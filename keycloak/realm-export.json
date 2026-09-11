@@ -1,0 +1,241 @@
+{
+  "id": "vereint",
+  "realm": "vereint",
+  "displayName": "VEREINT",
+  "displayNameHtml": "<b>VEREINT</b>",
+  "notBefore": 0,
+  "defaultSignatureAlgorithm": "RS256",
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 86400,
+  "ssoSessionIdleTimeoutRememberMe": 86400,
+  "ssoSessionMaxLifespanRememberMe": 86400,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespan": 5184000,
+  "clientSessionIdleTimeout": 0,
+  "clientSessionMaxLifespan": 0,
+  "clientOfflineSessionIdleTimeout": 0,
+  "clientOfflineSessionMaxLifespan": 0,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "oauth2DeviceCodeLifespan": 600,
+  "oauth2DevicePollingInterval": 5,
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxTemporaryLockouts": 3,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 300,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "roles": {
+    "realm": [
+      {
+        "name": "member",
+        "description": "Standard-Mitglied"
+      },
+      {
+        "name": "board",
+        "description": "Vorstandsmitglied"
+      },
+      {
+        "name": "admin",
+        "description": "Administrator"
+      },
+      {
+        "name": "chair",
+        "description": "Vorsitz"
+      },
+      {
+        "name": "treasurer",
+        "description": "Kassenwart"
+      },
+      {
+        "name": "secretary",
+        "description": "Schriftführer"
+      },
+      {
+        "name": "assessor",
+        "description": "Beisitzer"
+      },
+      {
+        "name": "tabletRecorder",
+        "description": "Tablet-Getränkeerfassung"
+      },
+      {
+        "name": "default-roles-vereint",
+        "description": "Standardrollen für neue Realm-Benutzer",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "member"
+          ]
+        }
+      }
+    ]
+  },
+  "defaultRole": {
+    "name": "default-roles-vereint",
+    "description": "Standardrollen für neue Realm-Benutzer",
+    "composite": true,
+    "composites": {
+      "realm": [
+        "member"
+      ]
+    }
+  },
+  "clients": [
+    {
+      "id": "vereint-web",
+      "clientId": "vereint-web",
+      "name": "VEREINT Web & SSR Gateway",
+      "rootUrl": "${PUBLIC_BASE_URL}",
+      "baseUrl": "/",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_CLIENT_SECRET}",
+      "redirectUris": [
+        "http://localhost:8080/api/auth/callback",
+        "http://localhost:8080/login/oauth2/code/keycloak",
+        "http://127.0.0.1:8080/api/auth/callback",
+        "http://127.0.0.1:8080/login/oauth2/code/keycloak",
+        "http://localhost:4300/api/auth/callback",
+        "http://localhost:4300/login/oauth2/code/keycloak",
+        "http://127.0.0.1:4300/api/auth/callback",
+        "http://127.0.0.1:4300/login/oauth2/code/keycloak"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:4300",
+        "http://127.0.0.1:4300"
+      ],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "publicClient": false,
+      "frontchannelLogout": true,
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8080/web/login##http://127.0.0.1:8080/web/login##http://localhost:4300/web/login##http://127.0.0.1:4300/web/login",
+        "standard.flow.enabled": "true",
+        "direct.access.grants.enabled": "false"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "basic"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ]
+    },
+    {
+      "id": "vereint-service",
+      "clientId": "vereint-service",
+      "name": "VEREINT Spring Boot Backend API",
+      "rootUrl": "${SPRING_API_BASE_URL}",
+      "baseUrl": "/",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "notBefore": 0,
+      "bearerOnly": true,
+      "consentRequired": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "publicClient": false,
+      "redirectUris": [],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "basic"
+      ]
+    },
+    {
+      "id": "vereint-tablet",
+      "clientId": "vereint-tablet",
+      "name": "VEREINT Tablet Drink Recorder",
+      "description": "Technische Identität der Tablet-Erfassung; ausschließlich Client Credentials über das Service-Account.",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_TABLET_CLIENT_SECRET}",
+      "redirectUris": [],
+      "webOrigins": [],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "-",
+        "standard.flow.enabled": "false",
+        "direct.access.grants.enabled": "false"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "basic"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-vereint-tablet",
+      "enabled": true,
+      "serviceAccountClientId": "vereint-tablet",
+      "realmRoles": [
+        "tabletRecorder"
+      ]
+    }
+  ]
+}
