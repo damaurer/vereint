@@ -1,0 +1,83 @@
+name: baseservice CI/CD
+
+# Diese Action ist ausschliesslich fuer den `baseservice` zustaendig und
+# wird nur ausgefuehrt, wenn sich etwas im Ordner `baseservice/` oder an
+# diesem Workflow selbst geaendert hat (siehe `paths`-Filter).
+#
+# Die Tests werden jedes Mal ausgefuehrt.
+# Das Docker-Image wird nur gebaut und nach GitHub Packages (ghcr.io) deployed,
+# wenn der Merge auf den Branch `qs` abgeschlossen ist (push-Event auf `qs`).
+on:
+  push:
+    branches:
+      - main
+      - qs
+    paths:
+      - 'baseservice/**'
+      - '.github/workflows/baseservice-docker.yml'
+  pull_request:
+    branches:
+      - main
+      - qs
+    paths:
+      - 'baseservice/**'
+      - '.github/workflows/baseservice-docker.yml'
+
+jobs:
+  test:
+    name: Tests ausfuehren
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: JDK 25 einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+          cache: 'gradle'
+
+      - name: Gradle Wrapper ausfuehrbar machen
+        run: chmod +x gradlew
+        working-directory: baseservice
+
+      - name: Tests ausfuehren
+        run: ./gradlew test
+        working-directory: baseservice
+
+  docker:
+    name: Docker Image bauen und deployen
+    needs: test
+    # Das Image soll nur gebaut werden, wenn der Merge auf `qs` abgeschlossen ist.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/qs'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Docker Buildx einrichten
+        uses: docker/setup-buildx-action@v3
+
+      - name: An GitHub Container Registry anmelden
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker Image bauen und nach GitHub Packages pushen
+        uses: docker/build-push-action@v6
+        with:
+          context: baseservice
+          file: baseservice/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/baseservice:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/baseservice:qs
