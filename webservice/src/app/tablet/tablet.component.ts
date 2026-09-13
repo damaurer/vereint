@@ -1,0 +1,544 @@
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { forkJoin, type Observable } from 'rxjs';
+import { AsyncState } from '../member/async-state';
+import { describeApiError } from '../api/api-client.service';
+import { eventStatusLabel, formatMoney } from '../member/member-format';
+import { newIdempotencyKey } from '../api/idempotency';
+import { TabletApiService } from './tablet-api.service';
+import { StrichlisteRowComponent } from './strichliste-row.component';
+import { DrinkOverlayComponent } from './drink-overlay.component';
+import { RevenueSheetComponent, type RevenueKind } from './revenue-sheet.component';
+import { StatusBadgeComponent } from '../ui';
+import type { EventDrink } from '../events/event-manage.types';
+import type { LedgerEntry, TabletEvent, TabletMember } from '../api/api.types';
+
+interface EventContext {
+  members: TabletMember[];
+  drinks: EventDrink[];
+}
+
+/**
+ * Tablet-Erfassung / Drink-Recorder (TICKET-026, Redesign TICKET-034).
+ *
+ * Der Recorder wählt ein aktives Event, ein tabletfähiges Getränk und erfasst
+ * darüber die Strichliste je Mitglied sowie Runden und Abendaktionen. Preis,
+ * Währung, Abrechnungsmodus und Herkunft bestimmt ausschließlich der
+ * Fachservice; die Berechtigung `purchase.tablet` prüft er bei jedem Aufruf
+ * (`deny by default`), unberechtigte Aufrufe erhalten `403`. Jeder
+ * Schreibvorgang trägt einen Idempotency-Key; das Getränke-Overlay und das
+ * Runden-/Abend-Sheet sind reine Client-UI vor den bestehenden
+ * Buchungsaufrufen. Die Ansicht wird ausschließlich im Browser gerendert.
+ */
+@Component({
+  selector: 'app-tablet',
+  imports: [
+    RouterLink,
+    StatusBadgeComponent,
+    StrichlisteRowComponent,
+    DrinkOverlayComponent,
+    RevenueSheetComponent,
+  ],
+  template: `
+    <main class="page-shell" [class.terminal-standalone]="standalone()">
+      <section class="page-card member-card" aria-labelledby="tablet-title">
+        @if (standalone()) {
+          <div class="terminal-bar">
+            <a class="terminal-portal" routerLink="/dashboard">← Zurück zum Stammtisch-Portal</a>
+            <span class="terminal-flag">
+              <span class="terminal-dot" aria-hidden="true"></span> Standalone Terminal Modus
+            </span>
+          </div>
+        } @else {
+          <span class="eyebrow">Drink Recorder</span>
+        }
+        <h1 id="tablet-title">{{ standalone() ? 'Strichliste Terminal' : 'Tablet-Erfassung' }}</h1>
+        @if (!standalone()) {
+          <p>Strichliste für aktive Events.</p>
+          <a class="member-back" routerLink="/dashboard">← Zur Übersicht</a>
+        }
+        <button
+          type="button"
+          class="member-button ghost terminal-toggle"
+          [attr.aria-pressed]="standalone()"
+          (click)="toggleStandalone()"
+        >
+          {{ standalone() ? 'Terminal-Modus verlassen' : 'Standalone Terminal Modus' }}
+        </button>
+
+        @if (actionError(); as err) {
+          <p class="manage-action-error" role="alert">{{ err }}</p>
+        }
+        @if (actionInfo(); as info) {
+          <p class="manage-action-info" role="status">{{ info }}</p>
+        }
+
+        @if (events.isLoading()) {
+          <div class="state-card" role="status" aria-live="polite">
+            <strong>Wird geladen …</strong>
+            <span>Aktive Events werden abgerufen.</span>
+          </div>
+        } @else if (events.isError()) {
+          <div class="state-card state-error" role="alert">
+            <strong>Erfassung nicht verfügbar</strong>
+            <span>{{ events.errorMessage() }}</span>
+            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
+          </div>
+        } @else if (events.data(); as list) {
+          <h2 class="member-subtitle">Aktive Events ({{ list.length }})</h2>
+          @if (list.length === 0) {
+            <div class="state-card" role="status">
+              <strong>Keine aktiven Events</strong>
+              <span>Derzeit ist kein Event für die Erfassung freigegeben.</span>
+            </div>
+          } @else {
+            <ul class="member-list">
+              @for (event of list; track event.id) {
+                <li class="member-list-item board-row">
+                  <span class="member-list-title">{{ event.title }}</span>
+                  <vereint-status-badge
+                    [label]="eventStatusLabel(event.status)"
+                    [tone]="'success'"
+                  />
+                  <button
+                    type="button"
+                    class="member-button"
+                    [class.is-active]="selectedEventId() === event.id"
+                    (click)="selectEvent(event.id)"
+                  >
+                    Auswählen
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        }
+
+        @if (selectedEventId()) {
+          @if (context.isLoading()) {
+            <div class="state-card" role="status" aria-live="polite">
+              <strong>Wird geladen …</strong>
+              <span>Mitglieder und Getränke werden abgerufen.</span>
+            </div>
+          } @else if (context.isError()) {
+            <p class="manage-action-error" role="alert">{{ context.errorMessage() }}</p>
+          } @else if (context.data(); as ctx) {
+            @if (ctx.members.length === 0 || ctx.drinks.length === 0) {
+              <div class="state-card" role="status">
+                <strong>Erfassung nicht möglich</strong>
+                <span>Für dieses Event fehlen freigegebene Mitglieder oder Getränke.</span>
+              </div>
+            } @else {
+              <div class="tally-head">
+                <h2 class="member-subtitle">Strichliste</h2>
+                <button type="button" class="member-button ghost" (click)="openDrinkOverlay()">
+                  @if (activeDrink(ctx); as drink) {
+                    Getränk: {{ drink.drinkName }} · {{ formatMoney(drink.price, drink.currency) }}
+                  } @else {
+                    Getränk wählen
+                  }
+                </button>
+              </div>
+
+              <div class="tally-list">
+                @for (member of ctx.members; track member.memberId) {
+                  <app-strichliste-row
+                    [name]="member.displayName"
+                    [count]="tallyFor(member.memberId)"
+                    (increment)="quickBook(member.memberId)"
+                    (decrement)="onTallyDecrease(member.memberId)"
+                  />
+                }
+              </div>
+
+              <div class="quickbook-bar">
+                <span class="quickbook-label">Aktives Getränk für Schnellbuchung:</span>
+                <button
+                  type="button"
+                  class="member-button quickbook-drink"
+                  (click)="openDrinkOverlay()"
+                >
+                  @if (activeDrink(ctx); as drink) {
+                    {{ drink.drinkName }} · {{ formatMoney(drink.price, drink.currency) }}
+                  } @else {
+                    Getränk wählen
+                  }
+                </button>
+              </div>
+
+              <div class="tally-actions">
+                <button
+                  type="button"
+                  class="member-button"
+                  [disabled]="busy()"
+                  (click)="openRevenueSheet('round', ctx.members)"
+                >
+                  🍻 Runde ausgeben
+                </button>
+                <button
+                  type="button"
+                  class="member-button ghost"
+                  [disabled]="busy()"
+                  (click)="openRevenueSheet('evening', ctx.members)"
+                >
+                  👑 Ganzen Abend stiften
+                </button>
+              </div>
+
+              <app-drink-overlay
+                [open]="drinkOverlayOpen()"
+                [drinks]="ctx.drinks"
+                [selectedId]="activeDrinkId()"
+                (select)="selectActiveDrink($event)"
+                (confirm)="confirmDrink()"
+                (closed)="closeDrinkOverlay()"
+              />
+
+              <app-revenue-sheet
+                [open]="revenueSheetOpen()"
+                [kind]="revenueForm.kind"
+                [members]="ctx.members"
+                [selection]="revenueSelection"
+                [disabled]="busy() || !hasRevenueSelection()"
+                (kindChange)="setRevenueKind($event)"
+                (toggle)="toggleRevenueMember($event)"
+                (confirm)="confirmRevenue()"
+                (closed)="closeRevenueSheet()"
+              />
+            }
+          }
+        }
+      </section>
+    </main>
+  `,
+  styles: [
+    `
+      .board-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: space-between;
+      }
+      .manage-action-error {
+        color: #b91c1c;
+        font-weight: 600;
+      }
+      .manage-action-info {
+        color: #15803d;
+        font-weight: 600;
+      }
+      .tally-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+      .tally-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        margin: 0.75rem 0 1.25rem;
+      }
+      .tally-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+      .member-button.ghost {
+        background: transparent;
+        border: 1px solid rgba(148, 163, 184, 0.5);
+        color: inherit;
+      }
+      .member-button.is-active {
+        outline: 2px solid var(--color-brand);
+      }
+      .terminal-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+      }
+      .terminal-portal {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        font-weight: 600;
+        text-decoration: none;
+        color: inherit;
+      }
+      .terminal-flag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-weight: 600;
+        opacity: 0.85;
+      }
+      .terminal-dot {
+        width: 0.6rem;
+        height: 0.6rem;
+        border-radius: 50%;
+        background: var(--color-brand, #f59e0b);
+      }
+      .terminal-toggle {
+        align-self: flex-start;
+        min-height: 44px;
+      }
+      .quickbook-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0.75rem;
+        margin: 0 0 1.25rem;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        border-radius: var(--radius-md, 0.75rem);
+      }
+      .quickbook-label {
+        font-weight: 600;
+        opacity: 0.8;
+      }
+      .quickbook-drink {
+        min-height: 44px;
+        font-weight: 700;
+      }
+      .tally-actions .member-button {
+        min-height: 44px;
+      }
+      /* Landscape-Optimierung: breites Grid und feste Aktionsleiste. */
+      @media (min-width: 900px) and (orientation: landscape) {
+        .tally-list {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0.75rem;
+        }
+        .quickbook-drink {
+          font-size: 1.05rem;
+          padding-block: 0.75rem;
+        }
+      }
+    `,
+  ],
+})
+export class TabletComponent implements OnInit, OnDestroy {
+  private readonly api = inject(TabletApiService);
+
+  protected readonly events = new AsyncState<TabletEvent[]>();
+  protected readonly context = new AsyncState<EventContext>();
+
+  protected readonly selectedEventId = signal<string | null>(null);
+  protected readonly busy = signal(false);
+  protected readonly actionError = signal<string | null>(null);
+  protected readonly actionInfo = signal<string | null>(null);
+
+  protected readonly activeDrinkId = signal<string | null>(null);
+  protected readonly standalone = signal(false);
+  protected readonly drinkOverlayOpen = signal(false);
+  protected readonly revenueSheetOpen = signal(false);
+  protected readonly tallies = signal<Record<string, number>>({});
+
+  protected purchaseForm = { memberId: '', eventDrinkId: '' };
+  protected revenueForm: { eventDrinkId: string; kind: RevenueKind } = {
+    eventDrinkId: '',
+    kind: 'round',
+  };
+  protected revenueSelection: Record<string, boolean> = {};
+
+  protected readonly formatMoney = formatMoney;
+  protected readonly eventStatusLabel = eventStatusLabel;
+
+  ngOnInit(): void {
+    this.reload();
+  }
+
+  ngOnDestroy(): void {
+    this.events.destroy();
+    this.context.destroy();
+  }
+
+  protected reload(): void {
+    this.events.run(this.api.listEvents());
+  }
+
+  protected selectEvent(eventId: string): void {
+    this.selectedEventId.set(eventId);
+    this.purchaseForm = { memberId: '', eventDrinkId: '' };
+    this.revenueForm = { eventDrinkId: '', kind: 'round' };
+    this.revenueSelection = {};
+    this.activeDrinkId.set(null);
+    this.drinkOverlayOpen.set(false);
+    this.revenueSheetOpen.set(false);
+    this.tallies.set({});
+    this.actionError.set(null);
+    this.actionInfo.set(null);
+    this.context.run(
+      forkJoin({
+        members: this.api.listMembers(eventId),
+        drinks: this.api.listDrinks(eventId),
+      }),
+    );
+  }
+
+  /**
+   * Schaltet den Standalone-Terminal-Modus um (reine Client-UI). Der Modus
+   * reduziert die Chrome und blendet „Zurück zum Stammtisch-Portal“ ein; der
+   * gewählte Event- und Strichlisten-Zustand bleibt dabei unverändert erhalten.
+   */
+  protected toggleStandalone(): void {
+    this.standalone.update((value) => !value);
+  }
+
+  /**
+   * Schnellbuchung: bucht das aktive Getränk mit genau einem Aufruf für ein
+   * Mitglied. Nutzt die bestehende Strichlisten-/Buchungslogik aus TICKET-034
+   * wieder (inkl. Idempotency-Key) und dupliziert sie nicht.
+   */
+  protected quickBook(memberId: string): void {
+    this.onTallyIncrease(memberId);
+  }
+
+  /** Aktuell für die Strichliste gewähltes Getränk aus dem Kontext. */
+  protected activeDrink(ctx: EventContext): EventDrink | null {
+    const id = this.activeDrinkId();
+    return ctx.drinks.find((drink) => drink.id === id) ?? null;
+  }
+
+  /** Aktuelle Strichanzahl eines Mitglieds. */
+  protected tallyFor(memberId: string): number {
+    return this.tallies()[memberId] ?? 0;
+  }
+
+  /** Öffnet das Getränke-Overlay. */
+  protected openDrinkOverlay(): void {
+    this.drinkOverlayOpen.set(true);
+  }
+
+  protected closeDrinkOverlay(): void {
+    this.drinkOverlayOpen.set(false);
+  }
+
+  protected selectActiveDrink(eventDrinkId: string): void {
+    this.activeDrinkId.set(eventDrinkId);
+  }
+
+  protected confirmDrink(): void {
+    if (!this.activeDrinkId()) return;
+    this.drinkOverlayOpen.set(false);
+  }
+
+  /**
+   * Erhöht die Striche eines Mitglieds um eins und löst genau einen
+   * Buchungsaufruf mit dem aktiven Getränk aus. Fehlt noch ein Getränk, öffnet
+   * sich das Auswahl-Overlay statt einer Buchung.
+   */
+  protected onTallyIncrease(memberId: string): void {
+    const eventDrinkId = this.activeDrinkId();
+    if (!eventDrinkId) {
+      this.drinkOverlayOpen.set(true);
+      return;
+    }
+    this.tallies.update((current) => ({
+      ...current,
+      [memberId]: (current[memberId] ?? 0) + 1,
+    }));
+    this.purchaseForm = { memberId, eventDrinkId };
+    this.recordPurchase();
+  }
+
+  /** Verringert die angezeigten Striche eines Mitglieds (keine Gegenbuchung). */
+  protected onTallyDecrease(memberId: string): void {
+    this.tallies.update((current) => ({
+      ...current,
+      [memberId]: Math.max(0, (current[memberId] ?? 0) - 1),
+    }));
+  }
+
+  /** Öffnet das Runden-/Abend-Sheet und wählt zunächst alle Mitglieder vor. */
+  protected openRevenueSheet(kind: RevenueKind, members: TabletMember[]): void {
+    this.revenueForm = { eventDrinkId: '', kind };
+    this.revenueSelection = members.reduce<Record<string, boolean>>((acc, member) => {
+      acc[member.memberId] = true;
+      return acc;
+    }, {});
+    this.revenueSheetOpen.set(true);
+  }
+
+  protected closeRevenueSheet(): void {
+    this.revenueSheetOpen.set(false);
+  }
+
+  protected setRevenueKind(kind: RevenueKind): void {
+    this.revenueForm = { ...this.revenueForm, kind };
+  }
+
+  protected toggleRevenueMember(memberId: string): void {
+    this.revenueSelection = {
+      ...this.revenueSelection,
+      [memberId]: !this.revenueSelection[memberId],
+    };
+  }
+
+  protected hasRevenueSelection(): boolean {
+    return Object.values(this.revenueSelection).some(Boolean);
+  }
+
+  /** Bestätigt das Sheet: setzt das aktive Getränk und bucht die Aktion. */
+  protected confirmRevenue(): void {
+    this.revenueForm = { ...this.revenueForm, eventDrinkId: this.activeDrinkId() ?? '' };
+    if (!this.revenueForm.eventDrinkId) {
+      this.drinkOverlayOpen.set(true);
+      return;
+    }
+    this.recordRevenue();
+    this.revenueSheetOpen.set(false);
+  }
+
+  private runAction(source: Observable<unknown>, successInfo: string): void {
+    this.busy.set(true);
+    this.actionError.set(null);
+    this.actionInfo.set(null);
+    source.subscribe({
+      next: () => {
+        this.busy.set(false);
+        this.actionInfo.set(successInfo);
+      },
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.actionError.set(describeApiError(error));
+      },
+    });
+  }
+
+  protected recordPurchase(): void {
+    const eventId = this.selectedEventId();
+    const { memberId, eventDrinkId } = this.purchaseForm;
+    if (!eventId || !memberId || !eventDrinkId) return;
+    this.runAction(
+      this.api.recordPurchase(eventId, { memberId, eventDrinkId }, newIdempotencyKey()),
+      'Kauf erfasst.',
+    );
+    this.purchaseForm = { memberId: '', eventDrinkId: '' };
+  }
+
+  protected recordRevenue(): void {
+    const eventId = this.selectedEventId();
+    const eventDrinkId = this.revenueForm.eventDrinkId;
+    const memberIds = Object.keys(this.revenueSelection).filter((id) => this.revenueSelection[id]);
+    if (!eventId || !eventDrinkId || memberIds.length === 0) return;
+    const payload = { eventDrinkId, memberIds };
+    const key = newIdempotencyKey();
+    const source: Observable<LedgerEntry[]> =
+      this.revenueForm.kind === 'evening'
+        ? this.api.recordEvening(eventId, payload, key)
+        : this.api.recordRound(eventId, payload, key);
+    this.runAction(
+      source,
+      this.revenueForm.kind === 'evening' ? 'Abendaktion gebucht.' : 'Runde gebucht.',
+    );
+    this.revenueForm = { eventDrinkId: '', kind: this.revenueForm.kind };
+    this.revenueSelection = {};
+  }
+}

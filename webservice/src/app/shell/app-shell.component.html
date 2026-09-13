@@ -1,0 +1,113 @@
+@if (isGuest()) {
+  <div class="shell shell-guest">
+    <header class="shell-guest-bar">
+      <span class="shell-brand">VEREINT</span>
+      <span class="shell-guest-tag">Gast</span>
+    </header>
+    <main class="shell-content">
+      <router-outlet />
+    </main>
+  </div>
+} @else {
+  <div class="shell" [attr.data-viewport]="viewport()">
+    @if (viewport() === 'web') {
+      <aside class="shell-sidebar">
+        <div class="shell-brand-row">
+          <span class="shell-brand">VEREINT</span>
+        </div>
+        <nav class="shell-nav" aria-label="Hauptnavigation">
+          @for (item of primaryNav(); track trackNav($index, item)) {
+            <a
+              class="shell-nav-link"
+              [routerLink]="item.route"
+              routerLinkActive="is-active"
+            >
+              <span class="shell-nav-icon" aria-hidden="true">{{ item.icon }}</span>
+              <span class="shell-nav-label">{{ item.label }}</span>
+            </a>
+          }
+        </nav>
+        @if (panelNav().length > 0) {
+          <nav class="shell-nav shell-nav-panel" aria-label="Verwaltung">
+            <p class="shell-nav-heading">Verwaltung</p>
+            @for (item of panelNav(); track trackNav($index, item)) {
+              <a
+                class="shell-nav-link"
+                [routerLink]="item.route"
+                routerLinkActive="is-active"
+              >
+                <span class="shell-nav-icon" aria-hidden="true">{{ item.icon }}</span>
+                <span class="shell-nav-label">{{ item.label }}</span>
+              </a>
+            }
+          </nav>
+        }
+      </aside>
+    } @else if (viewport() === 'tablet') {
+      <aside class="shell-rail" aria-label="Hauptnavigation">
+        <span class="shell-brand shell-brand-compact">R</span>
+        @for (item of primaryNav(); track trackNav($index, item)) {
+          <a
+            class="shell-rail-link"
+            [routerLink]="item.route"
+            routerLinkActive="is-active"
+            [attr.aria-label]="item.label"
+            [attr.title]="item.label"
+          >
+            <span aria-hidden="true">{{ item.icon }}</span>
+          </a>
+        }
+        @for (item of panelNav(); track trackNav($index, item)) {
+          <a
+            class="shell-rail-link shell-rail-panel"
+            [routerLink]="item.route"
+            routerLinkActive="is-active"
+            [attr.aria-label]="item.label"
+            [attr.title]="item.label"
+          >
+            <span aria-hidden="true">{{ item.icon }}</span>
+          </a>
+        }
+      </aside>
+    }
+
+    <div class="shell-main">
+      @if (viewport() === 'web') {
+        <header class="shell-topbar">
+          <label class="shell-search">
+            <span class="shell-search-icon" aria-hidden="true">🔍</span>
+            <input type="search" placeholder="Suchen…" aria-label="Suchen" />
+          </label>
+          <div class="shell-topbar-actions">
+            <button type="button" class="shell-icon-button" aria-label="Benachrichtigungen">
+              🔔
+            </button>
+            <button type="button" class="shell-profile" aria-label="Profil-Menü">
+              <span class="shell-profile-name">{{ displayName() ?? 'Konto' }}</span>
+              <span aria-hidden="true">▾</span>
+            </button>
+          </div>
+        </header>
+      }
+
+      <main class="shell-content">
+        <router-outlet />
+      </main>
+
+      @if (viewport() === 'mobile') {
+        <nav class="shell-bottom-bar" aria-label="Hauptnavigation">
+          @for (item of primaryNav(); track trackNav($index, item)) {
+            <a
+              class="shell-bottom-link"
+              [routerLink]="item.route"
+              routerLinkActive="is-active"
+            >
+              <span class="shell-bottom-icon" aria-hidden="true">{{ item.icon }}</span>
+              <span class="shell-bottom-label">{{ item.label }}</span>
+            </a>
+          }
+        </nav>
+      }
+    </div>
+  </div>
+}

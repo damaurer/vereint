@@ -10,8 +10,8 @@ Dieses Verzeichnis enthält die versionierten Realm-Definitionen. Beide Dateien 
 Keycloak ersetzt beim Import Platzhalter der Form `${VARIABLE}` durch den Wert der jeweiligen Umgebungsvariablen.
 
 ```text
-KEYCLOAK_CLIENT_SECRET           Secret des Clients reisch-web
-KEYCLOAK_TABLET_CLIENT_SECRET    Secret des Service-Accounts reisch-tablet
+KEYCLOAK_CLIENT_SECRET           Secret des Clients vereint-web
+KEYCLOAK_TABLET_CLIENT_SECRET    Secret des Service-Accounts vereint-tablet
 PUBLIC_BASE_URL                  Root-URL des Express-/SSR-Gateways
 SPRING_API_BASE_URL              Root-URL des Spring-Boot-Fachservice
 KEYCLOAK_SEED_ADMIN_PASSWORD     nur Entwicklungsimport

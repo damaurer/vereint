@@ -1,0 +1,72 @@
+import { isPlatformBrowser } from '@angular/common';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Router, UrlTree } from '@angular/router';
+import { defaultRouteForSession, loginRouteForPath, PUBLIC_LOGIN_ROUTE } from './app-context';
+import { AuthService } from './auth.service';
+import { AuthSessionUser } from './auth.types';
+import { RememberedLoginService } from './remembered-login.service';
+
+/**
+ * Zentrale App-Kontext-Navigation nach Login und Logout (TICKET-023).
+ *
+ * Die Navigation ist reine UX: Sie ergänzt die serverseitige
+ * Zugriffskontrolle (Express-Access-Resolver, Spring-Boot-Fachservice), ersetzt
+ * sie aber nie. Alle Ziele stammen aus `app-context.ts` und decken sich mit den
+ * Serverquellen (`src/server/auth/redirect.ts`,
+ * `authorization.middleware.ts`).
+ */
+@Injectable({ providedIn: 'root' })
+export class AuthNavigationService {
+  constructor(
+    @Inject(PLATFORM_ID) private readonly platformId: object,
+    private readonly auth: AuthService,
+    private readonly router: Router,
+    private readonly rememberedLogin: RememberedLoginService,
+  ) {}
+
+  /**
+   * Ermittelt die Standard-Startseite des angemeldeten Benutzers und navigiert
+   * dorthin. Ohne Session führt der Weg auf den passenden Login.
+   */
+  async goToDefaultRoute(): Promise<boolean> {
+    if (!isPlatformBrowser(this.platformId)) return false;
+    const session = await this.auth.getSession(true);
+    return this.router.navigateByUrl(defaultRouteForSession(session));
+  }
+
+  /**
+   * Baut das Anmeldeziel für einen angeforderten Pfad. Der Kontext bestimmt
+   * `pwa`- oder `web`-Login; der ursprüngliche Pfad wird als `returnUrl`
+   * mitgegeben, damit Express nach erfolgreicher Anmeldung dorthin zurückführt.
+   */
+  loginUrlTree(requestedUrl: string): UrlTree {
+    const login = loginRouteForPath(requestedUrl);
+    if (!requestedUrl || !requestedUrl.startsWith('/') || requestedUrl.startsWith('//')) {
+      return this.router.parseUrl(login);
+    }
+    return this.router.createUrlTree([login], { queryParams: { returnUrl: requestedUrl } });
+  }
+
+  /** UrlTree der kontextabhängigen Standard-Startseite (für Guards). */
+  defaultRouteUrlTree(session: AuthSessionUser | null): UrlTree {
+    return this.router.parseUrl(defaultRouteForSession(session));
+  }
+
+  /** Ziel für einen verweigerten Zugriff. */
+  forbiddenUrlTree(): UrlTree {
+    return this.router.parseUrl('/403');
+  }
+
+  /**
+   * Meldet den Benutzer ab: beendet die Express-Session (inklusive
+   * Keycloak-Backchannel-Logout), verwirft private Clientdaten und navigiert
+   * auf den öffentlichen Login.
+   */
+  async logout(): Promise<boolean> {
+    await this.auth.signOut();
+    this.rememberedLogin.forget();
+    this.auth.clearClientState();
+    if (!isPlatformBrowser(this.platformId)) return false;
+    return this.router.navigateByUrl(PUBLIC_LOGIN_ROUTE);
+  }
+}

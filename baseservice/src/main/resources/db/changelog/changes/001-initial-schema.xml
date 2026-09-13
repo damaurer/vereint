@@ -1,0 +1,691 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Zieldatenbank ist PostgreSQL. H2 bleibt ausschließlich für die schnellen
+        Spring-Context-Tests zugelassen; die migrationsnahen Integrationstests laufen
+        über Testcontainers gegen PostgreSQL.
+    -->
+    <property name="text.type" value="TEXT" dbms="postgresql"/>
+    <property name="text.type" value="VARCHAR(65535)" dbms="h2"/>
+
+    <!--
+        Primaer- und Fremdschluessel nutzen den nativen UUID-Typ. PostgreSQL bildet ihn
+        auf "uuid" ab, H2 kennt denselben Typnamen; damit bleiben Schema und JPA-Mapping
+        (java.util.UUID) in beiden Datenbanken identisch.
+    -->
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 1. Users table -->
+    <changeSet id="001-create-users" author="junie">
+        <createTable tableName="users">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="keycloak_subject" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_users_keycloak_subject"/>
+            </column>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="disabled" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="drink_recorder" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="board_role" type="VARCHAR(32)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="users"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 2. User Roles table -->
+    <changeSet id="002-create-user-roles" author="junie">
+        <createTable tableName="user_roles">
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_user_roles_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="role" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="user_roles" columnNames="user_id, role" constraintName="pk_user_roles"/>
+        <rollback>
+            <dropTable tableName="user_roles"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 3. User Permissions table -->
+    <changeSet id="003-create-user-permissions" author="junie">
+        <createTable tableName="user_permissions">
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_user_permissions_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="permission" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="user_permissions" columnNames="user_id, permission" constraintName="pk_user_permissions"/>
+        <rollback>
+            <dropTable tableName="user_permissions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 4. Events table -->
+    <changeSet id="004-create-events" author="junie">
+        <createTable tableName="events">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="${text.type}"/>
+            <column name="location" type="VARCHAR(255)"/>
+            <column name="starts_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ends_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="status" type="VARCHAR(32)" defaultValue="draft">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_events_owner" references="users(id)"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="events" indexName="idx_events_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="events" indexName="idx_events_owner">
+            <column name="owner_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="events"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 5. Event Participants table -->
+    <changeSet id="005-create-event-participants" author="junie">
+        <createTable tableName="event_participants">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="event_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_participants_event" references="events(id)" deleteCascade="true"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_participants_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="role" type="VARCHAR(32)" defaultValue="participant">
+                <constraints nullable="false"/>
+            </column>
+            <column name="joined_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="event_participants" columnNames="event_id, user_id" constraintName="uk_event_participants_event_user"/>
+        <rollback>
+            <dropTable tableName="event_participants"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 6. Event Invites table -->
+    <changeSet id="006-create-event-invites" author="junie">
+        <createTable tableName="event_invites">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="event_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_invites_event" references="events(id)" deleteCascade="true"/>
+            </column>
+            <column name="token_hash" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_event_invites_token_hash"/>
+            </column>
+            <column name="created_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_event_invites_creator" references="users(id)"/>
+            </column>
+            <column name="role" type="VARCHAR(32)" defaultValue="guest">
+                <constraints nullable="false"/>
+            </column>
+            <column name="max_uses" type="INTEGER"/>
+            <column name="uses_count" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="revoked" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="event_invites"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 7. Event Guests table -->
+    <changeSet id="007-create-event-guests" author="junie">
+        <createTable tableName="event_guests">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="event_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_guests_event" references="events(id)" deleteCascade="true"/>
+            </column>
+            <column name="invite_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_event_guests_invite" references="event_invites(id)"/>
+            </column>
+            <column name="guest_token_hash" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_event_guests_guest_token_hash"/>
+            </column>
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(32)" defaultValue="active">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="event_guests"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 8. Drink Catalog table -->
+    <changeSet id="008-create-drink-catalog" author="junie">
+        <createTable tableName="drink_catalog">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="${text.type}"/>
+            <column name="category" type="VARCHAR(64)"/>
+            <column name="default_price" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)" defaultValue="EUR">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_reference" type="VARCHAR(512)"/>
+            <column name="catalog_version" type="INTEGER" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="drink_catalog"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 9. Drink Barcodes table -->
+    <changeSet id="009-create-drink-barcodes" author="junie">
+        <createTable tableName="drink_barcodes">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="drink_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_drink_barcodes_drink" references="drink_catalog(id)" deleteCascade="true"/>
+            </column>
+            <column name="barcode" type="VARCHAR(128)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_drink_barcodes_barcode"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="drink_barcodes"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 10. Drink Sublists table -->
+    <changeSet id="010-create-drink-sublists" author="junie">
+        <createTable tableName="drink_sublists">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="${text.type}"/>
+            <column name="created_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_drink_sublists_creator" references="users(id)"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="drink_sublists"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 11. Drink Sublist Items table -->
+    <changeSet id="011-create-drink-sublist-items" author="junie">
+        <createTable tableName="drink_sublist_items">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="sublist_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_sublist_items_sublist" references="drink_sublists(id)" deleteCascade="true"/>
+            </column>
+            <column name="drink_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_sublist_items_drink" references="drink_catalog(id)" deleteCascade="true"/>
+            </column>
+            <column name="default_price" type="DECIMAL(10, 2)"/>
+        </createTable>
+        <addUniqueConstraint tableName="drink_sublist_items" columnNames="sublist_id, drink_id" constraintName="uk_drink_sublist_items_sublist_drink"/>
+        <rollback>
+            <dropTable tableName="drink_sublist_items"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 12. Event Drinks table -->
+    <changeSet id="012-create-event-drinks" author="junie">
+        <createTable tableName="event_drinks">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="event_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_drinks_event" references="events(id)" deleteCascade="true"/>
+            </column>
+            <column name="drink_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_drinks_drink" references="drink_catalog(id)"/>
+            </column>
+            <column name="price" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)" defaultValue="EUR">
+                <constraints nullable="false"/>
+            </column>
+            <column name="self_service_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tablet_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="catalog_version" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_snapshot" type="VARCHAR(512)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="event_drinks" columnNames="event_id, drink_id" constraintName="uk_event_drinks_event_drink"/>
+        <rollback>
+            <dropTable tableName="event_drinks"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 13. Ledger Entries table -->
+    <changeSet id="013-create-ledger-entries" author="junie">
+        <createTable tableName="ledger_entries">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="event_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_ledger_entries_event" references="events(id)"/>
+            </column>
+            <column name="member_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_ledger_entries_member" references="users(id)"/>
+            </column>
+            <column name="drink_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_ledger_entries_drink" references="drink_catalog(id)"/>
+            </column>
+            <column name="amount" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)" defaultValue="EUR">
+                <constraints nullable="false"/>
+            </column>
+            <column name="accounting_mode" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="actor_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_ledger_entries_actor" references="users(id)"/>
+            </column>
+            <column name="idempotency_key" type="VARCHAR(128)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_ledger_entries_idempotency_key"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="ledger_entries" indexName="idx_ledger_entries_member">
+            <column name="member_id"/>
+        </createIndex>
+        <createIndex tableName="ledger_entries" indexName="idx_ledger_entries_event">
+            <column name="event_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="ledger_entries"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 14. Purchase Snapshots table -->
+    <changeSet id="014-create-purchase-snapshots" author="junie">
+        <createTable tableName="purchase_snapshots">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ledger_entry_id" type="${uuid.type}">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_purchase_snapshots_ledger_entry"
+                             foreignKeyName="fk_purchase_snapshots_ledger_entry" references="ledger_entries(id)" deleteCascade="true"/>
+            </column>
+            <column name="drink_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_reference" type="VARCHAR(512)"/>
+            <column name="barcode" type="VARCHAR(128)"/>
+            <column name="unit_price" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)" defaultValue="EUR">
+                <constraints nullable="false"/>
+            </column>
+            <column name="catalog_version" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="purchase_snapshots"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 15. Idempotency Records table -->
+    <changeSet id="015-create-idempotency-records" author="junie">
+        <createTable tableName="idempotency_records">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="idempotency_key" type="VARCHAR(128)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_idempotency_records_key"/>
+            </column>
+            <column name="scope" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="request_hash" type="VARCHAR(64)"/>
+            <column name="response_status" type="INTEGER"/>
+            <column name="response_payload" type="${text.type}"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="idempotency_records" indexName="idx_idempotency_records_expires">
+            <column name="expires_at"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="idempotency_records"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 16. Conversations table -->
+    <changeSet id="016-create-conversations" author="junie">
+        <createTable tableName="conversations">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(32)" defaultValue="event">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_conversations_event" references="events(id)" deleteCascade="true"/>
+            </column>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="conversations"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 17. Conversation Members table -->
+    <changeSet id="017-create-conversation-members" author="junie">
+        <createTable tableName="conversation_members">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="conversation_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_conversation_members_conversation" references="conversations(id)" deleteCascade="true"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_conversation_members_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="guest_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_conversation_members_guest" references="event_guests(id)" deleteCascade="true"/>
+            </column>
+            <column name="joined_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="conversation_members"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 18. Chat Messages table -->
+    <changeSet id="018-create-chat-messages" author="junie">
+        <createTable tableName="chat_messages">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="conversation_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_chat_messages_conversation" references="conversations(id)" deleteCascade="true"/>
+            </column>
+            <column name="sender_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_chat_messages_sender" references="users(id)"/>
+            </column>
+            <column name="guest_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_chat_messages_guest" references="event_guests(id)"/>
+            </column>
+            <column name="message" type="${text.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="VARCHAR(512)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="chat_messages" indexName="idx_chat_messages_conversation">
+            <column name="conversation_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="chat_messages"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 19. Notifications table -->
+    <changeSet id="019-create-notifications" author="junie">
+        <createTable tableName="notifications">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_notifications_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="body" type="${text.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="read" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="notifications" indexName="idx_notifications_user">
+            <column name="user_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="notifications"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 20. Push Subscriptions table -->
+    <changeSet id="020-create-push-subscriptions" author="junie">
+        <createTable tableName="push_subscriptions">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_push_subscriptions_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="endpoint" type="${text.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="p256dh" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="auth" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_agent" type="VARCHAR(512)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="push_subscriptions" indexName="idx_push_subscriptions_user">
+            <column name="user_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="push_subscriptions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 21. Drink With Me Sessions table -->
+    <changeSet id="021-create-drink-with-me-sessions" author="junie">
+        <createTable tableName="drink_with_me_sessions">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_drink_with_me_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="event_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_drink_with_me_event" references="events(id)" deleteCascade="true"/>
+            </column>
+            <column name="latitude" type="DOUBLE PRECISION"/>
+            <column name="longitude" type="DOUBLE PRECISION"/>
+            <column name="message" type="VARCHAR(255)"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="drink_with_me_sessions" indexName="idx_drink_with_me_active">
+            <column name="active"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="drink_with_me_sessions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 22. Audit Logs table -->
+    <changeSet id="022-create-audit-logs" author="junie">
+        <createTable tableName="audit_logs">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="actor_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_audit_logs_actor" references="users(id)"/>
+            </column>
+            <column name="action" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_entity" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_id" type="VARCHAR(128)"/>
+            <column name="details" type="${text.type}"/>
+            <column name="ip_address" type="VARCHAR(64)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="audit_logs" indexName="idx_audit_logs_actor">
+            <column name="actor_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="audit_logs"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

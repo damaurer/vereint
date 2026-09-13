@@ -1,0 +1,45 @@
+.login-form {
+  display: grid;
+  gap: .5rem;
+  margin: 1rem 0;
+}
+
+.login-form input {
+  padding: .6rem .75rem;
+  border-radius: .5rem;
+  border: 1px solid var(--color-border, #d4d4d8);
+  font: inherit;
+}
+
+.login-form button {
+  margin-top: .5rem;
+  padding: .7rem 1rem;
+  border: 0;
+  border-radius: .5rem;
+  background: var(--color-brand, #2563eb);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.login-form button[disabled] {
+  opacity: .6;
+  cursor: progress;
+}
+
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .5rem;
+  cursor: pointer;
+}
+
+.login-remember input {
+  width: auto;
+  margin: 0;
+}
+
+.login-error strong {
+  color: var(--color-danger, #b91c1c);
+}

@@ -1,0 +1,74 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.page-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.page-card {
+  width: min(100%, 42rem);
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border-radius: 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
+}
+
+.eyebrow {
+  color: var(--color-brand);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: .75rem 0;
+  color: var(--color-text);
+}
+
+p {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.state-card {
+  display: grid;
+  gap: .35rem;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-left: .25rem solid var(--color-brand);
+  background-color: var(--color-brand-soft);
+}
+
+.state-card strong {
+  color: var(--color-text);
+}
+
+.state-card span {
+  color: var(--color-text-muted);
+}
+
+a {
+  color: var(--color-brand);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--color-brand-strong);
+  text-decoration: underline;
+}

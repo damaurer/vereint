@@ -1,0 +1,51 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.dialect: org.hibernate.dialect.H2Dialect
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    contexts: test
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Test-Issuer fuer isolierte Mock-JWT-Validierung (in Compose auf Port 8082 gemappt)
+          issuer-uri: http://localhost:8080/realms/vereint
+          jwk-set-uri: http://localhost:8080/realms/vereint/protocol/openid-connect/certs
+
+vereint:
+  cors:
+    allowed-origins: http://localhost:4200,http://localhost:8080
+  storage:
+    # In Tests standardmaessig In-Memory-Storage (keine MinIO-Abhaengigkeit)
+    enabled: false
+    bucket: vereint-test
+  push:
+    # In Tests standardmaessig No-Op-Push-Sender
+    enabled: false
+
+# Spiegelt die gehärtete Produktionskonfiguration, damit die Actuator-Tests aussagekräftig sind
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+      roles: ADMIN
+      probes:
+        enabled: true
+
+server:
+  port: 0

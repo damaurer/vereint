@@ -1,0 +1,110 @@
+<main class="page-shell">
+  <section class="page-card member-card" aria-label="Mein Profil">
+    <span class="eyebrow">Mein Profil</span>
+
+    <a class="member-back" routerLink="/dashboard">← Zur Übersicht</a>
+
+    @if (load.isLoading()) {
+      <div class="state-card" role="status" aria-live="polite">
+        <strong>Wird geladen …</strong>
+        <span>Das Profil wird abgerufen.</span>
+      </div>
+    } @else if (load.isError()) {
+      <div class="state-card state-error" role="alert">
+        <strong>Profil nicht verfügbar</strong>
+        <span>{{ load.errorMessage() }}</span>
+        <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
+      </div>
+    } @else if (load.data(); as profile) {
+      <vereint-hero-greeting
+        eyebrow="Mein Profil"
+        [name]="profile.displayName"
+        [subtitle]="profile.email"
+      />
+
+      <div class="profile-roles">
+        @for (role of profile.roles; track role) {
+          <vereint-role-chip [label]="role" />
+        } @empty {
+          <span class="member-muted">keine Rollen</span>
+        }
+        @if (profile.boardRole) {
+          <vereint-role-chip [label]="profile.boardRole" tone="accent" />
+        }
+      </div>
+
+      <div class="profile-toggle">
+        <div class="profile-toggle-text">
+          <span class="profile-toggle-title">⚡ BeerWithMe Status</span>
+          <span class="member-muted">Verfügbar für ein spontanes Bier in der Nähe.</span>
+        </div>
+        <input
+          id="beerWithMe"
+          type="checkbox"
+          role="switch"
+          [checked]="beerWithMe()"
+          [attr.aria-checked]="beerWithMe()"
+          (change)="toggleBeerWithMe()"
+        />
+      </div>
+
+      <form class="member-form" (submit)="submit($event)">
+        <label class="member-field">
+          <span>Anzeigename</span>
+          <input
+            id="displayName"
+            name="displayName"
+            type="text"
+            autocomplete="name"
+            required
+            maxlength="255"
+            [value]="displayName()"
+            (input)="onDisplayName($any($event.target).value)"
+          />
+        </label>
+
+        <label class="member-field">
+          <span>E-Mail</span>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            maxlength="255"
+            [value]="email()"
+            (input)="onEmail($any($event.target).value)"
+          />
+        </label>
+
+        <button type="submit" class="member-button" [disabled]="saving()">
+          {{ saving() ? 'Wird gespeichert …' : 'Speichern' }}
+        </button>
+
+        @if (saved()) {
+          <p class="member-hint member-hint-success" role="status">Profil aktualisiert.</p>
+        }
+        @if (saveError()) {
+          <p class="member-hint member-hint-error" role="alert">{{ saveError() }}</p>
+        }
+      </form>
+
+      <h2 class="member-subtitle">Persönliche Angaben</h2>
+      <dl class="member-detail-list">
+        <div>
+          <dt>Status</dt>
+          <dd>{{ profile.disabled ? 'Deaktiviert' : 'Aktiv' }}</dd>
+        </div>
+        <div>
+          <dt>Mitglied seit</dt>
+          <dd>{{ formatDateTime(profile.createdAt) }}</dd>
+        </div>
+        @if (profile.drinkRecorder) {
+          <div>
+            <dt>Erfassung</dt>
+            <dd>Strichlisten-Erfassung aktiv</dd>
+          </div>
+        }
+      </dl>
+    }
+  </section>
+</main>

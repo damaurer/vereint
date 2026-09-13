@@ -1,0 +1,28 @@
+package de.maurer.baseservice.error
+
+object ErrorCode {
+    const val OIDC_LOGIN_FAILED = "oidc_login_failed"
+    const val OIDC_SESSION_EXPIRED = "oidc_session_expired"
+    const val ACCOUNT_DISABLED = "account_disabled"
+    const val ACCESS_DENIED = "access_denied"
+    const val PROFILE_NOT_FOUND = "profile_not_found"
+    const val ROLE_NOT_ASSIGNED = "role_not_assigned"
+    const val INVITATION_EXPIRED = "invitation_expired"
+    const val INVITATION_REVOKED = "invitation_revoked"
+    const val EVENT_NOT_ACTIVE = "event_not_active"
+    const val CONSENT_REQUIRED = "consent_required"
+    const val PERMISSION_DENIED = "permission_denied"
+    const val IDEMPOTENCY_CONFLICT = "idempotency_conflict"
+    const val IDEMPOTENCY_KEY_REQUIRED = "idempotency_key_required"
+    const val LEDGER_ALREADY_CORRECTED = "ledger_already_corrected"
+    const val SELF_SERVICE_DISABLED = "self_service_disabled"
+    const val DRINK_NOT_IN_EVENT = "drink_not_in_event"
+    const val INVALID_REQUEST = "invalid_request"
+    const val VALIDATION_FAILED = "validation_failed"
+    const val CONCURRENT_MODIFICATION = "concurrent_modification"
+    const val DATA_INTEGRITY_VIOLATION = "data_integrity_violation"
+    const val SELF_PRIVILEGE_CHANGE_DENIED = "self_privilege_change_denied"
+    const val LAST_ADMIN_PROTECTED = "last_admin_protected"
+    const val NOT_FOUND = "not_found"
+    const val INTERNAL_ERROR = "internal_error"
+}

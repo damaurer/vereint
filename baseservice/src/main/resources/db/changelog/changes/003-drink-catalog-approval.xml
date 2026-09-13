@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Vorschlags- und Freigabezustand des globalen Getränkekatalogs (TICKET-012).
+        Zieldatenbank ist PostgreSQL; H2 bleibt für die schnellen Spring-Context-Tests
+        zugelassen. Der native UUID-Typ wird pro Datenbank identisch abgebildet.
+    -->
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 201. Freigabestatus und Herkunft der globalen Getränke -->
+    <changeSet id="201-drink-catalog-approval-columns" author="junie">
+        <addColumn tableName="drink_catalog">
+            <column name="status" type="VARCHAR(32)" defaultValue="proposed">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="drink_catalog">
+            <column name="proposed_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_drink_catalog_proposed_by" references="users(id)"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="drink_catalog">
+            <column name="approved_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_drink_catalog_approved_by" references="users(id)"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="drink_catalog" indexName="idx_drink_catalog_status">
+            <column name="status"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="drink_catalog" indexName="idx_drink_catalog_status"/>
+            <dropColumn tableName="drink_catalog" columnName="approved_by"/>
+            <dropColumn tableName="drink_catalog" columnName="proposed_by"/>
+            <dropColumn tableName="drink_catalog" columnName="status"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 202. CHECK-Constraint für den Freigabestatus -->
+    <changeSet id="202-drink-catalog-status-check" author="junie">
+        <sql>
+            ALTER TABLE drink_catalog
+            ADD CONSTRAINT ck_drink_catalog_status
+            CHECK (status IN ('proposed', 'approved', 'rejected'))
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE drink_catalog DROP CONSTRAINT ck_drink_catalog_status</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

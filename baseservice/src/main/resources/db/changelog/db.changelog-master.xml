@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Zieldatenbank ist PostgreSQL; H2 ist ausschließlich für die schnellen
+        Spring-Context-Tests zugelassen. Seed- oder Testdaten gehören ausschließlich in
+        Changesets mit `context="dev"`; Produktivmigrationen laufen ohne Context bzw.
+        mit `context="prod"`.
+    -->
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <include file="db/changelog/changes/001-initial-schema.xml"/>
+    <include file="db/changelog/changes/002-integrity-constraints.xml"/>
+    <include file="db/changelog/changes/003-drink-catalog-approval.xml"/>
+    <include file="db/changelog/changes/004-image-assets.xml"/>
+    <include file="db/changelog/changes/005-ledger-transactions.xml"/>
+
+</databaseChangeLog>

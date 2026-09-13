@@ -1,0 +1,22 @@
+<main class="page-shell">
+  <section class="page-card" aria-labelledby="login-title">
+    <span class="eyebrow">Öffentlich</span>
+    <h1 id="login-title">Anmeldung</h1>
+    <p>Die Anmeldung erfolgt über das VEREINT-Konto bei Keycloak.</p>
+
+    <form class="login-form" (submit)="startLogin($event)">
+      <button id="start-login" type="submit" [disabled]="busy()">
+        {{ busy() ? 'Weiterleitung …' : 'Mit VEREINT-Konto anmelden' }}
+      </button>
+    </form>
+
+    <a routerLink="/password-reset">Passwort zurücksetzen</a>
+
+    @if (error()) {
+      <div class="state-card login-error" role="alert">
+        <strong>Anmeldung fehlgeschlagen</strong>
+        <span>{{ error() }}</span>
+      </div>
+    }
+  </section>
+</main>

@@ -1,0 +1,268 @@
+import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
+import { AsyncState } from './async-state';
+import { MemberApiService } from './member-api.service';
+import { eventStatusLabel, formatDateTime } from './member-format';
+import type { EventDetail, EventParticipant } from '../api/api.types';
+import { AvatarBadgeComponent, StatusBadgeComponent, type StatusTone } from '../ui';
+
+interface EventDetailView {
+  event: EventDetail;
+  participants: EventParticipant[];
+}
+
+/** Mögliche RSVP-Antwort eines Mitglieds (reine Client-Auswahl). */
+type RsvpAnswer = 'yes' | 'maybe' | 'no';
+
+/**
+ * Eventdetails für ein Mitglied (TICKET-024, Redesign TICKET-034).
+ *
+ * Lädt Stammdaten und Teilnehmerliste eines Events. Die Sichtbarkeit prüft der
+ * Fachservice; fehlt der Zugriff, meldet dieser `403` und die Ansicht zeigt eine
+ * neutrale Fehlermeldung (`deny by default`). Kopf mit „Route öffnen“ nutzt die
+ * Karten-App ausschließlich clientseitig; die RSVP-Antwort ist eine reine
+ * UI-Auswahl vor dem bestehenden Datenfluss. Teilnehmer erhalten Status-Chips
+ * über die geteilten Primitive aus TICKET-032.
+ */
+@Component({
+  selector: 'app-member-event-detail',
+  imports: [RouterLink, AvatarBadgeComponent, StatusBadgeComponent],
+  template: `
+    <main class="page-shell">
+      <section class="page-card member-card" aria-labelledby="event-title">
+        <span class="eyebrow">Event</span>
+
+        <a class="member-back" routerLink="/events">← Zu den Events</a>
+
+        @if (load.isLoading()) {
+          <div class="state-card" role="status" aria-live="polite">
+            <strong>Wird geladen …</strong>
+            <span>Die Eventdetails werden abgerufen.</span>
+          </div>
+        } @else if (load.isError()) {
+          <div class="state-card state-error" role="alert">
+            <strong>Event nicht verfügbar</strong>
+            <span>{{ load.errorMessage() }}</span>
+            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
+          </div>
+        } @else if (load.data(); as view) {
+          <article class="detail-head">
+            <div class="detail-head-top">
+              <h1 id="event-title">{{ view.event.title }}</h1>
+              <vereint-status-badge
+                [label]="eventStatusLabel(view.event.status)"
+                [tone]="'success'"
+              />
+            </div>
+            <ul class="detail-meta">
+              <li><span aria-hidden="true">📅</span> {{ formatDateTime(view.event.startsAt) }}</li>
+              @if (view.event.endsAt) {
+                <li><span aria-hidden="true">⏰</span> bis {{ formatDateTime(view.event.endsAt) }}</li>
+              }
+              @if (view.event.location) {
+                <li><span aria-hidden="true">📍</span> {{ view.event.location }}</li>
+              }
+              <li><span aria-hidden="true">👤</span> {{ view.event.ownerDisplayName }}</li>
+            </ul>
+            @if (view.event.location) {
+              <button type="button" class="member-button route-button" (click)="openRoute(view.event.location)">
+                Route öffnen
+              </button>
+            }
+          </article>
+
+          @if (view.event.description) {
+            <p class="member-description">{{ view.event.description }}</p>
+          }
+
+          <h2 class="member-subtitle">Deine Antwort</h2>
+          <div class="rsvp-row" role="group" aria-label="Deine Antwort">
+            <button
+              type="button"
+              class="rsvp-button rsvp-yes"
+              [class.is-active]="rsvp() === 'yes'"
+              [attr.aria-pressed]="rsvp() === 'yes'"
+              (click)="setRsvp('yes')"
+            >
+              Zusagen
+            </button>
+            <button
+              type="button"
+              class="rsvp-button"
+              [class.is-active]="rsvp() === 'maybe'"
+              [attr.aria-pressed]="rsvp() === 'maybe'"
+              (click)="setRsvp('maybe')"
+            >
+              Vielleicht
+            </button>
+            <button
+              type="button"
+              class="rsvp-button"
+              [class.is-active]="rsvp() === 'no'"
+              [attr.aria-pressed]="rsvp() === 'no'"
+              (click)="setRsvp('no')"
+            >
+              Absagen
+            </button>
+          </div>
+
+          <h2 class="member-subtitle">Anwesenheit ({{ view.participants.length }} Personen)</h2>
+          @if (view.participants.length === 0) {
+            <p class="member-muted">Noch keine Teilnehmer.</p>
+          } @else {
+            <ul class="detail-participants">
+              @for (participant of view.participants; track participant.userId) {
+                <li class="detail-participant">
+                  <vereint-avatar-badge [name]="participant.displayName" />
+                  <span class="detail-participant-name">{{ participant.displayName }}</span>
+                  <vereint-status-badge
+                    [label]="participantLabel(participant.role)"
+                    [tone]="participantTone(participant.role)"
+                  />
+                </li>
+              }
+            </ul>
+          }
+        }
+      </section>
+    </main>
+  `,
+  styles: [
+    `
+      .detail-head {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        padding: var(--space-3, 1rem);
+        border-radius: var(--radius-lg, 1rem);
+        background: rgba(148, 163, 184, 0.08);
+      }
+      .detail-head-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+      .detail-head-top h1 {
+        margin: 0;
+      }
+      .detail-meta {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        opacity: 0.9;
+      }
+      .route-button {
+        align-self: flex-start;
+      }
+      .rsvp-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .rsvp-button {
+        flex: 1 1 6rem;
+        padding: 0.7rem 0.9rem;
+        border: 1px solid rgba(148, 163, 184, 0.4);
+        border-radius: var(--radius-md, 0.75rem);
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      .rsvp-button.is-active {
+        border-color: var(--color-brand);
+        background: rgba(245, 166, 35, 0.15);
+        font-weight: 600;
+      }
+      .rsvp-button.rsvp-yes.is-active {
+        border-color: #16a34a;
+        background: rgba(22, 163, 74, 0.18);
+      }
+      .detail-participants {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .detail-participant {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.5rem 0.6rem;
+        border-radius: var(--radius-md, 0.75rem);
+        background: rgba(148, 163, 184, 0.08);
+      }
+      .detail-participant-name {
+        flex: 1 1 auto;
+      }
+    `,
+  ],
+})
+export class EventDetailComponent implements OnInit, OnDestroy {
+  private readonly api = inject(MemberApiService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly platformId = inject(PLATFORM_ID);
+
+  protected readonly load = new AsyncState<EventDetailView>();
+  protected readonly rsvp = signal<RsvpAnswer | null>(null);
+  protected readonly formatDateTime = formatDateTime;
+  protected readonly eventStatusLabel = eventStatusLabel;
+
+  ngOnInit(): void {
+    this.reload();
+  }
+
+  ngOnDestroy(): void {
+    this.load.destroy();
+  }
+
+  protected reload(): void {
+    const eventId = this.route.snapshot.paramMap.get('eventId') ?? '';
+    this.load.run(
+      forkJoin({
+        event: this.api.getEvent(eventId),
+        participants: this.api.listParticipants(eventId),
+      }),
+    );
+  }
+
+  /** Speichert die gewählte RSVP-Antwort als reine Client-Auswahl. */
+  protected setRsvp(answer: RsvpAnswer): void {
+    this.rsvp.set(answer);
+  }
+
+  /**
+   * Öffnet die Route zum Veranstaltungsort in einer Karten-App. Ausschließlich
+   * clientseitig – im SSR-Kontext passiert nichts (keine privaten Daten).
+   */
+  protected openRoute(location: string): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const query = encodeURIComponent(location);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank', 'noopener');
+  }
+
+  /** Klartext des Teilnehmerstatus (Rolle) für den Status-Chip. */
+  protected participantLabel(role: string): string {
+    switch (role) {
+      case 'coHost':
+        return 'Co-Gastgeber';
+      case 'participant':
+        return 'Teilnehmer';
+      default:
+        return role;
+    }
+  }
+
+  /** Farbton des Teilnehmer-Status-Chips. */
+  protected participantTone(role: string): StatusTone {
+    return role === 'coHost' ? 'success' : 'neutral';
+  }
+}
