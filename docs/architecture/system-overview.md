@@ -38,10 +38,10 @@ graph TD
 
     Browser -->|HTTP / Hydration / Static Assets| SSR
     Browser -->|OIDC Login / Refresh / Logout| AuthBFF
-    Browser -->|BFF API Requests (Session Cookie)| ApiProxy
+    Browser -->|"BFF API Requests (Session Cookie)"| ApiProxy
     SW -->|Push Notification Events| Browser
 
-    AuthBFF -->|Token Exchange (PKCE)| KC
+    AuthBFF -->|"Token Exchange (PKCE)"| KC
     DeliveryMW -->|Inject Initial Auth State| SSR
     ApiProxy -->|Forward with Authorization: Bearer JWT| SecFilter
 
