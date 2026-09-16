@@ -1,0 +1,160 @@
+<div class="mockup-window mockup-kiosk-window">
+  <div class="mockup-header mockup-kiosk-header">
+    <div class="mockup-dots"><span></span><span></span><span></span></div>
+    <div class="mockup-kiosk-brand">
+      <span class="kiosk-brand-icon">🍻</span>
+      <span class="kiosk-brand-title">VEREINT – THEKEN STRICHLISTE (KIOSK MODE)</span>
+    </div>
+    <div class="mockup-kiosk-event-pill">Event: Sommerfest 2026 (Aktiv)</div>
+    <div class="mockup-kiosk-user-action">
+      <span class="kiosk-operator">Bediener: Theke 1</span>
+      <button class="btn btn-kiosk-logout">🔒 Sperren</button>
+    </div>
+  </div>
+
+  <div class="mockup-body mockup-kiosk-body">
+    <!-- Top Search & Filter Bar -->
+    <div class="kiosk-search-bar">
+      <div class="kiosk-search-input-wrap">
+        <label for="kiosk-search-input" class="visually-hidden">Mitglied suchen</label>
+        <span class="search-icon">🔍</span>
+        <input type="text" id="kiosk-search-input" class="kiosk-search-input" value="Max" placeholder="Mitglied suchen..." readonly />
+        <span class="search-clear">✕</span>
+      </div>
+      <div class="kiosk-filter-chips">
+        <span class="kiosk-chip active">Alle (42)</span>
+        <span class="kiosk-chip">Anwesend (18)</span>
+        <span class="kiosk-chip">Vorstand (4)</span>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Split: Members List vs 1-Tap Drink Grid -->
+    <div class="kiosk-main-split">
+      <!-- Left Column: Members List -->
+      <div class="kiosk-col-members">
+        <div class="kiosk-col-title">MITGLIEDER (1-TAP AUSWAHL)</div>
+        <div class="kiosk-member-list">
+          <div class="kiosk-member-row selected">
+            <div class="member-avatar">MM</div>
+            <div class="member-details">
+              <div class="member-name">Max Mustermann</div>
+              <div class="member-role-tag">Vorstand • Anwesend</div>
+            </div>
+            <div class="member-balance pos">14,50 €</div>
+            <div class="member-select-arrow">▶</div>
+          </div>
+
+          <div class="kiosk-member-row">
+            <div class="member-avatar">EM</div>
+            <div class="member-details">
+              <div class="member-name">Erika Muster</div>
+              <div class="member-role-tag">Mitglied</div>
+            </div>
+            <div class="member-balance pos">8,00 €</div>
+          </div>
+
+          <div class="kiosk-member-row warning-row">
+            <div class="member-avatar danger">LS</div>
+            <div class="member-details">
+              <div class="member-name">Lukas Schmidt</div>
+              <div class="member-role-tag alert-text">⚠️ Minusstand beachten</div>
+            </div>
+            <div class="member-balance neg">-2,50 €</div>
+          </div>
+
+          <div class="kiosk-member-row">
+            <div class="member-avatar">SW</div>
+            <div class="member-details">
+              <div class="member-name">Sarah Weber</div>
+              <div class="member-role-tag">Mitglied</div>
+            </div>
+            <div class="member-balance pos">22,00 €</div>
+          </div>
+        </div>
+
+        <div class="kiosk-member-actions">
+          <button class="btn btn-kiosk-round">
+            <span class="btn-icon">🍻</span>
+            <span>Runde für Gruppe buchen</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: 1-Tap Drink Grid -->
+      <div class="kiosk-col-drinks">
+        <div class="kiosk-col-title">GETRÄNKE FÜR: <span class="highlight-member">MAX MUSTERMANN</span></div>
+        <div class="kiosk-drinks-grid">
+          <button class="drink-card drink-card-pils">
+            <div class="drink-badge">0.5 L</div>
+            <div class="drink-emoji">🍺</div>
+            <div class="drink-name">Pils vom Fass</div>
+            <div class="drink-price">3,00 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+
+          <button class="drink-card drink-card-radler">
+            <div class="drink-badge">0.5 L</div>
+            <div class="drink-emoji">🍋</div>
+            <div class="drink-name">Radler Naturtrüb</div>
+            <div class="drink-price">3,00 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+
+          <button class="drink-card drink-card-cola">
+            <div class="drink-badge">0.33 L</div>
+            <div class="drink-emoji">🥤</div>
+            <div class="drink-name">Cola / Spezi</div>
+            <div class="drink-price">2,00 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+
+          <button class="drink-card drink-card-water">
+            <div class="drink-badge">0.5 L</div>
+            <div class="drink-emoji">💧</div>
+            <div class="drink-name">Mineralwasser</div>
+            <div class="drink-price">1,50 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+
+          <button class="drink-card drink-card-weizen">
+            <div class="drink-badge">0.5 L</div>
+            <div class="drink-emoji">🌾</div>
+            <div class="drink-name">Hefeweizen</div>
+            <div class="drink-price">3,50 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+
+          <button class="drink-card drink-card-apfelschorle">
+            <div class="drink-badge">0.4 L</div>
+            <div class="drink-emoji">🍏</div>
+            <div class="drink-name">Apfelschorle</div>
+            <div class="drink-price">2,00 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+        </div>
+
+        <div class="kiosk-quick-footer">
+          <button class="btn btn-kiosk-storno">
+            <span class="btn-icon">⚡</span>
+            <span>Letzte Buchung stornieren (Storno)</span>
+          </button>
+          <button class="btn btn-kiosk-evening">
+            <span class="btn-icon">💵</span>
+            <span>Abendabschluss & Barumsatz</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="kiosk-status-bar">
+      <div class="status-indicator">
+        <span class="status-pulse-dot"></span>
+        <span>Status: Online • Event aktiv • Idempotenz-Schutz UUIDv4</span>
+      </div>
+      <div class="status-last-action">
+        Letzte Buchung: 21:15 Uhr • 1x Pils (3,00 €) für Max Mustermann
+      </div>
+    </div>
+  </div>
+</div>

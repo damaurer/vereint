@@ -9,6 +9,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "build:user-guide": "node ../scripts/generate-user-guide.mjs",
     "serve:ssr:webservice": "node dist/webservice/server/server.mjs"
   },
   "private": true,

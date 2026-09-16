@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vereint – Benutzerhandbuch</title>
+  <style>
+    /* ==========================================================================
+   Optimus Print Stylesheet for Vereint Benutzerhandbuch
+   ========================================================================== */
+
+:root {
+  --opt-color-primary: #1e3a8a;
+  --opt-color-primary-light: #eff6ff;
+  --opt-color-primary-dark: #172554;
+  --opt-color-accent: #d97706;
+  --opt-color-accent-light: #fef3c7;
+  --opt-color-success: #16a34a;
+  --opt-color-success-light: #dcfce7;
+  --opt-color-danger: #dc2626;
+  --opt-color-danger-light: #fee2e2;
+  --opt-bg-canvas: #f8fafc;
+  --opt-bg-surface: #ffffff;
+  --opt-border-color: #e2e8f0;
+  --opt-border-dark: #cbd5e1;
+  --opt-text-main: #0f172a;
+  --opt-text-muted: #64748b;
+  --opt-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --opt-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --opt-radius-sm: 4px;
+  --opt-radius-md: 8px;
+  --opt-radius-lg: 12px;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 18mm 14mm 18mm 14mm;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: var(--opt-text-main) !important;
+    font-size: 9.5pt;
+    line-height: 1.5;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+  .avoid-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--opt-font-sans);
+  color: var(--opt-text-main);
+  background-color: var(--opt-bg-canvas);
+  line-height: 1.55;
+  font-size: 10pt;
+}
+
+.document-container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #ffffff;
+}
+
+/* ==========================================================================
+   Cover Sheet / Deckblatt
+   ========================================================================== */
+.cover-page {
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 20px;
+  border-bottom: 3px solid var(--opt-color-primary);
+  page-break-after: always;
+  break-after: page;
+}
+
+.cover-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cover-brand-icon {
+  font-size: 42pt;
+}
+
+.cover-brand-title {
+  font-size: 28pt;
+  font-weight: 800;
+  color: var(--opt-color-primary);
+  letter-spacing: -0.5px;
+}
+
+.cover-brand-sub {
+  font-size: 11pt;
+  color: var(--opt-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+.cover-body {
+  margin: 60px 0;
+}
+
+.cover-doc-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  background: var(--opt-color-primary-light);
+  color: var(--opt-color-primary);
+  font-weight: 700;
+  font-size: 10pt;
+  border-radius: 20px;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cover-title {
+  font-size: 32pt;
+  font-weight: 800;
+  color: var(--opt-text-main);
+  line-height: 1.15;
+  margin-bottom: 18px;
+}
+
+.cover-subtitle {
+  font-size: 13pt;
+  color: var(--opt-text-muted);
+  max-width: 650px;
+  line-height: 1.6;
+}
+
+.cover-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 20px;
+  background: var(--opt-bg-canvas);
+  border: 1px solid var(--opt-border-color);
+  border-radius: var(--opt-radius-md);
+}
+
+.cover-meta-item .meta-label {
+  font-size: 8pt;
+  text-transform: uppercase;
+  color: var(--opt-text-muted);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.cover-meta-item .meta-value {
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--opt-color-primary);
+  margin-top: 2px;
+}
+
+.cover-footer {
+  font-size: 8.5pt;
+  color: var(--opt-text-muted);
+  border-top: 1px solid var(--opt-border-color);
+  padding-top: 16px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ==========================================================================
+   Typography & Sections
+   ========================================================================== */
+h1, h2, h3, h4 {
+  color: var(--opt-text-main);
+  font-weight: 700;
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+h1 {
+  font-size: 18pt;
+  color: var(--opt-color-primary);
+  margin-top: 28px;
+  margin-bottom: 12px;
+  border-bottom: 2px solid var(--opt-border-color);
+  padding-bottom: 6px;
+}
+
+h2 {
+  font-size: 14pt;
+  margin-top: 22px;
+  margin-bottom: 10px;
+  color: var(--opt-color-primary-dark);
+}
+
+h3 {
+  font-size: 11.5pt;
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+
+h4 {
+  font-size: 10pt;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+
+p {
+  margin-bottom: 10px;
+}
+
+ul, ol {
+  margin-left: 20px;
+  margin-bottom: 12px;
+}
+
+li {
+  margin-bottom: 4px;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--opt-border-color);
+  margin: 20px 0;
+}
+
+/* ==========================================================================
+   Callout Boxes & Badges
+   ========================================================================== */
+.callout {
+  padding: 12px 16px;
+  border-radius: var(--opt-radius-md);
+  margin: 14px 0;
+  font-size: 9pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.callout-info {
+  background: var(--opt-color-primary-light);
+  border-left: 4px solid var(--opt-color-primary);
+  color: #1e3a8a;
+}
+
+.callout-success {
+  background: var(--opt-color-success-light);
+  border-left: 4px solid var(--opt-color-success);
+  color: #14532d;
+}
+
+.callout-warning {
+  background: var(--opt-color-accent-light);
+  border-left: 4px solid var(--opt-color-accent);
+  color: #78350f;
+}
+
+.callout-danger {
+  background: var(--opt-color-danger-light);
+  border-left: 4px solid var(--opt-color-danger);
+  color: #7f1d1d;
+}
+
+.callout-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 9pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+table th {
+  background: #f1f5f9;
+  color: var(--opt-text-main);
+  font-weight: 700;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid var(--opt-border-color);
+  font-size: 8.5pt;
+  text-transform: uppercase;
+}
+
+table td {
+  padding: 8px 10px;
+  border: 1px solid var(--opt-border-color);
+  vertical-align: top;
+}
+
+table tr:nth-child(even) td {
+  background: #f8fafc;
+}
+
+/* ==========================================================================
+   Code Blocks & Preformatted text
+   ========================================================================== */
+pre, code {
+  font-family: var(--opt-font-mono);
+}
+
+code {
+  background: #f1f5f9;
+  padding: 2px 5px;
+  border-radius: var(--opt-radius-sm);
+  font-size: 8.5pt;
+  color: #0f172a;
+}
+
+pre {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 12px 14px;
+  border-radius: var(--opt-radius-md);
+  font-size: 8pt;
+  line-height: 1.4;
+  overflow-x: auto;
+  margin: 12px 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* ==========================================================================
+   Optimus UI Mockup Styles
+   ========================================================================== */
+.mockup-container {
+  margin: 18px 0 24px 0;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.mockup-window {
+  border: 1px solid #cbd5e1;
+  border-radius: var(--opt-radius-lg);
+  background: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.mockup-header {
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 8pt;
+}
+
+.mockup-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.mockup-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  display: inline-block;
+}
+
+.mockup-dots span:nth-child(1) { background: #f87171; }
+.mockup-dots span:nth-child(2) { background: #fbbf24; }
+.mockup-dots span:nth-child(3) { background: #34d399; }
+
+.mockup-title {
+  font-weight: 700;
+  color: var(--opt-text-main);
+}
+
+.mockup-badge {
+  background: #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 7.5pt;
+  color: var(--opt-text-muted);
+}
+
+.mockup-body {
+  padding: 16px;
+  background: var(--opt-bg-canvas);
+}
+
+/* UI Elements inside mockups */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 8.5pt;
+  font-weight: 600;
+  border-radius: var(--opt-radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.btn-primary { background: var(--opt-color-primary); color: #ffffff; }
+.btn-success-light { background: var(--opt-color-success-light); color: var(--opt-color-success); border-color: #86efac; }
+.btn-outline { background: #ffffff; border-color: var(--opt-border-dark); color: var(--opt-text-main); }
+.btn-secondary { background: #e2e8f0; color: var(--opt-text-main); }
+.btn-block { width: 100%; }
+.btn-sm { padding: 4px 8px; font-size: 7.5pt; }
+
+.form-group { margin-bottom: 12px; }
+.form-label { display: block; font-size: 8pt; font-weight: 600; margin-bottom: 4px; color: var(--opt-text-main); }
+.form-input {
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 8.5pt;
+  border: 1px solid var(--opt-border-color);
+  border-radius: var(--opt-radius-md);
+  background: #ffffff;
+}
+
+.input-with-icon { position: relative; }
+.input-with-icon .input-icon { position: absolute; left: 8px; top: 7px; font-size: 9pt; }
+.input-with-icon .form-input { padding-left: 28px; }
+
+.form-helper-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 7.5pt;
+  margin-top: 4px;
+  color: var(--opt-text-muted);
+}
+
+/* Auth Card Mockup */
+.mockup-auth-layout { display: flex; justify-content: center; }
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: var(--opt-radius-lg);
+  border: 1px solid var(--opt-border-color);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.auth-logo { text-align: center; margin-bottom: 16px; }
+.auth-icon { font-size: 24pt; }
+.auth-logo h2 { font-size: 14pt; color: var(--opt-color-primary); margin: 2px 0; }
+.auth-subtitle { font-size: 8pt; color: var(--opt-text-muted); }
+.auth-divider { text-align: center; margin: 14px 0 10px 0; position: relative; }
+.auth-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--opt-border-color);
+  z-index: 1;
+}
+.auth-divider span {
+  position: relative;
+  z-index: 2;
+  background: #ffffff;
+  padding: 0 8px;
+  font-size: 7.5pt;
+  color: var(--opt-text-muted);
+}
+
+.demo-role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.demo-role-card {
+  padding: 8px;
+  border: 1px solid var(--opt-border-color);
+  border-radius: var(--opt-radius-md);
+  background: #f8fafc;
+}
+.demo-role-card.active {
+  border-color: var(--opt-color-primary);
+  background: var(--opt-color-primary-light);
+}
+.role-badge {
+  display: inline-block;
+  font-size: 6.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.role-member { background: #dbeafe; color: #1e40af; }
+.role-board { background: #fef3c7; color: #92400e; }
+.role-tablet { background: #dcfce7; color: #166534; }
+.role-admin { background: #fee2e2; color: #991b1b; }
+.demo-name { font-size: 8pt; font-weight: 700; margin-top: 3px; }
+.demo-desc { font-size: 6.5pt; color: var(--opt-text-muted); }
+
+/* Dashboard Mockup */
+.mockup-dashboard-layout { display: flex; flex-direction: column; gap: 14px; }
+.hero-greeting {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: var(--opt-radius-lg);
+  border: 1px solid var(--opt-border-color);
+}
+.hero-avatar { position: relative; }
+.avatar-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--opt-color-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11pt;
+}
+.avatar-status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+.avatar-status-dot.online { background: var(--opt-color-success); }
+.hero-text { flex: 1; }
+.hero-welcome { font-size: 7.5pt; color: var(--opt-text-muted); }
+.hero-name { font-size: 13pt; margin: 0; }
+.hero-role-chips { display: flex; gap: 6px; margin-top: 2px; }
+.chip { font-size: 7pt; font-weight: 600; padding: 1px 6px; border-radius: 12px; }
+.chip-primary { background: var(--opt-color-primary-light); color: var(--opt-color-primary); }
+.chip-neutral { background: #f1f5f9; color: var(--opt-text-muted); }
+
+.balance-card {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: var(--opt-radius-lg);
+  border: 1px solid var(--opt-border-color);
+}
+.balance-card-positive { border-left: 5px solid var(--opt-color-success); }
+.balance-card-negative { border-left: 5px solid var(--opt-color-danger); }
+.balance-card-header { display: flex; justify-content: space-between; align-items: center; }
+.balance-title-group { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 9pt; }
+.status-badge { font-size: 7pt; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+.status-badge-success { background: var(--opt-color-success-light); color: var(--opt-color-success); }
+.status-badge-active { background: #dbeafe; color: #1e40af; }
+.balance-amount-row { margin: 8px 0 4px 0; display: flex; align-items: baseline; gap: 4px; }
+.balance-currency { font-size: 14pt; font-weight: 700; color: var(--opt-text-muted); }
+.balance-val { font-size: 24pt; font-weight: 800; color: var(--opt-color-success); }
+.balance-meta { font-size: 7.5pt; color: var(--opt-text-muted); margin-bottom: 12px; }
+.balance-actions { display: flex; gap: 10px; }
+
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.card { background: #ffffff; padding: 12px; border-radius: var(--opt-radius-md); border: 1px solid var(--opt-border-color); }
+.action-card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.action-card h3 { font-size: 9pt; margin: 0; }
+.action-card p { font-size: 7.5pt; color: var(--opt-text-muted); margin-bottom: 8px; }
+.event-preview-header { display: flex; justify-content: space-between; font-size: 7pt; margin-bottom: 4px; }
+.event-title { font-size: 9.5pt; margin: 0 0 2px 0; }
+.event-loc { font-size: 7.5pt; color: var(--opt-text-muted); margin-bottom: 6px; }
+.event-rsvp-status { display: flex; justify-content: space-between; font-size: 7.5pt; font-weight: 600; }
+.rsvp-indicator.confirmed { color: var(--opt-color-success); }
+
+/* Kiosk Mode Mockup */
+.mockup-kiosk-header { background: #0f172a; color: #ffffff; }
+.mockup-kiosk-brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 8.5pt; }
+.mockup-kiosk-event-pill { background: #1e3a8a; color: #93c5fd; padding: 2px 8px; border-radius: 12px; font-size: 7pt; font-weight: 700; }
+.mockup-kiosk-user-action { display: flex; align-items: center; gap: 8px; font-size: 7pt; }
+.btn-kiosk-logout { background: #334155; color: #ffffff; font-size: 7pt; padding: 3px 6px; }
+
+.kiosk-search-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.kiosk-search-input-wrap { position: relative; width: 60%; }
+.kiosk-search-input-wrap .search-icon { position: absolute; left: 8px; top: 6px; font-size: 8pt; }
+.kiosk-search-input { width: 100%; padding: 5px 24px 5px 26px; font-size: 8.5pt; border: 1px solid var(--opt-border-color); border-radius: var(--opt-radius-md); background: #ffffff; }
+.search-clear { position: absolute; right: 8px; top: 6px; font-size: 8pt; color: var(--opt-text-muted); }
+.kiosk-filter-chips { display: flex; gap: 6px; }
+.kiosk-chip { font-size: 7pt; padding: 3px 8px; border-radius: 12px; background: #e2e8f0; font-weight: 600; color: var(--opt-text-muted); }
+.kiosk-chip.active { background: var(--opt-color-primary); color: #ffffff; }
+
+.kiosk-main-split { display: grid; grid-template-columns: 45% 55%; gap: 12px; }
+.kiosk-col-title { font-size: 7.5pt; font-weight: 800; color: var(--opt-text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+.highlight-member { color: var(--opt-color-primary); }
+
+.kiosk-member-list { display: flex; flex-direction: column; gap: 6px; background: #ffffff; padding: 6px; border-radius: var(--opt-radius-md); border: 1px solid var(--opt-border-color); }
+.kiosk-member-row { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--opt-radius-sm); border: 1px solid transparent; background: #f8fafc; }
+.kiosk-member-row.selected { background: var(--opt-color-primary-light); border-color: var(--opt-color-primary); }
+.kiosk-member-row.warning-row { background: #fff1f2; border-color: #fecdd3; }
+.member-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--opt-color-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: 700; }
+.member-avatar.danger { background: var(--opt-color-danger); }
+.member-details { flex: 1; }
+.member-name { font-size: 8pt; font-weight: 700; }
+.member-role-tag { font-size: 6.5pt; color: var(--opt-text-muted); }
+.alert-text { color: var(--opt-color-danger); font-weight: 700; }
+.member-balance { font-size: 8.5pt; font-weight: 800; }
+.member-balance.pos { color: var(--opt-color-success); }
+.member-balance.neg { color: var(--opt-color-danger); }
+.member-select-arrow { font-size: 7.5pt; color: var(--opt-color-primary); }
+
+.kiosk-member-actions { margin-top: 8px; }
+.btn-kiosk-round { width: 100%; background: var(--opt-color-accent); color: #ffffff; padding: 8px; font-weight: 700; font-size: 8pt; }
+
+.kiosk-drinks-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.drink-card {
+  background: #ffffff;
+  border: 1px solid var(--opt-border-color);
+  border-radius: var(--opt-radius-md);
+  padding: 8px 4px;
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.drink-badge { position: absolute; top: 4px; right: 4px; font-size: 6pt; background: #e2e8f0; padding: 1px 4px; border-radius: 4px; font-weight: 700; }
+.drink-emoji { font-size: 16pt; margin: 2px 0; }
+.drink-name { font-size: 7.5pt; font-weight: 700; }
+.drink-price { font-size: 8.5pt; font-weight: 800; color: var(--opt-color-primary); }
+.drink-tap-hint { font-size: 6pt; background: var(--opt-color-primary-light); color: var(--opt-color-primary); padding: 1px 4px; border-radius: 4px; font-weight: 700; margin-top: 2px; }
+
+.kiosk-quick-footer { display: flex; gap: 8px; margin-top: 8px; }
+.btn-kiosk-storno { flex: 1; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; font-size: 7.5pt; font-weight: 700; padding: 6px; }
+.btn-kiosk-evening { flex: 1; background: #f1f5f9; color: var(--opt-text-main); border: 1px solid var(--opt-border-dark); font-size: 7.5pt; font-weight: 700; padding: 6px; }
+
+.kiosk-status-bar { display: flex; justify-content: space-between; font-size: 7pt; color: var(--opt-text-muted); margin-top: 10px; border-top: 1px solid var(--opt-border-color); padding-top: 6px; }
+.status-indicator { display: flex; align-items: center; gap: 4px; }
+.status-pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--opt-color-success); display: inline-block; }
+
+/* Events & Crypto Guest Token Mockup */
+.mockup-event-layout { display: flex; flex-direction: column; gap: 14px; }
+.event-hero-card { background: #ffffff; padding: 14px; border-radius: var(--opt-radius-lg); border: 1px solid var(--opt-border-color); }
+.event-hero-meta { display: flex; gap: 8px; margin-bottom: 6px; }
+.event-time-badge, .event-loc-badge { font-size: 7.5pt; background: #f1f5f9; padding: 2px 6px; border-radius: 6px; color: var(--opt-text-muted); }
+.event-main-title { font-size: 12pt; margin: 0 0 4px 0; }
+.event-desc { font-size: 8pt; color: var(--opt-text-muted); margin-bottom: 10px; }
+.event-rsvp-bar { display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 8px 12px; border-radius: var(--opt-radius-md); border: 1px solid var(--opt-border-color); }
+.rsvp-label { font-size: 7.5pt; font-weight: 700; }
+.rsvp-btn-group { display: flex; gap: 4px; }
+.btn-rsvp { font-size: 7pt; padding: 4px 8px; background: #ffffff; border: 1px solid var(--opt-border-color); }
+.btn-rsvp.active-yes { background: var(--opt-color-success); color: #ffffff; border-color: var(--opt-color-success); font-weight: 700; }
+.btn-invite-trigger { margin-left: auto; font-size: 7.5pt; padding: 5px 10px; }
+
+.modal-simulation-wrap { background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: var(--opt-radius-lg); }
+.modal-card { background: #ffffff; border-radius: var(--opt-radius-md); padding: 14px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--opt-border-color); padding-bottom: 8px; margin-bottom: 10px; }
+.modal-title-wrap { display: flex; align-items: center; gap: 6px; }
+.modal-title-wrap h3 { font-size: 9.5pt; margin: 0; color: var(--opt-color-primary); }
+.modal-close-btn { font-size: 9pt; color: var(--opt-text-muted); cursor: pointer; }
+.modal-info-text { font-size: 7.5pt; color: var(--opt-text-muted); margin-bottom: 10px; }
+.token-link-box { display: flex; gap: 6px; margin: 4px 0; }
+.token-input { flex: 1; font-family: var(--opt-font-mono); font-size: 7.5pt; padding: 5px 8px; background: #f8fafc; border: 1px solid var(--opt-border-color); border-radius: var(--opt-radius-sm); }
+.btn-copy { font-size: 7.5pt; background: var(--opt-color-primary-light); color: var(--opt-color-primary); border: 1px solid #bfdbfe; font-weight: 700; }
+.token-security-note { font-size: 6.5pt; color: var(--opt-text-muted); margin-top: 4px; }
+.token-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f8fafc; padding: 8px; border-radius: var(--opt-radius-sm); margin: 10px 0; }
+.meta-title { display: block; font-size: 6.5pt; color: var(--opt-text-muted); font-weight: 700; }
+.meta-val { font-size: 7.5pt; font-weight: 700; color: var(--opt-text-main); }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--opt-border-color); padding-top: 8px; }
+.btn-share { background: var(--opt-color-success); color: #ffffff; font-size: 7.5pt; font-weight: 700; }
+
+/* Moments Mockup */
+.mockup-moments-layout { display: flex; flex-direction: column; gap: 12px; }
+.moment-active-card { background: #ffffff; padding: 12px; border-radius: var(--opt-radius-lg); border: 1px solid var(--opt-border-color); border-left: 5px solid var(--opt-color-accent); }
+.moment-header-row { display: flex; justify-content: space-between; align-items: flex-start; }
+.moment-title-wrap { display: flex; gap: 8px; }
+.moment-icon { font-size: 18pt; }
+.moment-name { font-size: 10.5pt; margin: 0; }
+.moment-subtitle { font-size: 7pt; color: var(--opt-text-muted); }
+.moment-countdown-badge { display: flex; align-items: center; gap: 4px; background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 10px; font-size: 7pt; font-weight: 700; }
+.pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--opt-color-accent); }
+
+.moment-reaction-panel { margin-top: 10px; background: #f8fafc; padding: 8px; border-radius: var(--opt-radius-md); }
+.panel-label { font-size: 7pt; font-weight: 700; margin-bottom: 6px; color: var(--opt-text-muted); }
+.reaction-buttons-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.reaction-btn { display: flex; flex-direction: column; align-items: center; padding: 4px; background: #ffffff; border: 1px solid var(--opt-border-color); border-radius: var(--opt-radius-sm); }
+.reaction-btn.active-react { border-color: var(--opt-color-primary); background: var(--opt-color-primary-light); }
+.react-emoji { font-size: 12pt; }
+.react-count { font-size: 6.5pt; font-weight: 800; color: var(--opt-color-primary); }
+.react-label { font-size: 5.5pt; color: var(--opt-text-muted); }
+.moment-input-row { display: flex; gap: 6px; margin-top: 8px; }
+.moment-status-input { flex: 1; font-size: 7.5pt; padding: 5px 8px; border: 1px solid var(--opt-border-color); border-radius: var(--opt-radius-sm); }
+.btn-send-moment { font-size: 7.5pt; padding: 5px 10px; }
+
+.moment-columns-grid { display: grid; grid-template-columns: 55% 45%; gap: 10px; }
+.moment-feed-card, .moment-map-card { background: #ffffff; padding: 10px; border-radius: var(--opt-radius-md); border: 1px solid var(--opt-border-color); }
+.feed-header, .map-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.feed-header h3, .map-header h3 { font-size: 8.5pt; margin: 0; }
+.feed-live-indicator { font-size: 6.5pt; color: var(--opt-color-danger); font-weight: 700; }
+.map-status { font-size: 6.5pt; background: #dbeafe; color: #1e40af; padding: 1px 5px; border-radius: 6px; font-weight: 700; }
+
+.timeline-items-list { display: flex; flex-direction: column; gap: 6px; }
+.timeline-item { display: flex; gap: 6px; font-size: 7pt; }
+.item-avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--opt-color-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 6.5pt; font-weight: 700; }
+.item-avatar.guest-av { background: var(--opt-color-accent); }
+.item-content { flex: 1; }
+.item-top { display: flex; gap: 4px; align-items: center; }
+.item-user { font-weight: 700; }
+.item-role { font-size: 5.5pt; background: #e2e8f0; padding: 0 4px; border-radius: 4px; }
+.item-role-guest { font-size: 5.5pt; background: #fef3c7; color: #92400e; padding: 0 4px; border-radius: 4px; font-weight: 700; }
+.item-time { font-size: 5.5pt; color: var(--opt-text-muted); margin-left: auto; }
+.item-body { margin-top: 1px; }
+.item-react-badge { font-weight: 700; color: var(--opt-color-primary); margin-right: 4px; }
+
+.map-canvas-mockup { height: 110px; background: #e2e8f0; border-radius: var(--opt-radius-sm); position: relative; overflow: hidden; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 10px 10px; }
+.map-pin { position: absolute; font-size: 9pt; cursor: pointer; }
+.pin-badge { font-size: 5.5pt; background: var(--opt-color-primary); color: #fff; padding: 1px 3px; border-radius: 50%; font-weight: 700; }
+.map-legend { position: absolute; bottom: 4px; left: 6px; font-size: 5.5pt; color: var(--opt-text-muted); }
+
+/* Chat & Push Mockup */
+.mockup-chat-layout { display: flex; flex-direction: column; gap: 10px; }
+.push-optin-banner { display: flex; justify-content: space-between; align-items: center; background: var(--opt-color-primary-light); border: 1px solid #bfdbfe; padding: 8px 12px; border-radius: var(--opt-radius-md); }
+.push-banner-content { display: flex; align-items: center; gap: 8px; font-size: 7.5pt; }
+.push-bell-icon { font-size: 14pt; }
+.push-banner-content p { font-size: 6.5pt; color: var(--opt-text-muted); margin: 0; }
+.btn-push-activate { font-size: 7pt; background: var(--opt-color-primary); color: #fff; padding: 4px 8px; font-weight: 700; }
+
+.chat-container-card { background: #ffffff; border: 1px solid var(--opt-border-color); border-radius: var(--opt-radius-lg); overflow: hidden; }
+.chat-header-bar { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-bottom: 1px solid var(--opt-border-color); padding: 8px 12px; }
+.chat-title-group { display: flex; align-items: center; gap: 6px; }
+.chat-title-group h3 { font-size: 8.5pt; margin: 0; }
+.chat-members-count { font-size: 6.5pt; color: var(--opt-text-muted); }
+.chat-messages-area { padding: 10px; display: flex; flex-direction: column; gap: 8px; max-height: 140px; background: #f8fafc; }
+.chat-msg { display: flex; gap: 6px; }
+.msg-incoming { align-self: flex-start; }
+.msg-outgoing { align-self: flex-end; }
+.msg-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--opt-color-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 7pt; font-weight: 700; }
+.guest-avatar { background: var(--opt-color-accent); }
+.msg-bubble-wrap { max-width: 80%; }
+.msg-sender-info { display: flex; align-items: center; gap: 4px; font-size: 6pt; margin-bottom: 2px; }
+.badge-role-board { background: #fef3c7; color: #92400e; padding: 0 3px; border-radius: 3px; font-weight: 700; }
+.badge-role-guest { background: #f1f5f9; color: var(--opt-text-muted); padding: 0 3px; border-radius: 3px; font-weight: 700; }
+.msg-timestamp { color: var(--opt-text-muted); }
+.msg-bubble { background: #ffffff; border: 1px solid var(--opt-border-color); padding: 6px 8px; border-radius: 8px; font-size: 7.5pt; }
+.guest-bubble { border-left: 3px solid var(--opt-color-accent); }
+.my-bubble { background: var(--opt-color-primary); color: #ffffff; border: none; }
+.chat-input-bar { display: flex; gap: 6px; padding: 6px 10px; background: #ffffff; border-top: 1px solid var(--opt-border-color); }
+.chat-attach-btn { background: #f1f5f9; border: 1px solid var(--opt-border-color); border-radius: var(--opt-radius-sm); padding: 2px 6px; font-size: 9pt; }
+.chat-text-input { flex: 1; font-size: 7.5pt; border: 1px solid var(--opt-border-color); border-radius: var(--opt-radius-sm); padding: 4px 8px; }
+.btn-chat-send { font-size: 7.5pt; padding: 4px 10px; }
+
+/* Analytics Mockup */
+.mockup-analytics-layout { display: flex; flex-direction: column; gap: 10px; }
+.analytics-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.kpi-card { background: #ffffff; padding: 8px; border-radius: var(--opt-radius-md); border: 1px solid var(--opt-border-color); }
+.kpi-label { font-size: 6.5pt; color: var(--opt-text-muted); font-weight: 700; text-transform: uppercase; }
+.kpi-value { font-size: 13pt; font-weight: 800; color: var(--opt-color-primary); margin: 2px 0; }
+.kpi-trend { font-size: 6pt; font-weight: 700; }
+.kpi-trend.positive { color: var(--opt-color-success); }
+.kpi-trend.neutral { color: var(--opt-text-muted); }
+.kpi-sub { font-size: 6pt; color: var(--opt-text-muted); }
+
+.analytics-charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.analytics-card { background: #ffffff; padding: 10px; border-radius: var(--opt-radius-md); border: 1px solid var(--opt-border-color); }
+.analytics-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.analytics-card-header h3 { font-size: 8pt; margin: 0; }
+.badge-tag { font-size: 6pt; background: #f1f5f9; padding: 1px 5px; border-radius: 4px; color: var(--opt-text-muted); font-weight: 600; }
+
+.ranking-list { display: flex; flex-direction: column; gap: 4px; }
+.ranking-row { display: flex; align-items: center; gap: 6px; font-size: 7pt; }
+.rank-pos { font-weight: 700; width: 24px; }
+.rank-name { width: 75px; font-weight: 600; }
+.rank-bar-wrap { flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+.rank-bar { height: 100%; background: var(--opt-color-primary); border-radius: 3px; }
+.rank-val { font-weight: 700; width: 35px; text-align: right; }
+
+.spending-bars-chart { display: flex; justify-content: space-around; align-items: flex-end; height: 65px; padding-top: 10px; }
+.chart-col { display: flex; flex-direction: column; align-items: center; width: 35px; height: 100%; justify-content: flex-end; }
+.bar-fill { width: 14px; background: #93c5fd; border-radius: 3px 3px 0 0; }
+.bar-fill.active-bar { background: var(--opt-color-primary); }
+.bar-label { font-size: 6pt; color: var(--opt-text-muted); margin-top: 2px; }
+.bar-amount { font-size: 5.5pt; font-weight: 700; }
+
+.round-givers-list { display: flex; flex-direction: column; gap: 4px; }
+.round-giver-item { display: flex; align-items: center; gap: 6px; font-size: 7pt; padding: 3px 6px; background: #f8fafc; border-radius: 4px; }
+.giver-avatar { width: 18px; height: 18px; border-radius: 50%; background: var(--opt-color-accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 5.5pt; font-weight: 700; }
+.giver-name { font-weight: 600; flex: 1; }
+.giver-badge { font-size: 6pt; font-weight: 700; color: #92400e; }
+
+.drink-share-list { display: flex; flex-direction: column; gap: 4px; }
+.drink-share-row { display: flex; align-items: center; gap: 6px; font-size: 6.5pt; }
+.drink-title { width: 110px; font-weight: 600; }
+.share-bar-wrap { flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+.share-bar { height: 100%; border-radius: 3px; }
+.share-pct { font-weight: 700; width: 28px; text-align: right; }
+
+  </style>
+</head>
+<body>
+  <div class="document-container">
+    <!-- Deckblatt / Cover Page -->
+    <div class="cover-page">
+      <div class="cover-header">
+        <span class="cover-brand-icon">🍻</span>
+        <div>
+          <div class="cover-brand-title">VEREINT</div>
+          <div class="cover-brand-sub">Plattform für Vereinswesen & Digitale Strichliste</div>
+        </div>
+      </div>
+
+      <div class="cover-body">
+        <div class="cover-doc-badge">Offizielle Dokumentation</div>
+        <h1 class="cover-title">Benutzerhandbuch & Leitfaden</h1>
+        <p class="cover-subtitle">
+          Vollständige Anleitung für Mitglieder, Vorstände, Thekenbediener und Gäste mit detaillierten UI-Mockups der Optimus-Benutzeroberflächen.
+        </p>
+      </div>
+
+      <div class="cover-meta-grid">
+        <div class="cover-meta-item">
+          <div class="meta-label">Zielgruppe</div>
+          <div class="meta-value">Alle Vereinsrollen</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="meta-label">Version & Stand</div>
+          <div class="meta-value">Release 2026.1 (Sept 2026)</div>
+        </div>
+        <div class="cover-meta-item">
+          <div class="meta-label">Design-System</div>
+          <div class="meta-value">Optimus UI Standard</div>
+        </div>
+      </div>
+
+      <div class="cover-footer">
+        <span>Vereint Plattform • Revisionssichere Vereinsverwaltung</span>
+        <span>Dokumenten-Klassifizierung: Öffentlich</span>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="manual-content">
+      <h1>🍻 Vereint – Benutzerhandbuch</h1>
+<p>Willkommen beim offiziellen Benutzerhandbuch der Vereinsplattform <strong>Vereint</strong>. Dieses Handbuch bietet allen Mitgliedern, Vorständen, Thekenbedienern und Gästen eine strukturierte, praxisnahe und lückenlose Anleitung zur optimalen Nutzung aller Funktionen.</p>
+<hr />
+<h2>📑 Inhaltsverzeichnis</h2>
+<ol>
+<li><strong>Kapitel 1: Einführung &amp; Erste Schritte</strong></li>
+</ol>
+<ul>
+<li>1.1 Zweck &amp; Systemübersicht</li>
+<li>1.2 Rollen- und Berechtigungskonzept</li>
+<li>1.3 Anmeldung &amp; Authentifizierung (Keycloak OIDC)</li>
+<li>1.4 Mobile Nutzung als Progressive Web App (PWA)</li>
+</ul>
+<ol>
+<li><strong>Kapitel 2: Mein Vereinskonto &amp; Kassenbuch</strong></li>
+</ol>
+<ul>
+<li>2.1 Das persönliche Dashboard &amp; die BalanceCard</li>
+<li>2.2 Guthaben aufladen (Einzahlungen)</li>
+<li>2.3 Buchungshistorie &amp; digitaler Kontoauszug</li>
+<li>2.4 Barcode-Kauf &amp; PWA-Selbstbedienung</li>
+<li>2.5 Revisionssicherheit &amp; Append-Only-Prinzip</li>
+</ul>
+<ol>
+<li><strong>Kapitel 3: Theken-Strichliste (Kiosk-Modus)</strong></li>
+</ol>
+<ul>
+<li>3.1 Touch-Oberfläche im Thekenbetrieb</li>
+<li>3.2 1-Tap-Getränkebuchung in der Praxis</li>
+<li>3.3 Rundenabrechnung für Gruppen</li>
+<li>3.4 Abendabschluss &amp; Bareinnahmen</li>
+<li>3.5 Fehlbuchungen &amp; Sofortstornierung</li>
+</ul>
+<ol>
+<li><strong>Kapitel 4: Veranstaltungen &amp; Gast-Einladungen</strong></li>
+</ol>
+<ul>
+<li>4.1 Event-Übersicht &amp; Lebenszyklus</li>
+<li>4.2 Zu- und Absagen (RSVP) &amp; Teilnehmerlisten</li>
+<li>4.3 Krypto-Gasttokens &amp; Einladungslinks</li>
+<li>4.4 Gast-Teilnahme ohne Vereinsbenutzerkonto</li>
+</ul>
+<ol>
+<li><strong>Kapitel 5: Moments &amp; Rituale (Gemeinschaftsmomente)</strong></li>
+</ol>
+<ul>
+<li>5.1 Was sind Moments? (Anstoßen, Jubeln, Gebet, Check-in)</li>
+<li>5.2 Multi-Status-Reaktionen in Echtzeit</li>
+<li>5.3 Die 24-Stunden-Moment-Konversation</li>
+<li>5.4 Interaktive Weltkarte &amp; GeoJSON-Standortfreigabe</li>
+<li>5.5 Archivierung im Eventverlauf</li>
+</ul>
+<ol>
+<li><strong>Kapitel 6: Kommunikation &amp; Push-Benachrichtigungen</strong></li>
+</ol>
+<ul>
+<li>6.1 Vereinskanäle, Event-Chat &amp; Direktnachrichten</li>
+<li>6.2 Gast-Chat mit temporärem Zugang</li>
+<li>6.3 Web-Push-Aktivierung (VAPID) auf Smartphones &amp; PC</li>
+<li>6.4 Vorstands-Broadcasts &amp; Eilmeldungen</li>
+</ul>
+<ol>
+<li><strong>Kapitel 7: Statistiken &amp; Eber-Analytics</strong></li>
+</ol>
+<ul>
+<li>7.1 Persönliche Kennzahlen &amp; Liter-Ranking</li>
+<li>7.2 Ausgabentrends &amp; Monatsvergleiche</li>
+<li>7.3 Top-Rundengeber &amp; Getränkeranglisten</li>
+<li>7.4 Datenschutz &amp; Clientseitige Datenaggregation</li>
+</ul>
+<ol>
+<li><strong>Kapitel 8: Häufige Fragen &amp; Fehlerbehebung (FAQ)</strong></li>
+</ol>
+<ul>
+<li>8.1 Idempotenz &amp; Netzausfälle an der Theke</li>
+<li>8.2 Negativer Kontostand &amp; Guthabenauszahlung</li>
+<li>8.3 Login-Probleme &amp; Passwort-Reset</li>
+<li>8.4 Offline-Verhalten &amp; Service-Worker</li>
+</ul>
+<hr />
+<h2 class="chapter-title">🏛️ Kapitel 1: Einführung &amp; Erste Schritte</h2>
+<div class="mockup-container"><div class="mockup-window">
+  <div class="mockup-header">
+    <div class="mockup-dots"><span></span><span></span><span></span></div>
+    <div class="mockup-title">Vereint – Authentifizierung & Single Sign-On (Keycloak OIDC)</div>
+    <div class="mockup-badge">https://vereint.mein-verein.de/login</div>
+  </div>
+  <div class="mockup-body mockup-auth-layout">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="auth-icon">🍻</span>
+        <h2>VEREINT</h2>
+        <p class="auth-subtitle">Moderne Vereinsverwaltung & Strichliste</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-username">Benutzername oder E-Mail</label>
+        <div class="input-with-icon">
+          <span class="input-icon">👤</span>
+          <input type="text" id="login-username" class="form-input" value="max.mustermann@vereint.de" readonly />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-password">Passwort</label>
+        <div class="input-with-icon">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="login-password" class="form-input" value="••••••••••••" readonly />
+        </div>
+        <div class="form-helper-row">
+          <label class="remember-me" for="login-remember"><input type="checkbox" id="login-remember" checked disabled /> Angemeldet bleiben</label>
+          <a href="#" class="forgot-link">Passwort vergessen?</a>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block">
+        <span>Mit Vereint ID anmelden</span>
+        <span class="btn-arrow">→</span>
+      </button>
+
+      <div class="auth-divider"><span>Schnellauswahl für Demo-Umgebungen</span></div>
+
+      <div class="demo-role-grid">
+        <div class="demo-role-card active">
+          <div class="role-badge role-member">member</div>
+          <div class="demo-name">Max (Mitglied)</div>
+          <div class="demo-desc">Kassenstand, RSVP, Chat</div>
+        </div>
+        <div class="demo-role-card">
+          <div class="role-badge role-board">board</div>
+          <div class="demo-name">Erika (Vorstand)</div>
+          <div class="demo-desc">Events, Topup, Broadcast</div>
+        </div>
+        <div class="demo-role-card">
+          <div class="role-badge role-tablet">tabletRecorder</div>
+          <div class="demo-name">Theken-Tablet</div>
+          <div class="demo-desc">1-Tap Theken-Kiosk</div>
+        </div>
+        <div class="demo-role-card">
+          <div class="role-badge role-admin">admin</div>
+          <div class="demo-name">Admin</div>
+          <div class="demo-desc">Vollzugriff & Rollen</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<h3>1.1 Zweck &amp; Systemübersicht</h3>
+<p><strong>Vereint</strong> ist eine ganzheitliche Web- und PWA-Plattform, die alle organisatorischen und geselligen Aspekte des Vereinsalltags bündelt. Das System verbindet ein finanzamtkonformes Doppel-Buchungsjournal mit einer extrem schnellen Touch-Strichliste für die Vereinstheke, einem flexiblen Eventmanagement mit Gästezugängen sowie interaktiven Kommunikationsmodulen.</p>
+<pre><code>+-----------------------------------------------------------------------------------+
+|                                🍻 VEREINT PLATTFORM                               |
++------------------------+--------------------------+-------------------------------+
+| 💰 KASSENBUCH &amp; FINANZ | 📱 THEKEN-KIOSK          | 📅 EVENTS &amp; GÄSTE             |
+| - Double-Entry Ledger  | - 1-Tap Touch-Buchung    | - RSVP &amp; Teilnehmerlisten     |
+| - Guthabenverwaltung   | - Rundenabrechnung       | - Kryptografische Gast-Tokens |
+| - PWA-Barcodescanner   | - Fehlertoleranz         | - Sortiments-Sublisten        |
++------------------------+--------------------------+-------------------------------+
+| 💬 CHAT &amp; PUSH-NOTIFY  | 🎉 MOMENTS &amp; RITUALE     | 📊 EBER-ANALYTICS             |
+| - Vereins- &amp; Eventchat | - Anstoßen / Jubeln      | - Liter- &amp; Ausgabenranking    |
+| - Web Push (VAPID)     | - Weltkarte &amp; 24h-Chat   | - Trend- &amp; Verbrauchsanalysen |
+| - Board-Broadcasts     | - Archivierte Historie   | - Revisionssichere Audits     |
++------------------------+--------------------------+-------------------------------+</code></pre>
+<h3>1.2 Rollen- und Berechtigungskonzept</h3>
+<p>Das Berechtigungssystem basiert auf klar definierten Rollen, die den Funktionsumfang für jeden Benutzer passgenau steuern:</p>
+<table class="data-table"><thead><tr><th>Rolle</th><th>Schlüssel</th><th>Typische Nutzer</th><th>Berechtigungen &amp; Zugriffsrechte</th></tr></thead><tbody>
+<tr><td><strong>Mitglied</strong></td><td><code>member</code></td><td>Reguläre Vereinsmitglieder</td><td>Eigenes Guthaben einsehen, Barcodekauf via PWA, Event-RSVP, Teilnahme an Chats &amp; Moments, persönliche Statistiken.</td></tr>
+<tr><td><strong>Vorstand</strong></td><td><code>board</code></td><td>Vorsitzende, Kassierer, Schriftführer</td><td>Event-Erstellung, Gast-Einladungen generieren, Getränkekatalog verwalten, Kassen-Topups/Payouts durchführen, Broadcasts senden.</td></tr>
+<tr><td><strong>Thekenbediener</strong></td><td><code>tabletRecorder</code></td><td>Diensthabende am Theken-Tablet</td><td>Kiosk-Modus bedienen, 1-Tap-Getränkebuchungen für alle Mitglieder erfassen, Runden buchen, Abendabschluss durchführen.</td></tr>
+<tr><td><strong>Administrator</strong></td><td><code>admin</code></td><td>IT-Verantwortliche des Vereins</td><td>Benutzerverwaltung, Rollenzuweisung, Kontosperrungen, Audit-Log-Einsicht, Systemkonfiguration.</td></tr>
+<tr><td><strong>Gast</strong></td><td><code>guest</code></td><td>Externe Besucher ohne Account</td><td>Teilnahme an freigegebenen Events via Einladungslink, Lesen und Schreiben im Event-Chat über temporäres Gast-Token.</td></tr>
+</tbody></table>
+<div class="callout callout-info"><div class="callout-body">ℹ️ <strong>Hinweis</strong>: Ein Benutzer kann mehrere Rollen gleichzeitig innehaben (z. B. <code>member</code> + <code>board</code> + <code>tabletRecorder</code>).</div></div>
+<h3>1.3 Anmeldung &amp; Authentifizierung (Keycloak OIDC)</h3>
+<p>Der Zugang zu Vereint erfolgt sicher über das zentrale Single-Sign-On-System <strong>Keycloak (OpenID Connect)</strong>.</p>
+<h4>Schritt-für-Schritt: Erstmalige Anmeldung</h4>
+<ol>
+<li>Rufen Sie die Vereins-URL in Ihrem Webbrowser auf (z. B. <code>https://vereint.mein-verein.de</code>).</li>
+<li>Klicken Sie auf <strong>&quot;Anmelden mit Vereint ID&quot;</strong>. Sie werden auf die geschützte Keycloak-Anmeldeseite weitergeleitet.</li>
+<li>Geben Sie Ihren Benutzernamen (oder E-Mail-Adresse) und Ihr Passwort ein.</li>
+<li>Nach erfolgreicher Authentifizierung werden Sie automatisch auf Ihr persönliches <strong>Dashboard</strong> weitergeleitet.</li>
+<li><em>Just-in-Time Provisioning</em>: Bei Ihrem allerersten Login wird Ihr Vereinskonto automatisch initialisiert und mit der Standardrolle <code>member</code> verknüpft.</li>
+</ol>
+<h3>1.4 Mobile Nutzung als Progressive Web App (PWA)</h3>
+<p>Vereint ist als <strong>Progressive Web App (PWA)</strong> konzipiert. Sie können die Plattform direkt auf dem Startbildschirm Ihres Smartphones oder Tablets installieren – ganz ohne App-Store-Download:</p>
+<ul>
+<li><strong>Auf iOS (Apple Safari)</strong>:</li>
+</ul>
+<ol>
+<li>Öffnen Sie die Vereinswebseite in Safari.</li>
+<li>Tippen Sie in der Menüleiste auf das <strong>Teilen-Symbol</strong> (Quadrat mit Pfeil nach oben).</li>
+<li>Wählen Sie die Option <strong>&quot;Zum Home-Bildschirm&quot;</strong> (<code>Add to Home Screen</code>).</li>
+<li>Bestätigen Sie den Namen mit <strong>Hinzufügen</strong>.</li>
+</ol>
+<ul>
+<li><strong>Auf Android (Google Chrome)</strong>:</li>
+</ul>
+<ol>
+<li>Öffnen Sie die Vereinswebseite in Chrome.</li>
+<li>Tippen Sie auf das Dreipunkt-Menü oben rechts oder auf das Banner <strong>&quot;Vereint zum Startbildschirm hinzufügen&quot;</strong>.</li>
+<li>Bestätigen Sie die Installation mit <strong>Installieren</strong>.</li>
+</ol>
+<hr />
+<h2 class="chapter-title">💰 Kapitel 2: Mein Vereinskonto &amp; Kassenbuch</h2>
+<div class="mockup-container"><div class="mockup-window">
+  <div class="mockup-header">
+    <div class="mockup-dots"><span></span><span></span><span></span></div>
+    <div class="mockup-title">Vereint – Mein Dashboard & Kassenbuch</div>
+    <div class="mockup-badge">PWA / Mobile View</div>
+  </div>
+  <div class="mockup-body mockup-dashboard-layout">
+    <!-- Hero Greeting Component -->
+    <div class="hero-greeting">
+      <div class="hero-avatar">
+        <div class="avatar-circle">MM</div>
+        <div class="avatar-status-dot online"></div>
+      </div>
+      <div class="hero-text">
+        <div class="hero-welcome">Guten Abend,</div>
+        <h1 class="hero-name">Max Mustermann</h1>
+        <div class="hero-role-chips">
+          <span class="chip chip-primary">Mitglied</span>
+          <span class="chip chip-neutral">Aktiv</span>
+        </div>
+      </div>
+      <div class="hero-action">
+        <button class="icon-btn" title="Einstellungen">⚙️</button>
+      </div>
+    </div>
+
+    <!-- BalanceCard Component -->
+    <div class="balance-card balance-card-positive">
+      <div class="balance-card-header">
+        <div class="balance-title-group">
+          <span class="balance-icon">💰</span>
+          <span class="balance-label">Mein Vereinsguthaben</span>
+        </div>
+        <span class="status-badge status-badge-success">Ausgeglichen</span>
+      </div>
+      <div class="balance-amount-row">
+        <span class="balance-currency">€</span>
+        <span class="balance-val">14,50</span>
+      </div>
+      <div class="balance-meta">
+        <span>Letzte Buchung: Gestern, 21:15 Uhr (-3,00 € • Pils 0.5L)</span>
+      </div>
+      <div class="balance-actions">
+        <button class="btn btn-success-light">
+          <span>➕ Guthaben aufladen</span>
+        </button>
+        <button class="btn btn-outline">
+          <span>📄 Kontoauszug</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dashboard Quick Actions & Upcoming Events Grid -->
+    <div class="dashboard-grid">
+      <!-- Quick Barcode Action -->
+      <div class="card action-card">
+        <div class="action-card-header">
+          <span class="action-icon">📷</span>
+          <h3>Barcode-Scanner</h3>
+        </div>
+        <p>Getränk am Kühlschrank selbstständig scannen und buchen.</p>
+        <button class="btn btn-primary btn-sm">Scanner öffnen</button>
+      </div>
+
+      <!-- Upcoming Event RSVP Card -->
+      <div class="card event-preview-card">
+        <div class="event-preview-header">
+          <span class="status-badge status-badge-active">Heute aktiv</span>
+          <span class="event-date">18:00 – Open End</span>
+        </div>
+        <h3 class="event-title">🍻 Sommerfest & Vereinstheke</h3>
+        <p class="event-loc">📍 Vereinsheim Hauptplatz</p>
+        <div class="event-rsvp-status">
+          <span class="rsvp-indicator confirmed">✓ Du nimmst teil</span>
+          <span class="rsvp-count">18 Zusagen</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<h3>2.1 Das persönliche Dashboard &amp; die BalanceCard</h3>
+<p>Nach der Anmeldung sehen Sie im Dashboard sofort Ihren aktuellen Kontostand auf der zentralen <strong>BalanceCard</strong>:</p>
+<ul>
+<li><strong>Positiver Saldo (Grün)</strong>: Ihr Konto weist ein aktives Guthaben auf. Sie können jederzeit Getränke an der Theke buchen oder via Barcode erwerben.</li>
+<li><strong>Negativer Saldo (Rot / Warnung)</strong>: Ihr Konto ist im Minus. Sie werden gebeten, Ihr Guthaben beim Kassierer oder per Überweisung zeitnah aufzuladen.</li>
+</ul>
+<pre><code>+-------------------------------------------------------------+
+|  👤 Guten Abend, Max Mustermann!             [ Profil ⚙️ ]  |
++-------------------------------------------------------------+
+|  💰 MEIN KASSENSTAND                                        |
+|  +-------------------------------------------------------+  |
+|  |  Aktuelles Guthaben:     14,50 €            [ AKTIV ] |  |
+|  |  Status: Ausgeglichen • Letzte Buchung: Gestern, 21:15|  |
+|  +-------------------------------------------------------+  |
+|  [ ➕ Guthaben aufladen ]           [ 📄 Kontoauszug ]      |
++-------------------------------------------------------------+</code></pre>
+<h3>2.2 Guthaben aufladen (Einzahlungen)</h3>
+<p>Um das Vereinskonto aufzuladen, stehen folgende Wege zur Verfügung:</p>
+<ol>
+<li><strong>Barzahlung beim Kassier / Vorstand</strong>:</li>
+</ol>
+<ul>
+<li>Übergeben Sie den gewünschten Betrag dem Kassenverantwortlichen.</li>
+<li>Der Vorstand bucht den Betrag über <code>POST /api/v1/ledger/topups</code> auf Ihr Mitgliedskonto.</li>
+<li>Ihr Kontostand aktualisiert sich in Echtzeit.</li>
+</ul>
+<ol>
+<li><strong>Banküberweisung / Dauerauftrag</strong>:</li>
+</ol>
+<ul>
+<li>Sofern Ihr Verein Banküberweisungen unterstützt, geben Sie Ihre Mitgliedsnummer im Verwendungszweck an. Der Kassierer bucht den Geldeingang nach Kontoabgleich ein.</li>
+</ul>
+<h3>2.3 Buchungshistorie &amp; digitaler Kontoauszug</h3>
+<p>Jedes Mitglied kann lückenlos jede einzelne Buchung nachvollziehen:</p>
+<ul>
+<li>Klicken Sie auf <strong>&quot;Kontoauszug&quot;</strong> auf der BalanceCard.</li>
+<li>Sie erhalten eine chronologische Auflistung mit Buchungsdatum, Buchungsart (<code>topup</code>, <code>purchase</code>, <code>payout</code>, <code>correction</code>), Artikeldetails (z. B. &quot;1x Pils 0.5L&quot;) und dem gebuchten Betrag.</li>
+<li>Transaktionen sind transparent und können nach Datumsbereich oder Event gefiltert werden.</li>
+</ul>
+<h3>2.4 Barcode-Kauf &amp; PWA-Selbstbedienung</h3>
+<p>Befindet sich an der Vereinstheke oder im Vereinsheim ein Selbstbedienungs-Kühlschrank mit Barcode-Etiketten:</p>
+<ol>
+<li>Öffnen Sie die Vereint PWA auf Ihrem Smartphone.</li>
+<li>Tippen Sie auf das <strong>Kamera-/Barcode-Symbol</strong>.</li>
+<li>Scannen Sie den EAN-Strichcode auf der Flasche.</li>
+<li>Die App zeigt den Getränkenamen und den Preis an. Bestätigen Sie mit <strong>&quot;Jetzt kaufen&quot;</strong>.</li>
+<li>Der Kauf wird sekundenschnell vom Guthaben abgebucht.</li>
+</ol>
+<h3>2.5 Revisionssicherheit &amp; Append-Only-Prinzip</h3>
+<p>Das Kassenbuch von Vereint folgt strengen buchhalterischen Standards:</p>
+<ul>
+<li><strong>Unveränderbarkeit (Append-Only)</strong>: Bestehende Buchungszeilen können niemals gelöscht oder nachträglich editiert werden.</li>
+<li><strong>Korrekturen</strong>: Bei versehentlichen Fehlbuchungen wird eine Gegenbuchung (<code>correction</code>) erzeugt, die den Originalbetrag referenziert und rechnerisch ausgleicht.</li>
+<li><strong>Datenbank-Trigger</strong>: Spezielle Trigger in der PostgreSQL-Datenbank stellen sicher, dass jeder Beleg manipulationssicher archiviert wird.</li>
+</ul>
+<hr />
+<h2 class="chapter-title">📱 Kapitel 3: Theken-Strichliste (Kiosk-Modus)</h2>
+<div class="mockup-container"><div class="mockup-window mockup-kiosk-window">
+  <div class="mockup-header mockup-kiosk-header">
+    <div class="mockup-dots"><span></span><span></span><span></span></div>
+    <div class="mockup-kiosk-brand">
+      <span class="kiosk-brand-icon">🍻</span>
+      <span class="kiosk-brand-title">VEREINT – THEKEN STRICHLISTE (KIOSK MODE)</span>
+    </div>
+    <div class="mockup-kiosk-event-pill">Event: Sommerfest 2026 (Aktiv)</div>
+    <div class="mockup-kiosk-user-action">
+      <span class="kiosk-operator">Bediener: Theke 1</span>
+      <button class="btn btn-kiosk-logout">🔒 Sperren</button>
+    </div>
+  </div>
+
+  <div class="mockup-body mockup-kiosk-body">
+    <!-- Top Search & Filter Bar -->
+    <div class="kiosk-search-bar">
+      <div class="kiosk-search-input-wrap">
+        <label for="kiosk-search-input" class="visually-hidden">Mitglied suchen</label>
+        <span class="search-icon">🔍</span>
+        <input type="text" id="kiosk-search-input" class="kiosk-search-input" value="Max" placeholder="Mitglied suchen..." readonly />
+        <span class="search-clear">✕</span>
+      </div>
+      <div class="kiosk-filter-chips">
+        <span class="kiosk-chip active">Alle (42)</span>
+        <span class="kiosk-chip">Anwesend (18)</span>
+        <span class="kiosk-chip">Vorstand (4)</span>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Split: Members List vs 1-Tap Drink Grid -->
+    <div class="kiosk-main-split">
+      <!-- Left Column: Members List -->
+      <div class="kiosk-col-members">
+        <div class="kiosk-col-title">MITGLIEDER (1-TAP AUSWAHL)</div>
+        <div class="kiosk-member-list">
+          <div class="kiosk-member-row selected">
+            <div class="member-avatar">MM</div>
+            <div class="member-details">
+              <div class="member-name">Max Mustermann</div>
+              <div class="member-role-tag">Vorstand • Anwesend</div>
+            </div>
+            <div class="member-balance pos">14,50 €</div>
+            <div class="member-select-arrow">▶</div>
+          </div>
+
+          <div class="kiosk-member-row">
+            <div class="member-avatar">EM</div>
+            <div class="member-details">
+              <div class="member-name">Erika Muster</div>
+              <div class="member-role-tag">Mitglied</div>
+            </div>
+            <div class="member-balance pos">8,00 €</div>
+          </div>
+
+          <div class="kiosk-member-row warning-row">
+            <div class="member-avatar danger">LS</div>
+            <div class="member-details">
+              <div class="member-name">Lukas Schmidt</div>
+              <div class="member-role-tag alert-text">⚠️ Minusstand beachten</div>
+            </div>
+            <div class="member-balance neg">-2,50 €</div>
+          </div>
+
+          <div class="kiosk-member-row">
+            <div class="member-avatar">SW</div>
+            <div class="member-details">
+              <div class="member-name">Sarah Weber</div>
+              <div class="member-role-tag">Mitglied</div>
+            </div>
+            <div class="member-balance pos">22,00 €</div>
+          </div>
+        </div>
+
+        <div class="kiosk-member-actions">
+          <button class="btn btn-kiosk-round">
+            <span class="btn-icon">🍻</span>
+            <span>Runde für Gruppe buchen</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: 1-Tap Drink Grid -->
+      <div class="kiosk-col-drinks">
+        <div class="kiosk-col-title">GETRÄNKE FÜR: <span class="highlight-member">MAX MUSTERMANN</span></div>
+        <div class="kiosk-drinks-grid">
+          <button class="drink-card drink-card-pils">
+            <div class="drink-badge">0.5 L</div>
+            <div class="drink-emoji">🍺</div>
+            <div class="drink-name">Pils vom Fass</div>
+            <div class="drink-price">3,00 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+
+          <button class="drink-card drink-card-radler">
+            <div class="drink-badge">0.5 L</div>
+            <div class="drink-emoji">🍋</div>
+            <div class="drink-name">Radler Naturtrüb</div>
+            <div class="drink-price">3,00 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+
+          <button class="drink-card drink-card-cola">
+            <div class="drink-badge">0.33 L</div>
+            <div class="drink-emoji">🥤</div>
+            <div class="drink-name">Cola / Spezi</div>
+            <div class="drink-price">2,00 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+
+          <button class="drink-card drink-card-water">
+            <div class="drink-badge">0.5 L</div>
+            <div class="drink-emoji">💧</div>
+            <div class="drink-name">Mineralwasser</div>
+            <div class="drink-price">1,50 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+
+          <button class="drink-card drink-card-weizen">
+            <div class="drink-badge">0.5 L</div>
+            <div class="drink-emoji">🌾</div>
+            <div class="drink-name">Hefeweizen</div>
+            <div class="drink-price">3,50 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+
+          <button class="drink-card drink-card-apfelschorle">
+            <div class="drink-badge">0.4 L</div>
+            <div class="drink-emoji">🍏</div>
+            <div class="drink-name">Apfelschorle</div>
+            <div class="drink-price">2,00 €</div>
+            <div class="drink-tap-hint">1-TAP BUCHEN</div>
+          </button>
+        </div>
+
+        <div class="kiosk-quick-footer">
+          <button class="btn btn-kiosk-storno">
+            <span class="btn-icon">⚡</span>
+            <span>Letzte Buchung stornieren (Storno)</span>
+          </button>
+          <button class="btn btn-kiosk-evening">
+            <span class="btn-icon">💵</span>
+            <span>Abendabschluss & Barumsatz</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="kiosk-status-bar">
+      <div class="status-indicator">
+        <span class="status-pulse-dot"></span>
+        <span>Status: Online • Event aktiv • Idempotenz-Schutz UUIDv4</span>
+      </div>
+      <div class="status-last-action">
+        Letzte Buchung: 21:15 Uhr • 1x Pils (3,00 €) für Max Mustermann
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<h3>3.1 Touch-Oberfläche im Thekenbetrieb</h3>
+<p>Der Kiosk-Modus ist speziell für Tablets an der Vereinstheke konzipiert. Die Oberfläche ist für schnelle Fingerbedienung bei lauter Umgebung und hohem Besucherandrang optimiert.</p>
+<pre><code>+-----------------------------------------------------------------------------------+
+| 🍻 VEREINT - THEKEN STRICHLISTE (KIOSK MODE)                    Event: Sommerfest |
++-----------------------------------------------------------------------------------+
+| Mitglied suchen... [ 🔍 Max                             ]       [ 🔒 Abmelden ]  |
++-----------------------------------------+-----------------------------------------+
+| MITGLIEDERLISTE                         | GETRÄNKE-SCHNELLAUSWAHL (1-TAP)         |
+| --------------------------------------- | --------------------------------------- |
+| [👤 Max Mustermann         (14,50 €)] &gt; | [ 🍺 Pils 0.5L                 3,00 € ] |
+| [👤 Erika Muster           ( 8,00 €)]   | [ 🍋 Radler 0.5L               3,00 € ] |
+| [👤 Lukas Schmidt          (-2,50 €)] ! | [ 🥤 Cola / Limo 0.33L         2,00 € ] |
+| [👤 Sarah Weber            (22,00 €)]   | [ 💧 Mineralwasser             1,50 € ] |
+| --------------------------------------- | --------------------------------------- |
+| [ 🍻 Runde für Gruppe buchen ]          | [ ⚡ Letzte Buchung stornieren (Storno) ]|
++-----------------------------------------+-----------------------------------------+
+| Status: Bereit • 1-Tap Buchung aktiv • Idempotenz-Schutz eingeschaltet            |
++-----------------------------------------------------------------------------------+</code></pre>
+<h3>3.2 1-Tap-Getränkebuchung in der Praxis</h3>
+<p>Die Erfassung eines Getränks an der Theke erfordert lediglich <strong>zwei kurze Fingertipps</strong>:</p>
+<ol>
+<li><strong>Mitglied auswählen</strong>: Tippen Sie in der linken Liste auf den Namen des Mitglieds (z. B. &quot;Max Mustermann&quot;).</li>
+<li><strong>Getränk antippen</strong>: In der rechten Spalte tippen Sie auf das gewünschte Getränk (z. B. &quot;Pils 0.5L&quot;).</li>
+<li><strong>Sofortige Quittierung</strong>:</li>
+</ol>
+<ul>
+<li>Die Buchung wird sofort ausgeführt.</li>
+<li>Ein grünes Bestätigungsbanner (<code>Toast</code>) erscheint: <em>&quot;1x Pils 0.5L für Max Mustermann gebucht (-3,00 €)&quot;</em>.</li>
+<li>Der neue Kontostand des Mitglieds wird unmittelbar aktualisiert.</li>
+</ul>
+<h3>3.3 Rundenabrechnung für Gruppen</h3>
+<p>Gibt ein Mitglied eine Runde für mehrere Personen aus:</p>
+<ol>
+<li>Tippen Sie auf die Schaltfläche <strong>&quot;Runde für Gruppe buchen&quot;</strong>.</li>
+<li>Wählen Sie das Getränk für die Runde aus.</li>
+<li>Markieren Sie alle anwesenden Mitglieder, die ein Getränk erhalten.</li>
+<li>Bestätigen Sie mit <strong>&quot;Runde buchen&quot;</strong>.</li>
+<li>Das System bucht die Runde im Modus <code>revenueOnly</code> bzw. belastet wahlweise den Ausgeber, ohne dass alle Einzelempfänger ins Minus geraten.</li>
+</ol>
+<h3>3.4 Abendabschluss &amp; Bareinnahmen</h3>
+<p>Am Ende des Abends führt das Thekenpersonal den Kassenabschluss durch:</p>
+<ol>
+<li>Öffnen Sie das Kiosk-Menü oben rechts und wählen Sie <strong>&quot;Abendabschluss&quot;</strong>.</li>
+<li>Geben Sie die Summe der erhaltenen Bareinnahmen von Gästen ohne Vereinskonto ein.</li>
+<li>Das System erzeugt einen aggregierten Abschlussbeleg (<code>source = evening, accountingMode = revenueOnly</code>).</li>
+<li>Das Event kann anschließend vom Vorstand in den Status <code>completed</code> versetzt werden.</li>
+</ol>
+<h3>3.5 Fehlbuchungen &amp; Sofortstornierung</h3>
+<p>Sollte versehentlich ein falsches Getränk angetippt worden sein:</p>
+<ul>
+<li>Direkt nach der Buchung steht der Button <strong>&quot;Letzte Buchung stornieren&quot;</strong> zur Verfügung.</li>
+<li>Ein Tippen erzeugt automatisch eine Revisions-Gegenbuchung (<code>POST /api/v1/ledger/corrections</code>), die das Mitgliedskonto umgehend wieder entlastet.</li>
+</ul>
+<hr />
+<h2 class="chapter-title">📅 Kapitel 4: Veranstaltungen &amp; Gast-Einladungen</h2>
+<div class="mockup-container"><div class="mockup-window">
+  <div class="mockup-header">
+    <div class="mockup-dots"><span></span><span></span><span></span></div>
+    <div class="mockup-title">Vereint – Event-Management & Gast-Einladungsmodal</div>
+    <div class="mockup-badge">Desktop / Tablet View</div>
+  </div>
+  <div class="mockup-body mockup-event-layout">
+    <div class="event-hero-card">
+      <div class="event-hero-meta">
+        <span class="status-badge status-badge-active">Status: Aktiv</span>
+        <span class="event-time-badge">🕒 Heute, 18:00 – Open End</span>
+        <span class="event-loc-badge">📍 Vereinsheim & Theke</span>
+      </div>
+      <h2 class="event-main-title">🍻 Sommerfest 2026 & Saisonauftakt</h2>
+      <p class="event-desc">
+        Jährliches Vereinsfest mit Freibier-Fassanstich, Grillstation und digitaler Theken-Strichliste. Alle Mitglieder und geladenen Gäste sind herzlich willkommen!
+      </p>
+
+      <div class="event-rsvp-bar">
+        <span class="rsvp-label">Mein Teilnahmestatus (RSVP):</span>
+        <div class="rsvp-btn-group">
+          <button class="btn btn-rsvp active-yes">✓ Zusage (18)</button>
+          <button class="btn btn-rsvp">❓ Unsicher (5)</button>
+          <button class="btn btn-rsvp">✕ Absage (2)</button>
+        </div>
+        <button class="btn btn-primary btn-invite-trigger">
+          <span>✉️ Gast-Einladung generieren</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Overlay Simulation for Crypto Guest Token -->
+    <div class="modal-simulation-wrap">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-icon">🔑</span>
+            <h3>Krypto-Einladungslink für externe Gäste</h3>
+          </div>
+          <span class="modal-close-btn">✕</span>
+        </div>
+        <div class="modal-body">
+          <p class="modal-info-text">
+            Erzeugt einen passwortlosen Gastzugang mit kryptografischem 256-Bit Token. Der Gast kann dem Event-Chat beitreten und an Live-Moments teilnehmen.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="event-invite-link">Sicherer Einladungslink (Einmalig kopierbar)</label>
+            <div class="token-link-box">
+              <input type="text" id="event-invite-link" class="token-input" value="https://vereint.mein-verein.de/invites/accept?token=sec_9f8a2c4e8b1d6f30a9e7" readonly />
+              <button class="btn btn-copy">📋 Kopieren</button>
+            </div>
+            <div class="token-security-note">
+              <span>🔒 Revisionssicherheit: Im Vereinsserver wird ausschließlich der SHA-256 Hash gespeichert.</span>
+            </div>
+          </div>
+
+          <div class="token-meta-grid">
+            <div class="token-meta-item">
+              <span class="meta-title">Maximale Nutzungen:</span>
+              <span class="meta-val">15 Gäste (Noch 12 frei)</span>
+            </div>
+            <div class="token-meta-item">
+              <span class="meta-title">Gültigkeitsdauer:</span>
+              <span class="meta-val">24 Stunden (bis 17.09. 18:00)</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary">Schließen</button>
+          <button class="btn btn-share">🔗 Link per Messenger teilen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<h3>4.1 Event-Übersicht &amp; Lebenszyklus</h3>
+<p>Veranstaltungen durchlaufen in Vereint einen definierten Lebenszyklus:</p>
+<pre><code>[ Entwurf (draft) ] ---&gt; [ Veröffentlicht (published) ] ---&gt; [ Aktiv / Theke offen (active) ]
+                                   |                                        |
+                                   v                                        v
+                          [ Abgesagt (cancelled) ]                 [ Beendet (completed) ]
+                                                                            |
+                                                                            v
+                                                                  [ Archiviert (archived) ]</code></pre>
+<ul>
+<li><strong>draft</strong>: Nur für den Ersteller und den Vorstand sichtbar zur Vorbereitung von Datum, Ort und Getränkeauswahl.</li>
+<li><strong>published</strong>: Sichtbar für alle Mitglieder; RSVP-Rückmeldungen können abgegeben werden.</li>
+<li><strong>active</strong>: Die Veranstaltung läuft aktuell. Das Tablet an der Theke greift auf die Event-Getränkeliste zu.</li>
+<li><strong>completed</strong>: Das Event ist beendet und die Kassenabrechnung abgeschlossen.</li>
+<li><strong>archived</strong>: Das Event steht für historische Statistiken bereit.</li>
+</ul>
+<h3>4.2 Zu- und Absagen (RSVP) &amp; Teilnehmerlisten</h3>
+<p>Jedes Vereinsmitglied kann mit einem Klick auf der Eventkarte seinen Teilnahmestatus festlegen:</p>
+<ul>
+<li><strong>Zusagen (<code>attending</code>)</strong>: Sie werden in die Teilnehmerliste aufgenommen. Das Thekenteam sieht Sie priorisiert in der Schnellauswahl.</li>
+<li><strong>Unsicher (<code>maybe</code>)</strong>: Hilft dem Vorstand bei der Mengenplanung für Getränke und Verpflegung.</li>
+<li><strong>Absagen (<code>declined</code>)</strong>: Entfernt Sie aus der aktiven Teilnehmerübersicht des Events.</li>
+</ul>
+<h3>4.3 Krypto-Gasttokens &amp; Einladungslinks</h3>
+<p>Für Freunde, Partnervereine oder externe Gäste können Vorstände sichere Einladungslinks erzeugen:</p>
+<ol>
+<li>Öffnen Sie die Event-Details und klicken Sie auf <strong>&quot;Gast-Einladung erstellen&quot;</strong>.</li>
+<li>Legen Sie optional ein <strong>Nutzungslimit</strong> (z. B. maximal 15 Gäste) und eine <strong>Gültigkeitsdauer</strong> fest.</li>
+<li>Das System erzeugt einen kryptografisch sicheren Zufallstoken (<code>256-Bit Entropy</code>).</li>
+<li>In der Vereinsdatenbank wird aus Sicherheitsgründen ausschließlich der <strong>SHA-256-Hash</strong> gespeichert.</li>
+<li>Kopieren Sie den generierten Link (z. B. <code>https://vereint.mein-verein.de/invites/accept?token=sec_9f8a...</code>) und teilen Sie ihn per WhatsApp, Signal oder E-Mail.</li>
+</ol>
+<h3>4.4 Gast-Teilnahme ohne Vereinsbenutzerkonto</h3>
+<p>Externe Gäste benötigen <strong>kein Passwort und kein Vereinskonto</strong>:</p>
+<ol>
+<li>Der Gast klickt auf den erhaltenen Einladungslink.</li>
+<li>Es öffnet sich eine Willkommensseite: Der Gast gibt lediglich seinen <strong>Anzeigenamen</strong> ein (z. B. &quot;Thomas (Gast)&quot;).</li>
+<li>Nach dem Klick auf <strong>&quot;Beitreten&quot;</strong> erhält das Gast-Smartphone ein sicheres <code>guestToken</code>.</li>
+<li>Der Gast hat nun sofortigen Zugriff auf den Event-Chat und kann an Live-Moments teilnehmen.</li>
+</ol>
+<hr />
+<h2 class="chapter-title">🎉 Kapitel 5: Moments &amp; Rituale (Gemeinschaftsmomente)</h2>
+<div class="mockup-container"><div class="mockup-window">
+  <div class="mockup-header">
+    <div class="mockup-dots"><span></span><span></span><span></span></div>
+    <div class="mockup-title">Vereint – Moments & Rituale (Live-Interaktion & Weltkarte)</div>
+    <div class="mockup-badge">Live View</div>
+  </div>
+  <div class="mockup-body mockup-moments-layout">
+    <!-- Active Moment Banner Card -->
+    <div class="moment-active-card">
+      <div class="moment-header-row">
+        <div class="moment-title-wrap">
+          <span class="moment-icon">🎉</span>
+          <div>
+            <h2 class="moment-name">Sommerfest Eröffnungs-Anstoßen 🍻</h2>
+            <div class="moment-subtitle">Initiator: Vorstand Max • Kategorie: Toast (Anstoßen)</div>
+          </div>
+        </div>
+        <div class="moment-countdown-badge">
+          <span class="pulse-dot"></span>
+          <span>Noch 14 Min aktiv</span>
+        </div>
+      </div>
+
+      <!-- Quick Reaction Bar -->
+      <div class="moment-reaction-panel">
+        <div class="panel-label">Schnell-Reaktion senden (Mehrfach möglich):</div>
+        <div class="reaction-buttons-grid">
+          <button class="reaction-btn active-react"><span class="react-emoji">🍻</span><span class="react-count">18</span><span class="react-label">Anstoßen</span></button>
+          <button class="reaction-btn"><span class="react-emoji">📣</span><span class="react-count">9</span><span class="react-label">Jubeln</span></button>
+          <button class="reaction-btn"><span class="react-emoji">❤️</span><span class="react-count">12</span><span class="react-label">Herz</span></button>
+          <button class="reaction-btn"><span class="react-emoji">🔥</span><span class="react-count">15</span><span class="react-label">Stimmung</span></button>
+          <button class="reaction-btn"><span class="react-emoji">🙏</span><span class="react-count">3</span><span class="react-label">Gebet</span></button>
+          <button class="reaction-btn"><span class="react-emoji">👍</span><span class="react-count">7</span><span class="react-label">Daumen</span></button>
+        </div>
+
+        <div class="moment-input-row">
+          <label for="moment-status-input" class="visually-hidden">Statusnachricht zum Moment</label>
+          <input type="text" id="moment-status-input" class="moment-status-input" value="Prost auf ein erfolgreiches Vereinsjahr! 🍻" readonly />
+          <button class="btn btn-primary btn-send-moment">🚀 Absenden</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2-Column: Timeline Feed & Mini World Map -->
+    <div class="moment-columns-grid">
+      <!-- Live Timeline -->
+      <div class="moment-feed-card">
+        <div class="feed-header">
+          <h3>Live-Reaktionen (42)</h3>
+          <span class="feed-live-indicator">● Live</span>
+        </div>
+        <div class="timeline-items-list">
+          <div class="timeline-item">
+            <div class="item-avatar">MM</div>
+            <div class="item-content">
+              <div class="item-top">
+                <span class="item-user">Max Mustermann</span>
+                <span class="item-role">Vorstand</span>
+                <span class="item-time">Gerade eben</span>
+              </div>
+              <div class="item-body">
+                <span class="item-react-badge">🍻 Anstoßen</span>
+                <span class="item-text">Das Fass ist angezapft! Auf uns!</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="item-avatar guest-av">TG</div>
+            <div class="item-content">
+              <div class="item-top">
+                <span class="item-user">Thomas (Gast)</span>
+                <span class="item-role-guest">Gast</span>
+                <span class="item-time">Vor 2 Min</span>
+              </div>
+              <div class="item-body">
+                <span class="item-react-badge">🔥 Stimmung</span>
+                <span class="item-text">Großartige Stimmung hier! Danke für die Einladung!</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="item-avatar">EM</div>
+            <div class="item-content">
+              <div class="item-top">
+                <span class="item-user">Erika Muster</span>
+                <span class="item-role">Vorstand</span>
+                <span class="item-time">Vor 4 Min</span>
+              </div>
+              <div class="item-body">
+                <span class="item-react-badge">❤️ Herz</span>
+                <span class="item-text">Schön, dass alle da sind!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini World Map Visualizer -->
+      <div class="moment-map-card">
+        <div class="map-header">
+          <h3>📍 Teilnehmer-Weltkarte</h3>
+          <span class="map-status">12 Freigaben</span>
+        </div>
+        <div class="map-canvas-mockup">
+          <div class="map-pin pin-1" style="top: 40%; left: 48%;" title="Vereinsheim Hauptplatz (8 Teilnehmer)">📍 <span class="pin-badge">8</span></div>
+          <div class="map-pin pin-2" style="top: 36%; left: 52%;" title="Lukas Schmidt (Berlin)">📍 <span class="pin-badge">1</span></div>
+          <div class="map-pin pin-3" style="top: 44%; left: 44%;" title="Sarah Weber (München)">📍 <span class="pin-badge">1</span></div>
+          <div class="map-legend">GeoJSON Visualisierung • Opt-in Standortfreigabe</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<h3>5.1 Was sind Moments? (Anstoßen, Jubeln, Gebet, Check-in)</h3>
+<p><strong>Moments</strong> ist das emotionale Herzstück von Vereint. Es ermöglicht Mitgliedern und Gästen, spontane Momente gemeinsamer Aktivität digital zu synchronisieren und festzuhalten – egal ob vor Ort im Vereinsheim oder aus der Ferne.</p>
+<p>Typische Moment-Typen:</p>
+<ul>
+<li>🍻 <strong>Gemeinsames Anstoßen (<code>toast</code>)</strong>: Zum feierlichen Auftakt eines Festes oder beim Feierabendbier.</li>
+<li>🙏 <strong>Gemeinsames Beten &amp; Fürbitten (<code>prayer</code>)</strong>: Für kirchliche Gruppen, Chöre oder besinnliche Anlässe.</li>
+<li>📣 <strong>Jubeln &amp; Anfeuern (<code>cheer</code>)</strong>: Bei Toren des Vereins, Wettkampfsiegen oder Ehrungen.</li>
+<li>📍 <strong>Check-in &amp; Treffpunkt (<code>checkin</code>)</strong>: Zur Bestätigung der Ankunft am Festzelt oder Sportplatz.</li>
+<li>✨ <strong>Individuelle Rituale (<code>other</code>)</strong>: Frei definierbare Aktionen für besondere Vereinsanlässe.</li>
+</ul>
+<h3>5.2 Multi-Status-Reaktionen in Echtzeit</h3>
+<p>Während ein Moment aktiv ist, können alle Teilnehmer in Sekundenschnelle reagieren:</p>
+<ul>
+<li><strong>Schnell-Reaktionen</strong>: Wählen Sie aus Emojis wie 🍻, 🙏, 📣, ❤️, 🔥, 👍.</li>
+<li><strong>Mehrfache Status-Updates</strong>: Teilnehmer können mehrfach nacheinander reagieren (z. B. wiederholtes Anstoßen oder Zwischenrufe).</li>
+<li><strong>Kurznachrichten</strong>: Fügen Sie Ihrer Reaktion einen kurzen Status-Text (max. 255 Zeichen) hinzu.</li>
+</ul>
+<pre><code>+-----------------------------------------------------------------------------------+
+| 🎉 AKTIVER MOMENT: &quot;Sommerfest Eröffnungs-Anstoßen 🍻&quot;        [ Noch 14 Min aktiv]|
++-----------------------------------------------------------------------------------+
+|  Initiator: Vorstand Max • 18 Teilnehmer online • 42 Reaktionen geteilt           |
+|                                                                                   |
+|  SCHNELL-REAKTIONEN:                                                              |
+|  [ 🍻 Anstoßen ]   [ 📣 Jubeln ]   [ ❤️ Herz ]   [ 🔥 Stimmung ]   [ 👍 Top ]     |
+|                                                                                   |
+|  Ihre Nachricht: [ Prost auf ein gelungenes Fest!            ] [ Absenden 🚀 ]    |
++-----------------------------------------------------------------------------------+
+|  LIVE-TIMELINE DER TEILNEHMER:                                                    |
+|  • Vor 1 Min  - Lukas Schmidt: &quot;Auf den Verein! 🍻&quot;                               |
+|  • Vor 2 Min  - Erika Muster: &quot;Endlich geht es los! 🔥&quot;                           |
+|  • Vor 4 Min  - Thomas (Gast): &quot;Danke für die Einladung! 🍻&quot;                      |
++-----------------------------------------------------------------------------------+</code></pre>
+<h3>5.3 Die 24-Stunden-Moment-Konversation</h3>
+<p>Mit dem Start eines jeden Moments wird automatisch ein dedizierter Chatraum (<code>conversation_type = moment</code>) eröffnet:</p>
+<ul>
+<li>Ermöglicht allen Teilnehmern den ungestörten Austausch während der Aktion.</li>
+<li>Bleibt für <strong>exakt 24 Stunden</strong> geöffnet und archiviert sich danach automatisch, um den Hauptchat schlank zu halten.</li>
+</ul>
+<h3>5.4 Interaktive Weltkarte &amp; GeoJSON-Standortfreigabe</h3>
+<p>Mitglieder, die unterwegs sind oder von zu Hause aus teilnehmen, können optional ihren Standort freigeben (<code>consent = true</code>):</p>
+<ul>
+<li>Vereint projiziert alle Teilnehmer als Pins auf eine interaktive Weltkarte (GeoJSON FeatureCollection).</li>
+<li>Ideal für überregionale Vereine, Fanclubs bei Auswärtsspielen oder weltweite Alumnitreffen.</li>
+</ul>
+<h3>5.5 Archivierung im Eventverlauf</h3>
+<p>Nach Ablauf des Moments fasst das System die Aktivität automatisch zusammen:</p>
+<ul>
+<li><em>&quot;18 Teilnehmer haben 42 Statusbeiträge zum Moment &#039;Sommerfest Eröffnungs-Anstoßen&#039; geteilt.&quot;</em></li>
+<li>Die Erinnerung bleibt dauerhaft im chronologischen Rückblick des Events erhalten.</li>
+</ul>
+<hr />
+<h2 class="chapter-title">💬 Kapitel 6: Kommunikation &amp; Push-Benachrichtigungen</h2>
+<div class="mockup-container"><div class="mockup-window">
+  <div class="mockup-header">
+    <div class="mockup-dots"><span></span><span></span><span></span></div>
+    <div class="mockup-title">Vereint – Vereinschat & Web-Push-Benachrichtigungen</div>
+    <div class="mockup-badge">Mobile / Chat View</div>
+  </div>
+  <div class="mockup-body mockup-chat-layout">
+    <!-- Push Notification Opt-In Banner -->
+    <div class="push-optin-banner">
+      <div class="push-banner-content">
+        <span class="push-bell-icon">🔔</span>
+        <div>
+          <strong>Push-Benachrichtigungen aktivieren</strong>
+          <p>Erhalte Echtzeit-Nachrichten und Einladungen direkt auf dein Smartphone.</p>
+        </div>
+      </div>
+      <button class="btn btn-push-activate">Aktivieren (VAPID)</button>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="chat-container-card">
+      <div class="chat-header-bar">
+        <div class="chat-title-group">
+          <span class="chat-channel-icon">💬</span>
+          <div>
+            <h3>Event-Chat: Sommerfest 2026</h3>
+            <span class="chat-members-count">24 Teilnehmer online (inkl. 4 Gäste)</span>
+          </div>
+        </div>
+        <div class="chat-actions">
+          <button class="icon-btn" title="Kanal-Info">ℹ️</button>
+        </div>
+      </div>
+
+      <div class="chat-messages-area">
+        <!-- Message 1 from Board -->
+        <div class="chat-msg msg-incoming">
+          <div class="msg-avatar">EM</div>
+          <div class="msg-bubble-wrap">
+            <div class="msg-sender-info">
+              <span class="msg-sender-name">Erika Muster</span>
+              <span class="badge-role-board">Vorstand</span>
+              <span class="msg-timestamp">20:45</span>
+            </div>
+            <div class="msg-bubble">
+              Grill ist jetzt heiß! Es gibt Steaks, Würstchen und vegetarische Spieße. 🥩🌭
+            </div>
+          </div>
+        </div>
+
+        <!-- Message 2 from Guest -->
+        <div class="chat-msg msg-incoming">
+          <div class="msg-avatar guest-avatar">TG</div>
+          <div class="msg-bubble-wrap">
+            <div class="msg-sender-info">
+              <span class="msg-sender-name">Thomas (Gast)</span>
+              <span class="badge-role-guest">Gast</span>
+              <span class="msg-timestamp">20:48</span>
+            </div>
+            <div class="msg-bubble guest-bubble">
+              Klasse, vielen Dank! Wo finde ich die Getränke-Strichliste?
+            </div>
+          </div>
+        </div>
+
+        <!-- Message 3 from Self (Outgoing) -->
+        <div class="chat-msg msg-outgoing">
+          <div class="msg-bubble-wrap">
+            <div class="msg-sender-info">
+              <span class="msg-timestamp">20:50</span>
+              <span class="msg-sender-name">Du (Max)</span>
+            </div>
+            <div class="msg-bubble my-bubble">
+              Direkt an der Theke beim Kiosk-Tablet oder einfach mit der PWA am Kühlschrank scannen! 👍
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="chat-input-bar">
+        <button class="chat-attach-btn" title="Bild anhängen">📷</button>
+        <label for="chat-text-input" class="visually-hidden">Nachricht verfassen</label>
+        <input type="text" id="chat-text-input" class="chat-text-input" placeholder="Nachricht an Sommerfest 2026..." readonly />
+        <button class="btn btn-primary btn-chat-send">Senden</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<h3>6.1 Vereinskanäle, Event-Chat &amp; Direktnachrichten</h3>
+<p>Vereint stellt eine vollwertige Kommunikationszentrale bereit:</p>
+<ul>
+<li><strong>Vereins-Hauptkanal (<code>Club Channel</code>)</strong>: Der allgemeine Treffpunkt für vereinsweite Ankündigungen, Diskussionen und Austausch.</li>
+<li><strong>Event-Chaträume</strong>: Jedes Event besitzt einen eigenen Raum für Fahrgemeinschaften, Helferkoordination oder Mitbringsel.</li>
+<li><strong>Direktnachrichten (1:1 DMs)</strong>: Für vertrauliche Absprachen zwischen zwei Mitgliedern oder mit dem Vorstand.</li>
+</ul>
+<h3>6.2 Gast-Chat mit temporärem Zugang</h3>
+<p>Gäste, die über einen Krypto-Einladungslink beigetreten sind, werden im Event-Chat mit einem gut sichtbaren <strong>[Gast]</strong>-Badge markiert. Sie können vollwertig mitlesen und schreiben, besitzen jedoch keinen Zugriff auf vereinsinterne Kanäle oder Mitgliederstammdaten.</p>
+<h3>6.3 Web-Push-Aktivierung (VAPID) auf Smartphones &amp; PC</h3>
+<p>Um keine wichtigen Vereinsnachrichten oder Einladungen zu verpassen, unterstützt Vereint standardkonforme <strong>Web Push Notifications</strong>:</p>
+<h4>Anleitung zur Push-Aktivierung:</h4>
+<ol>
+<li>Öffnen Sie Ihr Profil über das Zahnrad-Symbol oben rechts.</li>
+<li>Scrollen Sie zum Bereich <strong>&quot;Benachrichtigungen &amp; Push&quot;</strong>.</li>
+<li>Aktivieren Sie den Schalter <strong>&quot;Push-Benachrichtigungen empfangen&quot;</strong>.</li>
+<li>Der Browser blendet eine Berechtigungsabfrage ein (<em>&quot;vereint.de möchte Ihnen Benachrichtigungen senden&quot;</em>).</li>
+<li>Bestätigen Sie mit <strong>&quot;Erlauben&quot;</strong> (<code>Allow</code>).</li>
+<li>Ihr Gerät ist nun sicher via VAPID-Schlüsselpaar registriert und empfängt Meldungen auch bei geschlossener App.</li>
+</ol>
+<h3>6.4 Vorstands-Broadcasts &amp; Eilmeldungen</h3>
+<p>Der Vorstand kann über das Administrationsmenü dringende Meldungen verfassen (z. B. <em>&quot;Platz wegen Unwetter gesperrt&quot;</em>). Diese werden priorisiert als Systembenachrichtigung an alle Mitglieder versendet.</p>
+<hr />
+<h2 class="chapter-title">📊 Kapitel 7: Statistiken &amp; Eber-Analytics</h2>
+<div class="mockup-container"><div class="mockup-window">
+  <div class="mockup-header">
+    <div class="mockup-dots"><span></span><span></span><span></span></div>
+    <div class="mockup-title">Vereint – Eber-Analytics & Vereinsstatistiken</div>
+    <div class="mockup-badge">Analytics Dashboard</div>
+  </div>
+  <div class="mockup-body mockup-analytics-layout">
+    <!-- Analytics Header & KPI Summary Cards -->
+    <div class="analytics-kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Gesamtkonsum Saison</div>
+        <div class="kpi-value">342.5 L</div>
+        <div class="kpi-trend positive">↗ +18 % ggü. Vorjahr</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Anwesenheitsquote</div>
+        <div class="kpi-value">84 %</div>
+        <div class="kpi-sub">12 von 14 Events besucht</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Gesamtausgaben Kasse</div>
+        <div class="kpi-value">1.240,50 €</div>
+        <div class="kpi-trend neutral">→ Im Budgetplan</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ausgegebene Runden</div>
+        <div class="kpi-value">28 Runden</div>
+        <div class="kpi-sub">Höchste Spendierfreude: Juli</div>
+      </div>
+    </div>
+
+    <!-- Main Analytics 2x2 Grid -->
+    <div class="analytics-charts-grid">
+      <!-- Chart 1: Top Consumers (Liter Ranking) -->
+      <div class="analytics-card">
+        <div class="analytics-card-header">
+          <h3>🏆 Top-Konsumenten (Liter-Rangliste)</h3>
+          <span class="badge-tag">Saison 2026</span>
+        </div>
+        <div class="ranking-list">
+          <div class="ranking-row gold">
+            <span class="rank-pos">1 🥇</span>
+            <span class="rank-name">Max Mustermann</span>
+            <div class="rank-bar-wrap"><div class="rank-bar" style="width: 100%;"></div></div>
+            <span class="rank-val">34.5 L</span>
+          </div>
+          <div class="ranking-row silver">
+            <span class="rank-pos">2 🥈</span>
+            <span class="rank-name">Lukas Schmidt</span>
+            <div class="rank-bar-wrap"><div class="rank-bar" style="width: 81%;"></div></div>
+            <span class="rank-val">28.0 L</span>
+          </div>
+          <div class="ranking-row bronze">
+            <span class="rank-pos">3 🥉</span>
+            <span class="rank-name">Sarah Weber</span>
+            <div class="rank-bar-wrap"><div class="rank-bar" style="width: 62%;"></div></div>
+            <span class="rank-val">21.5 L</span>
+          </div>
+          <div class="ranking-row">
+            <span class="rank-pos">4</span>
+            <span class="rank-name">Erika Muster</span>
+            <div class="rank-bar-wrap"><div class="rank-bar" style="width: 52%;"></div></div>
+            <span class="rank-val">18.0 L</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart 2: Monthly Spending Trend -->
+      <div class="analytics-card">
+        <div class="analytics-card-header">
+          <h3>📈 Monatlicher Ausgabentrend</h3>
+          <span class="badge-tag">+14 % Trend</span>
+        </div>
+        <div class="spending-bars-chart">
+          <div class="chart-col">
+            <div class="bar-fill" style="height: 45%;"></div>
+            <span class="bar-label">Mai</span>
+            <span class="bar-amount">45 €</span>
+          </div>
+          <div class="chart-col">
+            <div class="bar-fill" style="height: 65%;"></div>
+            <span class="bar-label">Jun</span>
+            <span class="bar-amount">65 €</span>
+          </div>
+          <div class="chart-col">
+            <div class="bar-fill" style="height: 88%;"></div>
+            <span class="bar-label">Jul</span>
+            <span class="bar-amount">88 €</span>
+          </div>
+          <div class="chart-col">
+            <div class="bar-fill active-bar" style="height: 100%;"></div>
+            <span class="bar-label">Aug</span>
+            <span class="bar-amount">112 €</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart 3: Top Round Givers -->
+      <div class="analytics-card">
+        <div class="analytics-card-header">
+          <h3>🍻 Top-Rundengeber</h3>
+          <span class="badge-tag">Vereinsgemeinschaft</span>
+        </div>
+        <div class="round-givers-list">
+          <div class="round-giver-item">
+            <span class="giver-avatar">MM</span>
+            <span class="giver-name">Max Mustermann</span>
+            <span class="giver-badge">6 Runden spendiert 🍺</span>
+          </div>
+          <div class="round-giver-item">
+            <span class="giver-avatar">CB</span>
+            <span class="giver-name">Christian Bauer</span>
+            <span class="giver-badge">4 Runden spendiert 🍻</span>
+          </div>
+          <div class="round-giver-item">
+            <span class="giver-avatar">SW</span>
+            <span class="giver-name">Sarah Weber</span>
+            <span class="giver-badge">3 Runden spendiert 🍷</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart 4: Drink Market Share -->
+      <div class="analytics-card">
+        <div class="analytics-card-header">
+          <h3>🥤 Beliebteste Getränke</h3>
+          <span class="badge-tag">Marktanteil</span>
+        </div>
+        <div class="drink-share-list">
+          <div class="drink-share-row">
+            <span class="drink-title">🍺 Pils vom Fass 0.5L</span>
+            <div class="share-bar-wrap"><div class="share-bar" style="width: 48%; background: var(--opt-color-primary);"></div></div>
+            <span class="share-pct">48 %</span>
+          </div>
+          <div class="drink-share-row">
+            <span class="drink-title">🍋 Radler Naturtrüb 0.5L</span>
+            <div class="share-bar-wrap"><div class="share-bar" style="width: 26%; background: var(--opt-color-accent);"></div></div>
+            <span class="share-pct">26 %</span>
+          </div>
+          <div class="drink-share-row">
+            <span class="drink-title">🥤 Cola & Softdrinks 0.33L</span>
+            <div class="share-bar-wrap"><div class="share-bar" style="width: 16%; background: var(--opt-color-success);"></div></div>
+            <span class="share-pct">16 %</span>
+          </div>
+          <div class="drink-share-row">
+            <span class="drink-title">💧 Mineralwasser 0.5L</span>
+            <div class="share-bar-wrap"><div class="share-bar" style="width: 10%; background: #94a3b8;"></div></div>
+            <span class="share-pct">10 %</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<h3>7.1 Persönliche Kennzahlen &amp; Liter-Ranking</h3>
+<p>Das Modul <strong>Eber-Analytics</strong> bietet spannende Einblicke in das Vereinsgeschehen:</p>
+<ul>
+<li><strong>Liter-Ranking</strong>: Wer hat im aktuellen Monat oder auf dem letzten Fest den größten Durst bewiesen? Transparente Rangliste des Gesamtkonsums (in Litern).</li>
+<li><strong>Anwesenheitsquote (<code>attendancePercent</code>)</strong>: Zeigt den prozentualen Anteil besuchter Events im Jahresverlauf.</li>
+</ul>
+<pre><code>+-----------------------------------------------------------------------------------+
+| 📊 EBER-ANALYTICS &amp; STATISTIKEN                                     Zeitraum: 2026|
++-----------------------------------------+-----------------------------------------+
+| 🏆 TOP-KONSUMENTEN (LITER BIER/GETRÄNKE)| 💰 AUSGABEN-TREND (MONATLICH)           |
+| --------------------------------------- | --------------------------------------- |
+| 1. 🥇 Max Mustermann        34.5 Liter  | Jan:  45,00 €  |████                    |
+| 2. 🥈 Lukas Schmidt         28.0 Liter  | Feb:  62,50 €  |██████                  |
+| 3. 🥉 Sarah Weber           21.5 Liter  | Mär:  88,00 €  |████████                |
+| 4.    Erika Muster          18.0 Liter  | Trend: +14 % zum Vormonat ↗️            |
++-----------------------------------------+-----------------------------------------+
+| 🍻 TOP-RUNDENGEBER                      | 🥤 BELIEBTESTE GETRÄNKE (MARKTANTEIL)   |
+| --------------------------------------- | --------------------------------------- |
+| 1. Max Mustermann          6 Runden     | 1. Pils 0.5L (48 %)                     |
+| 2. Christian Bauer         4 Runden     | 2. Radler 0.5L (26 %)                   |
+| 3. Sarah Weber             3 Runden     | 3. Cola / Softdrinks (16 %)             |
++-----------------------------------------+-----------------------------------------+</code></pre>
+<h3>7.2 Ausgabentrends &amp; Monatsvergleiche</h3>
+<p>Die Sparkline- und Balkendiagramme visualisieren die finanzielle Dynamik:</p>
+<ul>
+<li>Monatliche Gesamtausgaben im Verein.</li>
+<li>Vergleichswerte zum Vormonat in Prozent.</li>
+<li>Hilft dem Kassierer bei der vorausschauenden Getränkebestellung für anstehende Feste.</li>
+</ul>
+<h3>7.3 Top-Rundengeber &amp; Getränkeranglisten</h3>
+<p>Besonders spendable Mitglieder werden in der Kategorie <strong>Top-Rundengeber</strong> gewürdigt. Die Getränkestatistik gibt Aufschluss über Sortimentsfavoriten und hilft bei der Sortimentsoptimierung.</p>
+<h3>7.4 Datenschutz &amp; Clientseitige Datenaggregation</h3>
+<ul>
+<li><strong>Sicherheitsgarantie</strong>: Statistiken werden niemals in öffentlichen Server-Caches oder SSR-Seiten vorgespeichert.</li>
+<li><strong>Client-Side Rendering</strong>: Sämtliche Diagramme werden erst nach individueller Anmeldung im Webbrowser des autorisierten Nutzers berechnet.</li>
+</ul>
+<hr />
+<h2 class="chapter-title">❓ Kapitel 8: Häufige Fragen &amp; Fehlerbehebung (FAQ)</h2>
+<h3>8.1 Was passiert bei instabilem WLAN an der Vereinstheke?</h3>
+<p>Vereint verfügt über einen integrierten <strong>Idempotenz-Schutz</strong> (<code>UUIDv4 Idempotency-Key</code>):</p>
+<ul>
+<li>Bei Netzabbrüchen wiederholt das Tablet die Anfrage automatisch.</li>
+<li>Der Backend-Server erkennt Duplikate anhand des Schlüssels und führt die Abbuchung <strong>garantiert nur genau einmal</strong> aus. Es entstehen keine Doppelbuchungen!</li>
+</ul>
+<h3>8.2 Was tun, wenn mein Guthaben ins Minus gerät?</h3>
+<p>Ein negatives Guthaben sperrt Sie nicht sofort von der Vereinsgemeinschaft aus. Sie erhalten jedoch auf Ihrer BalanceCard einen dezenten Hinweis. Bitte gleichen Sie den Betrag bei der nächsten Gelegenheit beim Kassierer oder per Überweisung aus.</p>
+<h3>8.3 Was geschieht mit Restguthaben bei einem Vereinsaustritt?</h3>
+<p>Bei Beendigung der Mitgliedschaft erfasst der Vorstand eine Auszahlungsbuchung (<code>POST /api/v1/ledger/payouts</code>). Das verbleibende Restguthaben wird Ihnen in bar oder per Banküberweisung erstattet und das Vereinskonto auf 0,00 € ausgeglichen.</p>
+<h3>8.4 Ich habe mein Passwort vergessen – wie erhalte ich Zugang?</h3>
+<p>Klicken Sie auf der Keycloak-Anmeldeseite auf <strong>&quot;Passwort vergessen?&quot;</strong>. Geben Sie Ihre hinterlegte E-Mail-Adresse ein. Sie erhalten umgehend einen Link zur Vergabe eines neuen Passworts.</p>
+<h3>8.5 Funktioniert die App auch offline?</h3>
+<p>Dank Service-Worker-Caching können Sie Ihr Dashboard und die letzten Kontobewegungen auch ohne aktives Internet einsehen. Für neue Buchungen oder Chat-Nachrichten synchronisiert sich das System automatisch, sobald wieder Empfang besteht.</p>
+<hr />
+<p><em>Stand: September 2026 – Vereint Dokumentations- und Redaktionsteam.</em></p>
+
+    </main>
+  </div>
+</body>
+</html>

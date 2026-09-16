@@ -1,0 +1,115 @@
+<div class="mockup-window">
+  <div class="mockup-header">
+    <div class="mockup-dots"><span></span><span></span><span></span></div>
+    <div class="mockup-title">Vereint – Moments & Rituale (Live-Interaktion & Weltkarte)</div>
+    <div class="mockup-badge">Live View</div>
+  </div>
+  <div class="mockup-body mockup-moments-layout">
+    <!-- Active Moment Banner Card -->
+    <div class="moment-active-card">
+      <div class="moment-header-row">
+        <div class="moment-title-wrap">
+          <span class="moment-icon">🎉</span>
+          <div>
+            <h2 class="moment-name">Sommerfest Eröffnungs-Anstoßen 🍻</h2>
+            <div class="moment-subtitle">Initiator: Vorstand Max • Kategorie: Toast (Anstoßen)</div>
+          </div>
+        </div>
+        <div class="moment-countdown-badge">
+          <span class="pulse-dot"></span>
+          <span>Noch 14 Min aktiv</span>
+        </div>
+      </div>
+
+      <!-- Quick Reaction Bar -->
+      <div class="moment-reaction-panel">
+        <div class="panel-label">Schnell-Reaktion senden (Mehrfach möglich):</div>
+        <div class="reaction-buttons-grid">
+          <button class="reaction-btn active-react"><span class="react-emoji">🍻</span><span class="react-count">18</span><span class="react-label">Anstoßen</span></button>
+          <button class="reaction-btn"><span class="react-emoji">📣</span><span class="react-count">9</span><span class="react-label">Jubeln</span></button>
+          <button class="reaction-btn"><span class="react-emoji">❤️</span><span class="react-count">12</span><span class="react-label">Herz</span></button>
+          <button class="reaction-btn"><span class="react-emoji">🔥</span><span class="react-count">15</span><span class="react-label">Stimmung</span></button>
+          <button class="reaction-btn"><span class="react-emoji">🙏</span><span class="react-count">3</span><span class="react-label">Gebet</span></button>
+          <button class="reaction-btn"><span class="react-emoji">👍</span><span class="react-count">7</span><span class="react-label">Daumen</span></button>
+        </div>
+
+        <div class="moment-input-row">
+          <label for="moment-status-input" class="visually-hidden">Statusnachricht zum Moment</label>
+          <input type="text" id="moment-status-input" class="moment-status-input" value="Prost auf ein erfolgreiches Vereinsjahr! 🍻" readonly />
+          <button class="btn btn-primary btn-send-moment">🚀 Absenden</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2-Column: Timeline Feed & Mini World Map -->
+    <div class="moment-columns-grid">
+      <!-- Live Timeline -->
+      <div class="moment-feed-card">
+        <div class="feed-header">
+          <h3>Live-Reaktionen (42)</h3>
+          <span class="feed-live-indicator">● Live</span>
+        </div>
+        <div class="timeline-items-list">
+          <div class="timeline-item">
+            <div class="item-avatar">MM</div>
+            <div class="item-content">
+              <div class="item-top">
+                <span class="item-user">Max Mustermann</span>
+                <span class="item-role">Vorstand</span>
+                <span class="item-time">Gerade eben</span>
+              </div>
+              <div class="item-body">
+                <span class="item-react-badge">🍻 Anstoßen</span>
+                <span class="item-text">Das Fass ist angezapft! Auf uns!</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="item-avatar guest-av">TG</div>
+            <div class="item-content">
+              <div class="item-top">
+                <span class="item-user">Thomas (Gast)</span>
+                <span class="item-role-guest">Gast</span>
+                <span class="item-time">Vor 2 Min</span>
+              </div>
+              <div class="item-body">
+                <span class="item-react-badge">🔥 Stimmung</span>
+                <span class="item-text">Großartige Stimmung hier! Danke für die Einladung!</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="item-avatar">EM</div>
+            <div class="item-content">
+              <div class="item-top">
+                <span class="item-user">Erika Muster</span>
+                <span class="item-role">Vorstand</span>
+                <span class="item-time">Vor 4 Min</span>
+              </div>
+              <div class="item-body">
+                <span class="item-react-badge">❤️ Herz</span>
+                <span class="item-text">Schön, dass alle da sind!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini World Map Visualizer -->
+      <div class="moment-map-card">
+        <div class="map-header">
+          <h3>📍 Teilnehmer-Weltkarte</h3>
+          <span class="map-status">12 Freigaben</span>
+        </div>
+        <div class="map-canvas-mockup">
+          <div class="map-pin pin-1" style="top: 40%; left: 48%;" title="Vereinsheim Hauptplatz (8 Teilnehmer)">📍 <span class="pin-badge">8</span></div>
+          <div class="map-pin pin-2" style="top: 36%; left: 52%;" title="Lukas Schmidt (Berlin)">📍 <span class="pin-badge">1</span></div>
+          <div class="map-pin pin-3" style="top: 44%; left: 44%;" title="Sarah Weber (München)">📍 <span class="pin-badge">1</span></div>
+          <div class="map-legend">GeoJSON Visualisierung • Opt-in Standortfreigabe</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
