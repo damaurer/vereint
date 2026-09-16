@@ -38,7 +38,8 @@ class LiquibaseSchemaTest @Autowired constructor(
     private val chatMessageRepository: ChatMessageRepository,
     private val notificationRepository: NotificationRepository,
     private val pushSubscriptionRepository: PushSubscriptionRepository,
-    private val drinkWithMeSessionRepository: DrinkWithMeSessionRepository,
+    private val momentSessionRepository: MomentSessionRepository,
+    private val momentResponseRepository: MomentResponseRepository,
     private val auditLogRepository: AuditLogRepository,
     private val jdbcTemplate: JdbcTemplate
 ) {
@@ -196,6 +197,16 @@ class LiquibaseSchemaTest @Autowired constructor(
         )
         conversationRepository.save(conversation)
 
+        val momentConvId = UUID.randomUUID()
+        val momentConversation = ConversationEntity(
+            id = momentConvId,
+            type = "moment",
+            event = event,
+            title = "Moment: Anstoßen",
+            expiresAt = Instant.now().plusSeconds(86400)
+        )
+        conversationRepository.save(momentConversation)
+
         val memberId = UUID.randomUUID()
         val convMember = ConversationMemberEntity(
             id = memberId,
@@ -234,16 +245,30 @@ class LiquibaseSchemaTest @Autowired constructor(
         pushSubscriptionRepository.save(pushSubscription)
 
         val sessionId = UUID.randomUUID()
-        val session = DrinkWithMeSessionEntity(
+        val session = MomentSessionEntity(
             id = sessionId,
-            user = user,
+            creator = user,
             event = event,
+            title = "Anstoßen",
+            topicType = "toast",
             latitude = 48.1351,
             longitude = 11.5820,
             message = "Am Tresen",
             expiresAt = Instant.now().plusSeconds(3600)
         )
-        drinkWithMeSessionRepository.save(session)
+        momentSessionRepository.save(session)
+
+        val responseId = UUID.randomUUID()
+        val momentResponse = MomentResponseEntity(
+            id = responseId,
+            moment = session,
+            user = user,
+            reaction = "CHEERS",
+            statusText = "Dabei!",
+            latitude = 48.1352,
+            longitude = 11.5821
+        )
+        momentResponseRepository.save(momentResponse)
 
         val auditId = UUID.randomUUID()
         val auditLog = AuditLogEntity(
@@ -258,7 +283,8 @@ class LiquibaseSchemaTest @Autowired constructor(
 
         assertNotNull(notificationRepository.findById(notifId).orElse(null))
         assertNotNull(pushSubscriptionRepository.findById(subscrId).orElse(null))
-        assertNotNull(drinkWithMeSessionRepository.findById(sessionId).orElse(null))
+        assertNotNull(momentSessionRepository.findById(sessionId).orElse(null))
+        assertNotNull(momentResponseRepository.findById(responseId).orElse(null))
         assertNotNull(auditLogRepository.findById(auditId).orElse(null))
     }
 

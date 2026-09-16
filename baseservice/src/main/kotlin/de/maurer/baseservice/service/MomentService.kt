@@ -1,0 +1,446 @@
+package de.maurer.baseservice.service
+
+import de.maurer.baseservice.domain.*
+import de.maurer.baseservice.dto.*
+import de.maurer.baseservice.error.*
+import de.maurer.baseservice.repository.*
+import de.maurer.baseservice.security.UserPrincipal
+import de.maurer.baseservice.security.UserRole
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
+
+/**
+ * Fachlicher Slice für Gemeinschaftsmomente & Rituale (Moments).
+ *
+ * Moments ermöglichen interaktive Aktionen während eines Events (gemeinsames Anstoßen,
+ * Gebetskreise, Jubeln/Anfeuern, Check-ins).
+ *
+ * Sicherheits- und Datenschutzregeln (deny by default):
+ * - Nur Event-Owner, teilnehmende Mitglieder sowie Vorstand/Admin haben Zugriff auf Momente.
+ * - Standortübermittlung erfolgt ausschließlich opt-in mit expliziter Einwilligung (consent=true).
+ * - Beim Start eines Moments wird automatisch eine verknüpfte 24h-Chat-Konversation angelegt
+ *   und eine Push-/In-App-Benachrichtigung an alle Event-Teilnehmer versendet.
+ * - Teilnehmer können mehrfach während der Laufzeit Statusbeiträge und Stimmungen übermitteln.
+ * - Nach Ablauf oder manuellem Abschluss wird der Moment in die Event-Historie archiviert.
+ */
+@Service
+@Transactional
+class MomentService(
+    private val momentSessionRepository: MomentSessionRepository,
+    private val momentResponseRepository: MomentResponseRepository,
+    private val eventRepository: EventRepository,
+    private val eventParticipantRepository: EventParticipantRepository,
+    private val userRoleRepository: UserRoleRepository,
+    private val userService: UserService,
+    private val chatService: ChatService,
+    private val notificationService: NotificationService,
+    private val auditService: AuditService
+) {
+
+    /**
+     * Startet einen neuen Gemeinschaftsmoment im Kontext eines Events.
+     */
+    fun startMoment(eventId: UUID, request: StartMomentRequest, principal: UserPrincipal): MomentSessionDto {
+        val caller = userService.getOrCreateUser(principal)
+        val event = requireEvent(eventId)
+        requireMemberAccess(caller, principal, event)
+        requireEventOpen(event)
+
+        val title = request.title.trim()
+        if (title.isBlank()) {
+            throw InvalidRequestException("title darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+        }
+        val topicType = request.topicType.trim()
+        if (topicType.isBlank()) {
+            throw InvalidRequestException("topicType darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+        }
+
+        validateCoordinatesAndConsent(request.latitude, request.longitude, request.consent)
+
+        val durationMinutes = request.durationMinutes.coerceIn(1, 1440)
+        val expiresAt = Instant.now().plus(Duration.ofMinutes(durationMinutes.toLong()))
+
+        val conversation = chatService.createMomentConversation(event, title)
+
+        val session = MomentSessionEntity(
+            event = event,
+            creator = caller,
+            conversation = conversation,
+            title = title,
+            topicType = topicType,
+            message = request.message?.trim()?.ifBlank { null },
+            latitude = if (request.consent) request.latitude else null,
+            longitude = if (request.consent) request.longitude else null,
+            active = true,
+            expiresAt = expiresAt
+        )
+        val saved = momentSessionRepository.save(session)
+
+        // Benachrichtigung & Web-Push an alle Teilnehmer des Events versenden
+        val participantUsers = eventParticipantRepository.findByEventId(event.id).mapNotNull { it.user }
+        val eventOwner = event.owner
+        val recipients = (participantUsers + listOfNotNull(eventOwner))
+            .distinctBy { it.id }
+            .filter { it.id != caller.id }
+
+        if (recipients.isNotEmpty()) {
+            val notifTitle = "Neuer Moment: ${saved.title}"
+            val notifBody = "${caller.displayName} hat den Moment '${saved.title}' gestartet. Sei dabei!"
+            notificationService.notifyUsers(recipients, notifTitle, notifBody, NOTIFICATION_TYPE_MOMENT)
+        }
+
+        auditService.recordMomentAction(
+            actor = caller,
+            action = AuditService.ACTION_MOMENT_STARTED,
+            momentId = saved.id,
+            details = "title=${saved.title}; topic=${saved.topicType}; durationMinutes=$durationMinutes"
+        )
+
+        return toSessionDto(saved, 0)
+    }
+
+    /**
+     * Sendet eine Status- bzw. Stimmungsrückmeldung zu einem aktiven Moment ab.
+     * Mehrfache Abgaben desselben Nutzers während der Session sind ausdrücklich zulässig.
+     */
+    fun submitResponse(
+        eventId: UUID,
+        momentId: UUID,
+        request: SubmitMomentResponseRequest,
+        principal: UserPrincipal
+    ): MomentResponseDto {
+        val caller = userService.getOrCreateUser(principal)
+        val event = requireEvent(eventId)
+        requireMemberAccess(caller, principal, event)
+        requireEventOpen(event)
+
+        val session = requireMomentSession(momentId)
+        if (session.event?.id != event.id) {
+            throw ResourceNotFoundException("Moment mit ID '$momentId' gehört nicht zu Event '$eventId'", ErrorCode.NOT_FOUND)
+        }
+
+        if (!session.active || session.expiresAt.isBefore(Instant.now())) {
+            if (session.active) {
+                completeMomentInternal(session)
+            }
+            throw InvalidRequestException("Der Moment ist abgelaufen oder nicht mehr aktiv", ErrorCode.INVALID_REQUEST)
+        }
+
+        val reaction = request.reaction.trim()
+        if (reaction.isBlank()) {
+            throw InvalidRequestException("reaction darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+        }
+
+        validateCoordinatesAndConsent(request.latitude, request.longitude, request.consent)
+
+        val response = MomentResponseEntity(
+            moment = session,
+            user = caller,
+            reaction = reaction,
+            statusText = request.statusText?.trim()?.ifBlank { null },
+            latitude = if (request.consent) request.latitude else null,
+            longitude = if (request.consent) request.longitude else null
+        )
+        val saved = momentResponseRepository.save(response)
+        return toResponseDto(saved)
+    }
+
+    /**
+     * Listet alle aktiven Momente eines Events auf.
+     */
+    @Transactional
+    fun listActiveMoments(eventId: UUID, principal: UserPrincipal): List<MomentSessionDto> {
+        val caller = userService.getOrCreateUser(principal)
+        val event = requireEvent(eventId)
+        requireMemberAccess(caller, principal, event)
+
+        val sessions = momentSessionRepository.findByEventIdAndActiveTrue(event.id)
+        val now = Instant.now()
+        val activeDtos = mutableListOf<MomentSessionDto>()
+
+        for (session in sessions) {
+            if (session.expiresAt.isBefore(now)) {
+                completeMomentInternal(session)
+            } else {
+                val count = momentResponseRepository.countByMomentId(session.id).toInt()
+                activeDtos.add(toSessionDto(session, count))
+            }
+        }
+
+        return activeDtos.sortedByDescending { it.createdAt }
+    }
+
+    /**
+     * Ruft die Detailansicht eines Moments ab (inklusive Antwort-Stream und GeoJSON-Karte).
+     */
+    @Transactional
+    fun getMomentDetail(eventId: UUID, momentId: UUID, principal: UserPrincipal): MomentDetailDto {
+        val caller = userService.getOrCreateUser(principal)
+        val event = requireEvent(eventId)
+        requireMemberAccess(caller, principal, event)
+
+        val session = requireMomentSession(momentId)
+        if (session.event?.id != event.id) {
+            throw ResourceNotFoundException("Moment mit ID '$momentId' gehört nicht zu Event '$eventId'", ErrorCode.NOT_FOUND)
+        }
+
+        if (session.active && session.expiresAt.isBefore(Instant.now())) {
+            completeMomentInternal(session)
+        }
+
+        val responses = momentResponseRepository.findByMomentIdOrderByCreatedAtAsc(session.id)
+        val responseDtos = responses.map { toResponseDto(it) }
+        val mapGeoJson = buildGeoJson(session, responses)
+
+        return MomentDetailDto(
+            session = toSessionDto(session, responses.size),
+            responses = responseDtos,
+            mapGeoJson = mapGeoJson
+        )
+    }
+
+    /**
+     * Liefert die GeoJSON FeatureCollection aller freigegebenen Teilnehmer-Standorte.
+     */
+    @Transactional(readOnly = true)
+    fun getMomentMapGeoJson(eventId: UUID, momentId: UUID, principal: UserPrincipal): MomentMapGeoJsonDto {
+        val caller = userService.getOrCreateUser(principal)
+        val event = requireEvent(eventId)
+        requireMemberAccess(caller, principal, event)
+
+        val session = requireMomentSession(momentId)
+        if (session.event?.id != event.id) {
+            throw ResourceNotFoundException("Moment mit ID '$momentId' gehört nicht zu Event '$eventId'", ErrorCode.NOT_FOUND)
+        }
+
+        val responses = momentResponseRepository.findByMomentIdOrderByCreatedAtAsc(session.id)
+        return buildGeoJson(session, responses)
+    }
+
+    /**
+     * Schließt einen Moment vorzeitig oder regulär ab und erzeugt die Zusammenfassung für die Event-Historie.
+     */
+    fun completeMoment(eventId: UUID, momentId: UUID, principal: UserPrincipal): MomentSummaryDto {
+        val caller = userService.getOrCreateUser(principal)
+        val event = requireEvent(eventId)
+        requireMemberAccess(caller, principal, event)
+
+        val session = requireMomentSession(momentId)
+        if (session.event?.id != event.id) {
+            throw ResourceNotFoundException("Moment mit ID '$momentId' gehört nicht zu Event '$eventId'", ErrorCode.NOT_FOUND)
+        }
+
+        if (!canManageMoment(caller, principal, event, session)) {
+            throw AccessDeniedException(
+                "Nur der Ersteller des Moments, der Event-Owner oder Vorstand/Admin dürfen diesen Moment abschließen",
+                ErrorCode.ACCESS_DENIED
+            )
+        }
+
+        return completeMomentInternal(session)
+    }
+
+    /**
+     * Listet alle vergangenen / archivierten Momente eines Events für die Kalender- und Event-Historie auf.
+     */
+    @Transactional
+    fun listMomentHistory(eventId: UUID, principal: UserPrincipal): List<MomentSummaryDto> {
+        val caller = userService.getOrCreateUser(principal)
+        val event = requireEvent(eventId)
+        requireMemberAccess(caller, principal, event)
+
+        val sessions = momentSessionRepository.findByEventIdOrderByCreatedAtDesc(event.id)
+        val now = Instant.now()
+        sessions.forEach { s ->
+            if (s.active && s.expiresAt.isBefore(now)) {
+                completeMomentInternal(s)
+            }
+        }
+
+        return sessions.map { toSummaryDto(it) }
+    }
+
+    private fun completeMomentInternal(session: MomentSessionEntity): MomentSummaryDto {
+        if (session.active) {
+            val responses = momentResponseRepository.findByMomentIdOrderByCreatedAtAsc(session.id)
+            val participantIds = responses.mapNotNull { it.user?.id }.toSet()
+            val uniqueParticipants = (participantIds + listOfNotNull(session.creator?.id)).distinct().size
+            val totalResponses = responses.size
+            val summaryText = "$uniqueParticipants Teilnehmer haben $totalResponses Statusbeiträge zum Moment '${session.title}' (${session.topicType}) geteilt."
+
+            session.active = false
+            session.completedAt = Instant.now()
+            session.summary = summaryText
+            momentSessionRepository.save(session)
+
+            auditService.recordMomentAction(
+                actor = session.creator,
+                action = AuditService.ACTION_MOMENT_COMPLETED,
+                momentId = session.id,
+                details = summaryText
+            )
+        }
+        return toSummaryDto(session)
+    }
+
+    private fun buildGeoJson(session: MomentSessionEntity, responses: List<MomentResponseEntity>): MomentMapGeoJsonDto {
+        val features = mutableListOf<GeoJsonFeatureDto>()
+
+        if (session.latitude != null && session.longitude != null) {
+            features.add(
+                GeoJsonFeatureDto(
+                    geometry = GeoJsonGeometryDto(
+                        type = "Point",
+                        coordinates = listOf(session.longitude!!, session.latitude!!)
+                    ),
+                    properties = mapOf(
+                        "id" to session.id.toString(),
+                        "type" to "session_initiator",
+                        "userId" to session.creator?.id?.toString(),
+                        "userName" to session.creator?.displayName,
+                        "title" to session.title,
+                        "topicType" to session.topicType,
+                        "message" to session.message,
+                        "createdAt" to session.createdAt.toString()
+                    )
+                )
+            )
+        }
+
+        responses.filter { it.latitude != null && it.longitude != null }.forEach { resp ->
+            features.add(
+                GeoJsonFeatureDto(
+                    geometry = GeoJsonGeometryDto(
+                        type = "Point",
+                        coordinates = listOf(resp.longitude!!, resp.latitude!!)
+                    ),
+                    properties = mapOf(
+                        "id" to resp.id.toString(),
+                        "type" to "response",
+                        "userId" to resp.user?.id?.toString(),
+                        "userName" to resp.user?.displayName,
+                        "reaction" to resp.reaction,
+                        "statusText" to resp.statusText,
+                        "createdAt" to resp.createdAt.toString()
+                    )
+                )
+            )
+        }
+
+        return MomentMapGeoJsonDto(
+            type = "FeatureCollection",
+            features = features
+        )
+    }
+
+    private fun validateCoordinatesAndConsent(lat: Double?, lon: Double?, consent: Boolean) {
+        if ((lat != null && lon == null) || (lat == null && lon != null)) {
+            throw InvalidRequestException("Breitengrad und Längengrad müssen gemeinsam angegeben werden", ErrorCode.INVALID_REQUEST)
+        }
+        if (lat != null && (lat < -90.0 || lat > 90.0)) {
+            throw InvalidRequestException("latitude muss zwischen -90 und 90 liegen", ErrorCode.INVALID_REQUEST)
+        }
+        if (lon != null && (lon < -180.0 || lon > 180.0)) {
+            throw InvalidRequestException("longitude muss zwischen -180 und 180 liegen", ErrorCode.INVALID_REQUEST)
+        }
+        if ((lat != null || lon != null) && !consent) {
+            throw ConsentRequiredException("Standortfreigabe erfordert explizite Einwilligung (consent=true)", ErrorCode.CONSENT_REQUIRED)
+        }
+    }
+
+    private fun requireEvent(id: UUID): EventEntity =
+        eventRepository.findById(id).orElseThrow {
+            ResourceNotFoundException("Event mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+        }
+
+    private fun requireMomentSession(id: UUID): MomentSessionEntity =
+        momentSessionRepository.findById(id).orElseThrow {
+            ResourceNotFoundException("Moment mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+        }
+
+    private fun requireEventOpen(event: EventEntity) {
+        if (event.status == EventStatus.cancelled || event.status == EventStatus.archived) {
+            throw EventNotActiveException("Das Event ist nicht aktiv", ErrorCode.EVENT_NOT_ACTIVE)
+        }
+    }
+
+    private fun requireMemberAccess(caller: UserEntity, principal: UserPrincipal, event: EventEntity) {
+        if (!canViewEvent(caller, principal, event)) {
+            throw AccessDeniedException("Keine Berechtigung für dieses Event", ErrorCode.ACCESS_DENIED)
+        }
+    }
+
+    private fun canViewEvent(caller: UserEntity, principal: UserPrincipal, event: EventEntity): Boolean {
+        if (isBoardOrAdmin(caller, principal)) return true
+        if (event.owner?.id == caller.id) return true
+        return eventParticipantRepository.findByEventIdAndUserId(event.id, caller.id).isPresent
+    }
+
+    private fun canManageMoment(caller: UserEntity, principal: UserPrincipal, event: EventEntity, session: MomentSessionEntity): Boolean {
+        if (isBoardOrAdmin(caller, principal)) return true
+        if (event.owner?.id == caller.id) return true
+        return session.creator?.id == caller.id
+    }
+
+    private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean {
+        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
+        val roles = principal.roles + dbRoles
+        return roles.any { it == UserRole.BOARD || it == UserRole.ADMIN }
+    }
+
+    private fun toSessionDto(session: MomentSessionEntity, responsesCount: Int): MomentSessionDto {
+        return MomentSessionDto(
+            id = session.id.toString(),
+            eventId = session.event?.id?.toString().orEmpty(),
+            creatorId = session.creator?.id?.toString().orEmpty(),
+            creatorName = session.creator?.displayName.orEmpty(),
+            conversationId = session.conversation?.id?.toString(),
+            title = session.title,
+            topicType = session.topicType,
+            message = session.message,
+            latitude = session.latitude,
+            longitude = session.longitude,
+            active = session.active,
+            responsesCount = responsesCount,
+            expiresAt = session.expiresAt,
+            createdAt = session.createdAt,
+            summary = session.summary
+        )
+    }
+
+    private fun toResponseDto(response: MomentResponseEntity): MomentResponseDto {
+        return MomentResponseDto(
+            id = response.id.toString(),
+            momentId = response.moment?.id?.toString().orEmpty(),
+            userId = response.user?.id?.toString().orEmpty(),
+            userName = response.user?.displayName.orEmpty(),
+            reaction = response.reaction,
+            statusText = response.statusText,
+            latitude = response.latitude,
+            longitude = response.longitude,
+            createdAt = response.createdAt
+        )
+    }
+
+    private fun toSummaryDto(session: MomentSessionEntity): MomentSummaryDto {
+        val responses = momentResponseRepository.findByMomentId(session.id)
+        val participantIds = responses.mapNotNull { it.user?.id }.toSet()
+        val uniqueCount = (participantIds + listOfNotNull(session.creator?.id)).distinct().size
+        return MomentSummaryDto(
+            momentId = session.id.toString(),
+            title = session.title,
+            topicType = session.topicType,
+            totalResponses = responses.size,
+            uniqueParticipants = uniqueCount,
+            summary = session.summary,
+            completedAt = session.completedAt
+        )
+    }
+
+    companion object {
+        const val NOTIFICATION_TYPE_MOMENT = "moment"
+    }
+}

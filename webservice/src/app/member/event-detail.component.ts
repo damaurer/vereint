@@ -1,16 +1,18 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of, catchError } from 'rxjs';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
 import { eventStatusLabel, formatDateTime } from './member-format';
-import type { EventDetail, EventParticipant } from '../api/api.types';
+import type { EventDetail, EventParticipant, MomentSessionDto, MomentSummaryDto } from '../api/api.types';
 import { AvatarBadgeComponent, StatusBadgeComponent, type StatusTone } from '../ui';
 
 interface EventDetailView {
   event: EventDetail;
   participants: EventParticipant[];
+  moments: MomentSessionDto[];
+  history: MomentSummaryDto[];
 }
 
 /** Mögliche RSVP-Antwort eines Mitglieds (reine Client-Auswahl). */
@@ -125,6 +127,54 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
               }
             </ul>
           }
+
+          <!-- Gemeinschaftsmomente & Rituale (Moments) Sektion -->
+          <h2 class="member-subtitle">Moments & Rituale</h2>
+          <div class="moments-banner-card">
+            <div class="moments-banner-head">
+              <span class="moments-banner-icon">✨</span>
+              <div>
+                <strong>Gemeinschaftsmomente</strong>
+                <p>
+                  @if (view.moments.length > 0) {
+                    {{ view.moments.length }} aktiver Moment läuft gerade!
+                  } @else {
+                    Starte ein gemeinsames Anstoßen, Gebet oder Anfeuern für alle Teilnehmer.
+                  }
+                </p>
+              </div>
+            </div>
+            <a
+              class="member-button moments-btn"
+              [routerLink]="['/events', view.event.id, 'moments']"
+            >
+              @if (view.moments.length > 0) {
+                Moments ansehen ({{ view.moments.length }} aktiv) →
+              } @else {
+                Moment starten / Übersicht →
+              }
+            </a>
+          </div>
+
+          <!-- Vergangene Moments / Archiv -->
+          @if (view.history.length > 0) {
+            <h3 class="member-subtitle history-title">Vergangene Moments & Rituale</h3>
+            <ul class="detail-history-list">
+              @for (item of view.history; track item.momentId) {
+                <li class="detail-history-item">
+                  <div class="history-item-head">
+                    <span class="history-chip">{{ item.topicType }}</span>
+                    <strong>{{ item.title }}</strong>
+                    <time class="history-date">{{ formatDateTime(item.completedAt) }}</time>
+                  </div>
+                  <p class="history-text">{{ item.summary }}</p>
+                  <span class="history-meta">
+                    👥 {{ item.uniqueParticipants }} Teilnehmer · 💬 {{ item.totalResponses }} Beiträge
+                  </span>
+                </li>
+              }
+            </ul>
+          }
         }
       </section>
     </main>
@@ -203,6 +253,85 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
       .detail-participant-name {
         flex: 1 1 auto;
       }
+      .moments-banner-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem;
+        border-radius: var(--radius-md, 0.75rem);
+        background-color: var(--color-surface-raised, rgba(148, 163, 184, 0.08));
+        border: 1px solid var(--color-border);
+      }
+      .moments-banner-head {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .moments-banner-icon {
+        font-size: 1.5rem;
+      }
+      .moments-banner-head strong {
+        display: block;
+        color: var(--color-text);
+        font-size: 0.95rem;
+      }
+      .moments-banner-head p {
+        margin: 0.15rem 0 0;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+      }
+      .moments-btn {
+        align-self: flex-start;
+      }
+      .history-title {
+        margin-top: 1.5rem;
+      }
+      .detail-history-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+      .detail-history-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        padding: 0.75rem;
+        border-radius: var(--radius-md, 0.75rem);
+        background: rgba(148, 163, 184, 0.05);
+        border: 1px solid var(--color-border);
+      }
+      .history-item-head {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .history-chip {
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        background-color: var(--color-brand-soft);
+        color: var(--color-brand);
+        border: 1px solid var(--color-brand);
+      }
+      .history-date {
+        margin-left: auto;
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+      }
+      .history-text {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--color-text);
+      }
+      .history-meta {
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+      }
     `,
   ],
 })
@@ -230,6 +359,8 @@ export class EventDetailComponent implements OnInit, OnDestroy {
       forkJoin({
         event: this.api.getEvent(eventId),
         participants: this.api.listParticipants(eventId),
+        moments: this.api.listMoments(eventId).pipe(catchError(() => of([]))),
+        history: this.api.listMomentHistory(eventId).pipe(catchError(() => of([]))),
       }),
     );
   }

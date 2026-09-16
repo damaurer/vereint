@@ -45,12 +45,12 @@ export const RESOLVER_TIMEOUT_MS = 800;
 export const RESOLVER_STALE_GRACE_MS = 60_000;
 
 export function hasAnyRole(identity: RequestIdentity | undefined, roles: UserRole[]): boolean {
-  if (!identity || !identity.roles) return false;
+  if (!identity?.roles) return false;
   return roles.some((role) => identity.roles.includes(role));
 }
 
 export function hasBoardRole(identity: RequestIdentity | undefined, boardRoles: BoardRole[]): boolean {
-  if (!identity || !identity.roles) return false;
+  if (!identity?.roles) return false;
   if (identity.roles.includes('admin')) return true;
   if (!identity.roles.includes('board')) return false;
   return identity.boardRole ? boardRoles.includes(identity.boardRole) : true;
@@ -107,7 +107,7 @@ export function resolvePathAppContext(pathname: string): PathAppContextMatch | n
     '/sublists',
     '/chat',
     '/notifications',
-    '/drink-with-me',
+    '/moments',
   ];
 
   if (memberPaths.some((prefix) => clean === prefix || clean.startsWith(`${prefix}/`))) {
@@ -176,7 +176,7 @@ export interface AccessDecisionResult {
 export async function resolveAccessDecision(options: ResolveAccessOptions): Promise<AccessDecisionResult> {
   const { identity, accessToken, sessionId } = options;
 
-  if (!identity || !identity.uid) {
+  if (!identity?.uid) {
     return { outcome: 'unauthenticated', decision: denyAllDecision() };
   }
 
@@ -372,6 +372,19 @@ async function checkGuestAccess(options: CheckResourceAccessOptions): Promise<Ac
   }
 }
 
+function evaluateEventAccess(
+  decision: ResolvedAccessDecision,
+  appContext: 'event' | 'eventOwner',
+  eventId?: string,
+): boolean {
+  if (!decision.allowedAppContexts.includes(appContext)) return false;
+  if (!eventId) return true;
+  const inScope = appContext === 'eventOwner'
+    ? decision.ownedEvents.includes(eventId)
+    : decision.eventScopes.includes(eventId);
+  return inScope || decision.roles.includes('board') || decision.roles.includes('admin');
+}
+
 /**
  * Prüft einen App-Kontext serverseitig. Rückgabe ist bewusst dreiwertig:
  * Freigabe, Ablehnung oder Störung des Fachservices.
@@ -404,29 +417,9 @@ export async function checkResourceAccess(options: CheckResourceAccessOptions): 
     return { outcome: 'denied', decision };
   }
 
-  // `eventOwner` folgt ausschließlich `ownedEvents`; Teilnahme genügt nicht.
-  if (appContext === 'eventOwner') {
-    if (!decision.allowedAppContexts.includes('eventOwner')) {
-      return { outcome: 'denied', decision };
-    }
-    if (!eventId) return { outcome: 'allowed', decision };
-    if (decision.ownedEvents.includes(eventId)) return { outcome: 'allowed', decision };
-    if (decision.roles.includes('board') || decision.roles.includes('admin')) {
-      return { outcome: 'allowed', decision };
-    }
-    return { outcome: 'denied', decision };
-  }
-
-  if (appContext === 'event') {
-    if (!decision.allowedAppContexts.includes('event')) {
-      return { outcome: 'denied', decision };
-    }
-    if (!eventId) return { outcome: 'allowed', decision };
-    if (decision.eventScopes.includes(eventId)) return { outcome: 'allowed', decision };
-    if (decision.roles.includes('board') || decision.roles.includes('admin')) {
-      return { outcome: 'allowed', decision };
-    }
-    return { outcome: 'denied', decision };
+  if (appContext === 'eventOwner' || appContext === 'event') {
+    const isAllowed = evaluateEventAccess(decision, appContext, eventId);
+    return { outcome: isAllowed ? 'allowed' : 'denied', decision };
   }
 
   return decision.allowedAppContexts.includes(appContext)

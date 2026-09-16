@@ -84,7 +84,7 @@
         <sql>
             ALTER TABLE image_assets
             ADD CONSTRAINT ck_image_assets_purpose
-            CHECK (purpose IN ('profile', 'event', 'drink', 'drinkWithMe'))
+            CHECK (purpose IN ('profile', 'event', 'drink', 'moment'))
         </sql>
         <sql>
             ALTER TABLE image_assets

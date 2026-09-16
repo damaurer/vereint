@@ -494,6 +494,7 @@
                 <constraints foreignKeyName="fk_conversations_event" references="events(id)" deleteCascade="true"/>
             </column>
             <column name="title" type="VARCHAR(255)"/>
+            <column name="expires_at" type="TIMESTAMP WITH TIME ZONE"/>
             <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
@@ -625,41 +626,90 @@
         </rollback>
     </changeSet>
 
-    <!-- 21. Drink With Me Sessions table -->
-    <changeSet id="021-create-drink-with-me-sessions" author="junie">
-        <createTable tableName="drink_with_me_sessions">
+    <!-- 21. Moment Sessions table -->
+    <changeSet id="021-create-moment-sessions" author="junie">
+        <createTable tableName="moment_sessions">
             <column name="id" type="${uuid.type}">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="user_id" type="${uuid.type}">
-                <constraints nullable="false" foreignKeyName="fk_drink_with_me_user" references="users(id)" deleteCascade="true"/>
-            </column>
             <column name="event_id" type="${uuid.type}">
-                <constraints nullable="false" foreignKeyName="fk_drink_with_me_event" references="events(id)" deleteCascade="true"/>
+                <constraints nullable="false" foreignKeyName="fk_moment_sessions_event" references="events(id)" deleteCascade="true"/>
             </column>
+            <column name="creator_user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_moment_sessions_creator" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="conversation_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_moment_sessions_conversation" references="conversations(id)"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="topic_type" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="VARCHAR(500)"/>
             <column name="latitude" type="DOUBLE PRECISION"/>
             <column name="longitude" type="DOUBLE PRECISION"/>
-            <column name="message" type="VARCHAR(255)"/>
             <column name="active" type="BOOLEAN" defaultValueBoolean="true">
                 <constraints nullable="false"/>
             </column>
             <column name="expires_at" type="TIMESTAMP WITH TIME ZONE">
                 <constraints nullable="false"/>
             </column>
+            <column name="completed_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="summary" type="${text.type}"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="moment_sessions" indexName="idx_moment_sessions_event_active">
+            <column name="event_id"/>
+            <column name="active"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="moment_sessions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 22. Moment Responses table -->
+    <changeSet id="022-create-moment-responses" author="junie">
+        <createTable tableName="moment_responses">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="moment_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_moment_responses_moment" references="moment_sessions(id)" deleteCascade="true"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_moment_responses_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="reaction" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status_text" type="VARCHAR(255)"/>
+            <column name="latitude" type="DOUBLE PRECISION"/>
+            <column name="longitude" type="DOUBLE PRECISION"/>
             <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-        <createIndex tableName="drink_with_me_sessions" indexName="idx_drink_with_me_active">
-            <column name="active"/>
+        <createIndex tableName="moment_responses" indexName="idx_moment_responses_moment_created">
+            <column name="moment_id"/>
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex tableName="moment_responses" indexName="idx_moment_responses_user">
+            <column name="user_id"/>
         </createIndex>
         <rollback>
-            <dropTable tableName="drink_with_me_sessions"/>
+            <dropTable tableName="moment_responses"/>
         </rollback>
     </changeSet>
 
-    <!-- 22. Audit Logs table -->
-    <changeSet id="022-create-audit-logs" author="junie">
+    <!-- 23. Audit Logs table -->
+    <changeSet id="023-create-audit-logs" author="junie">
         <createTable tableName="audit_logs">
             <column name="id" type="${uuid.type}">
                 <constraints primaryKey="true" nullable="false"/>

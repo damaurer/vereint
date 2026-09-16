@@ -192,9 +192,18 @@ interface PushSubscriptionRepository : JpaRepository<PushSubscriptionEntity, UUI
 }
 
 @Repository
-interface DrinkWithMeSessionRepository : JpaRepository<DrinkWithMeSessionEntity, UUID> {
-    fun findByEventIdAndActiveTrue(eventId: UUID): List<DrinkWithMeSessionEntity>
-    fun findByEventIdAndUserIdAndActiveTrue(eventId: UUID, userId: UUID): List<DrinkWithMeSessionEntity>
+interface MomentSessionRepository : JpaRepository<MomentSessionEntity, UUID> {
+    fun findByEventIdAndActiveTrue(eventId: UUID): List<MomentSessionEntity>
+    fun findByEventIdAndCreatorIdAndActiveTrue(eventId: UUID, creatorId: UUID): List<MomentSessionEntity>
+    fun findByEventIdOrderByCreatedAtDesc(eventId: UUID): List<MomentSessionEntity>
+}
+
+@Repository
+interface MomentResponseRepository : JpaRepository<MomentResponseEntity, UUID> {
+    fun findByMomentIdOrderByCreatedAtAsc(momentId: UUID): List<MomentResponseEntity>
+    fun findByMomentId(momentId: UUID): List<MomentResponseEntity>
+    fun findByUserId(userId: UUID): List<MomentResponseEntity>
+    fun countByMomentId(momentId: UUID): Long
 }
 
 @Repository

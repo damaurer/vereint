@@ -7,7 +7,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![MinIO](https://img.shields.io/badge/MinIO-S3_Storage-C72C48?logo=minio&logoColor=white)](https://min.io/)
 
-**Vereint** ist eine moderne, hochperformante All-in-One-Plattform für Vereine, Clubs und Organisationen. Sie kombiniert ein **doppeltes Kassenbuch (Double-Entry Ledger)**, eine blitzschnelle **Tablet-Strichliste (Kiosk Touch Mode)**, ein vollumfängliches **Event- & Teilnehmer-Management mit Gäste-Einladungstoken**, einen **Getränkekatalog mit Sublisten**, **Drink With Me Standortfreigaben**, **Vereinschat & Push-Benachrichtigungen** sowie tiefe **Verbrauchs- und Finanzanalysen**.
+**Vereint** ist eine moderne, hochperformante All-in-One-Plattform für Vereine, Clubs und Organisationen. Sie kombiniert ein **doppeltes Kassenbuch (Double-Entry Ledger)**, eine blitzschnelle **Tablet-Strichliste (Kiosk Touch Mode)**, ein vollumfängliches **Event- & Teilnehmer-Management mit Gäste-Einladungstoken**, einen **Getränkekatalog mit Sublisten**, **Moments & Rituale (Gemeinschaftsmomente)**, **Vereinschat & Push-Benachrichtigungen** sowie tiefe **Verbrauchs- und Finanzanalysen**.
 
 ---
 
@@ -107,7 +107,8 @@ Die Dokumentation ist lückenlos nach Fachbereichen und technischen Schichten un
 ### 💼 [Fachdomänen & Module (Functional & Technical Deep Dives)](docs/domains/)
 - **[Benutzerverwaltung & Authentifizierung](docs/domains/auth-and-user-management.md)** – Profile, Rollen, Account-Deaktivierung, Keycloak Sync & Provisionierung.
 - **[Kassenbuch & Finanzwesen (Ledger)](docs/domains/ledger-and-finance.md)** – Double-Entry Journal, Buchungstypen (`topup`, `purchase`, `payout`, `correction`), Kontostand & Idempotenz.
-- **[Getränkekatalog, Sublisten & "Drink With Me"](docs/domains/drink-catalog-and-sublists.md)** – Master-Katalog, Kategorien, Event-Sublisten und opt-in Standortfreigaben.
+- **[Getränkekatalog & Sublisten](docs/domains/drink-catalog-and-sublists.md)** – Master-Katalog, Kategorien und Event-Sublisten.
+- **[Moments & Rituale (Gemeinschaftsmomente)](docs/domains/moments-and-rituals.md)** – Spontane Momente gemeinsamer Aktivität, Multi-Status-Updates, Welt-Karten und Event-Kalender-Archivierung.
 - **[Event-Management & Gast-Einladungen](docs/domains/events-and-invites.md)** – Event-Lifecycle, Teilnehmerverwaltung, Krypto-Gasttoken und passwortlose Anmeldung.
 - **[Tablet Strichlisten-Recorder](docs/domains/tablet-strichliste-recorder.md)** – Touch-Kiosk UI, 1-Tap-Getränkebuchung, Rundenabrechnung & Abendabschluss.
 - **[Kommunikation & Push-Benachrichtigungen](docs/domains/chat-and-push-notifications.md)** – Vereinskanäle, Direktnachrichten, VAPID Web Push & Board-Broadcasts.

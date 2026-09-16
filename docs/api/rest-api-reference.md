@@ -58,7 +58,7 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | `POST` | `/api/v1/tablet/events/{eventId}/rounds` | Runden-Buchung für Gruppe (`TabletRevenuePurchaseRequest` + opt. `Idempotency-Key`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/evening` | Abendabrechnung (`TabletRevenuePurchaseRequest` + opt. `Idempotency-Key`) | `purchase.tablet` |
 
-### 5. Getränkekatalog & Sublisten (`DrinkCatalogController`, `DrinkSublistController`, `EventDrinkController`, `DrinkWithMeController`)
+### 5. Getränkekatalog & Sublisten (`DrinkCatalogController`, `DrinkSublistController`, `EventDrinkController`)
 | Methode | Pfad | Beschreibung | Berechtigung / Rolle |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/drinks` | Globalen Getränkekatalog abrufen (Filter `status`, `category`) | `member` |
@@ -79,9 +79,17 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | `POST` | `/api/v1/events/{eventId}/drinks/assign-sublist` | Komplette Subliste einem Event zuweisen (`AssignSublistRequest`) | `event.manage` |
 | `PUT` | `/api/v1/events/{eventId}/drinks/{eventDrinkId}` | Eventgetränk bearbeiten (`UpdateEventDrinkRequest`) | `event.manage` |
 | `DELETE` | `/api/v1/events/{eventId}/drinks/{eventDrinkId}` | Eventgetränk entfernen | `event.manage` |
-| `GET` | `/api/v1/events/{eventId}/drink-with-me` | Aktive DrinkWithMe-Standort-Sessions für Event abrufen | `member` |
-| `POST` | `/api/v1/events/{eventId}/drink-with-me` | DrinkWithMe-Präsenz/Standort teilen (`StartDrinkWithMeRequest`) | `member` |
-| `DELETE` | `/api/v1/events/{eventId}/drink-with-me/{sessionId}` | Eigene DrinkWithMe-Session beenden / widerrufen | `member` |
+
+### 5.1. Moments & Rituale (`MomentController`)
+| Methode | Pfad | Beschreibung | Berechtigung / Rolle |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/events/{eventId}/moments` | Aktive Moments für Event abrufen | `member` |
+| `POST` | `/api/v1/events/{eventId}/moments` | Neuen Moment starten (`StartMomentRequest`) | `member` |
+| `GET` | `/api/v1/events/{eventId}/moments/{momentId}` | Moment-Details mit Timeline und Responses abrufen | `member` |
+| `POST` | `/api/v1/events/{eventId}/moments/{momentId}/responses` | Status-Update/Reaktion zu Moment einreichen (`SubmitMomentResponseRequest`) | `member` |
+| `GET` | `/api/v1/events/{eventId}/moments/{momentId}/map` | GeoJSON FeatureCollection mit Teilnehmer-Standorten abrufen (RFC 7946) | `member` |
+| `POST` | `/api/v1/events/{eventId}/moments/{momentId}/complete` | Moment abschließen und in Event-Kalender archivieren | `member` (Initiator) / `board`, `admin` |
+| `GET` | `/api/v1/events/{eventId}/moments/history` | Abgeschlossene Moments mit Zusammenfassungen abrufen | `member` |
 
 ### 6. Events & Gast-Einladungen (`EventController`, `InviteController`)
 | Methode | Pfad | Beschreibung | Berechtigung / Rolle |

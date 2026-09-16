@@ -161,10 +161,10 @@ class ImageService(
         principal: UserPrincipal
     ): UUID {
         return when (purpose) {
-            ImagePurpose.profile, ImagePurpose.drinkWithMe -> {
+            ImagePurpose.profile, ImagePurpose.moment -> {
                 // Eigengebundene Bilder: das Ziel ist immer der Aufrufer selbst.
-                if (purpose == ImagePurpose.drinkWithMe && !isMemberOrHigher(caller, principal)) {
-                    throw AccessDeniedException("Keine Berechtigung für DrinkWithMe-Bilder", ErrorCode.ACCESS_DENIED)
+                if (purpose == ImagePurpose.moment && !isMemberOrHigher(caller, principal)) {
+                    throw AccessDeniedException("Keine Berechtigung für Moment-Bilder", ErrorCode.ACCESS_DENIED)
                 }
                 caller.id
             }
@@ -203,7 +203,7 @@ class ImageService(
 
     private fun resolveTargetForRead(purpose: ImagePurpose, targetIdValue: String?, caller: UserEntity): UUID =
         when (purpose) {
-            ImagePurpose.profile, ImagePurpose.drinkWithMe -> parseTargetId(targetIdValue) ?: caller.id
+            ImagePurpose.profile, ImagePurpose.moment -> parseTargetId(targetIdValue) ?: caller.id
             ImagePurpose.event, ImagePurpose.drink -> requireTargetId(targetIdValue)
         }
 
@@ -212,7 +212,7 @@ class ImageService(
         if (image.owner?.id == caller.id) return true
 
         return when (image.purpose) {
-            ImagePurpose.profile, ImagePurpose.drinkWithMe -> false
+            ImagePurpose.profile, ImagePurpose.moment -> false
             ImagePurpose.event -> {
                 val eventId = image.targetId ?: return false
                 val event = eventRepository.findById(eventId).orElse(null) ?: return false

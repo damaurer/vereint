@@ -42,7 +42,7 @@ Jede fehlerhafte Antwort des Backends wird im standardisierten JSON-Format `appl
 | `access_denied` | `403 Forbidden` | Fehlende Berechtigung für die angeforderte Ressource. |
 | `permission_denied` | `403 Forbidden` | Spezifische Berechtigung (z. B. `purchase.tablet`) fehlt. |
 | `role_not_assigned` | `403 Forbidden` | Erforderliche Benutzerrolle ist dem Benutzer nicht zugewiesen. |
-| `consent_required` | `403 Forbidden` | Fehlende explizite Zustimmung (z. B. Standortfreigabe bei DrinkWithMe). |
+| `consent_required` | `403 Forbidden` | Fehlende explizite Zustimmung (z. B. Standortfreigabe bei Moments). |
 | `self_service_disabled` | `403 Forbidden` | Self-Service Barcode-Kauf ist für dieses Benutzerkonto deaktiviert. |
 | `self_privilege_change_denied` | `403 Forbidden` | Administratoren dürfen sich eigene Privilegien nicht selbst entziehen. |
 | `last_admin_protected` | `403 Forbidden` | Der letzte verbleibende Administrator kann nicht degradiert werden. |

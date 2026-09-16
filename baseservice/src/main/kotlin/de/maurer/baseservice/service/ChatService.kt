@@ -30,6 +30,7 @@ import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.support.SecureTokens
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
@@ -41,7 +42,7 @@ import java.util.UUID
  * nur als Owner, Teilnehmer oder Vorstand/Administration; Gäste erreichen
  * ausschließlich den ihrem eventgebundenen Gast-Token zugewiesenen Chat und kein
  * anderes Event (siehe `docs/fachkonzept.md`, Abschnitt „Chat, Notifications und
- * DrinkWithMe"). Der Rohwert eines Gast-Tokens wird nur über seinen SHA-256-Hash
+ * Moments"). Der Rohwert eines Gast-Tokens wird nur über seinen SHA-256-Hash
  * aufgelöst, formatgleich mit [AccessResolverService].
  */
 @Service
@@ -120,6 +121,82 @@ class ChatService(
             imageUrl = normalizeImageUrl(request.imageUrl)
         )
         return toMessageDto(chatMessageRepository.save(message))
+    }
+
+    /**
+     * Erstellt eine temporäre Konversation für einen Gemeinschaftsmoment mit 24h Gültigkeit.
+     */
+    fun createMomentConversation(event: EventEntity, title: String): ConversationEntity {
+        val now = Instant.now()
+        val conversation = ConversationEntity(
+            type = CONVERSATION_TYPE_MOMENT,
+            event = event,
+            title = "Moment: $title",
+            createdAt = now,
+            expiresAt = now.plus(Duration.ofHours(24))
+        )
+        return conversationRepository.save(conversation)
+    }
+
+    /**
+     * Ruft eine Konversation anhand ihrer ID ab und prüft Gültigkeit sowie Ablauf (z. B. 24h-Moment-Chat).
+     */
+    @Transactional(readOnly = true)
+    fun getConversationById(conversationId: UUID, principal: UserPrincipal): ConversationDto {
+        val caller = userService.getOrCreateUser(principal)
+        val conversation = requireActiveConversation(conversationId)
+        val event = conversation.event ?: throw ResourceNotFoundException("Event für Konversation nicht gefunden", ErrorCode.NOT_FOUND)
+        requireMemberAccess(caller, principal, event)
+        return toConversationDto(conversation)
+    }
+
+    /**
+     * Listet die Nachrichten einer Konversation auf und verwehrt Zugriff bei abgelaufenen Moment-Chats.
+     */
+    fun listConversationMessages(conversationId: UUID, principal: UserPrincipal): List<ChatMessageDto> {
+        val caller = userService.getOrCreateUser(principal)
+        val conversation = requireActiveConversation(conversationId)
+        val event = conversation.event ?: throw ResourceNotFoundException("Event für Konversation nicht gefunden", ErrorCode.NOT_FOUND)
+        requireMemberAccess(caller, principal, event)
+        ensureMember(conversation, caller)
+        return messagesOf(conversation)
+    }
+
+    /**
+     * Sendet eine Nachricht an eine Konversation und verwehrt Zugriff bei abgelaufenen Moment-Chats.
+     */
+    fun sendConversationMessage(
+        conversationId: UUID,
+        request: SendMessageRequest,
+        principal: UserPrincipal
+    ): ChatMessageDto {
+        val caller = userService.getOrCreateUser(principal)
+        val conversation = requireActiveConversation(conversationId)
+        val event = conversation.event ?: throw ResourceNotFoundException("Event für Konversation nicht gefunden", ErrorCode.NOT_FOUND)
+        requireMemberAccess(caller, principal, event)
+        requireEventOpenForChat(event)
+        ensureMember(conversation, caller)
+
+        val message = ChatMessageEntity(
+            conversation = conversation,
+            sender = caller,
+            guest = null,
+            message = requireMessageText(request.message),
+            imageUrl = normalizeImageUrl(request.imageUrl)
+        )
+        return toMessageDto(chatMessageRepository.save(message))
+    }
+
+    /** Prüft, ob eine Konversation existiert und noch nicht abgelaufen / archiviert ist. */
+    fun requireActiveConversation(conversationId: UUID): ConversationEntity {
+        val conversation = conversationRepository.findById(conversationId).orElseThrow {
+            ResourceNotFoundException("Konversation mit ID '$conversationId' nicht gefunden", ErrorCode.NOT_FOUND)
+        }
+        val expiresAt = conversation.expiresAt
+        if (expiresAt != null && expiresAt.isBefore(Instant.now())) {
+            throw InvalidRequestException("Die Konversation ist abgelaufen und archiviert", ErrorCode.INVALID_REQUEST)
+        }
+        return conversation
     }
 
     // --- Interne Helfer ---
@@ -253,7 +330,8 @@ class ChatService(
             type = conversation.type,
             eventId = conversation.event?.id?.toString(),
             title = conversation.title,
-            memberCount = conversationMemberRepository.countByConversationId(conversation.id).toInt()
+            memberCount = conversationMemberRepository.countByConversationId(conversation.id).toInt(),
+            expiresAt = conversation.expiresAt
         )
 
     private fun toMessageDto(message: ChatMessageEntity): ChatMessageDto {
@@ -276,6 +354,7 @@ class ChatService(
 
     companion object {
         const val CONVERSATION_TYPE_EVENT = "event"
+        const val CONVERSATION_TYPE_MOMENT = "moment"
         const val SENDER_TYPE_MEMBER = "member"
         const val SENDER_TYPE_GUEST = "guest"
         const val UNKNOWN_SENDER_NAME = "Unbekannt"

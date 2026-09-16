@@ -2,6 +2,7 @@ package de.maurer.baseservice
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.maurer.baseservice.dto.ChatMessageDto
+import de.maurer.baseservice.dto.ConversationDto
 import de.maurer.baseservice.dto.SendMessageRequest
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.service.ChatService
@@ -167,5 +168,55 @@ class ChatControllerTest {
         )
             .andExpect(status().isCreated)
             .andExpect(jsonPath("$.senderType").value("guest"))
+    }
+
+    @Test
+    fun `GET specific conversation returns 200`() {
+        val convDto = ConversationDto(
+            id = conversationId.toString(),
+            type = "moment",
+            eventId = eventId.toString(),
+            title = "Moment: Anstoßen",
+            memberCount = 2,
+            expiresAt = Instant.now().plusSeconds(3600)
+        )
+        `when`(chatService.getConversationById(anyUuid(), anyPrincipal())).thenReturn(convDto)
+
+        mockMvc.perform(
+            get("/api/v1/events/$eventId/chat/conversations/$conversationId")
+                .with(jwt().jwt { it.subject("sub-owner") })
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value(conversationId.toString()))
+            .andExpect(jsonPath("$.type").value("moment"))
+            .andExpect(jsonPath("$.title").value("Moment: Anstoßen"))
+    }
+
+    @Test
+    fun `GET conversation messages returns 200`() {
+        `when`(chatService.listConversationMessages(anyUuid(), anyPrincipal()))
+            .thenReturn(listOf(sampleMessage(ChatService.SENDER_TYPE_MEMBER)))
+
+        mockMvc.perform(
+            get("/api/v1/events/$eventId/chat/conversations/$conversationId/messages")
+                .with(jwt().jwt { it.subject("sub-owner") })
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].message").value("Hallo"))
+    }
+
+    @Test
+    fun `POST conversation message returns 201`() {
+        `when`(chatService.sendConversationMessage(anyUuid(), anyRequest(), anyPrincipal()))
+            .thenReturn(sampleMessage(ChatService.SENDER_TYPE_MEMBER))
+
+        mockMvc.perform(
+            post("/api/v1/events/$eventId/chat/conversations/$conversationId/messages")
+                .with(jwt().jwt { it.subject("sub-owner") })
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(SendMessageRequest(message = "Hallo")))
+        )
+            .andExpect(status().isCreated)
+            .andExpect(jsonPath("$.message").value("Hallo"))
     }
 }

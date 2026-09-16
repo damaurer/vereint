@@ -253,3 +253,84 @@ export interface UserListQuery {
   page?: number;
   size?: number;
 }
+
+/** Gemeinschaftsmomente & Rituale DTOs (`/api/v1/events/{eventId}/moments`). */
+export interface StartMomentRequest {
+  title: string;
+  topicType: string;
+  message?: string;
+  consent: boolean;
+  latitude?: number;
+  longitude?: number;
+  durationMinutes?: number;
+}
+
+export interface SubmitMomentResponseRequest {
+  reaction: string;
+  statusText?: string;
+  consent: boolean;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface MomentSessionDto {
+  id: string;
+  eventId: string;
+  creatorId: string;
+  creatorName: string;
+  conversationId: string | null;
+  title: string;
+  topicType: string;
+  message: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  active: boolean;
+  responsesCount: number;
+  expiresAt: string;
+  createdAt: string;
+  summary: string | null;
+}
+
+export interface MomentResponseDto {
+  id: string;
+  momentId: string;
+  userId: string;
+  userName: string;
+  reaction: string;
+  statusText: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  createdAt: string;
+}
+
+export interface GeoJsonGeometryDto {
+  type: string;
+  coordinates: [number, number];
+}
+
+export interface GeoJsonFeatureDto {
+  type: string;
+  geometry: GeoJsonGeometryDto;
+  properties: Record<string, unknown>;
+}
+
+export interface MomentMapGeoJsonDto {
+  type: string;
+  features: GeoJsonFeatureDto[];
+}
+
+export interface MomentDetailDto {
+  session: MomentSessionDto;
+  responses: MomentResponseDto[];
+  mapGeoJson: MomentMapGeoJsonDto;
+}
+
+export interface MomentSummaryDto {
+  momentId: string;
+  title: string;
+  topicType: string;
+  totalResponses: number;
+  uniqueParticipants: number;
+  summary: string;
+  completedAt: string;
+}

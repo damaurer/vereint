@@ -37,12 +37,45 @@ class ChatController(
 ) {
 
     private fun eventId(id: String) = Identifiers.parseUuid(id, "eventId")
+    private fun conversationId(id: String) = Identifiers.parseUuid(id, "conversationId")
 
     @GetMapping
     @Operation(summary = "Event-Konversation abrufen", description = "Liefert die Konversation des Events für berechtigte Mitglieder")
     fun getConversation(@PathVariable("eventId") eventIdValue: String): ResponseEntity<ConversationDto> {
         val principal = authContext.getRequiredPrincipal()
         return ResponseEntity.ok(chatService.getConversation(eventId(eventIdValue), principal))
+    }
+
+    @GetMapping("/conversations/{conversationId}")
+    @Operation(summary = "Spezifische Konversation abrufen", description = "Liefert eine Konversation anhand ihrer ID (z. B. 24h-Moment-Chat)")
+    fun getConversationById(
+        @PathVariable("eventId") eventIdValue: String,
+        @PathVariable("conversationId") conversationIdValue: String
+    ): ResponseEntity<ConversationDto> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(chatService.getConversationById(conversationId(conversationIdValue), principal))
+    }
+
+    @GetMapping("/conversations/{conversationId}/messages")
+    @Operation(summary = "Nachrichten einer Konversation abrufen", description = "Listet die Nachrichten einer Konversation (z. B. 24h-Moment-Chat)")
+    fun listConversationMessages(
+        @PathVariable("eventId") eventIdValue: String,
+        @PathVariable("conversationId") conversationIdValue: String
+    ): ResponseEntity<List<ChatMessageDto>> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(chatService.listConversationMessages(conversationId(conversationIdValue), principal))
+    }
+
+    @PostMapping("/conversations/{conversationId}/messages")
+    @Operation(summary = "Nachricht an Konversation senden", description = "Sendet eine Nachricht an eine Konversation (z. B. 24h-Moment-Chat)")
+    fun sendConversationMessage(
+        @PathVariable("eventId") eventIdValue: String,
+        @PathVariable("conversationId") conversationIdValue: String,
+        @Valid @RequestBody request: SendMessageRequest
+    ): ResponseEntity<ChatMessageDto> {
+        val principal = authContext.getRequiredPrincipal()
+        val message = chatService.sendConversationMessage(conversationId(conversationIdValue), request, principal)
+        return ResponseEntity.status(HttpStatus.CREATED).body(message)
     }
 
     @GetMapping("/messages")

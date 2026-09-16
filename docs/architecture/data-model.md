@@ -15,14 +15,14 @@ erDiagram
     users ||--o{ chat_messages : "sends"
     users ||--o{ push_subscriptions : "owns"
     users ||--o{ image_assets : "owns"
-    users ||--o{ drink_with_me_sessions : "hosts"
+    users ||--o{ moment_responses : "submits"
 
     events ||--o{ event_participants : "has"
     events ||--o{ event_invites : "creates"
     events ||--o{ event_guests : "hosts"
     events ||--o{ event_drinks : "offers"
     events ||--o{ ledger_entries : "generates"
-    events ||--o{ drink_with_me_sessions : "scopes"
+    events ||--o{ moment_sessions : "hosts"
 
     drink_catalog ||--o{ drink_barcodes : "identifies"
     drink_catalog ||--o{ drink_sublist_items : "included_in"
@@ -35,6 +35,8 @@ erDiagram
 
     conversations ||--o{ conversation_members : "includes"
     conversations ||--o{ chat_messages : "contains"
+
+    moment_sessions ||--o{ moment_responses : "receives"
 ```
 
 ---
@@ -98,14 +100,15 @@ erDiagram
 - **`event_invites`**: `id` (`UUID`, PK), `event_id` (FK `events.id`), `token_hash` (`VARCHAR(64)`, Unique SHA-256), `created_by` (FK `users.id`), `role` (`VARCHAR(32)`), `max_uses` (`INTEGER`), `uses_count` (`INTEGER`), `expires_at` (`TIMESTAMPTZ`), `revoked` (`BOOLEAN`)
 - **`event_guests`**: `id` (`UUID`, PK), `event_id` (FK `events.id`), `invite_id` (FK `event_invites.id`), `display_name` (`VARCHAR(255)`), `status` (`VARCHAR(32)`, Check: `pending`, `active`, `revoked`, `expired`), `expires_at` (`TIMESTAMPTZ`)
 
-### 5. Chat, Push & Standortfreigabe
+### 5. Chat, Push, Moments & Benachrichtigungen
 - **`conversations`**: `id` (`UUID`, PK), `type` (`VARCHAR(32)`, default `'event'`), `title` (`VARCHAR(255)`), `event_id` (FK `events.id`)
 - **`conversation_members`**: `id` (`UUID`, PK), `conversation_id` (FK `conversations.id`), `user_id` (FK `users.id`)
 - **`chat_messages`**: `id` (`UUID`, PK), `conversation_id` (FK `conversations.id`), `sender_id` (FK `users.id`), `guest_id` (FK `event_guests.id`), `message` (`TEXT`), `image_url` (`VARCHAR(512)`), `created_at` (`TIMESTAMPTZ`)
 - **`push_subscriptions`**: `id` (`UUID`, PK), `user_id` (FK `users.id`), `endpoint` (`TEXT`), `p256dh` (`VARCHAR(255)`), `auth` (`VARCHAR(255)`), `user_agent` (`VARCHAR(512)`)
 - **`notifications`**: `id` (`UUID`, PK), `user_id` (FK `users.id`), `title` (`VARCHAR(255)`), `body` (`TEXT`), `type` (`VARCHAR(64)`), `read` (`BOOLEAN`), `created_at` (`TIMESTAMPTZ`)
-- **`drink_with_me_sessions`**: `id` (`UUID`, PK), `event_id` (FK `events.id`), `user_id` (FK `users.id`), `latitude` (`DECIMAL(10,7)`), `longitude` (`DECIMAL(10,7)`), `message` (`VARCHAR(255)`), `active` (`BOOLEAN`), `expires_at` (`TIMESTAMPTZ`), `created_at` (`TIMESTAMPTZ`)
-- **`image_assets`**: `id` (`UUID`, PK), `user_id` (FK `users.id`), `purpose` (`VARCHAR(32)`, Check: `profile`, `event`, `drink`, `drinkWithMe`), `target_id` (`VARCHAR(128)`), `storage_key` (`VARCHAR(512)`), `content_type` (`VARCHAR(128)`), `size_bytes` (`BIGINT`), `status` (`VARCHAR(32)`, Check: `active`, `deleted`)
+- **`moment_sessions`**: `id` (`UUID`, PK), `event_id` (FK `events.id`), `creator_user_id` (FK `users.id`), `conversation_id` (FK `conversations.id`), `title` (`VARCHAR(255)`), `topic_type` (`VARCHAR(64)`), `message` (`VARCHAR(500)`), `latitude` (`DOUBLE PRECISION`), `longitude` (`DOUBLE PRECISION`), `active` (`BOOLEAN`), `expires_at` (`TIMESTAMPTZ`), `completed_at` (`TIMESTAMPTZ`), `summary` (`TEXT`), `created_at` (`TIMESTAMPTZ`), `updated_at` (`TIMESTAMPTZ`), `version` (`BIGINT`)
+- **`moment_responses`**: `id` (`UUID`, PK), `moment_id` (FK `moment_sessions.id`), `user_id` (FK `users.id`), `reaction` (`VARCHAR(64)`), `status_text` (`VARCHAR(255)`), `latitude` (`DOUBLE PRECISION`), `longitude` (`DOUBLE PRECISION`), `created_at` (`TIMESTAMPTZ`), `version` (`BIGINT`)
+- **`image_assets`**: `id` (`UUID`, PK), `user_id` (FK `users.id`), `purpose` (`VARCHAR(32)`, Check: `profile`, `event`, `drink`, `moment`), `target_id` (`VARCHAR(128)`), `storage_key` (`VARCHAR(512)`), `content_type` (`VARCHAR(128)`), `size_bytes` (`BIGINT`), `status` (`VARCHAR(32)`, Check: `active`, `deleted`)
 - **`audit_logs`**: `id` (`UUID`, PK), `actor_id` (FK `users.id`), `action` (`VARCHAR(128)`), `target_entity` (`VARCHAR(64)`), `target_id` (`VARCHAR(128)`), `details` (`TEXT`), `ip_address` (`VARCHAR(64)`), `created_at` (`TIMESTAMPTZ`)
 
 ---
@@ -137,5 +140,6 @@ FOR EACH ROW EXECUTE FUNCTION vereint_reject_ledger_mutation();
 | `001` | `001-initial-schema.xml` | Grundlegendes relationales Datenmodell (Users, Events, Drinks, Ledger, Chat, Push). |
 | `002` | `002-integrity-constraints.xml` | CHECK-Constraints für Enums, Optimistic Locking (`version`), Append-Only Trigger für Ledger, Query-Indizes. |
 | `003` | `003-drink-catalog-approval.xml` | Getränke-Vorschlagsworkflow (`proposed`, `approved`, `rejected`) mit `proposed_by` und `approved_by`. |
-| `004` | `004-image-assets.xml` | S3 Metadatentabelle `image_assets` mit Zweckzuordnung (`profile`, `event`, `drink`, `drinkWithMe`). |
+| `004` | `004-image-assets.xml` | S3 Metadatentabelle `image_assets` mit Zweckzuordnung (`profile`, `event`, `drink`, `moment`). |
 | `005` | `005-ledger-transactions.xml` | Erweiterte Buchungstypen (`topup`, `payout`, `correction`), Storno-Referenz (`reverses_entry_id`) und gelockerte Null-Constraints. |
+| `006` | `006-moments-and-rituals.xml` | Moment-Sessions und Responses für Gemeinschaftsmomente mit Multi-Status-Unterstützung, GeoJSON-Koordinaten und 24h-Linked-Chats. |

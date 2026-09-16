@@ -90,6 +90,28 @@ class AuditService(
         log.info("audit action={} actor={} target={} {}", action, actor?.id, notificationId, details)
     }
 
+    /**
+     * Protokolliert Aktionen rund um Gemeinschaftsmomente (Start, Abschluss/Archivierung).
+     */
+    fun recordMomentAction(
+        actor: UserEntity?,
+        action: String,
+        momentId: UUID,
+        details: String
+    ) {
+        auditLogRepository.save(
+            AuditLogEntity(
+                id = UUID.randomUUID(),
+                actor = actor,
+                action = action,
+                targetEntity = TARGET_MOMENT,
+                targetId = momentId.toString(),
+                details = details
+            )
+        )
+        log.info("audit action={} actor={} target={} {}", action, actor?.id, momentId, details)
+    }
+
     private fun render(value: Any?): String = when (value) {
         null -> "-"
         is Collection<*> -> value.map { it.toString() }.sorted().joinToString(",")
@@ -100,7 +122,10 @@ class AuditService(
         const val TARGET_USER = "User"
         const val TARGET_LEDGER = "Ledger"
         const val TARGET_NOTIFICATION = "Notification"
+        const val TARGET_MOMENT = "Moment"
         const val ACTION_NOTIFICATION_SENT = "NOTIFICATION_SENT"
+        const val ACTION_MOMENT_STARTED = "MOMENT_STARTED"
+        const val ACTION_MOMENT_COMPLETED = "MOMENT_COMPLETED"
         const val ACTION_ROLES_CHANGED = "USER_ROLES_CHANGED"
         const val ACTION_PERMISSIONS_CHANGED = "USER_PERMISSIONS_CHANGED"
         const val ACTION_STATUS_CHANGED = "USER_STATUS_CHANGED"

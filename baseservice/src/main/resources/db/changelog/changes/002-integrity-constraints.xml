@@ -50,7 +50,39 @@
             ADD CONSTRAINT ck_ledger_entries_source
             CHECK (source IN ('pwaBarcode', 'tabletManual', 'round', 'evening'))
         </sql>
+        <sql>
+            <![CDATA[
+            ALTER TABLE moment_sessions
+            ADD CONSTRAINT ck_moment_sessions_latitude
+            CHECK (latitude IS NULL OR (latitude >= -90.0 AND latitude <= 90.0))
+            ]]>
+        </sql>
+        <sql>
+            <![CDATA[
+            ALTER TABLE moment_sessions
+            ADD CONSTRAINT ck_moment_sessions_longitude
+            CHECK (longitude IS NULL OR (longitude >= -180.0 AND longitude <= 180.0))
+            ]]>
+        </sql>
+        <sql>
+            <![CDATA[
+            ALTER TABLE moment_responses
+            ADD CONSTRAINT ck_moment_responses_latitude
+            CHECK (latitude IS NULL OR (latitude >= -90.0 AND latitude <= 90.0))
+            ]]>
+        </sql>
+        <sql>
+            <![CDATA[
+            ALTER TABLE moment_responses
+            ADD CONSTRAINT ck_moment_responses_longitude
+            CHECK (longitude IS NULL OR (longitude >= -180.0 AND longitude <= 180.0))
+            ]]>
+        </sql>
         <rollback>
+            <sql>ALTER TABLE moment_responses DROP CONSTRAINT ck_moment_responses_longitude</sql>
+            <sql>ALTER TABLE moment_responses DROP CONSTRAINT ck_moment_responses_latitude</sql>
+            <sql>ALTER TABLE moment_sessions DROP CONSTRAINT ck_moment_sessions_longitude</sql>
+            <sql>ALTER TABLE moment_sessions DROP CONSTRAINT ck_moment_sessions_latitude</sql>
             <sql>ALTER TABLE users DROP CONSTRAINT ck_users_board_role</sql>
             <sql>ALTER TABLE user_roles DROP CONSTRAINT ck_user_roles_role</sql>
             <sql>ALTER TABLE events DROP CONSTRAINT ck_events_status</sql>
@@ -134,7 +166,12 @@
                 <constraints nullable="false"/>
             </column>
         </addColumn>
-        <addColumn tableName="drink_with_me_sessions">
+        <addColumn tableName="moment_sessions">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="moment_responses">
             <column name="version" type="BIGINT" defaultValueNumeric="0">
                 <constraints nullable="false"/>
             </column>
@@ -152,7 +189,8 @@
             <dropColumn tableName="conversations" columnName="version"/>
             <dropColumn tableName="notifications" columnName="version"/>
             <dropColumn tableName="push_subscriptions" columnName="version"/>
-            <dropColumn tableName="drink_with_me_sessions" columnName="version"/>
+            <dropColumn tableName="moment_sessions" columnName="version"/>
+            <dropColumn tableName="moment_responses" columnName="version"/>
         </rollback>
     </changeSet>
 

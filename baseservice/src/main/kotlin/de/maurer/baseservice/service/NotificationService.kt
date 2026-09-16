@@ -186,6 +186,13 @@ class NotificationService(
     }
 
     /**
+     * Versendet eine Benachrichtigung an mehrere Empfänger (z. B. Event-Teilnehmer bei neuem Moment).
+     */
+    fun notifyUsers(targets: Collection<UserEntity>, title: String, body: String, type: String): List<NotificationEntity> {
+        return targets.map { notifyUser(it, title, body, type) }
+    }
+
+    /**
      * Stellt eine Nachricht an alle Abonnements des Empfängers zu und entfernt
      * dauerhaft ungültige Abonnements (`404`/`410`). Liefert die Anzahl der
      * erfolgreichen Zustellungen.

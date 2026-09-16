@@ -148,7 +148,7 @@ enum class ImagePurpose {
     profile,
     event,
     drink,
-    drinkWithMe;
+    moment;
 
     companion object {
         fun fromValue(value: String?): ImagePurpose? = entries.firstOrNull { it.name == value }

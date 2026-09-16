@@ -3,7 +3,7 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
-import type { EventDetail, EventParticipant } from '../api/api.types';
+import type { EventDetail, EventParticipant, MomentSessionDto, MomentSummaryDto } from '../api/api.types';
 import { EventDetailComponent } from './event-detail.component';
 import { MemberApiService } from './member-api.service';
 
@@ -26,10 +26,44 @@ const participants: EventParticipant[] = [
   { userId: 'u-1', displayName: 'Alice', role: 'participant', joinedAt: '2026-06-01T10:00:00Z' },
 ];
 
+const mockMoments: MomentSessionDto[] = [
+  {
+    id: 'm-1',
+    eventId: 'e-1',
+    creatorId: 'u-1',
+    creatorName: 'Alice',
+    conversationId: 'c-1',
+    title: 'Gemeinsames Anstoßen',
+    topicType: 'toast',
+    message: 'Prost!',
+    latitude: 48.13,
+    longitude: 11.58,
+    active: true,
+    responsesCount: 3,
+    expiresAt: '2026-07-01T20:00:00Z',
+    createdAt: '2026-07-01T19:00:00Z',
+    summary: null,
+  },
+];
+
+const mockHistory: MomentSummaryDto[] = [
+  {
+    momentId: 'm-old',
+    title: 'Früheres Gebet',
+    topicType: 'prayer',
+    totalResponses: 5,
+    uniqueParticipants: 4,
+    summary: '4 Teilnehmer haben 5 Statusbeiträge geteilt.',
+    completedAt: '2026-06-15T18:00:00Z',
+  },
+];
+
 describe('EventDetailComponent', () => {
   let api: {
     getEvent: ReturnType<typeof vi.fn>;
     listParticipants: ReturnType<typeof vi.fn>;
+    listMoments: ReturnType<typeof vi.fn>;
+    listMomentHistory: ReturnType<typeof vi.fn>;
   };
 
   const create = async () => {
@@ -58,6 +92,8 @@ describe('EventDetailComponent', () => {
     api = {
       getEvent: vi.fn(() => of(event)),
       listParticipants: vi.fn(() => of(participants)),
+      listMoments: vi.fn(() => of(mockMoments)),
+      listMomentHistory: vi.fn(() => of(mockHistory)),
     };
   });
 
@@ -67,6 +103,16 @@ describe('EventDetailComponent', () => {
     expect(html(fixture)).toContain('Sommerfest');
     expect(html(fixture)).toContain('Vereinsheim');
     expect(html(fixture)).toContain('Alice');
+  });
+
+  it('renders active moments and past moment recaps', async () => {
+    const fixture = await create();
+    expect(api.listMoments).toHaveBeenCalledWith('e-1');
+    expect(api.listMomentHistory).toHaveBeenCalledWith('e-1');
+    expect(html(fixture)).toContain('Moments & Rituale');
+    expect(html(fixture)).toContain('1 aktiver Moment läuft gerade!');
+    expect(html(fixture)).toContain('Früheres Gebet');
+    expect(html(fixture)).toContain('4 Teilnehmer haben 5 Statusbeiträge geteilt.');
   });
 
   it('offers a route button and RSVP answer options', async () => {

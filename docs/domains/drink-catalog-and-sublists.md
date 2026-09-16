@@ -1,6 +1,6 @@
-# Fachdomäne: Getränkekatalog, Sublisten & "Drink With Me"
+# Fachdomäne: Getränkekatalog & Sublisten
 
-Die Getränkeverwaltung in **Vereint** bildet das gesamte Sortiment ab – vom globalen Vereins-Masterkatalog über Event-spezifische Sublisten bis hin zu opt-in Standortfreigaben ("Drink With Me").
+Die Getränkeverwaltung in **Vereint** bildet das gesamte Sortiment ab – vom globalen Vereins-Masterkatalog über Event-spezifische Sublisten bis hin zu flexiblen Event-Getränkeauswahlen.
 
 ---
 
@@ -19,10 +19,6 @@ Die Getränkeverwaltung in **Vereint** bildet das gesamte Sortiment ab – vom g
 - Innerhalb einer Subliste können globale Katalogpreise mit einem spezifischen `default_price` überschrieben werden.
 - Über `EventDrinkController` (`/api/v1/events/{eventId}/drinks/assign-sublist`) werden Sublisten an Events gekoppelt oder Einzelgetränke (`AddEventDrinkRequest`) mit festen Eventpreisen zugewiesen.
 
-### 3. "Drink With Me" (Präsenz- & Standort-Freigabe)
-- `DrinkWithMe` ist ein **opt-in Location- & Presence-Sharing-Feature**: Mitglieder können während eines aktiven Events ihren Standort (Breiten- und Längengrad) sowie eine Statusnachricht für andere Vereinsmitglieder freigeben.
-- **Zustimmungspflicht**: Erfordert zwingend `consent = true`. Fehlt die Zustimmung, wird die Anfrage mit Fehlercode `consent_required` abgewiesen.
-- **Zeitliche Begrenzung**: Die Session läuft nach Ablauf von `durationMinutes` (Standard z. B. 60 Minuten, maximal 720 Minuten) automatisch ab oder kann jederzeit durch das Mitglied widerrufen werden (`DELETE /api/v1/events/{eventId}/drink-with-me/{sessionId}`).
 
 ---
 
@@ -33,9 +29,8 @@ Die Getränkeverwaltung in **Vereint** bildet das gesamte Sortiment ab – vom g
   - `DrinkCatalogController`: Globaler Katalog (`/api/v1/drinks`), Vorschläge (`/propose`), Freigaben (`/{id}/approve`, `/{id}/reject`), Barcodes (`/{id}/barcodes`).
   - `DrinkSublistController`: Verwaltung von Sublisten (`/api/v1/sublists`) und Artikeln (`/items`).
   - `EventDrinkController`: Eventbezogene Getränkeauswahl (`/api/v1/events/{eventId}/drinks`) und Sublistenzuweisung.
-  - `DrinkWithMeController`: Starten, Abfragen und Beenden von Standort-Sessions (`/api/v1/events/{eventId}/drink-with-me`).
-- **Services**: `DrinkCatalogService`, `DrinkSublistService`, `EventDrinkService`, `DrinkWithMeService`.
-- **Entitäten**: `DrinkCatalogEntity`, `DrinkBarcodeEntity`, `DrinkSublistEntity`, `DrinkSublistItemEntity`, `EventDrinkEntity`, `DrinkWithMeSessionEntity`.
+- **Services**: `DrinkCatalogService`, `DrinkSublistService`, `EventDrinkService`.
+- **Entitäten**: `DrinkCatalogEntity`, `DrinkBarcodeEntity`, `DrinkSublistEntity`, `DrinkSublistItemEntity`, `EventDrinkEntity`.
 
 ---
 
@@ -70,26 +65,6 @@ data class ProposeDrinkRequest(
     val barcodes: List<String>? = null
 )
 
-data class StartDrinkWithMeRequest(
-    val consent: Boolean = false,
-    @field:DecimalMin("-90.0") @field:DecimalMax("90.0") val latitude: BigDecimal? = null,
-    @field:DecimalMin("-180.0") @field:DecimalMax("180.0") val longitude: BigDecimal? = null,
-    @field:Size(max = 255) val message: String? = null,
-    @field:Min(1) @field:Max(720) val durationMinutes: Long? = null
-)
-
-data class DrinkWithMeSessionDto(
-    val id: String,
-    val eventId: String,
-    val userId: String,
-    val userName: String,
-    val latitude: BigDecimal?,
-    val longitude: BigDecimal?,
-    val message: String?,
-    val active: Boolean,
-    val expiresAt: Instant,
-    val createdAt: Instant
-)
 ```
 
 ---

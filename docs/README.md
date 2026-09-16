@@ -20,7 +20,8 @@ docs/
 ├── domains/                              # Fachliche & Technische Spezifikationen der Kernmodule
 │   ├── auth-and-user-management.md       # Profile, Rollen, Deaktivierung & Provisionierung
 │   ├── ledger-and-finance.md             # Kassenbuch, Buchungslogik & Idempotenz
-│   ├── drink-catalog-and-sublists.md     # Getränkekatalog, Event-Sublisten & "Drink With Me"
+│   ├── drink-catalog-and-sublists.md     # Getränkekatalog & Event-Sublisten
+│   ├── moments-and-rituals.md            # Moments & Rituale, Multi-Status-Updates & Welt-Karten
 │   ├── events-and-invites.md             # Event-Lebenszyklus, RSVPs & Gast-Einladungstoken
 │   ├── tablet-strichliste-recorder.md    # Kiosk-Strichliste, 1-Tap-Buchung & Abendabrechnung
 │   ├── chat-and-push-notifications.md    # Vereinschat, Direktnachrichten & VAPID Web Push
@@ -54,7 +55,7 @@ docs/
 | **Guthaben (Balance)** | `MemberBalanceDto.creditBalance` | Aktueller Kontostand eines Mitglieds als `BigDecimal` (in EUR). |
 | **Idempotenzschlüssel** | `Idempotency-Key` (UUIDv4) | Eindeutiger HTTP-Header zur Vermeidung von Doppelbuchungen bei Verbindungsabbrüchen. |
 | **Subliste (Sublist)** | `DrinkSublistEntity`, `DrinkSublistItemEntity` | Eine für ein Event freigeschaltete Untermenge des globalen Getränkekatalogs. |
-| **Drink With Me** | `DrinkWithMeSessionDto` | Opt-in Feature, bei dem Mitglieder ihren Standort und Status während eines aktiven Events teilen. |
+| **Moments & Rituale** | `MomentSessionEntity`, `MomentResponseEntity` | Ereignisgesteuerte Kollaborationsfunktion für spontane Momente gemeinsamer Aktivität (Toasts, Gebete, Jubelrufe, Check-ins) mit Multi-Status-Updates, Welt-Karten und 24h-Linked-Chats. |
 | **Gast-Einladungstoken** | `EventInviteEntity`, `token_hash` | Krypto-Token (SHA-256 gehasht) für passwortlose Registrierung externer Gäste zu Events. |
 | **Abendabrechnung** | `POST /api/v1/tablet/events/{eventId}/evening` | Abschlussbuchung von Bareinnahmen oder pauschalen Event-Umsätzen (`revenueOnly`). |
 | **Optimus Design System** | `styles.css`, CSS Custom Properties | Zentrales Design-Token-System für konsistente Abstände, Farben, Elevation und Typografie. |

@@ -23,7 +23,7 @@ export const KNOWN_APP_PREFIXES: readonly string[] = [
   '/sublists',
   '/chat',
   '/notifications',
-  '/drink-with-me',
+  '/moments',
   '/board',
   '/admin',
   '/tablet',
@@ -55,7 +55,7 @@ export const DEFAULT_RETURN_TO = '/app';
 const MAX_RETURN_TO_LENGTH = 512;
 
 /** Steuerzeichen, Backslash und Whitespace sind in Pfaden nicht zulässig. */
-const FORBIDDEN_CHARACTERS = /[\s\\\u0000-\u001f\u007f]/;
+const FORBIDDEN_CHARACTERS = /[\\\s\u0000-\u0008\u000e-\u001f\u007f]/;
 
 function matchesKnownPrefix(pathname: string, prefixes: readonly string[]): boolean {
   return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));

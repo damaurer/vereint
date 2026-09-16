@@ -13,8 +13,10 @@ import de.maurer.baseservice.dto.SendMessageRequest
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.EventNotActiveException
+import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.InvitationExpiredException
 import de.maurer.baseservice.error.InvitationRevokedException
+import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.ChatMessageRepository
 import de.maurer.baseservice.repository.ConversationMemberRepository
 import de.maurer.baseservice.repository.ConversationRepository
@@ -296,5 +298,113 @@ class ChatServiceTest {
             chatService.listGuestMessages(eventId, "unknown-token")
         }
         assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
+    }
+
+    @Test
+    fun `createMomentConversation creates conversation with 24h expiration`() {
+        val ev = event()
+        `when`(conversationRepository.save(any(ConversationEntity::class.java) ?: ConversationEntity())).thenAnswer { it.arguments[0] }
+
+        val before = Instant.now().plusSeconds(86390)
+        val conversation = chatService.createMomentConversation(ev, "Gemeinsames Beten")
+        val after = Instant.now().plusSeconds(86410)
+
+        assertEquals("moment", conversation.type)
+        assertEquals("Moment: Gemeinsames Beten", conversation.title)
+        assertEquals(ev, conversation.event)
+        assertNotNull(conversation.expiresAt)
+        assertTrue(conversation.expiresAt!!.isAfter(before), "expiresAt should be after $before")
+        assertTrue(conversation.expiresAt!!.isBefore(after), "expiresAt should be before $after")
+    }
+
+    @Test
+    fun `getConversationById returns conversation details when active`() {
+        val ev = event()
+        val owner = ownerUser()
+        val principal = UserPrincipal(subject = "sub-owner", roles = setOf(UserRole.MEMBER))
+        val conversation = ConversationEntity(
+            id = conversationId,
+            type = "moment",
+            event = ev,
+            title = "Moment: Anstoßen",
+            expiresAt = Instant.now().plusSeconds(3600)
+        )
+
+        `when`(userService.getOrCreateUser(principal)).thenReturn(owner)
+        `when`(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation))
+
+        val dto = chatService.getConversationById(conversationId, principal)
+
+        assertEquals(conversationId.toString(), dto.id)
+        assertEquals("moment", dto.type)
+        assertEquals("Moment: Anstoßen", dto.title)
+        assertEquals(conversation.expiresAt, dto.expiresAt)
+    }
+
+    @Test
+    fun `getConversationById rejects expired moment conversation with INVALID_REQUEST`() {
+        val ev = event()
+        val owner = ownerUser()
+        val principal = UserPrincipal(subject = "sub-owner", roles = setOf(UserRole.MEMBER))
+        val conversation = ConversationEntity(
+            id = conversationId,
+            type = "moment",
+            event = ev,
+            title = "Moment: Anstoßen",
+            expiresAt = Instant.now().minusSeconds(10)
+        )
+
+        `when`(userService.getOrCreateUser(principal)).thenReturn(owner)
+        `when`(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation))
+
+        val ex = assertThrows(InvalidRequestException::class.java) {
+            chatService.getConversationById(conversationId, principal)
+        }
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.errorCode)
+        assertTrue(ex.message.contains("abgelaufen"))
+    }
+
+    @Test
+    fun `listConversationMessages rejects expired moment conversation with INVALID_REQUEST`() {
+        val ev = event()
+        val owner = ownerUser()
+        val principal = UserPrincipal(subject = "sub-owner", roles = setOf(UserRole.MEMBER))
+        val conversation = ConversationEntity(
+            id = conversationId,
+            type = "moment",
+            event = ev,
+            title = "Moment: Anstoßen",
+            expiresAt = Instant.now().minusSeconds(10)
+        )
+
+        `when`(userService.getOrCreateUser(principal)).thenReturn(owner)
+        `when`(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation))
+
+        val ex = assertThrows(InvalidRequestException::class.java) {
+            chatService.listConversationMessages(conversationId, principal)
+        }
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.errorCode)
+    }
+
+    @Test
+    fun `sendConversationMessage rejects expired moment conversation with INVALID_REQUEST`() {
+        val ev = event()
+        val owner = ownerUser()
+        val principal = UserPrincipal(subject = "sub-owner", roles = setOf(UserRole.MEMBER))
+        val conversation = ConversationEntity(
+            id = conversationId,
+            type = "moment",
+            event = ev,
+            title = "Moment: Anstoßen",
+            expiresAt = Instant.now().minusSeconds(10)
+        )
+
+        `when`(userService.getOrCreateUser(principal)).thenReturn(owner)
+        `when`(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation))
+
+        val ex = assertThrows(InvalidRequestException::class.java) {
+            chatService.sendConversationMessage(conversationId, SendMessageRequest(message = "Zu spät"), principal)
+        }
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.errorCode)
     }
 }

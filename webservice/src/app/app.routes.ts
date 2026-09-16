@@ -104,7 +104,26 @@ export const routes: Routes = [
       import('./chat/direct-messages.component').then((m) => m.DirectMessagesComponent),
   },
   { path: 'notifications', ...memberPage('Notifications', 'In-App- und Push-Benachrichtigungen.') },
-  { path: 'drink-with-me', ...memberPage('DrinkWithMe', 'Zeitlich begrenzte Session für berechtigte Eventteilnehmer.') },
+  {
+    path: 'moments',
+    canActivate: [authGuard],
+    data: {
+      title: 'Moments',
+      description: 'Gemeinschaftsmomente & Rituale für aktive Events.',
+      access: 'Geschützter Bereich',
+    },
+    loadComponent: () => import('./moments/moments.component').then((m) => m.MomentsComponent),
+  },
+  {
+    path: 'events/:eventId/moments',
+    canActivate: [authGuard],
+    data: {
+      title: 'Event Moments',
+      description: 'Gemeinschaftsmomente & Rituale für dieses Event.',
+      access: 'Geschützter Bereich',
+    },
+    loadComponent: () => import('./moments/moments.component').then((m) => m.MomentsComponent),
+  },
   {
     path: 'board',
     canActivate: [authGuard, roleGuard],

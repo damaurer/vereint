@@ -25,6 +25,9 @@ class ConversationEntity(
     @Column(name = "title", length = 255)
     var title: String? = null,
 
+    @Column(name = "expires_at")
+    var expiresAt: Instant? = null,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),
@@ -161,20 +164,33 @@ class PushSubscriptionEntity(
 )
 
 @Entity
-@Table(name = "drink_with_me_sessions")
+@Table(name = "moment_sessions")
 @EntityListeners(AuditingEntityListener::class)
-class DrinkWithMeSessionEntity(
+class MomentSessionEntity(
     @Id
     @Column(name = "id", nullable = false)
     var id: UUID = UUID.randomUUID(),
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    var user: UserEntity? = null,
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
     var event: EventEntity? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_user_id", nullable = false)
+    var creator: UserEntity? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conversation_id")
+    var conversation: ConversationEntity? = null,
+
+    @Column(name = "title", length = 255, nullable = false)
+    var title: String = "",
+
+    @Column(name = "topic_type", length = 64, nullable = false)
+    var topicType: String = "",
+
+    @Column(name = "message", length = 500)
+    var message: String? = null,
 
     @Column(name = "latitude")
     var latitude: Double? = null,
@@ -182,14 +198,58 @@ class DrinkWithMeSessionEntity(
     @Column(name = "longitude")
     var longitude: Double? = null,
 
-    @Column(name = "message", length = 255)
-    var message: String? = null,
-
     @Column(name = "active", nullable = false)
     var active: Boolean = true,
 
     @Column(name = "expires_at", nullable = false)
     var expiresAt: Instant = Instant.now(),
+
+    @Column(name = "completed_at")
+    var completedAt: Instant? = null,
+
+    @Column(name = "summary")
+    var summary: String? = null,
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: Instant = Instant.now(),
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: Instant = Instant.now(),
+
+    @Version
+    @Column(name = "version", nullable = false)
+    var version: Long = 0
+)
+
+@Entity
+@Table(name = "moment_responses")
+@EntityListeners(AuditingEntityListener::class)
+class MomentResponseEntity(
+    @Id
+    @Column(name = "id", nullable = false)
+    var id: UUID = UUID.randomUUID(),
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "moment_id", nullable = false)
+    var moment: MomentSessionEntity? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    var user: UserEntity? = null,
+
+    @Column(name = "reaction", length = 64, nullable = false)
+    var reaction: String = "",
+
+    @Column(name = "status_text", length = 255)
+    var statusText: String? = null,
+
+    @Column(name = "latitude")
+    var latitude: Double? = null,
+
+    @Column(name = "longitude")
+    var longitude: Double? = null,
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

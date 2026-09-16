@@ -8,6 +8,13 @@ import type {
   LedgerEntry,
   MemberBalance,
   MemberProfile,
+  MomentDetailDto,
+  MomentMapGeoJsonDto,
+  MomentResponseDto,
+  MomentSessionDto,
+  MomentSummaryDto,
+  StartMomentRequest,
+  SubmitMomentResponseRequest,
   UpdateProfilePayload,
 } from '../api/api.types';
 
@@ -55,5 +62,54 @@ export class MemberApiService {
   /** Eigener Kontoauszug (`GET /api/v1/ledger/members/{memberId}/entries`). */
   listEntries(memberId: string): Observable<LedgerEntry[]> {
     return this.api.get<LedgerEntry[]>(`/ledger/members/${encodeURIComponent(memberId)}/entries`);
+  }
+
+  /** Aktive Moments eines Events (`GET /api/v1/events/{eventId}/moments`). */
+  listMoments(eventId: string): Observable<MomentSessionDto[]> {
+    return this.api.get<MomentSessionDto[]>(`/events/${encodeURIComponent(eventId)}/moments`);
+  }
+
+  /** Details und Timeline-Beiträge eines Moments (`GET /api/v1/events/{eventId}/moments/{momentId}`). */
+  getMomentDetail(eventId: string, momentId: string): Observable<MomentDetailDto> {
+    return this.api.get<MomentDetailDto>(
+      `/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}`,
+    );
+  }
+
+  /** Startet einen neuen Gemeinschaftsmoment (`POST /api/v1/events/{eventId}/moments`). */
+  startMoment(eventId: string, payload: StartMomentRequest): Observable<MomentSessionDto> {
+    return this.api.post<MomentSessionDto>(`/events/${encodeURIComponent(eventId)}/moments`, payload);
+  }
+
+  /** Reicht einen Statusbeitrag/eine Reaktion zu einem Moment ein (`POST /api/v1/events/{eventId}/moments/{momentId}/responses`). */
+  submitMomentResponse(
+    eventId: string,
+    momentId: string,
+    payload: SubmitMomentResponseRequest,
+  ): Observable<MomentResponseDto> {
+    return this.api.post<MomentResponseDto>(
+      `/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}/responses`,
+      payload,
+    );
+  }
+
+  /** GeoJSON Map FeatureCollection für Kartenansicht (`GET /api/v1/events/{eventId}/moments/{momentId}/map`). */
+  getMomentMapGeoJson(eventId: string, momentId: string): Observable<MomentMapGeoJsonDto> {
+    return this.api.get<MomentMapGeoJsonDto>(
+      `/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}/map`,
+    );
+  }
+
+  /** Schließt einen aktiven Moment ab (`POST /api/v1/events/{eventId}/moments/{momentId}/complete`). */
+  completeMoment(eventId: string, momentId: string): Observable<MomentSummaryDto> {
+    return this.api.post<MomentSummaryDto>(
+      `/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}/complete`,
+      {},
+    );
+  }
+
+  /** Archivierte/abgeschlossene Moments eines Events (`GET /api/v1/events/{eventId}/moments/history`). */
+  listMomentHistory(eventId: string): Observable<MomentSummaryDto[]> {
+    return this.api.get<MomentSummaryDto[]>(`/events/${encodeURIComponent(eventId)}/moments/history`);
   }
 }

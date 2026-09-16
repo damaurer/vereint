@@ -45,7 +45,7 @@ Dateien werden nach Zweck strukturiert abgelegt:
 images/profile/{user_uuid}/{image_uuid}.webp
 images/event/{event_uuid}/{image_uuid}.webp
 images/drink/{drink_uuid}/{image_uuid}.webp
-images/drinkWithMe/{session_uuid}/{image_uuid}.webp
+images/moment/{session_uuid}/{image_uuid}.webp
 ```
 
 ### 3. Presigned URLs & Sicherheit

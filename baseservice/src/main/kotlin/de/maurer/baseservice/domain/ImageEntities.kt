@@ -42,7 +42,7 @@ class ImageAssetEntity(
 
     /**
      * Kennung des referenzierten Fachobjekts (z. B. Event- oder Getränk-ID). Für
-     * profil- und DrinkWithMe-Bilder ist dies die Kennung des Eigentümers.
+     * Profil- und Moment-Bilder ist dies die Kennung des Eigentümers.
      */
     @Column(name = "target_id")
     var targetId: UUID? = null,

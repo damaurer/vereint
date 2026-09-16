@@ -29,7 +29,8 @@ data class ConversationDto(
     val type: String,
     val eventId: String?,
     val title: String?,
-    val memberCount: Int
+    val memberCount: Int,
+    val expiresAt: Instant? = null
 )
 
 /**
