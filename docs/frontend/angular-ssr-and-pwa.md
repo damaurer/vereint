@@ -1,4 +1,4 @@
-# Frontend-Architektur: Angular 19 SSR, BFF & PWA
+# Frontend-Architektur: Angular 22 SSR, BFF & PWA
 
 Das Web-Frontend von **Vereint** kombiniert serverseitiges Rendering (Angular SSR auf Express 5), eine reaktive Standalone-Komponentenarchitektur und eine robuste Progressive Web App (PWA) für Theken- und Mobilgeräte.
 

@@ -27,7 +27,7 @@ docs/
 │   └── statistics-and-analytics.md       # Verbrauchs- & Eber-Statistiken, Auswertungen
 │
 ├── frontend/                             # Client-Architektur & UI-Bibliothek
-│   ├── angular-ssr-and-pwa.md            # Angular 19 SSR, Express BFF & PWA-Caching
+│   ├── angular-ssr-and-pwa.md            # Angular 22 SSR, Express BFF & PWA-Caching
 │   └── ui-components-and-design-system.md # Optimus Design Tokens & UI-Komponentenbibliothek
 │
 ├── api/                                  # API-Referenz & Integrationsverträge

@@ -11,7 +11,7 @@ Das Gesamtsystem besteht aus vier primären logischen Schichten:
 ```mermaid
 graph TD
     subgraph ClientLayer ["1. Client & PWA Layer"]
-        Browser["Angular 19 Standalone PWA"]
+        Browser["Angular 22 Standalone PWA"]
         SW["Service Worker (VAPID Push / Offline Cache)"]
     end
 
@@ -58,7 +58,7 @@ graph TD
 ## 🧩 Schichten & Komponenten im Detail
 
 ### 1. Client & PWA Layer (`webservice/src/app`)
-- **Framework**: Angular 19 (Standalone Components, Signals, Zoneless/Zone-kompatibel).
+- **Framework**: Angular 22 (Standalone Components, Signals, Zoneless/Zone-kompatibel).
 - **App Shell Architecture**: Einheitliches Shell-Layout (`AppShellComponent`) mit adaptiver Navigation für Mobile (Bottom Navigation Bar), Tablet (Kiosk Overlay) und Desktop (Sidebar Navigation).
 - **Progressive Web App (PWA)**: Service Worker für intelligentes Caching statischer Assets, Offline-Hinweise und Hintergrundempfang von Push-Benachrichtigungen via VAPID.
 - **Optimus Design System**: Eigenes UI-System mit CSS Custom Properties für Theme-Konsistenz (`--opt-color-primary`, `--opt-space-*`, `--opt-radius-*`).
@@ -72,7 +72,7 @@ graph TD
   - Proxy-Middleware (`api-proxy.middleware.ts`) leitet Client-Anfragen transparent an das Spring Boot Backend weiter und hängt das gültige Bearer-Access-Token an.
 
 ### 3. Spring Boot Backend (`baseservice`)
-- **Framework**: Spring Boot 3.4+, Kotlin 2.1+, Java 21 LTS.
+- **Framework**: Spring Boot 4.1+, Kotlin 2.3+, Java 25 JDK.
 - **Security**: Stateless OAuth2 Resource Server mit JWT-Validierung (`JwtAuthConverter`, `RolePermissionMatrix`).
 - **Idempotenz**: Eindeutige Transaktionssicherheit über den HTTP-Header `Idempotency-Key` (UUIDv4) für kritische Kassen- und Thekenbuchungen.
 - **Storage & Push**:

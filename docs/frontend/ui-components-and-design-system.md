@@ -1,6 +1,6 @@
 # UI-Komponentenbibliothek & Optimus Design-System
 
-Die Benutzeroberfläche von **Vereint** basiert auf dem **Optimus Design System** – einem hochgradig konsistenten, barrierefreien und modularen Komponenten-Ökosystem in Angular 19.
+Die Benutzeroberfläche von **Vereint** basiert auf dem **Optimus Design System** – einem hochgradig konsistenten, barrierefreien und modularen Komponenten-Ökosystem in Angular 22.
 
 ---
 

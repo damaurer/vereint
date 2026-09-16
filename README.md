@@ -1,8 +1,8 @@
 # 🍻 Vereint – Moderne Vereinsverwaltung & Digitale Strichliste
 
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.4+-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.1+-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Angular](https://img.shields.io/badge/Angular-19_SSR-DD0031?logo=angular&logoColor=white)](https://angular.dev/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1+-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3+-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
+[![Angular](https://img.shields.io/badge/Angular-22_SSR-DD0031?logo=angular&logoColor=white)](https://angular.dev/)
 [![Keycloak](https://img.shields.io/badge/Keycloak-26_OIDC-4D4D4D?logo=redhat&logoColor=white)](https://www.keycloak.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![MinIO](https://img.shields.io/badge/MinIO-S3_Storage-C72C48?logo=minio&logoColor=white)](https://min.io/)
@@ -15,8 +15,8 @@
 
 ### Voraussetzungen
 - **Docker & Docker Compose** (Docker Desktop oder Engine)
-- **Node.js 22+ & npm** (für das Frontend/BFF)
-- **Java 21 JDK** (für das Spring Boot Backend)
+- **Node.js 22+ & npm 11+** (für das Frontend/BFF)
+- **Java 25 JDK** (für das Spring Boot Backend)
 
 ### 1. Infrastruktur starten (PostgreSQL, Keycloak, MinIO)
 ```bash
@@ -58,7 +58,7 @@ npm run dev:ssr
 ```mermaid
 graph TD
     subgraph ClientLayer ["Client & PWA Layer"]
-        Browser["Angular 19 PWA (Browser / Mobile / Tablet)"]
+        Browser["Angular 22 PWA (Browser / Mobile / Tablet)"]
         SW["Service Worker (VAPID Push / Offline Caching)"]
     end
 
@@ -132,7 +132,7 @@ Die Dokumentation ist lückenlos nach Fachbereichen und technischen Schichten un
 
 | Verzeichnis | Technologie | Zweck & Verantwortung |
 | :--- | :--- | :--- |
-| `baseservice/` | Kotlin 2.1, Spring Boot 3.4, Java 21 | REST-Backend, Business-Logik, JPA/PostgreSQL, Liquibase, S3 Storage, Web Push. |
-| `webservice/` | Angular 19, Express 5, TypeScript | SSR-BFF, PWA Frontend, Session-Cookie Handling, Optimus UI Komponenten. |
+| `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-Backend, Business-Logik, JPA/PostgreSQL, Liquibase, S3 Storage, Web Push. |
+| `webservice/` | Angular 22, Express 5, TypeScript 6 | SSR-BFF, PWA Frontend, Session-Cookie Handling, Optimus UI Komponenten. |
 | `keycloak/` | Keycloak 26 | OIDC/OAuth2 Identity Provider, Realm-Definitionen (`realm-export-dev.json`). |
 | `docs/` | Markdown & Mermaid | Vollständige technische und fachliche Dokumentationssuite. |

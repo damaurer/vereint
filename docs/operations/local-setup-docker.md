@@ -6,8 +6,8 @@ Dieses Handbuch beschreibt die Einrichtung und den Betrieb der lokalen Entwicklu
 
 ## 🛠️ Voraussetzungen
 - **Docker & Docker Compose** (Docker Desktop oder Docker Engine ab Version 24+)
-- **Java JDK 21** (Temurin, Corretto oder OpenJDK)
-- **Node.js 22 LTS & npm**
+- **Java JDK 25** (Temurin, Corretto oder OpenJDK)
+- **Node.js 22 LTS & npm 11+**
 
 ---
 
