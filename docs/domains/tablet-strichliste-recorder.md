@@ -88,7 +88,7 @@ sequenceDiagram
     UI->>BFF: POST /api/v1/tablet/events/{id}/purchases (memberId, eventDrinkId)
     BFF->>Spring: POST /api/v1/tablet/events/{id}/purchases<br/>Header: Idempotency-Key: c9d1a...
     Spring->>Spring: Prüft Berechtigung ('purchase.tablet') & Event-Status ('active')
-    Spring->>Ledger: Bucht Eintrag (source = tabletManual, mode = credit, amount = -300)
+    Spring->>Ledger: Bucht Eintrag (source = tabletManual, mode = credit, amount = -3.00)
     Ledger->>DB: INSERT INTO ledger_entries & purchase_snapshots
     DB-->>Ledger: Committed
     Ledger-->>Spring: LedgerEntryDto

@@ -24,11 +24,11 @@ Die Benutzerverwaltung in **Vereint** verbindet das externe Identitätsmanagemen
 
 ### 1. Relevante Komponenten & Klassen
 - **Controller**: `de.maurer.baseservice.controller.UserController`
-  - `GET /api/v1/users/me` – Eigenes Profil laden
-  - `PATCH /api/v1/users/me` – Eigenes Profil aktualisieren (`UpdateProfileRequest`)
+  - `GET /api/v1/users/me` – Eigenes Profil laden (`UserProfileDto`)
+  - `PUT /api/v1/users/me` – Eigenes Profil aktualisieren (`UpdateUserProfileRequest`)
   - `GET /api/v1/users` – Mitgliederliste paginiert abrufen (`PagedResponse<UserSummaryDto>`, optional Filter `search`, `role`, `disabled`)
   - `GET /api/v1/users/{id}` – Details eines Mitglieds abrufen
-  - `PATCH /api/v1/users/{id}` – Stammdaten durch Admin bearbeiten (`AdminUpdateUserRequest`)
+  - `PUT /api/v1/users/{id}` – Stammdaten durch Admin bearbeiten (`AdminUpdateUserRequest`)
   - `PUT /api/v1/users/{id}/roles` – Rollenzuweisung (`AssignRolesRequest`)
   - `PUT /api/v1/users/{id}/permissions` – Direkte Berechtigungszuweisung (`AssignPermissionsRequest`)
   - `PUT /api/v1/users/{id}/status` – Benutzer aktivieren/deaktivieren (`UpdateUserStatusRequest`)
@@ -57,22 +57,30 @@ data class UserProfileDto(
     val updatedAt: Instant
 )
 
-data class UpdateProfileRequest(
+data class UpdateUserProfileRequest(
     @field:Size(min = 2, max = 255)
     val displayName: String? = null,
     @field:Email
     val email: String? = null
 )
 
+data class AdminUpdateUserRequest(
+    @field:Size(min = 2, max = 255) val displayName: String? = null,
+    @field:Email val email: String? = null,
+    val boardRole: String? = null,
+    val drinkRecorder: Boolean? = null
+)
+
 data class AssignRolesRequest(
-    @field:NotNull
-    @field:AllowedValues(values = ["member", "board", "admin", "tabletRecorder"])
-    val roles: Set<String>
+    @field:NotNull val roles: Set<String>
+)
+
+data class AssignPermissionsRequest(
+    @field:NotNull val permissions: Set<String>
 )
 
 data class UpdateUserStatusRequest(
-    @field:NotNull
-    val disabled: Boolean
+    @field:NotNull val disabled: Boolean
 )
 ```
 

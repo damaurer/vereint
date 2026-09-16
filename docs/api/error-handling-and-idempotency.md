@@ -36,9 +36,14 @@ Jede fehlerhafte Antwort des Backends wird im standardisierten JSON-Format `appl
 
 | Fehlercode (`code`) | HTTP-Status | Beschreibung & Ursache |
 | :--- | :---: | :--- |
+| `oidc_login_failed` | `401 Unauthorized` | OIDC Login oder Token-Austausch fehlgeschlagen. |
+| `oidc_session_expired` | `401 Unauthorized` | OIDC Sitzung oder Refresh-Token ist abgelaufen. |
 | `account_disabled` | `403 Forbidden` | Benutzer wurde durch Administration gesperrt (`disabled = true`). |
 | `access_denied` | `403 Forbidden` | Fehlende Berechtigung für die angeforderte Ressource. |
 | `permission_denied` | `403 Forbidden` | Spezifische Berechtigung (z. B. `purchase.tablet`) fehlt. |
+| `role_not_assigned` | `403 Forbidden` | Erforderliche Benutzerrolle ist dem Benutzer nicht zugewiesen. |
+| `consent_required` | `403 Forbidden` | Fehlende explizite Zustimmung (z. B. Standortfreigabe bei DrinkWithMe). |
+| `self_service_disabled` | `403 Forbidden` | Self-Service Barcode-Kauf ist für dieses Benutzerkonto deaktiviert. |
 | `self_privilege_change_denied` | `403 Forbidden` | Administratoren dürfen sich eigene Privilegien nicht selbst entziehen. |
 | `last_admin_protected` | `403 Forbidden` | Der letzte verbleibende Administrator kann nicht degradiert werden. |
 | `not_found` | `404 Not Found` | Angefragte Ressource (User, Event, Drink, Sublist) existiert nicht. |
@@ -48,9 +53,11 @@ Jede fehlerhafte Antwort des Backends wird im standardisierten JSON-Format `appl
 | `event_not_active` | `409 Conflict` | Event ist nicht im Status `active` (Thekenbuchung nicht erlaubt). |
 | `drink_not_in_event` | `409 Conflict` | Getränk ist nicht für dieses Event in der Subliste freigeschaltet. |
 | `ledger_already_corrected` | `409 Conflict` | Buchung wurde bereits durch eine Gegenbuchung storniert. |
-| `idempotency_key_required` | `400 Bad Request` | Pflicht-Header `Idempotency-Key` fehlt bei Kassenbuchung. |
 | `idempotency_conflict` | `409 Conflict` | Idempotenzschlüssel wurde mit abweichenden Parametern wiederverwendet. |
 | `concurrent_modification` | `409 Conflict` | Optimistic Lock Fehler (`version` Konflikt bei paralleler Bearbeitung). |
+| `data_integrity_violation` | `409 Conflict` | Datenbankintegritätsverletzung (z. B. Unique Constraint oder Fremdschlüssel). |
+| `idempotency_key_required` | `400 Bad Request` | Pflicht-Header `Idempotency-Key` fehlt bei Kassenbuchung. |
+| `invalid_request` | `400 Bad Request` | Ungültiges Anfrageformat oder Parameterkonflikt. |
 | `validation_failed` | `400 / 422` | Bean-Validierungsfehler (z. B. ungültige E-Mail, negativer Preis). |
 | `internal_error` | `500 Server Error` | Unerwarteter interner Serverfehler. |
 

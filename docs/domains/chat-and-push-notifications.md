@@ -22,20 +22,26 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den interaktiven Austausch zw
 
 ### 1. Relevante Komponenten & Klassen
 - **Controller**:
-  - `ChatController`: Endpunkte unter `/api/v1/chat` (Konversationen auflisten, Nachrichten senden/abrufen, Event-Gast-Chat unter `/api/v1/events/{id}/chat/guest`).
+  - `ChatController`: Endpunkte unter `/api/v1/events/{eventId}/chat`
+    - `GET /` – Konversationsmetadaten für das Event laden
+    - `GET /messages` – Nachrichten des Event-Chats abrufen
+    - `POST /messages` – Nachricht als authentifiziertes Mitglied senden (`SendMessageRequest`)
+    - `GET /guest/messages` – Nachrichten als Gast abrufen (Header `X-Guest-Token`)
+    - `POST /guest/messages` – Nachricht als Gast senden (`SendMessageRequest` + `X-Guest-Token`)
   - `NotificationController`: Endpunkte unter `/api/v1/notifications`
-    - `GET /api/v1/notifications` – Eigene Benachrichtigungen laden
-    - `GET /api/v1/notifications/unread-count` – Anzahl ungelesener Nachrichten
-    - `POST /api/v1/notifications/{id}/read` – Als gelesen markieren
-    - `GET /api/v1/notifications/vapid-public-key` – Öffentlichen VAPID-Schlüssel für Browser holen
-    - `POST /api/v1/notifications/push-subscriptions` – Browser-Abonnement registrieren
-    - `POST /api/v1/notifications/send` – Vorstands-Broadcast versenden
+    - `GET /` – Eigene Benachrichtigungen laden (`List<NotificationDto>`)
+    - `GET /unread-count` – Anzahl ungelesener Nachrichten (`UnreadCountDto`)
+    - `POST /read-all` – Alle Benachrichtigungen als gelesen markieren
+    - `POST /{id}/read` – Einzelne Benachrichtigung als gelesen markieren
+    - `GET /vapid-public-key` – Öffentlichen VAPID-Schlüssel abfragen (`VapidPublicKeyDto`)
+    - `POST /subscriptions` – Web-Push-Abonnement registrieren (`PushSubscriptionCreateRequest`)
+    - `POST /` – Benachrichtigung / Broadcast an Benutzer senden (`SendNotificationRequest`)
 - **Services**:
   - `ChatService`: Nachrichtenverwaltung und Berechtigungsprüfung (`chat.member`, `chat.event`).
   - `NotificationService`: Erstellung von In-App-Notifications und Auslösen des Push-Versands.
   - `VapidPushSender`: Erzeugt RFC-8292-konforme VAPID-Header und verschlüsselt Payloads über WebPush-Krypto (`p256dh`, `auth`).
   - `NoOpPushSender`: Fallback für lokale Tests ohne konfigurierte VAPID-Keys.
-- **Entitäten**: `ConversationEntity`, `ConversationMemberEntity`, `ChatMessageEntity`, `NotificationEntity`, `PushSubscriptionEntity` (in `CommunicationEntities.kt`).
+- **Entitäten**: `ConversationEntity`, `ConversationMemberEntity`, `ChatMessageEntity`, `NotificationEntity`, `PushSubscriptionEntity`.
 
 ---
 
@@ -45,30 +51,55 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den interaktiven Austausch zw
 data class ChatMessageDto(
     val id: String,
     val conversationId: String,
-    val senderId: String?,
+    val senderUserId: String?,
     val senderDisplayName: String,
-    val content: String,
+    val senderRole: String?,
+    val guestId: String?,
+    val message: String,
+    val imageUrl: String?,
     val isGuest: Boolean,
     val createdAt: Instant
 )
 
-data class RegisterPushSubscriptionRequest(
-    @field:NotBlank
-    val endpoint: String,
-    @field:NotBlank
-    val p256dh: String,
-    @field:NotBlank
-    val auth: String,
+data class SendMessageRequest(
+    @field:NotBlank(message = "message darf nicht leer sein")
+    @field:Size(max = 2000, message = "message darf höchstens 2000 Zeichen lang sein")
+    val message: String? = null,
+
+    @field:Size(max = 512, message = "imageUrl darf höchstens 512 Zeichen lang sein")
+    val imageUrl: String? = null
+)
+
+data class PushSubscriptionCreateRequest(
+    @field:NotBlank(message = "endpoint darf nicht leer sein")
+    @field:Size(max = 1024, message = "endpoint darf höchstens 1024 Zeichen lang sein")
+    val endpoint: String? = null,
+
+    @field:NotBlank(message = "p256dh darf nicht leer sein")
+    @field:Size(max = 255, message = "p256dh darf höchstens 255 Zeichen lang sein")
+    val p256dh: String? = null,
+
+    @field:NotBlank(message = "auth darf nicht leer sein")
+    @field:Size(max = 255, message = "auth darf höchstens 255 Zeichen lang sein")
+    val auth: String? = null,
+
+    @field:Size(max = 512, message = "userAgent darf höchstens 512 Zeichen lang sein")
     val userAgent: String? = null
 )
 
 data class SendNotificationRequest(
-    @field:NotBlank
-    val userId: String,
-    @field:NotBlank
-    val title: String,
-    @field:NotBlank
-    val body: String,
+    @field:NotBlank(message = "userId darf nicht leer sein")
+    val userId: String? = null,
+
+    @field:NotBlank(message = "title darf nicht leer sein")
+    @field:Size(max = 255, message = "title darf höchstens 255 Zeichen lang sein")
+    val title: String? = null,
+
+    @field:NotBlank(message = "body darf nicht leer sein")
+    @field:Size(max = 4000, message = "body darf höchstens 4000 Zeichen lang sein")
+    val body: String? = null,
+
+    @field:Size(max = 64, message = "type darf höchstens 64 Zeichen lang sein")
     val type: String? = null
 )
 ```
@@ -81,13 +112,13 @@ data class SendNotificationRequest(
 sequenceDiagram
     autonumber
     actor Board as Vorstand
-    participant Spring as NotificationService / VapidPushSender
+    participant Spring as NotificationController / VapidPushSender
     participant DB as PostgreSQL (push_subscriptions)
     participant PushService as Browser Push Gateway (Mozilla / Apple / Google)
     actor Member as Empfänger (Service Worker)
 
-    Board->>Spring: POST /api/v1/notifications/send (userId, title, body)
-    Spring->>DB: INSERT INTO notifications (user_id, title, body, read = false)
+    Board->>Spring: POST /api/v1/notifications (userId, title, body, type)
+    Spring->>DB: INSERT INTO notifications (user_id, title, body, type, read = false)
     Spring->>DB: SELECT * FROM push_subscriptions WHERE user_id = :userId
     loop Für jedes aktive Abonnement
         Note over Spring: Signiert VAPID JWT mit privatem Server-Key<br/>Verschlüsselt Payload mit p256dh & auth

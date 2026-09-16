@@ -52,14 +52,14 @@ Das System unterscheidet vier elementare Buchungstypen (`entryType`):
 ## 💰 Saldenberechnung & Formel
 
 ```text
-creditBalance = topupTotal - payoutTotal - (creditPurchases) + (correctionTotal)
+creditBalance = topupTotal - payoutTotal - (creditPurchases) ± (correctionTotal)
 ```
 
-Jeder Buchungsdatensatz speichert den Cent-Betrag als vorzeichenbehafteten Integer (`amount_cents`):
+Jeder Buchungsdatensatz speichert den Betrag als `DECIMAL(10,2)` (`amount: BigDecimal`):
 - `topup`: Positiv (`+amount`)
 - `payout`: Negativ (`-amount`)
 - `purchase` (im Modus `credit`): Negativ (`-amount`)
-- `correction`: Hebt das Vorzeichen der Originalbuchung umgekehrt auf (`-original.amount_cents`)
+- `correction`: Hebt den Betrag der Originalbuchung umgekehrt auf (`-original.amount`)
 
 ---
 
@@ -80,8 +80,8 @@ sequenceDiagram
         Spring-->>Member: 201 Created (Gleiche LedgerEntryDto wie zuvor)
     else Neuer Request
         Spring->>DB: Finde EventDrink & DrinkSnapshot zum Barcode
-        Spring->>DB: INSERT INTO ledger_entries (id, member_id, amount_cents = -250, entry_type = 'purchase', ...)
-        Spring->>DB: INSERT INTO purchase_snapshots (ledger_entry_id, drink_name = "Club Mate", price_cents = 250)
+        Spring->>DB: INSERT INTO ledger_entries (id, member_id, amount = -2.50, currency = 'EUR', entry_type = 'purchase', ...)
+        Spring->>DB: INSERT INTO purchase_snapshots (ledger_entry_id, drink_name = "Club Mate", unit_price = 2.50)
         Spring->>IdemRepo: INSERT INTO idempotency_records (scope, key, response_body)
         DB-->>Spring: Transaction Committed
         Spring-->>Member: 201 Created (Neuer LedgerEntryDto)

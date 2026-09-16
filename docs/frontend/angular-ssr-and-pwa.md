@@ -15,7 +15,7 @@ sequenceDiagram
 
     Browser->>BFF: GET / (Erster Seitenaufruf)
     Note over BFF: AuthMiddleware liest vereint_session Cookie
-    BFF->>Spring: GET /api/v1/auth/access/current (Initialer Auth-State)
+    BFF->>Spring: GET /api/v1/auth/access (Initialer Auth-State & Scopes)
     Spring-->>BFF: 200 OK (Rollen, Berechtigungen)
     Note over BFF: Rendert Angular HTML & injiziert TransferState:<br/>- CLUB_CONFIG_KEY<br/>- AUTH_STATE_KEY
     BFF-->>Browser: 200 OK (Vollständiges HTML mit Styles & Inline-State)

@@ -1,6 +1,6 @@
 # Fachdomäne: Event-Management & Gast-Einladungen
 
-Das Event-Modul in **Vereint** verwaltet den gesamten Lebenszyklus von Vereinsveranstaltungen – von der Planung über Mitglieder-Zusagen (RSVP) bis hin zu sicheren, tokenbasierten Einladungen für externe Gäste ohne vollwertiges Vereinskonto.
+Das Event-Modul in **Vereint** verwaltet den gesamten Lebenszyklus von Vereinsveranstaltungen – von der Planung über die Teilnehmerverwaltung bis hin zu sicheren, tokenbasierten Einladungen für externe Gäste ohne vollwertiges Vereinskonto.
 
 ---
 
@@ -12,38 +12,40 @@ Events durchlaufen definierte Zustände:
 ```mermaid
 stateDiagram-v2
     [*] --> draft : Event anlegen
-    draft --> published : Freigeben / Veröffentlichen
-    published --> active : Event beginnt / Theke öffnet
-    active --> completed : Event beendet & abgerechnet
-    published --> cancelled : Event abgesagt
+    draft --> published : Veröffentlichen
+    published --> active : Event starten / Theke öffnen
+    active --> completed : Event abschließen & abrechnen
+    published --> cancelled : Event absagen
     active --> cancelled : Vorzeitiger Abbruch
     completed --> archived : Archivierung
     cancelled --> archived : Archivierung
     archived --> [*]
 ```
 
-- **`draft`**: Entwurf (nur für Ersteller und Vorstand sichtbar).
-- **`published`**: Öffentlich für alle Mitglieder sichtbar; RSVPs sind geöffnet.
-- **`active`**: Event läuft aktuell; Strichliste am Kiosk-Tablet ist aktiv und Getränkebuchungen sind möglich.
-- **`completed`**: Event erfolgreich abgeschlossen; Abendabrechnung ist erfolgt.
+- **`draft`**: Entwurf (nur für Owner und Vorstand sichtbar).
+- **`published`**: Für alle Mitglieder sichtbar; Teilnehmer können sich anmelden.
+- **`active`**: Event läuft aktuell; Strichliste am Tablet-Recorder ist aktiv und Kassenbuchungen sind möglich.
+- **`completed`**: Event erfolgreich beendet und abgerechnet.
 - **`cancelled`**: Event wurde storniert.
-- **`archived`**: Historisches Event für statistische Auswertungen.
+- **`archived`**: Archiviertes Event für Statistiken.
 
-### 2. Mitglieder-Zusagen (RSVP)
-- Vereinsmitglieder können ihre Teilnahme vorab signalisieren:
-  - `attending` (Zusage / Ich komme)
-  - `declined` (Absage / Ich komme nicht)
-  - `maybe` (Vielleicht / Unsicher)
-- Vorstände sehen eine aggregierte Übersicht zur Einkaufs- und Getränkeplanung.
+Statusänderungen und Stammdatenaktualisierungen werden über `PUT /api/v1/events/{id}` (`UpdateEventRequest`) vorgenommen.
+
+### 2. Teilnehmerverwaltung (`EventParticipantDto`)
+- Vereinsmitglieder und Vorstände verwalten Teilnehmer über `/api/v1/events/{id}/participants`:
+  - `GET /api/v1/events/{id}/participants`: Liefert die Liste aller registrierten Teilnehmer.
+  - `POST /api/v1/events/{id}/participants`: Fügt einen Teilnehmer (`AddParticipantRequest`) mit einer Rolle (z. B. `participant`) hinzu.
+  - `DELETE /api/v1/events/{id}/participants/{userId}`: Entfernt einen Teilnehmer aus dem Event.
 
 ### 3. Gast-Einladungen via Krypto-Token
-- Für externe Gäste (z. B. Freunde, Familienangehörige, Gastredner) können Vorstände **Einladungslinks** mit kryptografischen Tokens generieren.
+- Für externe Gäste können Veranstaltungs-Owner und Vorstände über `POST /api/v1/events/{eventId}/invites` Einladungslinks mit kryptografischen Tokens generieren.
 - **Sicherheitskonzept**:
-  - Im Link wird ein zufälliges URL-sicheres Geheimnis übergeben.
+  - Im Antwort-Payload (`CreateInviteResponse`) wird das einmalig einsehbare Klartext-Token (`token`) und der `acceptPath` übergeben.
   - In der Datenbank wird ausschließlich der kryptografische **SHA-256 Hash** (`token_hash`) gespeichert (`SecureTokens.kt`).
-  - Einladungen können mit einer maximalen Nutzungsanzahl (`max_uses`) und einem Ablaufdatum (`expires_at`) versehen werden.
+  - Einladungen unterstützen Nutzungsbegrenzungen (`maxUses`) und Gültigkeitsdauer (`expiresInMinutes`).
 - **Gast-Erlebnis**:
-  - Gast öffnet den Link, gibt seinen Anzeigenamen ein und erhält temporären Zugriff auf das Event, das Getränkeangebot und den Event-Gastchat.
+  - Der Gast löst die Einladung über `POST /api/v1/invites/accept` (`AcceptInviteRequest`) mit seinem Anzeigenamen ein.
+  - Die Antwort (`AcceptInviteResponse`) enthält ein temporäres Gast-Session-Token (`guestToken`), das für nachfolgende Gast-Chat-Aufrufe (`X-Guest-Token`) genutzt wird.
 
 ---
 
@@ -51,11 +53,11 @@ stateDiagram-v2
 
 ### 1. Relevante Komponenten & Klassen
 - **Controller**:
-  - `EventController`: CRUD für Events (`/api/v1/events`), Statusübergänge (`/publish`, `/activate`, `/complete`, `/cancel`), RSVP-Endpunkte (`/rsvp`).
-  - `InviteController`: Erstellung von Einladungen (`/api/v1/invites`), Einlösen von Gasttokens (`/api/v1/invites/accept`), Gaststatus-Verwaltung.
+  - `EventController`: CRUD und Lifecycle (`/api/v1/events`, `PUT /api/v1/events/{id}`), Teilnehmerverwaltung (`/api/v1/events/{id}/participants`).
+  - `InviteController`: Event-Einladungsverwaltung (`/api/v1/events/{eventId}/invites`), Einlösen von Gasttokens (`POST /api/v1/invites/accept`).
 - **Services**: `EventService`, `InviteService`.
 - **Sicherheit & Krypto**: `SecureTokens.kt` (Generierung von 256-Bit Zufalls-Tokens und SHA-256 Hashing).
-- **Entitäten**: `EventEntity`, `EventRsvpEntity`, `EventInviteEntity`, `EventGuestEntity` (in `EventEntities.kt`).
+- **Entitäten**: `EventEntity`, `EventParticipantEntity`, `EventInviteEntity`, `EventGuestEntity`.
 
 ---
 
@@ -67,35 +69,40 @@ data class EventDto(
     val title: String,
     val description: String?,
     val location: String?,
+    val ownerId: String,
     val startsAt: Instant,
     val endsAt: Instant?,
     val status: String,
-    val sublistId: String?,
-    val createdById: String,
-    val rsvpSummary: RsvpSummaryDto
+    val createdAt: Instant,
+    val updatedAt: Instant
 )
 
-data class CreateEventInviteRequest(
-    @field:NotBlank
-    val eventId: String,
-    @field:Min(1)
-    val maxUses: Int = 1,
-    val expiresAt: Instant? = null
+data class UpdateEventRequest(
+    @field:Size(min = 1, max = 255) val title: String? = null,
+    @field:Size(max = 4000) val description: String? = null,
+    @field:Size(max = 255) val location: String? = null,
+    val status: EventStatus? = null,
+    val startsAt: Instant? = null,
+    val endsAt: Instant? = null
+)
+
+data class CreateInviteRequest(
+    @field:Min(1) @field:Max(10000) val maxUses: Int? = null,
+    @field:Min(1) @field:Max(129600) val expiresInMinutes: Long? = null,
+    @field:Pattern(regexp = "^(guest)?$") val role: String? = null
 )
 
 data class AcceptInviteRequest(
-    @field:NotBlank
-    val token: String,
-    @field:NotBlank
-    @field:Size(min = 2, max = 255)
-    val displayName: String
+    @field:NotBlank val token: String,
+    @field:Size(max = 255) val displayName: String
 )
 
-data class GuestAccessDto(
-    val guestId: String,
-    val eventId: String,
-    val displayName: String,
+data class AcceptInviteResponse(
     val guestToken: String,
+    val eventId: String,
+    val eventTitle: String,
+    val displayName: String,
+    val status: String,
     val expiresAt: Instant
 )
 ```
@@ -107,20 +114,20 @@ data class GuestAccessDto(
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Board as Vorstand
+    actor Board as Event-Owner / Vorstand
     actor Guest as Externer Gast
-    participant Spring as EventController / InviteController
+    participant Spring as InviteController / Service
     participant DB as PostgreSQL (event_invites / event_guests)
 
-    Board->>Spring: POST /api/v1/invites (eventId, maxUses: 10)
+    Board->>Spring: POST /api/v1/events/{eventId}/invites (maxUses: 10, expiresInMinutes: 1440)
     Note over Spring: Generiert token = "sec_abc123..."<br/>Berechnet SHA-256(token)
-    Spring->>DB: INSERT INTO event_invites (token_hash, max_uses, uses_count = 0)
-    Spring-->>Board: 201 Created (Einladungs-URL mit raw token)
+    Spring->>DB: INSERT INTO event_invites (token_hash, max_uses = 10, uses_count = 0)
+    Spring-->>Board: 201 Created (CreateInviteResponse: token, acceptPath)
 
-    Board->>Guest: Teilt Einladungs-Link (z. B. via WhatsApp / E-Mail)
-    Guest->>Spring: POST /api/v1/invites/accept (token, displayName: "Max Mustermann")
-    Note over Spring: Berechnet SHA-256(token) und prüft Gültigkeit & Limit
+    Board->>Guest: Teilt Einladungs-Link
+    Guest->>Spring: POST /api/v1/invites/accept (token: "sec_abc123...", displayName: "Max Mustermann")
+    Note over Spring: Validiert SHA-256(token), Frist & Limit
     Spring->>DB: UPDATE event_invites SET uses_count = uses_count + 1
     Spring->>DB: INSERT INTO event_guests (event_id, invite_id, display_name, status = 'active')
-    Spring-->>Guest: 200 OK (GuestAccessDto mit temporärem Gast-Session-Token)
+    Spring-->>Guest: 201 Created (AcceptInviteResponse mit guestToken)
 ```

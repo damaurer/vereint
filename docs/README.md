@@ -50,13 +50,13 @@ docs/
 | **Vorstand (Board)** | Rolle `board` | Vereinsführung mit Rechten zur Event-Erstellung, Kassenverwaltung und Broadcasts. |
 | **Administrator (Admin)** | Rolle `admin` | System- und Vereinsadministrator mit Vollzugriff inkl. Rollenvergabe und Account-Deaktivierung. |
 | **Strichlisten-Schreiber** | Rolle `tabletRecorder`, Berechtigung `purchase.tablet` | Berechtigung zur Bedienung des Tablet-Kiosks zur Getränkebuchung auf Events. |
-| **Kassenbuch / Ledger** | `LedgerEntry`, `LedgerService` | Unveränderliches Transaktionsjournal (Double-Entry Prinzip) für Einzahlungen, Käufe und Runden. |
-| **Guthaben (Balance)** | `aggregated sum(amount_cents)` | Aktueller Kontostand eines Mitglieds in Cents (positiv = Guthaben, negativ = Schulden). |
+| **Kassenbuch / Ledger** | `LedgerEntry`, `LedgerService` | Unveränderliches Transaktionsjournal (Double-Entry Prinzip) für `topup`, `purchase`, `payout` und `correction`. |
+| **Guthaben (Balance)** | `MemberBalanceDto.creditBalance` | Aktueller Kontostand eines Mitglieds als `BigDecimal` (in EUR). |
 | **Idempotenzschlüssel** | `Idempotency-Key` (UUIDv4) | Eindeutiger HTTP-Header zur Vermeidung von Doppelbuchungen bei Verbindungsabbrüchen. |
-| **Subliste (Sublist)** | `DrinkSublistEntity`, `DrinkSublistMapping` | Eine für ein Event freigeschaltete Untermenge des globalen Getränkekatalogs. |
-| **Trink mit mir (Drink With Me)** | `DrinkWithMeEntity` | Kollaboratives Feature, bei dem Mitglieder virtuelle Runden anbieten oder beitreten. |
-| **Gast-Einladungstoken** | `GuestInviteTokenEntity` | Krypto-Token (SHA-256 gehasht) für passwortlose Registrierung externer Gäste zu Events. |
-| **Abendabrechnung** | `POST /api/v1/tablet/events/{id}/evening` | Abschlussbuchung von Bareinnahmen oder pauschalen Event-Umsätzen ohne Personenzuordnung. |
+| **Subliste (Sublist)** | `DrinkSublistEntity`, `DrinkSublistItemEntity` | Eine für ein Event freigeschaltete Untermenge des globalen Getränkekatalogs. |
+| **Drink With Me** | `DrinkWithMeSessionDto` | Opt-in Feature, bei dem Mitglieder ihren Standort und Status während eines aktiven Events teilen. |
+| **Gast-Einladungstoken** | `EventInviteEntity`, `token_hash` | Krypto-Token (SHA-256 gehasht) für passwortlose Registrierung externer Gäste zu Events. |
+| **Abendabrechnung** | `POST /api/v1/tablet/events/{eventId}/evening` | Abschlussbuchung von Bareinnahmen oder pauschalen Event-Umsätzen (`revenueOnly`). |
 | **Optimus Design System** | `styles.css`, CSS Custom Properties | Zentrales Design-Token-System für konsistente Abstände, Farben, Elevation und Typografie. |
 | **BFF (Backend-for-Frontend)** | `webservice/src/server/server.ts` | Node.js / Express Server für SSR-Rendering, Cookie-Session-Verwaltung und API-Proxy. |
 
