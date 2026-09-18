@@ -7,7 +7,7 @@
 .login-form input {
   padding: .6rem .75rem;
   border-radius: .5rem;
-  border: 1px solid var(--color-border, #d4d4d8);
+  border: 1px solid var(--color-border, #e2e8f0);
   font: inherit;
 }
 
@@ -16,7 +16,7 @@
   padding: .7rem 1rem;
   border: 0;
   border-radius: .5rem;
-  background: var(--color-brand, #2563eb);
+  background: var(--color-brand, #1e3a8a);
   color: #fff;
   font: inherit;
   cursor: pointer;
@@ -41,5 +41,5 @@
 }
 
 .login-error strong {
-  color: var(--color-danger, #b91c1c);
+  color: var(--color-danger, #dc2626);
 }

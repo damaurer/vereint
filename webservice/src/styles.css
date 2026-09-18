@@ -1,16 +1,43 @@
 :root {
-  --color-bg: #0B0B0A;
-  --color-surface: #141412;
-  --color-surface-raised: #1D1C19;
-  --color-border: #302E28;
-  --color-text: #F3F0E8;
-  --color-text-muted: #9B988E;
-  --color-brand: #F2B600;
-  --color-brand-strong: #FFC400;
-  --color-brand-soft: #3B2F08;
-  --color-success: #56B56B;
-  --color-warning: #D99B32;
-  --color-danger: #D85C5C;
+  /* Optimus Farbschema Tokens (User Guide) */
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-border: #e2e8f0;
+  --color-border-dark: #cbd5e1;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-brand: #1e3a8a;
+  --color-brand-strong: #172554;
+  --color-brand-soft: #eff6ff;
+  --color-accent: #d97706;
+  --color-accent-light: #fef3c7;
+  --color-success: #16a34a;
+  --color-success-light: #dcfce7;
+  --color-warning: #d97706;
+  --color-warning-light: #fef3c7;
+  --color-danger: #dc2626;
+  --color-danger-light: #fee2e2;
+
+  /* Optimus Original Aliases */
+  --opt-color-primary: #1e3a8a;
+  --opt-color-primary-light: #eff6ff;
+  --opt-color-primary-dark: #172554;
+  --opt-color-accent: #d97706;
+  --opt-color-accent-light: #fef3c7;
+  --opt-color-success: #16a34a;
+  --opt-color-success-light: #dcfce7;
+  --opt-color-danger: #dc2626;
+  --opt-color-danger-light: #fee2e2;
+  --opt-bg-canvas: #f8fafc;
+  --opt-bg-surface: #ffffff;
+  --opt-border-color: #e2e8f0;
+  --opt-border-dark: #cbd5e1;
+  --opt-text-main: #0f172a;
+  --opt-text-muted: #64748b;
+  --opt-radius-sm: 4px;
+  --opt-radius-md: 8px;
+  --opt-radius-lg: 12px;
 }
 
 *,
@@ -46,7 +73,7 @@ body {
   border-radius: 1rem;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 .eyebrow {
@@ -116,7 +143,7 @@ a:focus-visible {
 
 .state-card.state-error {
   border-left-color: var(--color-danger);
-  background-color: rgba(216, 92, 92, 0.12);
+  background-color: var(--color-danger-light);
 }
 
 .state-card button {
@@ -158,10 +185,14 @@ a:focus-visible {
   border-radius: 0.5rem;
   border: none;
   background-color: var(--color-brand);
-  color: #1a1a17;
+  color: #ffffff;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+.member-button:hover:not(:disabled) {
+  background-color: var(--color-brand-strong);
 }
 
 .member-button:disabled {
@@ -216,7 +247,7 @@ a:focus-visible {
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
   background-color: var(--color-brand-soft);
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -266,7 +297,7 @@ a:focus-visible {
 }
 
 .member-amount {
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
   font-weight: 700;
 }
 
@@ -277,7 +308,7 @@ a:focus-visible {
   padding: 1.25rem;
   border-radius: 0.75rem;
   border: 1px solid var(--color-border);
-  background-color: var(--color-surface-raised);
+  background-color: var(--color-surface);
 }
 
 .member-balance-label {
@@ -288,7 +319,7 @@ a:focus-visible {
 }
 
 .member-balance-value {
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
   font-size: 1.75rem;
   font-weight: 800;
 }
@@ -407,13 +438,14 @@ a:focus-visible {
 
 .shell-nav-link:hover,
 .shell-nav-link:focus-visible {
-  background-color: var(--color-surface-raised);
+  background-color: #f1f5f9;
   text-decoration: none;
 }
 
 .shell-nav-link.is-active {
   background-color: var(--color-brand-soft);
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
+  font-weight: 700;
 }
 
 .shell-nav-icon {
@@ -454,13 +486,14 @@ a:focus-visible {
 
 .shell-rail-link:hover,
 .shell-rail-link:focus-visible {
-  background-color: var(--color-surface-raised);
+  background-color: #f1f5f9;
   text-decoration: none;
 }
 
 .shell-rail-link.is-active {
   background-color: var(--color-brand-soft);
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
+  font-weight: 700;
 }
 
 /* --- Topbar (Web) --- */
@@ -549,7 +582,7 @@ a:focus-visible {
 }
 
 .shell-bottom-link.is-active {
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
 }
 
 .shell-bottom-icon {
@@ -571,7 +604,7 @@ a:focus-visible {
   padding: 0.15rem 0.6rem;
   border-radius: 999px;
   background-color: var(--color-brand-soft);
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -582,9 +615,13 @@ a:focus-visible {
   border-radius: var(--radius-sm);
   border: none;
   background-color: var(--color-brand);
-  color: #1a1a17;
+  color: #ffffff;
   font-weight: 700;
   cursor: pointer;
+}
+
+.ui-button:hover:not(:disabled) {
+  background-color: var(--color-brand-strong);
 }
 
 .ui-button:disabled {
@@ -610,8 +647,8 @@ a:focus-visible {
 .ui-avatar-fallback {
   display: grid;
   place-items: center;
-  background-color: var(--color-brand-soft);
-  color: var(--color-brand-strong);
+  background-color: var(--color-brand);
+  color: #ffffff;
   font-weight: 800;
 }
 
@@ -620,7 +657,7 @@ a:focus-visible {
   padding: 0.15rem 0.6rem;
   border-radius: 999px;
   border: 1px solid var(--color-border);
-  background-color: var(--color-surface-raised);
+  background-color: #f1f5f9;
   color: var(--color-text-muted);
   font-size: 0.75rem;
   font-weight: 700;
@@ -628,7 +665,7 @@ a:focus-visible {
 
 .ui-chip-accent {
   background-color: var(--color-brand-soft);
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
   border-color: transparent;
 }
 
@@ -641,23 +678,23 @@ a:focus-visible {
 }
 
 .ui-badge-neutral {
-  background-color: var(--color-surface-raised);
+  background-color: #f1f5f9;
   color: var(--color-text-muted);
 }
 
 .ui-badge-success {
-  background-color: rgba(86, 181, 107, 0.16);
+  background-color: var(--color-success-light);
   color: var(--color-success);
 }
 
 .ui-badge-warning {
-  background-color: rgba(217, 155, 50, 0.16);
-  color: var(--color-warning);
+  background-color: var(--color-warning-light);
+  color: #92400e;
 }
 
 .ui-badge-danger {
-  background-color: rgba(216, 92, 92, 0.16);
-  color: var(--color-danger);
+  background-color: var(--color-danger-light);
+  color: #991b1b;
 }
 
 .ui-hero {
@@ -690,7 +727,7 @@ a:focus-visible {
   padding: var(--space-3);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background-color: var(--color-surface-raised);
+  background-color: var(--color-surface);
 }
 
 .ui-stat-icon {
@@ -740,7 +777,7 @@ a:focus-visible {
   margin: 0.2rem 0 var(--space-2);
   font-size: 2rem;
   font-weight: 800;
-  color: var(--color-brand-strong);
+  color: var(--color-brand);
 }
 
 .ui-balance-negative {
@@ -776,7 +813,7 @@ a:focus-visible {
   min-height: 44px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
-  background-color: var(--color-surface-raised);
+  background-color: #f1f5f9;
   color: var(--color-text);
   font-size: 1.3rem;
   cursor: pointer;
@@ -827,7 +864,7 @@ a:focus-visible {
   display: grid;
   place-items: center;
   padding: var(--space-4);
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(15, 23, 42, 0.4);
 }
 
 .ui-overlay-bottom {
@@ -842,6 +879,7 @@ a:focus-visible {
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background-color: var(--color-surface);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
 }
 
 .ui-modal-head,
@@ -872,6 +910,7 @@ a:focus-visible {
   border-top-right-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background-color: var(--color-surface);
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
 .ui-sheet-grabber {
@@ -879,7 +918,7 @@ a:focus-visible {
   height: 0.3rem;
   margin: var(--space-2) auto 0;
   border-radius: 999px;
-  background-color: var(--color-border);
+  background-color: var(--color-border-dark);
 }
 
 /* --- Responsive Content-Padding --- */
