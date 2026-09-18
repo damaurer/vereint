@@ -115,6 +115,10 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "${KEYCLOAK_CLIENT_SECRET}",
       "redirectUris": [
+        "http://localhost:8080/api/auth/callback",
+        "http://localhost:8080/login/oauth2/code/keycloak",
+        "http://127.0.0.1:8080/api/auth/callback",
+        "http://127.0.0.1:8080/login/oauth2/code/keycloak",
         "http://localhost:4200/api/auth/callback",
         "http://localhost:4200/login/oauth2/code/keycloak",
         "http://127.0.0.1:4200/api/auth/callback",
@@ -125,6 +129,8 @@
         "http://127.0.0.1:4300/login/oauth2/code/keycloak"
       ],
       "webOrigins": [
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
         "http://localhost:4200",
         "http://127.0.0.1:4200",
         "http://localhost:4300",

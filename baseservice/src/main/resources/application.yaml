@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8081}
+  port: ${SPRING_PORT:8081}
   # Request-Größenlimits gegen DoS (relevant ab dem Bild-Upload aus TICKET-014)
   max-http-request-header-size: 16KB
   tomcat:
