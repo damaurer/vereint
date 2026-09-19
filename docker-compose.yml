@@ -63,6 +63,12 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD fehlt in .env}
       KC_HTTP_PORT: 8080
       KC_HEALTH_ENABLED: "true"
+      # Nur Dev: Theme-Cache aus, damit Aenderungen am Login-Theme `vereint`
+      # (./keycloak/themes) ohne Neustart sichtbar sind. In Produktion bleiben
+      # die Keycloak-Standardwerte (Cache aktiv), siehe keycloak/README.md.
+      KC_SPI_THEME_CACHE_THEMES: "false"
+      KC_SPI_THEME_CACHE_TEMPLATES: "false"
+      KC_SPI_THEME_STATIC_MAX_AGE: "-1"
       # Platzhalter des Realm-Imports (`${VARIABLE}`), siehe keycloak/README.md.
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
       SPRING_API_BASE_URL: http://vereint-service:8081
@@ -76,6 +82,8 @@ services:
     volumes:
       # Ausschliesslich der Entwicklungs-Realm inklusive Seed-Benutzer.
       - ./keycloak/dev:/opt/keycloak/data/import:ro
+      # Login-Theme `vereint` (keycloak/themes/vereint), siehe keycloak/README.md.
+      - ./keycloak/themes:/opt/keycloak/themes:ro
     depends_on:
       keycloak-db:
         condition: service_healthy

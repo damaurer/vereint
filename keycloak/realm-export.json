@@ -37,6 +37,13 @@
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
+  "loginTheme": "vereint",
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "de",
+    "en"
+  ],
+  "defaultLocale": "de",
   "bruteForceProtected": true,
   "permanentLockout": false,
   "maxTemporaryLockouts": 3,

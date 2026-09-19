@@ -28,6 +28,13 @@ Keycloak dient als zentraler Identity & Access Provider (OIDC). Für die lokale 
 | `member` | `member` | `member` | Normales Vereinsmitglied (Profil, Kasse, RSVPs) |
 | `tablet` | `tablet` | `member`, `tabletRecorder` | Kiosk-Tablet an der Vereinstheke |
 
+### 4. Login-Theme `vereint`
+- **Speicherort**: `keycloak/themes/vereint/login` (wird in `/opt/keycloak/themes` gemountet), Basis `keycloak.v2` (PatternFly 5).
+- **Aktivierung**: Beide Realm-Exports setzen `loginTheme: "vereint"`, `defaultLocale: "de"` und `supportedLocales: ["de", "en"]`; nach `docker compose up` ist das Theme ohne manuelle Konfiguration aktiv.
+- **Gestaltete Seiten**: Login, Passwort zurücksetzen und Registrierung (Registrierung nur im Entwicklungs-Realm aktiviert). Alle weiteren Keycloak-Seiten erben Rahmen und Branding.
+- **Design**: Split-Screen mit Vereint-Verlauf und Logo, Optimus-Design-Tokens, responsiv ab 320 px, automatischer Dark-Mode über `prefers-color-scheme`.
+- **Dev-Cache**: `KC_SPI_THEME_CACHE_THEMES=false`, `KC_SPI_THEME_CACHE_TEMPLATES=false`, `KC_SPI_THEME_STATIC_MAX_AGE=-1` in `docker-compose.yml` – Änderungen sind sofort sichtbar. In Produktion diese Variablen nicht setzen (Cache bleibt aktiv). Details in `keycloak/README.md`.
+
 ---
 
 ## 🪣 MinIO / S3 Objektspeicher
