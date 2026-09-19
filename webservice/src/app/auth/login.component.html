@@ -1,22 +1,49 @@
-<main class="page-shell">
-  <section class="page-card" aria-labelledby="login-title">
-    <span class="eyebrow">Öffentlich</span>
-    <h1 id="login-title">Anmeldung</h1>
-    <p>Die Anmeldung erfolgt über das VEREINT-Konto bei Keycloak.</p>
+<div class="vereint-shell">
+  <aside class="vereint-brand" aria-hidden="true">
+    <div class="vereint-brand-inner">
+      <img src="vereint-logo-mono.svg" alt="" class="vereint-brand-logo" width="440" height="140" />
+      <p class="vereint-brand-claim">Dein Verein. Vereint.</p>
+      <p class="vereint-brand-sub">Mitglieder, Events, Kasse und Theke an einem Ort – sicher und auf jedem Gerät.</p>
+    </div>
+    <div class="vereint-brand-nodes"></div>
+  </aside>
 
-    <form class="login-form" (submit)="startLogin($event)">
-      <button id="start-login" type="submit" [disabled]="busy()">
-        {{ busy() ? 'Weiterleitung …' : 'Mit VEREINT-Konto anmelden' }}
-      </button>
-    </form>
+  <main class="vereint-main">
+    <header class="vereint-mobile-header">
+      <a class="vereint-mobile-brand" routerLink="/login">
+        <img src="vereint-logo.svg" alt="vereint" class="vereint-logo vereint-logo-light" width="440" height="140" />
+        <img src="vereint-logo-mono.svg" alt="vereint" class="vereint-logo vereint-logo-dark" width="440" height="140" />
+      </a>
+    </header>
 
-    <a routerLink="/password-reset">Passwort zurücksetzen</a>
-
-    @if (error()) {
-      <div class="state-card login-error" role="alert">
-        <strong>Anmeldung fehlgeschlagen</strong>
-        <span>{{ error() }}</span>
+    <section class="vereint-card" aria-labelledby="login-title">
+      <div class="vereint-card-header">
+        <div class="vereint-card-heading">
+          <p class="vereint-eyebrow">Öffentlich</p>
+          <h1 class="vereint-title" id="login-title">Anmeldung</h1>
+        </div>
       </div>
-    }
-  </section>
-</main>
+
+      <div class="vereint-card-body">
+        <p class="vereint-subtitle">Die Anmeldung erfolgt über das VEREINT-Konto bei Keycloak.</p>
+
+        <form class="login-form" (submit)="startLogin($event)">
+          <button id="start-login" type="submit" [disabled]="busy()">
+            {{ busy() ? 'Weiterleitung …' : 'Mit VEREINT-Konto anmelden' }}
+          </button>
+        </form>
+
+        <div class="login-links">
+          <a routerLink="/password-reset">Passwort zurücksetzen</a>
+        </div>
+
+        @if (error()) {
+          <div class="state-card state-error login-error" role="alert">
+            <strong>Anmeldung fehlgeschlagen</strong>
+            <span>{{ error() }}</span>
+          </div>
+        }
+      </div>
+    </section>
+  </main>
+</div>

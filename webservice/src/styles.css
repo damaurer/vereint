@@ -31,6 +31,7 @@
   --opt-color-danger-light: #fee2e2;
   --opt-bg-canvas: #f8fafc;
   --opt-bg-surface: #ffffff;
+  --opt-bg-surface-raised: #ffffff;
   --opt-border-color: #e2e8f0;
   --opt-border-dark: #cbd5e1;
   --opt-text-main: #0f172a;
@@ -38,6 +39,22 @@
   --opt-radius-sm: 4px;
   --opt-radius-md: 8px;
   --opt-radius-lg: 12px;
+  --opt-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+  /* Markenverlauf (vereint-logo.svg) */
+  --vereint-teal: #2ec4b6;
+  --vereint-blue: #3a86ff;
+  --vereint-violet: #8338ec;
+  --vereint-ink: #1b1f3b;
+  --vereint-gradient: linear-gradient(135deg, var(--vereint-teal) 0%, var(--vereint-blue) 55%, var(--vereint-violet) 100%);
+
+  /* Layout */
+  --vereint-card-width: 28rem;
+  --vereint-card-padding: clamp(1.25rem, 4vw, 2.5rem);
+  --vereint-control-height: 2.75rem; /* >= 44px Touch-Ziel */
+  --vereint-control-radius: 0.5rem;
+  --vereint-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  --vereint-focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-brand);
 }
 
 *,
@@ -438,7 +455,7 @@ a:focus-visible {
 
 .shell-nav-link:hover,
 .shell-nav-link:focus-visible {
-  background-color: #f1f5f9;
+  background-color: var(--color-bg);
   text-decoration: none;
 }
 
@@ -486,7 +503,7 @@ a:focus-visible {
 
 .shell-rail-link:hover,
 .shell-rail-link:focus-visible {
-  background-color: #f1f5f9;
+  background-color: var(--color-bg);
   text-decoration: none;
 }
 
@@ -657,7 +674,7 @@ a:focus-visible {
   padding: 0.15rem 0.6rem;
   border-radius: 999px;
   border: 1px solid var(--color-border);
-  background-color: #f1f5f9;
+  background-color: var(--color-bg);
   color: var(--color-text-muted);
   font-size: 0.75rem;
   font-weight: 700;
@@ -678,7 +695,7 @@ a:focus-visible {
 }
 
 .ui-badge-neutral {
-  background-color: #f1f5f9;
+  background-color: var(--color-bg);
   color: var(--color-text-muted);
 }
 
@@ -813,7 +830,7 @@ a:focus-visible {
   min-height: 44px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
-  background-color: #f1f5f9;
+  background-color: var(--color-bg);
   color: var(--color-text);
   font-size: 1.3rem;
   cursor: pointer;
@@ -929,4 +946,369 @@ a:focus-visible {
 .shell[data-viewport='tablet'] .shell-content,
 .shell[data-viewport='web'] .shell-content {
   padding: var(--space-4);
+}
+
+/* =============================================================
+   Vereint Split-Screen Branding Layout & Card System
+   Harmonized with Keycloak 26 Theme Design System
+   ============================================================= */
+
+/* --- Split-Screen Geruest ------------------------------------- */
+.vereint-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* --- Branding-Panel (Split-Screen, ab 768 px) ---------------- */
+.vereint-brand {
+  display: none;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--vereint-ink);
+  background-image: var(--vereint-gradient);
+  color: #ffffff;
+}
+
+.vereint-brand-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  height: 100%;
+  padding: clamp(2rem, 6vw, 5rem);
+  max-width: 34rem;
+}
+
+.vereint-brand-logo {
+  display: block;
+  width: min(100%, 16rem);
+  height: auto;
+  filter: brightness(0) invert(1);
+}
+
+.vereint-brand-claim {
+  margin: 1.5rem 0 0;
+  font-size: clamp(1.75rem, 2.6vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.vereint-brand-sub {
+  margin: 0;
+  max-width: 28rem;
+  font-size: clamp(1rem, 1.2vw, 1.125rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.vereint-brand-nodes {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='2' y='2' width='96' height='96' rx='26' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cg stroke='%23fff' stroke-width='3.5' stroke-linecap='round'%3E%3Cline x1='50' y1='50' x2='28' y2='30'/%3E%3Cline x1='50' y1='50' x2='72' y2='30'/%3E%3Cline x1='50' y1='50' x2='28' y2='72'/%3E%3Cline x1='50' y1='50' x2='72' y2='72'/%3E%3C/g%3E%3Cg fill='%23fff'%3E%3Ccircle cx='28' cy='30' r='8'/%3E%3Ccircle cx='72' cy='30' r='8'/%3E%3Ccircle cx='28' cy='72' r='8'/%3E%3Ccircle cx='72' cy='72' r='8'/%3E%3Ccircle cx='50' cy='50' r='11'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: min(70%, 34rem) auto;
+  background-position: right -12% bottom -14%;
+  background-repeat: no-repeat;
+}
+
+/* --- Formular- / Hauptspalte ---------------------------------- */
+.vereint-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  min-width: 0;
+  padding: clamp(1rem, 4vw, 3rem) 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.vereint-mobile-header {
+  display: flex;
+  justify-content: center;
+  width: min(100%, var(--vereint-card-width));
+}
+
+.vereint-mobile-brand {
+  display: inline-flex;
+  border-radius: var(--opt-radius-md);
+}
+
+.vereint-mobile-header .vereint-logo {
+  display: block;
+  width: min(60vw, 11rem);
+  height: auto;
+}
+
+.vereint-mobile-header .vereint-logo-dark {
+  display: none;
+  filter: brightness(0) invert(1);
+}
+
+/* --- Vereint Card & Typography -------------------------------- */
+.vereint-card {
+  width: min(100%, var(--vereint-card-width));
+  padding: var(--vereint-card-padding);
+  border-radius: 1rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--vereint-shadow);
+  color: var(--color-text);
+  overflow-wrap: break-word;
+}
+
+.vereint-card .vereint-card-header {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0;
+  margin-bottom: 1.25rem;
+}
+
+.vereint-card .vereint-title {
+  margin: 0;
+  font-family: var(--opt-font-sans);
+  font-size: clamp(1.375rem, 5vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.2;
+  text-wrap: balance;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.vereint-card .vereint-card-body,
+.vereint-card .vereint-card-footer {
+  padding: 0;
+}
+
+.vereint-card .vereint-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.vereint-card .vereint-card-footer:empty {
+  display: none;
+}
+
+.vereint-card .vereint-card-heading {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.vereint-eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--color-brand);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vereint-subtitle {
+  margin: 0 0 1.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* --- Breakpoints ----------------------------------------------- */
+@media (min-width: 48em) {
+  .vereint-shell {
+    grid-template-columns: minmax(16rem, 38%) minmax(0, 1fr);
+  }
+
+  .vereint-brand {
+    display: block;
+  }
+
+  .vereint-mobile-header {
+    display: none;
+  }
+
+  .vereint-main {
+    padding: clamp(1.5rem, 4vw, 4rem);
+  }
+}
+
+@media (min-width: 80em) {
+  .vereint-shell {
+    grid-template-columns: minmax(20rem, 45%) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 30em) {
+  .vereint-main {
+    padding: 1rem 0 max(1rem, env(safe-area-inset-bottom));
+    gap: 0.75rem;
+  }
+
+  .vereint-mobile-header {
+    padding: 0.5rem 1rem 0;
+  }
+
+  .vereint-card {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+}
+
+/* --- Dark-Mode Styling & Tokens ------------------------------- */
+:root[data-theme='dark'],
+[data-theme='dark'],
+.theme-dark,
+html.pf-v5-theme-dark {
+  color-scheme: dark;
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-raised: #0f172a;
+  --color-border: #334155;
+  --color-border-dark: #475569;
+  --color-text: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-brand: #3b82f6;
+  --color-brand-strong: #2563eb;
+  --color-brand-soft: rgba(59, 130, 246, 0.16);
+  --color-accent: #fbbf24;
+  --color-accent-light: rgba(217, 119, 6, 0.18);
+  --color-success: #4ade80;
+  --color-success-light: rgba(22, 163, 74, 0.18);
+  --color-warning: #fbbf24;
+  --color-warning-light: rgba(217, 119, 6, 0.18);
+  --color-danger: #f87171;
+  --color-danger-light: rgba(220, 38, 38, 0.18);
+
+  --opt-color-primary: #3b82f6;
+  --opt-color-primary-light: rgba(59, 130, 246, 0.16);
+  --opt-color-primary-dark: #2563eb;
+  --opt-color-accent: #fbbf24;
+  --opt-color-accent-light: rgba(217, 119, 6, 0.18);
+  --opt-color-success: #4ade80;
+  --opt-color-success-light: rgba(22, 163, 74, 0.18);
+  --opt-color-danger: #f87171;
+  --opt-color-danger-light: rgba(220, 38, 38, 0.18);
+  --opt-bg-canvas: #0f172a;
+  --opt-bg-surface: #1e293b;
+  --opt-bg-surface-raised: #0f172a;
+  --opt-border-color: #334155;
+  --opt-border-dark: #475569;
+  --opt-text-main: #f8fafc;
+  --opt-text-muted: #94a3b8;
+  --vereint-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+  --vereint-focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-brand);
+}
+
+:root[data-theme='dark'] .vereint-brand,
+[data-theme='dark'] .vereint-brand,
+.theme-dark .vereint-brand,
+html.pf-v5-theme-dark .vereint-brand {
+  background: #0b1120;
+  background-image: linear-gradient(135deg, #1f8f86 0%, #2563eb 55%, #6d28d9 100%);
+}
+
+:root[data-theme='dark'] .vereint-mobile-header .vereint-logo-light,
+[data-theme='dark'] .vereint-mobile-header .vereint-logo-light,
+.theme-dark .vereint-mobile-header .vereint-logo-light,
+html.pf-v5-theme-dark .vereint-mobile-header .vereint-logo-light {
+  display: none;
+}
+
+:root[data-theme='dark'] .vereint-mobile-header .vereint-logo-dark,
+[data-theme='dark'] .vereint-mobile-header .vereint-logo-dark,
+.theme-dark .vereint-mobile-header .vereint-logo-dark,
+html.pf-v5-theme-dark .vereint-mobile-header .vereint-logo-dark {
+  display: block;
+}
+
+:root[data-theme='dark'] .vereint-eyebrow,
+[data-theme='dark'] .vereint-eyebrow,
+.theme-dark .vereint-eyebrow,
+html.pf-v5-theme-dark .vereint-eyebrow {
+  color: #93c5fd;
+}
+
+/* Fallback via prefers-color-scheme Media-Query */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-bg: #0f172a;
+    --color-surface: #1e293b;
+    --color-surface-raised: #0f172a;
+    --color-border: #334155;
+    --color-border-dark: #475569;
+    --color-text: #f8fafc;
+    --color-text-muted: #94a3b8;
+    --color-brand: #3b82f6;
+    --color-brand-strong: #2563eb;
+    --color-brand-soft: rgba(59, 130, 246, 0.16);
+    --color-accent: #fbbf24;
+    --color-accent-light: rgba(217, 119, 6, 0.18);
+    --color-success: #4ade80;
+    --color-success-light: rgba(22, 163, 74, 0.18);
+    --color-warning: #fbbf24;
+    --color-warning-light: rgba(217, 119, 6, 0.18);
+    --color-danger: #f87171;
+    --color-danger-light: rgba(220, 38, 38, 0.18);
+
+    --opt-color-primary: #3b82f6;
+    --opt-color-primary-light: rgba(59, 130, 246, 0.16);
+    --opt-color-primary-dark: #2563eb;
+    --opt-color-accent: #fbbf24;
+    --opt-color-accent-light: rgba(217, 119, 6, 0.18);
+    --opt-color-success: #4ade80;
+    --opt-color-success-light: rgba(22, 163, 74, 0.18);
+    --opt-color-danger: #f87171;
+    --opt-color-danger-light: rgba(220, 38, 38, 0.18);
+    --opt-bg-canvas: #0f172a;
+    --opt-bg-surface: #1e293b;
+    --opt-bg-surface-raised: #0f172a;
+    --opt-border-color: #334155;
+    --opt-border-dark: #475569;
+    --opt-text-main: #f8fafc;
+    --opt-text-muted: #94a3b8;
+    --vereint-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+    --vereint-focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-brand);
+  }
+
+  :root:not([data-theme='light']) .vereint-brand {
+    background: #0b1120;
+    background-image: linear-gradient(135deg, #1f8f86 0%, #2563eb 55%, #6d28d9 100%);
+  }
+
+  :root:not([data-theme='light']) .vereint-mobile-header .vereint-logo-light {
+    display: none;
+  }
+
+  :root:not([data-theme='light']) .vereint-mobile-header .vereint-logo-dark {
+    display: block;
+  }
+
+  :root:not([data-theme='light']) .vereint-eyebrow {
+    color: #93c5fd;
+  }
+}
+
+/* --- Barrierefreiheit / Reduzierte Bewegung ------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }
