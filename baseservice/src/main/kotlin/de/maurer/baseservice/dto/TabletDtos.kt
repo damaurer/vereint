@@ -5,31 +5,22 @@ import jakarta.validation.constraints.NotEmpty
 import java.time.Instant
 
 /**
- * Erfassung eines manuellen Tablet-Kaufs (TICKET-017).
- *
- * Das Tablet wählt ausschließlich das Eventmitglied (`memberId`) und das
- * eventbezogene Getränk (`eventDrinkId`) aus. Preis, Währung, Abrechnungsmodus und
- * Herkunft werden serverseitig bestimmt; das Tablet darf sie nicht vorgeben.
+ * Erfassung eines manuellen Tablet-Kaufs (Getränk oder Speise).
  */
 data class TabletPurchaseRequest(
     @field:NotBlank(message = "memberId darf nicht leer sein")
     val memberId: String? = null,
 
-    @field:NotBlank(message = "eventDrinkId darf nicht leer sein")
-    val eventDrinkId: String? = null
+    val eventDrinkId: String? = null,
+    val eventFoodId: String? = null
 )
 
 /**
- * Erfassung einer Runde oder Abendaktion (TICKET-018).
- *
- * Der Tablet-Recorder wählt ausschließlich das eventbezogene Getränk (`eventDrinkId`)
- * und die begünstigten Eventmitglieder (`memberIds`). Preis, Währung und Herkunft
- * (`round`/`evening`) bestimmt der Server; der Abrechnungsmodus ist stets
- * `revenueOnly` und belastet kein persönliches Guthaben.
+ * Erfassung einer Runde oder Abendaktion (Getränk oder Speise).
  */
 data class TabletRevenuePurchaseRequest(
-    @field:NotBlank(message = "eventDrinkId darf nicht leer sein")
     val eventDrinkId: String? = null,
+    val eventFoodId: String? = null,
 
     @field:NotEmpty(message = "memberIds darf nicht leer sein")
     val memberIds: List<String>? = null
@@ -48,4 +39,10 @@ data class TabletEventDto(
 data class TabletMemberDto(
     val memberId: String,
     val displayName: String
+)
+
+/** Kombiniertes Angebot an Getränken und Speisen für die Tablet-Strichliste. */
+data class TabletItemsDto(
+    val drinks: List<EventDrinkDto>,
+    val food: List<EventFoodDto>
 )

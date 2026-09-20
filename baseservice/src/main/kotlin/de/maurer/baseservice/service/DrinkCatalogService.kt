@@ -16,6 +16,7 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.util.UUID
 
 /**
@@ -111,6 +112,7 @@ class DrinkCatalogService(
             description = request.description?.trim()?.ifBlank { null },
             category = request.category?.trim()?.ifBlank { null },
             defaultPrice = price,
+            costPrice = request.costPrice ?: BigDecimal.ZERO,
             currency = normalizeCurrency(request.currency),
             imageReference = request.imageReference?.trim()?.ifBlank { null },
             catalogVersion = 1,
@@ -133,38 +135,17 @@ class DrinkCatalogService(
         val caller = userService.getOrCreateUser(principal)
         val drink = requireDrink(id)
         val privileged = isBoardOrAdmin(caller, principal)
-        requireManage(caller, principal, drink, privileged)
+        requireManage(caller, drink, privileged)
 
         var snapshotRelevantChanged = false
-
-        if (request.name != null) {
-            val name = normalizeName(request.name)
-            if (name.isBlank()) {
-                throw InvalidRequestException("name darf nicht leer sein", ErrorCode.INVALID_REQUEST)
-            }
-            if (name != drink.name) snapshotRelevantChanged = true
-            drink.name = name
+        if (applyDrinkDetails(drink, request)) {
+            snapshotRelevantChanged = true
         }
-        if (request.description != null) {
-            drink.description = request.description.trim().ifBlank { null }
-        }
-        if (request.category != null) {
-            drink.category = request.category.trim().ifBlank { null }
-        }
-        if (request.defaultPrice != null) {
-            if (request.defaultPrice.signum() < 0) {
-                throw InvalidRequestException("defaultPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
-            }
-            if (request.defaultPrice.compareTo(drink.defaultPrice) != 0) snapshotRelevantChanged = true
-            drink.defaultPrice = request.defaultPrice
+        if (applyDrinkPricing(drink, request)) {
+            snapshotRelevantChanged = true
         }
         if (request.currency != null) {
             drink.currency = normalizeCurrency(request.currency)
-        }
-        if (request.imageReference != null) {
-            val image = request.imageReference.trim().ifBlank { null }
-            if (image != drink.imageReference) snapshotRelevantChanged = true
-            drink.imageReference = image
         }
         if (request.active != null) {
             // Aktiv-/Inaktiv-Schaltung freigegebener Stammdaten ist Vorstand/Admin vorbehalten.
@@ -185,6 +166,49 @@ class DrinkCatalogService(
 
         val saved = drinkCatalogRepository.save(drink)
         return toDrinkDto(saved)
+    }
+
+    private fun applyDrinkDetails(drink: DrinkCatalogEntity, request: UpdateDrinkRequest): Boolean {
+        var changed = false
+        if (request.name != null) {
+            val name = normalizeName(request.name)
+            if (name.isBlank()) {
+                throw InvalidRequestException("name darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            }
+            if (name != drink.name) changed = true
+            drink.name = name
+        }
+        if (request.description != null) {
+            drink.description = request.description.trim().ifBlank { null }
+        }
+        if (request.category != null) {
+            drink.category = request.category.trim().ifBlank { null }
+        }
+        if (request.imageReference != null) {
+            val image = request.imageReference.trim().ifBlank { null }
+            if (image != drink.imageReference) changed = true
+            drink.imageReference = image
+        }
+        return changed
+    }
+
+    private fun applyDrinkPricing(drink: DrinkCatalogEntity, request: UpdateDrinkRequest): Boolean {
+        var changed = false
+        if (request.defaultPrice != null) {
+            if (request.defaultPrice.signum() < 0) {
+                throw InvalidRequestException("defaultPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            }
+            if (request.defaultPrice.compareTo(drink.defaultPrice) != 0) changed = true
+            drink.defaultPrice = request.defaultPrice
+        }
+        if (request.costPrice != null) {
+            if (request.costPrice.signum() < 0) {
+                throw InvalidRequestException("costPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            }
+            if (request.costPrice.compareTo(drink.costPrice) != 0) changed = true
+            drink.costPrice = request.costPrice
+        }
+        return changed
     }
 
     fun approveDrink(id: UUID, principal: UserPrincipal): DrinkDto {
@@ -214,7 +238,7 @@ class DrinkCatalogService(
     fun addBarcode(id: UUID, request: AddBarcodeRequest, principal: UserPrincipal): DrinkBarcodeDto {
         val caller = userService.getOrCreateUser(principal)
         val drink = requireDrink(id)
-        requireManage(caller, principal, drink, isBoardOrAdmin(caller, principal))
+        requireManage(caller, drink, isBoardOrAdmin(caller, principal))
 
         val normalized = normalizeBarcode(request.barcode)
         requireBarcodeAvailable(normalized)
@@ -228,7 +252,7 @@ class DrinkCatalogService(
     fun removeBarcode(id: UUID, barcodeId: UUID, principal: UserPrincipal) {
         val caller = userService.getOrCreateUser(principal)
         val drink = requireDrink(id)
-        requireManage(caller, principal, drink, isBoardOrAdmin(caller, principal))
+        requireManage(caller, drink, isBoardOrAdmin(caller, principal))
 
         val barcode = drinkBarcodeRepository.findById(barcodeId).orElseThrow {
             ResourceNotFoundException("Barcode mit ID '$barcodeId' nicht gefunden", ErrorCode.NOT_FOUND)
@@ -262,7 +286,6 @@ class DrinkCatalogService(
      */
     private fun requireManage(
         caller: UserEntity,
-        principal: UserPrincipal,
         drink: DrinkCatalogEntity,
         privileged: Boolean
     ) {
@@ -334,6 +357,7 @@ class DrinkCatalogService(
             description = drink.description,
             category = drink.category,
             defaultPrice = drink.defaultPrice,
+            costPrice = drink.costPrice,
             currency = drink.currency,
             imageReference = drink.imageReference,
             catalogVersion = drink.catalogVersion,
@@ -353,6 +377,7 @@ class DrinkCatalogService(
             name = drink.name,
             category = drink.category,
             defaultPrice = drink.defaultPrice,
+            costPrice = drink.costPrice,
             currency = drink.currency,
             status = drink.status.name,
             active = drink.active,

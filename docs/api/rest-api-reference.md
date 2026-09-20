@@ -54,7 +54,9 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | `GET` | `/api/v1/tablet/events` | Liste aktiver Events für Kioskauswahl | `purchase.tablet` |
 | `GET` | `/api/v1/tablet/events/{eventId}/members` | Aktive Mitgliederliste für Touch-Ansicht | `purchase.tablet` |
 | `GET` | `/api/v1/tablet/events/{eventId}/drinks` | Verfügbare Getränke für das Event | `purchase.tablet` |
-| `POST` | `/api/v1/tablet/events/{eventId}/purchases` | 1-Tap Touch-Buchung (`TabletPurchaseRequest` + opt. `Idempotency-Key`) | `purchase.tablet` |
+| `GET` | `/api/v1/tablet/events/{eventId}/food` | Verfügbare Speisen für das Event | `purchase.tablet` |
+| `GET` | `/api/v1/tablet/events/{eventId}/items` | Kombiniertes Angebot an Getränken und Speisen (`TabletItemsDto`) | `purchase.tablet` |
+| `POST` | `/api/v1/tablet/events/{eventId}/purchases` | 1-Tap Touch-Buchung für Getränk oder Speise (`TabletPurchaseRequest` + opt. `Idempotency-Key`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/rounds` | Runden-Buchung für Gruppe (`TabletRevenuePurchaseRequest` + opt. `Idempotency-Key`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/evening` | Abendabrechnung (`TabletRevenuePurchaseRequest` + opt. `Idempotency-Key`) | `purchase.tablet` |
 
@@ -62,7 +64,7 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | Methode | Pfad | Beschreibung | Berechtigung / Rolle |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/drinks` | Globalen Getränkekatalog abrufen (Filter `status`, `category`) | `member` |
-| `POST` | `/api/v1/drinks/propose` | Neues Getränk vorschlagen (`ProposeDrinkRequest`) | `catalog.propose` |
+| `POST` | `/api/v1/drinks/propose` | Neues Getränk vorschlagen (`ProposeDrinkRequest` inkl. `costPrice`) | `catalog.propose` |
 | `POST` | `/api/v1/drinks/{id}/approve` | Vorgeschlagenes Getränk freigeben | `catalog.approve` |
 | `POST` | `/api/v1/drinks/{id}/reject` | Vorschlag ablehnen | `catalog.approve` |
 | `POST` | `/api/v1/drinks/{id}/barcodes` | Barcode zuweisen (`AssignBarcodeRequest`) | `board`, `admin` |
@@ -75,12 +77,28 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | `POST` | `/api/v1/sublists/{id}/items` | Getränk zu Subliste mit optionalem `defaultPrice` hinzufügen | `board`, `admin` |
 | `DELETE` | `/api/v1/sublists/{id}/items/{itemId}` | Sublisteneintrag entfernen | `board`, `admin` |
 | `GET` | `/api/v1/events/{eventId}/drinks` | Event-Getränkeauswahl laden | `member` |
-| `POST` | `/api/v1/events/{eventId}/drinks` | Einzelgetränk zu Event hinzufügen (`AddEventDrinkRequest`) | `event.manage` |
+| `POST` | `/api/v1/events/{eventId}/drinks` | Einzelgetränk zu Event hinzufügen (`AddEventDrinkRequest` inkl. `price`, `costPrice`) | `event.manage` |
 | `POST` | `/api/v1/events/{eventId}/drinks/assign-sublist` | Komplette Subliste einem Event zuweisen (`AssignSublistRequest`) | `event.manage` |
 | `PUT` | `/api/v1/events/{eventId}/drinks/{eventDrinkId}` | Eventgetränk bearbeiten (`UpdateEventDrinkRequest`) | `event.manage` |
 | `DELETE` | `/api/v1/events/{eventId}/drinks/{eventDrinkId}` | Eventgetränk entfernen | `event.manage` |
 
-### 5.1. Moments & Rituale (`MomentController`)
+### 5.1. Speisenkatalog (`FoodCatalogController`)
+| Methode | Pfad | Beschreibung | Berechtigung / Rolle |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/food` | Globalen Speisenkatalog auflisten (Filter `active`) | `member` (aktive) / `board`, `admin` (alle) |
+| `GET` | `/api/v1/food/{id}` | Details einer Speise abrufen (`FoodDto`) | `member` |
+| `POST` | `/api/v1/food` | Neue Speise im Vereinskatalog anlegen (`CreateFoodRequest`) | `board`, `admin` |
+| `PUT` | `/api/v1/food/{id}` | Speise im Vereinskatalog aktualisieren (`UpdateFoodRequest`) | `board`, `admin` |
+
+### 5.2. Eventspeisen (`EventFoodController`)
+| Methode | Pfad | Beschreibung | Berechtigung / Rolle |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/events/{eventId}/food` | Speisenangebot des Events abrufen (`List<EventFoodDto>`) | `member` / `purchase.tablet` |
+| `POST` | `/api/v1/events/{eventId}/food` | Speise zum Event hinzufügen (`AddEventFoodRequest` mit `price`, `costPrice`, `tabletEnabled`) | `event.manage` / Owner |
+| `PUT` | `/api/v1/events/{eventId}/food/{eventFoodId}` | Eventspeise bearbeiten (`UpdateEventFoodRequest`) | `event.manage` / Owner |
+| `DELETE` | `/api/v1/events/{eventId}/food/{eventFoodId}` | Speise aus dem Event entfernen | `event.manage` / Owner |
+
+### 5.3. Moments & Rituale (`MomentController`)
 | Methode | Pfad | Beschreibung | Berechtigung / Rolle |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/events/{eventId}/moments` | Aktive Moments für Event abrufen | `member` |

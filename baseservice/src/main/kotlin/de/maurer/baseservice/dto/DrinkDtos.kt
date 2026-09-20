@@ -28,6 +28,10 @@ data class ProposeDrinkRequest(
     @field:Digits(integer = 8, fraction = 2, message = "defaultPrice erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
     val defaultPrice: BigDecimal? = null,
 
+    @field:DecimalMin(value = "0.00", message = "costPrice darf nicht negativ sein")
+    @field:Digits(integer = 8, fraction = 2, message = "costPrice erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
+    val costPrice: BigDecimal? = null,
+
     @field:Pattern(regexp = CURRENCY_PATTERN, message = "currency muss ein dreistelliger Währungscode sein")
     val currency: String? = null,
 
@@ -51,6 +55,10 @@ data class UpdateDrinkRequest(
     @field:DecimalMin(value = "0.00", message = "defaultPrice darf nicht negativ sein")
     @field:Digits(integer = 8, fraction = 2, message = "defaultPrice erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
     val defaultPrice: BigDecimal? = null,
+
+    @field:DecimalMin(value = "0.00", message = "costPrice darf nicht negativ sein")
+    @field:Digits(integer = 8, fraction = 2, message = "costPrice erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
+    val costPrice: BigDecimal? = null,
 
     @field:Pattern(regexp = CURRENCY_PATTERN, message = "currency muss ein dreistelliger Währungscode sein")
     val currency: String? = null,
@@ -79,6 +87,7 @@ data class DrinkDto(
     val description: String?,
     val category: String?,
     val defaultPrice: BigDecimal,
+    val costPrice: BigDecimal = BigDecimal.ZERO,
     val currency: String,
     val imageReference: String?,
     val catalogVersion: Int,
@@ -96,6 +105,7 @@ data class DrinkSummaryDto(
     val name: String,
     val category: String?,
     val defaultPrice: BigDecimal,
+    val costPrice: BigDecimal = BigDecimal.ZERO,
     val currency: String,
     val status: String,
     val active: Boolean,

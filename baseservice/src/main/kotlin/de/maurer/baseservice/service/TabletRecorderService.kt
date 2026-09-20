@@ -2,12 +2,16 @@ package de.maurer.baseservice.service
 
 import de.maurer.baseservice.domain.EventDrinkEntity
 import de.maurer.baseservice.domain.EventEntity
+import de.maurer.baseservice.domain.EventFoodEntity
 import de.maurer.baseservice.domain.EventStatus
+import de.maurer.baseservice.domain.FoodCatalogEntity
 import de.maurer.baseservice.domain.PurchaseSource
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.EventDrinkDto
+import de.maurer.baseservice.dto.EventFoodDto
 import de.maurer.baseservice.dto.LedgerEntryDto
 import de.maurer.baseservice.dto.TabletEventDto
+import de.maurer.baseservice.dto.TabletItemsDto
 import de.maurer.baseservice.dto.TabletMemberDto
 import de.maurer.baseservice.dto.TabletPurchaseRequest
 import de.maurer.baseservice.dto.TabletRevenuePurchaseRequest
@@ -17,6 +21,7 @@ import de.maurer.baseservice.error.EventNotActiveException
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.EventDrinkRepository
+import de.maurer.baseservice.repository.EventFoodRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.UserRepository
@@ -27,27 +32,22 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.Identifiers
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
 import java.util.UUID
 
 /**
- * Fachlicher Slice für die Tablet-Erfassung und den Drink-Recorder (TICKET-017).
+ * Fachlicher Slice für die Tablet-Erfassung und den Recorder (TICKET-017).
  *
  * Der Tablet-Kontext nutzt eine dedizierte technische Identität (`tabletRecorder`).
  * Er darf aktive Events, die freigegebenen Eventmitglieder und die tabletfähigen
- * Eventgetränke lesen sowie manuelle Käufe über die Strichliste erfassen. Er darf
- * keine PWA-Barcodekäufe auslösen und weder Käuferidentität noch Preis oder
- * Abrechnungsmodus autoritativ vorgeben: Der Käufer muss ein Eventmitglied sein,
- * Preis/Währung stammen aus dem Eventgetränk, der Modus ist stets `credit` und die
- * Herkunft `tabletManual` (siehe `docs/fachkonzept.md`, `docs/authentifizierung.md`).
- *
- * Jeder Zugriff wird serverseitig geprüft und folgt `deny by default`: Ohne die
- * fachliche Berechtigung `purchase.tablet` entsteht kein Zugriff.
+ * Eventgetränke sowie Eventspeisen lesen sowie manuelle Käufe über die Strichliste erfassen.
  */
 @Service
 @Transactional
 class TabletRecorderService(
     private val eventRepository: EventRepository,
     private val eventDrinkRepository: EventDrinkRepository,
+    private val eventFoodRepository: EventFoodRepository,
     private val eventParticipantRepository: EventParticipantRepository,
     private val userRepository: UserRepository,
     private val userRoleRepository: UserRoleRepository,
@@ -90,9 +90,33 @@ class TabletRecorderService(
             .map { toEventDrinkDto(it) }
     }
 
+    @Transactional(readOnly = true)
+    fun listTabletFood(eventId: UUID, principal: UserPrincipal): List<EventFoodDto> {
+        requireTabletRecorder(principal)
+        requireActiveEvent(eventId)
+        return eventFoodRepository.findByEventId(eventId)
+            .filter { it.tabletEnabled }
+            .sortedBy { it.food?.name.orEmpty() }
+            .map { toEventFoodDto(it) }
+    }
+
+    @Transactional(readOnly = true)
+    fun listTabletItems(eventId: UUID, principal: UserPrincipal): TabletItemsDto {
+        requireTabletRecorder(principal)
+        requireActiveEvent(eventId)
+        val drinks = eventDrinkRepository.findByEventId(eventId)
+            .filter { it.tabletEnabled }
+            .sortedBy { it.drink?.name.orEmpty() }
+            .map { toEventDrinkDto(it) }
+        val food = eventFoodRepository.findByEventId(eventId)
+            .filter { it.tabletEnabled }
+            .sortedBy { it.food?.name.orEmpty() }
+            .map { toEventFoodDto(it) }
+        return TabletItemsDto(drinks = drinks, food = food)
+    }
+
     /**
-     * Erfasst einen manuellen Kauf. Käufer, Getränk und Eventzugehörigkeit werden
-     * geprüft; Preis, Währung, Abrechnungsmodus und Herkunft bestimmt der Server.
+     * Erfasst einen manuellen Kauf (Getränk oder Speise).
      */
     fun recordPurchase(
         eventId: UUID,
@@ -106,28 +130,62 @@ class TabletRecorderService(
         val memberId = Identifiers.parseUuid(request.memberId, "memberId")
         val buyer = requireEventMember(event, memberId)
 
-        val eventDrinkId = Identifiers.parseUuid(request.eventDrinkId, "eventDrinkId")
-        val eventDrink = requireEventDrink(eventId, eventDrinkId)
-        val drink = eventDrink.drink
-            ?: throw ResourceNotFoundException(
-                "Eventgetränk mit ID '$eventDrinkId' ist keinem Getränk zugeordnet",
-                ErrorCode.NOT_FOUND
-            )
+        val hasDrink = !request.eventDrinkId.isNullOrBlank()
+        val hasFood = !request.eventFoodId.isNullOrBlank()
 
-        return ledgerService.recordTabletPurchase(
-            event = event,
-            member = buyer,
-            drink = drink,
-            eventDrink = eventDrink,
-            actor = actor,
-            idempotencyKey = idempotencyKey
-        )
+        if (hasDrink && hasFood) {
+            throw InvalidRequestException(
+                "Es darf entweder nur eventDrinkId oder nur eventFoodId angegeben werden",
+                ErrorCode.INVALID_REQUEST
+            )
+        }
+        if (!hasDrink && !hasFood) {
+            throw InvalidRequestException(
+                "Entweder eventDrinkId oder eventFoodId muss angegeben werden",
+                ErrorCode.INVALID_REQUEST
+            )
+        }
+
+        return if (hasDrink) {
+            val eventDrinkId = Identifiers.parseUuid(request.eventDrinkId, "eventDrinkId")
+            val eventDrink = requireEventDrink(eventId, eventDrinkId)
+            val drink = eventDrink.drink
+                ?: throw ResourceNotFoundException(
+                    "Eventgetränk mit ID '$eventDrinkId' ist keinem Getränk zugeordnet",
+                    ErrorCode.NOT_FOUND
+                )
+
+            ledgerService.recordTabletPurchase(
+                event = event,
+                member = buyer,
+                drink = drink,
+                eventDrink = eventDrink,
+                actor = actor,
+                idempotencyKey = idempotencyKey
+            )
+        } else {
+            val eventFoodId = Identifiers.parseUuid(request.eventFoodId, "eventFoodId")
+            val eventFood = requireEventFood(eventId, eventFoodId)
+            val food = eventFood.food
+                ?: throw ResourceNotFoundException(
+                    "Eventspeise mit ID '$eventFoodId' ist keiner Speise zugeordnet",
+                    ErrorCode.NOT_FOUND
+                )
+
+            ledgerService.recordTabletFoodPurchase(
+                event = event,
+                member = buyer,
+                food = food,
+                eventFood = eventFood,
+                actor = actor,
+                idempotencyKey = idempotencyKey
+            )
+        }
     }
 
     /**
      * Erfasst eine Runde (`source = round`) als Revenue-Only-Buchung für alle
-     * angegebenen Eventmitglieder. Kein persönliches Guthaben wird belastet; nur der
-     * Eventumsatz steigt (TICKET-018).
+     * angegebenen Eventmitglieder.
      */
     fun recordRound(
         eventId: UUID,
@@ -138,8 +196,7 @@ class TabletRecorderService(
 
     /**
      * Erfasst eine Abendaktion (`source = evening`) als Revenue-Only-Buchung für alle
-     * angegebenen Eventmitglieder. Kein persönliches Guthaben wird belastet; nur der
-     * Eventumsatz steigt (TICKET-018).
+     * angegebenen Eventmitglieder.
      */
     fun recordEvening(
         eventId: UUID,
@@ -148,15 +205,6 @@ class TabletRecorderService(
         principal: UserPrincipal
     ): List<LedgerEntryDto> = recordRevenuePurchase(eventId, request, idempotencyKey, principal, PurchaseSource.evening)
 
-    /**
-     * Gemeinsamer Pfad für Runden und Abendaktionen: prüft Berechtigung, aktives
-     * Event, tabletfähiges Getränk und die Mitgliedschaft jedes Begünstigten und
-     * bucht je Mitglied genau eine unveränderliche Revenue-Only-Buchung. Der
-     * gemeinsame `Idempotency-Key` wird je Mitglied und Herkunft zu einem global
-     * eindeutigen Schlüssel abgeleitet, sodass Wiederholungen keine Doppelbuchung
-     * erzeugen. Preis, Währung, Abrechnungsmodus (`revenueOnly`) und Herkunft
-     * bestimmt ausschließlich der Server.
-     */
     private fun recordRevenuePurchase(
         eventId: UUID,
         request: TabletRevenuePurchaseRequest,
@@ -168,13 +216,21 @@ class TabletRecorderService(
         val event = requireActiveEvent(eventId)
         val baseKey = requireBatchIdempotencyKey(idempotencyKey)
 
-        val eventDrinkId = Identifiers.parseUuid(request.eventDrinkId, "eventDrinkId")
-        val eventDrink = requireEventDrink(eventId, eventDrinkId)
-        val drink = eventDrink.drink
-            ?: throw ResourceNotFoundException(
-                "Eventgetränk mit ID '$eventDrinkId' ist keinem Getränk zugeordnet",
-                ErrorCode.NOT_FOUND
+        val hasDrink = !request.eventDrinkId.isNullOrBlank()
+        val hasFood = !request.eventFoodId.isNullOrBlank()
+
+        if (hasDrink && hasFood) {
+            throw InvalidRequestException(
+                "Es darf entweder nur eventDrinkId oder nur eventFoodId angegeben werden",
+                ErrorCode.INVALID_REQUEST
             )
+        }
+        if (!hasDrink && !hasFood) {
+            throw InvalidRequestException(
+                "Entweder eventDrinkId oder eventFoodId muss angegeben werden",
+                ErrorCode.INVALID_REQUEST
+            )
+        }
 
         val rawIds = request.memberIds.orEmpty()
         if (rawIds.isEmpty()) {
@@ -182,27 +238,68 @@ class TabletRecorderService(
         }
         val memberIds = rawIds.map { Identifiers.parseUuid(it, "memberIds") }.distinct()
 
-        return memberIds.map { memberId ->
-            val buyer = requireEventMember(event, memberId)
-            val derivedKey = "$baseKey#${source.name}#$memberId"
-            ledgerService.recordEventRevenuePurchase(
-                event = event,
-                member = buyer,
-                drink = drink,
-                eventDrink = eventDrink,
-                actor = actor,
-                source = source,
-                idempotencyKey = derivedKey
-            )
+        return if (hasDrink) {
+            val eventDrinkId = Identifiers.parseUuid(request.eventDrinkId, "eventDrinkId")
+            val eventDrink = requireEventDrink(eventId, eventDrinkId)
+            val drink = eventDrink.drink
+                ?: throw ResourceNotFoundException(
+                    "Eventgetränk mit ID '$eventDrinkId' ist keinem Getränk zugeordnet",
+                    ErrorCode.NOT_FOUND
+                )
+
+            memberIds.map { memberId ->
+                val buyer = requireEventMember(event, memberId)
+                val derivedKey = "$baseKey#${source.name}#$memberId"
+                ledgerService.recordEventRevenuePurchase(
+                    event = event,
+                    member = buyer,
+                    drink = drink,
+                    eventDrink = eventDrink,
+                    actor = actor,
+                    source = source,
+                    idempotencyKey = derivedKey
+                )
+            }
+        } else {
+            val eventFoodId = Identifiers.parseUuid(request.eventFoodId, "eventFoodId")
+            val eventFood = requireEventFood(eventId, eventFoodId)
+            val food = eventFood.food
+                ?: throw ResourceNotFoundException(
+                    "Eventspeise mit ID '$eventFoodId' ist keiner Speise zugeordnet",
+                    ErrorCode.NOT_FOUND
+                )
+
+            memberIds.map { memberId ->
+                val buyer = requireEventMember(event, memberId)
+                val derivedKey = "$baseKey#${source.name}#$memberId"
+                ledgerService.recordEventRevenueFoodPurchase(
+                    event = event,
+                    member = buyer,
+                    food = food,
+                    eventFood = eventFood,
+                    actor = actor,
+                    source = source,
+                    idempotencyKey = derivedKey
+                )
+            }
         }
     }
 
-    /**
-     * Prüft und beschränkt den gemeinsamen Idempotenzschlüssel einer Runde/Abendaktion.
-     * Aus ihm werden je Mitglied global eindeutige Ledger-Schlüssel abgeleitet
-     * (`baseKey#source#memberId`); die Länge bleibt begrenzt, damit die abgeleiteten
-     * Schlüssel die Grenze aus [LedgerService] nicht überschreiten.
-     */
+    private fun requireTabletRecorder(principal: UserPrincipal): UserEntity {
+        val actor = userService.getOrCreateUser(principal)
+        val dbRoles = userRoleRepository.findByIdUserId(actor.id).map { it.id.role.name }.toSet()
+        val roles = principal.roles + dbRoles
+        val drinkRecorder = principal.drinkRecorder || actor.drinkRecorder
+        val permissions = principal.permissions + RolePermissionMatrix.derivePermissions(roles, drinkRecorder)
+        if (!permissions.contains(Permission.PURCHASE_TABLET)) {
+            throw AccessDeniedException(
+                "Nur der Tablet-Recorder darf manuelle Käufe erfassen",
+                ErrorCode.ACCESS_DENIED
+            )
+        }
+        return actor
+    }
+
     private fun requireBatchIdempotencyKey(value: String?): String {
         val key = value?.trim()
         if (key.isNullOrBlank()) {
@@ -219,27 +316,6 @@ class TabletRecorderService(
             )
         }
         return key
-    }
-
-    /**
-     * Prüft die fachliche Tablet-Berechtigung (`purchase.tablet`). Sie entsteht über
-     * die technische Rolle `tabletRecorder`, die Adminrolle oder das
-     * `drinkRecorder`-Flag; Mitglieder und Vorstand ohne dieses Recht werden
-     * abgewiesen. Gibt die aufgelöste Akteursidentität zurück.
-     */
-    private fun requireTabletRecorder(principal: UserPrincipal): UserEntity {
-        val actor = userService.getOrCreateUser(principal)
-        val dbRoles = userRoleRepository.findByIdUserId(actor.id).map { it.id.role.name }.toSet()
-        val roles = principal.roles + dbRoles
-        val drinkRecorder = principal.drinkRecorder || actor.drinkRecorder
-        val permissions = principal.permissions + RolePermissionMatrix.derivePermissions(roles, drinkRecorder)
-        if (!permissions.contains(Permission.PURCHASE_TABLET)) {
-            throw AccessDeniedException(
-                "Nur der Tablet-Recorder darf manuelle Käufe erfassen",
-                ErrorCode.ACCESS_DENIED
-            )
-        }
-        return actor
     }
 
     private fun requireActiveEvent(eventId: UUID): EventEntity {
@@ -290,6 +366,25 @@ class TabletRecorderService(
         return eventDrink
     }
 
+    private fun requireEventFood(eventId: UUID, eventFoodId: UUID): EventFoodEntity {
+        val eventFood = eventFoodRepository.findById(eventFoodId).orElseThrow {
+            ResourceNotFoundException("Eventspeise mit ID '$eventFoodId' nicht gefunden", ErrorCode.NOT_FOUND)
+        }
+        if (eventFood.event?.id != eventId) {
+            throw ResourceNotFoundException(
+                "Eventspeise mit ID '$eventFoodId' ist diesem Event nicht zugeordnet",
+                ErrorCode.NOT_FOUND
+            )
+        }
+        if (!eventFood.tabletEnabled) {
+            throw InvalidRequestException(
+                "Für diese Speise ist die Tablet-Erfassung im Event deaktiviert",
+                ErrorCode.INVALID_REQUEST
+            )
+        }
+        return eventFood
+    }
+
     private fun toEventDto(event: EventEntity): TabletEventDto =
         TabletEventDto(
             id = event.id.toString(),
@@ -301,12 +396,16 @@ class TabletRecorderService(
 
     private fun toEventDrinkDto(eventDrink: EventDrinkEntity): EventDrinkDto {
         val drink = eventDrink.drink
+        val costPrice = eventDrink.costPrice
+        val effectiveCost = costPrice ?: drink?.costPrice ?: BigDecimal.ZERO
         return EventDrinkDto(
             id = eventDrink.id.toString(),
             eventId = eventDrink.event?.id?.toString().orEmpty(),
             drinkId = drink?.id?.toString().orEmpty(),
             drinkName = drink?.name.orEmpty(),
             price = eventDrink.price,
+            costPrice = costPrice,
+            effectiveCostPrice = effectiveCost,
             currency = eventDrink.currency,
             selfServiceEnabled = eventDrink.selfServiceEnabled,
             tabletEnabled = eventDrink.tabletEnabled,
@@ -317,12 +416,31 @@ class TabletRecorderService(
         )
     }
 
+    private fun toEventFoodDto(eventFood: EventFoodEntity): EventFoodDto {
+        val food = eventFood.food
+        val price = eventFood.price
+        val effectivePrice = price ?: food?.defaultPrice ?: BigDecimal.ZERO
+        val costPrice = eventFood.costPrice
+        val effectiveCost = costPrice ?: food?.costPrice ?: BigDecimal.ZERO
+
+        return EventFoodDto(
+            id = eventFood.id.toString(),
+            eventId = eventFood.event?.id?.toString().orEmpty(),
+            foodId = food?.id?.toString().orEmpty(),
+            foodName = food?.name.orEmpty(),
+            price = price,
+            effectivePrice = effectivePrice,
+            costPrice = costPrice,
+            effectiveCostPrice = effectiveCost,
+            currency = eventFood.currency,
+            selfServiceEnabled = eventFood.selfServiceEnabled,
+            tabletEnabled = eventFood.tabletEnabled,
+            createdAt = eventFood.createdAt,
+            updatedAt = eventFood.updatedAt
+        )
+    }
+
     companion object {
-        /**
-         * Obergrenze des gemeinsamen Runden-/Abendaktions-Schlüssels. Sie hält die
-         * abgeleiteten Ledger-Schlüssel (`baseKey#source#memberId`) unter der Grenze
-         * von [LedgerService.MAX_IDEMPOTENCY_KEY_LENGTH].
-         */
         const val MAX_BATCH_IDEMPOTENCY_KEY_LENGTH = 80
     }
 }

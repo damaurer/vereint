@@ -66,6 +66,7 @@ describe('TabletComponent', () => {
     listEvents: ReturnType<typeof vi.fn>;
     listMembers: ReturnType<typeof vi.fn>;
     listDrinks: ReturnType<typeof vi.fn>;
+    listFood: ReturnType<typeof vi.fn>;
     recordPurchase: ReturnType<typeof vi.fn>;
     recordRound: ReturnType<typeof vi.fn>;
     recordEvening: ReturnType<typeof vi.fn>;
@@ -91,6 +92,7 @@ describe('TabletComponent', () => {
       listEvents: vi.fn(() => of(events)),
       listMembers: vi.fn(() => of(members)),
       listDrinks: vi.fn(() => of(drinks)),
+      listFood: vi.fn(() => of([])),
       recordPurchase: vi.fn(() => of(entry)),
       recordRound: vi.fn(() => of([entry])),
       recordEvening: vi.fn(() => of([entry])),

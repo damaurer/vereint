@@ -84,10 +84,15 @@ class EventDrinkService(
         if (price.signum() < 0) {
             throw InvalidRequestException("price darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
         }
+        val costPrice = request.costPrice
+        if (costPrice != null && costPrice.signum() < 0) {
+            throw InvalidRequestException("costPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+        }
         val eventDrink = EventDrinkEntity(
             event = event,
             drink = drink,
             price = price,
+            costPrice = costPrice,
             currency = normalizeCurrency(request.currency) ?: drink.currency,
             selfServiceEnabled = request.selfServiceEnabled ?: true,
             tabletEnabled = request.tabletEnabled ?: true,
@@ -115,6 +120,12 @@ class EventDrinkService(
                 throw InvalidRequestException("price darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
             }
             eventDrink.price = request.price
+        }
+        if (request.costPrice != null) {
+            if (request.costPrice.signum() < 0) {
+                throw InvalidRequestException("costPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            }
+            eventDrink.costPrice = request.costPrice
         }
         normalizeCurrency(request.currency)?.let { eventDrink.currency = it }
         request.selfServiceEnabled?.let { eventDrink.selfServiceEnabled = it }
@@ -268,12 +279,16 @@ class EventDrinkService(
 
     private fun toDto(eventDrink: EventDrinkEntity): EventDrinkDto {
         val drink: DrinkCatalogEntity? = eventDrink.drink
+        val costPrice = eventDrink.costPrice
+        val effectiveCost = costPrice ?: drink?.costPrice ?: java.math.BigDecimal.ZERO
         return EventDrinkDto(
             id = eventDrink.id.toString(),
             eventId = eventDrink.event?.id?.toString().orEmpty(),
             drinkId = drink?.id?.toString().orEmpty(),
             drinkName = drink?.name.orEmpty(),
             price = eventDrink.price,
+            costPrice = costPrice,
+            effectiveCostPrice = effectiveCost,
             currency = eventDrink.currency,
             selfServiceEnabled = eventDrink.selfServiceEnabled,
             tabletEnabled = eventDrink.tabletEnabled,

@@ -42,6 +42,10 @@ class LedgerEntryEntity(
     @JoinColumn(name = "drink_id")
     var drink: DrinkCatalogEntity? = null,
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "food_id")
+    var food: FoodCatalogEntity? = null,
+
     @Column(name = "amount", precision = 10, scale = 2, nullable = false)
     var amount: BigDecimal = BigDecimal.ZERO,
 
@@ -92,8 +96,14 @@ class PurchaseSnapshotEntity(
     @JoinColumn(name = "ledger_entry_id", nullable = false, unique = true)
     var ledgerEntry: LedgerEntryEntity? = null,
 
-    @Column(name = "drink_name", length = 255, nullable = false)
-    var drinkName: String = "",
+    @Column(name = "item_type", length = 32, nullable = false)
+    var itemType: String = "DRINK",
+
+    @Column(name = "drink_name", length = 255)
+    var drinkName: String? = null,
+
+    @Column(name = "food_name", length = 255)
+    var foodName: String? = null,
 
     @Column(name = "image_reference", length = 512)
     var imageReference: String? = null,
@@ -104,11 +114,17 @@ class PurchaseSnapshotEntity(
     @Column(name = "unit_price", precision = 10, scale = 2, nullable = false)
     var unitPrice: BigDecimal = BigDecimal.ZERO,
 
+    @Column(name = "cost_price", precision = 10, scale = 2, nullable = false)
+    var costPrice: BigDecimal = BigDecimal.ZERO,
+
+    @Column(name = "profit", precision = 10, scale = 2, nullable = false)
+    var profit: BigDecimal = BigDecimal.ZERO,
+
     @Column(name = "currency", length = 3, nullable = false)
     var currency: String = "EUR",
 
-    @Column(name = "catalog_version", nullable = false)
-    var catalogVersion: Int = 1,
+    @Column(name = "catalog_version")
+    var catalogVersion: Int? = 1,
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

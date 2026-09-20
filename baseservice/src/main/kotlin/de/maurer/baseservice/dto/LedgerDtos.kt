@@ -77,12 +77,16 @@ data class PurchaseRequest(
 
 /** Beleg-Snapshot eines Kaufs; unveränderlich (siehe `docs/fachkonzept.md`). */
 data class PurchaseSnapshotDto(
-    val drinkName: String,
-    val imageReference: String?,
-    val barcode: String?,
+    val itemType: String = "DRINK",
+    val drinkName: String? = null,
+    val foodName: String? = null,
+    val imageReference: String? = null,
+    val barcode: String? = null,
     val unitPrice: BigDecimal,
+    val costPrice: BigDecimal = BigDecimal.ZERO,
+    val profit: BigDecimal = BigDecimal.ZERO,
     val currency: String,
-    val catalogVersion: Int
+    val catalogVersion: Int? = 1
 )
 
 /** Einzelne Ledger-Zeile in Textform der Kennungen (UUID). */
@@ -93,6 +97,7 @@ data class LedgerEntryDto(
     val memberId: String,
     val memberDisplayName: String,
     val drinkId: String?,
+    val foodId: String? = null,
     val amount: BigDecimal,
     val currency: String,
     val accountingMode: String,
@@ -126,6 +131,8 @@ data class EventLedgerSummaryDto(
     val eventId: String,
     val currency: String,
     val revenueTotal: BigDecimal,
+    val costTotal: BigDecimal = BigDecimal.ZERO,
+    val profitTotal: BigDecimal = BigDecimal.ZERO,
     val creditConsumptionTotal: BigDecimal,
     val entryCount: Int
 )

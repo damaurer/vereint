@@ -18,6 +18,10 @@ data class AddEventDrinkRequest(
     @field:Digits(integer = 8, fraction = 2, message = "price erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
     val price: BigDecimal? = null,
 
+    @field:DecimalMin(value = "0.00", message = "costPrice darf nicht negativ sein")
+    @field:Digits(integer = 8, fraction = 2, message = "costPrice erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
+    val costPrice: BigDecimal? = null,
+
     @field:Pattern(regexp = EVENT_DRINK_CURRENCY_PATTERN, message = "currency muss ein dreistelliger Währungscode sein")
     val currency: String? = null,
 
@@ -30,6 +34,10 @@ data class UpdateEventDrinkRequest(
     @field:DecimalMin(value = "0.00", message = "price darf nicht negativ sein")
     @field:Digits(integer = 8, fraction = 2, message = "price erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
     val price: BigDecimal? = null,
+
+    @field:DecimalMin(value = "0.00", message = "costPrice darf nicht negativ sein")
+    @field:Digits(integer = 8, fraction = 2, message = "costPrice erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
+    val costPrice: BigDecimal? = null,
 
     @field:Pattern(regexp = EVENT_DRINK_CURRENCY_PATTERN, message = "currency muss ein dreistelliger Währungscode sein")
     val currency: String? = null,
@@ -50,6 +58,8 @@ data class EventDrinkDto(
     val drinkId: String,
     val drinkName: String,
     val price: BigDecimal,
+    val costPrice: BigDecimal? = null,
+    val effectiveCostPrice: BigDecimal = BigDecimal.ZERO,
     val currency: String,
     val selfServiceEnabled: Boolean,
     val tabletEnabled: Boolean,

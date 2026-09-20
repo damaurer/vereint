@@ -263,4 +263,37 @@ class TabletRecorderControllerTest {
             .andExpect(jsonPath("$.code").value("invalid_request"))
             .andExpect(jsonPath("$.traceId").exists())
     }
+
+    @Test
+    fun `GET items lists tablet drinks and foods`() {
+        `when`(tabletRecorderService.listTabletItems(anyUuid(), anyPrincipal())).thenReturn(
+            de.maurer.baseservice.dto.TabletItemsDto(
+                drinks = emptyList(),
+                food = listOf(
+                    de.maurer.baseservice.dto.EventFoodDto(
+                        id = UUID.randomUUID().toString(),
+                        eventId = eventId.toString(),
+                        foodId = UUID.randomUUID().toString(),
+                        foodName = "Bratwurst",
+                        price = BigDecimal("3.50"),
+                        effectivePrice = BigDecimal("3.50"),
+                        costPrice = BigDecimal("1.50"),
+                        effectiveCostPrice = BigDecimal("1.50"),
+                        currency = "EUR",
+                        selfServiceEnabled = true,
+                        tabletEnabled = true,
+                        createdAt = Instant.now(),
+                        updatedAt = Instant.now()
+                    )
+                )
+            )
+        )
+
+        mockMvc.perform(
+            get("/api/v1/tablet/events/$eventId/items")
+                .with(jwt().jwt { it.subject("sub-tablet") })
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.food[0].foodName").value("Bratwurst"))
+    }
 }

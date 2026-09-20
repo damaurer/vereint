@@ -7,17 +7,18 @@ Die Getränkeverwaltung in **Vereint** bildet das gesamte Sortiment ab – vom g
 ## 🎯 Fachliche Sicht (Business Domain)
 
 ### 1. Globaler Getränkekatalog & Vorschlagsworkflow
-- **Masterkatalog**: Zentrales Verzeichnis aller im Verein verfügbaren Getränke mit Name, Beschreibung, Kategorie (z. B. Bier, Softdrinks, Heißgetränke), Standardpreis (`defaultPrice: BigDecimal`), Währung (`currency: String`, z. B. `EUR`), Bildreferenz und Barcode(s).
+- **Masterkatalog**: Zentrales Verzeichnis aller im Verein verfügbaren Getränke mit Name, Beschreibung, Kategorie (z. B. Bier, Softdrinks, Heißgetränke), Standard-Verkaufspreis (`defaultPrice: BigDecimal`), Einkaufspreis (`costPrice: BigDecimal`), Währung (`currency: String`, z. B. `EUR`), Bildreferenz und Barcode(s).
+- **Einkaufspreise & Wirtschaftlichkeit**: Die Pflege von `costPrice` ermöglicht exakte Deckungsbeitrags- und Gewinnrechnungen (`profit = unitPrice - costPrice`) pro Event und Verkaufskanal.
 - **Vorschlags- & Freigabeprozess**:
   1. Mitglieder oder Vorstände schlagen neue Getränke vor (`status = proposed`, erfasst `proposed_by_user_id`).
   2. Der Vorstand prüft und gibt das Getränk frei (`status = approved`, erfasst `approved_by_user_id`) oder lehnt es ab (`status = rejected`).
   3. Nur freigegebene Getränke können in Sublisten oder Event-Angebote aufgenommen werden.
 
-### 2. Event-Sublisten (Sortimentssteuerung)
+### 2. Event-Sublisten (Sortimentssteuerung) & Event-Getränke
 - Nicht jedes Vereins-Event bietet das gesamte Vereinssortiment an.
 - **Sublisten** definieren ausgewählte Sortiments-Teilmengen (z. B. "Sommerfest", "Mitgliederversammlung", "Sportturnier").
 - Innerhalb einer Subliste können globale Katalogpreise mit einem spezifischen `default_price` überschrieben werden.
-- Über `EventDrinkController` (`/api/v1/events/{eventId}/drinks/assign-sublist`) werden Sublisten an Events gekoppelt oder Einzelgetränke (`AddEventDrinkRequest`) mit festen Eventpreisen zugewiesen.
+- Über `EventDrinkController` (`/api/v1/events/{eventId}/drinks/assign-sublist`) werden Sublisten an Events gekoppelt oder Einzelgetränke (`AddEventDrinkRequest`) mit festen Eventpreisen (`price`, `costPrice`), `selfServiceEnabled` und `tabletEnabled` zugewiesen.
 
 
 ---
@@ -43,6 +44,7 @@ data class DrinkDto(
     val description: String?,
     val category: String?,
     val defaultPrice: BigDecimal,
+    val costPrice: BigDecimal = BigDecimal.ZERO,
     val currency: String,
     val imageReference: String?,
     val catalogVersion: Int,
@@ -60,11 +62,29 @@ data class ProposeDrinkRequest(
     @field:Size(max = 4000) val description: String? = null,
     @field:Size(max = 64) val category: String? = null,
     @field:NotNull @field:DecimalMin("0.00") val defaultPrice: BigDecimal?,
+    @field:DecimalMin("0.00") val costPrice: BigDecimal? = null,
     @field:Pattern(regexp = "^[A-Za-z]{3}$") val currency: String? = null,
     @field:Size(max = 512) val imageReference: String? = null,
     val barcodes: List<String>? = null
 )
 
+data class EventDrinkDto(
+    val id: String,
+    val eventId: String,
+    val drinkId: String,
+    val drinkName: String,
+    val price: BigDecimal?,
+    val effectivePrice: BigDecimal,
+    val costPrice: BigDecimal?,
+    val effectiveCostPrice: BigDecimal,
+    val currency: String,
+    val selfServiceEnabled: Boolean,
+    val tabletEnabled: Boolean,
+    val catalogVersion: Int,
+    val imageSnapshot: String?,
+    val createdAt: Instant,
+    val updatedAt: Instant
+)
 ```
 
 ---

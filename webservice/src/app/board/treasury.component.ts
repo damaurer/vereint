@@ -122,6 +122,12 @@ interface MemberLedger {
             <div class="state-card" role="status">
               <strong>Eventabrechnung</strong>
               <span>Umsatz: {{ formatMoney(sum.revenueTotal, sum.currency) }}</span>
+              @if (sum.costTotal) {
+                <span>Wareneinsatz: {{ formatMoney(sum.costTotal, sum.currency) }}</span>
+              }
+              @if (sum.profitTotal) {
+                <span>Reingewinn: {{ formatMoney(sum.profitTotal, sum.currency) }}</span>
+              }
               <span>Kreditverzehr: {{ formatMoney(sum.creditConsumptionTotal, sum.currency) }}</span>
               <span>Buchungen: {{ sum.entryCount }}</span>
             </div>

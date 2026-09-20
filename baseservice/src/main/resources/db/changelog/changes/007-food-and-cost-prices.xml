@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+    <property name="text.type" value="TEXT" dbms="postgresql"/>
+    <property name="text.type" value="VARCHAR(65535)" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 109. Einkaufspreise für Getränke und Event-Getränke -->
+    <changeSet id="109-drink-cost-prices" author="junie">
+        <addColumn tableName="drink_catalog">
+            <column name="cost_price" type="DECIMAL(10, 2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="event_drinks">
+            <column name="cost_price" type="DECIMAL(10, 2)"/>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="event_drinks" columnName="cost_price"/>
+            <dropColumn tableName="drink_catalog" columnName="cost_price"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 110. Speisen-Katalog auf Vereinsebene -->
+    <changeSet id="110-create-food-catalog" author="junie">
+        <createTable tableName="food_catalog">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="${text.type}"/>
+            <column name="category" type="VARCHAR(64)"/>
+            <column name="default_price" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cost_price" type="DECIMAL(10, 2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)" defaultValue="EUR">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_food_catalog_creator" references="users(id)"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="food_catalog" indexName="idx_food_catalog_active">
+            <column name="active"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="food_catalog"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 111. Event-Speisen -->
+    <changeSet id="111-create-event-food" author="junie">
+        <createTable tableName="event_food">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="event_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_food_event" references="events(id)" deleteCascade="true"/>
+            </column>
+            <column name="food_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_food_food" references="food_catalog(id)"/>
+            </column>
+            <column name="price" type="DECIMAL(10, 2)"/>
+            <column name="cost_price" type="DECIMAL(10, 2)"/>
+            <column name="currency" type="VARCHAR(3)" defaultValue="EUR">
+                <constraints nullable="false"/>
+            </column>
+            <column name="self_service_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tablet_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="event_food" columnNames="event_id, food_id" constraintName="uk_event_food_event_food"/>
+        <createIndex tableName="event_food" indexName="idx_event_food_event">
+            <column name="event_id"/>
+        </createIndex>
+        <createIndex tableName="event_food" indexName="idx_event_food_food">
+            <column name="food_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="event_food"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 112. Ledger und Snapshots für Speisen und Gewinnermittlung -->
+    <changeSet id="112-ledger-food-and-profit" author="junie">
+        <addColumn tableName="ledger_entries">
+            <column name="food_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_ledger_entries_food" references="food_catalog(id)"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="ledger_entries" indexName="idx_ledger_entries_food">
+            <column name="food_id"/>
+        </createIndex>
+        <addColumn tableName="purchase_snapshots">
+            <column name="item_type" type="VARCHAR(32)" defaultValue="DRINK">
+                <constraints nullable="false"/>
+            </column>
+            <column name="food_name" type="VARCHAR(255)"/>
+            <column name="cost_price" type="DECIMAL(10, 2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="profit" type="DECIMAL(10, 2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <dropNotNullConstraint tableName="purchase_snapshots" columnName="drink_name" columnDataType="VARCHAR(255)"/>
+        <dropNotNullConstraint tableName="purchase_snapshots" columnName="catalog_version" columnDataType="INTEGER"/>
+        <rollback>
+            <addNotNullConstraint tableName="purchase_snapshots" columnName="catalog_version" columnDataType="INTEGER"/>
+            <addNotNullConstraint tableName="purchase_snapshots" columnName="drink_name" columnDataType="VARCHAR(255)"/>
+            <dropColumn tableName="purchase_snapshots" columnName="profit"/>
+            <dropColumn tableName="purchase_snapshots" columnName="cost_price"/>
+            <dropColumn tableName="purchase_snapshots" columnName="food_name"/>
+            <dropColumn tableName="purchase_snapshots" columnName="item_type"/>
+            <dropIndex tableName="ledger_entries" indexName="idx_ledger_entries_food"/>
+            <dropForeignKeyConstraint baseTableName="ledger_entries" constraintName="fk_ledger_entries_food"/>
+            <dropColumn tableName="ledger_entries" columnName="food_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

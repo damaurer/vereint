@@ -75,8 +75,13 @@ graph TD
 - **Framework**: Spring Boot 4.1+, Kotlin 2.3+, Java 25 JDK.
 - **Security**: Stateless OAuth2 Resource Server mit JWT-Validierung (`JwtAuthConverter`, `RolePermissionMatrix`).
 - **Idempotenz**: Eindeutige Transaktionssicherheit über den HTTP-Header `Idempotency-Key` (UUIDv4) für kritische Kassen- und Thekenbuchungen.
+- **Domänenmodule**:
+  - **Getränke- & Speisenkatalog**: Stammdatenverwaltung (`DrinkCatalogService`, `FoodCatalogService`) mit Standardpreisen und Einkaufspreisen (`costPrice`).
+  - **Event-Angebote**: Granulare Zuordnung von Getränken (`EventDrinkService`) und Speisen (`EventFoodService`) zu Events mit individueller Preisgestaltung und Tablet-/Kiosk-Freigabe.
+  - **Revisionssicheres Kassenbuch & Gewinnermittlung**: Transaktionsjournal (`LedgerService`) mit Beleg-Snapshots (`PurchaseSnapshot`), Einkaufspreiserfassung und Deckungsbeitragsberechnung (`profit = unit_price - cost_price`).
+  - **Tablet Strichlisten-Recorder**: Kiosk-API (`TabletRecorderService`) für Getränke und Speisen mit kombinierten Katalogen (`/items`), Runden- und Abendbuchungen.
 - **Storage & Push**:
-  - Integrierter S3-Client (`S3ObjectStorage`) für Profilbilder, Event-Banner und Getränkefotos.
+  - Integrierter S3-Client (`S3ObjectStorage`) für Profilbilder, Event-Banner und Artikelbilder.
   - VAPID Web Push Sender (`VapidPushSender`) mit RFC-8292-konformer Payload-Verschlüsselung.
 
 ### 4. Daten- & Infrastrukturschicht (`docker-compose.yml`)

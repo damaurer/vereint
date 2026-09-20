@@ -1,6 +1,6 @@
 # Fachdomäne: Tablet Strichlisten-Recorder (Kiosk Mode)
 
-Der Tablet Strichlisten-Recorder in **Vereint** ist für den hochfrequenten Thekenbetrieb auf Vereinsfesten, Feiern und Mitgliederversammlungen optimiert. Er bietet eine touch-optimierte Kiosk-Oberfläche zur blitzschnellen 1-Tap-Getränkebuchung, Rundenabrechnung und zum Abendabschluss.
+Der Tablet Strichlisten-Recorder in **Vereint** ist für den hochfrequenten Thekenbetrieb auf Vereinsfesten, Feiern und Mitgliederversammlungen optimiert. Er bietet eine touch-optimierte Kiosk-Oberfläche zur blitzschnellen 1-Tap-Getränke- und Speisenbuchung, Rundenabrechnung und zum Abendabschluss.
 
 ---
 
@@ -9,10 +9,13 @@ Der Tablet Strichlisten-Recorder in **Vereint** ist für den hochfrequenten Thek
 ### 1. Kiosk-Modus & Theken-Bedienung
 - **1-Tap Schnellbuchung**:
   - Thekenbediener sehen eine touch-optimierte Liste aller aktiven Vereinsmitglieder (`TabletMemberDto`).
-  - Ein Antippen einer Mitgliedszeile öffnet das Getränke-Overlay mit großen Buttons für die für dieses Event freigeschalteten Getränke.
-  - Eine Getränkeauswahl löst die sofortige Buchung auf das persönliche Vereinskonto aus (`accountingMode = credit, source = tabletManual`).
+  - Ein Antippen einer Mitgliedszeile öffnet das Artikel-Overlay mit Tabs für **Getränke** und **Speisen**.
+  - Große Kachel-Buttons zeigen die für dieses Event freigeschalteten Artikel (`tabletEnabled = true`) mit Name und effektivem Preis.
+  - Eine Artikelauswahl löst die sofortige Buchung auf das persönliche Vereinskonto aus (`accountingMode = credit, source = tabletManual`, `eventDrinkId` oder `eventFoodId`).
+- **Kombiniertes Sortiment (`/items`)**:
+  - Der Endpunkt `/api/v1/tablet/events/{eventId}/items` liefert in einer Abfrage alle freigegebenen Event-Getränke (`drinks`) und Event-Speisen (`food`) zur Minimierung von Latenzen.
 - **Runden-Erfassung (`round`)**:
-  - Ermöglicht das gleichzeitige Buchen eines Getränks für eine Gruppe ausgewählter Mitglieder (`memberIds`).
+  - Ermöglicht das gleichzeitige Buchen eines Getränks oder einer Speise für eine Gruppe ausgewählter Mitglieder (`memberIds`).
   - Wird als `revenueOnly`-Buchung erfasst und belastet die Kasse bzw. den Rundengeber ohne negative Einzelbelastungen.
 - **Abendabschluss & Bareinnahmen (`evening`)**:
   - Erfassung von pauschalen Einnahmen oder Abrechnungen am Ende eines Festabends (`source = evening, accountingMode = revenueOnly`).
@@ -31,14 +34,16 @@ Der Tablet Strichlisten-Recorder in **Vereint** ist für den hochfrequenten Thek
     - `GET /api/v1/tablet/events` – Liste aktiver Events für die Kioskauswahl
     - `GET /api/v1/tablet/events/{eventId}/members` – Aktive Teilnehmerliste
     - `GET /api/v1/tablet/events/{eventId}/drinks` – Verfügbare Event-Getränke
-    - `POST /api/v1/tablet/events/{eventId}/purchases` – Einzelkauf buchen (`TabletPurchaseRequest`)
+    - `GET /api/v1/tablet/events/{eventId}/food` – Verfügbare Event-Speisen
+    - `GET /api/v1/tablet/events/{eventId}/items` – Kombinierte Getränke & Speisen (`TabletItemsDto`)
+    - `POST /api/v1/tablet/events/{eventId}/purchases` – Einzelkauf buchen (`TabletPurchaseRequest`, `eventDrinkId` oder `eventFoodId`)
     - `POST /api/v1/tablet/events/{eventId}/rounds` – Rundenbuchung (`TabletRevenuePurchaseRequest`)
     - `POST /api/v1/tablet/events/{eventId}/evening` – Abendabschlussbuchung
-  - `TabletRecorderService`: Validiert Event-Status (`active`), Event-Getränke-Zuordnung und delegiert Buchungen an den `LedgerService`.
+  - `TabletRecorderService`: Validiert Event-Status (`active`), Event-Artikel-Zuordnung und delegiert Buchungen (`recordTabletPurchase` / `recordTabletFoodPurchase`) an den `LedgerService`.
   - Berechtigung: Erfordert Rolle `tabletRecorder` oder Berechtigung `purchase.tablet`.
 - **Frontend (Angular)**:
   - `webservice/src/app/tablet/tablet.component.ts` – Haupt-Container mit Eventauswahl und Mitgliedsliste.
-  - `drink-overlay.component.ts` – Touch-Modal zur Getränkewahl.
+  - `drink-overlay.component.ts` – Touch-Modal zur Artikelwahl mit Tab-Umschaltung ("Getränke" / "Speisen").
   - `strichliste-row.component.ts` – Optimierte Tabellenzeile mit schnellem Touch-Handler.
   - `revenue-sheet.component.ts` – Übersicht der an diesem Abend getätigten Buchungen.
 
@@ -48,17 +53,24 @@ Der Tablet Strichlisten-Recorder in **Vereint** ist für den hochfrequenten Thek
 
 ```kotlin
 data class TabletPurchaseRequest(
-    @field:NotBlank
-    val memberId: String,
-    @field:NotBlank
-    val eventDrinkId: String
+    @field:NotBlank(message = "memberId darf nicht leer sein")
+    val memberId: String? = null,
+
+    val eventDrinkId: String? = null,
+    val eventFoodId: String? = null
 )
 
 data class TabletRevenuePurchaseRequest(
-    @field:NotBlank
-    val eventDrinkId: String,
-    @field:NotEmpty
-    val memberIds: List<String>
+    val eventDrinkId: String? = null,
+    val eventFoodId: String? = null,
+
+    @field:NotEmpty(message = "memberIds darf nicht leer sein")
+    val memberIds: List<String>? = null
+)
+
+data class TabletItemsDto(
+    val drinks: List<EventDrinkDto>,
+    val food: List<EventFoodDto>
 )
 
 data class TabletMemberDto(
@@ -69,7 +81,7 @@ data class TabletMemberDto(
 
 ---
 
-## 🔄 Sequenzablauf: 1-Tap Thekenbuchung
+## 🔄 Sequenzablauf: 1-Tap Thekenbuchung (Getränk oder Speise)
 
 ```mermaid
 sequenceDiagram
@@ -82,17 +94,17 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     Bartender->>UI: Tippt auf "Max Mustermann"
-    UI->>UI: Öffnet Drink-Overlay (Bier, Radler, Wasser...)
-    Bartender->>UI: Tippt auf "Pils 0.5L (3,00 €)"
+    UI->>UI: Öffnet Overlay mit Tabs [Getränke] [Speisen]
+    Bartender->>UI: Wählt Tab "Speisen" & tippt auf "Bratwurst (3,50 €)"
     Note over UI: Generiert UUIDv4 für Idempotency-Key
-    UI->>BFF: POST /api/v1/tablet/events/{id}/purchases (memberId, eventDrinkId)
+    UI->>BFF: POST /api/v1/tablet/events/{id}/purchases (memberId, eventFoodId)
     BFF->>Spring: POST /api/v1/tablet/events/{id}/purchases<br/>Header: Idempotency-Key: c9d1a...
     Spring->>Spring: Prüft Berechtigung ('purchase.tablet') & Event-Status ('active')
-    Spring->>Ledger: Bucht Eintrag (source = tabletManual, mode = credit, amount = -3.00)
-    Ledger->>DB: INSERT INTO ledger_entries & purchase_snapshots
+    Spring->>Ledger: Bucht Speiseneintrag (food_id, cost_price, profit, amount = -3.50)
+    Ledger->>DB: INSERT INTO ledger_entries & purchase_snapshots (item_type = 'FOOD')
     DB-->>Ledger: Committed
     Ledger-->>Spring: LedgerEntryDto
     Spring-->>BFF: 201 Created
     BFF-->>UI: 201 Created
-    UI->>Bartender: Grünes Toast / Badge "+1 Pils für Max gebucht"
+    UI->>Bartender: Grünes Feedback "+1 Bratwurst für Max gebucht"
 ```

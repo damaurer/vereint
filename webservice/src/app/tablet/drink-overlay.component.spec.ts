@@ -53,7 +53,7 @@ describe('DrinkOverlayComponent', () => {
   it('emits the selected drink id', () => {
     const fixture = create(true);
     let selected: string | null = null;
-    fixture.componentInstance.select.subscribe((id) => (selected = id));
+    fixture.componentInstance.itemSelect.subscribe((id) => (selected = id));
     (root(fixture).querySelector('[role="option"]') as HTMLButtonElement).click();
     expect(selected).toBe('d-1');
   });

@@ -1,17 +1,6 @@
 package de.maurer.baseservice
 
-import de.maurer.baseservice.domain.AccountingMode
-import de.maurer.baseservice.domain.DrinkBarcodeEntity
-import de.maurer.baseservice.domain.DrinkCatalogEntity
-import de.maurer.baseservice.domain.DrinkStatus
-import de.maurer.baseservice.domain.EventDrinkEntity
-import de.maurer.baseservice.domain.EventEntity
-import de.maurer.baseservice.domain.EventStatus
-import de.maurer.baseservice.domain.LedgerEntryEntity
-import de.maurer.baseservice.domain.LedgerEntryType
-import de.maurer.baseservice.domain.PurchaseSnapshotEntity
-import de.maurer.baseservice.domain.PurchaseSource
-import de.maurer.baseservice.domain.UserEntity
+import de.maurer.baseservice.domain.*
 import de.maurer.baseservice.dto.CorrectionRequest
 import de.maurer.baseservice.dto.PayoutRequest
 import de.maurer.baseservice.dto.PurchaseRequest
@@ -696,39 +685,106 @@ class LedgerServiceTest {
     }
 
     @Test
-    fun `event summary aggregates revenue and credit consumption`() {
+    fun `event summary aggregates revenue, cost and profit`() {
         `when`(userService.getOrCreateUser(adminPrincipal())).thenReturn(admin())
         val eventId = UUID.randomUUID()
         val event = EventEntity(id = eventId, title = "Fest")
-        val entries = listOf(
-            LedgerEntryEntity(
-                entryType = LedgerEntryType.purchase,
-                event = event,
-                member = member(),
-                amount = BigDecimal("2.50"),
-                currency = "EUR",
-                accountingMode = AccountingMode.credit,
-                actor = member(),
-                idempotencyKey = "p1"
-            ),
-            LedgerEntryEntity(
-                entryType = LedgerEntryType.purchase,
-                event = event,
-                member = member(),
-                amount = BigDecimal("1.50"),
-                currency = "EUR",
-                accountingMode = AccountingMode.revenueOnly,
-                actor = member(),
-                idempotencyKey = "p2"
-            )
+
+        val entry1 = LedgerEntryEntity(
+            entryType = LedgerEntryType.purchase,
+            event = event,
+            member = member(),
+            amount = BigDecimal("2.50"),
+            currency = "EUR",
+            accountingMode = AccountingMode.credit,
+            actor = member(),
+            idempotencyKey = "p1"
         )
+        val snap1 = PurchaseSnapshotEntity(
+            ledgerEntry = entry1,
+            itemType = "DRINK",
+            drinkName = "Mate",
+            unitPrice = BigDecimal("2.50"),
+            costPrice = BigDecimal("1.00"),
+            profit = BigDecimal("1.50")
+        )
+        entry1.purchaseSnapshot = snap1
+
+        val entry2 = LedgerEntryEntity(
+            entryType = LedgerEntryType.purchase,
+            event = event,
+            member = member(),
+            amount = BigDecimal("4.00"),
+            currency = "EUR",
+            accountingMode = AccountingMode.revenueOnly,
+            actor = member(),
+            idempotencyKey = "p2"
+        )
+        val snap2 = PurchaseSnapshotEntity(
+            ledgerEntry = entry2,
+            itemType = "FOOD",
+            foodName = "Bratwurst",
+            unitPrice = BigDecimal("4.00"),
+            costPrice = BigDecimal("1.50"),
+            profit = BigDecimal("2.50")
+        )
+        entry2.purchaseSnapshot = snap2
+
+        val entries = listOf(entry1, entry2)
         `when`(ledgerEntryRepository.findByEventId(eventId)).thenReturn(entries)
 
         val summary = ledgerService.getEventSummary(eventId, adminPrincipal())
 
         assertEquals(eventId.toString(), summary.eventId)
-        assertEquals(0, BigDecimal("4.00").compareTo(summary.revenueTotal))
+        assertEquals(0, BigDecimal("6.50").compareTo(summary.revenueTotal))
+        assertEquals(0, BigDecimal("2.50").compareTo(summary.costTotal))
+        assertEquals(0, BigDecimal("4.00").compareTo(summary.profitTotal))
         assertEquals(0, BigDecimal("2.50").compareTo(summary.creditConsumptionTotal))
         assertEquals(2, summary.entryCount)
+    }
+
+    @Test
+    fun `records tablet food purchase with fallback pricing and profit calculation`() {
+        val eventId = UUID.randomUUID()
+        val event = EventEntity(id = eventId, title = "Event", status = EventStatus.active)
+        val buyer = member()
+        val actor = admin()
+        val food = FoodCatalogEntity(
+            id = UUID.randomUUID(),
+            name = "Currywurst",
+            defaultPrice = BigDecimal("4.50"),
+            costPrice = BigDecimal("2.00")
+        )
+        val eventFood = EventFoodEntity(
+            id = UUID.randomUUID(),
+            event = event,
+            food = food,
+            price = null, // fallback to 4.50
+            costPrice = null, // fallback to 2.00
+            currency = "EUR"
+        )
+
+        `when`(ledgerEntryRepository.save(anyLedgerEntry())).thenAnswer { it.arguments[0] }
+        `when`(purchaseSnapshotRepository.save(anyPurchaseSnapshot())).thenAnswer { it.arguments[0] }
+
+        val dto = ledgerService.recordTabletFoodPurchase(
+            event = event,
+            member = buyer,
+            food = food,
+            eventFood = eventFood,
+            actor = actor,
+            idempotencyKey = "food-idem-1"
+        )
+
+        assertEquals("purchase", dto.entryType)
+        assertEquals(0, BigDecimal("4.50").compareTo(dto.amount))
+        assertEquals(food.id.toString(), dto.foodId)
+        assertNull(dto.drinkId)
+        assertNotNull(dto.snapshot)
+        assertEquals("FOOD", dto.snapshot?.itemType)
+        assertEquals("Currywurst", dto.snapshot?.foodName)
+        assertEquals(0, BigDecimal("4.50").compareTo(dto.snapshot?.unitPrice))
+        assertEquals(0, BigDecimal("2.00").compareTo(dto.snapshot?.costPrice))
+        assertEquals(0, BigDecimal("2.50").compareTo(dto.snapshot?.profit))
     }
 }

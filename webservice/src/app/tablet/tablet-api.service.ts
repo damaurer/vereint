@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClient } from '../api/api-client.service';
-import type { EventDrink } from '../events/event-manage.types';
+import type { EventDrink, EventFood } from '../events/event-manage.types';
 import type {
   LedgerEntry,
   MemberProfile,
   TabletEvent,
+  TabletItems,
   TabletMember,
   TabletPurchasePayload,
   TabletRevenuePayload,
@@ -53,6 +54,16 @@ export class TabletApiService {
   /** Tabletfähige Eventgetränke (`GET /tablet/events/{id}/drinks`). */
   listDrinks(eventId: string): Observable<EventDrink[]> {
     return this.api.get<EventDrink[]>(`${this.eventPath(eventId)}/drinks`);
+  }
+
+  /** Tabletfähige Eventspeisen (`GET /tablet/events/{id}/food`). */
+  listFood(eventId: string): Observable<EventFood[]> {
+    return this.api.get<EventFood[]>(`${this.eventPath(eventId)}/food`);
+  }
+
+  /** Kombiniertes Angebot an Getränken und Speisen (`GET /tablet/events/{id}/items`). */
+  listItems(eventId: string): Observable<TabletItems> {
+    return this.api.get<TabletItems>(`${this.eventPath(eventId)}/items`);
   }
 
   /** Manuellen Strichlisten-Kauf erfassen (`POST /tablet/events/{id}/purchases`). */

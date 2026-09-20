@@ -91,4 +91,29 @@ describe('EventManageService', () => {
     expect(req.request.body).toEqual({ message: 'Hallo' });
     req.flush({});
   });
+
+  it('lists event food via GET', () => {
+    service.listEventFood('e-1').subscribe();
+
+    const req = http.expectOne('/api/v1/events/e-1/food');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
+  it('adds food to an event via POST', () => {
+    service.addFood('e-1', { foodId: 'f-1', price: '4.00' }).subscribe();
+
+    const req = http.expectOne('/api/v1/events/e-1/food');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ foodId: 'f-1', price: '4.00' });
+    req.flush({});
+  });
+
+  it('removes event food via DELETE', () => {
+    service.removeFood('e-1', 'ef-1').subscribe();
+
+    const req = http.expectOne('/api/v1/events/e-1/food/ef-1');
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null);
+  });
 });

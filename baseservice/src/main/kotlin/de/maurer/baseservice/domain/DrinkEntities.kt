@@ -28,6 +28,9 @@ class DrinkCatalogEntity(
     @Column(name = "default_price", precision = 10, scale = 2, nullable = false)
     var defaultPrice: BigDecimal = BigDecimal.ZERO,
 
+    @Column(name = "cost_price", precision = 10, scale = 2, nullable = false)
+    var costPrice: BigDecimal = BigDecimal.ZERO,
+
     @Column(name = "currency", length = 3, nullable = false)
     var currency: String = "EUR",
 
@@ -175,6 +178,9 @@ class EventDrinkEntity(
 
     @Column(name = "price", precision = 10, scale = 2, nullable = false)
     var price: BigDecimal = BigDecimal.ZERO,
+
+    @Column(name = "cost_price", precision = 10, scale = 2)
+    var costPrice: BigDecimal? = null,
 
     @Column(name = "currency", length = 3, nullable = false)
     var currency: String = "EUR",

@@ -30,6 +30,8 @@ class LiquibaseSchemaTest @Autowired constructor(
     private val drinkSublistRepository: DrinkSublistRepository,
     private val drinkSublistItemRepository: DrinkSublistItemRepository,
     private val eventDrinkRepository: EventDrinkRepository,
+    private val foodCatalogRepository: FoodCatalogRepository,
+    private val eventFoodRepository: EventFoodRepository,
     private val ledgerEntryRepository: LedgerEntryRepository,
     private val purchaseSnapshotRepository: PurchaseSnapshotRepository,
     private val idempotencyRecordRepository: IdempotencyRecordRepository,
@@ -138,9 +140,35 @@ class LiquibaseSchemaTest @Autowired constructor(
             event = event,
             drink = drink,
             price = BigDecimal("2.50"),
+            costPrice = BigDecimal("1.20"),
             catalogVersion = 1
         )
         eventDrinkRepository.save(eventDrink)
+
+        // 4b. Food Catalog & Event Food
+        val foodId = UUID.randomUUID()
+        val food = FoodCatalogEntity(
+            id = foodId,
+            name = "Bratwurst",
+            description = "Frisch vom Grill",
+            category = "Grill",
+            defaultPrice = BigDecimal("3.50"),
+            costPrice = BigDecimal("1.50"),
+            currency = "EUR",
+            createdBy = user
+        )
+        foodCatalogRepository.save(food)
+
+        val eventFoodId = UUID.randomUUID()
+        val eventFood = EventFoodEntity(
+            id = eventFoodId,
+            event = event,
+            food = food,
+            price = BigDecimal("4.00"),
+            costPrice = BigDecimal("1.80"),
+            currency = "EUR"
+        )
+        eventFoodRepository.save(eventFood)
 
         // 5. Ledger entries and purchase snapshots
         val ledgerId = UUID.randomUUID()
@@ -161,12 +189,42 @@ class LiquibaseSchemaTest @Autowired constructor(
         val snapshot = PurchaseSnapshotEntity(
             id = snapshotId,
             ledgerEntry = ledgerEntry,
+            itemType = "DRINK",
             drinkName = "Club Mate",
             barcode = "4029764001807",
             unitPrice = BigDecimal("2.50"),
+            costPrice = BigDecimal("1.20"),
+            profit = BigDecimal("1.30"),
             catalogVersion = 1
         )
         purchaseSnapshotRepository.save(snapshot)
+
+        // 5b. Food Ledger entry
+        val foodLedgerId = UUID.randomUUID()
+        val foodLedgerEntry = LedgerEntryEntity(
+            id = foodLedgerId,
+            event = event,
+            member = user,
+            food = food,
+            amount = BigDecimal("4.00"),
+            accountingMode = AccountingMode.credit,
+            source = PurchaseSource.tabletManual,
+            actor = user,
+            idempotencyKey = "idem-key-1002"
+        )
+        ledgerEntryRepository.save(foodLedgerEntry)
+
+        val foodSnapshotId = UUID.randomUUID()
+        val foodSnapshot = PurchaseSnapshotEntity(
+            id = foodSnapshotId,
+            ledgerEntry = foodLedgerEntry,
+            itemType = "FOOD",
+            foodName = "Bratwurst",
+            unitPrice = BigDecimal("4.00"),
+            costPrice = BigDecimal("1.80"),
+            profit = BigDecimal("2.20")
+        )
+        purchaseSnapshotRepository.save(foodSnapshot)
 
         val foundLedger = ledgerEntryRepository.findById(ledgerId).orElseThrow()
         assertEquals("idem-key-1001", foundLedger.idempotencyKey)

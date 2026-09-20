@@ -14,7 +14,8 @@ baseservice/src/main/resources/db/changelog/
     ├── 002-integrity-constraints.xml     # Constraints, Optimistic Locking, Append-Only Trigger
     ├── 003-drink-catalog-approval.xml    # Getränke-Vorschlags- & Freigabefelder
     ├── 004-image-assets.xml              # S3 Bildmetadaten-Tabelle
-    └── 005-ledger-transactions.xml       # Erweiterte Buchungsarten (topup, payout, correction)
+    ├── 005-ledger-transactions.xml       # Erweiterte Buchungsarten (topup, payout, correction)
+    └── 007-food-and-cost-prices.xml      # Speisenkatalog, Eventspeisen, Einkaufspreise & Deckungsbeitrag
 ```
 
 ---
@@ -28,6 +29,7 @@ baseservice/src/main/resources/db/changelog/
 | `201-202` | `003-drink-catalog-approval.xml` | Statusfeld (`proposed`, `approved`, `rejected`) für Getränkekatalog | ✅ |
 | `301-302` | `004-image-assets.xml` | `image_assets` Tabelle für S3 Storage Keys | ✅ |
 | `107-108` | `005-ledger-transactions.xml` | `entry_type`, `reverses_entry_id` und nullable Spalten für Ein-/Auszahlungen | ✅ |
+| `109-112` | `007-food-and-cost-prices.xml` | `cost_price` für Getränke, Tabellen `food_catalog` & `event_food`, Ledger/Snapshot `food_id`, `item_type`, `cost_price`, `profit` | ✅ |
 
 ---
 

@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClient } from '../api/api-client.service';
-import type { EventDetail, EventParticipant, MemberProfile } from '../api/api.types';
+import type { EventDetail, EventParticipant, MemberProfile, FoodSummary } from '../api/api.types';
 import type {
   AddEventDrinkPayload,
+  AddEventFoodPayload,
   AddParticipantPayload,
   AssignSublistPayload,
   ChatMessage,
@@ -11,9 +12,11 @@ import type {
   CreateInvitePayload,
   CreatedInvite,
   EventDrink,
+  EventFood,
   Invite,
   SendMessagePayload,
   UpdateEventDrinkPayload,
+  UpdateEventFoodPayload,
   UpdateEventPayload,
 } from './event-manage.types';
 
@@ -98,6 +101,40 @@ export class EventManageService {
   /** Weist eine Sublist zu (`POST /events/{id}/drinks/assign-sublist`). */
   assignSublist(eventId: string, payload: AssignSublistPayload): Observable<EventDrink[]> {
     return this.api.post<EventDrink[]>(`${this.eventPath(eventId)}/drinks/assign-sublist`, payload);
+  }
+
+  /** Globaler Speisenkatalog (`GET /food`). */
+  listClubFood(): Observable<FoodSummary[]> {
+    return this.api.get<FoodSummary[]>('/food');
+  }
+
+  /** Eventspeisen (`GET /events/{id}/food`). */
+  listEventFood(eventId: string): Observable<EventFood[]> {
+    return this.api.get<EventFood[]>(`${this.eventPath(eventId)}/food`);
+  }
+
+  /** Fügt eine Eventspeise hinzu (`POST /events/{id}/food`). */
+  addFood(eventId: string, payload: AddEventFoodPayload): Observable<EventFood> {
+    return this.api.post<EventFood>(`${this.eventPath(eventId)}/food`, payload);
+  }
+
+  /** Aktualisiert eine Eventspeise (`PUT /events/{id}/food/{eventFoodId}`). */
+  updateFood(
+    eventId: string,
+    eventFoodId: string,
+    payload: UpdateEventFoodPayload
+  ): Observable<EventFood> {
+    return this.api.put<EventFood>(
+      `${this.eventPath(eventId)}/food/${encodeURIComponent(eventFoodId)}`,
+      payload
+    );
+  }
+
+  /** Entfernt eine Eventspeise (`DELETE /events/{id}/food/{eventFoodId}`). */
+  removeFood(eventId: string, eventFoodId: string): Observable<void> {
+    return this.api.delete<void>(
+      `${this.eventPath(eventId)}/food/${encodeURIComponent(eventFoodId)}`
+    );
   }
 
   /** Einladungen (`GET /events/{id}/invites`). */

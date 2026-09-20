@@ -17,10 +17,12 @@ Willkommen beim offiziellen Benutzerhandbuch der Vereinsplattform **Vereint**. D
    - 2.3 Buchungshistorie & digitaler Kontoauszug
    - 2.4 Barcode-Kauf & PWA-Selbstbedienung
    - 2.5 Revisionssicherheit & Append-Only-Prinzip
+   - 2.6 Einkaufspreise, Wareneinsatz & Deckungsbeitragsanalyse
+   - 2.7 Speisen- und Getränkekatalog verwalten (Vorstand & Admin)
 3. **Kapitel 3: Theken-Strichliste (Kiosk-Modus)**
    - 3.1 Touch-Oberfläche im Thekenbetrieb
-   - 3.2 1-Tap-Getränkebuchung in der Praxis
-   - 3.3 Rundenabrechnung für Gruppen
+   - 3.2 1-Tap-Getränke- & Speisenbuchung (Tab-Auswahl)
+   - 3.3 Rundenabrechnung für Gruppen (Getränke & Speisen)
    - 3.4 Abendabschluss & Bareinnahmen
    - 3.5 Fehlbuchungen & Sofortstornierung
 4. **Kapitel 4: Veranstaltungen & Gast-Einladungen**
@@ -28,6 +30,7 @@ Willkommen beim offiziellen Benutzerhandbuch der Vereinsplattform **Vereint**. D
    - 4.2 Zu- und Absagen (RSVP) & Teilnehmerlisten
    - 4.3 Krypto-Gasttokens & Einladungslinks
    - 4.4 Gast-Teilnahme ohne Vereinsbenutzerkonto
+   - 4.5 Speisen- & Getränkeangebot pro Event konfigurieren
 5. **Kapitel 5: Moments & Rituale (Gemeinschaftsmomente)**
    - 5.1 Was sind Moments? (Anstoßen, Jubeln, Gebet, Check-in)
    - 5.2 Multi-Status-Reaktionen in Echtzeit
@@ -161,12 +164,34 @@ Das Kassenbuch von Vereint folgt strengen buchhalterischen Standards:
 - **Korrekturen**: Bei versehentlichen Fehlbuchungen wird eine Gegenbuchung (`correction`) erzeugt, die den Originalbetrag referenziert und rechnerisch ausgleicht.
 - **Datenbank-Trigger**: Spezielle Trigger in der PostgreSQL-Datenbank stellen sicher, dass jeder Beleg manipulationssicher archiviert wird.
 
+### 2.6 Einkaufspreise, Wareneinsatz & Deckungsbeitragsanalyse
+Für eine transparente Wirtschaftlichkeit und professionelle Vereinsbuchhaltung unterstützt Vereint die lückenlose Erfassung von Einkaufspreisen (`costPrice`):
+- **Automatischer Beleg-Snapshot**: Bei jedem Kauf wird neben dem Verkaufspreis (`unitPrice`) auch der zum Kaufzeitpunkt gültige Einkaufspreis (`costPrice`) im Beleg eingefroren.
+- **Deckungsbeitrag pro Buchung**: Das System ermittelt sekundengenau den Deckungsbeitrag (`profit = unitPrice - costPrice`).
+- **Event-Wirtschaftlichkeitsanalyse (Vorstand & Kassenwart)**:
+  - In der Kassenübersicht eines Events (`/api/v1/ledger/events/{eventId}/summary`) sehen Vorstände auf einen Blick:
+    - **Gesamterlös (`revenueTotal`)**: Summe aller Verkäufe.
+    - **Wareneinsatz (`costTotal`)**: Tatsächliche Beschaffungskosten für konsumierte Speisen und Getränke.
+    - **Deckungsbeitrag / Reingewinn (`profitTotal`)**: Verbleibender Gewinn für die Vereinskasse.
+    - **Guthabenkonsum (`creditConsumptionTotal`)**: Anteil der bargeldlos über Mitgliedskonten abgerechneten Verkäufe.
+
+### 2.7 Speisen- und Getränkekatalog verwalten (Vorstand & Admin)
+Vorstände und Administratoren pflegen das Vereinssortiment zentral über das Administrations-Dashboard:
+1. **Speisenkatalog (`/api/v1/food`)**:
+   - Klicken Sie im Admin-Bereich auf **"Speisenkatalog"** und wählen Sie **"Neue Speise anlegen"**.
+   - Geben Sie Name, Kategorie (z. B. `Grill`, `Kuchen`, `Snacks`), den Standard-Verkaufspreis sowie den Standard-Einkaufspreis ein.
+   - Über den Schalter `Aktiv` können saisonale Angebote (z. B. Glühwein-Gebäck im Sommer) vorübergehend ausgeblendet werden, ohne historische Buchungen zu gefährden.
+2. **Getränkekatalog & Vorschläge (`/api/v1/drinks`)**:
+   - Mitglieder können über ihre App neue Getränke vorschlagen.
+   - Der Vorstand prüft vorgeschlagene Artikel im Dashboard und gibt sie mit einem Klick frei (`Freigeben`) oder weist sie ab.
+   - Freigegebenen Getränken können EAN-Barcodes für den Scanner zugewiesen werden.
+
 ---
 
 ## 📱 Kapitel 3: Theken-Strichliste (Kiosk-Modus)
 
 ### 3.1 Touch-Oberfläche im Thekenbetrieb
-Der Kiosk-Modus ist speziell für Tablets an der Vereinstheke konzipiert. Die Oberfläche ist für schnelle Fingerbedienung bei lauter Umgebung und hohem Besucherandrang optimiert.
+Der Kiosk-Modus ist speziell für Tablets an der Vereinstheke konzipiert. Die Oberfläche ist für schnelle Fingerbedienung bei lauter Umgebung und hohem Besucherandrang optimiert und kombiniert Getränke und Speisen in einer aufgeräumten Tab-Struktur:
 
 ```text
 +-----------------------------------------------------------------------------------+
@@ -174,12 +199,12 @@ Der Kiosk-Modus ist speziell für Tablets an der Vereinstheke konzipiert. Die Ob
 +-----------------------------------------------------------------------------------+
 | Mitglied suchen... [ 🔍 Max                             ]       [ 🔒 Abmelden ]  |
 +-----------------------------------------+-----------------------------------------+
-| MITGLIEDERLISTE                         | GETRÄNKE-SCHNELLAUSWAHL (1-TAP)         |
+| MITGLIEDERLISTE                         | ARTIKELAUSWAHL: [ 🍺 GETRÄNKE ] [ 🌭 SPEISEN ] |
 | --------------------------------------- | --------------------------------------- |
 | [👤 Max Mustermann         (14,50 €)] > | [ 🍺 Pils 0.5L                 3,00 € ] |
 | [👤 Erika Muster           ( 8,00 €)]   | [ 🍋 Radler 0.5L               3,00 € ] |
 | [👤 Lukas Schmidt          (-2,50 €)] ! | [ 🥤 Cola / Limo 0.33L         2,00 € ] |
-| [👤 Sarah Weber            (22,00 €)]   | [ 💧 Mineralwasser             1,50 € ] |
+| [👤 Sarah Weber            (22,00 €)]   | [ 🌭 Bratwurst im Brötchen     3,50 € ] |
 | --------------------------------------- | --------------------------------------- |
 | [ 🍻 Runde für Gruppe buchen ]          | [ ⚡ Letzte Buchung stornieren (Storno) ]|
 +-----------------------------------------+-----------------------------------------+
@@ -187,20 +212,21 @@ Der Kiosk-Modus ist speziell für Tablets an der Vereinstheke konzipiert. Die Ob
 +-----------------------------------------------------------------------------------+
 ```
 
-### 3.2 1-Tap-Getränkebuchung in der Praxis
-Die Erfassung eines Getränks an der Theke erfordert lediglich **zwei kurze Fingertipps**:
+### 3.2 1-Tap-Getränke- & Speisenbuchung in der Praxis
+Die Erfassung an der Theke erfordert lediglich **zwei kurze Fingertipps**:
 1. **Mitglied auswählen**: Tippen Sie in der linken Liste auf den Namen des Mitglieds (z. B. "Max Mustermann").
-2. **Getränk antippen**: In der rechten Spalte tippen Sie auf das gewünschte Getränk (z. B. "Pils 0.5L").
-3. **Sofortige Quittierung**:
-   - Die Buchung wird sofort ausgeführt.
-   - Ein grünes Bestätigungsbanner (`Toast`) erscheint: *"1x Pils 0.5L für Max Mustermann gebucht (-3,00 €)"*.
+2. **Kategorie wählen (optional)**: Wechseln Sie bei Bedarf oben zwischen den Tabs **[ 🍺 Getränke ]** und **[ 🌭 Speisen ]**.
+3. **Artikel antippen**: In der Kachelauswahl tippen Sie auf den gewünschten Artikel (z. B. "Pils 0.5L" oder "Bratwurst").
+4. **Sofortige Quittierung**:
+   - Die Buchung wird sofort ausgeführt (`TabletPurchaseRequest` mit `eventDrinkId` oder `eventFoodId`).
+   - Ein grünes Bestätigungsbanner (`Toast`) erscheint: *"1x Bratwurst für Max Mustermann gebucht (-3,50 €)"*.
    - Der neue Kontostand des Mitglieds wird unmittelbar aktualisiert.
 
-### 3.3 Rundenabrechnung für Gruppen
-Gibt ein Mitglied eine Runde für mehrere Personen aus:
+### 3.3 Rundenabrechnung für Gruppen (Getränke & Speisen)
+Gibt ein Mitglied eine Runde für mehrere Personen aus (z. B. Getränkerunde oder Brezeln für den Tisch):
 1. Tippen Sie auf die Schaltfläche **"Runde für Gruppe buchen"**.
-2. Wählen Sie das Getränk für die Runde aus.
-3. Markieren Sie alle anwesenden Mitglieder, die ein Getränk erhalten.
+2. Wählen Sie das gewünschte Getränk oder die Speise aus.
+3. Markieren Sie alle anwesenden Mitglieder, die den Artikel erhalten.
 4. Bestätigen Sie mit **"Runde buchen"**.
 5. Das System bucht die Runde im Modus `revenueOnly` bzw. belastet wahlweise den Ausgeber, ohne dass alle Einzelempfänger ins Minus geraten.
 
@@ -212,7 +238,7 @@ Am Ende des Abends führt das Thekenpersonal den Kassenabschluss durch:
 4. Das Event kann anschließend vom Vorstand in den Status `completed` versetzt werden.
 
 ### 3.5 Fehlbuchungen & Sofortstornierung
-Sollte versehentlich ein falsches Getränk angetippt worden sein:
+Sollte versehentlich ein falscher Artikel angetippt worden sein:
 - Direkt nach der Buchung steht der Button **"Letzte Buchung stornieren"** zur Verfügung.
 - Ein Tippen erzeugt automatisch eine Revisions-Gegenbuchung (`POST /api/v1/ledger/corrections`), die das Mitgliedskonto umgehend wieder entlastet.
 
@@ -233,9 +259,9 @@ Veranstaltungen durchlaufen in Vereint einen definierten Lebenszyklus:
                                                                   [ Archiviert (archived) ]
 ```
 
-- **draft**: Nur für den Ersteller und den Vorstand sichtbar zur Vorbereitung von Datum, Ort und Getränkeauswahl.
+- **draft**: Nur für den Ersteller und den Vorstand sichtbar zur Vorbereitung von Datum, Ort und Getränke-/Speisenangebot.
 - **published**: Sichtbar für alle Mitglieder; RSVP-Rückmeldungen können abgegeben werden.
-- **active**: Die Veranstaltung läuft aktuell. Das Tablet an der Theke greift auf die Event-Getränkeliste zu.
+- **active**: Die Veranstaltung läuft aktuell. Das Tablet an der Theke greift auf das Event-Sortiment (`/items`) zu.
 - **completed**: Das Event ist beendet und die Kassenabrechnung abgeschlossen.
 - **archived**: Das Event steht für historische Statistiken bereit.
 
@@ -259,6 +285,16 @@ Externe Gäste benötigen **kein Passwort und kein Vereinskonto**:
 2. Es öffnet sich eine Willkommensseite: Der Gast gibt lediglich seinen **Anzeigenamen** ein (z. B. "Thomas (Gast)").
 3. Nach dem Klick auf **"Beitreten"** erhält das Gast-Smartphone ein sicheres `guestToken`.
 4. Der Gast hat nun sofortigen Zugriff auf den Event-Chat und kann an Live-Moments teilnehmen.
+
+### 4.5 Speisen- & Getränkeangebot pro Event konfigurieren
+Veranstaltungsleiter und Vorstände passen das gastronomische Angebot im Vorfeld an das Event an:
+1. **Event-Getränke zuweisen**:
+   - Weisen Sie vorgefertigte Sublisten (z. B. "Sommerfest-Auswahl") oder Einzelgetränke mit individuellen Eventpreisen zu.
+   - Legen Sie fest, ob das Getränk für das Tablet (`tabletEnabled`) freigeschaltet wird.
+2. **Event-Speisen zuweisen (`/api/v1/events/{eventId}/food`)**:
+   - Wählen Sie Speisen aus dem Vereinskatalog aus.
+   - Passen Sie bei Bedarf den Verkaufspreis (`price`) und den Einkaufspreis (`costPrice`) an (z. B. Festpreise oder tagesaktuelle Einkaufskosten).
+   - Aktivieren Sie `tabletEnabled`, damit die Speisen auf dem Tablet-Kiosk im Speisen-Tab erscheinen.
 
 ---
 

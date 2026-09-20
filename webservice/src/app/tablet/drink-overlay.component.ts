@@ -1,16 +1,16 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { ModalComponent, RoleChipComponent } from '../ui';
 import { formatMoney } from '../member/member-format';
-import type { EventDrink } from '../events/event-manage.types';
+import type { EventDrink, EventFood } from '../events/event-manage.types';
+
+export interface SelectedItem {
+  id: string;
+  type: 'drink' | 'food';
+  name: string;
+}
 
 /**
- * Getränke-/Menüauswahl-Overlay des Terminals (TICKET-034).
- *
- * Bereichsnahe Präsentationskomponente auf Basis des `ModalComponent` aus
- * TICKET-032: Kategorie-Chip, Karten-Grid der tabletfähigen Eventgetränke und
- * eine Sticky-Bestätigen-Leiste. Preise stammen unverändert aus dem
- * Fachservice; die Auswahl ist reine Client-UI vor dem bestehenden
- * Buchungsaufruf. `Escape`/Backdrop schließen über das Modal.
+ * Getränke-/Speisenauswahl-Overlay des Terminals (TICKET-034).
  */
 @Component({
   selector: 'app-drink-overlay',
@@ -20,38 +20,71 @@ import type { EventDrink } from '../events/event-manage.types';
   template: `
     <vereint-modal
       [open]="open"
-      title="Getränkekarte / Menüauswahl"
+      title="Getränkekarte & Speiseangebot"
       [dismissible]="true"
       (closed)="closed.emit()"
     >
-      <p class="overlay-hint">Wähle das Standard-Getränk für die Strichliste.</p>
+      <p class="overlay-hint">Wähle den Verkaufsartikel für die Strichliste.</p>
 
-      <div class="overlay-chips" role="group" aria-label="Getränkekategorien">
-        <vereint-role-chip [label]="'Getränke (' + drinks.length + ')'" [tone]="'accent'" />
+      <div class="overlay-chips" role="group" aria-label="Kategorien">
+        <button
+          type="button"
+          class="overlay-tab-chip"
+          [class.is-active]="activeCategory === 'drinks'"
+          (click)="activeCategory = 'drinks'"
+        >
+          <vereint-role-chip [label]="'Getränke (' + drinks.length + ')'" [tone]="activeCategory === 'drinks' ? 'accent' : 'default'" />
+        </button>
+        <button
+          type="button"
+          class="overlay-tab-chip"
+          [class.is-active]="activeCategory === 'food'"
+          (click)="activeCategory = 'food'"
+        >
+          <vereint-role-chip [label]="'Speisen (' + foods.length + ')'" [tone]="activeCategory === 'food' ? 'accent' : 'default'" />
+        </button>
       </div>
 
-      <div class="overlay-grid" role="listbox" aria-label="Getränke">
-        @for (drink of drinks; track drink.id) {
-          <button
-            type="button"
-            class="overlay-card"
-            role="option"
-            [class.is-selected]="drink.id === selectedId"
-            [attr.aria-selected]="drink.id === selectedId"
-            (click)="select.emit(drink.id)"
-          >
-            <span class="overlay-card-name">{{ drink.drinkName }}</span>
-            <span class="overlay-card-price">{{ formatMoney(drink.price, drink.currency) }}</span>
-          </button>
-        }
-      </div>
+      @if (activeCategory === 'drinks') {
+        <div class="overlay-grid" role="listbox" aria-label="Getränke">
+          @for (drink of drinks; track drink.id) {
+            <button
+              type="button"
+              class="overlay-card"
+              role="option"
+              [class.is-selected]="drink.id === selectedId"
+              [attr.aria-selected]="drink.id === selectedId"
+              (click)="onSelectDrink(drink)"
+            >
+              <span class="overlay-card-name">{{ drink.drinkName }}</span>
+              <span class="overlay-card-price">{{ formatMoney(drink.price, drink.currency) }}</span>
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="overlay-grid" role="listbox" aria-label="Speisen">
+          @for (item of foods; track item.id) {
+            <button
+              type="button"
+              class="overlay-card"
+              role="option"
+              [class.is-selected]="item.id === selectedId"
+              [attr.aria-selected]="item.id === selectedId"
+              (click)="onSelectFood(item)"
+            >
+              <span class="overlay-card-name">{{ item.foodName }}</span>
+              <span class="overlay-card-price">{{ formatMoney(item.effectivePrice, item.currency) }}</span>
+            </button>
+          }
+        </div>
+      }
 
       <footer class="overlay-confirm">
         <span class="overlay-selected">
-          @if (selectedDrink(); as drink) {
-            Aktuell ausgewählt: {{ drink.drinkName }}
+          @if (selectedItemName(); as name) {
+            Aktuell ausgewählt: {{ name }}
           } @else {
-            Noch kein Getränk gewählt.
+            Noch kein Artikel gewählt.
           }
         </span>
         <button
@@ -76,6 +109,13 @@ import type { EventDrink } from '../events/event-manage.types';
         flex-wrap: wrap;
         gap: 0.5rem;
         margin-bottom: var(--space-3, 1rem);
+      }
+      .overlay-tab-chip {
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        font: inherit;
       }
       .overlay-grid {
         display: grid;
@@ -126,15 +166,37 @@ import type { EventDrink } from '../events/event-manage.types';
 export class DrinkOverlayComponent {
   @Input() open = false;
   @Input() drinks: EventDrink[] = [];
+  @Input() foods: EventFood[] = [];
   @Input() selectedId: string | null = null;
+  @Input() selectedType: 'drink' | 'food' = 'drink';
 
-  @Output() select = new EventEmitter<string>();
+  @Output() itemSelect = new EventEmitter<string>();
+  @Output() selectItem = new EventEmitter<SelectedItem>();
   @Output() confirm = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
 
+  protected activeCategory: 'drinks' | 'food' = 'drinks';
   protected readonly formatMoney = formatMoney;
 
-  /** Das aktuell markierte Getränk oder `null`. */
+  onSelectDrink(drink: EventDrink): void {
+    this.itemSelect.emit(drink.id);
+    this.selectItem.emit({ id: drink.id, type: 'drink', name: drink.drinkName });
+  }
+
+  onSelectFood(food: EventFood): void {
+    this.itemSelect.emit(food.id);
+    this.selectItem.emit({ id: food.id, type: 'food', name: food.foodName });
+  }
+
+  selectedItemName(): string | null {
+    const drink = this.drinks.find((d) => d.id === this.selectedId);
+    if (drink) return drink.drinkName;
+    const food = this.foods.find((f) => f.id === this.selectedId);
+    if (food) return food.foodName;
+    return null;
+  }
+
+  /** Abwärtskompatibilität: markiertes Getränk oder `null`. */
   selectedDrink(): EventDrink | null {
     return this.drinks.find((drink) => drink.id === this.selectedId) ?? null;
   }

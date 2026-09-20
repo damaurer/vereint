@@ -19,8 +19,9 @@ docs/
 │
 ├── domains/                              # Fachliche & Technische Spezifikationen der Kernmodule
 │   ├── auth-and-user-management.md       # Profile, Rollen, Deaktivierung & Provisionierung
-│   ├── ledger-and-finance.md             # Kassenbuch, Buchungslogik & Idempotenz
+│   ├── ledger-and-finance.md             # Kassenbuch, Buchungslogik, Einkaufspreise & Deckungsbeitrag
 │   ├── drink-catalog-and-sublists.md     # Getränkekatalog & Event-Sublisten
+│   ├── food-catalog-and-event-food.md    # Speisenkatalog & Eventspeisen
 │   ├── moments-and-rituals.md            # Moments & Rituale, Multi-Status-Updates & Welt-Karten
 │   ├── events-and-invites.md             # Event-Lebenszyklus, RSVPs & Gast-Einladungstoken
 │   ├── tablet-strichliste-recorder.md    # Kiosk-Strichliste, 1-Tap-Buchung & Abendabrechnung
@@ -55,6 +56,9 @@ docs/
 | **Guthaben (Balance)** | `MemberBalanceDto.creditBalance` | Aktueller Kontostand eines Mitglieds als `BigDecimal` (in EUR). |
 | **Idempotenzschlüssel** | `Idempotency-Key` (UUIDv4) | Eindeutiger HTTP-Header zur Vermeidung von Doppelbuchungen bei Verbindungsabbrüchen. |
 | **Subliste (Sublist)** | `DrinkSublistEntity`, `DrinkSublistItemEntity` | Eine für ein Event freigeschaltete Untermenge des globalen Getränkekatalogs. |
+| **Speisenkatalog (Food Catalog)** | `FoodCatalogEntity`, `FoodCatalogService` | Globaler Vereinskatalog für Speisen und Verzehrartikel mit Standard- und Einkaufspreisen. |
+| **Eventspeisen (Event Food)** | `EventFoodEntity`, `EventFoodService` | Veranstaltungsbezogenes Speisenangebot mit individueller Preisanpassung und Kiosk-Steuerung. |
+| **Einkaufspreis & Deckungsbeitrag** | `costPrice`, `profit = unitPrice - costPrice` | Erfassung des Wareneinsatzes zur automatischen Ermittlung der Gewinnmarge im Beleg-Snapshot und Kassenbuch. |
 | **Moments & Rituale** | `MomentSessionEntity`, `MomentResponseEntity` | Ereignisgesteuerte Kollaborationsfunktion für spontane Momente gemeinsamer Aktivität (Toasts, Gebete, Jubelrufe, Check-ins) mit Multi-Status-Updates, Welt-Karten und 24h-Linked-Chats. |
 | **Gast-Einladungstoken** | `EventInviteEntity`, `token_hash` | Krypto-Token (SHA-256 gehasht) für passwortlose Registrierung externer Gäste zu Events. |
 | **Abendabrechnung** | `POST /api/v1/tablet/events/{eventId}/evening` | Abschlussbuchung von Bareinnahmen oder pauschalen Event-Umsätzen (`revenueOnly`). |
@@ -73,7 +77,8 @@ docs/
   1. Siehe [Angular SSR & PWA](frontend/angular-ssr-and-pwa.md) bezüglich TransferState und Service Worker.
   2. Siehe [UI-Komponenten & Design System](frontend/ui-components-and-design-system.md) für wiederverwendbare Komponenten.
 - **Für Vorstände & Vereinsverwalter**:
-  1. Siehe [Kassenbuch & Finanzen](domains/ledger-and-finance.md) für das Buchungs- und Guthabensystem.
-  2. Siehe [Benutzerverwaltung](domains/auth-and-user-management.md) und [Events & Einladungen](domains/events-and-invites.md).
+  1. Siehe [Kassenbuch & Finanzen](domains/ledger-and-finance.md) für das Buchungs- und Guthabensystem sowie Deckungsbeitragsanalysen.
+  2. Siehe [Getränkekatalog](domains/drink-catalog-and-sublists.md) und [Speisenkatalog & Eventspeisen](domains/food-catalog-and-event-food.md) für die Sortimentspflege und Einkaufspreise.
+  3. Siehe [Benutzerverwaltung](domains/auth-and-user-management.md) und [Events & Einladungen](domains/events-and-invites.md).
 - **Für Event-Betreiber & Thekenteams**:
-  1. Siehe [Tablet Strichlisten-Recorder](domains/tablet-strichliste-recorder.md) für Kiosk-Abläufe und 1-Tap-Touch-Buchungen.
+  1. Siehe [Tablet Strichlisten-Recorder](domains/tablet-strichliste-recorder.md) für Kiosk-Abläufe, Speisen-/Getränkeauswahl und 1-Tap-Touch-Buchungen.

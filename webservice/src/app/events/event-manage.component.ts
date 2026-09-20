@@ -16,6 +16,7 @@ import type {
   ChatMessage,
   CreatedInvite,
   EventDrink,
+  EventFood,
   EventStatus,
   Invite,
   ParticipantRole,
@@ -29,6 +30,7 @@ interface ManageHeader {
 interface ManageSections {
   participants: EventParticipant[];
   drinks: EventDrink[];
+  food: EventFood[];
   invites: Invite[];
   messages: ChatMessage[];
 }
@@ -102,7 +104,7 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
 
             <!-- Stammdaten und Status -->
             <h2 class="member-subtitle">Stammdaten</h2>
-            <form class="manage-form" (ngSubmit)="saveEvent(head.event)">
+            <form class="manage-form" (ngSubmit)="saveEvent()">
               <label class="manage-field">
                 <span>Titel</span>
                 <input name="title" [(ngModel)]="form.title" maxlength="255" required />
@@ -176,7 +178,12 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                   @for (drink of data.drinks; track drink.id) {
                     <li class="member-list-item manage-row">
                       <span class="member-list-title">{{ drink.drinkName }}</span>
-                      <span class="member-list-meta">{{ formatMoney(drink.price, drink.currency) }}</span>
+                      <span class="member-list-meta">
+                        {{ formatMoney(drink.price, drink.currency) }}
+                        @if (drink.effectiveCostPrice) {
+                          · EK: {{ formatMoney(drink.effectiveCostPrice, drink.currency) }}
+                        }
+                      </span>
                       <button
                         type="button"
                         class="member-button member-button-danger"
@@ -195,8 +202,12 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                   <input name="drinkId" [(ngModel)]="drinkForm.drinkId" required />
                 </label>
                 <label class="manage-field">
-                  <span>Preis</span>
-                  <input name="drinkPrice" [(ngModel)]="drinkForm.price" inputmode="decimal" />
+                  <span>Preis (optional)</span>
+                  <input name="drinkPrice" [(ngModel)]="drinkForm.price" inputmode="decimal" placeholder="Fallback" />
+                </label>
+                <label class="manage-field">
+                  <span>EK (optional)</span>
+                  <input name="drinkCostPrice" [(ngModel)]="drinkForm.costPrice" inputmode="decimal" placeholder="Fallback" />
                 </label>
                 <label class="manage-field">
                   <span>Währung</span>
@@ -210,6 +221,53 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                   <input name="sublistId" [(ngModel)]="sublistId" required />
                 </label>
                 <button type="submit" class="member-button" [disabled]="busy()">Sublist zuweisen</button>
+              </form>
+
+              <!-- Eventspeisen -->
+              <h2 class="member-subtitle">Speisen ({{ data.food.length }})</h2>
+              @if (data.food.length === 0) {
+                <p class="member-muted">Noch keine Speisen zugewiesen.</p>
+              } @else {
+                <ul class="member-list">
+                  @for (item of data.food; track item.id) {
+                    <li class="member-list-item manage-row">
+                      <span class="member-list-title">{{ item.foodName }}</span>
+                      <span class="member-list-meta">
+                        {{ formatMoney(item.effectivePrice, item.currency) }}
+                        @if (item.price === null) { <small>(Standard)</small> }
+                        · EK: {{ formatMoney(item.effectiveCostPrice, item.currency) }}
+                        @if (item.costPrice === null) { <small>(Standard)</small> }
+                      </span>
+                      <button
+                        type="button"
+                        class="member-button member-button-danger"
+                        [disabled]="busy()"
+                        (click)="removeFood(item.id)"
+                      >
+                        Entfernen
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+              <form class="manage-form manage-inline" (ngSubmit)="addFood()">
+                <label class="manage-field">
+                  <span>Speisen-ID</span>
+                  <input name="foodId" [(ngModel)]="foodForm.foodId" required />
+                </label>
+                <label class="manage-field">
+                  <span>Preis (optional)</span>
+                  <input name="foodPrice" [(ngModel)]="foodForm.price" inputmode="decimal" placeholder="Fallback" />
+                </label>
+                <label class="manage-field">
+                  <span>EK (optional)</span>
+                  <input name="foodCostPrice" [(ngModel)]="foodForm.costPrice" inputmode="decimal" placeholder="Fallback" />
+                </label>
+                <label class="manage-field">
+                  <span>Währung</span>
+                  <input name="foodCurrency" [(ngModel)]="foodForm.currency" maxlength="3" />
+                </label>
+                <button type="submit" class="member-button" [disabled]="busy()">Speise hinzufügen</button>
               </form>
 
               <!-- Einladungen -->
@@ -364,7 +422,8 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
   protected readonly form = { title: '', description: '', location: '', status: 'draft' as EventStatus };
   protected participantForm: { userId: string; role: ParticipantRole } = { userId: '', role: 'participant' };
-  protected drinkForm = { drinkId: '', price: '', currency: '' };
+  protected drinkForm = { drinkId: '', price: '', costPrice: '', currency: '' };
+  protected foodForm = { foodId: '', price: '', costPrice: '', currency: '' };
   protected sublistId = '';
   protected inviteForm = { expiresInMinutes: '', maxUses: '' };
   protected chatMessage = '';
@@ -427,6 +486,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
       forkJoin({
         participants: this.service.listParticipants(this.eventId),
         drinks: this.service.listDrinks(this.eventId),
+        food: this.service.listEventFood(this.eventId),
         invites: this.service.listInvites(this.eventId),
         messages: this.service.listMessages(this.eventId),
       }),
@@ -451,7 +511,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
     });
   }
 
-  protected saveEvent(current: EventDetail): void {
+  protected saveEvent(): void {
     this.busy.set(true);
     this.actionError.set(null);
     this.actionInfo.set(null);
@@ -471,7 +531,6 @@ export class EventManageComponent implements OnInit, OnDestroy {
         error: (error: unknown) => {
           this.busy.set(false);
           this.actionError.set(describeApiError(error));
-          void current;
         },
       });
   }
@@ -494,20 +553,44 @@ export class EventManageComponent implements OnInit, OnDestroy {
     const drinkId = this.drinkForm.drinkId.trim();
     if (!drinkId) return;
     const price = this.drinkForm.price.trim();
+    const costPrice = this.drinkForm.costPrice.trim();
     const currency = this.drinkForm.currency.trim();
     this.runAction(
       this.service.addDrink(this.eventId, {
         drinkId,
         price: price || undefined,
+        costPrice: costPrice || undefined,
         currency: currency || undefined,
       }),
       'Getränk hinzugefügt.',
     );
-    this.drinkForm = { drinkId: '', price: '', currency: '' };
+    this.drinkForm = { drinkId: '', price: '', costPrice: '', currency: '' };
   }
 
   protected removeDrink(eventDrinkId: string): void {
     this.runAction(this.service.removeDrink(this.eventId, eventDrinkId), 'Getränk entfernt.');
+  }
+
+  protected addFood(): void {
+    const foodId = this.foodForm.foodId.trim();
+    if (!foodId) return;
+    const price = this.foodForm.price.trim();
+    const costPrice = this.foodForm.costPrice.trim();
+    const currency = this.foodForm.currency.trim();
+    this.runAction(
+      this.service.addFood(this.eventId, {
+        foodId,
+        price: price || undefined,
+        costPrice: costPrice || undefined,
+        currency: currency || undefined,
+      }),
+      'Speise hinzugefügt.',
+    );
+    this.foodForm = { foodId: '', price: '', costPrice: '', currency: '' };
+  }
+
+  protected removeFood(eventFoodId: string): void {
+    this.runAction(this.service.removeFood(this.eventId, eventFoodId), 'Speise entfernt.');
   }
 
   protected assignSublist(): void {

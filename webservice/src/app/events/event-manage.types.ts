@@ -37,6 +37,8 @@ export interface EventDrink {
   drinkId: string;
   drinkName: string;
   price: string;
+  costPrice?: string | null;
+  effectiveCostPrice?: string;
   currency: string;
   selfServiceEnabled: boolean;
   tabletEnabled: boolean;
@@ -50,6 +52,7 @@ export interface EventDrink {
 export interface AddEventDrinkPayload {
   drinkId: string;
   price?: string;
+  costPrice?: string;
   currency?: string;
   selfServiceEnabled?: boolean;
   tabletEnabled?: boolean;
@@ -58,6 +61,43 @@ export interface AddEventDrinkPayload {
 /** Aktualisierung eines Eventgetränks (`PUT /events/{id}/drinks/{drinkId}`). */
 export interface UpdateEventDrinkPayload {
   price?: string;
+  costPrice?: string;
+  currency?: string;
+  selfServiceEnabled?: boolean;
+  tabletEnabled?: boolean;
+}
+
+/** Eventbezogene Speise (`GET /events/{id}/food`). */
+export interface EventFood {
+  id: string;
+  eventId: string;
+  foodId: string;
+  foodName: string;
+  price: string | null;
+  effectivePrice: string;
+  costPrice: string | null;
+  effectiveCostPrice: string;
+  currency: string;
+  selfServiceEnabled: boolean;
+  tabletEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Hinzufügen einer Eventspeise (`POST /events/{id}/food`). */
+export interface AddEventFoodPayload {
+  foodId: string;
+  price?: string | null;
+  costPrice?: string | null;
+  currency?: string;
+  selfServiceEnabled?: boolean;
+  tabletEnabled?: boolean;
+}
+
+/** Aktualisierung einer Eventspeise (`PUT /events/{id}/food/{eventFoodId}`). */
+export interface UpdateEventFoodPayload {
+  price?: string | null;
+  costPrice?: string | null;
   currency?: string;
   selfServiceEnabled?: boolean;
   tabletEnabled?: boolean;
@@ -115,11 +155,14 @@ export interface Conversation {
   memberCount: number;
 }
 
+/** Zulässiger Absendertyp einer Chat-Nachricht. */
+export type ChatSenderType = 'member' | 'guest';
+
 /** Öffentliche Sicht auf eine Chat-Nachricht. */
 export interface ChatMessage {
   id: string;
   conversationId: string;
-  senderType: 'member' | 'guest' | string;
+  senderType: ChatSenderType;
   senderId: string | null;
   senderName: string;
   message: string;

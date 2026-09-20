@@ -1,8 +1,10 @@
 package de.maurer.baseservice.controller
 
 import de.maurer.baseservice.dto.EventDrinkDto
+import de.maurer.baseservice.dto.EventFoodDto
 import de.maurer.baseservice.dto.LedgerEntryDto
 import de.maurer.baseservice.dto.TabletEventDto
+import de.maurer.baseservice.dto.TabletItemsDto
 import de.maurer.baseservice.dto.TabletMemberDto
 import de.maurer.baseservice.dto.TabletPurchaseRequest
 import de.maurer.baseservice.dto.TabletRevenuePurchaseRequest
@@ -55,6 +57,20 @@ class TabletRecorderController(
     fun listDrinks(@PathVariable("eventId") id: String): ResponseEntity<List<EventDrinkDto>> {
         val principal = authContext.getRequiredPrincipal()
         return ResponseEntity.ok(tabletRecorderService.listTabletDrinks(eventId(id), principal))
+    }
+
+    @GetMapping("/events/{eventId}/food")
+    @Operation(summary = "Eventspeisen auflisten", description = "Listet die tabletfähigen Eventspeisen der Auswahl")
+    fun listFood(@PathVariable("eventId") id: String): ResponseEntity<List<EventFoodDto>> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(tabletRecorderService.listTabletFood(eventId(id), principal))
+    }
+
+    @GetMapping("/events/{eventId}/items")
+    @Operation(summary = "Event-Verkaufsartikel auflisten", description = "Listet alle tabletfähigen Getränke und Speisen des Events")
+    fun listItems(@PathVariable("eventId") id: String): ResponseEntity<TabletItemsDto> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(tabletRecorderService.listTabletItems(eventId(id), principal))
     }
 
     @PostMapping("/events/{eventId}/purchases")

@@ -37,7 +37,13 @@ Statusänderungen und Stammdatenaktualisierungen werden über `PUT /api/v1/event
   - `POST /api/v1/events/{id}/participants`: Fügt einen Teilnehmer (`AddParticipantRequest`) mit einer Rolle (z. B. `participant`) hinzu.
   - `DELETE /api/v1/events/{id}/participants/{userId}`: Entfernt einen Teilnehmer aus dem Event.
 
-### 3. Gast-Einladungen via Krypto-Token
+### 3. Event-Verpflegungsangebot (Getränke & Speisen)
+- Neben Teilnehmern verwalten Event-Owner und Vorstände das gastronomische Angebot der Veranstaltung:
+  - **Event-Getränke (`event_drinks`)**: Zuweisung über Sublisten oder Einzelauswahl (`EventDrinkController`) mit eventbezogener Preisanpassung (`price`, `costPrice`) und Freischaltung für Tablet-Strichliste (`tabletEnabled`).
+  - **Event-Speisen (`event_food`)**: Zuweisung aus dem Vereinskatalog (`EventFoodController`) mit individuellen Verkaufspreisen, Wareneinsatz-Kosten (`costPrice`) und Kiosk-Steuerung (`tabletEnabled`).
+- Im Zustand `active` werden diese Artikel über die Kiosk-API (`/api/v1/tablet/events/{eventId}/items`) für das Thekenteam bereitgestellt.
+
+### 4. Gast-Einladungen via Krypto-Token
 - Für externe Gäste können Veranstaltungs-Owner und Vorstände über `POST /api/v1/events/{eventId}/invites` Einladungslinks mit kryptografischen Tokens generieren.
 - **Sicherheitskonzept**:
   - Im Antwort-Payload (`CreateInviteResponse`) wird das einmalig einsehbare Klartext-Token (`token`) und der `acceptPath` übergeben.

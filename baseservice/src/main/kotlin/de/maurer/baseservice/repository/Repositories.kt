@@ -101,6 +101,19 @@ interface EventDrinkRepository : JpaRepository<EventDrinkEntity, UUID> {
     fun findByEventIdAndDrinkId(eventId: UUID, drinkId: UUID): Optional<EventDrinkEntity>
 }
 
+@Repository
+interface FoodCatalogRepository : JpaRepository<FoodCatalogEntity, UUID> {
+    fun findByActiveTrue(): List<FoodCatalogEntity>
+    fun findAllByOrderByNameAsc(): List<FoodCatalogEntity>
+    fun findByActiveTrueOrderByNameAsc(): List<FoodCatalogEntity>
+}
+
+@Repository
+interface EventFoodRepository : JpaRepository<EventFoodEntity, UUID> {
+    fun findByEventId(eventId: UUID): List<EventFoodEntity>
+    fun findByEventIdAndFoodId(eventId: UUID, foodId: UUID): Optional<EventFoodEntity>
+}
+
 /**
  * Append-only Zugriff auf das Ledger: Die Schnittstelle stellt bewusst keine
  * `delete`- oder Bulk-`update`-Operationen bereit. Korrekturen erfolgen als

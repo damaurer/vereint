@@ -1,24 +1,13 @@
 package de.maurer.baseservice
 
-import de.maurer.baseservice.domain.DrinkCatalogEntity
-import de.maurer.baseservice.domain.EventDrinkEntity
-import de.maurer.baseservice.domain.EventEntity
-import de.maurer.baseservice.domain.EventParticipantEntity
-import de.maurer.baseservice.domain.EventStatus
-import de.maurer.baseservice.domain.UserEntity
-import de.maurer.baseservice.domain.PurchaseSource
-import de.maurer.baseservice.dto.LedgerEntryDto
-import de.maurer.baseservice.dto.TabletPurchaseRequest
-import de.maurer.baseservice.dto.TabletRevenuePurchaseRequest
+import de.maurer.baseservice.domain.*
+import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.EventNotActiveException
 import de.maurer.baseservice.error.InvalidRequestException
-import de.maurer.baseservice.repository.EventDrinkRepository
-import de.maurer.baseservice.repository.EventParticipantRepository
-import de.maurer.baseservice.repository.EventRepository
-import de.maurer.baseservice.repository.UserRepository
-import de.maurer.baseservice.repository.UserRoleRepository
+import de.maurer.baseservice.error.ResourceNotFoundException
+import de.maurer.baseservice.repository.*
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.service.LedgerService
 import de.maurer.baseservice.service.TabletRecorderService
@@ -47,6 +36,9 @@ class TabletRecorderServiceTest {
 
     @Mock
     private lateinit var eventDrinkRepository: EventDrinkRepository
+
+    @Mock
+    private lateinit var eventFoodRepository: EventFoodRepository
 
     @Mock
     private lateinit var eventParticipantRepository: EventParticipantRepository
@@ -121,13 +113,13 @@ class TabletRecorderServiceTest {
         service = TabletRecorderService(
             eventRepository,
             eventDrinkRepository,
+            eventFoodRepository,
             eventParticipantRepository,
             userRepository,
             userRoleRepository,
             userService,
             ledgerService
         )
-        `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: recorderId)).thenReturn(emptyList())
     }
 
     @Test
@@ -442,5 +434,68 @@ class TabletRecorderServiceTest {
         assertEquals(1, drinks.size)
         assertEquals(eventDrinkId.toString(), drinks[0].id)
         assertTrue(drinks[0].tabletEnabled)
+    }
+
+    @Test
+    fun `records a manual food purchase for an event participant`() {
+        `when`(userService.getOrCreateUser(recorderPrincipal())).thenReturn(recorder())
+        `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(activeEvent()))
+        `when`(userRepository.findById(memberId)).thenReturn(Optional.of(member()))
+        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, memberId)).thenReturn(
+            Optional.of(EventParticipantEntity(event = activeEvent(), user = member()))
+        )
+
+        val foodId = UUID.randomUUID()
+        val eventFoodId = UUID.randomUUID()
+        val food = FoodCatalogEntity(id = foodId, name = "Brezel", defaultPrice = BigDecimal("2.00"))
+        val eventFood = EventFoodEntity(id = eventFoodId, event = activeEvent(), food = food, tabletEnabled = true)
+
+        `when`(eventFoodRepository.findById(eventFoodId)).thenReturn(Optional.of(eventFood))
+        `when`(
+            ledgerService.recordTabletFoodPurchase(
+                any(EventEntity::class.java) ?: activeEvent(),
+                any(UserEntity::class.java) ?: member(),
+                any(FoodCatalogEntity::class.java) ?: food,
+                any(EventFoodEntity::class.java) ?: eventFood,
+                any(UserEntity::class.java) ?: recorder(),
+                anyString()
+            )
+        ).thenReturn(sampleEntry())
+
+        val dto = service.recordPurchase(
+            eventId,
+            TabletPurchaseRequest(memberId = memberId.toString(), eventFoodId = eventFoodId.toString()),
+            "idem-food",
+            recorderPrincipal()
+        )
+
+        assertEquals("purchase", dto.entryType)
+        verify(ledgerService).recordTabletFoodPurchase(
+            any(EventEntity::class.java) ?: activeEvent(),
+            any(UserEntity::class.java) ?: member(),
+            any(FoodCatalogEntity::class.java) ?: food,
+            any(EventFoodEntity::class.java) ?: eventFood,
+            any(UserEntity::class.java) ?: recorder(),
+            org.mockito.ArgumentMatchers.eq("idem-food")
+        )
+    }
+
+    @Test
+    fun `lists tablet items including drinks and foods`() {
+        `when`(userService.getOrCreateUser(recorderPrincipal())).thenReturn(recorder())
+        `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(activeEvent()))
+        `when`(eventDrinkRepository.findByEventId(eventId)).thenReturn(listOf(eventDrink()))
+
+        val foodId = UUID.randomUUID()
+        val eventFoodId = UUID.randomUUID()
+        val food = FoodCatalogEntity(id = foodId, name = "Kuchen", defaultPrice = BigDecimal("2.50"))
+        val eventFood = EventFoodEntity(id = eventFoodId, event = activeEvent(), food = food, tabletEnabled = true)
+        `when`(eventFoodRepository.findByEventId(eventId)).thenReturn(listOf(eventFood))
+
+        val items = service.listTabletItems(eventId, recorderPrincipal())
+
+        assertEquals(1, items.drinks.size)
+        assertEquals(1, items.food.size)
+        assertEquals("Kuchen", items.food[0].foodName)
     }
 }

@@ -89,14 +89,21 @@ export interface MemberBalance {
   entryCount: number;
 }
 
+/** Zulässige Belegpositionstypen. */
+export type PurchaseItemType = 'DRINK' | 'FOOD';
+
 /** Unveränderlicher Beleg-Snapshot eines Kaufs. */
 export interface PurchaseSnapshot {
-  drinkName: string;
+  itemType?: PurchaseItemType;
+  drinkName: string | null;
+  foodName?: string | null;
   imageReference: string | null;
   barcode: string | null;
   unitPrice: string;
+  costPrice?: string;
+  profit?: string;
   currency: string;
-  catalogVersion: number;
+  catalogVersion: number | null;
 }
 
 /**
@@ -110,6 +117,7 @@ export interface LedgerEntry {
   memberId: string;
   memberDisplayName: string;
   drinkId: string | null;
+  foodId?: string | null;
   amount: string;
   currency: string;
   accountingMode: string;
@@ -133,6 +141,8 @@ export interface EventLedgerSummary {
   eventId: string;
   currency: string;
   revenueTotal: string;
+  costTotal?: string;
+  profitTotal?: string;
   creditConsumptionTotal: string;
   entryCount: number;
 }
@@ -207,7 +217,8 @@ export interface TabletMember {
 /** Manueller Strichlisten-Kauf (`POST /api/v1/tablet/events/{id}/purchases`). */
 export interface TabletPurchasePayload {
   memberId: string;
-  eventDrinkId: string;
+  eventDrinkId?: string | null;
+  eventFoodId?: string | null;
 }
 
 /**
@@ -215,8 +226,94 @@ export interface TabletPurchasePayload {
  * (`POST /api/v1/tablet/events/{id}/rounds` bzw. `/evening`).
  */
 export interface TabletRevenuePayload {
-  eventDrinkId: string;
+  eventDrinkId?: string | null;
+  eventFoodId?: string | null;
   memberIds: string[];
+}
+
+/** Globaler Speisenkatalog (`GET /api/v1/food`). */
+export interface FoodSummary {
+  id: string;
+  name: string;
+  category: string | null;
+  defaultPrice: string;
+  costPrice: string;
+  currency: string;
+  active: boolean;
+}
+
+/** Speisedetails (`GET /api/v1/food/{id}`). */
+export interface FoodDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  defaultPrice: string;
+  costPrice: string;
+  currency: string;
+  active: boolean;
+  createdById: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateFoodPayload {
+  name: string;
+  description?: string;
+  category?: string;
+  defaultPrice: string | number;
+  costPrice?: string | number;
+  currency?: string;
+}
+
+export interface UpdateFoodPayload {
+  name?: string;
+  description?: string;
+  category?: string;
+  defaultPrice?: string | number;
+  costPrice?: string | number;
+  currency?: string;
+  active?: boolean;
+}
+
+/** Eventspeise (`GET /api/v1/events/{id}/food`). */
+export interface EventFood {
+  id: string;
+  eventId: string;
+  foodId: string;
+  foodName: string;
+  price: string | null;
+  effectivePrice: string;
+  costPrice: string | null;
+  effectiveCostPrice: string;
+  currency: string;
+  selfServiceEnabled: boolean;
+  tabletEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AddEventFoodPayload {
+  foodId: string;
+  price?: string | number | null;
+  costPrice?: string | number | null;
+  currency?: string;
+  selfServiceEnabled?: boolean;
+  tabletEnabled?: boolean;
+}
+
+export interface UpdateEventFoodPayload {
+  price?: string | number | null;
+  costPrice?: string | number | null;
+  currency?: string;
+  selfServiceEnabled?: boolean;
+  tabletEnabled?: boolean;
+}
+
+/** Kombiniertes Angebot an Getränken und Speisen für das Tablet. */
+export interface TabletItems {
+  drinks: any[];
+  food: EventFood[];
 }
 
 /** Administrative Benutzeraktualisierung (`PUT /api/v1/users/{id}`). */

@@ -10,12 +10,13 @@ import { StrichlisteRowComponent } from './strichliste-row.component';
 import { DrinkOverlayComponent } from './drink-overlay.component';
 import { RevenueSheetComponent, type RevenueKind } from './revenue-sheet.component';
 import { StatusBadgeComponent } from '../ui';
-import type { EventDrink } from '../events/event-manage.types';
-import type { LedgerEntry, TabletEvent, TabletMember } from '../api/api.types';
+import type { EventDrink, EventFood } from '../events/event-manage.types';
+import type { LedgerEntry, TabletEvent, TabletMember, TabletRevenuePayload } from '../api/api.types';
 
 interface EventContext {
   members: TabletMember[];
   drinks: EventDrink[];
+  food: EventFood[];
 }
 
 /**
@@ -132,10 +133,12 @@ interface EventContext {
               <div class="tally-head">
                 <h2 class="member-subtitle">Strichliste</h2>
                 <button type="button" class="member-button ghost" (click)="openDrinkOverlay()">
-                  @if (activeDrink(ctx); as drink) {
+                  @if (activeItem(ctx); as item) {
+                    Artikel: {{ item.name }} · {{ formatMoney(item.price, item.currency) }}
+                  } @else if (activeDrink(ctx); as drink) {
                     Getränk: {{ drink.drinkName }} · {{ formatMoney(drink.price, drink.currency) }}
                   } @else {
-                    Getränk wählen
+                    Artikel wählen
                   }
                 </button>
               </div>
@@ -152,16 +155,18 @@ interface EventContext {
               </div>
 
               <div class="quickbook-bar">
-                <span class="quickbook-label">Aktives Getränk für Schnellbuchung:</span>
+                <span class="quickbook-label">Aktiver Artikel für Schnellbuchung:</span>
                 <button
                   type="button"
                   class="member-button quickbook-drink"
                   (click)="openDrinkOverlay()"
                 >
-                  @if (activeDrink(ctx); as drink) {
+                  @if (activeItem(ctx); as item) {
+                    {{ item.name }} · {{ formatMoney(item.price, item.currency) }}
+                  } @else if (activeDrink(ctx); as drink) {
                     {{ drink.drinkName }} · {{ formatMoney(drink.price, drink.currency) }}
                   } @else {
-                    Getränk wählen
+                    Artikel wählen
                   }
                 </button>
               </div>
@@ -188,8 +193,9 @@ interface EventContext {
               <app-drink-overlay
                 [open]="drinkOverlayOpen()"
                 [drinks]="ctx.drinks"
+                [foods]="ctx.food"
                 [selectedId]="activeDrinkId()"
-                (select)="selectActiveDrink($event)"
+                (itemSelect)="selectActiveDrink($event)"
                 (confirm)="confirmDrink()"
                 (closed)="closeDrinkOverlay()"
               />
@@ -340,9 +346,14 @@ export class TabletComponent implements OnInit, OnDestroy {
   protected readonly revenueSheetOpen = signal(false);
   protected readonly tallies = signal<Record<string, number>>({});
 
-  protected purchaseForm = { memberId: '', eventDrinkId: '' };
-  protected revenueForm: { eventDrinkId: string; kind: RevenueKind } = {
+  protected purchaseForm: { memberId: string; eventDrinkId?: string; eventFoodId?: string } = {
+    memberId: '',
     eventDrinkId: '',
+    eventFoodId: '',
+  };
+  protected revenueForm: { eventDrinkId?: string; eventFoodId?: string; kind: RevenueKind } = {
+    eventDrinkId: '',
+    eventFoodId: '',
     kind: 'round',
   };
   protected revenueSelection: Record<string, boolean> = {};
@@ -365,8 +376,8 @@ export class TabletComponent implements OnInit, OnDestroy {
 
   protected selectEvent(eventId: string): void {
     this.selectedEventId.set(eventId);
-    this.purchaseForm = { memberId: '', eventDrinkId: '' };
-    this.revenueForm = { eventDrinkId: '', kind: 'round' };
+    this.purchaseForm = { memberId: '', eventDrinkId: '', eventFoodId: '' };
+    this.revenueForm = { eventDrinkId: '', eventFoodId: '', kind: 'round' };
     this.revenueSelection = {};
     this.activeDrinkId.set(null);
     this.drinkOverlayOpen.set(false);
@@ -378,6 +389,7 @@ export class TabletComponent implements OnInit, OnDestroy {
       forkJoin({
         members: this.api.listMembers(eventId),
         drinks: this.api.listDrinks(eventId),
+        food: this.api.listFood(eventId),
       }),
     );
   }
@@ -392,12 +404,23 @@ export class TabletComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Schnellbuchung: bucht das aktive Getränk mit genau einem Aufruf für ein
+   * Schnellbuchung: bucht das aktive Getränk oder die Speise mit genau einem Aufruf für ein
    * Mitglied. Nutzt die bestehende Strichlisten-/Buchungslogik aus TICKET-034
    * wieder (inkl. Idempotency-Key) und dupliziert sie nicht.
    */
   protected quickBook(memberId: string): void {
     this.onTallyIncrease(memberId);
+  }
+
+  /** Aktuell für die Strichliste gewählter Artikel (Getränk oder Speise) aus dem Kontext. */
+  protected activeItem(ctx: EventContext): { name: string; price: string; currency: string } | null {
+    const id = this.activeDrinkId();
+    if (!id) return null;
+    const drink = ctx.drinks.find((d) => d.id === id);
+    if (drink) return { name: drink.drinkName, price: drink.price, currency: drink.currency };
+    const food = ctx.food.find((f) => f.id === id);
+    if (food) return { name: food.foodName, price: food.effectivePrice, currency: food.currency };
+    return null;
   }
 
   /** Aktuell für die Strichliste gewähltes Getränk aus dem Kontext. */
@@ -431,20 +454,24 @@ export class TabletComponent implements OnInit, OnDestroy {
 
   /**
    * Erhöht die Striche eines Mitglieds um eins und löst genau einen
-   * Buchungsaufruf mit dem aktiven Getränk aus. Fehlt noch ein Getränk, öffnet
+   * Buchungsaufruf mit dem aktiven Artikel aus. Fehlt noch ein Artikel, öffnet
    * sich das Auswahl-Overlay statt einer Buchung.
    */
   protected onTallyIncrease(memberId: string): void {
-    const eventDrinkId = this.activeDrinkId();
-    if (!eventDrinkId) {
+    const itemId = this.activeDrinkId();
+    if (!itemId) {
       this.drinkOverlayOpen.set(true);
       return;
     }
+    const ctx = this.context.data();
+    const isFood = ctx?.food.some((f) => f.id === itemId) ?? false;
     this.tallies.update((current) => ({
       ...current,
       [memberId]: (current[memberId] ?? 0) + 1,
     }));
-    this.purchaseForm = { memberId, eventDrinkId };
+    this.purchaseForm = isFood
+      ? { memberId, eventDrinkId: '', eventFoodId: itemId }
+      : { memberId, eventDrinkId: itemId, eventFoodId: '' };
     this.recordPurchase();
   }
 
@@ -458,7 +485,14 @@ export class TabletComponent implements OnInit, OnDestroy {
 
   /** Öffnet das Runden-/Abend-Sheet und wählt zunächst alle Mitglieder vor. */
   protected openRevenueSheet(kind: RevenueKind, members: TabletMember[]): void {
-    this.revenueForm = { eventDrinkId: '', kind };
+    const itemId = this.activeDrinkId() ?? '';
+    const ctx = this.context.data();
+    const isFood = ctx?.food.some((f) => f.id === itemId) ?? false;
+    this.revenueForm = {
+      eventDrinkId: isFood ? '' : itemId,
+      eventFoodId: isFood ? itemId : '',
+      kind,
+    };
     this.revenueSelection = members.reduce<Record<string, boolean>>((acc, member) => {
       acc[member.memberId] = true;
       return acc;
@@ -485,10 +519,17 @@ export class TabletComponent implements OnInit, OnDestroy {
     return Object.values(this.revenueSelection).some(Boolean);
   }
 
-  /** Bestätigt das Sheet: setzt das aktive Getränk und bucht die Aktion. */
+  /** Bestätigt das Sheet: setzt das aktive Getränk/Speise und bucht die Aktion. */
   protected confirmRevenue(): void {
-    this.revenueForm = { ...this.revenueForm, eventDrinkId: this.activeDrinkId() ?? '' };
-    if (!this.revenueForm.eventDrinkId) {
+    const itemId = this.activeDrinkId() ?? '';
+    const ctx = this.context.data();
+    const isFood = ctx?.food.some((f) => f.id === itemId) ?? false;
+    this.revenueForm = {
+      ...this.revenueForm,
+      eventDrinkId: isFood ? '' : itemId,
+      eventFoodId: isFood ? itemId : '',
+    };
+    if (!this.revenueForm.eventDrinkId && !this.revenueForm.eventFoodId) {
       this.drinkOverlayOpen.set(true);
       return;
     }
@@ -514,21 +555,33 @@ export class TabletComponent implements OnInit, OnDestroy {
 
   protected recordPurchase(): void {
     const eventId = this.selectedEventId();
-    const { memberId, eventDrinkId } = this.purchaseForm;
-    if (!eventId || !memberId || !eventDrinkId) return;
+    const { memberId, eventDrinkId, eventFoodId } = this.purchaseForm;
+    if (!eventId || !memberId || (!eventDrinkId && !eventFoodId)) return;
     this.runAction(
-      this.api.recordPurchase(eventId, { memberId, eventDrinkId }, newIdempotencyKey()),
+      this.api.recordPurchase(
+        eventId,
+        {
+          memberId,
+          eventDrinkId: eventDrinkId || undefined,
+          eventFoodId: eventFoodId || undefined,
+        },
+        newIdempotencyKey()
+      ),
       'Kauf erfasst.',
     );
-    this.purchaseForm = { memberId: '', eventDrinkId: '' };
+    this.purchaseForm = { memberId: '', eventDrinkId: '', eventFoodId: '' };
   }
 
   protected recordRevenue(): void {
     const eventId = this.selectedEventId();
-    const eventDrinkId = this.revenueForm.eventDrinkId;
+    const { eventDrinkId, eventFoodId } = this.revenueForm;
     const memberIds = Object.keys(this.revenueSelection).filter((id) => this.revenueSelection[id]);
-    if (!eventId || !eventDrinkId || memberIds.length === 0) return;
-    const payload = { eventDrinkId, memberIds };
+    if (!eventId || (!eventDrinkId && !eventFoodId) || memberIds.length === 0) return;
+    const payload: TabletRevenuePayload = {
+      eventDrinkId: eventDrinkId || undefined,
+      eventFoodId: eventFoodId || undefined,
+      memberIds,
+    };
     const key = newIdempotencyKey();
     const source: Observable<LedgerEntry[]> =
       this.revenueForm.kind === 'evening'
@@ -538,7 +591,7 @@ export class TabletComponent implements OnInit, OnDestroy {
       source,
       this.revenueForm.kind === 'evening' ? 'Abendaktion gebucht.' : 'Runde gebucht.',
     );
-    this.revenueForm = { eventDrinkId: '', kind: this.revenueForm.kind };
+    this.revenueForm = { eventDrinkId: '', eventFoodId: '', kind: this.revenueForm.kind };
     this.revenueSelection = {};
   }
 }

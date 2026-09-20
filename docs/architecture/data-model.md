@@ -16,11 +16,13 @@ erDiagram
     users ||--o{ push_subscriptions : "owns"
     users ||--o{ image_assets : "owns"
     users ||--o{ moment_responses : "submits"
+    users ||--o{ food_catalog : "creates"
 
     events ||--o{ event_participants : "has"
     events ||--o{ event_invites : "creates"
     events ||--o{ event_guests : "hosts"
     events ||--o{ event_drinks : "offers"
+    events ||--o{ event_food : "offers"
     events ||--o{ ledger_entries : "generates"
     events ||--o{ moment_sessions : "hosts"
 
@@ -29,9 +31,13 @@ erDiagram
     drink_catalog ||--o{ event_drinks : "offered_as"
     drink_catalog ||--o{ ledger_entries : "purchased_as"
 
+    food_catalog ||--o{ event_food : "offered_as"
+    food_catalog ||--o{ ledger_entries : "purchased_as"
+
     drink_sublists ||--o{ drink_sublist_items : "contains"
 
     ledger_entries ||--o| ledger_entries : "reverses"
+    ledger_entries ||--o| purchase_snapshots : "snapshots"
 
     conversations ||--o{ conversation_members : "includes"
     conversations ||--o{ chat_messages : "contains"
@@ -61,7 +67,8 @@ erDiagram
   - `id` (`UUID`, PK)
   - `member_id` (`UUID`, FK `users.id`, non-null)
   - `event_id` (`UUID`, FK `events.id`, nullable für Topups/Payouts/Korrekturen)
-  - `drink_id` (`UUID`, FK `drink_catalog.id`, nullable für Topups/Payouts/Korrekturen)
+  - `drink_id` (`UUID`, FK `drink_catalog.id`, nullable für Speisenkäufe/Topups/Payouts/Korrekturen)
+  - `food_id` (`UUID`, FK `food_catalog.id`, nullable für Getränkekäufe/Topups/Payouts/Korrekturen)
   - `amount` (`DECIMAL(10,2)`, negativ bei Belastung/Kauf, positiv bei Einzahlung/Topup)
   - `currency` (`VARCHAR(3)`, default `'EUR'`)
   - `entry_type` (`VARCHAR(32)`, Check: `purchase`, `topup`, `payout`, `correction`)
@@ -71,15 +78,29 @@ erDiagram
   - `idempotency_key` (`VARCHAR(128)`, Unique)
   - `reverses_entry_id` (`UUID`, FK `ledger_entries.id`, RESTRICT delete) – Für Stornierungen
   - `created_at` (`TIMESTAMPTZ`)
+- **`purchase_snapshots`**:
+  - `id` (`UUID`, PK)
+  - `ledger_entry_id` (`UUID`, FK `ledger_entries.id`, Unique, RESTRICT delete) – 1:1 Zuordnung zur Buchung
+  - `item_type` (`VARCHAR(32)`, default `'DRINK'`, Check: `DRINK`, `FOOD`) – Artikeltyp
+  - `drink_name` (`VARCHAR(255)`, nullable bei Speisen) – Historischer Name des Getränks
+  - `food_name` (`VARCHAR(255)`, nullable bei Getränken) – Historischer Name der Speise
+  - `image_reference` (`VARCHAR(512)`, nullable)
+  - `barcode` (`VARCHAR(128)`, nullable)
+  - `unit_price` (`DECIMAL(10,2)`) – Verkaufspreis zum Kaufzeitpunkt
+  - `cost_price` (`DECIMAL(10,2)`, default `0.00`) – Einkaufspreis zum Kaufzeitpunkt
+  - `profit` (`DECIMAL(10,2)`, default `0.00`) – Deckungsbeitrag (`unit_price - cost_price`)
+  - `currency` (`VARCHAR(3)`, default `'EUR'`)
+  - `catalog_version` (`INTEGER`, nullable) – Version des Stammartikels
+  - `created_at` (`TIMESTAMPTZ`)
 - **`idempotency_records`**:
   - `id` (`UUID`, PK), `scope` (`VARCHAR(64)`), `idempotency_key` (`VARCHAR(128)`)
   - `response_code` (`INTEGER`), `response_body` (`TEXT`), `created_at` (`TIMESTAMPTZ`)
   - Unique Constraint auf `(scope, idempotency_key)` verhindert doppelte Ausführung.
 
-### 3. Getränkekatalog & Sublisten
+### 3. Getränke- & Speisenkatalog, Sublisten und Event-Angebot
 - **`drink_catalog`**:
   - `id` (`UUID`, PK), `name` (`VARCHAR(255)`), `description` (`TEXT`), `category` (`VARCHAR(64)`)
-  - `default_price` (`DECIMAL(10,2)`), `currency` (`VARCHAR(3)`, default `'EUR'`), `volume_ml` (`INTEGER`)
+  - `default_price` (`DECIMAL(10,2)`), `cost_price` (`DECIMAL(10,2)`, default `0.00`), `currency` (`VARCHAR(3)`, default `'EUR'`), `volume_ml` (`INTEGER`)
   - `status` (`VARCHAR(32)`, Check: `proposed`, `approved`, `rejected`)
   - `catalog_version` (`INTEGER`, default `1`), `active` (`BOOLEAN`, default `true`)
   - `image_reference` (`VARCHAR(512)`), `image_asset_id` (FK `image_assets.id`)
@@ -88,7 +109,21 @@ erDiagram
 - **`drink_barcodes`**: `id` (`UUID`, PK), `drink_id` (FK `drink_catalog.id`), `barcode` (`VARCHAR(128)`, Unique), `active` (`BOOLEAN`)
 - **`drink_sublists`**: `id` (`UUID`, PK), `name` (`VARCHAR(255)`), `description` (`TEXT`), `created_by` (FK `users.id`)
 - **`drink_sublist_items`**: `id` (`UUID`, PK), `sublist_id` (FK `drink_sublists.id`), `drink_id` (FK `drink_catalog.id`), `default_price` (`DECIMAL(10,2)`)
-- **`event_drinks`**: `id` (`UUID`, PK), `event_id` (FK `events.id`), `drink_id` (FK `drink_catalog.id`), `price` (`DECIMAL(10,2)`), `currency` (`VARCHAR(3)`), `self_service_enabled` (`BOOLEAN`), `tablet_enabled` (`BOOLEAN`), `catalog_version` (`INTEGER`), `image_snapshot` (`VARCHAR(512)`)
+- **`event_drinks`**: `id` (`UUID`, PK), `event_id` (FK `events.id`), `drink_id` (FK `drink_catalog.id`), `price` (`DECIMAL(10,2)`), `cost_price` (`DECIMAL(10,2)`, nullable), `currency` (`VARCHAR(3)`), `self_service_enabled` (`BOOLEAN`), `tablet_enabled` (`BOOLEAN`), `catalog_version` (`INTEGER`), `image_snapshot` (`VARCHAR(512)`)
+- **`food_catalog`**:
+  - `id` (`UUID`, PK), `name` (`VARCHAR(255)`), `description` (`TEXT`), `category` (`VARCHAR(64)`)
+  - `default_price` (`DECIMAL(10,2)`), `cost_price` (`DECIMAL(10,2)`, default `0.00`), `currency` (`VARCHAR(3)`, default `'EUR'`)
+  - `active` (`BOOLEAN`, default `true`), `created_by` (FK `users.id`)
+  - `created_at` (`TIMESTAMPTZ`), `updated_at` (`TIMESTAMPTZ`), `version` (`BIGINT`)
+  - Index `idx_food_catalog_active` auf `active`
+- **`event_food`**:
+  - `id` (`UUID`, PK), `event_id` (FK `events.id`, onDelete CASCADE), `food_id` (FK `food_catalog.id`)
+  - `price` (`DECIMAL(10,2)`, nullable falls Standardpreis greift), `cost_price` (`DECIMAL(10,2)`, nullable)
+  - `currency` (`VARCHAR(3)`, default `'EUR'`)
+  - `self_service_enabled` (`BOOLEAN`, default `true`), `tablet_enabled` (`BOOLEAN`, default `true`)
+  - `created_at` (`TIMESTAMPTZ`), `updated_at` (`TIMESTAMPTZ`), `version` (`BIGINT`)
+  - Unique Constraint `uk_event_food_event_food` auf `(event_id, food_id)`
+  - Indizes `idx_event_food_event` auf `event_id`, `idx_event_food_food` auf `food_id`
 
 ### 4. Events & Einladungen
 - **`events`**:
@@ -143,3 +178,4 @@ FOR EACH ROW EXECUTE FUNCTION vereint_reject_ledger_mutation();
 | `004` | `004-image-assets.xml` | S3 Metadatentabelle `image_assets` mit Zweckzuordnung (`profile`, `event`, `drink`, `moment`). |
 | `005` | `005-ledger-transactions.xml` | Erweiterte Buchungstypen (`topup`, `payout`, `correction`), Storno-Referenz (`reverses_entry_id`) und gelockerte Null-Constraints. |
 | `006` | `006-moments-and-rituals.xml` | Moment-Sessions und Responses für Gemeinschaftsmomente mit Multi-Status-Unterstützung, GeoJSON-Koordinaten und 24h-Linked-Chats. |
+| `007` | `007-food-and-cost-prices.xml` | Einkaufspreise für Getränke/Speisen, `food_catalog`, `event_food` und Beleg-Snapshots mit `item_type`, `food_name`, `cost_price` und `profit`. |
