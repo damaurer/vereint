@@ -42,6 +42,6 @@ ENV PORT=8081 \
 EXPOSE 8081
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=12 --start-period=40s \
-  CMD curl -f http://127.0.0.1:8081/api/v1/health || exit 1
+  CMD curl -f http://127.0.0.1:8081/actuator/health || exit 1
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -58,4 +58,4 @@ USER 10001:10001
 
 EXPOSE 8080
 
-CMD ["node", "dist/vereint/server/server.mjs"]
+CMD ["node", "dist/webservice/server/server.mjs"]
