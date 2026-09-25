@@ -8,7 +8,7 @@ Dieses Dokumentationszentrum bietet eine lückenlose, hochdetaillierte fachliche
 
 ## 🗺️ Dokumentationsübersicht & Verzeichnisstruktur
 
-Die Dokumentation ist modular in sechs Kernbereiche unterteilt:
+Die Dokumentation ist modular in acht Kernbereiche unterteilt:
 
 ```text
 docs/
@@ -16,6 +16,25 @@ docs/
 │   ├── system-overview.md                # Multi-Tier Systemarchitektur & Tech-Stack
 │   ├── security-and-auth.md              # OIDC, PKCE, Cookie-Session, Rollen & Berechtigungen
 │   └── data-model.md                     # Entity-Relationship-Modell & PostgreSQL Schema
+│
+├── baseservice/                          # Spring Boot 4.1 Fachservice Technische Dokumentation
+│   ├── README.md                         # Übersicht, Lernpfad, Gesamtarchitektur & Glossar
+│   ├── 01-overview-and-setup.md          # Tech-Stack, Ordnerstruktur, Start & Umgebungsvariablen
+│   ├── 02-architecture-and-layers.md     # Schichten, Request-Lifecycle, Konventionen & Paketkarte
+│   ├── 03-security-and-authorization.md  # SecurityFilterChain, JWT, Matrix V2, AuthContext & CORS
+│   ├── 04-persistence-and-migrations.md  # Entities, Repositories, Optimistic Locking & Liquibase
+│   ├── 05-error-handling-and-observability.md # ApiException, ErrorCode, RFC 7807, Actuator & OpenAPI
+│   ├── 06-integrations.md                # Objektspeicher (S3/In-Memory), Web-Push (VAPID) & Chat
+│   └── 07-extending-the-service.md       # How-Tos, Testing (MockMvc/Testcontainers), Troubleshooting & PR-Checkliste
+│
+├── backend-for-frontend/                 # Express 5 BFF Technische Dokumentation
+│   ├── README.md                         # Übersicht, Lernpfad & Gesamtarchitektur
+│   ├── 01-overview-and-setup.md          # Tech-Stack, Ordnerstruktur, Skripte & Env-Variablen
+│   ├── 02-request-pipeline.md            # server.ts Pipeline, Helmet, Caching & TransferState
+│   ├── 03-authentication-and-session.md  # OIDC, PKCE, Session-Verschlüsselung & Token-Refresh
+│   ├── 04-authorization.md               # AppContexts, Entscheidungsbaum & Resilienz
+│   ├── 05-api-proxy-and-invites.md       # API-Proxy (/api/v1), Header-Regeln & Invites
+│   └── 06-extending-the-server.md        # How-Tos, Testing mit Vitest & Debugging
 │
 ├── domains/                              # Fachliche & Technische Spezifikationen der Kernmodule
 │   ├── auth-and-user-management.md       # Profile, Rollen, Deaktivierung & Provisionierung
@@ -63,7 +82,7 @@ docs/
 | **Gast-Einladungstoken** | `EventInviteEntity`, `token_hash` | Krypto-Token (SHA-256 gehasht) für passwortlose Registrierung externer Gäste zu Events. |
 | **Abendabrechnung** | `POST /api/v1/tablet/events/{eventId}/evening` | Abschlussbuchung von Bareinnahmen oder pauschalen Event-Umsätzen (`revenueOnly`). |
 | **Optimus Design System** | `styles.css`, CSS Custom Properties | Zentrales Design-Token-System für konsistente Abstände, Farben, Elevation und Typografie. |
-| **BFF (Backend-for-Frontend)** | `webservice/src/server/server.ts` | Node.js / Express Server für SSR-Rendering, Cookie-Session-Verwaltung und API-Proxy. |
+| **BFF (Backend-for-Frontend)** | `webservice/src/server.ts` | Node.js / Express Server für SSR-Rendering, Cookie-Session-Verwaltung und API-Proxy. |
 
 ---
 
@@ -73,6 +92,15 @@ docs/
   1. Starte mit dem [System-Überblick](architecture/system-overview.md) für Architektur und Datenflüsse.
   2. Richte die Umgebung über das [Docker Setup](operations/local-setup-docker.md) ein.
   3. Lies die Spezifikationen in [REST API Reference](api/rest-api-reference.md) und [Error Handling](api/error-handling-and-idempotency.md).
+- **Für Spring-Boot-Backend-Entwickler**:
+  1. Starte im [baseservice Dokumentations-Hub](baseservice/README.md) und [Übersicht & Setup](baseservice/01-overview-and-setup.md).
+  2. Vertiefe die [Architektur & Schichten](baseservice/02-architecture-and-layers.md), [Sicherheit & Autorisierung](baseservice/03-security-and-authorization.md) und [Persistenz & Migrationen](baseservice/04-persistence-and-migrations.md).
+  3. Siehe [Fehlerbehandlung & Observability](baseservice/05-error-handling-and-observability.md) und [Integrationen](baseservice/06-integrations.md).
+  4. Nutze [Service erweitern & Rezepte](baseservice/07-extending-the-service.md) für How-Tos, Testing-Konventionen und die PR-Checkliste.
+- **Für Backend-for-Frontend & Express-Entwickler**:
+  1. Starte im [BFF Dokumentations-Hub](backend-for-frontend/README.md) und [Übersicht & Setup](backend-for-frontend/01-overview-and-setup.md).
+  2. Vertiefe die [Request-Pipeline](backend-for-frontend/02-request-pipeline.md), [Authentifizierung & Session](backend-for-frontend/03-authentication-and-session.md) und [Autorisierung](backend-for-frontend/04-authorization.md).
+  3. Siehe [Server erweitern & How-Tos](backend-for-frontend/06-extending-the-server.md) für Rezepte und Vitest-Testing.
 - **Für Frontend- & UI-Entwickler**:
   1. Siehe [Angular SSR & PWA](frontend/angular-ssr-and-pwa.md) bezüglich TransferState und Service Worker.
   2. Siehe [UI-Komponenten & Design System](frontend/ui-components-and-design-system.md) für wiederverwendbare Komponenten.

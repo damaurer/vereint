@@ -1,0 +1,200 @@
+# 🏛️ Architektur, Schichten & Request-Lebenszyklus
+
+In diesem Kapitel wird die interne Architektur des `baseservice`, das Schichtenmodell, der detaillierte Lebenszyklus eines HTTP-Requests sowie die Design-Konventionen anhand des Referenzbeispiels Speisenkatalog vorgestellt. Eine vollständige Paket- und Klassenkarte bietet zudem eine schnelle Orientierung im Quellcode.
+
+---
+
+## 🧱 Schichtenmodell
+
+Der `baseservice` folgt einer sauberen, zustandslosen Schichtenarchitektur (*Layered Architecture*) mit klar abgegrenzten Verantwortlichkeiten:
+
+```mermaid
+graph TD
+  Client[Client / BFF Express / Kiosk] -->|HTTP / JSON| WebLayer
+
+  subgraph WebLayer["1. Web- & Filter-Schicht"]
+    ReqId[RequestIdFilter - X-Request-Id]
+    SecFilter[Spring SecurityFilterChain]
+    Conv[JwtAuthConverter & ClaimExtractor]
+  end
+
+  subgraph RestLayer["2. Controller-Schicht (REST API)"]
+    Ctrl[REST-Controller @RestController]
+    Val[Jakarta Bean Validation @Valid]
+    AuthCtx[AuthContext - Principal / Token]
+  end
+
+  subgraph ServiceLayer["3. Service-Schicht (Geschäftslogik)"]
+    Svc["Fach-Services @Service @Transactional"]
+    SecMatrix["Rollenprüfung & RolePermissionMatrix"]
+    Mapping["DTO <-> Entity Mapping"]
+  end
+
+  subgraph DataLayer["4. Persistenz- & Integrations-Schicht"]
+    Repo[Spring Data JPA Repositories]
+    Entities["JPA Entities (@Version, Auditing)"]
+    ExtStorage[ObjectStorage S3 / In-Memory]
+    ExtPush[PushSender VAPID / NoOp]
+  end
+
+  subgraph InfraLayer["5. Infrastruktur"]
+    DB[(PostgreSQL)]
+    S3Store[(MinIO / S3)]
+    PushGw[(Web Push Gateway)]
+  end
+
+  WebLayer --> RestLayer
+  RestLayer --> ServiceLayer
+  ServiceLayer --> DataLayer
+  DataLayer --> InfraLayer
+```
+
+---
+
+## 🔄 Request-Lebenszyklus
+
+Der Ablauf eines typischen API-Aufrufs – von der Header-Verarbeitung über die Authentifizierung und Transaktionssteuerung bis hin zum Fehlerhandling:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor Client as Client / BFF
+  participant Filter as RequestIdFilter
+  participant Sec as SecurityFilterChain
+  participant Ctrl as FoodCatalogController
+  participant Svc as FoodCatalogService
+  participant Repo as FoodCatalogRepository
+  participant DB as PostgreSQL
+  participant Err as GlobalExceptionHandler
+
+  Client->>Filter: POST /api/v1/food (Bearer JWT, Payload)
+  Note over Filter: Generiert oder übernimmt X-Request-Id
+  Filter->>Sec: Weiterleitung mit MDC / Trace-ID
+  Note over Sec: JwtAuthConverter validiert JWT & baut UserPrincipal
+  Sec->>Ctrl: createFood(@Valid request)
+  Note over Ctrl: Prüft Validierung, liest Principal via AuthContext
+  Ctrl->>Svc: createFood(request, principal)
+  Note over Svc: @Transactional Start<br/>Rollenprüfung (Board/Admin)<br/>Normalisierung & Validierung
+  alt Validierung oder Berechtigung fehlgeschlagen
+    Svc-->>Err: wirft ApiException (z. B. 403 ACCESS_DENIED)
+    Err-->>Client: 403 ProblemDetail (code, traceId, message)
+  else Erfolgsfall
+    Svc->>Repo: save(FoodCatalogEntity)
+    Repo->>DB: INSERT INTO food_catalog ...
+    DB-->>Repo: Gespeicherte Zeile (ID, Version)
+    Repo-->>Svc: FoodCatalogEntity
+    Note over Svc: Mapping Entity -> FoodDto<br/>@Transactional Commit
+    Svc-->>Ctrl: FoodDto
+    Ctrl-->>Client: 201 Created (FoodDto + X-Request-Id Header)
+  end
+```
+
+---
+
+## 📋 Design-Konventionen am Referenzbeispiel Speisenkatalog
+
+Die Kette **`FoodCatalogController` → `FoodCatalogService` → `FoodCatalogRepository` → `FoodCatalogEntity`** dient im gesamten Projekt als Referenz-Muster für alle Module.
+
+### 1. Dünne REST-Controller (`FoodCatalogController.kt`)
+Controller sind zustandslos, schlank und enthalten **keine Fachlogik**:
+- **URL-Präfix**: `/api/v1/<ressource>`
+- **OpenAPI**: `@Tag` für Gruppierung und `@Operation` für Endpunktbeschreibungen.
+- **Sicherheitskontext**: Authentifizierter Benutzer wird über `authContext.getRequiredPrincipal()` bezogen.
+- **ID-Parsing**: Sichere Konvertierung von Pfadvariablen mittels `Identifiers.parseUuid(id, "foodId")`.
+- **Validierung**: `@Valid @RequestBody` validiert DTO-Annotationen deklarativ vor Methodenaufruf.
+- **Rückgabe**: Rückgabe von `ResponseEntity<T>` mit passendem HTTP-Status (`200 OK`, `201 CREATED`).
+
+```kotlin
+@RestController
+@RequestMapping("/api/v1/food")
+@Tag(name = "Speisenkatalog", description = "Globaler Speisenkatalog des Vereins")
+class FoodCatalogController(
+    private val foodCatalogService: FoodCatalogService,
+    private val authContext: AuthContext
+) {
+    @PostMapping
+    @Operation(summary = "Speise anlegen")
+    fun createFood(@Valid @RequestBody request: CreateFoodRequest): ResponseEntity<FoodDto> {
+        val principal = authContext.getRequiredPrincipal()
+        val food = foodCatalogService.createFood(request, principal)
+        return ResponseEntity.status(HttpStatus.CREATED).body(food)
+    }
+}
+```
+
+### 2. Transaktionale Fach-Services (`FoodCatalogService.kt`)
+Services kapseln die vollständige Business-Logik:
+- **Transaktionsklammer**: Klassen-Annotation `@Service @Transactional`. Leseoperationen werden mit `@Transactional(readOnly = true)` optimiert.
+- **Berechtigungsprüfung**: Prüfung von Rollen und Rechten im Service-Code (z. B. `isBoardOrAdmin(caller, principal)`).
+- **Normalisierung & Guard Clauses**: String-Bereinigung (`normalizeName`), Trimmen und Whitelist-Checks.
+- **Fachliche Fehler**: Auslösen von typsicheren `ApiException`-Subklassen (`InvalidRequestException`, `AccessDeniedException`, `ResourceNotFoundException`) mit definierten `ErrorCode`-Konstanten.
+- **Entity-DTO-Mapping**: Private Mapping-Funktionen (`toFoodDto`, `toSummaryDto`), sodass Entities die Service-Schicht niemals verlassen.
+
+### 3. Unveränderliche DTOs (`FoodDtos.kt`)
+- **Request-DTOs**: Data Classes mit Validierungs-Annotationen (`@field:NotBlank`, `@field:DecimalMin("0.00")`).
+- **Response-DTOs**: Vollständige Datensätze für Detailansichten (`FoodDto`).
+- **Summary-DTOs**: Kompakte Datensätze für Listenansichten zur Reduzierung von Payload und DB-Last (`FoodSummaryDto`).
+
+### 4. JPA-Entities & Repositories (`FoodEntities.kt`, `Repositories.kt`)
+- **Primärschlüssel**: UUIDs mit Default `UUID.randomUUID()`.
+- **Auditing**: `@EntityListeners(AuditingEntityListener::class)` mit `@CreatedDate` und `@LastModifiedDate` (UTC `Instant`).
+- **Optimistic Locking**: `@Version var version: Long = 0` verhindert unbeabsichtigtes Überschreiben bei parallelem Zugriff.
+- **Spring Data Repository**: Interfaces erweitern `JpaRepository<Entity, UUID>` mit sprechenden Abfragemethoden (`findByActiveTrueOrderByNameAsc()`).
+
+---
+
+## 🗺️ Paket- & Klassenkarte
+
+Unter `de.maurer.baseservice` sind alle Controller und Services modular organisiert:
+
+### Controller-Übersicht (`de.maurer.baseservice.controller`)
+
+| Controller | Endpunkt-Basis | Zweck & Fachdomäne | Querverweis |
+| :--- | :--- | :--- | :--- |
+| `AccessResolverController` | `/api/v1/auth/access` | Berechnete AppContexts & Berechtigungen für BFF & Gast | [03. Security](03-security-and-authorization.md) |
+| `ApiInfoController` | `/api/v1/info` | Öffentliche Versions-, Umgebungs- und Feature-Informationen | [05. Observability](05-error-handling-and-observability.md) |
+| `AuditLogController` | `/api/v1/audit` | Revisionssichere Audit-Log-Abfragen für Vorstände | [docs/domains/ledger-and-finance.md](../domains/ledger-and-finance.md) |
+| `AuthController` | `/api/v1/auth` | Benutzer-Provisionierung und Session-Kontext | [03. Security](03-security-and-authorization.md) |
+| `ChatController` | `/api/v1/chat`, `/api/v1/events/{id}/chat` | Vereins- und Event-Chat, Gast-Chat-Nachrichten | [docs/domains/chat-and-push-notifications.md](../domains/chat-and-push-notifications.md) |
+| `DrinkCatalogController` | `/api/v1/drinks` | Globaler Getränkekatalog & Genehmigungsworkflow | [docs/domains/drink-catalog-and-sublists.md](../domains/drink-catalog-and-sublists.md) |
+| `DrinkSublistController` | `/api/v1/drinks/sublists` | Freigeschaltete Getränke-Sublisten für Veranstaltungen | [docs/domains/drink-catalog-and-sublists.md](../domains/drink-catalog-and-sublists.md) |
+| `EventController` | `/api/v1/events` | Veranstaltungs-Lebenszyklus, RSVPs und Strichlisten | [docs/domains/events-and-invites.md](../domains/events-and-invites.md) |
+| `EventDrinkController` | `/api/v1/events/{id}/drinks` | Eventbezogene Getränkepreise und Kioskeinstellungen | [docs/domains/drink-catalog-and-sublists.md](../domains/drink-catalog-and-sublists.md) |
+| `EventFoodController` | `/api/v1/events/{id}/food` | Eventbezogene Speisenauswahl & Kioskfreigabe | [docs/domains/food-catalog-and-event-food.md](../domains/food-catalog-and-event-food.md) |
+| `FoodCatalogController` | `/api/v1/food` | Globaler Speisenkatalog, Preise und Einkaufspreise | [docs/domains/food-catalog-and-event-food.md](../domains/food-catalog-and-event-food.md) |
+| `HealthController` | `/api/v1/health` | Öffentlicher Health-Check für Load Balancer | [05. Observability](05-error-handling-and-observability.md) |
+| `ImageController` | `/api/v1/images` | Upload und Download signierter URLs für Bilder | [06. Integrationen](06-integrations.md) |
+| `InviteController` | `/api/v1/invites` | Erstellung, Einlösung und Widerruf von Gast-Einladungstokens | [docs/domains/events-and-invites.md](../domains/events-and-invites.md) |
+| `LedgerController` | `/api/v1/ledger` | Kassenbuch-Transaktionen, Aufladung, Buchung, Korrektur | [docs/domains/ledger-and-finance.md](../domains/ledger-and-finance.md) |
+| `MomentController` | `/api/v1/moments` | Moments & Rituale, Statusmeldungen und Reaktionen | [docs/domains/moments-and-rituals.md](../domains/moments-and-rituals.md) |
+| `NotificationController` | `/api/v1/notifications` | Push-Abonnements & Benachrichtigungszustellung | [06. Integrationen](06-integrations.md) |
+| `TabletRecorderController`| `/api/v1/tablet` | Kiosk-Strichlisten-Erfassung & Abendabrechnung | [docs/domains/tablet-strichliste-recorder.md](../domains/tablet-strichliste-recorder.md) |
+| `UserController` | `/api/v1/users` | Benutzerprofile, Rollenverwaltung & Deaktivierung | [docs/domains/auth-and-user-management.md](../domains/auth-and-user-management.md) |
+
+---
+
+### Service-Übersicht (`de.maurer.baseservice.service`)
+
+- **`AccessResolverService`**: Berechnet dynamisch zugreifbare Rollen, Berechtigungen und AppContexts für das BFF.
+- **`AuditService` / `AuditLogService`**: Asynchrone Erfassung und Filterung von sicherheits- und finanzrelevanten Ereignissen.
+- **`ChatService`**: Versand, Speicherung und Historisierung von Vereins-, Event- und Gast-Chatnachrichten.
+- **`DrinkCatalogService` & `DrinkSublistService`**: Verwaltung des Getränkekatalogs und veranstaltungsspezifischer Sortimente.
+- **`EventService`, `EventDrinkService` & `EventFoodService`**: Event-Lebenszyklus, Teilnehmer-Zusagen (RSVP) und Kiosksortimente.
+- **`FoodCatalogService`**: Verwaltung des globalen Speisenkatalogs inklusive Einkaufspreisen und Deckungsbeitrag.
+- **`ImageService`**: Validierung, Skalierung und Verwaltung von Bild-Metadaten und S3-Schlüsseln.
+- **`InviteService`**: Kryptografische Generierung, Validierung und Einlösung von Event-Gast-Tokens.
+- **`LedgerService`**: Unveränderliches Transaktionsjournal nach dem Double-Entry-Prinzip mit Idempotenz-Schutz.
+- **`MomentService`**: Echtzeit-Rituale, 24h-Moments-Sessions und Geolokations-Checkins.
+- **`NotificationService`**: Speicherung von Web-Push-Abonnements und Auslösung von Benachrichtigungen.
+- **`TabletRecorderService`**: 1-Tap-Kiosk-Strichlisten-Buchungen und aggregierte Abendabrechnungen.
+- **`UserProvisioningService` & `UserService`**: Automatische Synchronisation von Keycloak-Konten in die PostgreSQL-Datenbank.
+- **`UserPermissionCache`**: In-Memory-Cache zur Beschleunigung von Berechtigungsprüfungen.
+
+---
+
+## 🔗 Querverweise
+
+- Weiter zu [03. Sicherheit & Autorisierung](03-security-and-authorization.md)
+- Zurück zu [01. Übersicht & Setup](01-overview-and-setup.md)
+- [BFF Request-Pipeline](../backend-for-frontend/02-request-pipeline.md)
+- [Fachdomänen Übersicht](../README.md#📖-glossar--fachbegriffe-domain-glossary)
