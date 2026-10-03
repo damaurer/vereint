@@ -14,16 +14,11 @@ import { RenderMode, ServerRoute } from '@angular/ssr';
  */
 export const serverRoutes: ServerRoute[] = [
   { path: '', renderMode: RenderMode.Server },
-  { path: 'login', renderMode: RenderMode.Server },
-  { path: 'web/login', renderMode: RenderMode.Server },
-  { path: 'pwa/login', renderMode: RenderMode.Server },
-  { path: 'password-reset', renderMode: RenderMode.Server },
+  { path: 'auth/error', renderMode: RenderMode.Server },
+  { path: 'auth/logged-out', renderMode: RenderMode.Server },
   { path: 'invite/accept', renderMode: RenderMode.Server },
   { path: '403', renderMode: RenderMode.Server },
   { path: '404', renderMode: RenderMode.Server },
-
-  // Einladungsgebundene Registrierung: kein SSR, weil der Code teil des Pfads ist.
-  { path: 'register/:inviteCode', renderMode: RenderMode.Client },
 
   // Private Kontexte
   { path: 'app', renderMode: RenderMode.Client },

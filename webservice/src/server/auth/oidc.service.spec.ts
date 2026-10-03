@@ -303,11 +303,11 @@ describe('oidc.service', () => {
     it('builds end-session URL with post_logout_redirect_uri and id_token_hint', () => {
       const url = buildEndSessionUrl({
         idTokenHint: 'hint_token_123',
-        postLogoutRedirectUri: 'http://localhost:8080/web/login',
+        postLogoutRedirectUri: 'http://localhost:8080/auth/logged-out',
       });
 
       expect(url).toContain('/protocol/openid-connect/logout');
-      expect(url).toContain('post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fweb%2Flogin');
+      expect(url).toContain('post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fauth%2Flogged-out');
       expect(url).toContain(`client_id=${serverEnvironment.keycloakClientId}`);
       expect(url).toContain('id_token_hint=hint_token_123');
     });

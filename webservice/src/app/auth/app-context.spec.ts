@@ -1,9 +1,8 @@
+import { describe, expect, it } from 'vitest';
 import {
   contextForPath,
   CONTEXT_DEFAULT_ROUTES,
   defaultRouteForSession,
-  loginRouteForPath,
-  PUBLIC_LOGIN_ROUTE,
 } from './app-context';
 import { AuthSessionUser } from './auth.types';
 
@@ -17,10 +16,6 @@ const session = (roles: AuthSessionUser['roles'], boardRole?: AuthSessionUser['b
 
 describe('app-context navigation', () => {
   describe('defaultRouteForSession', () => {
-    it('sends unauthenticated visitors to the public login', () => {
-      expect(defaultRouteForSession(null)).toBe(PUBLIC_LOGIN_ROUTE);
-    });
-
     it('prefers admin over board and member', () => {
       expect(defaultRouteForSession(session(['member', 'board', 'admin']))).toBe(CONTEXT_DEFAULT_ROUTES.admin);
     });
@@ -37,21 +32,6 @@ describe('app-context navigation', () => {
 
     it('does not assume a role for an authenticated user without a known role', () => {
       expect(defaultRouteForSession(session([]))).toBe(CONTEXT_DEFAULT_ROUTES.memberPwa);
-    });
-  });
-
-  describe('loginRouteForPath', () => {
-    it('uses the web login for board, admin and tablet contexts', () => {
-      expect(loginRouteForPath('/board')).toBe('/web/login');
-      expect(loginRouteForPath('/board/treasury')).toBe('/web/login');
-      expect(loginRouteForPath('/admin')).toBe('/web/login');
-      expect(loginRouteForPath('/tablet')).toBe('/web/login');
-    });
-
-    it('uses the pwa login for member and unknown contexts', () => {
-      expect(loginRouteForPath('/app')).toBe('/pwa/login');
-      expect(loginRouteForPath('/events/42')).toBe('/pwa/login');
-      expect(loginRouteForPath('/anything')).toBe('/pwa/login');
     });
   });
 

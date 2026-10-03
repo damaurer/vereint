@@ -16,7 +16,8 @@ export const authRoutes = Router();
 /** Gültigkeitsdauer des OIDC-Transaktionsstates (identisch zum State-Cookie). */
 const OIDC_STATE_MAX_AGE_MS = 10 * 60 * 1000;
 
-const LOGIN_ERROR_PATH = '/web/login';
+const LOGIN_ERROR_PATH = '/auth/error';
+const LOGGED_OUT_PATH = '/auth/logged-out';
 
 function loginErrorRedirect(code: string): string {
   return `${LOGIN_ERROR_PATH}?error=${encodeURIComponent(code)}`;
@@ -215,7 +216,7 @@ async function handleLogout(req: Request, res: Response): Promise<void> {
   if (req.query['redirect'] === 'true' || (req.accepts('html') && req.method === 'GET')) {
     const endSessionUrl = buildEndSessionUrl({
       idTokenHint: idToken,
-      postLogoutRedirectUri: `${serverEnvironment.publicBaseUrl}${LOGIN_ERROR_PATH}`,
+      postLogoutRedirectUri: `${serverEnvironment.publicBaseUrl}${LOGGED_OUT_PATH}`,
     });
     res.redirect(302, endSessionUrl);
     return;

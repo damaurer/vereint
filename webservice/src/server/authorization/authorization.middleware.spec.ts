@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RequestIdentity } from '../auth/auth.types';
-import { authorizePages, buildLoginRedirect, loginPathForContext } from './authorization.middleware';
+import { authorizePages, buildLoginRedirect } from './authorization.middleware';
 import { clearAccessDecisionCache } from './authorization.service';
 import type { ResolvedAccessDecision } from './authorization.types';
 
@@ -98,11 +98,8 @@ describe('authorizePages Express Middleware', () => {
 
   it('allows public paths and API endpoints without authentication', async () => {
     const publicTestPaths = [
-      '/',
-      '/login',
-      '/web/login',
-      '/pwa/login',
-      '/password-reset',
+      '/auth/error',
+      '/auth/logged-out',
       '/invite/accept',
       '/403',
       '/404',
@@ -127,48 +124,91 @@ describe('authorizePages Express Middleware', () => {
     expect(setHeader).not.toHaveBeenCalledWith('Cache-Control', expect.anything());
   });
 
-  it('redirects unauthenticated navigation to the context specific login', async () => {
-    const cases: { path: string; login: string }[] = [
-      { path: '/dashboard', login: '/pwa/login' },
-      { path: '/app', login: '/pwa/login' },
-      { path: '/board/treasury', login: '/web/login' },
-      { path: '/board/communications', login: '/web/login' },
-      { path: '/admin', login: '/web/login' },
-      { path: '/tablet', login: '/web/login' },
+  it('redirects unauthenticated navigation directly to /api/auth/login', async () => {
+    const paths = [
+      '/dashboard',
+      '/app',
+      '/board/treasury',
+      '/board/communications',
+      '/admin',
+      '/tablet',
     ];
 
-    for (const testCase of cases) {
-      const { req, res, next, redirect } = createMockReqRes({ path: testCase.path });
+    for (const path of paths) {
+      const { req, res, next, redirect } = createMockReqRes({ path });
       await authorizePages(req, res, next);
 
       expect(next).not.toHaveBeenCalled();
       expect(redirect).toHaveBeenCalledWith(
-        `${testCase.login}?returnUrl=${encodeURIComponent(testCase.path)}`,
+        `/api/auth/login?returnTo=${encodeURIComponent(path)}`,
       );
     }
   });
 
+  it('redirects unauthenticated navigation on / to /api/auth/login', async () => {
+    const { req, res, next, redirect } = createMockReqRes({ path: '/' });
+    await authorizePages(req, res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    expect(redirect).toHaveBeenCalledWith('/api/auth/login');
+  });
+
+  it('allows authenticated navigation on /', async () => {
+    const identity: RequestIdentity = { uid: 'user-member', roles: ['member'], drinkRecorder: false };
+    const { req, res, next, redirect } = createMockReqRes({ path: '/', identity });
+    await authorizePages(req, res, next);
+
+    expect(next).toHaveBeenCalledOnce();
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it('redirects legacy login and reset paths to /api/auth/login', async () => {
+    const legacyPaths = ['/login', '/web/login', '/pwa/login', '/password-reset'];
+    for (const path of legacyPaths) {
+      const { req, res, next, redirect } = createMockReqRes({ path });
+      await authorizePages(req, res, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(redirect).toHaveBeenCalledWith('/api/auth/login');
+    }
+
+    const { req, res, next, redirect } = createMockReqRes({
+      path: '/web/login',
+      query: { returnUrl: '/board' },
+    });
+    await authorizePages(req, res, next);
+    expect(redirect).toHaveBeenCalledWith(`/api/auth/login?returnTo=${encodeURIComponent('/board')}`);
+  });
+
+  it('redirects valid invite codes to /api/auth/login and invalid to /404', async () => {
+    const { req: validReq, res: validRes, next: validNext, redirect: validRedirect } = createMockReqRes({
+      path: '/register/valid-invite-code-12345',
+    });
+    await authorizePages(validReq, validRes, validNext);
+    expect(validNext).not.toHaveBeenCalled();
+    expect(validRedirect).toHaveBeenCalledWith('/api/auth/login');
+
+    const { req: invalidReq, res: invalidRes, next: invalidNext, redirect: invalidRedirect } = createMockReqRes({
+      path: '/register/invalid',
+    });
+    await authorizePages(invalidReq, invalidRes, invalidNext);
+    expect(invalidNext).not.toHaveBeenCalled();
+    expect(invalidRedirect).toHaveBeenCalledWith('/404');
+  });
+
   describe('returnUrl validation', () => {
     it('accepts only relative paths on known app prefixes', () => {
-      expect(buildLoginRedirect('memberPwa', '/wallet?tab=ledger')).toBe(
-        `/pwa/login?returnUrl=${encodeURIComponent('/wallet?tab=ledger')}`,
+      expect(buildLoginRedirect('/wallet?tab=ledger')).toBe(
+        `/api/auth/login?returnTo=${encodeURIComponent('/wallet?tab=ledger')}`,
       );
     });
 
     it('drops protocol relative, absolute and unknown targets', () => {
-      expect(buildLoginRedirect('memberPwa', '//evil.example.org/app')).toBe('/pwa/login');
-      expect(buildLoginRedirect('memberPwa', 'https://evil.example.org/app')).toBe('/pwa/login');
-      expect(buildLoginRedirect('admin', '/unknown-area')).toBe('/web/login');
-      expect(buildLoginRedirect('memberPwa', '/app/../../etc/passwd')).toBe('/pwa/login');
-    });
-
-    it('maps contexts to the matching login entry', () => {
-      expect(loginPathForContext('memberPwa')).toBe('/pwa/login');
-      expect(loginPathForContext('event')).toBe('/pwa/login');
-      expect(loginPathForContext('eventOwner')).toBe('/pwa/login');
-      expect(loginPathForContext('boardGeneral')).toBe('/web/login');
-      expect(loginPathForContext('admin')).toBe('/web/login');
-      expect(loginPathForContext('tabletRecorder')).toBe('/web/login');
+      expect(buildLoginRedirect('//evil.example.org/app')).toBe('/api/auth/login');
+      expect(buildLoginRedirect('https://evil.example.org/app')).toBe('/api/auth/login');
+      expect(buildLoginRedirect('/unknown-area')).toBe('/api/auth/login');
+      expect(buildLoginRedirect('/app/../../etc/passwd')).toBe('/api/auth/login');
+      expect(buildLoginRedirect()).toBe('/api/auth/login');
     });
 
     it('does not append a manipulated returnUrl from the request', async () => {
@@ -180,7 +220,7 @@ describe('authorizePages Express Middleware', () => {
       await authorizePages(req, res, next);
 
       expect(next).not.toHaveBeenCalled();
-      expect(redirect).toHaveBeenCalledWith('/pwa/login');
+      expect(redirect).toHaveBeenCalledWith('/api/auth/login');
     });
   });
 

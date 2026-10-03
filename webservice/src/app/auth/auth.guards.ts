@@ -30,20 +30,23 @@ function isBrowser(): boolean {
 
 /**
  * Default-Route (`''`): Angemeldete Benutzer werden auf ihre kontextabhängige
- * Startseite geführt, alle übrigen auf den öffentlichen Login. Beim
- * serverseitigen Rendern wird der Login ausgeliefert, damit kein
- * personenbezogenes Ziel im SSR-HTML entsteht.
+ * Startseite geführt, alle übrigen auf den Keycloak-Login. Beim
+ * serverseitigen Rendern wird `true` geliefert; die Express-Middleware hat
+ * den Zugriff bereits geprüft bzw. leitet weiter.
  */
 export const homeGuard: CanActivateFn = async (): Promise<GuardResult> => {
-  const navigation = inject(AuthNavigationService);
-  if (!isBrowser()) return navigation.loginUrlTree('');
+  if (!isBrowser()) return true;
 
   const auth = inject(AuthService);
+  const navigation = inject(AuthNavigationService);
   const session = await auth.getSession();
+  if (!session) {
+    return navigation.redirectToLogin('');
+  }
   return navigation.defaultRouteUrlTree(session);
 };
 
-/** Erzwingt eine angemeldete Session; sonst Umleitung auf den Login. */
+/** Erzwingt eine angemeldete Session; sonst direkte Umleitung auf den Keycloak-Login. */
 export const authGuard: CanActivateFn = async (
   _route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
@@ -56,13 +59,12 @@ export const authGuard: CanActivateFn = async (
   const session = await auth.getSession();
   if (session) return true;
 
-  // Fehlende oder abgelaufene Session: zurück zum kontextpassenden Login.
-  return navigation.loginUrlTree(state.url);
+  return navigation.redirectToLogin(state.url);
 };
 
 /**
  * Erzwingt mindestens eine der in `route.data['roles']` genannten Rollen.
- * Ohne Session führt der Weg zum Login (Sessionablauf), bei falscher Rolle
+ * Ohne Session führt der Weg direkt zum Login (Sessionablauf), bei falscher Rolle
  * auf `/403`.
  */
 export const roleGuard: CanActivateFn = async (
@@ -76,7 +78,7 @@ export const roleGuard: CanActivateFn = async (
 
   const required = (route.data['roles'] as UserRole[] | undefined) ?? [];
   const session = await auth.getSession();
-  if (!session) return navigation.loginUrlTree(state.url);
+  if (!session) return navigation.redirectToLogin(state.url);
 
   const roles = session.roles ?? [];
   if (required.length === 0 || required.some((role) => roles.includes(role))) return true;
@@ -100,7 +102,7 @@ export const permissionGuard: CanActivateFn = async (
 
   const required = (route.data['permissions'] as string[] | undefined) ?? [];
   const session = await auth.getSession();
-  if (!session) return navigation.loginUrlTree(state.url);
+  if (!session) return navigation.redirectToLogin(state.url);
 
   const permissions = session.permissions ?? [];
   if (required.length === 0 || required.some((permission) => permissions.includes(permission))) {

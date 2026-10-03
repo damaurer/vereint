@@ -28,7 +28,7 @@ interface AcceptInviteResponse {
           <div class="state-card state-error" role="alert">
             <strong>Ungültiger Einladungslink</strong>
             <p>Dieser Link enthält kein Einladungs-Token. Bitte nutzen Sie den vollständigen Link aus Ihrer Einladung.</p>
-            <a routerLink="/login" class="btn btn-secondary">Zurück zur Startseite</a>
+            <a routerLink="/" class="btn btn-secondary">Zurück zur Startseite</a>
           </div>
         } @else if (loading()) {
           <div class="state-loading" role="status">
@@ -40,7 +40,7 @@ interface AcceptInviteResponse {
             <p>{{ error() }}</p>
             <div class="action-buttons">
               <button type="button" class="btn btn-primary" (click)="accept()">Erneut versuchen</button>
-              <a routerLink="/login" class="btn btn-secondary">Zur Startseite</a>
+              <a routerLink="/" class="btn btn-secondary">Zur Startseite</a>
             </div>
           </div>
         } @else {

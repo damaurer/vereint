@@ -1,5 +1,5 @@
 import { Router, UrlTree } from '@angular/router';
-import { vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthNavigationService } from './auth-navigation.service';
 import { AuthService } from './auth.service';
 import { AuthSessionUser } from './auth.types';
@@ -9,7 +9,12 @@ describe('AuthNavigationService', () => {
   const browser = 'browser' as unknown as object;
   const server = 'server' as unknown as object;
 
-  let auth: { getSession: ReturnType<typeof vi.fn>; signOut: ReturnType<typeof vi.fn>; clearClientState: ReturnType<typeof vi.fn> };
+  let auth: {
+    getSession: ReturnType<typeof vi.fn>;
+    signOut: ReturnType<typeof vi.fn>;
+    clearClientState: ReturnType<typeof vi.fn>;
+    startLogin: ReturnType<typeof vi.fn>;
+  };
   let router: {
     navigateByUrl: ReturnType<typeof vi.fn>;
     parseUrl: ReturnType<typeof vi.fn>;
@@ -30,6 +35,7 @@ describe('AuthNavigationService', () => {
       getSession: vi.fn(async () => null),
       signOut: vi.fn(async () => undefined),
       clearClientState: vi.fn(),
+      startLogin: vi.fn(),
     };
     router = {
       navigateByUrl: vi.fn(async () => true),
@@ -54,6 +60,15 @@ describe('AuthNavigationService', () => {
       expect(router.navigateByUrl).toHaveBeenCalledWith('/admin');
     });
 
+    it('redirects to login when no session is present', async () => {
+      auth.getSession.mockResolvedValue(null);
+
+      const result = await create(browser).goToDefaultRoute();
+
+      expect(result).toBe(false);
+      expect(auth.startLogin).toHaveBeenCalledWith(undefined);
+    });
+
     it('does nothing during server-side rendering', async () => {
       const result = await create(server).goToDefaultRoute();
 
@@ -62,31 +77,37 @@ describe('AuthNavigationService', () => {
     });
   });
 
-  describe('loginUrlTree', () => {
-    it('keeps a safe returnUrl and picks the context login', () => {
-      create(browser).loginUrlTree('/board/treasury');
+  describe('redirectToLogin', () => {
+    it('keeps a safe returnUrl and calls startLogin', () => {
+      const result = create(browser).redirectToLogin('/board/treasury');
 
-      expect(router.createUrlTree).toHaveBeenCalledWith(['/web/login'], {
-        queryParams: { returnUrl: '/board/treasury' },
-      });
+      expect(auth.startLogin).toHaveBeenCalledWith('/board/treasury');
+      expect(result).toBe(false);
     });
 
-    it('drops an unsafe returnUrl and falls back to the pwa login', () => {
-      create(browser).loginUrlTree('//evil.example');
+    it('drops an unsafe returnUrl and calls startLogin without url', () => {
+      const result = create(browser).redirectToLogin('//evil.example');
 
-      expect(router.parseUrl).toHaveBeenCalledWith('/pwa/login');
-      expect(router.createUrlTree).not.toHaveBeenCalled();
+      expect(auth.startLogin).toHaveBeenCalledWith(undefined);
+      expect(result).toBe(false);
+    });
+
+    it('does nothing on server-side rendering', () => {
+      const result = create(server).redirectToLogin('/app');
+
+      expect(auth.startLogin).not.toHaveBeenCalled();
+      expect(result).toBe(false);
     });
   });
 
   describe('logout', () => {
-    it('ends the session, forgets client data and navigates to the login', async () => {
+    it('ends the session, forgets client data and navigates to /auth/logged-out', async () => {
       await create(browser).logout();
 
       expect(auth.signOut).toHaveBeenCalled();
       expect(remembered.forget).toHaveBeenCalled();
       expect(auth.clearClientState).toHaveBeenCalled();
-      expect(router.navigateByUrl).toHaveBeenCalledWith('/pwa/login');
+      expect(router.navigateByUrl).toHaveBeenCalledWith('/auth/logged-out');
     });
   });
 });

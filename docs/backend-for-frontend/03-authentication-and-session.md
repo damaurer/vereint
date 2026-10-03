@@ -64,12 +64,12 @@ Alle Routen werden in `webservice/src/server/routes/auth.routes.ts` definiert un
 | Methode | Pfad | Beschreibung | Statuscodes & Verhalten |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/login` | Startet den OIDC/PKCE Login-Flow. | `302 Redirect` zur Keycloak Login-Maske. |
-| `GET`, `POST` | `/callback` | Verarbeitet den Authorization-Code von Keycloak. | `302 Redirect` zum `returnTo`-Pfad (bei HTML-Accept) oder `200 OK` JSON; `400` / `302 /web/login?error=...` bei ungültigem State/Code. |
+| `GET`, `POST` | `/callback` | Verarbeitet den Authorization-Code von Keycloak. | `302 Redirect` zum `returnTo`-Pfad (bei HTML-Accept) oder `200 OK` JSON; `400` / `302 /auth/error?error=...` bei ungültigem State/Code. |
 | `GET` | `/keycloak` | Kombinierter Endpunkt: Verarbeitet Callback bei Vorhandensein von `code`/`error`, sonst Login-Start. | `302 Redirect`. |
 | `GET` | `/me` | Liefert die Identität der aktuellen Session. | `200 OK` mit JSON `{ authenticated: true, identity: { subject, displayName, roles, boardRole, permissions } }` oder `401 Unauthorized` (`oidc_session_expired`). |
 | `GET` | `/session` | Alias für `/me`. | Identisch zu `/me`. |
 | `POST` | `/session` | **Legacy-Endpunkt**: Früherer Firebase-Session-Endpunkt. | **`410 Gone`** (`legacy_session_endpoint`). Token-Austausch erfolgt ausschließlich über OIDC. |
-| `GET`, `POST` | `/logout` | Beendet die Session, invalidiert Caches und stößt Backchannel-Logout an. | `302 Redirect` zu Keycloak End-Session URL (bei `?redirect=true` oder HTML GET) bzw. `200 OK` JSON `{ success: true, backchannelLogout: boolean }`. |
+| `GET`, `POST` | `/logout` | Beendet die Session, invalidiert Caches und stößt Backchannel-Logout an. | `302 Redirect` zu Keycloak End-Session URL mit Weiterleitung auf `/auth/logged-out` (bei `?redirect=true` oder HTML GET) bzw. `200 OK` JSON `{ success: true, backchannelLogout: boolean }`. |
 
 ---
 
@@ -133,7 +133,7 @@ Beim Aufruf von `/api/auth/logout`:
 1. **Cache-Invalidierung**: `invalidateAccessDecision(sessionId)` verwirft sofort gecachte Rollenberechtigungen.
 2. **Backchannel-Logout**: Der BFF sendet einen `POST`-Request an Keycloaks `/protocol/openid-connect/logout` mit `client_id`, `client_secret` und dem `refresh_token`.
 3. **Cookie-Löschung**: Alle Session-Chunks (`vereint_session.*`) und State-Cookies werden mit `Max-Age=0` gelöscht.
-4. **End-Session-Redirect**: Bei Browseraufrufen leitet der Server mit `id_token_hint` und `post_logout_redirect_uri` zu Keycloak weiter, um auch die Keycloak-SSO-Sitzung im Browser zu beenden.
+4. **End-Session-Redirect**: Bei Browseraufrufen leitet der Server mit `id_token_hint` und `post_logout_redirect_uri` (`/auth/logged-out`) zu Keycloak weiter, um auch die Keycloak-SSO-Sitzung im Browser zu beenden. *Hinweis*: Bestehende Keycloak-Realms müssen die Redirect-URI `/auth/logged-out` erlauben (`post.logout.redirect.uris`), andernfalls lehnt Keycloak den End-Session-Redirect ab.
 
 ---
 
@@ -145,7 +145,7 @@ Rücksprungziele (`returnTo`, `returnUrl`) werden vor jedem Redirect strikt vali
 - **Erlaubte Zeichen**: Keine Whitespaces, Steuerzeichen oder Backslashes (`/[\\\s\u0000-\u0008\u000e-\u001f\u007f]/`).
 - **Keine absoluten oder protokollrelativen URLs**: URLs wie `https://evil.com`, `//evil.com` oder `/\evil.com` werden abgewiesen.
 - **Keine URL-Encoding-Tricks**: `%2f`, `%5c` etc. werden verworfen.
-- **Positivliste (`KNOWN_APP_PREFIXES`)**: Der Pfad muss mit einem bekannten Anwendungspräfix beginnen (`/app`, `/dashboard`, `/profile`, `/wallet`, `/purchases`, `/events`, `/guest`, `/catalog`, `/sublists`, `/chat`, `/notifications`, `/moments`, `/board`, `/admin`, `/tablet`, `/web/login`, `/pwa/login`, etc.).
+- **Positivliste (`KNOWN_APP_PREFIXES`)**: Der Pfad muss mit einem bekannten Anwendungspräfix beginnen (`/app`, `/dashboard`, `/profile`, `/wallet`, `/purchases`, `/events`, `/guest`, `/catalog`, `/sublists`, `/chat`, `/notifications`, `/moments`, `/board`, `/admin`, `/tablet`, `/invite/accept`, `/403`, `/404`). Statusseiten (`/auth/error`, `/auth/logged-out`) sind bewusst ausgeschlossen.
 
 ---
 

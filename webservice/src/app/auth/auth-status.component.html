@@ -10,39 +10,35 @@
 
   <main class="vereint-main">
     <header class="vereint-mobile-header">
-      <a class="vereint-mobile-brand" routerLink="/login">
+      <a class="vereint-mobile-brand" routerLink="/">
         <img src="vereint-logo.svg" alt="vereint" class="vereint-logo vereint-logo-light" width="440" height="140" />
         <img src="vereint-logo-mono.svg" alt="vereint" class="vereint-logo vereint-logo-dark" width="440" height="140" />
       </a>
     </header>
 
-    <section class="vereint-card" aria-labelledby="login-title">
+    <section class="vereint-card" aria-labelledby="status-title">
       <div class="vereint-card-header">
         <div class="vereint-card-heading">
           <p class="vereint-eyebrow">Öffentlich</p>
-          <h1 class="vereint-title" id="login-title">Anmeldung</h1>
+          <h1 class="vereint-title" id="status-title">{{ title() }}</h1>
         </div>
       </div>
 
       <div class="vereint-card-body">
-        <p class="vereint-subtitle">Die Anmeldung erfolgt über das VEREINT-Konto bei Keycloak.</p>
-
-        <form class="login-form" (submit)="startLogin($event)">
-          <button id="start-login" type="submit" [disabled]="busy()">
-            {{ busy() ? 'Weiterleitung …' : 'Mit VEREINT-Konto anmelden' }}
-          </button>
-        </form>
-
-        <div class="login-links">
-          <a routerLink="/password-reset">Passwort zurücksetzen</a>
-        </div>
-
-        @if (error()) {
+        @if (isError()) {
           <div class="state-card state-error login-error" role="alert">
             <strong>Anmeldung fehlgeschlagen</strong>
-            <span>{{ error() }}</span>
+            <span>{{ errorMessage() }}</span>
           </div>
+        } @else {
+          <p class="vereint-subtitle">Sie wurden erfolgreich abgemeldet.</p>
         }
+
+        <div class="login-form">
+          <button id="retry-login" type="button" (click)="retryLogin()">
+            Erneut anmelden
+          </button>
+        </div>
       </div>
     </section>
   </main>

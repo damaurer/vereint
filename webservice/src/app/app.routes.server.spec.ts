@@ -14,10 +14,8 @@ import { serverRoutes } from './app.routes.server';
 /** Öffentliche Einstiege, die serverseitig gerendert werden dürfen. */
 const PUBLIC_SERVER_PATHS: readonly string[] = [
   '',
-  'login',
-  'web/login',
-  'pwa/login',
-  'password-reset',
+  'auth/error',
+  'auth/logged-out',
   'invite/accept',
   '403',
   '404',
@@ -47,7 +45,6 @@ const PRIVATE_CLIENT_PATHS: readonly string[] = [
   'admin',
   'tablet',
   'statistik',
-  'register/:inviteCode',
 ];
 
 function renderModeOf(path: string): RenderMode | undefined {

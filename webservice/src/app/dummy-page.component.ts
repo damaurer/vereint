@@ -19,7 +19,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
             <strong>Feature-Platzhalter</strong>
             <span>Diese Seite ist für die SSR- und Rechteprüfung vorbereitet.</span>
           </div>
-          <a routerLink="/pwa/login">Zur Anmeldung</a>
+          <a routerLink="/">Zur Startseite</a>
         </div>
       </section>
     </main>

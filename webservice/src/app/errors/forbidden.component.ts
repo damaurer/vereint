@@ -17,7 +17,7 @@ import { StatusBadgeComponent } from '../ui';
         </p>
         <div class="error-actions">
           <a routerLink="/dashboard" class="btn btn-primary">Zum Dashboard</a>
-          <a routerLink="/login" class="btn btn-secondary">Neu anmelden</a>
+          <a routerLink="/" class="btn btn-secondary">Neu anmelden</a>
         </div>
       </div>
     </div>

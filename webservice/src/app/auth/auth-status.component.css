@@ -33,30 +33,6 @@
   cursor: progress;
 }
 
-.login-links {
-  margin: 1rem 0 0.5rem;
-}
-
-.login-links a {
-  color: var(--color-brand, #1e3a8a);
-  font-weight: 600;
-  text-decoration: none;
-  font-size: 0.95rem;
-  transition: color 0.2s ease;
-}
-
-.login-links a:hover,
-.login-links a:focus-visible {
-  color: var(--color-brand-strong, #172554);
-  text-decoration: underline;
-}
-
-.login-links a:focus-visible {
-  outline: 2px solid var(--color-brand, #1e3a8a);
-  outline-offset: 2px;
-  border-radius: var(--opt-radius-sm, 4px);
-}
-
 .login-error {
   margin-top: 1.25rem;
   display: grid;

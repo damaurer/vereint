@@ -247,7 +247,7 @@ export async function logoutFromKeycloak(refreshToken?: string, requestId?: stri
 
 export function buildEndSessionUrl(options?: { idTokenHint?: string; postLogoutRedirectUri?: string }): string {
   const logoutEndpoint = `${issuerBase()}/protocol/openid-connect/logout`;
-  const postLogoutRedirect = options?.postLogoutRedirectUri || `${serverEnvironment.publicBaseUrl}/web/login`;
+  const postLogoutRedirect = options?.postLogoutRedirectUri || `${serverEnvironment.publicBaseUrl}/auth/logged-out`;
 
   const params = new URLSearchParams({
     post_logout_redirect_uri: postLogoutRedirect,

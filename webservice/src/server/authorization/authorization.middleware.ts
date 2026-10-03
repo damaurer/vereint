@@ -15,30 +15,16 @@ import type { AppContext } from '../auth/auth.types';
  * nur über Freigabe, Anmeldung, `403` oder — bei gestörtem Fachservice — `503`.
  */
 
-/** Kontexte, die über die Webanwendung angemeldet werden. */
-const WEB_LOGIN_CONTEXTS: readonly AppContext[] = [
-  'tabletRecorder',
-  'admin',
-  'boardGeneral',
-  'boardTreasury',
-  'boardCommunications',
-];
-
-export function loginPathForContext(appContext: AppContext): string {
-  return WEB_LOGIN_CONTEXTS.includes(appContext) ? '/web/login' : '/pwa/login';
-}
-
 /**
  * Baut das Anmeldeziel. Das Rücksprungziel wird mit derselben Hilfsfunktion
  * geprüft wie in den Login-Routen (`src/server/auth/redirect.ts`); ungültige,
  * absolute oder protokollrelative Werte werden verworfen.
  */
-export function buildLoginRedirect(appContext: AppContext, requestedUrl: string): string {
-  const login = loginPathForContext(appContext);
-  if (!isSafeReturnTo(requestedUrl)) {
-    return login;
+export function buildLoginRedirect(requestedUrl?: string): string {
+  if (!requestedUrl || !isSafeReturnTo(requestedUrl)) {
+    return '/api/auth/login';
   }
-  return `${login}?returnUrl=${encodeURIComponent(requestedUrl)}`;
+  return `/api/auth/login?returnTo=${encodeURIComponent(requestedUrl)}`;
 }
 
 interface ProblemBody {
@@ -103,6 +89,13 @@ function sendServiceUnavailable(req: Request, res: Response, traceId: string): v
     );
 }
 
+const LEGACY_LOGIN_PATHS: readonly string[] = [
+  '/login',
+  '/web/login',
+  '/pwa/login',
+  '/password-reset',
+];
+
 export const authorizePages: RequestHandler = async (req, res, next) => {
   const pathname = req.path;
 
@@ -112,18 +105,50 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
     return;
   }
 
-  // 2. Registrierung über Einladungscode
+  // 2. Legacy-Login- und Reset-Pfade per 302 auf /api/auth/login umleiten
+  if (LEGACY_LOGIN_PATHS.includes(pathname)) {
+    const returnUrl =
+      (typeof req.query['returnUrl'] === 'string' ? req.query['returnUrl'] : undefined) ??
+      (typeof req.query['returnTo'] === 'string' ? req.query['returnTo'] : undefined);
+    res.redirect(buildLoginRedirect(returnUrl));
+    return;
+  }
+
+  // 3. Registrierung über Einladungscode
   if (pathIs(pathname, '/register')) {
     const inviteCode = pathname.split('/')[2] ?? '';
     if (!(await validateInvite(inviteCode))) {
       res.redirect('/404');
       return;
     }
+    res.redirect('/api/auth/login');
+    return;
+  }
+
+  // 4. Startseite: ohne Session direkt zum Login, mit Session weiter zum SSR/homeGuard
+  if (pathname === '/') {
+    if (!req.identity) {
+      if (isApiRequest(req)) {
+        const requestId = createCorrelationId();
+        sendProblem(
+          req,
+          res,
+          401,
+          'oidc_session_expired',
+          'Unauthorized',
+          'Für diesen Kontext ist eine gültige Session erforderlich.',
+          requestId,
+        );
+        return;
+      }
+      res.redirect('/api/auth/login');
+      return;
+    }
     next();
     return;
   }
 
-  // 3. Zielkontext bestimmen
+  // 5. Zielkontext bestimmen
   const matched = resolvePathAppContext(pathname);
   if (!matched) {
     next();
@@ -132,7 +157,7 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
 
   const requestId = createCorrelationId();
 
-  // 4. Gastkontext (/guest/:eventId)
+  // 6. Gastkontext (/guest/:eventId)
   if (matched.appContext === 'eventGuest') {
     const guestToken = (req.query['token'] as string) || (req.headers['x-guest-token'] as string | undefined);
     const guestResult = await checkResourceAccess({
@@ -169,7 +194,7 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
     return;
   }
 
-  // 5. Geschützte authentifizierte Kontexte
+  // 7. Geschützte authentifizierte Kontexte
   const identity = req.identity;
   if (!identity) {
     logSecurityEvent(
@@ -196,7 +221,7 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
       return;
     }
 
-    res.redirect(buildLoginRedirect(matched.appContext, req.originalUrl ?? pathname));
+    res.redirect(buildLoginRedirect(req.originalUrl ?? pathname));
     return;
   }
 
@@ -243,7 +268,7 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
       );
       return;
     }
-    res.redirect(buildLoginRedirect(matched.appContext, req.originalUrl ?? pathname));
+    res.redirect(buildLoginRedirect(req.originalUrl ?? pathname));
     return;
   }
 

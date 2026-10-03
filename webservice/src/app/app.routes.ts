@@ -5,31 +5,19 @@ import { authGuard, guestGuard, homeGuard, permissionGuard, roleGuard } from './
 export const routes: Routes = [
   { path: '', pathMatch: 'full', canActivate: [homeGuard], children: [] },
   {
-    path: 'login',
-    loadComponent: () => import('./auth/login.component').then((m) => m.LoginComponent),
+    path: 'auth/error',
+    data: { mode: 'error', title: 'Anmeldefehler', description: 'Fehler während der Anmeldung über Keycloak.', access: 'Öffentlich' },
+    loadComponent: () => import('./auth/auth-status.component').then((m) => m.AuthStatusComponent),
   },
   {
-    path: 'web/login',
-    loadComponent: () => import('./auth/login.component').then((m) => m.LoginComponent),
-  },
-  {
-    path: 'pwa/login',
-    loadComponent: () => import('./auth/login.component').then((m) => m.LoginComponent),
-  },
-  {
-    path: 'password-reset',
-    data: { title: 'Passwort zurücksetzen', description: 'Neutraler Passwort-Reset für Webkonten.', access: 'Öffentlich' },
-    loadComponent: () => import('./auth/password-reset.component').then((m) => m.PasswordResetComponent),
+    path: 'auth/logged-out',
+    data: { mode: 'loggedOut', title: 'Abgemeldet', description: 'Erfolgreich abgemeldet.', access: 'Öffentlich' },
+    loadComponent: () => import('./auth/auth-status.component').then((m) => m.AuthStatusComponent),
   },
   {
     path: 'invite/accept',
     data: { title: 'Einladung annehmen', description: 'Einladung annehmen oder Gastaktivierung.', access: 'Gültiger Einladungscode erforderlich' },
     loadComponent: () => import('./guest/invite-accept.component').then((m) => m.InviteAcceptComponent),
-  },
-  {
-    path: 'register/:inviteCode',
-    data: { title: 'Einladung registrieren', description: 'Registrierung oder Gastaktivierung mit validem Einladungscode.', access: 'Gültiger Einladungscode erforderlich' },
-    loadComponent: () => import('./member/register-invite.component').then((m) => m.RegisterInviteComponent),
   },
   {
     path: '403',

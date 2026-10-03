@@ -123,7 +123,7 @@ Alle Auslieferungsrichtlinien werden zentral in `webservice/src/server/authoriza
 | :--- | :--- | :--- | :--- |
 | **Geschützte Pfade** (`isPrivatePath`: AppContexts, `/register/*`) | `private, no-store` | `Cookie, Accept-Encoding` | Benutzer- und sitzungsspezifische Daten dürfen niemals in Shared Caches / Proxies landen. |
 | **Gehashte Build-Assets** (`isHashedAssetPath`: `main-5RAM3QJT.js` etc.) | `public, max-age=31536000, immutable` | `Accept-Encoding` | Dateiname ändert sich bei jedem Build; Inhalte können 1 Jahr unveränderlich gecacht werden. |
-| **App-Shell & Öffentliche Seiten** (`index.html`, `/login` etc.) | `no-cache` | `Accept-Encoding` | Browser muss vor jeder Wiederverwendung beim Server revalidieren (ETag / 304). |
+| **App-Shell & Öffentliche Seiten** (`index.html`, `/auth/error`, `/auth/logged-out` etc.) | `no-cache` | `Accept-Encoding` | Browser muss vor jeder Wiederverwendung beim Server revalidieren (ETag / 304). |
 
 ### Content-Security-Policy (CSP) Directives
 

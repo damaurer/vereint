@@ -7,12 +7,8 @@ import { AppContext, AuthSessionUser, BoardRole, UserRole } from './auth.types';
  * Sicherheitsentscheidung bleibt vollständig serverseitig (Express-Access-
  * Resolver und Spring-Boot-Fachservice, `deny by default`). Die Werte spiegeln
  * bewusst die Serverquellen aus `src/server/auth/redirect.ts`
- * (`CONTEXT_DEFAULT_PATHS`) und `authorization.middleware.ts`
- * (`loginPathForContext`), damit Client und Server dieselben Ziele verwenden.
+ * (`CONTEXT_DEFAULT_PATHS`), damit Client und Server dieselben Ziele verwenden.
  */
-
-/** Öffentliche Standard-Startseite ohne Session. */
-export const PUBLIC_LOGIN_ROUTE = '/pwa/login';
 
 /** Standardziel je App-Kontext, identisch zu `CONTEXT_DEFAULT_PATHS` im Server. */
 export const CONTEXT_DEFAULT_ROUTES: Readonly<Record<AppContext, string>> = {
@@ -27,18 +23,9 @@ export const CONTEXT_DEFAULT_ROUTES: Readonly<Record<AppContext, string>> = {
   eventGuest: '/guest',
 };
 
-/** Kontexte, die über die Webanwendung (`/web/login`) angemeldet werden. */
-const WEB_LOGIN_CONTEXTS: readonly AppContext[] = [
-  'tabletRecorder',
-  'admin',
-  'boardGeneral',
-  'boardTreasury',
-  'boardCommunications',
-];
-
 /**
  * Ordnet einen Zielpfad einem App-Kontext zu. Spiegelt bewusst
- * `resolvePathAppContext` im Server, damit die Loginwahl konsistent bleibt.
+ * `resolvePathAppContext` im Server.
  */
 export function contextForPath(pathname: string): AppContext | null {
   const clean = (pathname.split('?')[0] ?? '').split('#')[0];
@@ -62,24 +49,11 @@ export function contextForPath(pathname: string): AppContext | null {
 }
 
 /**
- * Wählt den Anmeldeeinstieg passend zum angeforderten Pfad: Vorstands-, Admin-
- * und Tablet-Kontexte melden sich über `/web/login` an, alle übrigen über
- * `/pwa/login` (spiegelt `loginPathForContext` im Server).
- */
-export function loginRouteForPath(pathname: string): string {
-  const context = contextForPath(pathname);
-  if (context && WEB_LOGIN_CONTEXTS.includes(context)) return '/web/login';
-  return PUBLIC_LOGIN_ROUTE;
-}
-
-/**
  * Leitet die Standard-Startseite eines angemeldeten Benutzers aus seinen Rollen
  * ab. Priorität `admin` vor `board` vor `member`; die Vorstandsrolle bestimmt
- * das Vorstandsressort. Ohne Session ergibt sich der öffentliche Login.
+ * das Vorstandsressort.
  */
-export function defaultRouteForSession(session: AuthSessionUser | null): string {
-  if (!session) return PUBLIC_LOGIN_ROUTE;
-
+export function defaultRouteForSession(session: AuthSessionUser): string {
   const roles: UserRole[] = session.roles ?? [];
   if (roles.includes('admin')) return CONTEXT_DEFAULT_ROUTES.admin;
   if (roles.includes('board')) return boardRouteForRole(session.boardRole);

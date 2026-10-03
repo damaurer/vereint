@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 function findRepoFile(relativePath: string): string {
   const fromCwd = resolve(process.cwd(), relativePath);
@@ -132,7 +133,7 @@ describe('Keycloak Realm Configuration', () => {
       const postLogout: string = webClient.attributes['post.logout.redirect.uris'];
       expect(postLogout).toBeDefined();
       expect(postLogout).not.toContain('*');
-      expect(postLogout.split('##')).toContain('http://localhost:8080/web/login');
+      expect(postLogout.split('##')).toContain('http://localhost:8080/auth/logged-out');
     }
   });
 

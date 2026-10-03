@@ -25,16 +25,19 @@ export type AppContext =
 
 | URL-Pfad / Präfix | Zugewiesener `AppContext` | Login-Ziel bei fehlender Session | Beschreibung |
 | :--- | :--- | :--- | :--- |
-| `/admin`, `/admin/*` | `admin` | `/web/login` | Administrationsbereich (Benutzer, Rollen, System). |
-| `/board/treasury`, `/board/treasury/*` | `boardTreasury` | `/web/login` | Kassen- und Finanzverwaltung des Vorstands. |
-| `/board/communications`, `/board/communications/*` | `boardCommunications` | `/web/login` | Kommunikations- und Rundschreibungsbereich. |
-| `/board`, `/board/*` | `boardGeneral` | `/web/login` | Allgemeiner Vorstandsbereich. |
-| `/tablet`, `/tablet/*` | `tabletRecorder` | `/web/login` | Kiosk-Strichlisten-Modus für Thekengeräte. |
+| `/admin`, `/admin/*` | `admin` | `/api/auth/login?returnTo=/admin` | Administrationsbereich (Benutzer, Rollen, System). |
+| `/board/treasury`, `/board/treasury/*` | `boardTreasury` | `/api/auth/login?returnTo=/board/treasury` | Kassen- und Finanzverwaltung des Vorstands. |
+| `/board/communications`, `/board/communications/*` | `boardCommunications` | `/api/auth/login?returnTo=/board/communications` | Kommunikations- und Rundschreibungsbereich. |
+| `/board`, `/board/*` | `boardGeneral` | `/api/auth/login?returnTo=/board` | Allgemeiner Vorstandsbereich. |
+| `/tablet`, `/tablet/*` | `tabletRecorder` | `/api/auth/login?returnTo=/tablet` | Kiosk-Strichlisten-Modus für Thekengeräte. |
 | `/guest/:eventId/*` | `eventGuest` | *(Gast-Token)* | Passwörterloser Gastzugang für Veranstaltungen. |
-| `/events/:eventId/manage/*` | `eventOwner` | `/pwa/login` | Veranstaltungsverwaltung für Ersteller/Verantwortliche. |
-| `/events/:eventId/*` | `event` | `/pwa/login` | Einzelansicht einer Veranstaltung für Mitglieder. |
-| `/app`, `/dashboard`, `/profile`, `/wallet`, `/purchases`, `/events`, `/catalog`, `/sublists`, `/chat`, `/notifications`, `/moments` | `memberPwa` | `/pwa/login` | Reguläre PWA-Mitgliederansichten. |
-| `/`, `/login`, `/web/login`, `/pwa/login`, `/password-reset`, `/invite/accept`, `/403`, `/404` | *(Öffentlich / `publicPaths`)* | *(Kein Login nötig)* | Öffentliche Seiten ohne Zugriffsbeschränkung. |
+| `/events/:eventId/manage/*` | `eventOwner` | `/api/auth/login?returnTo=/events/...` | Veranstaltungsverwaltung für Ersteller/Verantwortliche. |
+| `/events/:eventId/*` | `event` | `/api/auth/login?returnTo=/events/...` | Einzelansicht einer Veranstaltung für Mitglieder. |
+| `/app`, `/dashboard`, `/profile`, `/wallet`, `/purchases`, `/events`, `/catalog`, `/sublists`, `/chat`, `/notifications`, `/moments` | `memberPwa` | `/api/auth/login?returnTo=...` | Reguläre PWA-Mitgliederansichten. |
+| `/auth/error`, `/auth/logged-out`, `/invite/accept`, `/403`, `/404` | *(Öffentlich / `publicPaths`)* | *(Kein Login nötig)* | Öffentliche Seiten ohne Zugriffsbeschränkung. |
+| `/` | `memberPwa` *(über `homeGuard`)* | `/api/auth/login` *(ohne Session)* | Startseite: leitet unauthentifiziert direkt zum Login, authentifiziert auf die kontextabhängige Startseite. |
+| `/login`, `/web/login`, `/pwa/login`, `/password-reset` | *(Legacy)* | `302 /api/auth/login` | Alte Login- und Reset-URLs leiten per 302 auf den Keycloak-Login weiter (`returnUrl` wird zu `returnTo`). |
+| `/register/:inviteCode` | *(Einladung)* | `302 /api/auth/login` / `/404` | Gültiger Code leitet per 302 zu `/api/auth/login`, ungültiger zu `/404`. |
 | Unbekannte Pfade (z. B. `/impressum`) | `null` | *(Kein BFF-Block)* | Werden an Angular durchgereicht (SPA-404-Handling). |
 
 ---
@@ -47,22 +50,25 @@ Bevor statische Assets ausgeliefert oder das Angular-SSR gestartet wird, durchl�
 graph TD
   Start[Eingehender Seitenaufruf] --> Step1{1. Ist Pfad in publicPaths oder /api/*?}
   Step1 -- Ja --> Next1[next: Freigabe]
-  Step1 -- Nein --> Step2{2. resolvePathAppContext Match?}
+  Step1 -- Nein --> StepLegacy{2. Legacy Login / Register / / ohne Session?}
+  
+  StepLegacy -- Legacy Pfad / valid inviteCode / / ohne Session --> RedirLoginDirect[302 Redirect zu /api/auth/login]
+  StepLegacy -- Nein --> Step2{3. resolvePathAppContext Match?}
   
   Step2 -- Nein (Unbekannter Pfad) --> Next2[next: An Angular SPA / 404 weiterleiten]
-  Step2 -- Ja --> Step3{3. Ist AppContext == eventGuest?}
+  Step2 -- Ja --> Step3{4. Ist AppContext == eventGuest?}
   
   Step3 -- Ja --> GuestCheck{Gast-Token gültig gegen Spring /access/guest?}
   GuestCheck -- Erlaubt --> Next3[next: Freigabe]
   GuestCheck -- Verweigert / 401 / 403 --> DenyGuest[403 Forbidden / Gast-Fehlerseite]
   GuestCheck -- Spring Ausfall --> OutageGuest[503 Service Unavailable]
   
-  Step3 -- Nein (Regulärer Kontext) --> Step4{4. Besteht eine gültige Session?}
+  Step3 -- Nein (Regulärer Kontext) --> Step4{5. Besteht eine gültige Session?}
   Step4 -- Nein --> LoginRedir{Request-Typ?}
-  LoginRedir -- HTML-Seitenaufruf --> RedirLogin[302 Redirect zu /web/login bzw. /pwa/login?returnUrl=...]
+  LoginRedir -- HTML-Seitenaufruf --> RedirLogin[302 Redirect zu /api/auth/login?returnTo=...]
   LoginRedir -- API-Aufruf --> Prob401[401 Problem Details: oidc_session_expired]
   
-  Step4 -- Ja --> Step5[5. checkResourceAccess gegen Spring Boot / Cache]
+  Step4 -- Ja --> Step5[6. checkResourceAccess gegen Spring Boot / Cache]
   Step5 --> DecisionCheck{Entscheidung}
   DecisionCheck -- allowed == true --> Next4[next: Freigabe an SSR & Static]
   DecisionCheck -- allowed == false (disabled) --> DenyDisabled[403: account_disabled / Redirect /403]
@@ -129,6 +135,6 @@ Alle abgewiesenen Anfragen liefern standardisierte Fehlerstrukturen:
 ```
 
 ### Für HTML-Seitenaufrufe:
-- **Unauthentifiziert**: `302 Redirect` auf `/web/login?returnUrl=...` bzw. `/pwa/login?returnUrl=...`.
+- **Unauthentifiziert**: `302 Redirect` auf `/api/auth/login?returnTo=...`.
 - **Fehlende Berechtigung**: `302 Redirect` auf `/403`.
 - **Wartung / Ausfall (503)**: Vollständige HTML-Wartungsseite (*"Zugriff derzeit nicht prüfbar"*) mit `Retry-After: 30`-Header.

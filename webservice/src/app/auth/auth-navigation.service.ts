@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Router, UrlTree } from '@angular/router';
-import { defaultRouteForSession, loginRouteForPath, PUBLIC_LOGIN_ROUTE } from './app-context';
+import { defaultRouteForSession } from './app-context';
 import { AuthService } from './auth.service';
 import { AuthSessionUser } from './auth.types';
 import { RememberedLoginService } from './remembered-login.service';
@@ -26,29 +26,35 @@ export class AuthNavigationService {
 
   /**
    * Ermittelt die Standard-Startseite des angemeldeten Benutzers und navigiert
-   * dorthin. Ohne Session führt der Weg auf den passenden Login.
+   * dorthin. Ohne Session führt der Weg auf den Login.
    */
   async goToDefaultRoute(): Promise<boolean> {
     if (!isPlatformBrowser(this.platformId)) return false;
     const session = await this.auth.getSession(true);
+    if (!session) {
+      this.redirectToLogin('');
+      return false;
+    }
     return this.router.navigateByUrl(defaultRouteForSession(session));
   }
 
   /**
-   * Baut das Anmeldeziel für einen angeforderten Pfad. Der Kontext bestimmt
-   * `pwa`- oder `web`-Login; der ursprüngliche Pfad wird als `returnUrl`
-   * mitgegeben, damit Express nach erfolgreicher Anmeldung dorthin zurückführt.
+   * Leitet nicht-authentifizierte Benutzer direkt an den Keycloak-Login weiter.
+   * Ungültige oder unsichere URLs werden verworfen. Gibt stets `false` für
+   * Router-Guards zurück.
    */
-  loginUrlTree(requestedUrl: string): UrlTree {
-    const login = loginRouteForPath(requestedUrl);
-    if (!requestedUrl || !requestedUrl.startsWith('/') || requestedUrl.startsWith('//')) {
-      return this.router.parseUrl(login);
-    }
-    return this.router.createUrlTree([login], { queryParams: { returnUrl: requestedUrl } });
+  redirectToLogin(requestedUrl?: string): false {
+    if (!isPlatformBrowser(this.platformId)) return false;
+    const safeUrl =
+      requestedUrl && requestedUrl.startsWith('/') && !requestedUrl.startsWith('//')
+        ? requestedUrl
+        : undefined;
+    this.auth.startLogin(safeUrl);
+    return false;
   }
 
   /** UrlTree der kontextabhängigen Standard-Startseite (für Guards). */
-  defaultRouteUrlTree(session: AuthSessionUser | null): UrlTree {
+  defaultRouteUrlTree(session: AuthSessionUser): UrlTree {
     return this.router.parseUrl(defaultRouteForSession(session));
   }
 
@@ -60,13 +66,13 @@ export class AuthNavigationService {
   /**
    * Meldet den Benutzer ab: beendet die Express-Session (inklusive
    * Keycloak-Backchannel-Logout), verwirft private Clientdaten und navigiert
-   * auf den öffentlichen Login.
+   * auf `/auth/logged-out`.
    */
   async logout(): Promise<boolean> {
     await this.auth.signOut();
     this.rememberedLogin.forget();
     this.auth.clearClientState();
     if (!isPlatformBrowser(this.platformId)) return false;
-    return this.router.navigateByUrl(PUBLIC_LOGIN_ROUTE);
+    return this.router.navigateByUrl('/auth/logged-out');
   }
 }

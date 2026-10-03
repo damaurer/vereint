@@ -1,19 +1,18 @@
 import { PLATFORM_ID, runInInjectionContext, Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { AuthNavigationService } from './auth-navigation.service';
 import { authGuard, guestGuard, homeGuard, permissionGuard, roleGuard } from './auth.guards';
 import { AuthService } from './auth.service';
 import { AuthSessionUser } from './auth.types';
 
 type NavStub = {
-  loginUrlTree: ReturnType<typeof vi.fn>;
+  redirectToLogin: ReturnType<typeof vi.fn>;
   forbiddenUrlTree: ReturnType<typeof vi.fn>;
   defaultRouteUrlTree: ReturnType<typeof vi.fn>;
 };
 
-const LOGIN_TREE = { redirect: 'login' } as unknown;
 const FORBIDDEN_TREE = { redirect: '403' } as unknown;
 const DEFAULT_TREE = { redirect: 'default' } as unknown;
 
@@ -32,7 +31,7 @@ describe('auth navigation guards', () => {
   const configure = (platform: 'browser' | 'server', session: AuthSessionUser | null) => {
     authStub = { getSession: vi.fn(async () => session) };
     navStub = {
-      loginUrlTree: vi.fn(() => LOGIN_TREE),
+      redirectToLogin: vi.fn(() => false),
       forbiddenUrlTree: vi.fn(() => FORBIDDEN_TREE),
       defaultRouteUrlTree: vi.fn(() => DEFAULT_TREE),
     };
@@ -70,11 +69,11 @@ describe('auth navigation guards', () => {
       expect(result).toBe(true);
     });
 
-    it('redirects an expired session to the context login', async () => {
+    it('redirects an expired session to the login', async () => {
       configure('browser', null);
       const result = await run(() => authGuard(routeWith(), stateWith('/app')));
-      expect(result).toBe(LOGIN_TREE);
-      expect(navStub.loginUrlTree).toHaveBeenCalledWith('/app');
+      expect(result).toBe(false);
+      expect(navStub.redirectToLogin).toHaveBeenCalledWith('/app');
     });
   });
 
@@ -94,8 +93,8 @@ describe('auth navigation guards', () => {
     it('sends an anonymous request to the login', async () => {
       configure('browser', null);
       const result = await run(() => roleGuard(routeWith({ roles: ['admin'] }), stateWith('/admin')));
-      expect(result).toBe(LOGIN_TREE);
-      expect(navStub.loginUrlTree).toHaveBeenCalledWith('/admin');
+      expect(result).toBe(false);
+      expect(navStub.redirectToLogin).toHaveBeenCalledWith('/admin');
     });
   });
 
@@ -115,6 +114,15 @@ describe('auth navigation guards', () => {
       );
       expect(result).toBe(FORBIDDEN_TREE);
     });
+
+    it('sends an anonymous request to the login', async () => {
+      configure('browser', null);
+      const result = await run(() =>
+        permissionGuard(routeWith({ permissions: ['purchase.tablet'] }), stateWith('/tablet')),
+      );
+      expect(result).toBe(false);
+      expect(navStub.redirectToLogin).toHaveBeenCalledWith('/tablet');
+    });
   });
 
   describe('guestGuard', () => {
@@ -133,23 +141,26 @@ describe('auth navigation guards', () => {
 
   describe('homeGuard', () => {
     it('routes an authenticated browser user to the default route', async () => {
-      configure('browser', member(['admin']));
+      const authMember = member(['admin']);
+      configure('browser', authMember);
       const result = await run(() => homeGuard(routeWith(), stateWith('/')));
       expect(result).toBe(DEFAULT_TREE);
+      expect(navStub.defaultRouteUrlTree).toHaveBeenCalledWith(authMember);
     });
 
     it('sends an anonymous user to the login', async () => {
       configure('browser', null);
       const result = await run(() => homeGuard(routeWith(), stateWith('/')));
-      expect(result).toBe(DEFAULT_TREE);
-      expect(navStub.defaultRouteUrlTree).toHaveBeenCalledWith(null);
+      expect(result).toBe(false);
+      expect(navStub.redirectToLogin).toHaveBeenCalledWith('');
     });
 
-    it('renders the login on the server', async () => {
+    it('renders on the server without redirecting', async () => {
       configure('server', null);
       const result = await run(() => homeGuard(routeWith(), stateWith('/')));
-      expect(result).toBe(LOGIN_TREE);
-      expect(navStub.loginUrlTree).toHaveBeenCalledWith('');
+      expect(result).toBe(true);
+      expect(authStub.getSession).not.toHaveBeenCalled();
+      expect(navStub.redirectToLogin).not.toHaveBeenCalled();
     });
   });
 });

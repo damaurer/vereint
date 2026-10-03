@@ -3,11 +3,8 @@ import { serverEnvironment } from './environment';
 export const sessionCookieName = serverEnvironment.sessionCookieName;
 export const sessionDurationMs = serverEnvironment.sessionDurationMs;
 export const publicPaths = new Set([
-  '/',
-  '/login',
-  '/web/login',
-  '/pwa/login',
-  '/password-reset',
+  '/auth/error',
+  '/auth/logged-out',
   '/invite/accept',
   '/403',
   '/404',

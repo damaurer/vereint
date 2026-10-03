@@ -36,11 +36,8 @@ Um einen neuen Endpunkt (z. B. für Webhooks oder Systemstatus) zu registrieren:
 1. **`publicPaths` ergänzen** in `webservice/src/server/config/server-config.ts`:
    ```typescript
    export const publicPaths = new Set([
-     '/',
-     '/login',
-     '/web/login',
-     '/pwa/login',
-     '/password-reset',
+     '/auth/error',
+     '/auth/logged-out',
      '/invite/accept',
      '/impressum',    // <-- Hinzugefügt
      '/datenschutz',  // <-- Hinzugefügt
@@ -87,8 +84,7 @@ Wenn ein neuer geschützter Bereich entsteht (z. B. ein eigenes Kassenprüfer-Mo
    }
    ```
 3. **Login-Ziel & Fallback festlegen**:
-   - In `webservice/src/server/authorization/authorization.middleware.ts`: Gehört der Kontext zum Web-Portal (`WEB_LOGIN_CONTEXTS`) oder zur PWA?
-   - In `webservice/src/server/auth/redirect.ts`: `CONTEXT_DEFAULT_PATHS` für den Rücksprungpfad ergänzen.
+   - In `webservice/src/server/auth/redirect.ts`: `CONTEXT_DEFAULT_PATHS` für den Standard-Rücksprungpfad nach dem Login ergänzen.
 4. **Backend-Matrix abstimmen**: Im Spring-Boot-Backend (`baseservice/.../security/RolePermissionMatrix.kt`) die Rollen und Berechtigungen für den neuen `AppContext` freigeben.
 
 ---

@@ -32,7 +32,6 @@ const realFetch = globalThis.fetch;
 interface ContextCase {
   name: string;
   path: string;
-  login: string;
   appContext: AppContext;
   identity: RequestIdentity;
   allowedContexts: AppContext[];
@@ -49,7 +48,6 @@ const contextCases: ContextCase[] = [
   {
     name: 'memberPwa',
     path: '/app',
-    login: '/pwa/login',
     appContext: 'memberPwa',
     identity: memberIdentity,
     allowedContexts: ['memberPwa'],
@@ -57,7 +55,6 @@ const contextCases: ContextCase[] = [
   {
     name: 'event',
     path: '/events/evt-1',
-    login: '/pwa/login',
     appContext: 'event',
     identity: memberIdentity,
     allowedContexts: ['memberPwa', 'event'],
@@ -66,7 +63,6 @@ const contextCases: ContextCase[] = [
   {
     name: 'eventOwner',
     path: '/events/evt-1/manage',
-    login: '/pwa/login',
     appContext: 'eventOwner',
     identity: memberIdentity,
     allowedContexts: ['memberPwa', 'event', 'eventOwner'],
@@ -76,7 +72,6 @@ const contextCases: ContextCase[] = [
   {
     name: 'boardGeneral',
     path: '/board',
-    login: '/web/login',
     appContext: 'boardGeneral',
     identity: boardIdentity,
     allowedContexts: ['memberPwa', 'boardGeneral'],
@@ -84,7 +79,6 @@ const contextCases: ContextCase[] = [
   {
     name: 'boardTreasury',
     path: '/board/treasury',
-    login: '/web/login',
     appContext: 'boardTreasury',
     identity: boardIdentity,
     allowedContexts: ['memberPwa', 'boardGeneral', 'boardTreasury'],
@@ -92,7 +86,6 @@ const contextCases: ContextCase[] = [
   {
     name: 'boardCommunications',
     path: '/board/communications',
-    login: '/web/login',
     appContext: 'boardCommunications',
     identity: boardIdentity,
     allowedContexts: ['memberPwa', 'boardGeneral', 'boardCommunications'],
@@ -100,7 +93,6 @@ const contextCases: ContextCase[] = [
   {
     name: 'admin',
     path: '/admin',
-    login: '/web/login',
     appContext: 'admin',
     identity: adminIdentity,
     allowedContexts: ['memberPwa', 'admin'],
@@ -108,7 +100,6 @@ const contextCases: ContextCase[] = [
   {
     name: 'tabletRecorder',
     path: '/tablet',
-    login: '/web/login',
     appContext: 'tabletRecorder',
     identity: tabletIdentity,
     allowedContexts: ['memberPwa', 'tabletRecorder'],
@@ -204,7 +195,7 @@ describe('delivery rules per app context', () => {
 
     expect(response.status).toBe(302);
     expect(response.headers.get('location')).toBe(
-      `${testCase.login}?returnUrl=${encodeURIComponent(testCase.path)}`,
+      `/api/auth/login?returnTo=${encodeURIComponent(testCase.path)}`,
     );
     expect(response.headers.get('cache-control')).toBe(PRIVATE_CACHE_CONTROL);
     expect(response.headers.get('vary')).toContain('Cookie');
@@ -243,7 +234,7 @@ describe('delivery rules per app context', () => {
 
 describe('security headers', () => {
   it('sets a nonce based content security policy and hardening headers', async () => {
-    const response = await realFetch(`${baseUrl}/login`, { headers: { accept: 'text/html' } });
+    const response = await realFetch(`${baseUrl}/auth/error`, { headers: { accept: 'text/html' } });
     const csp = response.headers.get('content-security-policy') ?? '';
 
     expect(csp).toContain("default-src 'self'");
@@ -256,8 +247,8 @@ describe('security headers', () => {
   });
 
   it('creates a new nonce per response', async () => {
-    const first = await realFetch(`${baseUrl}/login`, { headers: { accept: 'text/html' } });
-    const second = await realFetch(`${baseUrl}/login`, { headers: { accept: 'text/html' } });
+    const first = await realFetch(`${baseUrl}/auth/error`, { headers: { accept: 'text/html' } });
+    const second = await realFetch(`${baseUrl}/auth/error`, { headers: { accept: 'text/html' } });
 
     expect(first.headers.get('content-security-policy')).not.toBe(
       second.headers.get('content-security-policy'),
@@ -265,10 +256,10 @@ describe('security headers', () => {
   });
 
   it('omits HSTS without TLS and sets it behind a TLS terminating proxy', async () => {
-    const plain = await realFetch(`${baseUrl}/login`, { headers: { accept: 'text/html' } });
+    const plain = await realFetch(`${baseUrl}/auth/error`, { headers: { accept: 'text/html' } });
     expect(plain.headers.get('strict-transport-security')).toBeNull();
 
-    const secure = await realFetch(`${baseUrl}/login`, {
+    const secure = await realFetch(`${baseUrl}/auth/error`, {
       headers: { accept: 'text/html', 'x-forwarded-proto': 'https' },
     });
     expect(secure.headers.get('strict-transport-security')).toBe('max-age=31536000; includeSubDomains');
@@ -285,14 +276,15 @@ describe('cache rules', () => {
 
     expect(isPrivateDeliveryPath('/app')).toBe(true);
     expect(isPrivateDeliveryPath('/register/abc')).toBe(true);
-    expect(isPrivateDeliveryPath('/login')).toBe(false);
+    expect(isPrivateDeliveryPath('/auth/error')).toBe(false);
+    expect(isPrivateDeliveryPath('/auth/logged-out')).toBe(false);
   });
 
   it('serves hashed assets immutable and the app shell revalidated', async () => {
     const asset = await realFetch(`${baseUrl}/main-5RAM3QJT.js`, { redirect: 'manual' });
     expect(asset.headers.get('cache-control')).toBe(IMMUTABLE_CACHE_CONTROL);
 
-    const shell = await realFetch(`${baseUrl}/login`, { headers: { accept: 'text/html' } });
+    const shell = await realFetch(`${baseUrl}/auth/error`, { headers: { accept: 'text/html' } });
     expect(shell.headers.get('cache-control')).toBe(APP_SHELL_CACHE_CONTROL);
     expect(shell.headers.get('vary')).toBe('Accept-Encoding');
   });

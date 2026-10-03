@@ -3,11 +3,8 @@ import type { Server } from 'node:http';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { attachIdentity } from '../auth/auth.middleware';
 import type { OidcTransactionState } from '../auth/auth.types';
-import {
-  installTestKeySet,
-  installTestSecrets,
-  signTokenPair,
-} from '../auth/testing/token-fixtures';
+import { installTestKeySet, installTestSecrets, signTokenPair } from '../auth/testing/token-fixtures';
+import { serverEnvironment } from '../config/environment';
 import { authRoutes } from './auth.routes';
 
 describe('auth.routes', () => {
@@ -172,7 +169,7 @@ describe('auth.routes', () => {
       });
 
       expect(response.status).toBe(302);
-      expect(response.headers.get('location')).toContain('/web/login?error=oidc_login_failed');
+      expect(response.headers.get('location')).toContain('/auth/error?error=oidc_login_failed');
       expect(response.headers.getSetCookie().some((c) => c.includes('vereint_session='))).toBe(false);
       expect(warn).toHaveBeenCalled();
     });
@@ -188,7 +185,7 @@ describe('auth.routes', () => {
         redirect: 'manual',
       });
 
-      expect(response.headers.get('location')).toContain('/web/login?error=oidc_login_failed');
+      expect(response.headers.get('location')).toContain('/auth/error?error=oidc_login_failed');
       expect(response.headers.getSetCookie().some((c) => c.includes('vereint_session='))).toBe(false);
     });
 
@@ -201,7 +198,7 @@ describe('auth.routes', () => {
       });
 
       expect(response.status).toBe(302);
-      expect(response.headers.get('location')).toContain('/web/login?error=invalid_state');
+      expect(response.headers.get('location')).toContain('/auth/error?error=invalid_state');
 
       const entry = JSON.parse(warn.mock.calls[0][0] as string);
       expect(entry.event).toBe('oidc_callback');
@@ -224,7 +221,7 @@ describe('auth.routes', () => {
         redirect: 'manual',
       });
 
-      expect(response.headers.get('location')).toContain('/web/login?error=oidc_login_failed');
+      expect(response.headers.get('location')).toContain('/auth/error?error=oidc_login_failed');
     });
 
     it('handles Keycloak error response during callback', async () => {
@@ -236,7 +233,7 @@ describe('auth.routes', () => {
       );
 
       expect(response.status).toBe(302);
-      expect(response.headers.get('location')).toContain('/web/login?error=');
+      expect(response.headers.get('location')).toContain('/auth/error?error=');
     });
 
     it('answers non-html clients with an error code and trace id', async () => {
@@ -335,6 +332,23 @@ describe('auth.routes', () => {
       expect(response.status).toBe(204);
       const setCookies = response.headers.getSetCookie();
       expect(setCookies.some((c) => c.includes('vereint_session=') && c.includes('Max-Age=0'))).toBe(true);
+    });
+  });
+
+  describe('GET /api/auth/logout', () => {
+    it('redirects to end-session URL with /auth/logged-out', async () => {
+      mockTokenEndpoint({});
+
+      const response = await originalFetch(`${baseUrl}/api/auth/logout`, {
+        headers: { Accept: 'text/html' },
+        redirect: 'manual',
+      });
+
+      expect(response.status).toBe(302);
+      expect(response.headers.get('location')).toContain('/protocol/openid-connect/logout');
+      expect(response.headers.get('location')).toContain(
+        `post_logout_redirect_uri=${encodeURIComponent(`${serverEnvironment.publicBaseUrl}/auth/logged-out`)}`,
+      );
     });
   });
 });
