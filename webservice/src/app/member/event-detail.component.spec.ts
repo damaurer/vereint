@@ -3,7 +3,7 @@ import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
-import type { EventDetail, EventParticipant, MomentSessionDto, MomentSummaryDto } from '../api/api.types';
+import type { EventDetail, EventParticipant, MemberProfile, MomentSessionDto, MomentSummaryDto } from '../api/api.types';
 import { EventDetailComponent } from './event-detail.component';
 import { MemberApiService } from './member-api.service';
 
@@ -58,12 +58,29 @@ const mockHistory: MomentSummaryDto[] = [
   },
 ];
 
+const profile: MemberProfile = {
+  id: 'u-1',
+  keycloakSubject: 'sub-1',
+  displayName: 'Alice',
+  email: 'alice@example.com',
+  disabled: false,
+  drinkRecorder: false,
+  boardRole: null,
+  roles: ['member'],
+  permissions: [],
+  createdAt: '2026-01-01T10:00:00Z',
+  updatedAt: '2026-01-02T10:00:00Z',
+};
+
 describe('EventDetailComponent', () => {
   let api: {
     getEvent: ReturnType<typeof vi.fn>;
     listParticipants: ReturnType<typeof vi.fn>;
     listMoments: ReturnType<typeof vi.fn>;
     listMomentHistory: ReturnType<typeof vi.fn>;
+    loadProfile: ReturnType<typeof vi.fn>;
+    addParticipant: ReturnType<typeof vi.fn>;
+    removeParticipant: ReturnType<typeof vi.fn>;
   };
 
   const create = async () => {
@@ -94,6 +111,9 @@ describe('EventDetailComponent', () => {
       listParticipants: vi.fn(() => of(participants)),
       listMoments: vi.fn(() => of(mockMoments)),
       listMomentHistory: vi.fn(() => of(mockHistory)),
+      loadProfile: vi.fn(() => of(profile)),
+      addParticipant: vi.fn((_eId, p) => of({ userId: p.userId, displayName: 'Alice', role: 'participant', joinedAt: '2026-06-01T10:00:00Z' })),
+      removeParticipant: vi.fn(() => of(undefined)),
     };
   });
 
@@ -123,17 +143,16 @@ describe('EventDetailComponent', () => {
     expect(html(fixture)).toContain('Absagen');
   });
 
-  it('stores the selected RSVP answer as client-side state', async () => {
+  it('stores the selected RSVP answer and updates participant list', async () => {
     const fixture = await create();
     const cmp = fixture.componentInstance as unknown as {
       rsvp: () => string | null;
       setRsvp(answer: 'yes' | 'maybe' | 'no'): void;
     };
-    expect(cmp.rsvp()).toBeNull();
-    cmp.setRsvp('yes');
     expect(cmp.rsvp()).toBe('yes');
     cmp.setRsvp('no');
     expect(cmp.rsvp()).toBe('no');
+    expect(api.removeParticipant).toHaveBeenCalledWith('e-1', 'u-1');
   });
 
   it('shows a neutral error when access is denied', async () => {

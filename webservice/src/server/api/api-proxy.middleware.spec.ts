@@ -164,4 +164,49 @@ describe('api-proxy.middleware', () => {
     const body = (await response.json()) as { code: string };
     expect(body.code).toBe('service_unavailable');
   });
+
+  it('forwards requests with X-Guest-Token without an active session', async () => {
+    injectedSession = undefined;
+    let captured: { url: string; headers: Headers } | undefined;
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      captured = { url: String(url), headers: new Headers(init?.headers) };
+      return new Response(JSON.stringify([{ id: 'msg-1', message: 'Hi' }]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+
+    const response = await originalFetch(`${baseUrl}/api/v1/events/evt-1/chat/guest/messages`, {
+      headers: { 'X-Guest-Token': 'guest-token-123' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(captured?.headers.get('x-guest-token')).toBe('guest-token-123');
+    expect(captured?.headers.get('authorization')).toBeNull();
+  });
+
+  it('forwards whitelisted public endpoints without an active session', async () => {
+    injectedSession = undefined;
+    let captured: { url: string; body: unknown } | undefined;
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      captured = {
+        url: String(url),
+        body: init?.body ? JSON.parse(String(init.body)) : undefined,
+      };
+      return new Response(JSON.stringify({ guestToken: 'gt-123', eventId: 'evt-1' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+
+    const response = await originalFetch(`${baseUrl}/api/v1/invites/accept`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: 'raw-token' }),
+    });
+
+    expect(response.status).toBe(201);
+    expect(captured?.url).toBe(`${serverEnvironment.springApiBaseUrl}/api/v1/invites/accept`);
+    expect(captured?.body).toEqual({ token: 'raw-token' });
+  });
 });

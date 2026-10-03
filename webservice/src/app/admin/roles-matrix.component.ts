@@ -110,7 +110,7 @@ function defaultRows(): PermissionRow[] {
 
       <footer class="roles-footer">
         <span class="roles-hint">
-          Systemrechte sind global für „Die Durstigen Eber“ geschützt.
+          Systemrechte sind global für Vereint geschützt.
         </span>
         <span class="roles-actions">
           <button

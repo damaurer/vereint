@@ -100,6 +100,25 @@ interface DashboardView {
               [value]="view.balance.entryCount"
             />
           </div>
+
+          <h2 class="member-subtitle">Schnellzugriff</h2>
+          <nav class="dash-shortcuts" aria-label="Schnellzugriff">
+            <a class="dash-shortcut-card" routerLink="/catalog">
+              <span class="dash-shortcut-icon">🍺</span>
+              <span class="dash-shortcut-title">Katalog</span>
+              <span class="dash-shortcut-sub">Getränke &amp; Speisen</span>
+            </a>
+            <a class="dash-shortcut-card" routerLink="/sublists">
+              <span class="dash-shortcut-icon">📋</span>
+              <span class="dash-shortcut-title">Sublists</span>
+              <span class="dash-shortcut-sub">Getränkekonfigurationen</span>
+            </a>
+            <a class="dash-shortcut-card" routerLink="/notifications">
+              <span class="dash-shortcut-icon">🔔</span>
+              <span class="dash-shortcut-title">Mitteilungen</span>
+              <span class="dash-shortcut-sub">Benachrichtigungen</span>
+            </a>
+          </nav>
         }
       </section>
     </main>
@@ -122,6 +141,47 @@ interface DashboardView {
       .dash-event-link:hover,
       .dash-event-link:focus-visible {
         text-decoration: none;
+      }
+
+      .dash-shortcuts {
+        display: grid;
+        gap: var(--space-2, 0.75rem);
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        margin: 0.5rem 0 1rem 0;
+      }
+
+      .dash-shortcut-card {
+        background: var(--color-surface-subtle, #f8fafc);
+        border: 1px solid var(--color-border, #e2e8f0);
+        border-radius: var(--radius-md, 0.5rem);
+        padding: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 0.25rem;
+        text-decoration: none;
+        transition: transform 0.15s, border-color 0.15s;
+      }
+
+      .dash-shortcut-card:hover {
+        border-color: var(--color-brand, #3b82f6);
+        transform: translateY(-2px);
+      }
+
+      .dash-shortcut-icon {
+        font-size: 1.5rem;
+      }
+
+      .dash-shortcut-title {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--color-text, #0f172a);
+      }
+
+      .dash-shortcut-sub {
+        font-size: 0.75rem;
+        color: var(--color-text-muted, #64748b);
       }
     `,
   ],

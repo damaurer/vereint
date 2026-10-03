@@ -5,7 +5,7 @@ import { forkJoin, of, catchError } from 'rxjs';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
 import { eventStatusLabel, formatDateTime } from './member-format';
-import type { EventDetail, EventParticipant, MomentSessionDto, MomentSummaryDto } from '../api/api.types';
+import type { EventDetail, EventParticipant, MemberProfile, MomentSessionDto, MomentSummaryDto } from '../api/api.types';
 import { AvatarBadgeComponent, StatusBadgeComponent, type StatusTone } from '../ui';
 
 interface EventDetailView {
@@ -13,6 +13,7 @@ interface EventDetailView {
   participants: EventParticipant[];
   moments: MomentSessionDto[];
   history: MomentSummaryDto[];
+  profile: MemberProfile | null;
 }
 
 /** Mögliche RSVP-Antwort eines Mitglieds (reine Client-Auswahl). */
@@ -361,13 +362,61 @@ export class EventDetailComponent implements OnInit, OnDestroy {
         participants: this.api.listParticipants(eventId),
         moments: this.api.listMoments(eventId).pipe(catchError(() => of([]))),
         history: this.api.listMomentHistory(eventId).pipe(catchError(() => of([]))),
+        profile: this.api.loadProfile().pipe(catchError(() => of(null))),
       }),
+      (data) => {
+        if (data.profile && data.participants.some((p) => p.userId === data.profile?.id)) {
+          this.rsvp.set('yes');
+        }
+      },
     );
   }
 
-  /** Speichert die gewählte RSVP-Antwort als reine Client-Auswahl. */
+  /** Speichert die gewählte RSVP-Antwort und synchronisiert sie mit dem Backend. */
   protected setRsvp(answer: RsvpAnswer): void {
+    const prev = this.rsvp();
     this.rsvp.set(answer);
+    const view = this.load.data();
+    if (!view || !view.profile) return;
+    const eventId = view.event.id;
+    const userId = view.profile.id;
+    const isParticipant = view.participants.some((p) => p.userId === userId);
+
+    if (answer === 'yes' && !isParticipant) {
+      this.api.addParticipant(eventId, { userId, role: 'participant' }).subscribe({
+        next: (participant) => {
+          this.load.data.update((curr) =>
+            curr
+              ? {
+                  ...curr,
+                  participants: [...curr.participants, participant],
+                  event: { ...curr.event, participantCount: curr.event.participantCount + 1 },
+                }
+              : curr,
+          );
+        },
+        error: () => {
+          this.rsvp.set(prev);
+        },
+      });
+    } else if (answer === 'no' && isParticipant) {
+      this.api.removeParticipant(eventId, userId).subscribe({
+        next: () => {
+          this.load.data.update((curr) =>
+            curr
+              ? {
+                  ...curr,
+                  participants: curr.participants.filter((p) => p.userId !== userId),
+                  event: { ...curr.event, participantCount: Math.max(0, curr.event.participantCount - 1) },
+                }
+              : curr,
+          );
+        },
+        error: () => {
+          this.rsvp.set(prev);
+        },
+      });
+    }
   }
 
   /**

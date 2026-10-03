@@ -64,14 +64,28 @@ function sendProblem(
     });
 }
 
-function forwardHeaders(req: Request, traceId: string, accessToken: string): Headers {
+function isPublicOrGuestRequest(req: Request): boolean {
+  if (req.header('x-guest-token')) return true;
+  const path = req.originalUrl.split('?')[0];
+  const publicPaths = [
+    '/api/v1/invites/accept',
+    '/api/v1/auth/access/guest',
+    '/api/v1/health',
+    '/api/v1/info',
+  ];
+  return publicPaths.includes(path);
+}
+
+function forwardHeaders(req: Request, traceId: string, accessToken?: string): Headers {
   const headers = new Headers();
   for (const [name, value] of Object.entries(req.headers)) {
     if (value === undefined) continue;
     if (STRIPPED_REQUEST_HEADERS.has(name.toLowerCase())) continue;
     headers.set(name, Array.isArray(value) ? value.join(',') : value);
   }
-  headers.set('authorization', `Bearer ${accessToken}`);
+  if (accessToken) {
+    headers.set('authorization', `Bearer ${accessToken}`);
+  }
   headers.set('x-request-id', traceId);
   if (!headers.has('accept')) headers.set('accept', 'application/json');
   return headers;
@@ -99,7 +113,7 @@ export const apiProxy: RequestHandler = (req, res, next) => {
   const instance = req.originalUrl;
 
   const accessToken = req.sessionData?.tokens.accessToken;
-  if (!accessToken) {
+  if (!accessToken && !isPublicOrGuestRequest(req)) {
     sendProblem(
       res,
       401,

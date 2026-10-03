@@ -1,18 +1,6 @@
 import { Routes } from '@angular/router';
-import { DummyPageComponent } from './dummy-page.component';
 import { AppShellComponent } from './shell/app-shell.component';
 import { authGuard, guestGuard, homeGuard, permissionGuard, roleGuard } from './auth/auth.guards';
-
-const page = (title: string, description: string, access = 'Geschützter Bereich') => ({
-  component: DummyPageComponent,
-  data: { title, description, access },
-});
-
-/** Geschützte Mitgliederseite: benötigt eine angemeldete Session (`authGuard`). */
-const memberPage = (title: string, description: string, access = 'Geschützter Bereich') => ({
-  ...page(title, description, access),
-  canActivate: [authGuard],
-});
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', canActivate: [homeGuard], children: [] },
@@ -28,20 +16,40 @@ export const routes: Routes = [
     path: 'pwa/login',
     loadComponent: () => import('./auth/login.component').then((m) => m.LoginComponent),
   },
-  { path: 'password-reset', ...page('Passwort zurücksetzen', 'Neutraler Passwort-Reset für Webkonten.', 'Öffentlich') },
-  { path: 'invite/accept', ...page('Einladung annehmen', 'Einladung annehmen oder Gastaktivierung.', 'Gültiger Einladungscode erforderlich') },
-  { path: 'register/:inviteCode', ...page('Einladung registrieren', 'Registrierung oder Gastaktivierung mit validem Einladungscode.', 'Gültiger Einladungscode erforderlich') },
-  { path: '403', ...page('Kein Zugriff', 'Für diese Seite fehlen die erforderlichen Rechte.', 'Zugriff verweigert') },
-  { path: '404', ...page('Nicht gefunden', 'Die angeforderte Seite existiert nicht.', 'Öffentlich') },
+  {
+    path: 'password-reset',
+    data: { title: 'Passwort zurücksetzen', description: 'Neutraler Passwort-Reset für Webkonten.', access: 'Öffentlich' },
+    loadComponent: () => import('./auth/password-reset.component').then((m) => m.PasswordResetComponent),
+  },
+  {
+    path: 'invite/accept',
+    data: { title: 'Einladung annehmen', description: 'Einladung annehmen oder Gastaktivierung.', access: 'Gültiger Einladungscode erforderlich' },
+    loadComponent: () => import('./guest/invite-accept.component').then((m) => m.InviteAcceptComponent),
+  },
+  {
+    path: 'register/:inviteCode',
+    data: { title: 'Einladung registrieren', description: 'Registrierung oder Gastaktivierung mit validem Einladungscode.', access: 'Gültiger Einladungscode erforderlich' },
+    loadComponent: () => import('./member/register-invite.component').then((m) => m.RegisterInviteComponent),
+  },
+  {
+    path: '403',
+    data: { title: 'Kein Zugriff', description: 'Für diese Seite fehlen die erforderlichen Rechte.', access: 'Zugriff verweigert' },
+    loadComponent: () => import('./errors/forbidden.component').then((m) => m.ForbiddenComponent),
+  },
+  {
+    path: '404',
+    data: { title: 'Nicht gefunden', description: 'Die angeforderte Seite existiert nicht.', access: 'Öffentlich' },
+    loadComponent: () => import('./errors/not-found.component').then((m) => m.NotFoundComponent),
+  },
   {
     // Layout-Route: genau eine AppShell umschließt alle geschützten Routen
     // (TICKET-032). Die Kindrouten behalten ihre Guards und `route.data`.
     path: '',
     component: AppShellComponent,
     children: [
-  { path: 'app', ...memberPage('Mitglieder-PWA', 'Persönliche Übersicht und Schnellzugriff.') },
-  {
-    path: 'dashboard',
+      { path: 'app', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
     canActivate: [authGuard],
     data: { title: 'Dashboard', description: 'Persönliche Übersicht und teilnehmende Events.', access: 'Geschützter Bereich' },
     loadComponent: () => import('./member/dashboard.component').then((m) => m.DashboardComponent),
@@ -88,8 +96,18 @@ export const routes: Routes = [
     data: { title: 'Gast-Event', description: 'Freigegebene Eventdetails und Event-Chat.', access: 'Gültiges Gast-Token erforderlich' },
     loadComponent: () => import('./guest/guest-event.component').then((m) => m.GuestEventComponent),
   },
-  { path: 'catalog', ...memberPage('Getränkekatalog', 'Globaler Katalog und Vorschläge.') },
-  { path: 'sublists', ...memberPage('Sublists', 'Wiederverwendbare Getränkelisten.') },
+  {
+    path: 'catalog',
+    canActivate: [authGuard],
+    data: { title: 'Getränkekatalog', description: 'Globaler Katalog und Vorschläge.', access: 'Geschützter Bereich' },
+    loadComponent: () => import('./catalog/catalog.component').then((m) => m.CatalogComponent),
+  },
+  {
+    path: 'sublists',
+    canActivate: [authGuard],
+    data: { title: 'Sublists', description: 'Wiederverwendbare Getränkelisten.', access: 'Geschützter Bereich' },
+    loadComponent: () => import('./sublists/sublists.component').then((m) => m.SublistsComponent),
+  },
   {
     path: 'chat',
     canActivate: [authGuard],
@@ -103,7 +121,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./chat/direct-messages.component').then((m) => m.DirectMessagesComponent),
   },
-  { path: 'notifications', ...memberPage('Notifications', 'In-App- und Push-Benachrichtigungen.') },
+  {
+    path: 'notifications',
+    canActivate: [authGuard],
+    data: { title: 'Benachrichtigungen', description: 'In-App- und Push-Benachrichtigungen.', access: 'Geschützter Bereich' },
+    loadComponent: () => import('./notifications/notifications.component').then((m) => m.NotificationsComponent),
+  },
   {
     path: 'moments',
     canActivate: [authGuard],

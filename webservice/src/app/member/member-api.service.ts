@@ -54,6 +54,16 @@ export class MemberApiService {
     return this.api.get<EventParticipant[]>(`/events/${encodeURIComponent(eventId)}/participants`);
   }
 
+  /** Fügt einen Teilnehmer hinzu (`POST /api/v1/events/{id}/participants`). */
+  addParticipant(eventId: string, payload: { userId: string; role?: string }): Observable<EventParticipant> {
+    return this.api.post<EventParticipant>(`/events/${encodeURIComponent(eventId)}/participants`, payload);
+  }
+
+  /** Entfernt einen Teilnehmer (`DELETE /api/v1/events/{id}/participants/{userId}`). */
+  removeParticipant(eventId: string, userId: string): Observable<void> {
+    return this.api.delete<void>(`/events/${encodeURIComponent(eventId)}/participants/${encodeURIComponent(userId)}`);
+  }
+
   /** Eigenes Guthaben (`GET /api/v1/ledger/members/{memberId}/balance`). */
   getBalance(memberId: string): Observable<MemberBalance> {
     return this.api.get<MemberBalance>(`/ledger/members/${encodeURIComponent(memberId)}/balance`);
