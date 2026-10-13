@@ -7,7 +7,9 @@ ARG JDK_IMAGE=eclipse-temurin:25-jdk
 ARG JRE_IMAGE=eclipse-temurin:25-jre
 
 # ---------- Build ----------
-FROM ${JDK_IMAGE} AS build
+# Der Build laeuft nativ auf der Plattform des Runners; das Jar ist
+# plattformunabhaengig und wird in das amd64- bzw. arm64-Runtime-Image kopiert.
+FROM --platform=$BUILDPLATFORM ${JDK_IMAGE} AS build
 
 WORKDIR /workspace
 

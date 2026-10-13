@@ -1,0 +1,12 @@
+# Bekannte Fehlalarme von Gitleaks (Format: <commit>:<datei>:<regel>:<zeile>).
+# Jeder Eintrag ist ein Platzhalter- bzw. Testwert, kein echtes Secret.
+# Neue Eintraege nur nach Pruefung hinzufuegen; echte Secrets muessen
+# stattdessen rotiert werden.
+
+# Beispielwerte in Mockups und Handbuch
+1aa258b5f6913f3ad196656b57e550c40ea95bab:docs/user-guide/mockups/mockup-4-events.html:generic-api-key:50
+1aa258b5f6913f3ad196656b57e550c40ea95bab:docs/user-guide/temp_manual.html:generic-api-key:1481
+# Beispiel-Idempotency-Key in der API-Dokumentation
+af3673512b469ff7f475d163c1924c1c827112ed:docs/api/error-handling-and-idempotency.md:generic-api-key:68
+# Test-Fixture fuer die Session-Signatur
+ee8222f150d6e5c386abb133b554ef96861ab16e:webservice/src/server/auth/testing/token-fixtures.ts:generic-api-key:18

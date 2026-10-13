@@ -1,0 +1,37 @@
+# Dependabot oeffnet woechentlich Pull Requests fuer veraltete bzw. unsichere
+# Abhaengigkeiten. Sicherheitsupdates kommen zusaetzlich sofort.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /baseservice
+    schedule:
+      interval: weekly
+    groups:
+      gradle:
+        patterns: ['*']
+
+  - package-ecosystem: npm
+    directory: /webservice
+    schedule:
+      interval: weekly
+    groups:
+      angular:
+        patterns: ['@angular/*', '@angular-devkit/*']
+      npm:
+        patterns: ['*']
+        exclude-patterns: ['@angular/*', '@angular-devkit/*']
+
+  - package-ecosystem: docker
+    directories:
+      - /baseservice
+      - /webservice
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']

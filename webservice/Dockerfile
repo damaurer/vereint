@@ -1,10 +1,14 @@
 # syntax=docker/dockerfile:1
 
-# Node 22 LTS, zusaetzlich per Digest gepinnt (reproduzierbarer Build).
-ARG NODE_IMAGE=node:22.22.0-alpine
+# Node 22 LTS, auf ein Patch-Release gepinnt (reproduzierbarer Build).
+# Die Angular CLI verlangt mindestens Node 22.22.3; Dependabot haelt das
+# Image aktuell.
+ARG NODE_IMAGE=node:22.23.3-alpine
 
 # ---------- Build ----------
-FROM ${NODE_IMAGE} AS build
+# Build-Stages laufen nativ auf der Plattform des Runners. Das Ergebnis ist
+# reines JavaScript und damit fuer amd64 und arm64 identisch.
+FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS build
 
 WORKDIR /app
 
@@ -20,7 +24,7 @@ ENV NODE_ENV=production
 RUN npm run build
 
 # ---------- Production dependencies ----------
-FROM ${NODE_IMAGE} AS deps
+FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS deps
 
 WORKDIR /app
 

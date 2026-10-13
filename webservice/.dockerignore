@@ -1,0 +1,14 @@
+# Nichts davon gehoert in den Build-Kontext: lokale Secrets, Build-Artefakte
+# und Abhaengigkeiten werden im Image neu erzeugt.
+.env
+.env.*
+!.env.example
+node_modules
+dist
+.angular
+coverage
+.vscode
+.idea
+*.iml
+Dockerfile
+.dockerignore
