@@ -103,12 +103,11 @@ describe('Keycloak Realm Configuration', () => {
     expect(webClient.implicitFlowEnabled).toBe(false);
     expect(webClient.publicClient).toBe(false);
     expect(webClient.attributes['pkce.code.challenge.method']).toBe('S256');
-    expect(webClient.redirectUris).toEqual(
-      expect.arrayContaining([
-        'http://localhost:8080/api/auth/callback',
-        'http://localhost:8080/login/oauth2/code/keycloak',
-      ]),
-    );
+    expect(webClient.redirectUris).toEqual([
+      '${PUBLIC_BASE_URL}/api/auth/callback',
+      '${PUBLIC_BASE_URL}/login/oauth2/code/keycloak',
+    ]);
+    expect(webClient.webOrigins).toEqual(['${PUBLIC_BASE_URL}']);
   });
 
   it('never uses wildcard redirect URIs or open web origins', () => {
@@ -116,12 +115,12 @@ describe('Keycloak Realm Configuration', () => {
       for (const client of config.clients) {
         for (const uri of client.redirectUris ?? []) {
           expect(uri).not.toContain('*');
-          expect(uri).toMatch(/^https?:\/\/[^*]+\/[^*]+$/);
+          expect(uri).toMatch(/^(https?:\/\/|\$\{PUBLIC_BASE_URL\})[^*]*\/[^*]+$/);
         }
         for (const origin of client.webOrigins ?? []) {
           expect(origin).not.toBe('+');
           expect(origin).not.toBe('*');
-          expect(origin).toMatch(/^https?:\/\//);
+          expect(origin).toMatch(/^(https?:\/\/|\$\{PUBLIC_BASE_URL\}$)/);
         }
       }
     }
@@ -133,8 +132,11 @@ describe('Keycloak Realm Configuration', () => {
       const postLogout: string = webClient.attributes['post.logout.redirect.uris'];
       expect(postLogout).toBeDefined();
       expect(postLogout).not.toContain('*');
-      expect(postLogout.split('##')).toContain('http://localhost:8080/auth/logged-out');
     }
+    const postLogout = (config: any) =>
+      config.clients.find((c: any) => c.clientId === 'vereint-web').attributes['post.logout.redirect.uris'].split('##');
+    expect(postLogout(realmConfig)).toEqual(['${PUBLIC_BASE_URL}/auth/logged-out']);
+    expect(postLogout(devRealmConfig)).toContain('http://localhost:8080/auth/logged-out');
   });
 
   it('disables direct access grants (password grant) for every client', () => {

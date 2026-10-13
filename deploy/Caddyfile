@@ -1,0 +1,34 @@
+# Oeffentlicher Einstiegspunkt. Caddy holt und erneuert das TLS-Zertifikat
+# fuer die Domain automatisch bei Let's Encrypt; HTTP leitet auf HTTPS um.
+{$PUBLIC_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Keycloak-Verwaltung (Admin-Konsole und Master-Realm) ist von aussen
+	# nicht erreichbar, nur per Session-Manager-Tunnel (siehe README).
+	handle /kc/admin* {
+		respond 404
+	}
+	handle /kc/realms/master* {
+		respond 404
+	}
+
+	handle /kc/* {
+		reverse_proxy keycloak:8080
+	}
+
+	handle {
+		reverse_proxy webservice:8080
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}
