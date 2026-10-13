@@ -1,4 +1,5 @@
 import { Component, computed, input, signal } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import type { GeoJsonFeatureDto, MomentMapGeoJsonDto } from '../api/api.types';
 import { formatDateTime } from '../member/member-format';
 
@@ -22,6 +23,7 @@ interface MapPin {
  */
 @Component({
   selector: 'app-moment-map',
+  imports: [IconComponent],
   template: `
     <section class="moment-map-section" aria-label="Weltkarte der Teilnehmer">
       <div class="map-header">
@@ -36,7 +38,7 @@ interface MapPin {
 
       @if (pins().length === 0) {
         <div class="map-empty" role="status">
-          <span class="map-empty-icon">🌍</span>
+          <vereint-icon class="map-empty-icon" name="location" />
           <strong>Keine Standorte geteilt</strong>
           <p>
             Für diesen Moment liegen keine Standortdaten vor. Standorte werden DSGVO-konform
@@ -145,7 +147,7 @@ interface MapPin {
                   aria-label="Schließen"
                   (click)="clearSelection()"
                 >
-                  ✕
+                  <vereint-icon name="close" />
                 </button>
               </div>
 
@@ -155,7 +157,7 @@ interface MapPin {
 
               <div class="pin-popup-meta">
                 <span class="pin-coords">
-                  📍 {{ active.latitude.toFixed(4) }}°, {{ active.longitude.toFixed(4) }}°
+                  <vereint-icon name="location" /> {{ active.latitude.toFixed(4) }}°, {{ active.longitude.toFixed(4) }}°
                 </span>
                 @if (active.createdAt) {
                   <span class="pin-time">{{ formatTime(active.createdAt) }}</span>

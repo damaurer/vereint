@@ -4,11 +4,11 @@ import { StatCardComponent } from '../ui';
 
 /** Präsentations-Rollen der Berechtigungsmatrix (Reihenfolge = Spalten). */
 const MATRIX_ROLES = [
-  { key: 'admin', label: 'Admin', icon: '👑' },
-  { key: 'treasurer', label: 'Kassenwart', icon: '💰' },
-  { key: 'secretary', label: 'Schriftwart', icon: '✉️' },
-  { key: 'host', label: 'Gastgeber', icon: '🍺' },
-  { key: 'member', label: 'Mitglied', icon: '🐗' },
+  { key: 'admin', label: 'Admin', icon: 'crown' },
+  { key: 'treasurer', label: 'Kassenwart', icon: 'treasury' },
+  { key: 'secretary', label: 'Schriftwart', icon: 'mail' },
+  { key: 'host', label: 'Gastgeber', icon: 'beer' },
+  { key: 'member', label: 'Mitglied', icon: 'user' },
 ] as const;
 
 type MatrixRoleKey = (typeof MATRIX_ROLES)[number]['key'];

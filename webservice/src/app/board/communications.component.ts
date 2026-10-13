@@ -39,7 +39,7 @@ interface CommunicationsView {
         <a class="member-back" routerLink="/board">← Zum Vorstand</a>
 
         <h2 class="member-subtitle">Pinnwand (Chat-Infotafeln)</h2>
-        <vereint-info-panel icon="📌" title="Info vom Schriftwart">
+        <vereint-info-panel icon="pin" title="Info vom Schriftwart">
           Angepinnte Infotafeln erscheinen oben im Chat. Verfasse unten einen
           neuen Rundbrief, um alle Mitglieder zu erreichen.
         </vereint-info-panel>

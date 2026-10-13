@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
@@ -22,7 +23,7 @@ type CatalogTab = 'drinks' | 'food';
 
 @Component({
   selector: 'app-catalog',
-  imports: [FormsModule, ModalComponent, StatusBadgeComponent],
+  imports: [IconComponent, FormsModule, ModalComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="catalog-title">
@@ -53,7 +54,7 @@ type CatalogTab = 'drinks' | 'food';
             [class.active]="activeTab() === 'drinks'"
             (click)="setTab('drinks')"
           >
-            🍺 Getränkekatalog
+            <vereint-icon name="beer" /> Getränkekatalog
           </button>
           <button
             type="button"
@@ -61,7 +62,7 @@ type CatalogTab = 'drinks' | 'food';
             [class.active]="activeTab() === 'food'"
             (click)="setTab('food')"
           >
-            🍽️ Speisenkatalog
+            <vereint-icon name="food" /> Speisenkatalog
           </button>
         </nav>
 
@@ -289,7 +290,7 @@ type CatalogTab = 'drinks' | 'food';
                         title="Barcode entfernen"
                         (click)="removeBarcode(drink.id, bc.id)"
                       >
-                        ✕
+                        <vereint-icon name="close" />
                       </button>
                     }
                   </li>

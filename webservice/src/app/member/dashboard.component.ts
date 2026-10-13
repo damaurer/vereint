@@ -9,9 +9,18 @@ import {
   BalanceCardComponent,
   EventCardComponent,
   HeroGreetingComponent,
+  IconComponent,
   StatCardComponent,
+  type IconName,
   type StatusTone,
 } from '../ui';
+
+interface DashboardShortcut {
+  route: string;
+  icon: IconName;
+  title: string;
+  sub: string;
+}
 
 interface DashboardView {
   profile: MemberProfile;
@@ -37,6 +46,7 @@ interface DashboardView {
     EventCardComponent,
     BalanceCardComponent,
     StatCardComponent,
+    IconComponent,
   ],
   template: `
     <main class="page-shell">
@@ -56,68 +66,66 @@ interface DashboardView {
           <vereint-hero-greeting
             eyebrow="Servus"
             [name]="view.profile.displayName"
-            subtitle="Schön, dass du wieder da bist."
+            [subtitle]="greeting()"
           />
 
-          <h2 class="member-subtitle">Nächster Termin</h2>
-          @if (nextEvent(view.events); as event) {
-            <a class="dash-event-link" [routerLink]="['/events', event.id]">
-              <vereint-event-card
-                [title]="event.title"
-                [when]="formatDateTime(event.startsAt)"
-                [statusLabel]="eventStatusLabel(event.status)"
-                [statusTone]="eventTone(event.status)"
+          <div class="dash-top">
+            <section class="dash-block" aria-labelledby="dash-balance">
+              <h2 id="dash-balance" class="dash-heading">Dein Guthaben</h2>
+              <vereint-balance-card
+                label="Aktueller Stand"
+                [amount]="formatMoney(view.balance.creditBalance, view.balance.currency)"
+                [negative]="isNegative(view.balance.creditBalance)"
+                [showTopup]="true"
+                (topup)="onTopup()"
               />
-            </a>
-          } @else {
-            <p class="member-muted">Aktuell keine Events.</p>
-          }
+              @if (topupRequested()) {
+                <p class="member-hint" role="status">
+                  Aufladungen erfolgen über den Kassenwart. Bitte sprich ihn direkt an.
+                </p>
+              }
+              <a class="dash-more" routerLink="/wallet">
+                Kontoauszug ansehen <vereint-icon name="chevron-right" />
+              </a>
+            </section>
 
-          <h2 class="member-subtitle">Guthaben</h2>
-          <vereint-balance-card
-            label="Dein Guthaben"
-            [amount]="formatMoney(view.balance.creditBalance, view.balance.currency)"
-            [negative]="isNegative(view.balance.creditBalance)"
-            [showTopup]="true"
-            (topup)="onTopup()"
-          />
-          @if (topupRequested()) {
-            <p class="member-hint" role="status">
-              Aufladungen erfolgen über den Kassenwart. Bitte sprich ihn direkt an.
-            </p>
-          }
-
-          <h2 class="member-subtitle">Diese Woche im Blick</h2>
-          <div class="dash-grid">
-            <vereint-stat-card
-              icon="📅"
-              label="Anstehende Events"
-              [value]="view.events.length"
-            />
-            <vereint-stat-card
-              icon="🧾"
-              label="Buchungen"
-              [value]="view.balance.entryCount"
-            />
+            <section class="dash-block" aria-labelledby="dash-next">
+              <h2 id="dash-next" class="dash-heading">Nächster Termin</h2>
+              @if (nextEvent(view.events); as event) {
+                <a class="dash-event-link" [routerLink]="['/events', event.id]">
+                  <vereint-event-card
+                    [title]="event.title"
+                    [when]="formatDateTime(event.startsAt)"
+                    [statusLabel]="eventStatusLabel(event.status)"
+                    [statusTone]="eventTone(event.status)"
+                  />
+                </a>
+                <a class="dash-more" routerLink="/events">
+                  Alle Events <vereint-icon name="chevron-right" />
+                </a>
+              } @else {
+                <div class="dash-empty">
+                  <vereint-icon name="events" [size]="28" />
+                  <p class="member-muted">Aktuell keine Events.</p>
+                </div>
+              }
+            </section>
           </div>
 
-          <h2 class="member-subtitle">Schnellzugriff</h2>
+          <div class="dash-grid">
+            <vereint-stat-card icon="events" label="Deine Events" [value]="view.events.length" />
+            <vereint-stat-card icon="receipt" label="Buchungen" [value]="view.balance.entryCount" />
+          </div>
+
+          <h2 class="dash-heading">Schnellzugriff</h2>
           <nav class="dash-shortcuts" aria-label="Schnellzugriff">
-            <a class="dash-shortcut-card" routerLink="/catalog">
-              <span class="dash-shortcut-icon">🍺</span>
-              <span class="dash-shortcut-title">Katalog</span>
-              <span class="dash-shortcut-sub">Getränke &amp; Speisen</span>
-            </a>
-            <a class="dash-shortcut-card" routerLink="/sublists">
-              <span class="dash-shortcut-icon">📋</span>
-              <span class="dash-shortcut-title">Sublists</span>
-              <span class="dash-shortcut-sub">Getränkekonfigurationen</span>
-            </a>
-            <a class="dash-shortcut-card" routerLink="/notifications">
-              <span class="dash-shortcut-icon">🔔</span>
-              <span class="dash-shortcut-title">Mitteilungen</span>
-              <span class="dash-shortcut-sub">Benachrichtigungen</span>
-            </a>
+            @for (shortcut of shortcuts; track shortcut.route) {
+              <a class="dash-shortcut-card" [routerLink]="shortcut.route">
+                <span class="dash-shortcut-icon"><vereint-icon [name]="shortcut.icon" /></span>
+                <span class="dash-shortcut-title">{{ shortcut.title }}</span>
+                <span class="dash-shortcut-sub">{{ shortcut.sub }}</span>
+              </a>
+            }
           </nav>
         }
       </section>
@@ -125,63 +133,127 @@ interface DashboardView {
   `,
   styles: [
     `
-      .dash-grid {
+      .dash-top {
         display: grid;
-        gap: var(--space-2);
-        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-        margin: 0.5rem 0;
+        gap: var(--space-4);
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        margin-bottom: var(--space-3);
+      }
+
+      .dash-block {
+        display: grid;
+        align-content: start;
+        gap: var(--space-1);
+      }
+
+      .dash-heading {
+        margin: 0 0 0.25rem;
+        color: var(--color-text);
+        font-size: 1rem;
+      }
+
+      .dash-more {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        justify-self: start;
+        min-height: 2.75rem;
+        font-size: 0.9rem;
       }
 
       .dash-event-link {
         display: block;
-        margin-top: 0.5rem;
+        color: inherit;
+        font-weight: inherit;
         text-decoration: none;
+        border-radius: var(--radius-md);
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease;
       }
 
       .dash-event-link:hover,
       .dash-event-link:focus-visible {
         text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: var(--vereint-shadow);
+      }
+
+      .dash-empty {
+        display: grid;
+        justify-items: center;
+        gap: 0.35rem;
+        padding: var(--space-4) var(--space-3);
+        border: 1px dashed var(--color-border-dark);
+        border-radius: var(--radius-md);
+        color: var(--color-text-muted);
+        text-align: center;
+      }
+
+      .dash-empty p {
+        margin: 0;
+      }
+
+      .dash-grid {
+        display: grid;
+        gap: var(--space-2);
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        margin: 0 0 var(--space-4);
       }
 
       .dash-shortcuts {
         display: grid;
-        gap: var(--space-2, 0.75rem);
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: var(--space-2);
+        grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
         margin: 0.5rem 0 1rem 0;
       }
 
       .dash-shortcut-card {
-        background: var(--color-surface-subtle, #f8fafc);
-        border: 1px solid var(--color-border, #e2e8f0);
-        border-radius: var(--radius-md, 0.5rem);
-        padding: 0.9rem;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 0.25rem;
+        align-items: flex-start;
+        gap: 0.2rem;
+        padding: 0.9rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-surface);
         text-decoration: none;
-        transition: transform 0.15s, border-color 0.15s;
+        transition:
+          transform 0.15s ease,
+          border-color 0.15s ease;
       }
 
-      .dash-shortcut-card:hover {
-        border-color: var(--color-brand, #3b82f6);
+      .dash-shortcut-card:hover,
+      .dash-shortcut-card:focus-visible {
+        border-color: var(--color-brand);
+        text-decoration: none;
         transform: translateY(-2px);
       }
 
       .dash-shortcut-icon {
-        font-size: 1.5rem;
+        display: grid;
+        place-items: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        margin-bottom: 0.35rem;
+        border-radius: var(--radius-sm);
+        background-color: var(--color-brand-soft);
+        color: var(--color-brand);
+        font-size: 1.35rem;
       }
 
       .dash-shortcut-title {
+        overflow-wrap: anywhere;
+        hyphens: auto;
         font-weight: 700;
-        font-size: 0.9rem;
-        color: var(--color-text, #0f172a);
+        font-size: 0.95rem;
+        color: var(--color-text);
       }
 
       .dash-shortcut-sub {
-        font-size: 0.75rem;
-        color: var(--color-text-muted, #64748b);
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--color-text-muted);
       }
     `,
   ],
@@ -195,13 +267,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly formatDateTime = formatDateTime;
   protected readonly eventStatusLabel = eventStatusLabel;
 
+  /** Kacheln „Schnellzugriff“: die Ziele hinter „Mehr“, die man oft braucht. */
+  protected readonly shortcuts: readonly DashboardShortcut[] = [
+    { route: '/moments', icon: 'moments', title: 'Moments', sub: 'Anstoßen & Rituale' },
+    { route: '/catalog', icon: 'catalog', title: 'Getränkekatalog', sub: 'Getränke & Speisen' },
+    { route: '/purchases', icon: 'receipt', title: 'Käufe', sub: 'Was du getrunken hast' },
+    { route: '/notifications', icon: 'bell', title: 'Mitteilungen', sub: 'Neuigkeiten vom Verein' },
+  ];
+
+  /** Tageszeitabhängiger Untertitel der Begrüßung. */
+  protected greeting(now: Date = new Date()): string {
+    const hour = now.getHours();
+    if (hour < 11) return 'Guten Morgen, schön dass du da bist.';
+    if (hour < 17) return 'Schön, dass du wieder da bist.';
+    return 'Guten Abend. Wer ist heute am Stammtisch?';
+  }
+
   ngOnInit(): void {
     this.reload();
   }
 
-  /** Nächster (erster) Termin der geladenen Liste oder `null`. */
-  protected nextEvent(events: EventSummary[]): EventSummary | null {
-    return events.length > 0 ? events[0] : null;
+  /**
+   * Nächster anstehender Termin: der früheste nicht abgesagte Termin, der noch
+   * nicht begonnen hat; sonst der erste Eintrag der Liste oder `null`.
+   */
+  protected nextEvent(events: EventSummary[], now: Date = new Date()): EventSummary | null {
+    const upcoming = events
+      .filter((event) => event.status !== 'cancelled' && Date.parse(event.startsAt) >= now.getTime())
+      .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
+    return upcoming[0] ?? events[0] ?? null;
   }
 
   /** Ordnet den Eventstatus einer Badge-Farbe der geteilten Primitive zu. */

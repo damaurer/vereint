@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin, of, catchError } from 'rxjs';
@@ -31,7 +32,7 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
  */
 @Component({
   selector: 'app-member-event-detail',
-  imports: [RouterLink, AvatarBadgeComponent, StatusBadgeComponent],
+  imports: [IconComponent, RouterLink, AvatarBadgeComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="event-title">
@@ -60,14 +61,14 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
               />
             </div>
             <ul class="detail-meta">
-              <li><span aria-hidden="true">📅</span> {{ formatDateTime(view.event.startsAt) }}</li>
+              <li><vereint-icon name="events" /> {{ formatDateTime(view.event.startsAt) }}</li>
               @if (view.event.endsAt) {
-                <li><span aria-hidden="true">⏰</span> bis {{ formatDateTime(view.event.endsAt) }}</li>
+                <li><vereint-icon name="clock" /> bis {{ formatDateTime(view.event.endsAt) }}</li>
               }
               @if (view.event.location) {
-                <li><span aria-hidden="true">📍</span> {{ view.event.location }}</li>
+                <li><vereint-icon name="location" /> {{ view.event.location }}</li>
               }
-              <li><span aria-hidden="true">👤</span> {{ view.event.ownerDisplayName }}</li>
+              <li><vereint-icon name="user" /> {{ view.event.ownerDisplayName }}</li>
             </ul>
             @if (view.event.location) {
               <button type="button" class="member-button route-button" (click)="openRoute(view.event.location)">
@@ -133,7 +134,7 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
           <h2 class="member-subtitle">Moments & Rituale</h2>
           <div class="moments-banner-card">
             <div class="moments-banner-head">
-              <span class="moments-banner-icon">✨</span>
+              <vereint-icon class="moments-banner-icon" name="moments" />
               <div>
                 <strong>Gemeinschaftsmomente</strong>
                 <p>
@@ -170,7 +171,7 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
                   </div>
                   <p class="history-text">{{ item.summary }}</p>
                   <span class="history-meta">
-                    👥 {{ item.uniqueParticipants }} Teilnehmer · 💬 {{ item.totalResponses }} Beiträge
+                    <vereint-icon name="users" /> {{ item.uniqueParticipants }} Teilnehmer · <vereint-icon name="chat" /> {{ item.totalResponses }} Beiträge
                   </span>
                 </li>
               }

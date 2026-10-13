@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import { FormsModule } from '@angular/forms';
 import { EMAIL_PATTERN } from '../auth/auth.types';
 import { formatDateTime } from '../member/member-format';
@@ -60,9 +61,9 @@ function demoInvites(): OpenInvite[] {
  */
 @Component({
   selector: 'app-admin-invite-modal',
-  imports: [FormsModule, ModalComponent, StatusBadgeComponent],
+  imports: [IconComponent, FormsModule, ModalComponent, StatusBadgeComponent],
   template: `
-    <vereint-modal [open]="open" title="Mitglied einladen 🐗" (closed)="close()">
+    <vereint-modal [open]="open" title="Mitglied einladen" (closed)="close()">
       <form class="invite-form" (ngSubmit)="send()">
         <label class="manage-field manage-field-grow">
           <span>E-Mail-Adresse</span>
@@ -105,7 +106,7 @@ function demoInvites(): OpenInvite[] {
           <button type="button" class="member-button member-button-ghost" (click)="close()">
             Abbrechen
           </button>
-          <button type="submit" class="member-button">Einladung senden 🍺</button>
+          <button type="submit" class="member-button"><vereint-icon name="send" /> Einladung senden</button>
         </div>
       </form>
 

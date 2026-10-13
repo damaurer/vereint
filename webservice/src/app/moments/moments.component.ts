@@ -7,6 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -49,6 +50,7 @@ export interface QuickReaction {
 @Component({
   selector: 'app-moments',
   imports: [
+    IconComponent,
     FormsModule,
     RouterLink,
     ModalComponent,
@@ -95,7 +97,7 @@ export interface QuickReaction {
         @if (pushJoinBanner(); as banner) {
           <div class="push-alert-banner" role="alert">
             <div class="push-alert-body">
-              <span class="push-alert-icon">🔔</span>
+              <vereint-icon class="push-alert-icon" name="bell" />
               <div>
                 <strong>Neuer Moment gestartet: „{{ banner.title }}“</strong>
                 <p>Möchtest du beitreten und eine Reaktion oder einen Status teilen?</p>
@@ -154,7 +156,7 @@ export interface QuickReaction {
           <!-- Aktive Moments Liste -->
           @if (activeSessions().length === 0) {
             <div class="empty-moments-card">
-              <span class="empty-icon">✨</span>
+              <vereint-icon class="empty-icon" name="moments" />
               <h3>Kein aktiver Moment</h3>
               <p>
                 Aktuell läuft kein Ritual oder Gemeinschaftsmoment für dieses Event.
@@ -194,7 +196,7 @@ export interface QuickReaction {
                   <div class="session-meta">
                     <span class="session-creator">Von {{ session.creatorName }}</span>
                     <span class="session-responses-count">
-                      💬 {{ session.responsesCount }} Antworten
+                      <vereint-icon name="chat" /> {{ session.responsesCount }} Antworten
                     </span>
                   </div>
 
@@ -213,7 +215,7 @@ export interface QuickReaction {
                         [routerLink]="['/chat']"
                         [queryParams]="{ conversationId: session.conversationId }"
                       >
-                        💬 24h-Chat
+                        <vereint-icon name="chat" /> 24h-Chat
                       </a>
                     }
 
@@ -317,8 +319,8 @@ export interface QuickReaction {
                     </div>
                     <p class="history-summary">{{ item.summary }}</p>
                     <div class="history-stats">
-                      <span>👥 {{ item.uniqueParticipants }} Teilnehmer</span>
-                      <span>💬 {{ item.totalResponses }} Beiträge</span>
+                      <span><vereint-icon name="users" /> {{ item.uniqueParticipants }} Teilnehmer</span>
+                      <span><vereint-icon name="chat" /> {{ item.totalResponses }} Beiträge</span>
                     </div>
                   </li>
                 }
@@ -410,7 +412,7 @@ export interface QuickReaction {
                 name="consent"
                 (change)="onConsentToggle($event)"
               />
-              <span>📍 Meinen Standort für die Weltkarte freigeben (DSGVO Opt-in)</span>
+              <span><vereint-icon name="location" /> Meinen Standort für die Weltkarte freigeben (DSGVO Opt-in)</span>
             </label>
             @if (geoStatus()) {
               <small class="geo-status-text">{{ geoStatus() }}</small>
@@ -485,7 +487,7 @@ export interface QuickReaction {
                 name="respondConsent"
                 (change)="onRespondConsentToggle($event)"
               />
-              <span>📍 Aktuellen Standort für diesen Beitrag auf der Weltkarte teilen</span>
+              <span><vereint-icon name="location" /> Aktuellen Standort für diesen Beitrag auf der Weltkarte teilen</span>
             </label>
             @if (respondGeoStatus()) {
               <small class="geo-status-text">{{ respondGeoStatus() }}</small>

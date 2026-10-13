@@ -1,5 +1,4 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { forkJoin, switchMap } from 'rxjs';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
@@ -26,14 +25,13 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
  */
 @Component({
   selector: 'app-member-wallet',
-  imports: [RouterLink, BalanceCardComponent, InfoPanelComponent],
+  imports: [BalanceCardComponent, InfoPanelComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="wallet-title">
         <span class="eyebrow">Guthaben & Transaktionen</span>
         <h1 id="wallet-title">Bierkasse</h1>
 
-        <a class="member-back" routerLink="/dashboard">← Zur Übersicht</a>
 
         @if (load.isLoading()) {
           <div class="state-card" role="status" aria-live="polite">
@@ -60,7 +58,7 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
             </p>
           }
 
-          <vereint-info-panel icon="🛡" title="Kassenwart">
+          <vereint-info-panel icon="treasury" title="Kassenwart">
             Guthaben wird vom Kassenwart verwaltet. Änderungen bedürfen einer Freigabe.
           </vereint-info-panel>
 

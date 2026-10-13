@@ -84,7 +84,7 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
             />
           </p>
           @if (head.event.location) {
-            <vereint-info-panel icon="📍" title="Nächster Termin">
+            <vereint-info-panel icon="location" title="Nächster Termin">
               {{ head.event.location }} · {{ formatDateTime(head.event.startsAt) }}
             </vereint-info-panel>
           }

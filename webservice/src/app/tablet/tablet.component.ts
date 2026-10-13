@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import { RouterLink } from '@angular/router';
 import { forkJoin, type Observable } from 'rxjs';
 import { AsyncState } from '../member/async-state';
@@ -34,6 +35,7 @@ interface EventContext {
 @Component({
   selector: 'app-tablet',
   imports: [
+    IconComponent,
     RouterLink,
     StatusBadgeComponent,
     StrichlisteRowComponent,
@@ -53,10 +55,9 @@ interface EventContext {
         } @else {
           <span class="eyebrow">Drink Recorder</span>
         }
-        <h1 id="tablet-title">{{ standalone() ? 'Strichliste Terminal' : 'Tablet-Erfassung' }}</h1>
+        <h1 id="tablet-title">{{ standalone() ? 'Strichliste Terminal' : 'Thekenterminal' }}</h1>
         @if (!standalone()) {
           <p>Strichliste für aktive Events.</p>
-          <a class="member-back" routerLink="/dashboard">← Zur Übersicht</a>
         }
         <button
           type="button"
@@ -178,7 +179,7 @@ interface EventContext {
                   [disabled]="busy()"
                   (click)="openRevenueSheet('round', ctx.members)"
                 >
-                  🍻 Runde ausgeben
+                  <vereint-icon name="beer" /> Runde ausgeben
                 </button>
                 <button
                   type="button"
@@ -186,7 +187,7 @@ interface EventContext {
                   [disabled]="busy()"
                   (click)="openRevenueSheet('evening', ctx.members)"
                 >
-                  👑 Ganzen Abend stiften
+                  <vereint-icon name="crown" /> Ganzen Abend stiften
                 </button>
               </div>
 

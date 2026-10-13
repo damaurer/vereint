@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import {
@@ -15,14 +16,14 @@ import { InfoPanelComponent, ModalComponent, StatusBadgeComponent } from '../ui'
 
 @Component({
   selector: 'app-sublists',
-  imports: [FormsModule, InfoPanelComponent, ModalComponent, StatusBadgeComponent],
+  imports: [IconComponent, FormsModule, InfoPanelComponent, ModalComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="sublists-title">
         <div class="sublists-header">
           <div>
             <span class="eyebrow">Event-Vorbereitung</span>
-            <h1 id="sublists-title">Getränke-Sublists</h1>
+            <h1 id="sublists-title">Getränkelisten</h1>
             <p>Erstelle und verwalte wiederverwendbare Getränkekonfigurationen für Events.</p>
           </div>
           <button type="button" class="member-button" (click)="openCreateModal()">
@@ -30,7 +31,7 @@ import { InfoPanelComponent, ModalComponent, StatusBadgeComponent } from '../ui'
           </button>
         </div>
 
-        <vereint-info-panel icon="📋" title="Wiederverwendbare Getränkelisten">
+        <vereint-info-panel icon="lists" title="Wiederverwendbare Getränkelisten">
           Sublists ermöglichen es dir, eine Vorauswahl an Getränken mit spezifischen Event-Preisen
           zusammenzustellen und mit einem Klick jedem Event zuzuweisen.
         </vereint-info-panel>
@@ -167,7 +168,7 @@ import { InfoPanelComponent, ModalComponent, StatusBadgeComponent } from '../ui'
                       title="Aus Sublist entfernen"
                       (click)="removeItem(sublist.id, item.id)"
                     >
-                      ✕
+                      <vereint-icon name="close" />
                     </button>
                   </li>
                 }

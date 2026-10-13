@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { IconComponent } from '../ui/icon.component';
 import { map, switchMap } from 'rxjs';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
@@ -18,7 +18,7 @@ import { StatusBadgeComponent } from '../ui';
  */
 @Component({
   selector: 'app-member-purchases',
-  imports: [RouterLink, StatusBadgeComponent],
+  imports: [IconComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="purchases-title">
@@ -26,7 +26,6 @@ import { StatusBadgeComponent } from '../ui';
         <h1 id="purchases-title">Käufe</h1>
         <p>Deine Käufe mit unveränderlichem Beleg.</p>
 
-        <a class="member-back" routerLink="/dashboard">← Zur Übersicht</a>
 
         @if (load.isLoading()) {
           <div class="state-card" role="status" aria-live="polite">
@@ -56,7 +55,7 @@ import { StatusBadgeComponent } from '../ui';
                       [alt]="purchase.snapshot!.drinkName"
                     />
                   } @else {
-                    <span class="receipt-image receipt-image-fallback" aria-hidden="true">🍺</span>
+                    <span class="receipt-image receipt-image-fallback" aria-hidden="true"><vereint-icon name="beer" /></span>
                   }
                   <div class="receipt-body">
                     <div class="receipt-head">

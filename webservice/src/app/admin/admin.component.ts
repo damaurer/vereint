@@ -1,6 +1,5 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
@@ -88,7 +87,6 @@ function formatDate(iso: string): string {
   selector: 'app-admin',
   imports: [
     FormsModule,
-    RouterLink,
     AvatarBadgeComponent,
     DataTableComponent,
     InfoPanelComponent,
@@ -103,9 +101,8 @@ function formatDate(iso: string): string {
         <span class="eyebrow">Administration</span>
         <h1 id="admin-title">Mitglieder &amp; Gruppen</h1>
         <p>Mitglieder, Rollen und Einladungen der „Durstigen Eber“.</p>
-        <a class="member-back" routerLink="/dashboard">← Zur Übersicht</a>
-
-        <vereint-info-panel icon="🛡" title="Administration">
+        
+        <vereint-info-panel icon="admin" title="Administration">
           Rollen und Berechtigungen werden serverseitig autorisiert; hier wird die
           Verwaltung nur vorbereitet.
         </vereint-info-panel>

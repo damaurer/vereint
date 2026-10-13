@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { IconComponent } from './icon.component';
+import type { IconName } from './icons';
 
 /**
  * Kompakte Kennzahlen-Karte (TICKET-032): Label, großer Wert und optionaler
@@ -6,12 +8,13 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
  */
 @Component({
   selector: 'vereint-stat-card',
+  imports: [IconComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <article class="ui-stat-card">
       @if (icon) {
-        <span class="ui-stat-icon" aria-hidden="true">{{ icon }}</span>
+        <vereint-icon class="ui-stat-icon" [name]="icon" />
       }
       <p class="ui-stat-label">{{ label }}</p>
       <p class="ui-stat-value">{{ value }}</p>
@@ -25,5 +28,5 @@ export class StatCardComponent {
   @Input() label = '';
   @Input() value: string | number = '';
   @Input() hint: string | null = null;
-  @Input() icon: string | null = null;
+  @Input() icon: IconName | null = null;
 }

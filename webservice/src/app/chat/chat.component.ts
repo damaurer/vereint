@@ -7,6 +7,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -44,7 +45,7 @@ interface ConversationRow {
  */
 @Component({
   selector: 'app-chat',
-  imports: [FormsModule, RouterLink, AvatarBadgeComponent, InfoPanelComponent],
+  imports: [IconComponent, FormsModule, RouterLink, AvatarBadgeComponent, InfoPanelComponent],
   template: `
     <main class="page-shell">
       <section class="page-card chat-card" aria-labelledby="chat-title">
@@ -176,7 +177,7 @@ interface ConversationRow {
                   aria-label="Anhang hinzufügen"
                   (click)="attach()"
                 >
-                  📎
+                  <vereint-icon name="attach" />
                 </button>
                 <input
                   name="draft"
@@ -200,7 +201,7 @@ interface ConversationRow {
                   aria-label="Senden"
                   [disabled]="sending() || draft.trim().length === 0"
                 >
-                  ➤
+                  <vereint-icon name="send" />
                 </button>
               </form>
             </div>

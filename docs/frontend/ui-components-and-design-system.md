@@ -64,3 +64,27 @@ Alle UI-Komponenten sind als **Angular Standalone Components** ohne externe UI-F
 
 ### 10. `AvatarBadgeComponent` (`avatar-badge.component.ts`)
 - **Zweck**: Rundes Profilbild mit Initialen-Fallback und Statuspunkt.
+
+### 11. `IconComponent` (`icon.component.ts`, `icons.ts`)
+- **Zweck**: Eigenes Vereint-Icon-Set statt Emojis für Navigation, Buttons, Statuskacheln und Hinweise.
+- **Stil**: 24er-Raster, 1,75er Linie, runde Enden und Ecken. Fast jedes Icon trägt einen gefüllten „Knoten“ aus der Bildmarke (Tür beim Haus, Klöppel der Glocke, Datenpunkte der Statistik, Regler der Administration).
+- **Nutzung**: `<vereint-icon name="wallet" />` ist dekorativ und skaliert mit der Schriftgröße; `[size]="28"` setzt Pixel, `label="Mitteilungen"` macht es zu einem benannten Bild für Screenreader. Farbe kommt über `color` (`currentColor`).
+- **Neue Icons**: In `icons.ts` als Formen-Daten ergänzen (kein `innerHTML`, SSR-sicher). Der Test `icon.component.spec.ts` prüft, dass alles im 24er-Raster liegt.
+- **Emojis** bleiben dort, wo sie Inhalt sind (Reaktionen im Chat, Moments-Rituale), nicht als Bedienelement.
+
+## 🧭 Navigation (`webservice/src/app/shell`)
+
+`nav-model.ts` ist die einzige Quelle für alle Ziele, gruppiert in **Verein**, **Mein Konto**, **Theke** und **Verwaltung** (nur mit Rolle/Permission).
+
+| Gerät | Darstellung |
+| :--- | :--- |
+| Handy | Kopfzeile mit Seitentitel und Mitteilungen; unten Start, Events, Chat, Guthaben und **Mehr** (Sheet mit allen übrigen Seiten und Abmelden). |
+| Tablet | Beschriftete Icon-Leiste mit denselben vier Zielen plus **Mehr**; Kopfzeile mit Profil-Menü. |
+| Desktop | Gruppierte Seitenleiste mit allen Seiten; Kopfzeile mit Seitentitel, Mitteilungen und Profil-Menü (Profil, Guthaben, Abmelden). |
+
+Der Seitentitel in der Kopfzeile kommt aus `route.data.title`; Titel und Navigationslabel sollen gleich lauten.
+
+## 📱 App-Icons (`webservice/public`)
+
+- `vereint-app-icon.svg`: Favicon und App-Icon, gefüllte Fläche im Markenverlauf mit weißer Bildmarke (bleibt bei 16 px lesbar).
+- `icons/icon-192.png`, `icons/icon-512.png`, `icons/icon-maskable-512.png`, `icons/apple-touch-icon.png`: Homescreen-Icons, eingebunden über `manifest.webmanifest` und `index.html`.

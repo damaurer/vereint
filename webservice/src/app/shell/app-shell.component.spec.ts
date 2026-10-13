@@ -63,7 +63,8 @@ describe('AppShellComponent', () => {
     const root = el(fixture);
     expect(root.querySelector('.shell-bottom-bar')).toBeTruthy();
     expect(root.querySelector('.shell-sidebar')).toBeFalsy();
-    expect(root.textContent).toContain('Home');
+    expect(root.textContent).toContain('Start');
+    expect(root.textContent).toContain('Mehr');
     expect(root.querySelector('router-outlet')).toBeTruthy();
   });
 
@@ -74,6 +75,37 @@ describe('AppShellComponent', () => {
     expect(root.querySelector('.shell-rail')).toBeTruthy();
     expect(root.querySelector('.shell-sidebar')).toBeFalsy();
     expect(root.querySelector('.shell-bottom-bar')).toBeFalsy();
+  });
+
+  it('shows the page title area and a working notifications link in the topbar', async () => {
+    const fixture = await create();
+    const root = el(fixture);
+    expect(root.querySelector('.shell-page-title')).toBeTruthy();
+    expect(root.querySelector('a.shell-icon-button')?.getAttribute('href')).toBe('/notifications');
+  });
+
+  it('offers logout in the profile menu', async () => {
+    const fixture = await create();
+    const root = el(fixture);
+    (root.querySelector('.shell-profile') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(root.querySelector('.shell-menu')?.textContent).toContain('Abmelden');
+  });
+
+  it('opens the more sheet with all remaining pages on mobile', async () => {
+    viewport.set('mobile');
+    session = member(['board']);
+    const fixture = await create();
+    const root = el(fixture);
+    const more = Array.from(root.querySelectorAll('.shell-bottom-link')).find((node) =>
+      node.textContent?.includes('Mehr'),
+    ) as HTMLButtonElement;
+    more.click();
+    fixture.detectChanges();
+    const sheet = root.querySelector('.ui-sheet')?.textContent ?? '';
+    expect(sheet).toContain('Profil');
+    expect(sheet).toContain('Kasse & Finanzen');
+    expect(sheet).toContain('Abmelden');
   });
 
   it('hides board and admin panels from a plain member (deny by default)', async () => {

@@ -1,4 +1,5 @@
 import { Component, input } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import type { MomentResponseDto } from '../api/api.types';
 import { formatDateTime } from '../member/member-format';
 import { AvatarBadgeComponent } from '../ui';
@@ -11,7 +12,7 @@ import { AvatarBadgeComponent } from '../ui';
  */
 @Component({
   selector: 'app-moment-timeline',
-  imports: [AvatarBadgeComponent],
+  imports: [IconComponent, AvatarBadgeComponent],
   template: `
     <section class="moment-timeline" aria-label="Status-Timeline">
       <div class="timeline-header">
@@ -21,7 +22,7 @@ import { AvatarBadgeComponent } from '../ui';
 
       @if (responses().length === 0) {
         <div class="timeline-empty" role="status">
-          <span class="timeline-empty-icon">💬</span>
+          <vereint-icon class="timeline-empty-icon" name="chat" />
           <p>Noch keine Statusbeiträge geteilt. Sei der Erste und teile deine Reaktion!</p>
         </div>
       } @else {
@@ -47,7 +48,7 @@ import { AvatarBadgeComponent } from '../ui';
 
                 @if (response.latitude !== null && response.longitude !== null) {
                   <div class="timeline-location">
-                    <span class="location-icon" aria-hidden="true">📍</span>
+                    <vereint-icon class="location-icon" name="location" />
                     <span class="location-coords">
                       Standort geteilt ({{ formatCoord(response.latitude) }}, {{ formatCoord(response.longitude) }})
                     </span>

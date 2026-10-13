@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import { RouterLink } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
 import { AsyncState } from '../member/async-state';
@@ -34,7 +35,7 @@ interface BoardView {
  */
 @Component({
   selector: 'app-board',
-  imports: [RouterLink, InfoPanelComponent, StatCardComponent, StatusBadgeComponent],
+  imports: [IconComponent, RouterLink, InfoPanelComponent, StatCardComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="board-title">
@@ -42,7 +43,7 @@ interface BoardView {
         <h1 id="board-title">Eber-Führungsstab</h1>
         <p>Moderation, Finanzübersichten und vorbereitete Mitteilungen.</p>
 
-        <vereint-info-panel icon="🛡" title="Vorstandsbereich">
+        <vereint-info-panel icon="board" title="Vorstandsbereich">
           Verwalte hier die Bierkasse, versende wichtige Ankündigungen oder plane
           die nächsten Stammtisch-Sitzungen.
         </vereint-info-panel>
@@ -50,12 +51,12 @@ interface BoardView {
         <h2 class="member-subtitle">Rollenspezifische Verwaltung</h2>
         <nav class="board-panels" aria-label="Vorstandsbereiche">
           <a class="board-panel" routerLink="/board/treasury">
-            <span class="board-panel-icon" aria-hidden="true">💰</span>
+            <vereint-icon class="board-panel-icon" name="treasury" />
             <span class="board-panel-title">Kassenwart · Kasse &amp; Finanzen</span>
             <span class="board-panel-desc">Bierkasse, Guthaben und Buchungen</span>
           </a>
           <a class="board-panel" routerLink="/board/communications">
-            <span class="board-panel-icon" aria-hidden="true">✉️</span>
+            <vereint-icon class="board-panel-icon" name="megaphone" />
             <span class="board-panel-title">Schriftwart · Kommunikation</span>
             <span class="board-panel-desc">Ankündigungen und Pinnwand</span>
           </a>
@@ -74,8 +75,8 @@ interface BoardView {
           </div>
         } @else if (load.data(); as view) {
           <div class="board-stats">
-            <vereint-stat-card icon="📅" label="Sichtbare Events" [value]="view.events.length" />
-            <vereint-stat-card icon="🧾" label="Letzte Aktionen" [value]="view.audit.length" />
+            <vereint-stat-card icon="events" label="Sichtbare Events" [value]="view.events.length" />
+            <vereint-stat-card icon="receipt" label="Letzte Aktionen" [value]="view.audit.length" />
           </div>
 
           <h2 class="member-subtitle">Gastgeber · Events ({{ view.events.length }})</h2>

@@ -16,3 +16,5 @@ export { RoleChipComponent } from './role-chip.component';
 export { StatCardComponent } from './stat-card.component';
 export { StatusBadgeComponent, type StatusTone } from './status-badge.component';
 export { StepperComponent } from './stepper.component';
+export { IconComponent } from './icon.component';
+export { ICONS, type IconName } from './icons';
