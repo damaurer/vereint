@@ -25,6 +25,11 @@ spring:
 vereint:
   cors:
     allowed-origins: http://localhost:4200,http://localhost:8080
+  encryption:
+    # Tests laufen mit eingeschalteter Verschlüsselung und einem festen,
+    # offensichtlich unsicheren Testschlüssel (32 Null-Bytes).
+    enabled: true
+    key: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
   storage:
     # In Tests standardmaessig In-Memory-Storage (keine MinIO-Abhaengigkeit)
     enabled: false

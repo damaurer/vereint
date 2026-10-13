@@ -2,6 +2,7 @@ package de.maurer.baseservice
 
 import de.maurer.baseservice.dto.ImageAssetDto
 import de.maurer.baseservice.security.UserPrincipal
+import de.maurer.baseservice.service.ImageContent
 import de.maurer.baseservice.service.ImageService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -18,6 +19,8 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
@@ -78,8 +81,8 @@ class ImageControllerTest {
         imageVersion = 1,
         status = "active",
         originalFilename = "avatar.png",
-        url = "memory://vereint/profile/$targetId/img.png?expires=123",
-        urlExpiresInSeconds = 900,
+        url = "/api/v1/images/$imageId/content",
+        urlExpiresInSeconds = 0,
         createdAt = Instant.now(),
         updatedAt = Instant.now()
     )
@@ -119,7 +122,7 @@ class ImageControllerTest {
             .andExpect(jsonPath("$.id").value(imageId.toString()))
             .andExpect(jsonPath("$.purpose").value("profile"))
             .andExpect(jsonPath("$.status").value("active"))
-            .andExpect(jsonPath("$.url").value("memory://vereint/profile/$targetId/img.png?expires=123"))
+            .andExpect(jsonPath("$.url").value("/api/v1/images/$imageId/content"))
     }
 
     @Test
@@ -158,6 +161,28 @@ class ImageControllerTest {
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].id").value(imageId.toString()))
+    }
+
+    @Test
+    fun `GET image content returns the decrypted bytes without caching`() {
+        val bytes = byteArrayOf(1, 2, 3, 4)
+        `when`(imageService.getImageContent(anyUuid(), anyPrincipal())).thenReturn(ImageContent(bytes, "image/png"))
+
+        mockMvc.perform(
+            get("/api/v1/images/$imageId/content")
+                .with(jwt().jwt { it.subject("sub-owner") })
+        )
+            .andExpect(status().isOk)
+            .andExpect(content().contentType("image/png"))
+            .andExpect(content().bytes(bytes))
+            .andExpect(header().string("Cache-Control", "private, no-store"))
+            .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+    }
+
+    @Test
+    fun `GET image content returns 401 when unauthenticated`() {
+        mockMvc.perform(get("/api/v1/images/$imageId/content"))
+            .andExpect(status().isUnauthorized)
     }
 
     @Test

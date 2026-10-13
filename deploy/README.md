@@ -28,6 +28,10 @@ ausgerollt, sodass immer ein zusammenpassender Stand läuft.
   ebenfalls über TLS.
 - **Verschlüsselt gespeichert:** Disks (EBS) und S3 sind verschlüsselt, Backups
   zusätzlich mit GnuPG (AES-256), bevor sie den Server verlassen.
+- **Inhalte zusätzlich in der App verschlüsselt:** Chat-Nachrichten,
+  Benachrichtigungen und Bilddateien verschlüsselt der baseservice mit
+  `DATA_ENCRYPTION_KEY` (AES-256-GCM), bevor sie in PostgreSQL oder S3 landen.
+  Auch Datenbank-Dumps und Bucket-Inhalte sind ohne diesen Schlüssel unlesbar.
 - **Keycloak-Verwaltung nicht öffentlich:** Admin-Konsole und Master-Realm
   liefern von außen 404. Erreichbar sind sie nur per Tunnel (siehe unten).
 - **Secrets** stehen nur im SSM Parameter Store. `bin/fetch-env.sh` schreibt sie
@@ -52,6 +56,13 @@ Um 02:30 UTC folgt zusätzlich ein Snapshot des gesamten Datenvolumes.
 > **Wichtig:** `BACKUP_ENCRYPTION_KEY` zusätzlich offline aufbewahren
 > (Passwort-Manager): `aws ssm get-parameter --name /vereint/BACKUP_ENCRYPTION_KEY --with-decryption`.
 > Ohne diesen Schlüssel sind die S3-Backups nicht lesbar.
+>
+> Genauso `DATA_ENCRYPTION_KEY`: Ohne ihn sind Chat-Nachrichten,
+> Benachrichtigungen und Bilder auch aus einem intakten Backup nicht mehr
+> lesbar. Zum Rotieren den bisherigen Wert zusätzlich als
+> `/vereint/DATA_ENCRYPTION_KEY_PREVIOUS` anlegen, dann einen neuen Schlüssel
+> erzeugen (`terraform apply -replace=random_bytes.data_encryption_key`) und neu
+> deployen.
 
 ### Wiederherstellen
 

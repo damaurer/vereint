@@ -1,5 +1,7 @@
 package de.maurer.baseservice
 
+import de.maurer.baseservice.crypto.DataEncryptor
+import de.maurer.baseservice.crypto.EncryptionProperties
 import de.maurer.baseservice.domain.DrinkCatalogEntity
 import de.maurer.baseservice.domain.DrinkStatus
 import de.maurer.baseservice.domain.EventEntity
@@ -22,7 +24,6 @@ import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.ImageService
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.storage.InMemoryObjectStorage
-import de.maurer.baseservice.storage.StorageProperties
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -62,6 +63,8 @@ class ImageServiceTest {
 
     private lateinit var objectStorage: InMemoryObjectStorage
     private lateinit var imageService: ImageService
+    private lateinit var encryptor: DataEncryptor
+    private var lastSaved: ImageAssetEntity? = null
 
     private val ownerId: UUID = UUID.randomUUID()
     private val otherId: UUID = UUID.randomUUID()
@@ -72,10 +75,11 @@ class ImageServiceTest {
     @BeforeEach
     fun setup() {
         objectStorage = InMemoryObjectStorage("vereint")
+        encryptor = DataEncryptor(EncryptionProperties(enabled = true, key = TEST_KEY))
         imageService = ImageService(
             imageAssetRepository,
             objectStorage,
-            StorageProperties(bucket = "vereint"),
+            encryptor,
             userService,
             userRoleRepository,
             eventRepository,
@@ -87,7 +91,9 @@ class ImageServiceTest {
             .thenReturn(0)
         `when`(imageAssetRepository.findByPurposeAndTargetIdAndStatus(any() ?: ImagePurpose.profile, any(), any() ?: ImageStatus.active))
             .thenReturn(emptyList())
-        `when`(imageAssetRepository.save(anyImage())).thenAnswer { it.arguments[0] }
+        `when`(imageAssetRepository.save(anyImage())).thenAnswer {
+            (it.arguments[0] as ImageAssetEntity).also { saved -> lastSaved = saved }
+        }
     }
 
     private fun anyImage(): ImageAssetEntity = any(ImageAssetEntity::class.java) ?: ImageAssetEntity()
@@ -116,7 +122,7 @@ class ImageServiceTest {
         assertEquals(ownerId.toString(), dto.targetId)
         assertEquals(1, dto.imageVersion)
         assertEquals(ImageStatus.active.name, dto.status)
-        assertTrue(dto.url.startsWith("memory://vereint/"))
+        assertEquals("/api/v1/images/${dto.id}/content", dto.url)
         assertTrue(dto.width > 0 && dto.height > 0)
         verify(imageAssetRepository).save(anyImage())
     }
@@ -278,6 +284,73 @@ class ImageServiceTest {
     }
 
     @Test
+    fun `uploadImage stores only encrypted bytes in the object storage`() {
+        val owner = ownerUser()
+        val principal = UserPrincipal(subject = "sub-owner", roles = setOf(UserRole.MEMBER))
+        `when`(userService.getOrCreateUser(principal)).thenReturn(owner)
+        val png = pngBytes()
+
+        imageService.uploadImage("profile", null, "avatar.png", "image/png", png, principal)
+
+        val stored = objectStorage.read(lastSaved!!.storageKey)!!
+        assertTrue(encryptor.isEncrypted(stored))
+        assertFalse(stored.contentEquals(png))
+        assertArrayEquals(png, encryptor.decrypt(stored))
+        assertEquals(png.size.toLong(), lastSaved!!.sizeBytes)
+    }
+
+    @Test
+    fun `getImageContent decrypts for the owner but denies an unrelated member`() {
+        val owner = ownerUser()
+        val key = "profile/$ownerId/img.png"
+        val png = pngBytes()
+        objectStorage.store(key, encryptor.encrypt(png), "application/octet-stream")
+        val image = ImageAssetEntity(
+            id = imageId,
+            storageKey = key,
+            owner = owner,
+            purpose = ImagePurpose.profile,
+            targetId = ownerId,
+            contentType = "image/png",
+            status = ImageStatus.active
+        )
+        `when`(imageAssetRepository.findById(imageId)).thenReturn(Optional.of(image))
+
+        val ownerPrincipal = UserPrincipal(subject = "sub-owner", roles = setOf(UserRole.MEMBER))
+        `when`(userService.getOrCreateUser(ownerPrincipal)).thenReturn(owner)
+        val content = imageService.getImageContent(imageId, ownerPrincipal)
+        assertArrayEquals(png, content.data)
+        assertEquals("image/png", content.contentType)
+
+        val otherPrincipal = UserPrincipal(subject = "sub-other", roles = setOf(UserRole.MEMBER))
+        `when`(userService.getOrCreateUser(otherPrincipal)).thenReturn(otherUser())
+        assertThrows(AccessDeniedException::class.java) {
+            imageService.getImageContent(imageId, otherPrincipal)
+        }
+    }
+
+    @Test
+    fun `getImageContent treats deleted images as not found`() {
+        val owner = ownerUser()
+        val image = ImageAssetEntity(
+            id = imageId,
+            storageKey = "profile/$ownerId/img.png",
+            owner = owner,
+            purpose = ImagePurpose.profile,
+            targetId = ownerId,
+            contentType = "image/png",
+            status = ImageStatus.deleted
+        )
+        `when`(imageAssetRepository.findById(imageId)).thenReturn(Optional.of(image))
+        val principal = UserPrincipal(subject = "sub-owner", roles = setOf(UserRole.MEMBER))
+        `when`(userService.getOrCreateUser(principal)).thenReturn(owner)
+
+        assertThrows(ResourceNotFoundException::class.java) {
+            imageService.getImageContent(imageId, principal)
+        }
+    }
+
+    @Test
     fun `deleteImage removes the object and marks the metadata deleted`() {
         val owner = ownerUser()
         val key = "profile/$ownerId/img.png"
@@ -323,5 +396,9 @@ class ImageServiceTest {
             imageService.deleteImage(imageId, principal)
         }
         assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
+    }
+
+    companion object {
+        private const val TEST_KEY = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
     }
 }

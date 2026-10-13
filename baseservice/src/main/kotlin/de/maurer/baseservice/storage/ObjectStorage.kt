@@ -17,6 +17,9 @@ interface ObjectStorage {
     /** Legt Binärdaten unter [key] ab und überschreibt einen vorhandenen Eintrag. */
     fun store(key: String, data: ByteArray, contentType: String)
 
+    /** Liest das Objekt unter [key]; `null`, wenn es nicht existiert. */
+    fun read(key: String): ByteArray?
+
     /** Entfernt das Objekt; ein nicht vorhandenes Objekt ist kein Fehler. */
     fun delete(key: String)
 

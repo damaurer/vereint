@@ -340,6 +340,22 @@ class LiquibaseSchemaTest @Autowired constructor(
         auditLogRepository.save(auditLog)
 
         assertNotNull(notificationRepository.findById(notifId).orElse(null))
+
+        // Chat-Nachrichten und Benachrichtigungen liegen nur verschlüsselt in der Datenbank.
+        chatMessageRepository.flush()
+        val storedMessage = jdbcTemplate.queryForObject(
+            "SELECT message FROM chat_messages WHERE id = ?", String::class.java, msgId
+        )!!
+        assertTrue(storedMessage.startsWith("enc:v1:"))
+        assertFalse(storedMessage.contains("Hallo"))
+        val storedNotification = jdbcTemplate.queryForMap(
+            "SELECT title, body FROM notifications WHERE id = ?", notifId
+        )
+        for (column in listOf("title", "body")) {
+            val value = storedNotification.entries.first { it.key.equals(column, ignoreCase = true) }.value as String
+            assertTrue(value.startsWith("enc:v1:"), column)
+            assertFalse(value.contains("Sommerfest") || value.contains("Event"), column)
+        }
         assertNotNull(pushSubscriptionRepository.findById(subscrId).orElse(null))
         assertNotNull(momentSessionRepository.findById(sessionId).orElse(null))
         assertNotNull(momentResponseRepository.findById(responseId).orElse(null))
