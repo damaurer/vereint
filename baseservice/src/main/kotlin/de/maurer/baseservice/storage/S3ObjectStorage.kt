@@ -43,6 +43,17 @@ class S3ObjectStorage(
         }
     }
 
+    override fun read(key: String): ByteArray? {
+        val url = presign("GET", key, properties.urlTtl())
+        val request = HttpRequest.newBuilder(url).GET().build()
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray())
+        return when (response.statusCode()) {
+            in 200..299 -> response.body()
+            404 -> null
+            else -> throw ObjectStorageException("Lesen von '$key' fehlgeschlagen (HTTP ${response.statusCode()})")
+        }
+    }
+
     override fun delete(key: String) {
         val url = presign("DELETE", key, properties.urlTtl())
         val request = HttpRequest.newBuilder(url).DELETE().build()

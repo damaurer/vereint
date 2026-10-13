@@ -1,5 +1,6 @@
 package de.maurer.baseservice.domain
 
+import de.maurer.baseservice.crypto.EncryptedStringConverter
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
@@ -82,6 +83,7 @@ class ChatMessageEntity(
     @JoinColumn(name = "guest_id")
     var guest: EventGuestEntity? = null,
 
+    @Convert(converter = EncryptedStringConverter::class)
     @Column(name = "message", nullable = false)
     var message: String = "",
 
@@ -105,9 +107,11 @@ class NotificationEntity(
     @JoinColumn(name = "user_id", nullable = false)
     var user: UserEntity? = null,
 
-    @Column(name = "title", length = 255, nullable = false)
+    @Convert(converter = EncryptedStringConverter::class)
+    @Column(name = "title", nullable = false)
     var title: String = "",
 
+    @Convert(converter = EncryptedStringConverter::class)
     @Column(name = "body", nullable = false)
     var body: String = "",
 

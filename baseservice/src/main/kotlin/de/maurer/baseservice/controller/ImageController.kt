@@ -8,6 +8,7 @@ import de.maurer.baseservice.service.ImageService
 import de.maurer.baseservice.support.Identifiers
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -19,7 +20,8 @@ import org.springframework.web.multipart.MultipartFile
  *
  * Der Upload erfolgt als Multipart; alle fachlichen Prüfungen (Typ, Größe,
  * Dimensionen, Berechtigung) laufen serverseitig im [ImageService]. Die Antwort
- * enthält ausschließlich Metadaten und eine zeitlich begrenzte, private URL.
+ * enthält ausschließlich Metadaten und die URL des Inhalts-Endpunkts, der die
+ * Bilddaten nach erneuter Berechtigungsprüfung entschlüsselt ausliefert.
  */
 @RestController
 @RequestMapping("/api/v1/images")
@@ -64,10 +66,22 @@ class ImageController(
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Bild abrufen", description = "Liefert Metadaten und eine private, zeitlich begrenzte URL")
+    @Operation(summary = "Bild abrufen", description = "Liefert Metadaten und die URL der Bilddaten")
     fun getImage(@PathVariable id: String): ResponseEntity<ImageAssetDto> {
         val principal = authContext.getRequiredPrincipal()
         return ResponseEntity.ok(imageService.getImage(imageId(id), principal))
+    }
+
+    @GetMapping("/{id}/content")
+    @Operation(summary = "Bilddaten abrufen", description = "Liefert die entschlüsselten Bilddaten für berechtigte Benutzer")
+    fun getImageContent(@PathVariable id: String): ResponseEntity<ByteArray> {
+        val principal = authContext.getRequiredPrincipal()
+        val content = imageService.getImageContent(imageId(id), principal)
+        return ResponseEntity.ok()
+            .contentType(MediaType.parseMediaType(content.contentType))
+            .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+            .header("X-Content-Type-Options", "nosniff")
+            .body(content.data)
     }
 
     @DeleteMapping("/{id}")

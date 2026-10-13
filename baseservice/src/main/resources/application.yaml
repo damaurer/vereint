@@ -49,6 +49,15 @@ vereint:
     secret-key: ${S3_SECRET_KEY:}
     path-style-access: ${S3_PATH_STYLE_ACCESS:true}
     url-ttl-seconds: ${S3_URL_TTL_SECONDS:900}
+  encryption:
+    # Anwendungsverschlüsselung für Chat-Nachrichten, Benachrichtigungen und
+    # Bilddateien (AES-256-GCM). Der Schlüssel ist ein Secret (32 Byte, Base64)
+    # und stammt ausschließlich aus DATA_ENCRYPTION_KEY. Ist enabled=true, startet
+    # der Service ohne Schlüssel nicht. DATA_ENCRYPTION_KEY_PREVIOUS dient nur der
+    # Rotation und wird ausschließlich zum Entschlüsseln genutzt.
+    enabled: ${DATA_ENCRYPTION_ENABLED:false}
+    key: ${DATA_ENCRYPTION_KEY:}
+    previous-key: ${DATA_ENCRYPTION_KEY_PREVIOUS:}
   push:
     # Web Push mit VAPID (TICKET-020). Ist enabled=false, greift der No-Op-Sender;
     # Benachrichtigungen werden weiterhin gespeichert, aber nicht zugestellt. Der
