@@ -1,0 +1,55 @@
+name: Infrastruktur
+
+# Prueft den Terraform-Code unter `infra/` auf Formatierung und Gueltigkeit.
+# Es wird nichts angewendet und kein AWS-Zugang benoetigt; Sicherheitsregeln
+# prueft zusaetzlich Trivy im Workflow `Security`.
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - qs
+    paths:
+      - 'infra/**'
+      - '.github/workflows/infra.yml'
+  pull_request:
+    branches:
+      - develop
+      - main
+      - qs
+    paths:
+      - 'infra/**'
+      - '.github/workflows/infra.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform pruefen
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        dir: [infra/aws, infra/aws/bootstrap]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Terraform einrichten
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
+
+      - name: Formatierung pruefen
+        run: terraform fmt -check -recursive -diff
+        working-directory: ${{ matrix.dir }}
+
+      - name: Initialisieren (ohne Backend)
+        run: terraform init -backend=false -input=false
+        working-directory: ${{ matrix.dir }}
+
+      - name: Validieren
+        run: terraform validate
+        working-directory: ${{ matrix.dir }}
