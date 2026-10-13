@@ -7,7 +7,9 @@ ARG JDK_IMAGE=eclipse-temurin:25-jdk
 ARG JRE_IMAGE=eclipse-temurin:25-jre
 
 # ---------- Build ----------
-FROM ${JDK_IMAGE} AS build
+# Der Build laeuft nativ auf der Plattform des Runners; das Jar ist
+# plattformunabhaengig und wird in das amd64- bzw. arm64-Runtime-Image kopiert.
+FROM --platform=$BUILDPLATFORM ${JDK_IMAGE} AS build
 
 WORKDIR /workspace
 
@@ -24,9 +26,12 @@ FROM ${JRE_IMAGE} AS runtime
 WORKDIR /app
 
 # `curl` wird ausschliesslich fuer den Healthcheck auf /api/v1/health benoetigt.
+# `pebble` (Service-Manager aus dem Ubuntu-Basisimage) wird nicht genutzt und
+# bringt eine Go-Laufzeit mit bekannten Schwachstellen mit; daher entfernt.
 RUN apt-get update \
  && apt-get install --no-install-recommends -y curl \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -f /usr/bin/pebble
 
 # Unprivilegierter Benutzer
 RUN addgroup --system --gid 10001 vereint \

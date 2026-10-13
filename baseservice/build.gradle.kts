@@ -24,6 +24,13 @@ repositories {
     mavenCentral()
 }
 
+// Sicherheits-Patches vor dem naechsten Spring-Boot-Release: Spring Boot 4.1.1
+// verwaltet Versionen mit bekannten Schwachstellen (Trivy-Image-Scan in CI).
+// Entfernen, sobald ein Spring-Boot-Update diese oder neuere Versionen mitbringt.
+extra["tomcat.version"] = "11.0.27"
+extra["jackson-bom.version"] = "3.1.7"
+extra["jackson-2-bom.version"] = "2.21.7"
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
