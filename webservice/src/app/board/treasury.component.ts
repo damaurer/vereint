@@ -59,7 +59,7 @@ interface MemberLedger {
         <p>Eventabrechnungen, Guthaben und Kassenbuchungen.</p>
         <a class="member-back" routerLink="/board">← Zum Vorstand</a>
 
-        <vereint-info-panel icon="💰" title="Bierkasse">
+        <vereint-info-panel icon="treasury" title="Bierkasse">
           Buchungen sind idempotent. Preis, Modus und Freigabe bestimmt
           ausschließlich der Fachservice.
         </vereint-info-panel>
@@ -84,7 +84,7 @@ interface MemberLedger {
           </div>
         } @else if (events.data(); as list) {
           <div class="treasury-stats">
-            <vereint-stat-card icon="📅" label="Events mit Abrechnung" [value]="list.length" />
+            <vereint-stat-card icon="events" label="Events mit Abrechnung" [value]="list.length" />
           </div>
 
           <h2 class="member-subtitle">Events ({{ list.length }})</h2>

@@ -23,8 +23,6 @@ import { EventCardComponent, type StatusTone } from '../ui';
         <h1 id="events-title">Events</h1>
         <p>Deine Events und Teilnahmen.</p>
 
-        <a class="member-back" routerLink="/dashboard">← Zur Übersicht</a>
-
         @if (load.isLoading()) {
           <div class="state-card" role="status" aria-live="polite">
             <strong>Wird geladen …</strong>

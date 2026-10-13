@@ -104,7 +104,7 @@ import type { MemberConsumption, StatisticsView } from './statistics.types';
                 </div>
               </article>
 
-              <vereint-info-panel class="stats-span" icon="👑" title="Top-Rundengeber">
+              <vereint-info-panel class="stats-span" icon="crown" title="Top-Rundengeber">
                 <ol class="rank-list">
                   @for (giver of view.topRounds; track giver.member) {
                     <li class="rank-row">
@@ -115,7 +115,7 @@ import type { MemberConsumption, StatisticsView } from './statistics.types';
                 </ol>
               </vereint-info-panel>
 
-              <vereint-info-panel class="stats-span" icon="🍺" title="Getränke-Ranking">
+              <vereint-info-panel class="stats-span" icon="beer" title="Getränke-Ranking">
                 <ol class="rank-list">
                   @for (drink of view.drinkRanking; track drink.drink) {
                     <li class="rank-row">

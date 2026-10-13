@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
+import { IconComponent } from '../ui/icon.component';
 import { forkJoin } from 'rxjs';
 import {
   NotificationsApiService,
@@ -34,7 +35,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
 
 @Component({
   selector: 'app-notifications',
-  imports: [StatusBadgeComponent],
+  imports: [IconComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="notifications-title">
@@ -67,7 +68,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
         <!-- Web Push Card -->
         <div class="push-card">
           <div class="push-card-content">
-            <span class="push-icon">🔔</span>
+            <vereint-icon class="push-icon" name="bell" />
             <div>
               <h3 class="push-title">Web-Push-Benachrichtigungen</h3>
               <p class="push-desc">

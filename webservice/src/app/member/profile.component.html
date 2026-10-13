@@ -2,7 +2,6 @@
   <section class="page-card member-card" aria-label="Mein Profil">
     <span class="eyebrow">Mein Profil</span>
 
-    <a class="member-back" routerLink="/dashboard">← Zur Übersicht</a>
 
     @if (load.isLoading()) {
       <div class="state-card" role="status" aria-live="polite">
@@ -35,7 +34,7 @@
 
       <div class="profile-toggle">
         <div class="profile-toggle-text">
-          <span class="profile-toggle-title">⚡ BeerWithMe Status</span>
+          <span class="profile-toggle-title"><vereint-icon name="beer" /> BeerWithMe Status</span>
           <span class="member-muted">Verfügbar für ein spontanes Bier in der Nähe.</span>
         </div>
         <input

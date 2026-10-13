@@ -1,4 +1,5 @@
 import { AuthSessionUser, UserRole } from '../auth/auth.types';
+import type { IconName } from '../ui/icons';
 
 /**
  * Navigationsmodell der responsiven `AppShell` (TICKET-032).
@@ -13,8 +14,8 @@ export interface NavItem {
   id: string;
   /** Sichtbares Label (Sidebar/Bottom-Bar) bzw. `aria-label` (Icon-Rail). */
   label: string;
-  /** Symbol-Glyphe für Bottom-Bar und Icon-Rail. */
-  icon: string;
+  /** Icon aus dem Vereint-Icon-Set. */
+  icon: IconName;
   /** Zielroute (absoluter Pfad). */
   route: string;
   /** Erfüllt, wenn die Session eine dieser Rollen besitzt. */
@@ -23,59 +24,106 @@ export interface NavItem {
   requiredPermissions?: string[];
 }
 
-/** Permission, die den Zugriff auf die Statistiken fvereintaltet. */
+/** Permission, die den Zugriff auf die Statistiken freischaltet. */
 export const STATISTICS_PERMISSION = 'statistics.view';
 
-/** Permission, die die Tablet-Erfassung fvereintaltet. */
+/** Permission, die die Tablet-Erfassung freischaltet. */
 export const TABLET_PERMISSION = 'purchase.tablet';
 
 /**
- * Primäre Navigation (Bottom-Tab-Bar mobil / Icon-Rail Tablet / Sidebar-Kopf).
- * Home, Strichliste, Chat, Statistik und Profil.
+ * Primäre Navigation: die vier häufigsten Ziele. Sie stehen mobil in der
+ * Bottom-Bar (plus „Mehr“), auf dem Tablet oben in der Rail und am Desktop
+ * zuerst in der Seitenleiste.
  */
 export const PRIMARY_NAV: readonly NavItem[] = [
-  { id: 'home', label: 'Home', icon: '🏠', route: '/dashboard' },
-  { id: 'strichliste', label: 'Strichliste', icon: '📋', route: '/events' },
-  { id: 'chat', label: 'Chat', icon: '💬', route: '/chat' },
-  {
-    id: 'statistik',
-    label: 'Statistik',
-    icon: '📊',
-    route: '/statistik',
-    requiredPermissions: [STATISTICS_PERMISSION],
-  },
-  { id: 'profil', label: 'Profil', icon: '👤', route: '/profile' },
+  { id: 'home', label: 'Start', icon: 'home', route: '/dashboard' },
+  { id: 'events', label: 'Events', icon: 'events', route: '/events' },
+  { id: 'chat', label: 'Chat', icon: 'chat', route: '/chat' },
+  { id: 'wallet', label: 'Guthaben', icon: 'wallet', route: '/wallet' },
 ];
 
 /**
- * Rollenspezifische Panels (Sidebar-Fuß Web / erweiterte Rail Tablet).
+ * Weitere Mitgliederseiten, die nicht in der Bottom-Bar Platz haben. Sie
+ * erscheinen in der Seitenleiste und im „Mehr“-Sheet.
+ */
+export const SECONDARY_NAV: readonly NavItem[] = [
+  { id: 'moments', label: 'Moments', icon: 'moments', route: '/moments' },
+  { id: 'direct', label: 'Direktnachrichten', icon: 'direct-message', route: '/direktnachrichten' },
+  { id: 'purchases', label: 'Käufe', icon: 'receipt', route: '/purchases' },
+  { id: 'notifications', label: 'Mitteilungen', icon: 'bell', route: '/notifications' },
+  { id: 'catalog', label: 'Getränkekatalog', icon: 'catalog', route: '/catalog' },
+  { id: 'sublists', label: 'Getränkelisten', icon: 'lists', route: '/sublists' },
+  {
+    id: 'statistik',
+    label: 'Statistik',
+    icon: 'stats',
+    route: '/statistik',
+    requiredPermissions: [STATISTICS_PERMISSION],
+  },
+  { id: 'profil', label: 'Profil', icon: 'user', route: '/profile' },
+];
+
+/**
+ * Rollenspezifische Panels (Abschnitt „Verwaltung“).
  * Vorstand, Kasse, Kommunikation, Administration und Terminal.
  */
 export const PANEL_NAV: readonly NavItem[] = [
-  { id: 'board', label: 'Vorstand', icon: '⭐', route: '/board', requiredRoles: ['board', 'admin'] },
+  {
+    id: 'board',
+    label: 'Vorstand',
+    icon: 'board',
+    route: '/board',
+    requiredRoles: ['board', 'admin'],
+  },
   {
     id: 'treasury',
     label: 'Kasse & Finanzen',
-    icon: '💰',
+    icon: 'treasury',
     route: '/board/treasury',
     requiredRoles: ['board', 'admin'],
   },
   {
     id: 'communications',
     label: 'Kommunikation',
-    icon: '📣',
+    icon: 'megaphone',
     route: '/board/communications',
     requiredRoles: ['board', 'admin'],
   },
-  { id: 'admin', label: 'Administration', icon: '🛠️', route: '/admin', requiredRoles: ['admin'] },
+  {
+    id: 'admin',
+    label: 'Administration',
+    icon: 'admin',
+    route: '/admin',
+    requiredRoles: ['admin'],
+  },
   {
     id: 'tablet',
-    label: 'Terminal',
-    icon: '🍺',
+    label: 'Thekenterminal',
+    icon: 'terminal',
     route: '/tablet',
     requiredPermissions: [TABLET_PERMISSION],
   },
 ];
+
+/** Abschnitt der Seitenleiste bzw. des „Mehr“-Sheets. */
+export interface NavSection {
+  id: 'club' | 'account' | 'bar' | 'admin';
+  label: string;
+  items: NavItem[];
+}
+
+const SECTION_LAYOUT: readonly { id: NavSection['id']; label: string; ids: readonly string[] }[] = [
+  { id: 'club', label: 'Verein', ids: ['home', 'events', 'moments', 'chat', 'direct'] },
+  { id: 'account', label: 'Mein Konto', ids: ['wallet', 'purchases', 'notifications', 'profil'] },
+  { id: 'bar', label: 'Theke', ids: ['catalog', 'sublists', 'statistik'] },
+  {
+    id: 'admin',
+    label: 'Verwaltung',
+    ids: ['board', 'treasury', 'communications', 'admin', 'tablet'],
+  },
+];
+
+const ALL_NAV: readonly NavItem[] = [...PRIMARY_NAV, ...SECONDARY_NAV, ...PANEL_NAV];
 
 /**
  * Prüft, ob ein Eintrag für die Session sichtbar ist. Ohne Session sind nur
@@ -115,4 +163,22 @@ export function buildPrimaryNav(session: AuthSessionUser | null): NavItem[] {
 /** Sichtbare rollenspezifische Panel-Einträge. */
 export function buildPanelNav(session: AuthSessionUser | null): NavItem[] {
   return filterNavItems(PANEL_NAV, session);
+}
+
+/** Alle sichtbaren Einträge außer den primären (Inhalt des „Mehr“-Sheets). */
+export function buildMoreNav(session: AuthSessionUser | null): NavItem[] {
+  return [...filterNavItems(SECONDARY_NAV, session), ...filterNavItems(PANEL_NAV, session)];
+}
+
+/**
+ * Sichtbare Abschnitte in fester Reihenfolge; leere Abschnitte (z. B.
+ * „Verwaltung“ für ein einfaches Mitglied) entfallen.
+ */
+export function buildNavSections(session: AuthSessionUser | null): NavSection[] {
+  const visible = new Map(filterNavItems(ALL_NAV, session).map((item) => [item.id, item]));
+  return SECTION_LAYOUT.map((section) => ({
+    id: section.id,
+    label: section.label,
+    items: section.ids.flatMap((id) => visible.get(id) ?? []),
+  })).filter((section) => section.items.length > 0);
 }

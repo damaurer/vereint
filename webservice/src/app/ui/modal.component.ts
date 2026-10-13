@@ -6,6 +6,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
+import { IconComponent } from './icon.component';
 
 /**
  * Modales Overlay (TICKET-032) für Dialoge wie das Einladungs-Modal.
@@ -16,6 +17,7 @@ import {
  */
 @Component({
   selector: 'vereint-modal',
+  imports: [IconComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -36,7 +38,7 @@ import {
               aria-label="Schließen"
               (click)="requestClose()"
             >
-              ✕
+              <vereint-icon name="close" />
             </button>
           </header>
           <div class="ui-modal-body"><ng-content></ng-content></div>

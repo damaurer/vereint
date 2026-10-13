@@ -1,11 +1,11 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { describeApiError } from '../api/api-client.service';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
 import { formatDateTime } from './member-format';
 import type { MemberProfile, UpdateProfilePayload } from '../api/api.types';
 import { HeroGreetingComponent, RoleChipComponent } from '../ui';
+import { IconComponent } from '../ui/icon.component';
 
 /**
  * Persönliches Profil eines Mitglieds (TICKET-024, Redesign TICKET-033).
@@ -19,7 +19,7 @@ import { HeroGreetingComponent, RoleChipComponent } from '../ui';
  */
 @Component({
   selector: 'app-member-profile',
-  imports: [RouterLink, HeroGreetingComponent, RoleChipComponent],
+  imports: [HeroGreetingComponent, RoleChipComponent, IconComponent],
   templateUrl: './profile.component.html',
   styles: [
     `

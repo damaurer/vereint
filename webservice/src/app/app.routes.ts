@@ -39,7 +39,7 @@ export const routes: Routes = [
       {
         path: 'dashboard',
     canActivate: [authGuard],
-    data: { title: 'Dashboard', description: 'Persönliche Übersicht und teilnehmende Events.', access: 'Geschützter Bereich' },
+    data: { title: 'Start', description: 'Persönliche Übersicht und teilnehmende Events.', access: 'Geschützter Bereich' },
     loadComponent: () => import('./member/dashboard.component').then((m) => m.DashboardComponent),
   },
   {
@@ -93,7 +93,7 @@ export const routes: Routes = [
   {
     path: 'sublists',
     canActivate: [authGuard],
-    data: { title: 'Sublists', description: 'Wiederverwendbare Getränkelisten.', access: 'Geschützter Bereich' },
+    data: { title: 'Getränkelisten', description: 'Wiederverwendbare Getränkelisten.', access: 'Geschützter Bereich' },
     loadComponent: () => import('./sublists/sublists.component').then((m) => m.SublistsComponent),
   },
   {
@@ -112,7 +112,7 @@ export const routes: Routes = [
   {
     path: 'notifications',
     canActivate: [authGuard],
-    data: { title: 'Benachrichtigungen', description: 'In-App- und Push-Benachrichtigungen.', access: 'Geschützter Bereich' },
+    data: { title: 'Mitteilungen', description: 'In-App- und Push-Benachrichtigungen.', access: 'Geschützter Bereich' },
     loadComponent: () => import('./notifications/notifications.component').then((m) => m.NotificationsComponent),
   },
   {
@@ -184,7 +184,7 @@ export const routes: Routes = [
     path: 'tablet',
     canActivate: [authGuard, permissionGuard],
     data: {
-      title: 'Tablet-Erfassung',
+      title: 'Thekenterminal',
       description: 'Manuelle Getränkeerfassung für den Drink Recorder.',
       access: 'drinkRecorder',
       permissions: ['purchase.tablet'],
@@ -195,7 +195,7 @@ export const routes: Routes = [
     path: 'statistik',
     canActivate: [authGuard, permissionGuard],
     data: {
-      title: 'Statistiken',
+      title: 'Statistik',
       description: 'Konsum, Anwesenheit, Ausgaben-Verlauf und Rankings der Eber-Analytik.',
       access: 'Statistiken einsehen',
       permissions: ['statistics.view'],

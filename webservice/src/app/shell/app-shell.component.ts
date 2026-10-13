@@ -3,26 +3,63 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  HostListener,
   Inject,
+  Injector,
   OnDestroy,
   OnInit,
   PLATFORM_ID,
   signal,
 } from '@angular/core';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  IsActiveMatchOptions,
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { AuthNavigationService } from '../auth/auth-navigation.service';
 import { AuthService } from '../auth/auth.service';
 import { AuthSessionUser } from '../auth/auth.types';
 import { BreakpointService } from './breakpoint.service';
-import { buildPanelNav, buildPrimaryNav, NavItem } from './nav-model';
+import { BottomSheetComponent } from '../ui/bottom-sheet.component';
+import { IconComponent } from '../ui/icon.component';
+import { buildNavSections, buildPrimaryNav, NavItem, NavSection, PRIMARY_NAV } from './nav-model';
+
+const PRIMARY_IDS = new Set(PRIMARY_NAV.map((item) => item.id));
+
+const SUBSET_MATCH: IsActiveMatchOptions = {
+  paths: 'subset',
+  queryParams: 'ignored',
+  fragment: 'ignored',
+  matrixParams: 'ignored',
+};
+const EXACT_MATCH: IsActiveMatchOptions = { ...SUBSET_MATCH, paths: 'exact' };
+
+/** Seitentitel aus `route.data.title` der tiefsten aktiven Route. */
+function titleOf(root: ActivatedRouteSnapshot): string {
+  let route: ActivatedRouteSnapshot | null = root;
+  let title = '';
+  while (route) {
+    const candidate = route.data?.['title'];
+    if (typeof candidate === 'string') title = candidate;
+    route = route.firstChild;
+  }
+  return title;
+}
 
 /**
  * Responsive Layout-Hülle (TICKET-032).
  *
  * Genau eine Shell umschließt alle geschützten Routen und schaltet die
- * Navigations-Darstellung je Breakpoint um: Bottom-Tab-Bar (mobil), Icon-Rail
- * (Tablet), Sidebar + Topbar (Web). Die sichtbaren Einträge werden anhand von
+ * Navigations-Darstellung je Breakpoint um: Bottom-Tab-Bar mit „Mehr“-Sheet
+ * (mobil), beschriftete Icon-Rail mit „Mehr“-Sheet (Tablet), gruppierte
+ * Sidebar (Web). Die Kopfzeile zeigt immer den Seitentitel und den Weg zu den
+ * Mitteilungen, am Tablet/Desktop zusätzlich das Profil-Menü mit Abmelden. Die sichtbaren Einträge werden anhand von
  * Rolle/Permission der bereits serverseitig freigegebenen Session gefiltert
  * (`deny by default`). Der Gast-Kontext (`/guest/...`) erhält eine reduzierte
  * Shell ohne rollenspezifische Navigation.
@@ -33,13 +70,14 @@ import { buildPanelNav, buildPrimaryNav, NavItem } from './nav-model';
 @Component({
   selector: 'vereint-app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, BottomSheetComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-shell.component.html',
 })
 export class AppShellComponent implements OnInit, OnDestroy {
   private readonly sessionSignal = signal<AuthSessionUser | null>(null);
   private readonly urlSignal = signal<string>('');
+  private readonly titleSignal = signal<string>('');
   private routerSub: Subscription | null = null;
 
   /** Aktueller Viewport (Signal des Breakpoint-Service). */
@@ -56,28 +94,68 @@ export class AppShellComponent implements OnInit, OnDestroy {
     this.isGuest() ? [] : buildPrimaryNav(this.sessionSignal()),
   );
 
-  /** Sichtbare rollenspezifische Panel-Einträge (leer im Gast-Kontext). */
-  readonly panelNav = computed<NavItem[]>(() =>
-    this.isGuest() ? [] : buildPanelNav(this.sessionSignal()),
+  /** Gruppierte Navigation der Seitenleiste (leer im Gast-Kontext). */
+  readonly sections = computed<NavSection[]>(() =>
+    this.isGuest() ? [] : buildNavSections(this.sessionSignal()),
   );
+
+  /** Abschnitte des „Mehr“-Sheets: alles außer den primären Zielen. */
+  readonly moreSections = computed<NavSection[]>(() =>
+    this.sections()
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) => !PRIMARY_IDS.has(item.id)),
+      }))
+      .filter((section) => section.items.length > 0),
+  );
+
+  /** Liegt die aktuelle Seite hinter „Mehr“? Dann wird „Mehr“ markiert. */
+  readonly moreActive = computed(() => {
+    const url = this.urlSignal().split(/[?#]/)[0];
+    const inPrimary = this.primaryNav().some(
+      (item) => url === item.route || url.startsWith(`${item.route}/`),
+    );
+    return !inPrimary && url !== '';
+  });
 
   /** Anzeigename der aktiven Session für die Topbar. */
   readonly displayName = computed(() => this.sessionSignal()?.displayName ?? null);
+
+  /** Initialen für den Avatar im Profil-Menü. */
+  readonly initials = computed(() => {
+    const parts = (this.displayName() ?? '').trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    const first = parts[0].charAt(0);
+    const last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+    return (first + last).toUpperCase();
+  });
+
+  /** Titel der aktuellen Seite (aus `route.data.title`). */
+  readonly pageTitle = computed(() => this.titleSignal() || 'Vereint');
+
+  readonly moreOpen = signal(false);
+  readonly profileOpen = signal(false);
 
   constructor(
     @Inject(PLATFORM_ID) private readonly platformId: object,
     private readonly breakpoints: BreakpointService,
     private readonly auth: AuthService,
     private readonly router: Router,
+    private readonly injector: Injector,
   ) {
     this.viewport = this.breakpoints.viewport;
   }
 
   ngOnInit(): void {
     this.urlSignal.set(this.router.url);
+    this.titleSignal.set(titleOf(this.router.routerState.snapshot.root));
     this.routerSub = this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
-      .subscribe((event) => this.urlSignal.set(event.urlAfterRedirects));
+      .subscribe((event) => {
+        this.urlSignal.set(event.urlAfterRedirects);
+        this.titleSignal.set(titleOf(this.router.routerState.snapshot.root));
+        this.closeMenus();
+      });
 
     if (isPlatformBrowser(this.platformId)) {
       void this.auth.getSession().then((session) => this.sessionSignal.set(session));
@@ -90,5 +168,40 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   trackNav(_index: number, item: NavItem): string {
     return item.id;
+  }
+
+  /** `/board` ist Elternpfad von Kasse/Kommunikation und daher exakt. */
+  activeOptions(item: NavItem): IsActiveMatchOptions {
+    return item.route === '/board' ? EXACT_MATCH : SUBSET_MATCH;
+  }
+
+  openMore(): void {
+    this.profileOpen.set(false);
+    this.moreOpen.set(true);
+  }
+
+  toggleProfile(event: Event): void {
+    event.stopPropagation();
+    this.profileOpen.update((open) => !open);
+  }
+
+  closeMenus(): void {
+    this.moreOpen.set(false);
+    this.profileOpen.set(false);
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.profileOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.profileOpen.set(false);
+  }
+
+  logout(): void {
+    this.closeMenus();
+    void this.injector.get(AuthNavigationService).logout();
   }
 }

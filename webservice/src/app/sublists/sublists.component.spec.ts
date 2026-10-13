@@ -75,7 +75,7 @@ describe('SublistsComponent', () => {
   it('renders sublists overview', async () => {
     const fixture = await create();
     const text = fixture.nativeElement.textContent ?? '';
-    expect(text).toContain('Getränke-Sublists');
+    expect(text).toContain('Getränkelisten');
     expect(text).toContain('Sommerfest Sublist');
     expect(text).toContain('+ Neue Sublist erstellen');
   });

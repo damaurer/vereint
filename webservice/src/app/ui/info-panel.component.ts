@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { IconComponent } from './icon.component';
+import type { IconName } from './icons';
 
 /**
  * Hervorgehobenes Info-/Pinnwand-Panel (TICKET-032), z. B. für das gepinnte
@@ -6,6 +8,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
  */
 @Component({
   selector: 'vereint-info-panel',
+  imports: [IconComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -13,7 +16,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
       @if (title) {
         <p class="ui-info-title">
           @if (icon) {
-            <span aria-hidden="true">{{ icon }}</span>
+            <vereint-icon class="ui-info-icon" [name]="icon" />
           }
           {{ title }}
         </p>
@@ -24,5 +27,5 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 })
 export class InfoPanelComponent {
   @Input() title: string | null = null;
-  @Input() icon: string | null = '📌';
+  @Input() icon: IconName | null = 'pin';
 }
