@@ -68,7 +68,7 @@ services:
     <<: *defaults
     # Keycloak behandelt Signale selbst und erwartet, PID 1 zu sein.
     init: false
-    image: ghcr.io/damaurer/keycloak:${IMAGE_TAG:?IMAGE_TAG fehlt}
+    image: ${KEYCLOAK_IMAGE:?KEYCLOAK_IMAGE fehlt}
     environment:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: keycloak
@@ -106,7 +106,7 @@ services:
 
   baseservice:
     <<: *defaults
-    image: ghcr.io/damaurer/baseservice:${IMAGE_TAG}
+    image: ${BASESERVICE_IMAGE:?BASESERVICE_IMAGE fehlt}
     environment:
       VEREINT_DB_URL: jdbc:postgresql://postgres:5432/vereint
       VEREINT_DB_USERNAME: vereint
@@ -140,7 +140,7 @@ services:
 
   webservice:
     <<: *defaults
-    image: ghcr.io/damaurer/webservice:${IMAGE_TAG}
+    image: ${WEBSERVICE_IMAGE:?WEBSERVICE_IMAGE fehlt}
     environment:
       NODE_ENV: production
       PORT: "8080"

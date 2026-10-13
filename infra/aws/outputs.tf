@@ -27,3 +27,12 @@ output "deploy_role_arn" {
   description = "Rolle fuer GitHub Actions (als Secret AWS_DEPLOY_ROLE_ARN im Environment production hinterlegen)."
   value       = aws_iam_role.deploy.arn
 }
+
+output "github_environment_variables" {
+  description = "Variablen fuer das GitHub-Environment production (Settings -> Environments -> production -> Variables)."
+  value = {
+    AWS_REGION            = var.region
+    VEREINT_INSTANCE_ID   = aws_instance.app.id
+    VEREINT_DEPLOY_BUCKET = aws_s3_bucket.backups.bucket
+  }
+}

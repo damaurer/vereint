@@ -1,12 +1,13 @@
 #!/bin/bash
-# Erzeugt /srv/vereint/app/.env aus dem AWS SSM Parameter Store (/vereint/*).
-# Aufruf: fetch-env.sh <image-tag>
+# Erzeugt .env neben compose.yaml aus dem AWS SSM Parameter Store (/vereint/*)
+# und den Image-Digests in images.env (von deploy.sh geprueft).
 # Die Datei ist nur fuer root lesbar und wird bei jedem Deployment neu erzeugt.
 set -euo pipefail
 
-IMAGE_TAG="${1:?Aufruf: fetch-env.sh <image-tag>}"
 APP_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET="$APP_DIR/.env"
+IMAGES="$APP_DIR/images.env"
+[ -f "$IMAGES" ] || { echo "$IMAGES fehlt" >&2; exit 1; }
 TMP="$(mktemp "$APP_DIR/.env.XXXXXX")"
 trap 'rm -f "$TMP"' EXIT
 chmod 600 "$TMP"
@@ -16,7 +17,7 @@ REGION="$(curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254
 
 {
   echo "# Erzeugt von bin/fetch-env.sh am $(date -u +%FT%TZ). Nicht bearbeiten."
-  echo "IMAGE_TAG='$IMAGE_TAG'"
+  sed -n "s/^\([A-Z_]*_IMAGE\)=\(.*\)$/\1='\2'/p" "$IMAGES"
   aws ssm get-parameters-by-path --region "$REGION" --path /vereint --recursive --with-decryption \
     --query 'Parameters[].[Name,Value]' --output text |
     while IFS=$'\t' read -r name value; do
@@ -28,6 +29,7 @@ REGION="$(curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254
 } > "$TMP"
 
 grep -q '^SESSION_SECRET=' "$TMP" || { echo "Secrets fehlen im Parameter Store" >&2; exit 1; }
+[ "$(grep -c '_IMAGE=' "$TMP")" -eq 3 ] || { echo "images.env unvollstaendig" >&2; exit 1; }
 mv "$TMP" "$TARGET"
 trap - EXIT
 echo "$TARGET geschrieben."
