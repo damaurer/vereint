@@ -23,6 +23,7 @@ import {
   StatusBadgeComponent,
   type StatusTone,
 } from '../ui';
+import { StateComponent } from '../ui/state.component';
 
 interface MemberLedger {
   balance: MemberBalance;
@@ -42,7 +43,7 @@ interface MemberLedger {
  */
 @Component({
   selector: 'app-board-treasury',
-  imports: [
+  imports: [StateComponent, 
     FormsModule,
     RouterLink,
     BalanceCardComponent,
@@ -72,16 +73,14 @@ interface MemberLedger {
         }
 
         @if (events.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Events werden abgerufen.</span>
-          </div>
+          <vereint-state kind="loading" title="Wird geladen …" message="Events werden abgerufen." />
         } @else if (events.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Kasse nicht verfügbar</strong>
-            <span>{{ events.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Kasse nicht verfügbar"
+            [message]="events.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (events.data(); as list) {
           <div class="treasury-stats">
             <vereint-stat-card icon="events" label="Events mit Abrechnung" [value]="list.length" />
@@ -89,10 +88,11 @@ interface MemberLedger {
 
           <h2 class="member-subtitle">Events ({{ list.length }})</h2>
           @if (list.length === 0) {
-            <div class="state-card" role="status">
-              <strong>Keine Events</strong>
-              <span>Es sind keine Events mit Abrechnung sichtbar.</span>
-            </div>
+            <vereint-state
+              kind="empty"
+              title="Keine Events"
+              message="Es sind keine Events mit Abrechnung sichtbar."
+            />
           } @else {
             <ul class="member-list">
               @for (event of list; track event.id) {
@@ -144,10 +144,11 @@ interface MemberLedger {
           <button type="submit" class="member-button" [disabled]="busy()">Anzeigen</button>
         </form>
         @if (ledger.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Guthaben und Buchungen werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Guthaben und Buchungen werden abgerufen."
+          />
         } @else if (ledger.isError()) {
           <p class="manage-action-error" role="alert">{{ ledger.errorMessage() }}</p>
         } @else if (ledger.data(); as view) {

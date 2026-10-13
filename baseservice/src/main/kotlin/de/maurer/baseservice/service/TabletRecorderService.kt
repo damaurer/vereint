@@ -184,6 +184,22 @@ class TabletRecorderService(
     }
 
     /**
+     * Nimmt einen eben am Tablet erfassten Strich zurück (Gegenbuchung). Die
+     * fachlichen Grenzen (eigener Strich, dieses Event, Zeitfenster) prüft
+     * [LedgerService.undoTabletPurchase].
+     */
+    fun undoPurchase(
+        eventId: UUID,
+        entryId: UUID,
+        idempotencyKey: String?,
+        principal: UserPrincipal
+    ): LedgerEntryDto {
+        val actor = requireTabletRecorder(principal)
+        requireActiveEvent(eventId)
+        return ledgerService.undoTabletPurchase(eventId, entryId, actor, idempotencyKey)
+    }
+
+    /**
      * Erfasst eine Runde (`source = round`) als Revenue-Only-Buchung für alle
      * angegebenen Eventmitglieder.
      */

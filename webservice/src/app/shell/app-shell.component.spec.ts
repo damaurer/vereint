@@ -1,9 +1,11 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AuthService } from '../auth/auth.service';
 import { AuthSessionUser } from '../auth/auth.types';
+import { NotificationsApiService } from '../notifications/notifications-api.service';
 import { AppShellComponent } from './app-shell.component';
 import { BreakpointService } from './breakpoint.service';
 import { Viewport } from './breakpoint.service';
@@ -15,6 +17,7 @@ import { Viewport } from './breakpoint.service';
 describe('AppShellComponent', () => {
   const viewport = signal<Viewport>('web');
   let session: AuthSessionUser | null;
+  let unread: number;
 
   const member = (roles: AuthSessionUser['roles'], permissions: string[] = []): AuthSessionUser => ({
     uid: 'u-1',
@@ -32,6 +35,10 @@ describe('AppShellComponent', () => {
         provideRouter([]),
         { provide: BreakpointService, useValue: { viewport } },
         { provide: AuthService, useValue: { getSession: () => Promise.resolve(session) } },
+        {
+          provide: NotificationsApiService,
+          useValue: { unreadCount: () => of({ unread }) },
+        },
       ],
     });
     const fixture = TestBed.createComponent(AppShellComponent);
@@ -45,6 +52,7 @@ describe('AppShellComponent', () => {
 
   beforeEach(() => {
     session = member(['member']);
+    unread = 0;
     viewport.set('web');
   });
 
@@ -82,6 +90,21 @@ describe('AppShellComponent', () => {
     const root = el(fixture);
     expect(root.querySelector('.shell-page-title')).toBeTruthy();
     expect(root.querySelector('a.shell-icon-button')?.getAttribute('href')).toBe('/notifications');
+  });
+
+  it('shows the unread count on the bell', async () => {
+    unread = 3;
+    const fixture = await create();
+    const bell = el(fixture).querySelector('a.shell-icon-button');
+    expect(bell?.querySelector('.shell-badge')?.textContent?.trim()).toBe('3');
+    expect(bell?.getAttribute('aria-label')).toBe('Mitteilungen, 3 ungelesen');
+  });
+
+  it('hides the badge when nothing is unread', async () => {
+    const fixture = await create();
+    const bell = el(fixture).querySelector('a.shell-icon-button');
+    expect(bell?.querySelector('.shell-badge')).toBeNull();
+    expect(bell?.getAttribute('aria-label')).toBe('Mitteilungen');
   });
 
   it('offers logout in the profile menu', async () => {

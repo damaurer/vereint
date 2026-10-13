@@ -16,6 +16,7 @@ import { formatDateTime } from '../member/member-format';
 import { AvatarBadgeComponent, InfoPanelComponent } from '../ui';
 import { ChatDataService } from './chat-data.service';
 import { DRINK_EMOJI, type ChatMessage, type ChatOverview } from './chat.model';
+import { StateComponent } from '../ui/state.component';
 
 /** Zusammengefasste Konversationszeile für die Seitenliste. */
 interface ConversationRow {
@@ -45,7 +46,7 @@ interface ConversationRow {
  */
 @Component({
   selector: 'app-chat',
-  imports: [IconComponent, FormsModule, RouterLink, AvatarBadgeComponent, InfoPanelComponent],
+  imports: [StateComponent, IconComponent, FormsModule, RouterLink, AvatarBadgeComponent, InfoPanelComponent],
   template: `
     <main class="page-shell">
       <section class="page-card chat-card" aria-labelledby="chat-title">
@@ -58,16 +59,18 @@ interface ConversationRow {
         </div>
 
         @if (isBusy()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Die Konversationen werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Die Konversationen werden abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Chat nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Chat nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (model(); as data) {
           <div class="chat-layout" [class.is-thread]="mobileView() === 'thread'">
             <aside class="chat-aside" aria-label="Konversationen">
@@ -125,10 +128,11 @@ interface ConversationRow {
 
               <div class="chat-history">
                 @if (selectedMessages().length === 0) {
-                  <div class="state-card" role="status">
-                    <strong>Noch keine Nachrichten</strong>
-                    <span>Schreibe die erste Nachricht in diese Konversation.</span>
-                  </div>
+                  <vereint-state
+                    kind="empty"
+                    title="Noch keine Nachrichten"
+                    message="Schreibe die erste Nachricht in diese Konversation."
+                  />
                 } @else {
                   @for (message of selectedMessages(); track message.id) {
                     <article class="chat-message" [class.is-own]="message.authorId === data.currentUserId">

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { EMAIL_PATTERN } from '../auth/auth.types';
 import { formatDateTime } from '../member/member-format';
 import { ModalComponent, StatusBadgeComponent, type StatusTone } from '../ui';
+import { StateComponent } from '../ui/state.component';
 
 /** Auswählbare Startrollen einer Einladung (Präsentation). */
 const START_ROLES = [
@@ -61,7 +62,7 @@ function demoInvites(): OpenInvite[] {
  */
 @Component({
   selector: 'app-admin-invite-modal',
-  imports: [IconComponent, FormsModule, ModalComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, FormsModule, ModalComponent, StatusBadgeComponent],
   template: `
     <vereint-modal [open]="open" title="Mitglied einladen" (closed)="close()">
       <form class="invite-form" (ngSubmit)="send()">
@@ -113,10 +114,11 @@ function demoInvites(): OpenInvite[] {
       <section class="invite-open" aria-labelledby="invite-open-title">
         <h3 class="member-subtitle" id="invite-open-title">Offene Einladungen</h3>
         @if (invites().length === 0) {
-          <div class="state-card" role="status">
-            <strong>Keine offenen Einladungen</strong>
-            <span>Aktuell sind keine Einladungen ausstehend.</span>
-          </div>
+          <vereint-state
+            kind="empty"
+            title="Keine offenen Einladungen"
+            message="Aktuell sind keine Einladungen ausstehend."
+          />
         } @else {
           <ul class="member-list">
             @for (invite of invites(); track invite.id) {

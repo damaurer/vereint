@@ -6,6 +6,7 @@ import { formatDateTime } from '../member/member-format';
 import { describeApiError } from '../api/api-client.service';
 import type { ChatMessage } from '../events/event-manage.types';
 import { GuestEventService } from './guest-event.service';
+import { StateComponent } from '../ui/state.component';
 
 /**
  * Gastoberfläche eines Events (TICKET-025).
@@ -20,7 +21,7 @@ import { GuestEventService } from './guest-event.service';
  */
 @Component({
   selector: 'app-guest-event',
-  imports: [FormsModule],
+  imports: [StateComponent, FormsModule],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="guest-title">
@@ -34,16 +35,18 @@ import { GuestEventService } from './guest-event.service';
             <span>Dieser Link enthält kein gültiges Gast-Token. Bitte den Einladungslink erneut öffnen.</span>
           </div>
         } @else if (load.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Der Event-Chat wird abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Der Event-Chat wird abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Chat nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Chat nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (load.data(); as messages) {
           @if (actionError(); as err) {
             <p class="guest-action-error" role="alert">{{ err }}</p>

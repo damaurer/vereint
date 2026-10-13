@@ -13,6 +13,7 @@ import {
   StatusBadgeComponent,
   type StatusTone,
 } from '../ui';
+import { StateComponent } from '../ui/state.component';
 
 interface BoardView {
   events: EventSummary[];
@@ -35,7 +36,7 @@ interface BoardView {
  */
 @Component({
   selector: 'app-board',
-  imports: [IconComponent, RouterLink, InfoPanelComponent, StatCardComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, RouterLink, InfoPanelComponent, StatCardComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="board-title">
@@ -63,16 +64,18 @@ interface BoardView {
         </nav>
 
         @if (load.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Events und Protokoll werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Events und Protokoll werden abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Vorstandsbereich nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Vorstandsbereich nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (load.data(); as view) {
           <div class="board-stats">
             <vereint-stat-card icon="events" label="Sichtbare Events" [value]="view.events.length" />
@@ -81,10 +84,11 @@ interface BoardView {
 
           <h2 class="member-subtitle">Gastgeber · Events ({{ view.events.length }})</h2>
           @if (view.events.length === 0) {
-            <div class="state-card" role="status">
-              <strong>Keine Events</strong>
-              <span>Aktuell sind keine Events zur Moderation sichtbar.</span>
-            </div>
+            <vereint-state
+              kind="empty"
+              title="Keine Events"
+              message="Aktuell sind keine Events zur Moderation sichtbar."
+            />
           } @else {
             <ul class="member-list">
               @for (event of view.events; track event.id) {
@@ -103,10 +107,11 @@ interface BoardView {
 
           <h2 class="member-subtitle">Letzte Aktionen ({{ view.audit.length }})</h2>
           @if (view.audit.length === 0) {
-            <div class="state-card" role="status">
-              <strong>Keine Einträge</strong>
-              <span>Für die erlaubten Bereiche liegen keine Protokolleinträge vor.</span>
-            </div>
+            <vereint-state
+              kind="empty"
+              title="Keine Einträge"
+              message="Für die erlaubten Bereiche liegen keine Protokolleinträge vor."
+            />
           } @else {
             <ul class="member-list">
               @for (entry of view.audit; track entry.id) {

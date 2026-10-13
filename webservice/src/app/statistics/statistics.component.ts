@@ -11,6 +11,7 @@ import { AsyncState } from '../member/async-state';
 import { InfoPanelComponent, StatCardComponent } from '../ui';
 import { StatisticsDataService } from './statistics-data.service';
 import type { MemberConsumption, StatisticsView } from './statistics.types';
+import { StateComponent } from '../ui/state.component';
 
 /**
  * Statistik- und Eber-Analytik-Oberfläche (TICKET-036).
@@ -31,7 +32,7 @@ import type { MemberConsumption, StatisticsView } from './statistics.types';
   selector: 'app-statistics',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [StatCardComponent, InfoPanelComponent],
+  imports: [StateComponent, StatCardComponent, InfoPanelComponent],
   template: `
     <main class="page-shell">
       <section class="page-card stats-card" aria-label="Statistiken und Eber-Analytik">
@@ -46,22 +47,25 @@ import type { MemberConsumption, StatisticsView } from './statistics.types';
             <span>Aggregierte Auswertungen erscheinen erst nach dem Laden im Browser.</span>
           </div>
         } @else if (load.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Die Auswertungen werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Die Auswertungen werden abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Statistiken nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Statistiken nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (load.data(); as view) {
           @if (isEmpty(view)) {
-            <div class="state-card" role="status">
-              <strong>Noch keine Auswertungen</strong>
-              <span>Sobald Käufe und Anwesenheiten erfasst sind, erscheinen hier Kennzahlen.</span>
-            </div>
+            <vereint-state
+              kind="empty"
+              title="Noch keine Auswertungen"
+              message="Sobald Käufe und Anwesenheiten erfasst sind, erscheinen hier Kennzahlen."
+            />
           } @else {
             <div class="stats-grid">
               <article class="stats-panel stats-span" aria-label="Bierkonsum diesen Monat">

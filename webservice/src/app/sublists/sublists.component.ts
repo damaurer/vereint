@@ -13,10 +13,11 @@ import {
 import { CatalogApiService, type DrinkSummaryDto } from '../catalog/catalog-api.service';
 import { AsyncState } from '../member/async-state';
 import { InfoPanelComponent, ModalComponent, StatusBadgeComponent } from '../ui';
+import { StateComponent } from '../ui/state.component';
 
 @Component({
   selector: 'app-sublists',
-  imports: [IconComponent, FormsModule, InfoPanelComponent, ModalComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, FormsModule, InfoPanelComponent, ModalComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="sublists-title">
@@ -37,22 +38,25 @@ import { InfoPanelComponent, ModalComponent, StatusBadgeComponent } from '../ui'
         </vereint-info-panel>
 
         @if (load.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Sublists werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Sublists werden abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Sublists nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Sublists nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (load.data(); as sublists) {
           @if (sublists.length === 0) {
-            <div class="state-card" role="status">
-              <strong>Keine Sublists vorhanden</strong>
-              <span>Erstelle deine erste Sublist, um Getränke für Events vorzukonfigurieren.</span>
-            </div>
+            <vereint-state
+              kind="empty"
+              title="Keine Sublists vorhanden"
+              message="Erstelle deine erste Sublist, um Getränke für Events vorzukonfigurieren."
+            />
           } @else {
             <div class="sublists-grid">
               @for (sublist of sublists; track sublist.id) {

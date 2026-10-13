@@ -79,6 +79,18 @@ export class TabletApiService {
     );
   }
 
+  /**
+   * Eben erfassten Strich zurücknehmen (`POST /tablet/events/{id}/purchases/{entryId}/undo`).
+   * Der Server erlaubt das nur für eigene, frische Striche und bucht eine Gegenbuchung.
+   */
+  undoPurchase(eventId: string, entryId: string, idempotencyKey: string): Observable<LedgerEntry> {
+    return this.api.post<LedgerEntry>(
+      `${this.eventPath(eventId)}/purchases/${encodeURIComponent(entryId)}/undo`,
+      {},
+      this.idempotency(idempotencyKey),
+    );
+  }
+
   /** Runde als Revenue-Only buchen (`POST /tablet/events/{id}/rounds`). */
   recordRound(
     eventId: string,

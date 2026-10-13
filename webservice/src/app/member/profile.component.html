@@ -1,19 +1,15 @@
 <main class="page-shell">
   <section class="page-card member-card" aria-label="Mein Profil">
-    <span class="eyebrow">Mein Profil</span>
-
 
     @if (load.isLoading()) {
-      <div class="state-card" role="status" aria-live="polite">
-        <strong>Wird geladen …</strong>
-        <span>Das Profil wird abgerufen.</span>
-      </div>
+      <vereint-state kind="loading" title="Wird geladen …" message="Das Profil wird abgerufen." />
     } @else if (load.isError()) {
-      <div class="state-card state-error" role="alert">
-        <strong>Profil nicht verfügbar</strong>
-        <span>{{ load.errorMessage() }}</span>
-        <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-      </div>
+      <vereint-state
+        kind="error"
+        title="Profil nicht verfügbar"
+        [message]="load.errorMessage()"
+        (retry)="reload()"
+      />
     } @else if (load.data(); as profile) {
       <vereint-hero-greeting
         eyebrow="Mein Profil"
@@ -45,6 +41,23 @@
           [attr.aria-checked]="beerWithMe()"
           (change)="toggleBeerWithMe()"
         />
+      </div>
+
+      <div class="profile-theme">
+        <span class="profile-toggle-title" id="theme-label">Darstellung</span>
+        <div class="profile-theme-options" role="radiogroup" aria-labelledby="theme-label">
+          @for (option of themeOptions; track option.value) {
+            <button
+              type="button"
+              class="profile-theme-option"
+              role="radio"
+              [attr.aria-checked]="themePreference() === option.value"
+              (click)="setTheme(option.value)"
+            >
+              {{ option.label }}
+            </button>
+          }
+        </div>
       </div>
 
       <form class="member-form" (submit)="submit($event)">

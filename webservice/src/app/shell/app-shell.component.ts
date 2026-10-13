@@ -25,6 +25,8 @@ import { filter } from 'rxjs/operators';
 import { AuthNavigationService } from '../auth/auth-navigation.service';
 import { AuthService } from '../auth/auth.service';
 import { AuthSessionUser } from '../auth/auth.types';
+import { NotificationsApiService } from '../notifications/notifications-api.service';
+import { UnreadBadgeStore } from '../notifications/unread-badge.store';
 import { BreakpointService } from './breakpoint.service';
 import { BottomSheetComponent } from '../ui/bottom-sheet.component';
 import { IconComponent } from '../ui/icon.component';
@@ -133,6 +135,22 @@ export class AppShellComponent implements OnInit, OnDestroy {
   /** Titel der aktuellen Seite (aus `route.data.title`). */
   readonly pageTitle = computed(() => this.titleSignal() || 'Vereint');
 
+  /** Ungelesene Mitteilungen für das Glocken-Badge (nur im Browser geladen). */
+  readonly unread;
+
+  /** Badge-Text: ab 100 gekürzt, damit der Kreis klein bleibt. */
+  readonly unreadBadge = computed(() => {
+    const count = this.unread();
+    if (count <= 0) return null;
+    return count > 99 ? '99+' : String(count);
+  });
+
+  /** Zugängliche Bezeichnung der Glocke inklusive Anzahl. */
+  readonly bellLabel = computed(() => {
+    const count = this.unread();
+    return count > 0 ? `Mitteilungen, ${count} ungelesen` : 'Mitteilungen';
+  });
+
   readonly moreOpen = signal(false);
   readonly profileOpen = signal(false);
 
@@ -144,6 +162,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     private readonly injector: Injector,
   ) {
     this.viewport = this.breakpoints.viewport;
+    this.unread = this.injector.get(UnreadBadgeStore).count;
   }
 
   ngOnInit(): void {
@@ -155,11 +174,30 @@ export class AppShellComponent implements OnInit, OnDestroy {
         this.urlSignal.set(event.urlAfterRedirects);
         this.titleSignal.set(titleOf(this.router.routerState.snapshot.root));
         this.closeMenus();
+        this.refreshUnread();
       });
 
     if (isPlatformBrowser(this.platformId)) {
-      void this.auth.getSession().then((session) => this.sessionSignal.set(session));
+      void this.auth.getSession().then((session) => {
+        this.sessionSignal.set(session);
+        this.refreshUnread();
+      });
     }
+  }
+
+  /**
+   * Lädt die Anzahl ungelesener Mitteilungen. Nur im Browser und mit Session;
+   * Fehler lassen das Badge einfach aus, die Glocke bleibt nutzbar.
+   */
+  private refreshUnread(): void {
+    if (!isPlatformBrowser(this.platformId) || !this.sessionSignal() || this.isGuest()) return;
+    this.injector
+      .get(NotificationsApiService)
+      .unreadCount()
+      .subscribe({
+        next: (response) => this.unread.set(Math.max(0, response?.unread ?? 0)),
+        error: () => this.unread.set(0),
+      });
   }
 
   ngOnDestroy(): void {

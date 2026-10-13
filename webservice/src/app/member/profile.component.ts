@@ -6,6 +6,8 @@ import { formatDateTime } from './member-format';
 import type { MemberProfile, UpdateProfilePayload } from '../api/api.types';
 import { HeroGreetingComponent, RoleChipComponent } from '../ui';
 import { IconComponent } from '../ui/icon.component';
+import { StateComponent } from '../ui/state.component';
+import { ThemeService, type ThemePreference } from '../shell/theme.service';
 
 /**
  * Persönliches Profil eines Mitglieds (TICKET-024, Redesign TICKET-033).
@@ -19,7 +21,7 @@ import { IconComponent } from '../ui/icon.component';
  */
 @Component({
   selector: 'app-member-profile',
-  imports: [HeroGreetingComponent, RoleChipComponent, IconComponent],
+  imports: [HeroGreetingComponent, RoleChipComponent, IconComponent, StateComponent],
   templateUrl: './profile.component.html',
   styles: [
     `
@@ -51,6 +53,46 @@ import { IconComponent } from '../ui/icon.component';
         font-weight: 700;
       }
 
+      .profile-theme {
+        display: grid;
+        gap: 0.5rem;
+        margin: var(--space-3) 0 0;
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--color-border);
+        background-color: var(--color-surface-raised);
+      }
+
+      .profile-theme-options {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.25rem;
+        padding: 0.25rem;
+        border-radius: 999px;
+        background-color: var(--color-bg);
+      }
+
+      .profile-theme-option {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-height: 2.75rem;
+        border: none;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--color-text-muted);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .profile-theme-option[aria-checked='true'] {
+        background-color: var(--color-surface);
+        color: var(--color-brand);
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+      }
+
       .profile-toggle input {
         width: 1.25rem;
         height: 1.25rem;
@@ -61,6 +103,7 @@ import { IconComponent } from '../ui/icon.component';
 })
 export class ProfileComponent implements OnInit, OnDestroy {
   private readonly api = inject(MemberApiService);
+  private readonly theme = inject(ThemeService);
 
   protected readonly load = new AsyncState<MemberProfile>();
   protected readonly displayName = signal('');
@@ -70,6 +113,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
   protected readonly saved = signal(false);
   protected readonly beerWithMe = signal(false);
   protected readonly formatDateTime = formatDateTime;
+  protected readonly themePreference = this.theme.preference;
+  protected readonly themeOptions: readonly { value: ThemePreference; label: string }[] = [
+    { value: 'system', label: 'System' },
+    { value: 'light', label: 'Hell' },
+    { value: 'dark', label: 'Dunkel' },
+  ];
+
+  protected setTheme(preference: ThemePreference): void {
+    this.theme.set(preference);
+  }
 
   ngOnInit(): void {
     this.reload();

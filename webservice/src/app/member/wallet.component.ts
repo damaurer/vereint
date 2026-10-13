@@ -5,6 +5,7 @@ import { MemberApiService } from './member-api.service';
 import { entryTypeLabel, formatDateTime, formatMoney } from './member-format';
 import type { LedgerEntry, MemberBalance } from '../api/api.types';
 import { BalanceCardComponent, InfoPanelComponent } from '../ui';
+import { StateComponent } from '../ui/state.component';
 
 interface WalletView {
   balance: MemberBalance;
@@ -25,7 +26,7 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
  */
 @Component({
   selector: 'app-member-wallet',
-  imports: [BalanceCardComponent, InfoPanelComponent],
+  imports: [StateComponent, BalanceCardComponent, InfoPanelComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="wallet-title">
@@ -34,16 +35,18 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
 
 
         @if (load.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Guthaben und Buchungen werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Guthaben und Buchungen werden abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Guthaben nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Guthaben nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (load.data(); as view) {
           <vereint-balance-card
             label="Aktueller Stand"
@@ -64,10 +67,11 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
 
           <h2 class="member-subtitle">Historie</h2>
           @if (view.entries.length === 0) {
-            <div class="state-card" role="status">
-              <strong>Keine Buchungen</strong>
-              <span>Für dein Konto liegen noch keine Buchungen vor.</span>
-            </div>
+            <vereint-state
+              kind="empty"
+              title="Keine Buchungen"
+              message="Für dein Konto liegen noch keine Buchungen vor."
+            />
           } @else {
             <div class="wallet-filter" role="group" aria-label="Historie filtern">
               <button
