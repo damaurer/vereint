@@ -87,9 +87,14 @@ Danach:
    anlegen.
 2. **Mails bestätigen:** AWS schickt an `alert_email` je eine Bestätigung für Budget- und Betriebsalarme (fehlendes Backup, Hardware-Ausfall). Bis das erste nächtliche Backup gelaufen ist, meldet der Backup-Alarm einmal „ALARM“.
 3. **GitHub:** Im Repository unter *Settings → Environments* ein Environment
-   `production` anlegen (optional mit erforderlicher Freigabe) und dort
-   `AWS_DEPLOY_ROLE_ARN` = `terraform output deploy_role_arn` als Secret
-   hinterlegen. Das brauchen die Deployments aus Schritt 4.
+   `production` anlegen (optional mit erforderlicher Freigabe und nur für den
+   Branch `main`) und dort hinterlegen:
+   - Secret `AWS_DEPLOY_ROLE_ARN` = `terraform output -raw deploy_role_arn`
+   - Variablen `AWS_REGION`, `VEREINT_INSTANCE_ID` und `VEREINT_DEPLOY_BUCKET`
+     aus `terraform output github_environment_variables`
+
+   Danach rollt jeder Merge nach `main` automatisch aus (siehe
+   `deploy/README.md`).
 
 ## Betrieb
 

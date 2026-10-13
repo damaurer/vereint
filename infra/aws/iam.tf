@@ -101,7 +101,9 @@ resource "aws_iam_access_key" "app_storage" {
 # --- Deployments aus GitHub Actions ---------------------------------------------
 # GitHub meldet sich per OIDC an; es gibt keine dauerhaften AWS-Schluessel in
 # GitHub. Nur Jobs im Environment `production` dieses Repositories duerfen die
-# Rolle uebernehmen, und die Rolle darf nur Befehle auf diesem Server ausfuehren.
+# Rolle uebernehmen. Die Rolle darf das Deploy-Bundle unter deploy/ im
+# Backup-Bucket ablegen und Befehle auf diesem einen Server ausfuehren, sonst
+# nichts: Backups lesen oder loeschen kann sie nicht.
 resource "aws_iam_openid_connect_provider" "github" {
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
@@ -140,6 +142,12 @@ resource "aws_iam_role_policy" "deploy" {
           aws_instance.app.arn,
           "arn:aws:ssm:${var.region}::document/AWS-RunShellScript",
         ]
+      },
+      {
+        Sid      = "UploadDeployBundle"
+        Effect   = "Allow"
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.backups.arn}/deploy/*"
       },
       {
         Sid      = "ReadCommandResult"

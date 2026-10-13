@@ -18,8 +18,9 @@ Internet ──443──▶ Caddy ──┬─ /kc/*  ──▶ Keycloak ─┐
 | `baseservice` | `ghcr.io/damaurer/baseservice` | Fachlogik und API |
 | `postgres` | `postgres` | Eine Instanz mit den Datenbanken `keycloak` und `vereint` |
 
-Alle drei eigenen Images werden mit demselben Tag (`IMAGE_TAG`, Commit-SHA)
-ausgerollt, sodass immer ein zusammenpassender Stand läuft.
+Die drei eigenen Images werden nie über einen veränderlichen Tag ausgerollt,
+sondern über ihren Digest (`images.env`). Was einmal getestet lief, läuft beim
+Rollback exakt genauso wieder.
 
 ## Sicherheit
 
@@ -75,20 +76,54 @@ Um 02:30 UTC folgt zusätzlich ein Snapshot des gesamten Datenvolumes.
 `restore.sh` fragt vor dem Überschreiben den Datenbanknamen ab und stoppt den
 betroffenen Dienst währenddessen.
 
-## Erstes Deployment (manuell)
+## Deployments
 
-Ab Schritt 4 übernimmt das GitHub Actions. Bis dahin per Session Manager:
+Jeder Merge nach `main` rollt automatisch aus (`.github/workflows/deploy.yml`):
 
-```bash
-aws ssm start-session --target <instance-id>   # aus terraform output
-sudo -i
-mkdir -p /srv/vereint/app && cd /srv/vereint/app
-# Inhalt dieses Ordners hierher kopieren, dann:
-bin/install.sh
-bin/fetch-env.sh <commit-sha>
-echo <github-token-mit-read:packages> | docker login ghcr.io -u <github-user> --password-stdin
-docker compose pull && docker compose up -d
-```
+1. GitHub Actions wartet, bis alle Image-Builds auf `main` fertig sind, und
+   bindet die Images `keycloak`, `baseservice` und `webservice` an ihren
+   Digest.
+2. Der Job meldet sich per OIDC bei AWS an, legt diesen Ordner samt
+   `images.env` unter `deploy/` im Backup-Bucket ab und startet auf dem Server
+   per Systems Manager `bin/deploy.sh`. SSH ist dafür nicht nötig.
+3. `deploy.sh` zieht die neuen Images, **sichert beide Datenbanken** (wie
+   nachts, inklusive Probe-Wiederherstellung; ohne Backup kein Deployment),
+   aktiviert den neuen Stand und wartet, bis alle Container gesund sind.
+4. Danach prüft es von außen über Caddy, ob `/api/v1/health`, der Login
+   (`/kc/realms/vereint/...`) und die Startseite antworten.
+5. **Schlägt Schritt 3 oder 4 fehl, startet automatisch wieder der vorherige
+   Stand** und der Workflow wird rot. Der fehlgeschlagene Stand liegt zur
+   Analyse unter `/srv/vereint/releases/failed`.
+
+Deployments laufen nacheinander, nie gleichzeitig. Während des Neustarts ist die
+Anwendung kurz nicht erreichbar (ein Server, ein Container je Dienst).
+
+### Von Hand ausrollen oder zurückrollen
+
+In GitHub unter *Actions → Deployment (Produktion) → Run workflow*:
+
+- `deploy` rollt den aktuellen Stand von `main` erneut aus.
+- `rollback` stellt den Stand vor dem letzten Deployment wieder her.
+
+Auf dem Server geht der Rollback auch direkt:
+`sudo /srv/vereint/app/bin/deploy.sh rollback`.
+
+### Rollback und Datenbank
+
+Ein Rollback setzt nur die Anwendung zurück, nicht die Datenbank. Liquibase-
+Migrationen sollten deshalb immer so geschrieben sein, dass auch der vorherige
+Stand mit dem neuen Schema läuft (Spalten erst hinzufügen, später entfernen).
+Ist doch einmal der Datenbankstand das Problem, liegt das Backup von direkt vor
+dem Deployment in S3: `sudo /srv/vereint/app/bin/restore.sh vereint` wählt
+das neueste.
+
+### Erstes Deployment
+
+Voraussetzungen aus `infra/aws/README.md` (Environment `production` mit Secret
+und Variablen). Gibt es auf `main` noch keine Images, unter *Actions* die
+Workflows `baseservice CI/CD`, `webservice CI/CD` und `keycloak CI/CD` je
+einmal mit *Run workflow* auf `main` starten; danach rollt das Deployment von
+selbst aus.
 
 ## Keycloak-Verwaltung
 

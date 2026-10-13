@@ -1,0 +1,154 @@
+name: Deployment (Produktion)
+
+# Rollt den Stand von `main` auf den Server aus (siehe deploy/README.md).
+#
+# Ausgeloest wird das Deployment
+#   - nachdem ein Image-Workflow auf `main` erfolgreich ein Image gepusht hat,
+#   - bei Aenderungen an deploy/ auf `main`,
+#   - von Hand (Actions -> Deployment -> Run workflow), auch als Rollback.
+#
+# Der Job meldet sich per OIDC bei AWS an (keine dauerhaften Schluessel in
+# GitHub) und laeuft nur im Environment `production`. Er bindet alle drei
+# Images an ihren Digest, legt das Bundle in S3 ab und startet auf dem Server
+# per AWS Systems Manager `bin/deploy.sh`. Das Skript sichert vorher die
+# Datenbanken, prueft danach die Gesundheit und kehrt bei einem Fehler
+# automatisch zum vorherigen Stand zurueck.
+on:
+  workflow_run:
+    workflows:
+      - baseservice CI/CD
+      - webservice CI/CD
+      - keycloak CI/CD
+    types: [completed]
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/**'
+      - '.github/workflows/deploy.yml'
+      - '.github/scripts/ssm-run.sh'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'deploy = aktuellen Stand von main ausrollen, rollback = vorherigen Stand wiederherstellen'
+        type: choice
+        options: [deploy, rollback]
+        default: deploy
+
+permissions:
+  contents: read
+
+# Deployments laufen nacheinander, nie parallel und nie abgebrochen.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Auf den Server ausrollen
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+
+    permissions:
+      contents: read
+      packages: read
+      actions: read
+      id-token: write
+
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'eu-central-1' }}
+      INSTANCE_ID: ${{ vars.VEREINT_INSTANCE_ID }}
+      DEPLOY_BUCKET: ${{ vars.VEREINT_DEPLOY_BUCKET }}
+      ACTION: ${{ inputs.action || 'deploy' }}
+
+    steps:
+      - name: Konfiguration pruefen
+        env:
+          ROLE: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+        run: |
+          missing=""
+          [ -n "$ROLE" ] || missing="$missing Secret:AWS_DEPLOY_ROLE_ARN"
+          [ -n "$INSTANCE_ID" ] || missing="$missing Variable:VEREINT_INSTANCE_ID"
+          [ -n "$DEPLOY_BUCKET" ] || missing="$missing Variable:VEREINT_DEPLOY_BUCKET"
+          if [ -n "$missing" ]; then
+            echo "::error::Im Environment production fehlt:$missing (siehe infra/aws/README.md)"
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Laufende Image-Builds abwarten
+        if: env.ACTION == 'deploy'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Damit nicht ein halb fertiger Stand mit gemischten Versionen ausrollt.
+          for wf in baseservice-docker.yml webservice-docker.yml keycloak-docker.yml; do
+            for _ in $(seq 1 60); do
+              running="$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --branch main \
+                --json status --jq '[.[] | select(.status != "completed")] | length')"
+              [ "$running" = 0 ] && continue 2
+              echo "$wf laeuft noch, warte ..."
+              sleep 30
+            done
+            echo "::error::$wf ist nach 30 Minuten noch nicht fertig"
+            exit 1
+          done
+
+      - name: Bei AWS anmelden (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: vereint-deploy-${{ github.run_id }}
+
+      - name: An GitHub Container Registry anmelden
+        if: env.ACTION == 'deploy'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Images an ihren Digest binden
+        if: env.ACTION == 'deploy'
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          : > images.env
+          for svc in keycloak baseservice webservice; do
+            digest="$(docker buildx imagetools inspect "ghcr.io/$owner/$svc:main" --format '{{json .Manifest}}' | jq -r .digest)"
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Kein Image ghcr.io/$owner/$svc:main gefunden"; exit 1; }
+            echo "${svc^^}_IMAGE=ghcr.io/$owner/$svc@$digest" >> images.env
+          done
+          cat images.env
+          {
+            echo "### Ausgerollte Images"
+            echo '```'
+            cat images.env
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Bundle nach S3 hochladen
+        if: env.ACTION == 'deploy'
+        run: |
+          bundle="$RUNNER_TEMP/bundle"
+          cp -r deploy "$bundle"
+          rm -f "$bundle"/.env "$bundle"/.env.*
+          cp images.env "$bundle/images.env"
+          tar -czf "$RUNNER_TEMP/bundle.tgz" -C "$bundle" .
+          key="deploy/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tgz"
+          aws s3 cp "$RUNNER_TEMP/bundle.tgz" "s3://$DEPLOY_BUCKET/$key" --sse AES256 --only-show-errors
+          echo "BUNDLE_KEY=$key" >> "$GITHUB_ENV"
+
+      - name: Auf dem Server ausfuehren
+        env:
+          # Kurzlebig: GitHub widerruft das Token, sobald dieser Job endet.
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/ssm-run.sh
