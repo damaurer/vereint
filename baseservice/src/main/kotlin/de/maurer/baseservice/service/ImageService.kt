@@ -1,5 +1,6 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.crypto.DataEncryptor
 import de.maurer.baseservice.domain.DrinkStatus
 import de.maurer.baseservice.domain.ImageAssetEntity
 import de.maurer.baseservice.domain.ImagePurpose
@@ -18,7 +19,6 @@ import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.storage.ObjectStorage
-import de.maurer.baseservice.storage.StorageProperties
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayInputStream
@@ -31,16 +31,17 @@ import javax.imageio.ImageIO
  * Der Spring-Service validiert Bildtyp, Größe, Dimensionen und Berechtigungen
  * serverseitig (`deny by default`). Die Binärdaten liegen im S3-kompatiblen
  * Objektspeicher; PostgreSQL speichert ausschließlich die Metadaten (Pfad,
- * Eigentümer, Zweck, Version, Status). Der lesende Zugriff erfolgt nur über
- * zeitlich begrenzte, private URLs (siehe `docs/architektur.md` und
- * `docs/fachkonzept.md`).
+ * Eigentümer, Zweck, Version, Status). Die Bilddaten werden vor dem Ablegen mit
+ * dem [DataEncryptor] verschlüsselt; ausgeliefert werden sie deshalb nur über
+ * [getImageContent], das die Berechtigung erneut prüft und entschlüsselt (siehe
+ * `docs/architektur.md` und `docs/fachkonzept.md`).
  */
 @Service
 @Transactional
 class ImageService(
     private val imageAssetRepository: ImageAssetRepository,
     private val objectStorage: ObjectStorage,
-    private val storageProperties: StorageProperties,
+    private val dataEncryptor: DataEncryptor,
     private val userService: UserService,
     private val userRoleRepository: UserRoleRepository,
     private val eventRepository: EventRepository,
@@ -92,7 +93,10 @@ class ImageService(
             }
 
         val storageKey = buildStorageKey(purpose, targetId, caller.id, normalizedType)
-        objectStorage.store(storageKey, data, normalizedType)
+        // Verschlüsselte Objekte sind für S3 opake Binärdaten; der eigentliche
+        // Bildtyp steht in den Metadaten.
+        val storedType = if (dataEncryptor.enabled) ENCRYPTED_CONTENT_TYPE else normalizedType
+        objectStorage.store(storageKey, dataEncryptor.encrypt(data), storedType)
 
         val entity = ImageAssetEntity(
             storageKey = storageKey,
@@ -119,6 +123,22 @@ class ImageService(
             throw AccessDeniedException("Keine Berechtigung zum Anzeigen dieses Bildes", ErrorCode.ACCESS_DENIED)
         }
         return toDto(image)
+    }
+
+    /** Liefert die entschlüsselten Bilddaten für berechtigte Benutzer. */
+    @Transactional(readOnly = true)
+    fun getImageContent(id: UUID, principal: UserPrincipal): ImageContent {
+        val caller = userService.getOrCreateUser(principal)
+        val image = requireImage(id)
+        if (image.status != ImageStatus.active) {
+            throw ResourceNotFoundException("Bild mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+        }
+        if (!canView(image, caller, principal)) {
+            throw AccessDeniedException("Keine Berechtigung zum Anzeigen dieses Bildes", ErrorCode.ACCESS_DENIED)
+        }
+        val stored = objectStorage.read(image.storageKey)
+            ?: throw ResourceNotFoundException("Bilddaten für ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+        return ImageContent(dataEncryptor.decrypt(stored), image.contentType)
     }
 
     @Transactional(readOnly = true)
@@ -302,8 +322,6 @@ class ImageService(
     }
 
     private fun toDto(image: ImageAssetEntity): ImageAssetDto {
-        val ttl = storageProperties.urlTtl()
-        val url = objectStorage.presignedGetUrl(image.storageKey, ttl)
         return ImageAssetDto(
             id = image.id.toString(),
             purpose = image.purpose.name,
@@ -316,8 +334,9 @@ class ImageService(
             imageVersion = image.imageVersion,
             status = image.status.name,
             originalFilename = image.originalFilename,
-            url = url.toString(),
-            urlExpiresInSeconds = ttl.seconds,
+            url = "/api/v1/images/${image.id}/content",
+            // Die Inhalts-URL ist an die Sitzung gebunden und läuft nicht ab.
+            urlExpiresInSeconds = 0,
             createdAt = image.createdAt,
             updatedAt = image.updatedAt
         )
@@ -326,6 +345,7 @@ class ImageService(
     companion object {
         const val MAX_SIZE_BYTES = 5 * 1024 * 1024
         const val MAX_DIMENSION = 4096
+        const val ENCRYPTED_CONTENT_TYPE = "application/octet-stream"
         val ALLOWED_CONTENT_TYPES = setOf("image/png", "image/jpeg", "image/gif")
         private val EXTENSIONS = mapOf(
             "image/png" to "png",
@@ -334,3 +354,5 @@ class ImageService(
         )
     }
 }
+
+class ImageContent(val data: ByteArray, val contentType: String)

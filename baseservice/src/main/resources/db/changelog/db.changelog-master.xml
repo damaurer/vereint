@@ -24,5 +24,6 @@
     <include file="db/changelog/changes/004-image-assets.xml"/>
     <include file="db/changelog/changes/005-ledger-transactions.xml"/>
     <include file="db/changelog/changes/007-food-and-cost-prices.xml"/>
+    <include file="db/changelog/changes/008-encrypted-content.xml"/>
 
 </databaseChangeLog>

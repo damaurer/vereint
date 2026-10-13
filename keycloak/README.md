@@ -56,4 +56,8 @@ Prüfschritte nach Änderungen: Seite rendert mit `<html class="login-pf vereint
 
 ### Produktion
 
+`keycloak/Dockerfile` baut das Produktions-Image (Keycloak 26.8.1): Realm-Import (`realm-export.json`) und Theme sind eingebaut, die Konfiguration ist vorab optimiert, Keycloak läuft unter dem Pfad `/kc`. CI baut und prüft das Image bei jeder Änderung und pusht es nach `ghcr.io/<owner>/keycloak`. Der Betrieb ist in `deploy/README.md` beschrieben.
+
+Laufzeit ist seit dem Produktions-Setup Keycloak 26.8.1 (26.1.4 hatte zahlreiche bekannte Schwachstellen); die FTL-Vorlagen basieren weiterhin auf 26.1.4 und rendern unter 26.8.1 (Login, Passwort zurücksetzen und Fehlermeldungen geprüft). Beim nächsten Theme-Umbau die Vorlagen mit den 26.8.1-Originalen abgleichen.
+
 Das Theme benötigt keinen Build-Schritt (`kc.sh build` ist nicht erforderlich). Den Ordner `keycloak/themes/vereint` entweder in das Image kopieren (`COPY keycloak/themes /opt/keycloak/themes`) oder wie lokal nach `/opt/keycloak/themes` mounten. Die Cache-Variablen aus `docker-compose.yml` **nicht** übernehmen: Keycloak cached Themes und Templates standardmäßig, was in Produktion gewünscht ist.

@@ -9,6 +9,12 @@ locals {
     "KEYCLOAK_TABLET_CLIENT_SECRET",
     "KEYCLOAK_DB_PASSWORD",
     "VEREINT_DB_PASSWORD",
+    # Superuser der PostgreSQL-Instanz (nur fuer Backups und Verwaltung).
+    "POSTGRES_PASSWORD",
+    # Passphrase, mit der Backups vor dem Upload nach S3 verschluesselt werden.
+    # Zusaetzlich offline (Passwort-Manager) aufbewahren: ohne sie sind die
+    # Backups nicht wiederherstellbar.
+    "BACKUP_ENCRYPTION_KEY",
   ])
 }
 
@@ -25,6 +31,24 @@ resource "aws_ssm_parameter" "generated" {
   name  = "${local.ssm_prefix}/${each.key}"
   type  = "SecureString"
   value = random_password.secrets[each.key].result
+}
+
+# Schluessel der Anwendungsverschluesselung (AES-256) fuer Chat-Nachrichten,
+# Benachrichtigungen und Bilddateien. Wie die Backup-Passphrase zusaetzlich
+# offline aufbewahren: ohne ihn sind diese Inhalte nicht mehr lesbar. Nicht mit
+# `-replace` rotieren, sondern wie in deploy/README.md beschrieben.
+resource "random_bytes" "data_encryption_key" {
+  length = 32
+}
+
+resource "aws_ssm_parameter" "data_encryption_key" {
+  name  = "${local.ssm_prefix}/DATA_ENCRYPTION_KEY"
+  type  = "SecureString"
+  value = random_bytes.data_encryption_key.base64
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_ssm_parameter" "s3_access_key" {

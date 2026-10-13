@@ -122,20 +122,11 @@
       "clientAuthenticatorType": "client-secret",
       "secret": "${KEYCLOAK_CLIENT_SECRET}",
       "redirectUris": [
-        "http://localhost:8080/api/auth/callback",
-        "http://localhost:8080/login/oauth2/code/keycloak",
-        "http://127.0.0.1:8080/api/auth/callback",
-        "http://127.0.0.1:8080/login/oauth2/code/keycloak",
-        "http://localhost:4300/api/auth/callback",
-        "http://localhost:4300/login/oauth2/code/keycloak",
-        "http://127.0.0.1:4300/api/auth/callback",
-        "http://127.0.0.1:4300/login/oauth2/code/keycloak"
+        "${PUBLIC_BASE_URL}/api/auth/callback",
+        "${PUBLIC_BASE_URL}/login/oauth2/code/keycloak"
       ],
       "webOrigins": [
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "http://localhost:4300",
-        "http://127.0.0.1:4300"
+        "${PUBLIC_BASE_URL}"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -149,7 +140,7 @@
       "protocol": "openid-connect",
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:8080/auth/logged-out##http://127.0.0.1:8080/auth/logged-out##http://localhost:4300/auth/logged-out##http://127.0.0.1:4300/auth/logged-out",
+        "post.logout.redirect.uris": "${PUBLIC_BASE_URL}/auth/logged-out",
         "standard.flow.enabled": "true",
         "direct.access.grants.enabled": "false"
       },

@@ -26,6 +26,8 @@ class InMemoryObjectStorage(
         objects[key] = Stored(data.copyOf(), contentType)
     }
 
+    override fun read(key: String): ByteArray? = objects[key]?.data?.copyOf()
+
     override fun delete(key: String) {
         objects.remove(key)
     }

@@ -147,5 +147,8 @@ resource "aws_cloudwatch_metric_alarm" "auto_recover" {
   dimensions = {
     InstanceId = aws_instance.app.id
   }
-  alarm_actions = ["arn:aws:automate:${var.region}:ec2:recover"]
+  alarm_actions = [
+    "arn:aws:automate:${var.region}:ec2:recover",
+    aws_sns_topic.alerts.arn,
+  ]
 }

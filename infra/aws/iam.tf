@@ -47,6 +47,16 @@ resource "aws_iam_role_policy" "app" {
         Action   = "s3:ListBucket"
         Resource = aws_s3_bucket.backups.arn
       },
+      {
+        # Erfolgsmeldung des Backups; bleibt sie aus, alarmiert monitoring.tf.
+        Sid      = "ReportBackupStatus"
+        Effect   = "Allow"
+        Action   = "cloudwatch:PutMetricData"
+        Resource = "*"
+        Condition = {
+          StringEquals = { "cloudwatch:namespace" = "Vereint" }
+        }
+      },
     ]
   })
 }
