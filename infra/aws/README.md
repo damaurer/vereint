@@ -16,6 +16,7 @@ Daten, die an einem einzigen Ort verloren gehen können.
 | S3-Bucket `vereint-app-<account>` | Dateien der Anwendung (ersetzt MinIO) | Cent-Bereich |
 | SSM Parameter Store | Alle Secrets, zufällig generiert | kostenlos |
 | Budget-Alarm | E-Mail bei 80 % Ist- bzw. 100 % Prognosewert | kostenlos |
+| Backup-Alarm (CloudWatch + E-Mail) | Meldet, wenn 26 Stunden kein erfolgreiches Backup kam | < 0,50 USD |
 | GitHub-OIDC-Rolle | Deployments ohne dauerhafte AWS-Schlüssel | kostenlos |
 
 Neue AWS-Accounts erhalten Startguthaben, das die ersten Monate deckt. Der
@@ -49,7 +50,7 @@ PostgreSQL-Instanzen nicht aus.
    nicht löschen (`prevent_destroy`). Die Erstinstallation formatiert sie nur,
    wenn sie noch leer ist.
 2. **Tägliche Snapshots** dieser Disk, 7 Tage aufbewahrt.
-3. **Nächtliche Dumps nach S3** (kommt mit Schritt 3). Der Server darf in den
+3. **Nächtliche, verschlüsselte Dumps nach S3**, jeweils vorher probeweise wiederhergestellt (siehe `deploy/README.md`). Der Server darf in den
    Backup-Bucket schreiben, aber nichts löschen. Zusammen mit der Versionierung
    kann selbst ein kompromittierter Server vorhandene Backups nicht zerstören.
 4. **Automatische Wiederherstellung:** Fällt die AWS-Hardware aus, startet AWS
@@ -84,7 +85,7 @@ Danach:
 
 1. **DNS:** Für die Subdomain einen `A`-Record auf `terraform output public_ip`
    anlegen.
-2. **Budget-Mail bestätigen:** AWS schickt eine Bestätigung an `alert_email`.
+2. **Mails bestätigen:** AWS schickt an `alert_email` je eine Bestätigung für Budget- und Betriebsalarme (fehlendes Backup, Hardware-Ausfall). Bis das erste nächtliche Backup gelaufen ist, meldet der Backup-Alarm einmal „ALARM“.
 3. **GitHub:** Im Repository unter *Settings → Environments* ein Environment
    `production` anlegen (optional mit erforderlicher Freigabe) und dort
    `AWS_DEPLOY_ROLE_ARN` = `terraform output deploy_role_arn` als Secret

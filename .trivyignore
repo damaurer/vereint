@@ -11,3 +11,8 @@ AVD-AWS-0132
 # Ziel muss aber das Internet sein (Updates, Images, Let's Encrypt, E-Mail).
 # VPC-Endpunkte bzw. ein Egress-Proxy kosten ein Vielfaches des Servers.
 AVD-AWS-0104
+
+# infra/aws: Das Alarm-Topic enthaelt nur Alarmnamen und Schwellwerte, keine
+# Nutzerdaten. CloudWatch kann nicht an Topics mit dem AWS-verwalteten
+# SNS-Schluessel senden; ein eigener KMS-Schluessel kostet 1 USD/Monat.
+AVD-AWS-0095
