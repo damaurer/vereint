@@ -1,3 +1,13 @@
 # Bewusst akzeptierte Trivy-Funde, eine CVE-ID pro Zeile mit Begruendung.
 # Nur eintragen, wenn der Fund nachweislich nicht ausnutzbar ist oder noch
 # kein Fix existiert; Eintraege regelmaessig ueberpruefen.
+
+# infra/aws: S3 nutzt SSE-S3 (AES-256) statt eines eigenen KMS-Schluessels.
+# Ein Customer Managed Key kostet 1 USD/Monat je Schluessel und bringt fuer
+# dieses Projekt nur zusaetzliches Audit-Logging; Verschluesselung besteht so oder so.
+AVD-AWS-0132
+
+# infra/aws: Ausgehender Verkehr ist auf die Ports 80/443/465/587 beschraenkt,
+# Ziel muss aber das Internet sein (Updates, Images, Let's Encrypt, E-Mail).
+# VPC-Endpunkte bzw. ein Egress-Proxy kosten ein Vielfaches des Servers.
+AVD-AWS-0104
