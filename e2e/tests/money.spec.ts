@@ -63,13 +63,15 @@ test.describe('Guthaben und Thekenterminal', () => {
       await expect.poll(() => member.api.balance(memberId)).toBe(start + 20);
     });
 
-    await test.step('Mitglied sieht Kauf und Korrektur oben in der Historie', async () => {
+    await test.step('Mitglied sieht Kauf und Storno mit Getraenkenamen oben in der Historie', async () => {
       const { page } = member;
       await page.goto('/wallet');
       await expect(page.getByText(euro(start + 20)).first()).toBeVisible();
-      const titles = page.locator('.member-list-title');
-      await expect(titles.nth(0)).toHaveText('Korrektur');
-      await expect(titles.nth(1)).toHaveText('Kauf');
+      const items = page.locator('.member-list-item');
+      await expect(items.nth(0).locator('.member-list-title')).toHaveText(`Storno: ${drink.name}`);
+      await expect(items.nth(0).locator('.member-list-meta')).toContainText('Korrektur');
+      await expect(items.nth(1).locator('.member-list-title')).toHaveText(drink.name);
+      await expect(items.nth(1).locator('.member-list-meta')).toContainText('Kauf');
     });
   });
 
