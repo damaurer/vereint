@@ -427,5 +427,188 @@
       "title": "Statistik",
       "description": "Konsum, Anwesenheit, Ausgaben-Verlauf und Rankings der Eber-Analytik."
     }
+  },
+  "chat": {
+    "eyebrow": "Stammtisch-Messenger",
+    "title": "Chat",
+    "toDirectMessages": "Direktnachrichten →",
+    "loadingMessage": "Die Konversationen werden abgerufen.",
+    "unavailable": "Chat nicht verfügbar",
+    "online": "online",
+    "unread": "{count} ungelesen",
+    "you": "Du",
+    "list": {
+      "ariaLabel": "Konversationen",
+      "newMessage": "+ Neue Nachricht",
+      "groupOnline": "{count} online"
+    },
+    "thread": {
+      "back": "← Zurück",
+      "membersOnline": "{count} Mitglieder online",
+      "pinnedTitle": "Info vom Schriftwart ({name})",
+      "emptyTitle": "Noch keine Nachrichten",
+      "emptyMessage": "Schreibe die erste Nachricht in diese Konversation.",
+      "addReaction": "Reaktion hinzufügen"
+    },
+    "composer": {
+      "attach": "Anhang hinzufügen",
+      "placeholder": "Schreibe eine Nachricht…",
+      "addDrink": "Getränk einfügen",
+      "send": "Senden",
+      "sendFailed": "Nachricht konnte nicht gesendet werden. Bitte erneut versuchen.",
+      "attachUnavailable": "Anhänge sind derzeit nicht verfügbar."
+    },
+    "direct": {
+      "eyebrow": "Direktnachrichten",
+      "title": "Einzelgespräche",
+      "badge": "DMs",
+      "toGroupChat": "← Zum Gruppen-Chat",
+      "unavailable": "Direktnachrichten nicht verfügbar",
+      "searchLabel": "Mitglieder durchsuchen",
+      "searchPlaceholder": "Mitglieder durchsuchen…",
+      "conversations": "Konversationen ({count})",
+      "emptyTitle": "Keine Konversationen",
+      "emptyMessage": "Es gibt keine passenden Einzelgespräche."
+    }
+  },
+  "moments": {
+    "eyebrow": "Gemeinschaftsmomente & Rituale",
+    "backToEvent": "← Zum Event",
+    "allEvents": "← Alle Events",
+    "loadingMessage": "Moments und Ritual-Feeds werden abgerufen.",
+    "unavailable": "Nicht verfügbar",
+    "picker": {
+      "label": "Aktives Event auswählen:",
+      "placeholder": "-- Bitte Event wählen --"
+    },
+    "push": {
+      "title": "Neuer Moment gestartet: „{title}“",
+      "message": "Möchtest du beitreten und eine Reaktion oder einen Status teilen?",
+      "join": "Jetzt Beitreten",
+      "dismiss": "Ausblenden"
+    },
+    "actions": {
+      "start": "+ Neuen Moment starten",
+      "activeCount": "{count} aktiver Moment"
+    },
+    "empty": {
+      "title": "Kein aktiver Moment",
+      "message": "Aktuell läuft kein Ritual oder Gemeinschaftsmoment für dieses Event. Starte jetzt ein gemeinsames Anstoßen, ein Gebet oder einen Fan-Jubel!",
+      "initiate": "Moment initiieren"
+    },
+    "session": {
+      "by": "Von {name}",
+      "responses": "{count} Antworten",
+      "react": "+ Reagieren",
+      "chat": "24h-Chat",
+      "complete": "Abschließen",
+      "completeTitle": "Moment abschließen und im Event-Verlauf archivieren"
+    },
+    "detail": {
+      "eyebrow": "Ausgewählter Moment",
+      "timelineTab": "Timeline ({count})",
+      "mapTab": "Weltkarte ({count})",
+      "quickLabel": "Schnell reagieren:",
+      "custom": "+ Status & Text"
+    },
+    "history": {
+      "title": "Archivierte Moments & Rituale",
+      "participants": "{count} Teilnehmer",
+      "contributions": "{count} Beiträge"
+    },
+    "start": {
+      "title": "Neuen Moment initiieren",
+      "titleLabel": "Titel des Rituals / Moments *",
+      "titlePlaceholder": "z. B. Gemeinsames Anstoßen, Abendgebet, Jubelwelle",
+      "topicLabel": "Thema / Ritualtyp *",
+      "messageLabel": "Nachricht / Impuls (optional)",
+      "messagePlaceholder": "z. B. Ein Hoch auf unseren Verein! Wer stößt aus der Ferne mit an?",
+      "durationLabel": "Dauer des Moments",
+      "duration": {
+        "m15": "15 Minuten (Kurzer Impuls)",
+        "m30": "30 Minuten",
+        "h1": "1 Stunde (Standard)",
+        "h2": "2 Stunden",
+        "h24": "24 Stunden (Tagesritual)"
+      },
+      "consent": "Meinen Standort für die Weltkarte freigeben (DSGVO Opt-in)",
+      "submit": "Moment jetzt starten",
+      "submitting": "Wird gestartet …",
+      "error": "Fehler beim Starten des Moments.",
+      "failed": "Moment konnte nicht gestartet werden."
+    },
+    "respond": {
+      "title": "Status & Reaktion teilen",
+      "reactionLabel": "Reaktion auswählen *",
+      "statusLabel": "Persönlicher Status (optional)",
+      "statusPlaceholder": "z. B. Schöne Grüße aus Hamburg! 🍺",
+      "consent": "Aktuellen Standort für diesen Beitrag auf der Weltkarte teilen",
+      "submit": "Beitrag absenden",
+      "submitting": "Wird gesendet …",
+      "error": "Fehler beim Absenden.",
+      "failed": "Status konnte nicht gesendet werden."
+    },
+    "topics": {
+      "toast": {
+        "label": "Gemeinsames Anstoßen",
+        "description": "Für Stammtische & Feste"
+      },
+      "prayer": {
+        "label": "Gebet & Fürbitte",
+        "description": "Für Kirchen- & Glaubensgemeinschaften"
+      },
+      "cheer": {
+        "label": "Jubeln & Anfeuern",
+        "description": "Für Sport- & Fan-Clubs"
+      },
+      "checkin": {
+        "label": "Spontaner Check-in",
+        "description": "Präsenz & Standort teilen"
+      },
+      "other": {
+        "label": "Sonstiger Impuls",
+        "description": "Freie Gemeinschaftsaktion"
+      }
+    },
+    "reactions": {
+      "toast": "Anstoßen",
+      "prayer": "Gebet",
+      "cheer": "Jubel",
+      "cheering": "Jubeln",
+      "thumbsUp": "Daumen hoch",
+      "celebrate": "Feiern",
+      "heart": "Herz",
+      "checkin": "Check-in"
+    },
+    "geo": {
+      "locating": "Ermittle GPS-Standort …",
+      "captured": "Standort erfasst: {lat}°, {lng}°",
+      "failedOrDenied": "Standortermittlung fehlgeschlagen oder im Browser verweigert.",
+      "failed": "Standortermittlung fehlgeschlagen."
+    },
+    "remaining": {
+      "expired": "Abgelaufen",
+      "minutes": "noch {count} Min aktiv",
+      "hours": "noch {count} Std aktiv"
+    },
+    "map": {
+      "ariaLabel": "Weltkarte der Teilnehmer",
+      "title": "Interaktive Teilnehmerkarte",
+      "subtitle": "Standorte von Teilnehmern mit aktiver Standortfreigabe (Opt-in).",
+      "count": "{count} Standorte",
+      "emptyTitle": "Keine Standorte geteilt",
+      "emptyMessage": "Für diesen Moment liegen keine Standortdaten vor. Standorte werden DSGVO-konform ausschließlich mit freiwilliger Freigabe (Opt-in) erfasst.",
+      "svgLabel": "Weltkarte mit Teilnehmer-Pins",
+      "pinDetails": "Pin Details",
+      "listTitle": "Geteilte Standorte",
+      "fallbackName": "Teilnehmer {number}"
+    },
+    "timeline": {
+      "title": "Status-Timeline",
+      "count": "{count} Beiträge",
+      "empty": "Noch keine Statusbeiträge geteilt. Sei der Erste und teile deine Reaktion!",
+      "locationShared": "Standort geteilt ({lat}, {lng})"
+    },
+    "quote": "„{text}“"
   }
 }

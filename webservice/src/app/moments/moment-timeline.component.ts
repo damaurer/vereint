@@ -3,6 +3,8 @@ import { IconComponent } from '../ui/icon.component';
 import type { MomentResponseDto } from '../api/api.types';
 import { formatDateTime } from '../member/member-format';
 import { AvatarBadgeComponent } from '../ui';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 /**
  * Visualisiert den chronologischen Feed aller Status- und Reaktionsbeiträge
@@ -12,18 +14,18 @@ import { AvatarBadgeComponent } from '../ui';
  */
 @Component({
   selector: 'app-moment-timeline',
-  imports: [IconComponent, AvatarBadgeComponent],
+  imports: [IconComponent, AvatarBadgeComponent, TranslatePipe],
   template: `
-    <section class="moment-timeline" aria-label="Status-Timeline">
+    <section class="moment-timeline" [attr.aria-label]="'moments.timeline.title' | t">
       <div class="timeline-header">
-        <h3 class="timeline-title">Status-Timeline</h3>
-        <span class="timeline-count">{{ responses().length }} Beiträge</span>
+        <h3 class="timeline-title">{{ 'moments.timeline.title' | t }}</h3>
+        <span class="timeline-count">{{ 'moments.timeline.count' | t: { count: responses().length } }}</span>
       </div>
 
       @if (responses().length === 0) {
         <div class="timeline-empty" role="status">
           <vereint-icon class="timeline-empty-icon" name="chat" />
-          <p>Noch keine Statusbeiträge geteilt. Sei der Erste und teile deine Reaktion!</p>
+          <p>{{ 'moments.timeline.empty' | t }}</p>
         </div>
       } @else {
         <ol class="timeline-list">
@@ -50,7 +52,7 @@ import { AvatarBadgeComponent } from '../ui';
                   <div class="timeline-location">
                     <vereint-icon class="location-icon" name="location" />
                     <span class="location-coords">
-                      Standort geteilt ({{ formatCoord(response.latitude) }}, {{ formatCoord(response.longitude) }})
+                      {{ 'moments.timeline.locationShared' | t: coords(response) }}
                     </span>
                   </div>
                 }
@@ -210,24 +212,29 @@ export class MomentTimelineComponent {
     return val.toFixed(2) + '°';
   }
 
+  /** Platzhalter für „Standort geteilt (…)“. */
+  protected coords(response: MomentResponseDto): { lat: string; lng: string } {
+    return { lat: this.formatCoord(response.latitude), lng: this.formatCoord(response.longitude) };
+  }
+
   protected reactionLabel(reaction: string): string {
     const r = reaction.toUpperCase();
     switch (r) {
       case 'TOAST':
       case 'CHEERS':
-        return '🍻 Anstoßen';
+        return `🍻 ${translate('moments.reactions.toast')}`;
       case 'PRAYER':
-        return '🙏 Gebet';
+        return `🙏 ${translate('moments.reactions.prayer')}`;
       case 'CHEER':
-        return '📣 Jubeln';
+        return `📣 ${translate('moments.reactions.cheering')}`;
       case 'THUMBS_UP':
-        return '👍 Daumen hoch';
+        return `👍 ${translate('moments.reactions.thumbsUp')}`;
       case 'CELEBRATE':
-        return '🎉 Feiern';
+        return `🎉 ${translate('moments.reactions.celebrate')}`;
       case 'HEART':
-        return '❤️ Herz';
+        return `❤️ ${translate('moments.reactions.heart')}`;
       case 'CHECKIN':
-        return '📍 Check-in';
+        return `📍 ${translate('moments.reactions.checkin')}`;
       default:
         return reaction;
     }
