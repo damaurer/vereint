@@ -1,0 +1,310 @@
+// Nimmt die Screenshots für das Benutzerhandbuch (docs/handbuch) auf.
+//
+// Voraussetzung: frische lokale Entwicklungsumgebung (siehe README.md in
+// diesem Ordner). Das Skript legt zuerst Demo-Daten an (seed.mjs) und
+// fotografiert danach jede Ansicht als die Person, die sie im Alltag nutzt.
+//
+//   node capture.mjs                  # Demo-Daten anlegen und alle Bilder aufnehmen
+//   node capture.mjs m-guthaben t-runde # nur ausgewählte Bilder (IDs siehe SHOTS)
+//
+// Der Seed läuft bei jedem Aufruf; deshalb vor jedem Lauf die Datenbanken
+// zurücksetzen (siehe README.md).
+
+import { mkdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { chromium } from 'playwright';
+import { APP_URL, PEOPLE, login, seedAppData, seedKeycloakUsers } from './seed.mjs';
+
+const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../docs/handbuch/bilder');
+
+const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
+const TABLET = { viewport: { width: 1180, height: 820 }, deviceScaleFactor: 2, hasTouch: true };
+const DESKTOP = { viewport: { width: 1280, height: 860 }, deviceScaleFactor: 2 };
+
+const settle = async (page) => {
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(600);
+};
+
+const open = async (page, path) => {
+  await page.goto(`${APP_URL}${path}`);
+  await settle(page);
+};
+
+/** Scrollt eine Überschrift knapp unter die Kopfzeile. */
+const scrollToHeading = async (page, text, offset = 72) => {
+  await page.getByRole('heading', { name: text }).first().evaluate((el, offset) => {
+    const top = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: 'instant' });
+  }, offset);
+  await page.waitForTimeout(300);
+};
+
+/** Öffnet am Terminal den Stammtisch und wählt optional einen Artikel. */
+const openTerminal = async (page, article) => {
+  await open(page, '/tablet');
+  await page.getByRole('button', { name: 'Auswählen' }).first().click();
+  await settle(page);
+  if (!article) return;
+  await page.locator('.quickbook-drink').click();
+  await page.locator('.overlay-card').filter({ hasText: article }).first().click();
+  await page.getByRole('button', { name: 'Auswahl bestätigen' }).click();
+  await page.waitForTimeout(300);
+};
+
+/**
+ * Bildliste. `who` ist die angemeldete Person, `device` die Bildschirmgröße,
+ * `run` bereitet die Ansicht vor. `data` enthält IDs aus dem Seed.
+ */
+const SHOTS = [
+  // Erste Schritte
+  { id: 'login', who: null, device: PHONE, run: async (page) => open(page, '/') },
+  { id: 'start', who: 'member', device: PHONE, run: async (page) => open(page, '/dashboard') },
+  {
+    id: 'mehr',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/dashboard');
+      await page.getByRole('button', { name: 'Mehr' }).click();
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    id: 'profil',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => open(page, '/profile'),
+  },
+
+  // Mitglied
+  {
+    id: 'm-start-termin',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/dashboard');
+      await scrollToHeading(page, 'Nächster Termin');
+    },
+  },
+  { id: 'm-events', who: 'member', device: PHONE, run: async (page) => open(page, '/events') },
+  {
+    id: 'm-event',
+    who: 'member',
+    device: PHONE,
+    run: async (page, data) => open(page, `/events/${data.events.stammtisch.id}`),
+  },
+  { id: 'm-guthaben', who: 'member', device: PHONE, run: async (page) => open(page, '/wallet') },
+  { id: 'm-kaeufe', who: 'member', device: PHONE, run: async (page) => open(page, '/purchases') },
+  { id: 'm-mitteilungen', who: 'member', device: PHONE, run: async (page) => open(page, '/notifications') },
+  {
+    id: 'm-moments',
+    who: 'member',
+    device: PHONE,
+    run: async (page, data) => open(page, `/events/${data.events.stammtisch.id}/moments`),
+  },
+  {
+    id: 'm-moment-reagieren',
+    who: 'member',
+    device: PHONE,
+    run: async (page, data) => {
+      await open(page, `/events/${data.events.stammtisch.id}/moments`);
+      await scrollToHeading(page, 'Prost auf den Vereinsabend!');
+      await page.getByText('Schnell reagieren:').first().evaluate((el) => {
+        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 200, behavior: 'instant' });
+      });
+      await page.waitForTimeout(300);
+    },
+  },
+  { id: 'm-katalog', who: 'member', device: PHONE, run: async (page) => open(page, '/catalog') },
+
+  // Vorstand
+  { id: 'v-uebersicht', who: 'board', device: PHONE, run: async (page) => open(page, '/board') },
+  { id: 'v-kasse', who: 'board', device: PHONE, run: async (page) => open(page, '/board/treasury') },
+  {
+    id: 'v-abrechnung',
+    who: 'board',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/board/treasury');
+      await page.locator('li').filter({ hasText: 'Stammtisch Oktober' }).getByRole('button', { name: 'Abrechnung' }).click();
+      await settle(page);
+      await page.getByText('Eventabrechnung', { exact: true }).evaluate((el) => {
+        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 420, behavior: 'instant' });
+      });
+      await page.waitForTimeout(300);
+    },
+  },
+  {
+    id: 'v-kasse-buchen',
+    who: 'board',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/board/treasury');
+      await scrollToHeading(page, 'Buchen');
+    },
+  },
+  {
+    id: 'v-event-verwalten',
+    who: 'board',
+    device: PHONE,
+    run: async (page, data) => open(page, `/events/${data.events.stammtisch.id}/manage`),
+  },
+  {
+    id: 'v-event-getraenke',
+    who: 'board',
+    device: PHONE,
+    run: async (page, data) => {
+      await open(page, `/events/${data.events.stammtisch.id}/manage`);
+      await scrollToHeading(page, /^Getränke \(/);
+    },
+  },
+  {
+    id: 'v-event-einladungen',
+    who: 'board',
+    device: PHONE,
+    run: async (page, data) => {
+      await open(page, `/events/${data.events.stammtisch.id}/manage`);
+      await scrollToHeading(page, /^Einladungen \(/);
+    },
+  },
+  {
+    id: 'v-event-chat',
+    who: 'board',
+    device: PHONE,
+    run: async (page, data) => {
+      await open(page, `/events/${data.events.stammtisch.id}/manage`);
+      await scrollToHeading(page, /^Event-Chat \(/);
+    },
+  },
+  {
+    id: 'v-katalog-freigabe',
+    who: 'board',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/catalog');
+      await page.getByText('Cola Zero 0,33 l').first().evaluate((el) => {
+        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 120, behavior: 'instant' });
+      });
+      await page.waitForTimeout(300);
+    },
+  },
+  { id: 'v-getraenkelisten', who: 'board', device: PHONE, run: async (page) => open(page, '/sublists') },
+  { id: 'v-kommunikation', who: 'board', device: PHONE, run: async (page) => open(page, '/board/communications') },
+
+  // Administration (am Rechner)
+  { id: 'a-mitglieder', who: 'admin', device: DESKTOP, run: async (page) => open(page, '/admin') },
+  {
+    id: 'a-bearbeiten',
+    who: 'admin',
+    device: DESKTOP,
+    run: async (page) => {
+      await open(page, '/admin');
+      await page.getByRole('row', { name: /Jonas Keller/ }).getByRole('button', { name: 'Bearbeiten' }).click();
+      await settle(page);
+      await scrollToHeading(page, 'Jonas Keller bearbeiten', 90);
+    },
+  },
+
+  // Thekenterminal (Tablet quer)
+  { id: 't-event-waehlen', who: 'theke', device: TABLET, run: async (page) => open(page, '/tablet') },
+  {
+    id: 't-artikel',
+    who: 'theke',
+    device: TABLET,
+    run: async (page) => {
+      await openTerminal(page);
+      await page.locator('.quickbook-drink').click();
+      await page.locator('.overlay-card').filter({ hasText: 'Helles' }).first().click();
+      await page.waitForTimeout(300);
+    },
+  },
+  {
+    id: 't-strichliste',
+    who: 'theke',
+    device: TABLET,
+    run: async (page) => {
+      await openTerminal(page, 'Helles');
+      await scrollToHeading(page, 'Strichliste', 120);
+    },
+  },
+  {
+    id: 't-strich-rueckgaengig',
+    who: 'theke',
+    device: TABLET,
+    run: async (page) => {
+      await openTerminal(page, 'Helles');
+      await page.locator('app-strichliste-row').filter({ hasText: 'Felix Braun' }).getByRole('button').last().click();
+      await settle(page);
+      await scrollToHeading(page, 'Strichliste', 120);
+    },
+  },
+  {
+    id: 't-runde',
+    who: 'theke',
+    device: TABLET,
+    run: async (page) => {
+      await openTerminal(page, 'Helles');
+      await page.getByRole('button', { name: /Runde ausgeben/ }).click();
+      await page.waitForTimeout(500);
+    },
+  },
+
+  // Gast
+  {
+    // Der Einladungslink wird beim Öffnen sofort eingelöst.
+    id: 'g-event',
+    who: null,
+    device: PHONE,
+    run: async (page, data) => {
+      await page.goto(`${APP_URL}${data.inviteAcceptPath}`);
+      await page.waitForURL(/\/guest\//);
+      await settle(page);
+    },
+  },
+];
+
+async function main() {
+  const only = process.argv.slice(2);
+
+  await mkdir(OUT_DIR, { recursive: true });
+  await seedKeycloakUsers();
+
+  const browser = await chromium.launch();
+  try {
+    const seedSessions = {};
+    for (const [key, person] of Object.entries(PEOPLE)) seedSessions[key] = await login(browser, person);
+    const data = await seedAppData(seedSessions);
+    for (const session of Object.values(seedSessions)) await session.context.close();
+
+    // Je Person und Gerät eine angemeldete Sitzung, wiederverwendet über alle Bilder.
+    const sessions = new Map();
+    const pageFor = async (who, device) => {
+      const key = `${who ?? 'anon'}:${device.viewport.width}`;
+      if (!sessions.has(key)) {
+        if (who) {
+          sessions.set(key, (await login(browser, PEOPLE[who], device)).page);
+        } else {
+          const context = await browser.newContext({ locale: 'de-DE', timezoneId: 'Europe/Berlin', ...device });
+          sessions.set(key, await context.newPage());
+        }
+      }
+      return sessions.get(key);
+    };
+
+    for (const shot of SHOTS) {
+      if (only.length && !only.includes(shot.id)) continue;
+      const page = shot.who
+        ? await pageFor(shot.who, shot.device)
+        : await (await browser.newContext({ locale: 'de-DE', timezoneId: 'Europe/Berlin', ...shot.device })).newPage();
+      await shot.run(page, data);
+      await page.screenshot({ path: join(OUT_DIR, `${shot.id}.png`) });
+      console.log(`✓ ${shot.id}`);
+    }
+  } finally {
+    await browser.close();
+  }
+}
+
+await main();

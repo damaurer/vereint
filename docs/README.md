@@ -6,6 +6,10 @@ Dieses Dokumentationszentrum bietet eine lückenlose, hochdetaillierte fachliche
 
 ---
 
+## 📘 Benutzerhandbuch
+
+Das Handbuch für Mitglieder, Vorstand, Administration, Thekendienst und Gäste mit echten Screenshots liegt unter [`handbuch/`](handbuch/README.md).
+
 ## 🗺️ Dokumentationsübersicht & Verzeichnisstruktur
 
 Die Dokumentation ist modular in acht Kernbereiche unterteilt:
