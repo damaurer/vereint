@@ -191,31 +191,13 @@
     "emptyTitle": "Keine Benachrichtigungen",
     "emptyMessage": "Du hast aktuell keine Benachrichtigungen.",
     "listLabel": "Benachrichtigungsliste",
-    "push": {
-      "title": "Web-Push-Benachrichtigungen",
-      "enabledHint": "Push-Benachrichtigungen sind für dieses Gerät aktiviert.",
-      "disabledHint": "Erhalte sofortige Benachrichtigungen zu Events, Thekendienst und Vereinsnews auch bei geschlossenem Browser.",
-      "enable": "Push aktivieren",
-      "disable": "Push deaktivieren",
-      "unsupported": "Push nicht unterstützt",
-      "message": {
-        "permissionDenied": "Berechtigung für Benachrichtigungen wurde nicht erteilt.",
-        "serverDisabled": "Web-Push ist auf dem Server derzeit nicht aktiviert.",
-        "enabled": "Web-Push-Benachrichtigungen erfolgreich aktiviert!",
-        "registerFailed": "Fehler beim Registrieren des Push-Abonnements.",
-        "pushManagerFailed": "PushManager-Registrierung fehlgeschlagen.",
-        "vapidFailed": "VAPID-Schlüssel konnte nicht abgerufen werden.",
-        "enableFailed": "Fehler bei der Push-Aktivierung.",
-        "disabled": "Push-Benachrichtigungen deaktiviert.",
-        "unsubscribeFailed": "Fehler beim Abbestellen des Push-Abonnements."
-      }
-    },
     "type": {
       "event": "Event",
       "ledger": "Kasse",
       "announcement": "Ankündigung",
       "system": "System",
-      "info": "Info"
+      "info": "Info",
+      "moment": "Moment"
     }
   },
   "shell": {
@@ -1197,6 +1179,36 @@
       "namePlaceholder": "z. B. Max Mustermann",
       "joining": "Beitreten …",
       "join": "Event beitreten"
+    }
+  },
+  "pwa": {
+    "install": {
+      "title": "App auf diesem Gerät",
+      "installed": "Vereint ist installiert.",
+      "prompt": "Startet wie eine App vom Home-Bildschirm, ohne Browserleiste.",
+      "ios": "In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.",
+      "manual": "Im Browsermenü „App installieren“ oder „Zum Startbildschirm“ wählen.",
+      "button": "Installieren"
+    },
+    "push": {
+      "title": "Mitteilungen auf diesem Gerät",
+      "hint": {
+        "on": "Du bekommst neue Mitteilungen auch bei geschlossener App.",
+        "off": "Neue Mitteilungen auch bei geschlossener App erhalten.",
+        "blocked": "Im Browser blockiert. Erlaube Mitteilungen in den Website-Einstellungen.",
+        "needsInstall": "Auf iPhone und iPad erst nach der Installation auf dem Home-Bildschirm möglich.",
+        "unsupported": "Dieser Browser unterstützt keine Mitteilungen.",
+        "checking": "Wird geprüft …"
+      },
+      "message": {
+        "permissionDenied": "Ohne deine Erlaubnis kann Vereint keine Mitteilungen schicken.",
+        "serverDisabled": "Mitteilungen sind auf dem Server noch nicht eingerichtet.",
+        "notReady": "Die App ist noch nicht vollständig geladen. Bitte gleich noch einmal versuchen.",
+        "enabled": "Mitteilungen sind auf diesem Gerät aktiv.",
+        "enableFailed": "Mitteilungen konnten nicht aktiviert werden. Bitte später erneut versuchen.",
+        "disabled": "Mitteilungen sind auf diesem Gerät aus.",
+        "disableFailed": "Mitteilungen konnten nicht deaktiviert werden. Bitte später erneut versuchen."
+      }
     }
   }
 }
