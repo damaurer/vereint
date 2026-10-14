@@ -32,6 +32,122 @@
       "cancelled": "Abgesagt",
       "completed": "Abgeschlossen",
       "archived": "Archiviert"
+    },
+    "rsvp": {
+      "accept": "Zusagen",
+      "maybe": "Vielleicht",
+      "decline": "Absagen"
+    },
+    "balance": {
+      "current": "Aktueller Stand",
+      "topupHint": "Aufladungen erfolgen über den Kassenwart. Bitte sprich ihn direkt an."
+    },
+    "dashboard": {
+      "ariaLabel": "Persönliche Übersicht",
+      "loadingMessage": "Deine Übersicht wird abgerufen.",
+      "unavailable": "Übersicht nicht verfügbar",
+      "eyebrow": "Servus",
+      "greeting": {
+        "morning": "Guten Morgen, schön dass du da bist.",
+        "day": "Schön, dass du wieder da bist.",
+        "evening": "Guten Abend. Wer ist heute am Stammtisch?"
+      },
+      "balanceHeading": "Dein Guthaben",
+      "statementLink": "Kontoauszug ansehen",
+      "nextEventHeading": "Nächster Termin",
+      "rsvpGroup": "Teilnahme am nächsten Termin",
+      "attending": "Du bist dabei",
+      "allEvents": "Alle Events",
+      "noEvents": "Aktuell keine Events.",
+      "statEvents": "Deine Events",
+      "statEntries": "Buchungen",
+      "shortcutsHeading": "Schnellzugriff",
+      "shortcuts": {
+        "moments": {
+          "title": "Moments",
+          "sub": "Anstoßen & Rituale"
+        },
+        "catalog": {
+          "title": "Getränkekatalog",
+          "sub": "Getränke & Speisen"
+        },
+        "purchases": {
+          "title": "Käufe",
+          "sub": "Was du getrunken hast"
+        },
+        "notifications": {
+          "title": "Mitteilungen",
+          "sub": "Neuigkeiten vom Verein"
+        }
+      }
+    },
+    "events": {
+      "eyebrow": "Mitglied",
+      "title": "Events",
+      "intro": "Deine Events und Teilnahmen.",
+      "loadingMessage": "Die Events werden abgerufen.",
+      "unavailable": "Events nicht verfügbar",
+      "emptyTitle": "Keine Events",
+      "emptyMessage": "Aktuell nimmst du an keinem Event teil."
+    },
+    "eventDetail": {
+      "eyebrow": "Event",
+      "back": "← Zu den Events",
+      "loadingMessage": "Die Eventdetails werden abgerufen.",
+      "unavailable": "Event nicht verfügbar",
+      "until": "bis {date}",
+      "openRoute": "Route öffnen",
+      "rsvpHeading": "Deine Antwort",
+      "attendance": {
+        "one": "Anwesenheit ({count} Personen)",
+        "other": "Anwesenheit ({count} Personen)"
+      },
+      "noParticipants": "Noch keine Teilnehmer.",
+      "momentsHeading": "Moments & Rituale",
+      "momentsTitle": "Gemeinschaftsmomente",
+      "momentsActive": {
+        "one": "{count} aktiver Moment läuft gerade!",
+        "other": "{count} aktiver Moment läuft gerade!"
+      },
+      "momentsInvite": "Starte ein gemeinsames Anstoßen, Gebet oder Anfeuern für alle Teilnehmer.",
+      "momentsView": "Moments ansehen ({count} aktiv) →",
+      "momentsStart": "Moment starten / Übersicht →",
+      "historyHeading": "Vergangene Moments & Rituale",
+      "historyParticipants": "{count} Teilnehmer",
+      "historyResponses": "{count} Beiträge",
+      "role": {
+        "coHost": "Co-Gastgeber",
+        "participant": "Teilnehmer"
+      }
+    },
+    "purchases": {
+      "eyebrow": "Belege",
+      "title": "Käufe",
+      "intro": "Deine Käufe mit unveränderlichem Beleg.",
+      "loadingMessage": "Die Käufe werden abgerufen.",
+      "unavailable": "Käufe nicht verfügbar",
+      "emptyTitle": "Keine Käufe",
+      "emptyMessage": "Du hast bisher keine Getränke gekauft.",
+      "barcode": "Barcode {code}",
+      "catalogVersion": "Katalog v{version}"
+    },
+    "wallet": {
+      "eyebrow": "Guthaben & Transaktionen",
+      "title": "Bierkasse",
+      "loadingMessage": "Guthaben und Buchungen werden abgerufen.",
+      "unavailable": "Guthaben nicht verfügbar",
+      "treasurerTitle": "Kassenwart",
+      "treasurerHint": "Guthaben wird vom Kassenwart verwaltet. Änderungen bedürfen einer Freigabe.",
+      "historyHeading": "Historie",
+      "emptyTitle": "Keine Buchungen",
+      "emptyMessage": "Für dein Konto liegen noch keine Buchungen vor.",
+      "filter": {
+        "label": "Historie filtern",
+        "all": "Alle",
+        "topup": "Aufladungen",
+        "spend": "Ausgaben",
+        "empty": "Keine Buchungen für diesen Filter."
+      }
     }
   },
   "profile": {
@@ -62,5 +178,44 @@
     "memberSince": "Mitglied seit",
     "recording": "Erfassung",
     "recordingActive": "Strichlisten-Erfassung aktiv"
+  },
+  "notifications": {
+    "eyebrow": "Mitteilungen",
+    "title": "Benachrichtigungen",
+    "unread": "{count} ungelesen",
+    "intro": "Bleibe über Events, Vereinsankündigungen und Neuigkeiten auf dem Laufenden.",
+    "markAllRead": "Alle als gelesen markieren",
+    "markRead": "Als gelesen markieren",
+    "loadingMessage": "Benachrichtigungen werden abgerufen.",
+    "unavailable": "Benachrichtigungen nicht verfügbar",
+    "emptyTitle": "Keine Benachrichtigungen",
+    "emptyMessage": "Du hast aktuell keine Benachrichtigungen.",
+    "listLabel": "Benachrichtigungsliste",
+    "push": {
+      "title": "Web-Push-Benachrichtigungen",
+      "enabledHint": "Push-Benachrichtigungen sind für dieses Gerät aktiviert.",
+      "disabledHint": "Erhalte sofortige Benachrichtigungen zu Events, Thekendienst und Vereinsnews auch bei geschlossenem Browser.",
+      "enable": "Push aktivieren",
+      "disable": "Push deaktivieren",
+      "unsupported": "Push nicht unterstützt",
+      "message": {
+        "permissionDenied": "Berechtigung für Benachrichtigungen wurde nicht erteilt.",
+        "serverDisabled": "Web-Push ist auf dem Server derzeit nicht aktiviert.",
+        "enabled": "Web-Push-Benachrichtigungen erfolgreich aktiviert!",
+        "registerFailed": "Fehler beim Registrieren des Push-Abonnements.",
+        "pushManagerFailed": "PushManager-Registrierung fehlgeschlagen.",
+        "vapidFailed": "VAPID-Schlüssel konnte nicht abgerufen werden.",
+        "enableFailed": "Fehler bei der Push-Aktivierung.",
+        "disabled": "Push-Benachrichtigungen deaktiviert.",
+        "unsubscribeFailed": "Fehler beim Abbestellen des Push-Abonnements."
+      }
+    },
+    "type": {
+      "event": "Event",
+      "ledger": "Kasse",
+      "announcement": "Ankündigung",
+      "system": "System",
+      "info": "Info"
+    }
   }
 }
