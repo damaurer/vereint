@@ -219,4 +219,20 @@ describe('CatalogComponent', () => {
     cmp.searchQuery.set('spezial');
     expect(cmp.filteredDrinks().map((d: DrinkSummaryDto) => d.id)).toEqual(['d-2']);
   });
+
+  it('lets members only propose and never sends a purchase price', async () => {
+    catalogApi.proposeDrink.mockReturnValue(of({ status: 'proposed' }));
+    const fixture = await create(['member']);
+    const cmp = fixture.componentInstance as any;
+
+    cmp.openCreateDrink();
+    cmp.drinkName = 'Radler';
+    cmp.drinkPrice = 3.2;
+    cmp.drinkCostPrice = 1;
+    cmp.submitDrinkForm(new Event('submit'));
+
+    const payload = catalogApi.proposeDrink.mock.calls[0][0];
+    expect(payload).not.toHaveProperty('costPrice');
+    expect(cmp.proposeInfo()).toContain('vorgeschlagen');
+  });
 });
