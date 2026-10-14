@@ -3,6 +3,7 @@ package de.maurer.baseservice
 import de.maurer.baseservice.domain.*
 import de.maurer.baseservice.dto.CorrectionRequest
 import de.maurer.baseservice.dto.PayoutRequest
+import de.maurer.baseservice.dto.PurchasePreviewRequest
 import de.maurer.baseservice.dto.PurchaseRequest
 import de.maurer.baseservice.dto.TopupRequest
 import de.maurer.baseservice.error.AccessDeniedException
@@ -12,6 +13,7 @@ import de.maurer.baseservice.error.IdempotencyConflictException
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.EventDrinkRepository
+import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.IdempotencyRecordRepository
 import de.maurer.baseservice.repository.LedgerEntryRepository
@@ -68,6 +70,9 @@ class LedgerServiceTest {
     private lateinit var eventDrinkRepository: EventDrinkRepository
 
     @Mock
+    private lateinit var eventParticipantRepository: EventParticipantRepository
+
+    @Mock
     private lateinit var userService: UserService
 
     @Mock
@@ -118,7 +123,13 @@ class LedgerServiceTest {
         imageSnapshot = "img/cola-v3.png"
     )
 
+    private fun stubMemberInvited() {
+        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, memberId))
+            .thenReturn(Optional.of(EventParticipantEntity(event = activeEvent(), user = member())))
+    }
+
     private fun stubPurchaseResolution(selfService: Boolean = true) {
+        stubMemberInvited()
         `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(activeEvent()))
         `when`(drinkBarcodeRepository.findByBarcode(barcode))
             .thenReturn(Optional.of(DrinkBarcodeEntity(drink = approvedDrink(), barcode = barcode, active = true)))
@@ -137,6 +148,7 @@ class LedgerServiceTest {
             eventRepository,
             drinkBarcodeRepository,
             eventDrinkRepository,
+            eventParticipantRepository,
             userService,
             auditService
         )
@@ -459,6 +471,7 @@ class LedgerServiceTest {
     fun `barcode purchase with an unknown barcode is not found`() {
         `when`(userService.getOrCreateUser(memberPrincipal())).thenReturn(member())
         `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(activeEvent()))
+        stubMemberInvited()
         `when`(drinkBarcodeRepository.findByBarcode(barcode)).thenReturn(Optional.empty())
 
         val ex = assertThrows(ApiException::class.java) {
@@ -499,6 +512,132 @@ class LedgerServiceTest {
         assertEquals(existing.id.toString(), dto.id)
         verify(ledgerEntryRepository, never()).save(anyLedgerEntry())
         verify(purchaseSnapshotRepository, never()).save(anyPurchaseSnapshot())
+    }
+
+    @Test
+    fun `barcode purchase is denied at an event the member is not invited to`() {
+        `when`(userService.getOrCreateUser(memberPrincipal())).thenReturn(member())
+        stubPurchaseResolution()
+        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, memberId)).thenReturn(Optional.empty())
+
+        val ex = assertThrows(AccessDeniedException::class.java) {
+            ledgerService.purchaseByBarcode(
+                PurchaseRequest(eventId = eventId.toString(), barcode = barcode),
+                "purchase-not-invited",
+                memberPrincipal()
+            )
+        }
+        assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
+        verify(ledgerEntryRepository, never()).save(anyLedgerEntry())
+    }
+
+    @Test
+    fun `barcode preview shows drink, price per running event and balance without booking`() {
+        `when`(userService.getOrCreateUser(memberPrincipal())).thenReturn(member())
+        stubPurchaseResolution()
+        val closedEvent = EventEntity(id = UUID.randomUUID(), title = "Vorbei", status = EventStatus.completed)
+        `when`(eventDrinkRepository.findByDrinkId(drinkId)).thenReturn(
+            listOf(eventDrink(), EventDrinkEntity(event = closedEvent, drink = approvedDrink(), price = BigDecimal("1.00")))
+        )
+        `when`(ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(memberId)).thenReturn(
+            listOf(
+                LedgerEntryEntity(
+                    entryType = LedgerEntryType.topup,
+                    member = member(),
+                    amount = BigDecimal("10.00"),
+                    currency = "EUR",
+                    accountingMode = AccountingMode.credit
+                )
+            )
+        )
+
+        val preview = ledgerService.previewBarcodePurchase(PurchasePreviewRequest(barcode = " $barcode "), memberPrincipal())
+
+        assertEquals(barcode, preview.barcode)
+        assertEquals("Cola", preview.drinkName)
+        assertEquals(1, preview.options.size)
+        assertEquals(eventId.toString(), preview.options[0].eventId)
+        assertEquals("Fest", preview.options[0].eventTitle)
+        assertEquals(0, BigDecimal("2.50").compareTo(preview.options[0].unitPrice))
+        assertEquals(0, BigDecimal("10.00").compareTo(preview.creditBalance))
+        verify(ledgerEntryRepository, never()).save(anyLedgerEntry())
+    }
+
+    @Test
+    fun `barcode preview fails when the drink is not sold at an event of the member`() {
+        `when`(userService.getOrCreateUser(memberPrincipal())).thenReturn(member())
+        stubPurchaseResolution()
+        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, memberId)).thenReturn(Optional.empty())
+        `when`(eventDrinkRepository.findByDrinkId(drinkId)).thenReturn(listOf(eventDrink()))
+
+        val ex = assertThrows(ApiException::class.java) {
+            ledgerService.previewBarcodePurchase(PurchasePreviewRequest(barcode = barcode), memberPrincipal())
+        }
+        assertEquals(ErrorCode.DRINK_NOT_IN_EVENT, ex.errorCode)
+    }
+
+    private fun barcodePurchase(
+        owner: UserEntity = member(),
+        source: PurchaseSource = PurchaseSource.pwaBarcode,
+        createdAt: Instant = Instant.now().minus(Duration.ofMinutes(2))
+    ) = LedgerEntryEntity(
+        entryType = LedgerEntryType.purchase,
+        event = activeEvent(),
+        member = owner,
+        drink = approvedDrink(),
+        amount = BigDecimal("2.50"),
+        currency = "EUR",
+        accountingMode = AccountingMode.credit,
+        source = source,
+        actor = owner,
+        idempotencyKey = "purchase-1",
+        createdAt = createdAt
+    )
+
+    @Test
+    fun `member undoes an own fresh barcode purchase with a compensating entry`() {
+        `when`(userService.getOrCreateUser(memberPrincipal())).thenReturn(member())
+        val original = barcodePurchase()
+        `when`(ledgerEntryRepository.findById(original.id)).thenReturn(Optional.of(original))
+        `when`(ledgerEntryRepository.findByReversesEntryId(original.id)).thenReturn(emptyList())
+        `when`(ledgerEntryRepository.save(anyLedgerEntry())).thenAnswer { it.arguments[0] }
+
+        val dto = ledgerService.undoBarcodePurchase(original.id, "undo-1", memberPrincipal())
+
+        assertEquals(LedgerEntryType.correction.name, dto.entryType)
+        assertEquals(original.id.toString(), dto.reversesEntryId)
+        assertEquals(memberId.toString(), dto.memberId)
+    }
+
+    @Test
+    fun `member cannot undo someone elses purchase`() {
+        `when`(userService.getOrCreateUser(memberPrincipal())).thenReturn(member())
+        val original = barcodePurchase(owner = admin())
+        `when`(ledgerEntryRepository.findById(original.id)).thenReturn(Optional.of(original))
+
+        assertThrows(ApiException::class.java) {
+            ledgerService.undoBarcodePurchase(original.id, "undo-2", memberPrincipal())
+        }
+        verify(ledgerEntryRepository, never()).save(anyLedgerEntry())
+    }
+
+    @Test
+    fun `member undo is rejected after the undo window and for tally purchases`() {
+        `when`(userService.getOrCreateUser(memberPrincipal())).thenReturn(member())
+        val old = barcodePurchase(
+            createdAt = Instant.now().minus(LedgerService.PURCHASE_UNDO_WINDOW).minus(Duration.ofMinutes(1))
+        )
+        val tally = barcodePurchase(source = PurchaseSource.tabletManual)
+        `when`(ledgerEntryRepository.findById(old.id)).thenReturn(Optional.of(old))
+        `when`(ledgerEntryRepository.findById(tally.id)).thenReturn(Optional.of(tally))
+
+        assertThrows(InvalidRequestException::class.java) {
+            ledgerService.undoBarcodePurchase(old.id, "undo-3", memberPrincipal())
+        }
+        assertThrows(InvalidRequestException::class.java) {
+            ledgerService.undoBarcodePurchase(tally.id, "undo-4", memberPrincipal())
+        }
+        verify(ledgerEntryRepository, never()).save(anyLedgerEntry())
     }
 
     @Test

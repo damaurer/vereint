@@ -75,6 +75,38 @@ data class PurchaseRequest(
     val barcode: String? = null
 )
 
+/**
+ * Vorschau eines Barcodekaufs, bevor das Mitglied bestätigt. Ohne `eventId`
+ * liefert der Server alle laufenden Events des Mitglieds, an denen das Getränk
+ * per Selbstbedienung verkauft wird.
+ */
+data class PurchasePreviewRequest(
+    @field:NotBlank(message = "barcode {validation.notBlank}")
+    @field:Size(max = 128, message = "barcode {validation.size.max}")
+    val barcode: String? = null,
+
+    val eventId: String? = null
+)
+
+/** Ein Event, an dem das gescannte Getränk gekauft werden kann, mit dessen Preis. */
+data class PurchaseOptionDto(
+    val eventId: String,
+    val eventTitle: String,
+    val unitPrice: BigDecimal,
+    val currency: String
+)
+
+/** Was ein Barcodekauf kosten würde; es wird nichts gebucht. */
+data class PurchasePreviewDto(
+    val barcode: String,
+    val drinkId: String,
+    val drinkName: String,
+    val imageReference: String?,
+    val options: List<PurchaseOptionDto>,
+    val creditBalance: BigDecimal,
+    val balanceCurrency: String
+)
+
 /** Beleg-Snapshot eines Kaufs; unveränderlich (siehe `docs/fachkonzept.md`). */
 data class PurchaseSnapshotDto(
     val itemType: String = "DRINK",

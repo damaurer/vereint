@@ -69,6 +69,10 @@
       "statEntries": "Transactions",
       "shortcutsHeading": "Quick access",
       "shortcuts": {
+        "scan": {
+          "title": "Pay for a drink",
+          "sub": "Scan the barcode"
+        },
         "moments": {
           "title": "Moments",
           "sub": "Toasts & rituals"
@@ -281,7 +285,8 @@
       "treasury": "Treasury & finances",
       "communications": "Communications",
       "admin": "Administration",
-      "tablet": "Bar terminal"
+      "tablet": "Bar terminal",
+      "scan": "Pay"
     },
     "sections": {
       "club": "Club",
@@ -489,6 +494,10 @@
     "eventCreate": {
       "title": "Create event",
       "description": "Plan a new event and invite members."
+    },
+    "scan": {
+      "title": "Pay for a drink",
+      "description": "Scan a barcode and pay with your credit."
     }
   },
   "chat": {
@@ -795,7 +804,9 @@
       "noBarcodes": "No barcodes stored.",
       "removeBarcode": "Remove barcode",
       "newBarcodePlaceholder": "Enter new barcode …",
-      "addBarcode": "+ Add barcode"
+      "addBarcode": "+ Add barcode",
+      "scanBarcode": "Scan with camera",
+      "scanCancel": "Stop scanning"
     },
     "food": {
       "editTitle": "Edit dish",
@@ -1507,6 +1518,55 @@
         "disabled": "Notifications are off for this device.",
         "disableFailed": "Notifications could not be turned off. Please try again later."
       }
+    }
+  },
+  "scan": {
+    "eyebrow": "Pay with credit",
+    "title": "Scan a drink",
+    "intro": "Hold the bottle's barcode inside the frame. You will see the drink and price before anything is charged.",
+    "camera": {
+      "label": "Camera view for scanning",
+      "starting": "Starting camera …",
+      "denied": "The app is not allowed to use the camera. Allow camera access in your browser settings or type the number below.",
+      "unavailable": "No camera is available here. Type the number under the barcode below."
+    },
+    "manual": {
+      "label": "Or type the number under the barcode",
+      "placeholder": "e.g. 4006381333931",
+      "submit": "Look up"
+    },
+    "loading": "Looking up the drink …",
+    "notFound": {
+      "title": "That didn't work"
+    },
+    "retry": "Scan again",
+    "confirm": {
+      "chooseEvent": "At which event?",
+      "event": "Event",
+      "price": "Price",
+      "balanceNow": "Credit now",
+      "balanceAfter": "Credit afterwards",
+      "negative": "This takes your credit below zero. Please top it up with the board.",
+      "pay": "Pay {price}",
+      "cancel": "Cancel"
+    },
+    "paying": "Paying …",
+    "done": {
+      "title": "Paid",
+      "message": "{drink} for {price} was charged to your credit.",
+      "undoHint": "Made a mistake? You can undo the purchase for 10 minutes.",
+      "undo": "Undo",
+      "next": "Scan next drink",
+      "toWallet": "Go to credit"
+    },
+    "undone": {
+      "title": "Purchase undone",
+      "message": "{price} is back on your credit."
+    },
+    "errors": {
+      "lookup": "The drink could not be looked up.",
+      "pay": "Payment failed.",
+      "undo": "Undo failed."
     }
   }
 }

@@ -69,6 +69,10 @@
       "statEntries": "Buchungen",
       "shortcutsHeading": "Schnellzugriff",
       "shortcuts": {
+        "scan": {
+          "title": "Getränk bezahlen",
+          "sub": "Strichcode scannen"
+        },
         "moments": {
           "title": "Moments",
           "sub": "Anstoßen & Rituale"
@@ -275,7 +279,8 @@
       "treasury": "Kasse & Finanzen",
       "communications": "Kommunikation",
       "admin": "Administration",
-      "tablet": "Thekenterminal"
+      "tablet": "Thekenterminal",
+      "scan": "Bezahlen"
     },
     "sections": {
       "club": "Verein",
@@ -483,6 +488,10 @@
     "eventCreate": {
       "title": "Event anlegen",
       "description": "Neues Event planen und Mitglieder einladen."
+    },
+    "scan": {
+      "title": "Getränk bezahlen",
+      "description": "Strichcode scannen und mit Guthaben bezahlen."
     }
   },
   "chat": {
@@ -762,7 +771,9 @@
       "noBarcodes": "Keine Barcodes hinterlegt.",
       "removeBarcode": "Barcode entfernen",
       "newBarcodePlaceholder": "Neuen Barcode erfassen …",
-      "addBarcode": "+ Barcode hinzufügen"
+      "addBarcode": "+ Barcode hinzufügen",
+      "scanBarcode": "Mit Kamera scannen",
+      "scanCancel": "Scannen beenden"
     },
     "food": {
       "editTitle": "Speise bearbeiten",
@@ -1474,6 +1485,55 @@
         "disabled": "Mitteilungen sind auf diesem Gerät aus.",
         "disableFailed": "Mitteilungen konnten nicht deaktiviert werden. Bitte später erneut versuchen."
       }
+    }
+  },
+  "scan": {
+    "eyebrow": "Mit Guthaben bezahlen",
+    "title": "Getränk scannen",
+    "intro": "Halte den Strichcode der Flasche in den Rahmen. Bevor etwas abgebucht wird, siehst du Getränk und Preis.",
+    "camera": {
+      "label": "Kamerabild zum Scannen",
+      "starting": "Kamera wird gestartet …",
+      "denied": "Die App darf die Kamera nicht benutzen. Erlaube den Kamerazugriff in den Browser-Einstellungen oder tippe die Nummer unten ein.",
+      "unavailable": "Hier ist keine Kamera verfügbar. Tippe die Nummer unter dem Strichcode unten ein."
+    },
+    "manual": {
+      "label": "Oder Nummer unter dem Strichcode eintippen",
+      "placeholder": "z. B. 4006381333931",
+      "submit": "Suchen"
+    },
+    "loading": "Getränk wird gesucht …",
+    "notFound": {
+      "title": "Das hat nicht geklappt"
+    },
+    "retry": "Nochmal scannen",
+    "confirm": {
+      "chooseEvent": "Bei welchem Event?",
+      "event": "Event",
+      "price": "Preis",
+      "balanceNow": "Guthaben jetzt",
+      "balanceAfter": "Guthaben danach",
+      "negative": "Dein Guthaben geht damit ins Minus. Bitte lade es beim Vorstand wieder auf.",
+      "pay": "{price} bezahlen",
+      "cancel": "Abbrechen"
+    },
+    "paying": "Wird bezahlt …",
+    "done": {
+      "title": "Bezahlt",
+      "message": "{drink} für {price} wurde von deinem Guthaben abgebucht.",
+      "undoHint": "Vertan? Du kannst den Kauf 10 Minuten lang zurücknehmen.",
+      "undo": "Rückgängig",
+      "next": "Nächstes Getränk scannen",
+      "toWallet": "Zum Guthaben"
+    },
+    "undone": {
+      "title": "Kauf zurückgenommen",
+      "message": "{price} sind wieder auf deinem Guthaben."
+    },
+    "errors": {
+      "lookup": "Das Getränk konnte nicht gesucht werden.",
+      "pay": "Bezahlen hat nicht geklappt.",
+      "undo": "Zurücknehmen hat nicht geklappt."
     }
   }
 }

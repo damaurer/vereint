@@ -70,6 +70,12 @@ export const routes: Routes = [
     loadComponent: () => import('./member/purchases.component').then((m) => m.PurchasesComponent),
   },
   {
+    path: 'scan',
+    canActivate: [authGuard],
+    data: { title: 'routes.scan.title', description: 'routes.scan.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./scan/scan.component').then((m) => m.ScanComponent),
+  },
+  {
     path: 'events',
     canActivate: [authGuard],
     data: { title: 'routes.events.title', description: 'routes.events.description', access: 'routes.access.protected' },

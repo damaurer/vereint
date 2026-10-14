@@ -356,6 +356,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Kacheln „Schnellzugriff“: die Ziele hinter „Mehr“, die man oft braucht. */
   protected readonly shortcuts: readonly DashboardShortcut[] = [
     {
+      route: '/scan',
+      icon: 'camera',
+      titleKey: 'member.dashboard.shortcuts.scan.title',
+      subKey: 'member.dashboard.shortcuts.scan.sub',
+    },
+    {
       route: '/moments',
       icon: 'moments',
       titleKey: 'member.dashboard.shortcuts.moments.title',

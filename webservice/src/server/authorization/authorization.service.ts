@@ -106,6 +106,7 @@ export function resolvePathAppContext(pathname: string): PathAppContextMatch | n
     '/profile',
     '/wallet',
     '/purchases',
+    '/scan',
     '/events',
     '/catalog',
     '/sublists',
