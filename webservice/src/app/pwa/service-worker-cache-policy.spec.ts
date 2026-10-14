@@ -72,10 +72,14 @@ describe('service-worker-cache-policy', () => {
     it('detects hashed immutable artefacts', () => {
       expect(isImmutableHashedAsset('/main-ABC12345.js')).toBe(true);
       expect(isImmutableHashedAsset('/styles.deadbeef99.css')).toBe(true);
+      expect(isImmutableHashedAsset('/main-5RAM3QJT.js')).toBe(true);
+      expect(isImmutableHashedAsset('/chunk-QWERTYUI.js')).toBe(true);
     });
 
     it('does not treat unhashed assets or the app-shell as immutable', () => {
       expect(isImmutableHashedAsset('/favicon.ico')).toBe(false);
+      expect(isImmutableHashedAsset('/icons/icon-maskable-512.png')).toBe(false);
+      expect(isImmutableHashedAsset('/vereint-something.png')).toBe(false);
       expect(isImmutableHashedAsset('/')).toBe(false);
       expect(isImmutableHashedAsset('/api/v1/main-ABC12345.js')).toBe(false);
     });
