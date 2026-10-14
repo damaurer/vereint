@@ -734,7 +734,8 @@
     },
     "actions": {
       "proposeDrink": "+ Propose drink",
-      "createFood": "+ Add new dish"
+      "createFood": "+ Add new dish",
+      "createDrink": "+ Add drink"
     },
     "tabs": {
       "label": "Catalogue sections",
@@ -763,7 +764,8 @@
       "detailsAndBarcodes": "Details & barcodes",
       "approve": "Approve",
       "reject": "Reject",
-      "edit": "Edit"
+      "edit": "Edit",
+      "margin": "Margin {amount}"
     },
     "drinkStatus": {
       "approved": "Approved",
@@ -777,15 +779,21 @@
       "categoryPlaceholder": "e.g. lager, wheat beer, alcohol-free",
       "pricePlaceholder": "e.g. 2.50",
       "descriptionPlaceholder": "Special features, brewery, etc.",
-      "barcode": "Barcode (optional)",
-      "barcodePlaceholder": "e.g. 4012345678901",
       "submit": "Submit proposal"
     },
     "form": {
       "category": "Category",
       "defaultPrice": "Default price (€) *",
       "description": "Description",
-      "requiredFields": "Please fill in all required fields."
+      "requiredFields": "Please fill in all required fields.",
+      "costPrice": "Purchase price (€)",
+      "costPricePlaceholder": "e.g. 1.10",
+      "marginHint": "Margin per sale: {amount}",
+      "barcodes": "Barcodes",
+      "similarName": "A drink called “{name}” already exists. Please check whether it is the same one.",
+      "barcodeTaken": "Barcode {barcode} already belongs to “{name}”.",
+      "barcodeNotAdded": "The barcode you entered has not been added yet. Tap “+ Add barcode” or clear the field.",
+      "activeLabel": "In stock (untick to take the drink off sale)"
     },
     "detail": {
       "fallbackTitle": "Drink details",
@@ -816,9 +824,26 @@
       "propose": "Failed to submit the proposal.",
       "addBarcode": "Failed to add the barcode.",
       "saveFood": "Failed to save the dish.",
-      "createFood": "Failed to create the dish."
+      "createFood": "Failed to create the dish.",
+      "saveDrink": "Failed to save the drink."
     },
-    "proposeInfo": "“{name}” was proposed. It will appear in the catalog once the board approves it."
+    "proposeInfo": "“{name}” was proposed. It will appear in the catalog once the board approves it.",
+    "create": {
+      "title": "Add drink",
+      "submit": "Add drink"
+    },
+    "edit": {
+      "title": "Edit drink"
+    },
+    "lookup": {
+      "open": "Scan barcode",
+      "title": "Find drink by barcode",
+      "intro": "Hold the bottle's barcode in front of the camera. If the drink is known it opens; otherwise you can add it right away.",
+      "manual": "Enter barcode …",
+      "search": "Search",
+      "newBarcode": "Barcode {barcode} is not assigned to any drink yet. It will be saved with the new drink."
+    },
+    "createInfo": "“{name}” was added and is in the catalog right away."
   },
   "sublists": {
     "header": {

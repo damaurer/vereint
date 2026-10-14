@@ -153,6 +153,43 @@ class DrinkCatalogServiceTest {
     }
 
     @Test
+    fun `proposeDrink by the board creates an approved active drink without a second review`() {
+        val board = boardUser()
+        val principal = boardPrincipal()
+        `when`(userService.getOrCreateUser(principal)).thenReturn(board)
+        `when`(drinkCatalogRepository.save(anyDrink())).thenAnswer { it.arguments[0] }
+
+        val dto = service.proposeDrink(
+            ProposeDrinkRequest(name = "Spezi", defaultPrice = BigDecimal("2.00"), costPrice = BigDecimal("0.90")),
+            principal
+        )
+
+        assertEquals(DrinkStatus.approved.name, dto.status)
+        assertTrue(dto.active)
+        assertEquals(boardId.toString(), dto.approvedById)
+        assertEquals(0, BigDecimal("0.90").compareTo(dto.costPrice))
+    }
+
+    @Test
+    fun `proposeDrink checks every barcode before saving the drink`() {
+        val proposer = proposerUser()
+        val principal = memberPrincipal()
+        `when`(userService.getOrCreateUser(principal)).thenReturn(proposer)
+        `when`(drinkBarcodeRepository.findByBarcode("222")).thenReturn(
+            Optional.of(DrinkBarcodeEntity(barcode = "222"))
+        )
+
+        assertThrows(InvalidRequestException::class.java) {
+            service.proposeDrink(
+                ProposeDrinkRequest(name = "Fanta", defaultPrice = BigDecimal("1.50"), barcodes = listOf("111", "222")),
+                principal
+            )
+        }
+        verify(drinkCatalogRepository, never()).save(anyDrink())
+        verify(drinkBarcodeRepository, never()).save(anyBarcode())
+    }
+
+    @Test
     fun `proposeDrink denies a caller without a member role`() {
         val guest = UserEntity(id = proposerId, keycloakSubject = "sub-guest", displayName = "Guest")
         val principal = UserPrincipal(subject = "sub-guest", roles = emptySet())

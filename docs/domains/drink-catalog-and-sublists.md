@@ -13,6 +13,12 @@ Die Getränkeverwaltung in **Vereint** bildet das gesamte Sortiment ab – vom g
   1. Mitglieder oder Vorstände schlagen neue Getränke vor (`status = proposed`, erfasst `proposed_by_user_id`).
   2. Der Vorstand prüft und gibt das Getränk frei (`status = approved`, erfasst `approved_by_user_id`) oder lehnt es ab (`status = rejected`).
   3. Nur freigegebene Getränke können in Sublisten oder Event-Angebote aufgenommen werden.
+  4. Legen Vorstand oder Administration ein Getränk selbst an, ist es sofort freigegeben und aktiv (`approved_by_user_id` = Anlegende); ein zweiter Freigabeschritt entfällt.
+- **Erfassung in der Oberfläche** (`/catalog`):
+  - „Barcode scannen“: Ein bekannter Barcode öffnet das Getränk, ein unbekannter das Formular „Getränk anlegen“ mit vorausgefülltem Code.
+  - Ein Formular für Anlegen, Vorschlagen und Bearbeiten: Name, Kategorie (Vorschläge aus vorhandenen Kategorien), Verkaufs- und Einkaufspreis mit Marge (Einkaufspreis nur Vorstand/Admin), Beschreibung, beliebig viele Barcodes per Kamera oder Eingabe.
+  - Vor dem Speichern wird geprüft, ob ein Barcode schon zu einem anderen Getränk gehört und ob es ein Getränk gleichen Namens gibt.
+  - „Im Sortiment“ nimmt ein Getränk aus dem Verkauf (`active = false`), ohne es zu löschen; die Karte zeigt dann „Inaktiv“.
 
 ### 2. Event-Sublisten (Sortimentssteuerung) & Event-Getränke
 - Nicht jedes Vereins-Event bietet das gesamte Vereinssortiment an.
