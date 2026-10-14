@@ -46,5 +46,65 @@ data class ChatMessageDto(
     val senderName: String,
     val message: String,
     val imageUrl: String?,
+    val createdAt: Instant,
+    val reactions: List<ChatReactionDto> = emptyList()
+)
+
+/** Zusammengefasste Reaktionen auf eine Nachricht. */
+data class ChatReactionDto(
+    val emoji: String,
+    val count: Int,
+    val reactedByMe: Boolean
+)
+
+/** Vorschau der letzten Nachricht einer Konversation. */
+data class ChatMessagePreviewDto(
+    val senderName: String,
+    val message: String,
     val createdAt: Instant
+)
+
+/**
+ * Eintrag der Chat-Übersicht: Vereinschat (`club`), Direktnachricht (`direct`)
+ * oder Event-Chat (`event`). `partnerId`/`partnerName` gibt es nur bei
+ * Direktnachrichten; die Infotafel nur im Vereinschat.
+ */
+data class ConversationSummaryDto(
+    val id: String,
+    val type: String,
+    val title: String,
+    val eventId: String?,
+    val partnerId: String?,
+    val partnerName: String?,
+    val lastMessage: ChatMessagePreviewDto?,
+    val unreadCount: Long,
+    val pinned: PinnedNoteDto?,
+    val canWrite: Boolean
+)
+
+data class PinnedNoteDto(
+    val text: String,
+    val authorName: String,
+    val pinnedAt: Instant
+)
+
+data class ChatUnreadCountDto(
+    val unread: Long
+)
+
+data class StartDirectConversationRequest(
+    @field:NotBlank(message = "userId {validation.notBlank}")
+    val userId: String? = null
+)
+
+data class ToggleReactionRequest(
+    @field:NotBlank(message = "emoji {validation.notBlank}")
+    @field:Size(max = 16, message = "emoji {validation.size.max}")
+    val emoji: String? = null
+)
+
+/** Infotafel setzen (`text`) oder entfernen (leer bzw. `null`). */
+data class PinNoteRequest(
+    @field:Size(max = 2000, message = "text {validation.size.max}")
+    val text: String? = null
 )

@@ -65,13 +65,36 @@ resource "aws_ssm_parameter" "s3_secret_key" {
   value = aws_iam_access_key.app_storage.secret
 }
 
+# VAPID-Schluesselpaar fuer Web-Push-Mitteilungen (P-256). Der baseservice liest
+# die DER-Form direkt (siehe VapidKeys.kt). Ein neues Schluesselpaar macht alle
+# bestehenden Abos ungueltig; die App meldet Geraete beim naechsten Start selbst
+# neu an.
+resource "tls_private_key" "vapid" {
+  algorithm   = "ECDSA"
+  ecdsa_curve = "P256"
+}
+
+locals {
+  vapid_private_key = replace(replace(tls_private_key.vapid.private_key_pem_pkcs8, "/-----[A-Z ]+-----/", ""), "\n", "")
+  vapid_public_key  = replace(replace(tls_private_key.vapid.public_key_pem, "/-----[A-Z ]+-----/", ""), "\n", "")
+}
+
+resource "aws_ssm_parameter" "vapid_private_key" {
+  name  = "${local.ssm_prefix}/VAPID_PRIVATE_KEY"
+  type  = "SecureString"
+  value = local.vapid_private_key
+}
+
 # Nicht geheime Werte, die das Deployment ebenfalls braucht.
 resource "aws_ssm_parameter" "config" {
   for_each = {
-    PUBLIC_DOMAIN = var.domain
-    S3_BUCKET     = aws_s3_bucket.app.bucket
-    S3_REGION     = var.region
-    BACKUP_BUCKET = aws_s3_bucket.backups.bucket
+    PUBLIC_DOMAIN    = var.domain
+    S3_BUCKET        = aws_s3_bucket.app.bucket
+    S3_REGION        = var.region
+    BACKUP_BUCKET    = aws_s3_bucket.backups.bucket
+    VAPID_ENABLED    = "true"
+    VAPID_SUBJECT    = "https://${var.domain}"
+    VAPID_PUBLIC_KEY = local.vapid_public_key
   }
 
   name  = "${local.ssm_prefix}/${each.key}"

@@ -36,12 +36,16 @@
               <a
                 class="shell-nav-link"
                 [routerLink]="item.route"
+                [attr.aria-label]="navAriaLabel(item)"
                 routerLinkActive="is-active"
                 [routerLinkActiveOptions]="activeOptions(item)"
                 ariaCurrentWhenActive="page"
               >
                 <vereint-icon class="shell-nav-icon" [name]="item.icon" />
                 <span class="shell-nav-label">{{ item.labelKey | t }}</span>
+                @if (item.id === 'chat' && chatBadge(); as badge) {
+                  <span class="shell-nav-count" aria-hidden="true">{{ badge }}</span>
+                }
               </a>
             }
           </nav>
@@ -57,12 +61,16 @@
             <a
               class="shell-rail-link"
               [routerLink]="item.route"
+              [attr.aria-label]="navAriaLabel(item)"
               routerLinkActive="is-active"
               [routerLinkActiveOptions]="activeOptions(item)"
               ariaCurrentWhenActive="page"
             >
               <vereint-icon class="shell-rail-icon" [name]="item.icon" />
               <span class="shell-rail-label">{{ item.labelKey | t }}</span>
+              @if (item.id === 'chat' && chatBadge(); as badge) {
+                <span class="shell-nav-count" aria-hidden="true">{{ badge }}</span>
+              }
             </a>
           }
           <button
@@ -162,12 +170,16 @@
             <a
               class="shell-bottom-link"
               [routerLink]="item.route"
+              [attr.aria-label]="navAriaLabel(item)"
               routerLinkActive="is-active"
               [routerLinkActiveOptions]="activeOptions(item)"
               ariaCurrentWhenActive="page"
             >
               <vereint-icon class="shell-bottom-icon" [name]="item.icon" />
               <span class="shell-bottom-label">{{ item.labelKey | t }}</span>
+              @if (item.id === 'chat' && chatBadge(); as badge) {
+                <span class="shell-nav-count" aria-hidden="true">{{ badge }}</span>
+              }
             </a>
           }
           <button

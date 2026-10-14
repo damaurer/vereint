@@ -36,7 +36,13 @@
     "rsvp": {
       "accept": "Attend",
       "maybe": "Maybe",
-      "decline": "Decline"
+      "decline": "Decline",
+      "status": {
+        "invited": "Pending",
+        "accepted": "Accepted",
+        "maybe": "Maybe",
+        "declined": "Declined"
+      }
     },
     "balance": {
       "current": "Current balance",
@@ -79,7 +85,9 @@
           "title": "Notifications",
           "sub": "News from the club"
         }
-      }
+      },
+      "declined": "You declined",
+      "maybe": "You answered maybe"
     },
     "events": {
       "eyebrow": "Member",
@@ -88,7 +96,9 @@
       "loadingMessage": "Loading events.",
       "unavailable": "Events unavailable",
       "emptyTitle": "No events",
-      "emptyMessage": "You are not attending any events at the moment."
+      "emptyMessage": "You are not attending any events at the moment.",
+      "create": "Create event",
+      "rsvpGroup": "Response for {title}"
     },
     "eventDetail": {
       "eyebrow": "Event",
@@ -124,6 +134,30 @@
       "role": {
         "coHost": "Co-host",
         "participant": "Participant"
+      },
+      "manage": "Manage",
+      "countsLabel": "Responses of the invitees",
+      "counts": {
+        "accepted": "Accepted: {count}",
+        "maybe": "Maybe: {count}",
+        "declined": "Declined: {count}",
+        "invited": "Pending: {count}"
+      },
+      "myRsvp": {
+        "invited": "You are invited. Will you join?",
+        "accepted": "You accepted.",
+        "maybe": "You answered maybe.",
+        "declined": "You declined. You can change your answer at any time."
+      },
+      "chat": {
+        "heading": "Event chat",
+        "empty": "No messages yet. Write the first one!",
+        "closed": "The event is cancelled or archived. The chat is read-only.",
+        "message": "Message",
+        "placeholder": "Write a message",
+        "send": "Send",
+        "loading": "Loading the chat.",
+        "unavailable": "The chat is not available to you."
       }
     },
     "purchases": {
@@ -197,31 +231,22 @@
     "emptyTitle": "No notifications",
     "emptyMessage": "You have no notifications at the moment.",
     "listLabel": "Notification list",
-    "push": {
-      "title": "Web push notifications",
-      "enabledHint": "Push notifications are enabled on this device.",
-      "disabledHint": "Get instant notifications about events, bar duty and club news, even when your browser is closed.",
-      "enable": "Enable push",
-      "disable": "Disable push",
-      "unsupported": "Push not supported",
-      "message": {
-        "permissionDenied": "Permission for notifications was not granted.",
-        "serverDisabled": "Web push is currently not enabled on the server.",
-        "enabled": "Web push notifications enabled successfully!",
-        "registerFailed": "Failed to register the push subscription.",
-        "pushManagerFailed": "PushManager registration failed.",
-        "vapidFailed": "Could not retrieve the VAPID key.",
-        "enableFailed": "Failed to enable push.",
-        "disabled": "Push notifications disabled.",
-        "unsubscribeFailed": "Failed to cancel the push subscription."
-      }
-    },
     "type": {
       "event": "Event",
       "ledger": "Kitty",
       "announcement": "Announcement",
       "system": "System",
-      "info": "Info"
+      "info": "Info",
+      "moment": "Moment",
+      "eventInvitation": "Invitation",
+      "eventReminder": "Reminder",
+      "eventCancelled": "Cancelled"
+    },
+    "open": "Open",
+    "openEvent": "Go to event",
+    "answered": {
+      "accepted": "You accepted.",
+      "declined": "You declined."
     }
   },
   "shell": {
@@ -235,7 +260,8 @@
     "wallet": "Balance",
     "logout": "Sign out",
     "notifications": "Notifications",
-    "notificationsUnread": "Notifications, {count} unread"
+    "notificationsUnread": "Notifications, {count} unread",
+    "chatUnread": "{label}, {count} unread"
   },
   "nav": {
     "items": {
@@ -459,13 +485,17 @@
     "statistics": {
       "title": "Statistics",
       "description": "Consumption, attendance, spending history and rankings from Eber analytics."
+    },
+    "eventCreate": {
+      "title": "Create event",
+      "description": "Plan a new event and invite members."
     }
   },
   "chat": {
-    "eyebrow": "Club messenger",
+    "eyebrow": "Club chat",
     "title": "Chat",
     "toDirectMessages": "Direct messages →",
-    "loadingMessage": "Fetching conversations.",
+    "loadingMessage": "Loading conversations.",
     "unavailable": "Chat unavailable",
     "online": "online",
     "unread": {
@@ -476,7 +506,11 @@
     "list": {
       "ariaLabel": "Conversations",
       "newMessage": "+ New message",
-      "groupOnline": "{count} online"
+      "groupOnline": "{count} online",
+      "clubChat": "Club chat",
+      "eventChats": "Event chats",
+      "noEventChats": "You have no event chats right now. They appear once you are invited to an event.",
+      "noMessages": "No messages yet"
     },
     "thread": {
       "back": "← Back",
@@ -484,10 +518,18 @@
         "one": "{count} member online",
         "other": "{count} members online"
       },
-      "pinnedTitle": "Note from the secretary ({name})",
+      "pinnedTitle": "Notice board by {name}",
       "emptyTitle": "No messages yet",
       "emptyMessage": "Write the first message in this conversation.",
-      "addReaction": "Add reaction"
+      "addReaction": "Add reaction",
+      "toEvent": "Go to event",
+      "loadingMessage": "Loading messages.",
+      "loadFailed": "Messages unavailable",
+      "guest": "Guest",
+      "image": "Image attached to the message",
+      "reactionLabel": "Reaction {emoji}, {count}",
+      "reactWith": "React with {emoji}",
+      "reactionFailed": "The reaction could not be saved. Please try again."
     },
     "composer": {
       "attach": "Add attachment",
@@ -495,19 +537,31 @@
       "addDrink": "Insert drink",
       "send": "Send",
       "sendFailed": "Message could not be sent. Please try again.",
-      "attachUnavailable": "Attachments are currently unavailable."
+      "attachUnavailable": "Attachments are currently unavailable.",
+      "readOnly": "You can no longer write in this chat."
     },
     "direct": {
       "eyebrow": "Direct messages",
       "title": "One-to-one chats",
       "badge": "DMs",
-      "toGroupChat": "← To group chat",
+      "toGroupChat": "← To the club chat",
       "unavailable": "Direct messages unavailable",
       "searchLabel": "Search members",
       "searchPlaceholder": "Search members…",
       "conversations": "Conversations ({count})",
       "emptyTitle": "No conversations",
-      "emptyMessage": "There are no matching one-to-one chats."
+      "emptyMessage": "There are no matching one-to-one chats.",
+      "emptyStart": "You have no direct chats yet. Start one with \"New message\".",
+      "noneSelectedTitle": "No conversation selected",
+      "noneSelectedMessage": "Pick a conversation on the left or start a new one.",
+      "pickerTitle": "New message",
+      "pickerSearchLabel": "Search member",
+      "pickerSearchPlaceholder": "Type a name…",
+      "pickerLoading": "Loading members.",
+      "pickerUnavailable": "Members unavailable",
+      "pickerEmptyTitle": "No members found",
+      "pickerEmptyMessage": "No member matches your search.",
+      "pickerStarting": "Opening…"
     }
   },
   "moments": {
@@ -760,7 +814,8 @@
       "addBarcode": "Failed to add the barcode.",
       "saveFood": "Failed to save the dish.",
       "createFood": "Failed to create the dish."
-    }
+    },
+    "proposeInfo": "“{name}” was proposed. It will appear in the catalog once the board approves it."
   },
   "sublists": {
     "header": {
@@ -1071,16 +1126,16 @@
     "comms": {
       "eyebrow": "Secretary",
       "title": "Info panels & newsletters",
-      "intro": "Messages to members and sent notifications.",
-      "pinboardTitle": "Notice board (chat info panels)",
+      "intro": "Club chat notice, newsletters to members and sent notifications.",
+      "pinboardTitle": "Club chat notice",
       "infoTitle": "Info from the secretary",
-      "infoText": "Pinned info panels appear at the top of the chat. Write a new newsletter below to reach all members.",
+      "infoText": "The notice sits at the top of the club chat and is visible to all members.",
       "composeTitle": "Compose message",
       "recipientId": "Recipient (member ID)",
       "messageTitle": "Title",
       "messageBody": "Text",
       "send": "Send",
-      "loadingMessage": "Loading recipients and audit log.",
+      "loadingMessage": "Loading sent messages.",
       "unavailable": "Communication unavailable",
       "recipientsHeading": "Recipients ({count})",
       "noRecipients": "No members visible.",
@@ -1088,12 +1143,44 @@
       "sentHeading": "Newsletters / messages ({count})",
       "sentEmpty": "No messages have been logged yet.",
       "sent": "Sent",
-      "sentInfo": "Message sent."
+      "sentInfo": "Message sent.",
+      "pin": {
+        "loading": "Loading the notice.",
+        "unavailable": "Notice unavailable",
+        "current": "Currently pinned",
+        "meta": "By {name}, {date}",
+        "none": "No notice is pinned right now.",
+        "label": "Notice",
+        "save": "Pin",
+        "remove": "Remove",
+        "saved": "Notice pinned.",
+        "removed": "Notice removed."
+      },
+      "recipients": {
+        "legend": "Recipients",
+        "all": "All members",
+        "selected": "Selected members",
+        "loading": "Loading members.",
+        "search": "Search recipients",
+        "searchPlaceholder": "Type a name",
+        "chosen": {
+          "one": "{count} recipient selected",
+          "other": "{count} recipients selected"
+        },
+        "remove": "Remove {name}",
+        "none": "No members found.",
+        "missing": "Select at least one member."
+      },
+      "sentCount": {
+        "zero": "Nobody received the message.",
+        "one": "{count} member received the message.",
+        "other": "{count} members received the message."
+      }
     },
     "treasury": {
       "eyebrow": "Treasurer",
       "title": "Manage beer kitty",
-      "intro": "Event settlements, balances and kitty bookings.",
+      "intro": "Member balances, cash bookings and event settlements.",
       "infoTitle": "Beer kitty",
       "infoText": "Bookings are idempotent. Price, mode and approval are determined solely by the back-end service.",
       "eventsLoading": "Loading events.",
@@ -1137,7 +1224,29 @@
         "correct": "Correct",
         "topupDone": "Top-up booked.",
         "payoutDone": "Payout booked.",
-        "correctionDone": "Correction booked."
+        "correctionDone": "Correction booked.",
+        "topupTitle": "Top up balance",
+        "payoutTitle": "Pay out balance",
+        "correctionTitle": "Correct a booking",
+        "correctionEntry": "Booking",
+        "correctionPlaceholder": "Choose a booking",
+        "correctionOption": "{date} · {type} · {amount}",
+        "noCorrectable": "There is no booking you can correct.",
+        "reversed": "Corrected",
+        "pick": "Select for correction",
+        "pickAria": "Select {entry} for correction"
+      },
+      "members": {
+        "title": "Members and balances",
+        "loading": "Loading balances.",
+        "statMembers": "Members",
+        "statNegative": "Below zero",
+        "search": "Search member",
+        "searchPlaceholder": "Type a name",
+        "empty": "No members found.",
+        "lastEntry": "Last booking: {date}",
+        "noEntry": "No bookings yet",
+        "id": "ID {id}"
       }
     }
   },
@@ -1163,7 +1272,9 @@
         "location": "Location",
         "description": "Description",
         "status": "Status",
-        "save": "Save details"
+        "save": "Save details",
+        "start": "Start",
+        "end": "End"
       },
       "participants": {
         "heading": "Participants & attendance ({count})",
@@ -1172,7 +1283,10 @@
         "role": "Role",
         "roleParticipant": "Participant",
         "roleCoHost": "Co-host",
-        "add": "Add"
+        "add": "Add",
+        "inviteLegend": "Invite members",
+        "invite": "Invite",
+        "removeNamed": "Remove {name}"
       },
       "drinks": {
         "heading": "Drinks ({count})",
@@ -1180,14 +1294,17 @@
         "id": "Drink ID",
         "add": "Add drink",
         "sublistId": "Sublist ID",
-        "assignSublist": "Assign sublist"
+        "assignSublist": "Assign sublist",
+        "pick": "Drink from the catalog",
+        "sublistPick": "Sublist"
       },
       "food": {
         "heading": "Food ({count})",
         "empty": "No food assigned yet.",
         "default": "(default)",
         "id": "Food ID",
-        "add": "Add food"
+        "add": "Add food",
+        "pick": "Food from the catalog"
       },
       "invites": {
         "heading": "Invitations ({count})",
@@ -1218,7 +1335,51 @@
         "sublistAssigned": "Sublist assigned.",
         "inviteCreated": "Invitation created.",
         "inviteRevoked": "Invitation revoked.",
-        "messageSent": "Message sent."
+        "messageSent": "Message sent.",
+        "membersInvited": "Members invited."
+      },
+      "choose": "Please choose"
+    },
+    "picker": {
+      "allMembers": "Invite all members",
+      "search": "Search member",
+      "searchPlaceholder": "Type a name",
+      "empty": "No further members available.",
+      "noMatch": "No member matches your search.",
+      "selected": "{count} selected"
+    },
+    "reminder": {
+      "none": "No reminder",
+      "hours": "{count} hours before",
+      "days": {
+        "one": "1 day before",
+        "other": "{count} days before"
+      },
+      "week": "1 week before"
+    },
+    "create": {
+      "eyebrow": "New event",
+      "back": "← Back to events",
+      "title": "Create event",
+      "intro": "Plan an event and invite members. Required fields are marked with *.",
+      "name": "Title",
+      "description": "Description",
+      "location": "Location",
+      "start": "Start",
+      "end": "End",
+      "invitees": "Invitees",
+      "notifyHeading": "Notify invitees",
+      "notifyOnPublish": "Immediately when published",
+      "notifyAt": "At a set time",
+      "notifyAtTime": "Notification time",
+      "reminder": "Reminder",
+      "saveDraft": "Save as draft",
+      "publish": "Publish and invite",
+      "errors": {
+        "title": "Please enter a title.",
+        "start": "Please enter the start.",
+        "end": "The end must be after the start.",
+        "notifyAt": "Please enter the notification time."
       }
     }
   },
@@ -1234,20 +1395,37 @@
     "unavailable": "Statistics unavailable",
     "empty": {
       "title": "No reports yet",
-      "message": "Key figures appear here as soon as purchases and attendance have been recorded."
+      "message": "Figures appear here as soon as tallies, sales or RSVPs are recorded."
     },
     "consumption": {
-      "ariaLabel": "Beer consumption this month",
-      "title": "Beer consumption this month (litres)"
+      "ariaLabel": "Leaderboard by tallies",
+      "title": "Leaderboard",
+      "total": "Club tallies",
+      "mine": "Your tallies",
+      "myRank": "Your rank",
+      "rankValue": "Rank {rank}",
+      "noRank": "No rank yet",
+      "you": "You",
+      "count": {
+        "one": "{count} tally",
+        "other": "{count} tallies"
+      },
+      "empty": "No tallies in this period yet."
     },
     "attendance": {
-      "title": "Attendance rate",
-      "ringLabel": "Attendance rate {percent} percent"
+      "title": "Acceptance rate",
+      "ringLabel": "Acceptance rate {percent} percent",
+      "hint": "Share of acceptances among answered invitations.",
+      "empty": "No RSVPs yet. Once invitations are answered, the rate shows up here."
     },
     "spending": {
-      "title": "Spending trend",
+      "title": "Sales 30 days",
       "thisMonth": "Spending this month",
-      "trendHint": "{change}% vs. last month"
+      "trendHint": "{change}% vs. the previous 30 days",
+      "total": "Sales in the last 30 days",
+      "weekly": "Last 8 weeks",
+      "weeklyLabel": "Sales per week, oldest first: {values}",
+      "empty": "No sales in the last 8 weeks."
     },
     "topRounds": {
       "title": "Top round buyers",
@@ -1259,6 +1437,16 @@
     "drinkRanking": {
       "title": "Drinks ranking",
       "share": "{percent}% popularity"
+    },
+    "intro": "Figures for the last {days} days.",
+    "items": {
+      "title": "Most popular items",
+      "share": "{percent}% ({count} sold)",
+      "empty": "No items sold yet."
+    },
+    "topEvents": {
+      "title": "Events with the most tallies",
+      "empty": "No tallies at events yet."
     }
   },
   "guest": {
@@ -1289,6 +1477,36 @@
       "namePlaceholder": "e.g. Jane Smith",
       "joining": "Joining …",
       "join": "Join event"
+    }
+  },
+  "pwa": {
+    "install": {
+      "title": "App on this device",
+      "installed": "Vereint is installed.",
+      "prompt": "Opens like an app from your home screen, without the browser bar.",
+      "ios": "In Safari, tap “Share” at the bottom, then “Add to Home Screen”.",
+      "manual": "Choose “Install app” or “Add to Home screen” in your browser menu.",
+      "button": "Install"
+    },
+    "push": {
+      "title": "Notifications on this device",
+      "hint": {
+        "on": "You get new notifications even when the app is closed.",
+        "off": "Get new notifications even when the app is closed.",
+        "blocked": "Blocked in your browser. Allow notifications in the site settings.",
+        "needsInstall": "On iPhone and iPad this only works after adding the app to your home screen.",
+        "unsupported": "This browser does not support notifications.",
+        "checking": "Checking …"
+      },
+      "message": {
+        "permissionDenied": "Vereint can't send notifications without your permission.",
+        "serverDisabled": "Notifications are not set up on the server yet.",
+        "notReady": "The app has not finished loading. Please try again in a moment.",
+        "enabled": "Notifications are on for this device.",
+        "enableFailed": "Notifications could not be turned on. Please try again later.",
+        "disabled": "Notifications are off for this device.",
+        "disableFailed": "Notifications could not be turned off. Please try again later."
+      }
     }
   }
 }

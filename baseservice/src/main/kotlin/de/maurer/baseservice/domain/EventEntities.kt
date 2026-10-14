@@ -42,6 +42,14 @@ class EventEntity(
     @JoinColumn(name = "owner_id", nullable = false)
     var owner: UserEntity? = null,
 
+    /** Ab wann Eingeladene benachrichtigt werden; `null` heißt: sobald das Event veröffentlicht ist. */
+    @Column(name = "invitation_notify_at")
+    var invitationNotifyAt: Instant? = null,
+
+    /** Optionale Erinnerung so viele Stunden vor Beginn an alle, die nicht abgesagt haben. */
+    @Column(name = "reminder_hours_before")
+    var reminderHoursBefore: Int? = null,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),
@@ -76,6 +84,19 @@ class EventParticipantEntity(
 
     @Column(name = "role", length = 32, nullable = false)
     var role: String = "participant",
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rsvp", length = 16, nullable = false)
+    var rsvp: RsvpStatus = RsvpStatus.invited,
+
+    @Column(name = "rsvp_at")
+    var rsvpAt: Instant? = null,
+
+    @Column(name = "invitation_sent_at")
+    var invitationSentAt: Instant? = null,
+
+    @Column(name = "reminder_sent_at")
+    var reminderSentAt: Instant? = null,
 
     @CreatedDate
     @Column(name = "joined_at", nullable = false, updatable = false)

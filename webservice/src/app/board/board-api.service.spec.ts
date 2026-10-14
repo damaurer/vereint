@@ -77,4 +77,36 @@ describe('BoardApiService', () => {
     expect(req.request.method).toBe('GET');
     req.flush({ content: [], page: 0, size: 25, totalElements: 0, totalPages: 0, sort: '' });
   });
+
+  it('lists the balance overview', () => {
+    service.listBalances().subscribe();
+    const req = http.expectOne('/api/v1/ledger/balances');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
+  it('reads the member directory', () => {
+    service.listDirectory().subscribe();
+    const req = http.expectOne('/api/v1/users/directory');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
+  it('sends a broadcast via POST', () => {
+    service.broadcast({ allMembers: true, title: 'Hallo', body: 'Text' }).subscribe();
+    const req = http.expectOne('/api/v1/notifications/broadcast');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ allMembers: true, title: 'Hallo', body: 'Text' });
+    req.flush({ sent: 3 });
+  });
+
+  it('reads and pins the club chat notice', () => {
+    service.getClubConversation().subscribe();
+    http.expectOne('/api/v1/conversations/club').flush({});
+    service.pinClubNotice(null).subscribe();
+    const req = http.expectOne('/api/v1/conversations/club/pin');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ text: null });
+    req.flush({});
+  });
 });

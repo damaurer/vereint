@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import de.maurer.baseservice.push.NoOpPushSender
 import de.maurer.baseservice.push.PushProperties
 import de.maurer.baseservice.push.PushSender
+import de.maurer.baseservice.push.VapidKeys
 import de.maurer.baseservice.push.VapidPushSender
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -26,7 +27,15 @@ class PushConfig {
     @Bean
     @ConditionalOnProperty(prefix = "vereint.push", name = ["enabled"], havingValue = "true")
     fun vapidPushSender(properties: PushProperties, objectMapper: ObjectMapper): PushSender =
-        VapidPushSender(properties, objectMapper)
+        VapidPushSender(
+            // Schlüssel aus Terraform kommen DER-kodiert; ungültige Werte brechen
+            // den Start ab, statt Push still ins Leere laufen zu lassen.
+            properties.copy(
+                publicKey = VapidKeys.normalizePublicKey(properties.publicKey),
+                privateKey = VapidKeys.normalizePrivateKey(properties.privateKey)
+            ),
+            objectMapper
+        )
 
     @Bean
     @ConditionalOnMissingBean(PushSender::class)

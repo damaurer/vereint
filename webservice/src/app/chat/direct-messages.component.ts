@@ -9,25 +9,34 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { forkJoin, map, type Subscription } from 'rxjs';
+import type { ConversationSummary, DirectoryMember } from '../api/api.types';
+import { describeApiError } from '../api/api-client.service';
 import { AsyncState } from '../member/async-state';
-import { AvatarBadgeComponent, StatusBadgeComponent } from '../ui';
-import { ChatDataService } from './chat-data.service';
-import type { ChatOverview, DirectConversation } from './chat.model';
+import { formatDateTime } from '../member/member-format';
+import { AvatarBadgeComponent, BottomSheetComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
+import { CHAT_LIST_REFRESH_MS, ChatApiService } from './chat-api.service';
+import { CHAT_LAYOUT_STYLES } from './chat-styles';
+import { ChatThreadComponent } from './chat-thread.component';
+
+interface DirectPageData {
+  myId: string;
+  conversations: ConversationSummary[];
+}
 
 /**
- * Direktnachrichten-Liste (TICKET-035).
+ * Direktnachrichten (`/direktnachrichten`).
  *
- * Zeigt die Einzelgespräche des Mitglieds mit Avatar, letztem Text, Zeitlabel
- * und Ungelesen-Indikator, dazu ein clientseitiges Suchfeld. Der Verlauf einer
- * Konversation öffnet sich im geräteübergreifenden Messenger (`/chat`).
+ * Listet die eigenen Einzelgespräche (Name, letzte Nachricht, Ungelesen-Badge)
+ * mit Suchfeld, öffnet den Verlauf daneben bzw. mobil als eigene Ansicht und
+ * startet über „Neue Nachricht“ ein Gespräch mit einem Mitglied aus dem
+ * Verzeichnis (`POST /conversations/direct` liefert bestehende Chats zurück).
  *
- * Wie der Gruppen-Chat lädt und rendert diese Ansicht ausschließlich im
- * Browser; im SSR-HTML erscheinen keine privaten Konversationen und es wird
- * nichts gecacht (siehe `AGENTS.md`). Die sichtbaren Konversationen bestimmt
- * serverseitig der Fachservice (`deny by default`).
+ * Lädt und rendert ausschließlich im Browser; im SSR-HTML erscheinen keine
+ * privaten Konversationen und es wird nichts gecacht (siehe `AGENTS.md`).
  */
 @Component({
   selector: 'app-direct-messages',
@@ -36,20 +45,20 @@ import { TranslatePipe } from '../i18n';
     FormsModule,
     RouterLink,
     AvatarBadgeComponent,
-    StatusBadgeComponent,
+    BottomSheetComponent,
+    ChatThreadComponent,
     TranslatePipe,
   ],
   template: `
     <main class="page-shell">
       <section class="page-card chat-card" aria-labelledby="dm-title">
-        <div class="dm-head">
+        <div class="chat-head">
           <div>
             <span class="eyebrow">{{ 'chat.direct.eyebrow' | t }}</span>
             <h1 id="dm-title">{{ 'chat.direct.title' | t }}</h1>
           </div>
-          <vereint-status-badge [label]="'chat.direct.badge' | t" />
+          <a class="member-back" routerLink="/chat">{{ 'chat.direct.toGroupChat' | t }}</a>
         </div>
-        <a class="member-back" routerLink="/chat">{{ 'chat.direct.toGroupChat' | t }}</a>
 
         @if (isBusy()) {
           <vereint-state
@@ -64,84 +73,180 @@ import { TranslatePipe } from '../i18n';
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
-        } @else if (model(); as data) {
-          <label class="dm-search">
-            <span class="dm-search-label">{{ 'chat.direct.searchLabel' | t }}</span>
+        } @else if (data(); as page) {
+          <div class="chat-layout" [class.is-thread]="mobileView() === 'thread'">
+            <aside class="chat-aside" [attr.aria-label]="'chat.list.ariaLabel' | t">
+              <button type="button" class="member-button dm-new" (click)="openPicker()">
+                {{ 'chat.list.newMessage' | t }}
+              </button>
+              @if (startError()) {
+                <p class="manage-action-error" role="alert">{{ startError() }}</p>
+              }
+
+              @if (directs().length > 0) {
+                <label class="chat-search">
+                  <span class="chat-search-label">{{ 'chat.direct.searchLabel' | t }}</span>
+                  <input
+                    name="search"
+                    type="search"
+                    autocomplete="off"
+                    [placeholder]="'chat.direct.searchPlaceholder' | t"
+                    [ngModel]="term()"
+                    (ngModelChange)="term.set($event)"
+                  />
+                </label>
+              }
+
+              <h2 class="chat-aside-title">
+                {{ 'chat.direct.conversations' | t: { count: filtered().length } }}
+              </h2>
+              @if (filtered().length === 0) {
+                <vereint-state
+                  kind="empty"
+                  [title]="'chat.direct.emptyTitle' | t"
+                  [message]="
+                    (directs().length === 0 ? 'chat.direct.emptyStart' : 'chat.direct.emptyMessage') | t
+                  "
+                />
+              } @else {
+                <ul class="chat-conversations dm-list">
+                  @for (conversation of filtered(); track conversation.id) {
+                    <li>
+                      <button
+                        type="button"
+                        class="chat-conversation dm-item"
+                        [class.is-active]="conversation.id === selectedId()"
+                        [attr.aria-current]="conversation.id === selectedId() ? 'true' : null"
+                        (click)="select(conversation.id)"
+                      >
+                        <vereint-avatar-badge [name]="partnerName(conversation)" />
+                        <span class="chat-conversation-body">
+                          <span class="chat-conversation-top">
+                            <span class="chat-conversation-name dm-name">{{ partnerName(conversation) }}</span>
+                            @if (conversation.lastMessage; as last) {
+                              <span class="chat-conversation-time dm-time">{{
+                                formatDateTime(last.createdAt)
+                              }}</span>
+                            }
+                          </span>
+                          <span class="chat-conversation-preview dm-preview">
+                            @if (conversation.lastMessage; as last) {
+                              {{ last.message }}
+                            } @else {
+                              {{ 'chat.list.noMessages' | t }}
+                            }
+                          </span>
+                        </span>
+                        @if (conversation.unreadCount > 0) {
+                          <span
+                            class="chat-unread dm-unread"
+                            [attr.aria-label]="'chat.unread' | t: { count: conversation.unreadCount }"
+                          >
+                            {{ conversation.unreadCount }}
+                          </span>
+                        }
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </aside>
+
+            <div class="chat-main">
+              @if (selected(); as conversation) {
+                <app-chat-thread
+                  [conversation]="conversation"
+                  [myId]="page.myId"
+                  (read)="onRead($event)"
+                  (sent)="refreshList()"
+                  (back)="backToList()"
+                />
+              } @else {
+                <vereint-state
+                  kind="empty"
+                  [title]="'chat.direct.noneSelectedTitle' | t"
+                  [message]="'chat.direct.noneSelectedMessage' | t"
+                />
+              }
+            </div>
+          </div>
+        }
+      </section>
+
+      <vereint-bottom-sheet [open]="pickerOpen()" [title]="'chat.direct.pickerTitle' | t" (closed)="closePicker()">
+        <div class="dm-picker">
+          <label class="dm-picker-search">
+            <span>{{ 'chat.direct.pickerSearchLabel' | t }}</span>
             <input
-              name="search"
+              name="memberSearch"
               type="search"
               autocomplete="off"
-              [placeholder]="'chat.direct.searchPlaceholder' | t"
-              [(ngModel)]="query"
-              (ngModelChange)="term.set($event)"
+              [placeholder]="'chat.direct.pickerSearchPlaceholder' | t"
+              [ngModel]="memberTerm()"
+              (ngModelChange)="memberTerm.set($event)"
             />
           </label>
-
-          <h2 class="member-subtitle">
-            {{ 'chat.direct.conversations' | t: { count: filtered().length } }}
-          </h2>
-          @if (filtered().length === 0) {
+          @if (directory.isLoading() || (directory.status() === 'idle' && pickerOpen())) {
+            <vereint-state
+              kind="loading"
+              [title]="'common.loading' | t"
+              [message]="'chat.direct.pickerLoading' | t"
+            />
+          } @else if (directory.isError()) {
+            <vereint-state
+              kind="error"
+              [title]="'chat.direct.pickerUnavailable' | t"
+              [message]="directory.errorMessage()"
+              (retry)="loadDirectory()"
+            />
+          } @else if (members().length === 0) {
             <vereint-state
               kind="empty"
-              [title]="'chat.direct.emptyTitle' | t"
-              [message]="'chat.direct.emptyMessage' | t"
+              [title]="'chat.direct.pickerEmptyTitle' | t"
+              [message]="'chat.direct.pickerEmptyMessage' | t"
             />
           } @else {
-            <ul class="dm-list">
-              @for (conversation of filtered(); track conversation.id) {
+            <ul class="dm-members">
+              @for (member of members(); track member.id) {
                 <li>
-                  <a class="dm-item" routerLink="/chat">
-                    <span class="dm-avatar-wrap">
-                      <vereint-avatar-badge [name]="conversation.partnerName" />
-                      @if (conversation.online) {
-                        <span class="dm-online" [attr.aria-label]="'chat.online' | t"></span>
-                      }
-                    </span>
-                    <span class="dm-body">
-                      <span class="dm-name">{{ conversation.partnerName }}</span>
-                      <span class="dm-preview">{{ conversation.lastText }}</span>
-                    </span>
-                    <span class="dm-meta">
-                      <span class="dm-time">{{ conversation.lastLabel }}</span>
-                      @if (conversation.unreadCount > 0) {
-                        <span
-                          class="dm-unread"
-                          [attr.aria-label]="'chat.unread' | t: { count: conversation.unreadCount }"
-                        >
-                          {{ conversation.unreadCount }}
-                        </span>
-                      }
-                    </span>
-                  </a>
+                  <button
+                    type="button"
+                    class="dm-member"
+                    [disabled]="starting() !== null"
+                    (click)="startWith(member)"
+                  >
+                    <vereint-avatar-badge [name]="member.displayName" />
+                    <span class="dm-member-name">{{ member.displayName }}</span>
+                    @if (starting() === member.id) {
+                      <span class="dm-member-hint">{{ 'chat.direct.pickerStarting' | t }}</span>
+                    }
+                  </button>
                 </li>
               }
             </ul>
           }
-        }
-      </section>
+        </div>
+      </vereint-bottom-sheet>
     </main>
   `,
   styles: [
+    CHAT_LAYOUT_STYLES,
     `
-      .dm-head {
+      .dm-new {
+        width: 100%;
+      }
+      .dm-picker {
         display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: var(--space-2);
+        flex-direction: column;
+        gap: var(--space-3);
       }
-      .dm-search {
-        display: block;
-        margin-top: var(--space-2);
+      .dm-picker-search {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        font-weight: 600;
       }
-      .dm-search-label {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-        white-space: nowrap;
-      }
-      .dm-search input {
+      .dm-picker-search input {
         width: 100%;
         padding: 0.7rem 0.9rem;
         border-radius: 999px;
@@ -149,122 +254,211 @@ import { TranslatePipe } from '../i18n';
         background-color: var(--color-surface-raised);
         color: inherit;
         font: inherit;
+        font-weight: 400;
       }
-      .dm-list {
+      .dm-members {
         list-style: none;
-        margin: 0.5rem 0 0;
+        margin: 0;
         padding: 0;
         display: grid;
         gap: var(--space-2);
+        max-height: 50vh;
+        overflow-y: auto;
       }
-      .dm-item {
+      .dm-member {
+        width: 100%;
         display: flex;
         align-items: center;
-        gap: var(--space-3);
-        padding: var(--space-3);
-        border-radius: var(--radius-md);
+        gap: var(--space-2);
+        padding: var(--space-2);
         border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
         background-color: var(--color-surface-raised);
         color: inherit;
-        text-decoration: none;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
       }
-      .dm-avatar-wrap {
-        position: relative;
-        flex: none;
-      }
-      .dm-online {
-        position: absolute;
-        right: -1px;
-        bottom: -1px;
-        width: 0.65rem;
-        height: 0.65rem;
-        border-radius: 50%;
-        background-color: #16a34a;
-        border: 2px solid var(--color-surface-raised);
-      }
-      .dm-body {
+      .dm-member-name {
         flex: 1;
-        min-width: 0;
-      }
-      .dm-name {
-        display: block;
         font-weight: 700;
         overflow-wrap: anywhere;
       }
-      .dm-preview {
-        display: block;
+      .dm-member-hint {
         color: var(--color-text-muted);
         font-size: 0.85rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .dm-meta {
-        flex: none;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0.35rem;
-      }
-      .dm-time {
-        color: var(--color-text-muted);
-        font-size: 0.8rem;
-        white-space: nowrap;
-      }
-      .dm-unread {
-        min-width: 1.4rem;
-        height: 1.4rem;
-        padding: 0 0.35rem;
-        display: grid;
-        place-items: center;
-        border-radius: 999px;
-        background-color: var(--color-brand);
-        color: #1a1206;
-        font-size: 0.8rem;
-        font-weight: 700;
       }
     `,
   ],
 })
 export class DirectMessagesComponent implements OnInit, OnDestroy {
-  private readonly data = inject(ChatDataService);
+  private readonly api = inject(ChatApiService);
+  private readonly route = inject(ActivatedRoute);
   private readonly platformId = inject(PLATFORM_ID);
 
-  protected readonly load = new AsyncState<ChatOverview>();
-  protected readonly model = signal<ChatOverview | null>(null);
+  protected readonly load = new AsyncState<DirectPageData>();
+  protected readonly directory = new AsyncState<DirectoryMember[]>();
+  protected readonly data = signal<DirectPageData | null>(null);
+  protected readonly selectedId = signal<string | null>(null);
+  protected readonly mobileView = signal<'list' | 'thread'>('list');
   protected readonly term = signal('');
+  protected readonly memberTerm = signal('');
+  protected readonly pickerOpen = signal(false);
+  protected readonly starting = signal<string | null>(null);
+  protected readonly startError = signal<string | null>(null);
+  protected readonly formatDateTime = formatDateTime;
 
-  protected query = '';
+  private listTimer: ReturnType<typeof setInterval> | null = null;
+  private listSub?: Subscription;
 
-  /** Konversationen gefiltert nach dem Suchbegriff (Name oder Text). */
-  protected readonly filtered = computed<DirectConversation[]>(() => {
-    const data = this.model();
-    if (!data) return [];
+  /** Eigene Direktchats in Server-Reihenfolge (neueste Nachricht zuerst). */
+  protected readonly directs = computed<ConversationSummary[]>(() =>
+    (this.data()?.conversations ?? []).filter((conversation) => conversation.type === 'direct'),
+  );
+
+  /** Direktchats gefiltert nach Name oder letzter Nachricht. */
+  protected readonly filtered = computed<ConversationSummary[]>(() => {
     const needle = this.term().trim().toLowerCase();
-    if (!needle) return data.conversations;
-    return data.conversations.filter(
+    if (!needle) return this.directs();
+    return this.directs().filter(
       (conversation) =>
-        conversation.partnerName.toLowerCase().includes(needle) ||
-        conversation.lastText.toLowerCase().includes(needle),
+        this.partnerName(conversation).toLowerCase().includes(needle) ||
+        (conversation.lastMessage?.message ?? '').toLowerCase().includes(needle),
     );
+  });
+
+  protected readonly selected = computed<ConversationSummary | null>(() => {
+    const id = this.selectedId();
+    return this.directs().find((conversation) => conversation.id === id) ?? null;
+  });
+
+  /** Mitglieder für die Auswahl: ohne mich selbst, nach Name gefiltert und sortiert. */
+  protected readonly members = computed<DirectoryMember[]>(() => {
+    const myId = this.data()?.myId;
+    const needle = this.memberTerm().trim().toLowerCase();
+    return (this.directory.data() ?? [])
+      .filter((member) => member.id !== myId)
+      .filter((member) => !needle || member.displayName.toLowerCase().includes(needle))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName, 'de'));
   });
 
   ngOnInit(): void {
     // Private Konversationen ausschließlich im Browser laden; SSR bleibt leer.
     if (!isPlatformBrowser(this.platformId)) return;
     this.reload();
+    this.listTimer = setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState !== 'hidden') this.refreshList();
+    }, CHAT_LIST_REFRESH_MS);
   }
 
   ngOnDestroy(): void {
     this.load.destroy();
+    this.directory.destroy();
+    this.listSub?.unsubscribe();
+    if (this.listTimer !== null) clearInterval(this.listTimer);
+    this.listTimer = null;
   }
 
   protected reload(): void {
-    this.load.run(this.data.loadOverview(), (overview) => this.model.set(overview));
+    const source = forkJoin({ me: this.api.me(), conversations: this.api.conversations() }).pipe(
+      map(({ me, conversations }) => ({ myId: me.id, conversations })),
+    );
+    this.load.run(source, (page) => {
+      this.data.set(page);
+      const wanted = this.route.snapshot.queryParamMap.get('id');
+      const match = this.directs().find((conversation) => conversation.id === wanted);
+      if (match) {
+        this.select(match.id);
+      } else if (!this.selected()) {
+        this.selectedId.set(this.directs()[0]?.id ?? null);
+      }
+    });
   }
 
-  /** Zeigt an, ob noch geladen wird (inklusive initialem SSR-/Idle-Zustand). */
   protected isBusy(): boolean {
-    return !this.load.isError() && this.model() === null;
+    return !this.load.isError() && this.data() === null;
+  }
+
+  protected partnerName(conversation: ConversationSummary): string {
+    return conversation.partnerName ?? conversation.title;
+  }
+
+  protected select(id: string): void {
+    this.selectedId.set(id);
+    this.mobileView.set('thread');
+  }
+
+  protected backToList(): void {
+    this.mobileView.set('list');
+  }
+
+  protected onRead(summary: ConversationSummary): void {
+    const current = this.data();
+    if (!current) return;
+    this.data.set({
+      ...current,
+      conversations: current.conversations.map((conversation) =>
+        conversation.id === summary.id
+          ? { ...conversation, unreadCount: summary.unreadCount, lastMessage: summary.lastMessage ?? conversation.lastMessage }
+          : conversation,
+      ),
+    });
+  }
+
+  protected openPicker(): void {
+    this.startError.set(null);
+    this.memberTerm.set('');
+    this.pickerOpen.set(true);
+    if (!this.directory.isSuccess()) this.loadDirectory();
+  }
+
+  protected closePicker(): void {
+    this.pickerOpen.set(false);
+  }
+
+  protected loadDirectory(): void {
+    this.directory.run(this.api.directory());
+  }
+
+  /** Startet bzw. öffnet den Direktchat mit diesem Mitglied. */
+  protected startWith(member: DirectoryMember): void {
+    if (this.starting() !== null) return;
+    this.starting.set(member.id);
+    this.startError.set(null);
+    this.api.startDirect(member.id).subscribe({
+      next: (conversation) => {
+        this.starting.set(null);
+        this.pickerOpen.set(false);
+        const current = this.data();
+        if (current && !current.conversations.some((entry) => entry.id === conversation.id)) {
+          this.data.set({ ...current, conversations: [conversation, ...current.conversations] });
+        }
+        this.term.set('');
+        this.select(conversation.id);
+      },
+      error: (error: unknown) => {
+        this.starting.set(null);
+        this.pickerOpen.set(false);
+        this.startError.set(describeApiError(error));
+      },
+    });
+  }
+
+  /** Lädt die Liste still nach (Ungelesen-Zähler, Vorschau). */
+  protected refreshList(): void {
+    if (this.data() === null) return;
+    this.listSub?.unsubscribe();
+    this.listSub = this.api.conversations().subscribe({
+      next: (conversations) => {
+        const current = this.data();
+        if (!current) return;
+        // Frisch angelegte Chats ohne Nachricht behalten, falls der Server sie noch nicht liefert.
+        const missing = current.conversations.filter(
+          (entry) => entry.type === 'direct' && !conversations.some((fresh) => fresh.id === entry.id),
+        );
+        this.data.set({ ...current, conversations: [...conversations, ...missing] });
+      },
+      error: () => undefined,
+    });
   }
 }

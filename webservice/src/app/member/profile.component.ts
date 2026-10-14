@@ -8,6 +8,7 @@ import { HeroGreetingComponent, RoleChipComponent } from '../ui';
 import { IconComponent } from '../ui/icon.component';
 import { StateComponent } from '../ui/state.component';
 import { ThemeService, type ThemePreference } from '../shell/theme.service';
+import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
 import { I18nService, TranslatePipe } from '../i18n';
 
 /**
@@ -22,7 +23,14 @@ import { I18nService, TranslatePipe } from '../i18n';
  */
 @Component({
   selector: 'app-member-profile',
-  imports: [HeroGreetingComponent, RoleChipComponent, IconComponent, StateComponent, TranslatePipe],
+  imports: [
+    HeroGreetingComponent,
+    RoleChipComponent,
+    IconComponent,
+    StateComponent,
+    TranslatePipe,
+    PwaSettingsComponent,
+  ],
   templateUrl: './profile.component.html',
   styles: [
     `

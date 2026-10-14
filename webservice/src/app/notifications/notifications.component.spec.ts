@@ -38,6 +38,7 @@ describe('NotificationsComponent', () => {
     listSubscriptions: ReturnType<typeof vi.fn>;
     registerSubscription: ReturnType<typeof vi.fn>;
     deleteSubscription: ReturnType<typeof vi.fn>;
+    respondToEvent: ReturnType<typeof vi.fn>;
   };
 
   const create = async () => {
@@ -67,6 +68,7 @@ describe('NotificationsComponent', () => {
       listSubscriptions: vi.fn(() => of([])),
       registerSubscription: vi.fn(() => of({})),
       deleteSubscription: vi.fn(() => of(undefined)),
+      respondToEvent: vi.fn(() => of({})),
     };
   });
 
@@ -99,5 +101,42 @@ describe('NotificationsComponent', () => {
 
     expect(api.markAllRead).toHaveBeenCalled();
     expect(cmp['unreadCount']()).toBe(0);
+  });
+
+  it('links notifications to their target and labels event types', async () => {
+    api.list.mockReturnValue(
+      of([
+        { ...mockNotifications[0], id: 'n-3', type: 'event_reminder', title: 'Gleich gehts los', link: '/events/e-7' },
+        { ...mockNotifications[1], id: 'n-4', type: 'event_cancelled', title: 'Fällt aus', link: '/events/e-8' },
+        { ...mockNotifications[1], id: 'n-5', type: 'announcement', title: 'Rundbrief', link: '/chat' },
+      ]),
+    );
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('.item-open'));
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/events/e-7', '/events/e-8', '/chat']);
+    expect(links[0].textContent).toContain('Zum Event');
+    expect(links[2].textContent).toContain('Öffnen');
+    const text = root.textContent ?? '';
+    expect(text).toContain('Erinnerung');
+    expect(text).toContain('Abgesagt');
+    expect(root.querySelector('.item-accept')).toBeNull();
+  });
+
+  it('answers an event invitation and marks it read', async () => {
+    api.list.mockReturnValue(
+      of([{ ...mockNotifications[0], id: 'n-9', type: 'event_invitation', title: 'Einladung: Grillen', link: '/events/e-1' }]),
+    );
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).toContain('Einladung');
+    (root.querySelector('.item-accept') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(api.respondToEvent).toHaveBeenCalledWith('e-1', 'accepted');
+    expect(api.markRead).toHaveBeenCalledWith('n-9');
+    expect(root.textContent).toContain('Du hast zugesagt');
+    expect(root.querySelector('.item-accept')).toBeNull();
+    expect(root.querySelector('.item-decline')).toBeTruthy();
   });
 });

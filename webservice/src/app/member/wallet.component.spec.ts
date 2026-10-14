@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
@@ -106,6 +106,14 @@ describe('WalletComponent', () => {
     expect(negative?.textContent).toContain('7,50');
   });
 
+  it('lists the newest booking first', async () => {
+    const fixture = await create();
+    const titles = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.member-list-title'),
+    ).map((node) => node.textContent?.trim());
+    expect(titles).toEqual(['Kauf', 'Aufladung']);
+  });
+
   it('filters the history to spendings via the chips', async () => {
     const fixture = await create();
     const root = fixture.nativeElement as HTMLElement;
@@ -120,6 +128,27 @@ describe('WalletComponent', () => {
     );
     expect(titles).toContain('Kauf');
     expect(titles).not.toContain('Aufladung');
+  });
+
+  it('hides the top-up action for regular members', async () => {
+    api.loadProfile.mockReturnValue(of({ ...profile, roles: ['member'] }));
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('vereint-balance-card button')).toBeNull();
+    expect(html(fixture)).not.toContain('Kassenwart direkt');
+  });
+
+  it('links board members from the top-up action to the treasury', async () => {
+    api.loadProfile.mockReturnValue(of({ ...profile, roles: ['member', 'board'] }));
+    const fixture = await create();
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    const button = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+      'vereint-balance-card button',
+    );
+    expect(button).toBeTruthy();
+    button!.click();
+    expect(navigate).toHaveBeenCalledWith('/board/treasury');
   });
 
   it('shows an empty state when there are no entries', async () => {

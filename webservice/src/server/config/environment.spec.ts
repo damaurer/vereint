@@ -5,6 +5,7 @@ import {
   loadEnvFile,
   MINIMUM_SESSION_SECRET_BYTES,
   resolveServerEnvironment,
+  ssrAllowedHosts,
 } from './environment';
 
 const VALID_SESSION_SECRET = 'a'.repeat(MINIMUM_SESSION_SECRET_BYTES);
@@ -210,5 +211,16 @@ describe('assertServerEnvironment', () => {
     expect(collectServerEnvironmentErrors(env)).toContain(
       'SESSION_COOKIE_SECURE muss in Produktion aktiv sein.',
     );
+  });
+});
+
+describe('ssrAllowedHosts', () => {
+  it('allows the public domain with and without port', () => {
+    expect(ssrAllowedHosts('https://vereint.example.com')).toEqual(['vereint.example.com']);
+    expect(ssrAllowedHosts('https://vereint.test:8443')).toEqual(['vereint.test:8443', 'vereint.test']);
+  });
+
+  it('adds hosts from NG_ALLOWED_HOSTS and ignores an invalid base URL', () => {
+    expect(ssrAllowedHosts('not a url', 'a.example.com, b.example.com,')).toEqual(['a.example.com', 'b.example.com']);
   });
 });

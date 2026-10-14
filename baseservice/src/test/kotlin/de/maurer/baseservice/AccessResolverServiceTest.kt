@@ -194,6 +194,7 @@ class AccessResolverServiceTest {
 
         assertTrue(decision.roles.contains(UserRole.ADMIN))
         assertTrue(decision.allowedAppContexts.contains(AppContext.ADMIN))
+        assertTrue(decision.allowedAppContexts.contains(AppContext.TABLET_RECORDER))
         assertTrue(decision.allowedAppContexts.contains(AppContext.BOARD_GENERAL))
         assertTrue(decision.allowedAppContexts.contains(AppContext.BOARD_TREASURY))
         assertTrue(decision.allowedAppContexts.contains(AppContext.BOARD_COMMUNICATIONS))

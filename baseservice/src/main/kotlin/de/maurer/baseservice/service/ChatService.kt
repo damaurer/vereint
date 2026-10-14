@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+import kotlin.jvm.optionals.getOrNull
 
 /**
  * Fachlicher Slice für den Event-Chat und die Chat-Mitgliedschaften (TICKET-019).
@@ -61,7 +62,7 @@ class ChatService(
 
     // --- Mitglieder (authentifiziert per JWT) ---
 
-    @Transactional(readOnly = true)
+    // Nicht readOnly: legt den Event-Chat beim ersten Abruf an.
     fun getConversation(eventId: UUID, principal: UserPrincipal): ConversationDto {
         val caller = userService.getOrCreateUser(principal)
         val event = requireEvent(eventId)
@@ -202,7 +203,7 @@ class ChatService(
 
     // --- Interne Helfer ---
 
-    private fun requireEvent(id: UUID): EventEntity =
+    internal fun requireEvent(id: UUID): EventEntity =
         eventRepository.findById(id).orElseThrow {
             ResourceNotFoundException(Msg("error.event.notFound", id), ErrorCode.NOT_FOUND)
         }
@@ -211,22 +212,15 @@ class ChatService(
      * Liefert die Event-Konversation oder legt sie beim ersten Zugriff an. Je
      * Event existiert genau eine Konversation vom Typ `event`.
      */
-    private fun requireEventConversation(event: EventEntity): ConversationEntity {
-        val existing = conversationRepository.findByEventId(event.id)
-            .firstOrNull { it.type == CONVERSATION_TYPE_EVENT }
-        if (existing != null) {
-            return existing
-        }
-        val conversation = ConversationEntity(
-            type = CONVERSATION_TYPE_EVENT,
-            event = event,
-            title = event.title
-        )
-        return conversationRepository.save(conversation)
+    internal fun requireEventConversation(event: EventEntity): ConversationEntity {
+        val key = eventConversationKey(event.id)
+        conversationRepository.findByDirectKey(key).getOrNull()?.let { return it }
+        conversationRepository.insertEventIfAbsent(UUID.randomUUID(), CONVERSATION_TYPE_EVENT, event.id, event.title, key)
+        return conversationRepository.findByDirectKey(key).orElseThrow()
     }
 
     /** Mitglieder erreichen den Chat als Owner, Teilnehmer oder Vorstand/Administration. */
-    private fun requireMemberAccess(caller: UserEntity, principal: UserPrincipal, event: EventEntity) {
+    internal fun requireMemberAccess(caller: UserEntity, principal: UserPrincipal, event: EventEntity) {
         val allowed = isBoardOrAdmin(caller, principal) ||
             event.owner?.id == caller.id ||
             eventParticipantRepository.findByEventIdAndUserId(event.id, caller.id).isPresent
@@ -239,7 +233,7 @@ class ChatService(
     }
 
     /** Beendete oder abgesagte Events nehmen keine neuen Nachrichten mehr an. */
-    private fun requireEventOpenForChat(event: EventEntity) {
+    internal fun requireEventOpenForChat(event: EventEntity) {
         if (event.status == EventStatus.cancelled || event.status == EventStatus.archived) {
             throw EventNotActiveException(
                 Msg("error.chat.eventClosed"),
@@ -289,11 +283,9 @@ class ChatService(
         return guest
     }
 
-    private fun ensureMember(conversation: ConversationEntity, user: UserEntity) {
+    internal fun ensureMember(conversation: ConversationEntity, user: UserEntity) {
         if (conversationMemberRepository.findByConversationIdAndUserId(conversation.id, user.id).isEmpty) {
-            conversationMemberRepository.save(
-                ConversationMemberEntity(conversation = conversation, user = user, guest = null)
-            )
+            conversationMemberRepository.insertUserIfAbsent(UUID.randomUUID(), conversation.id, user.id)
         }
     }
 
@@ -309,7 +301,7 @@ class ChatService(
         chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(conversation.id)
             .map { toMessageDto(it) }
 
-    private fun requireMessageText(value: String?): String {
+    internal fun requireMessageText(value: String?): String {
         val text = value?.trim()
         if (text.isNullOrEmpty()) {
             throw InvalidRequestException(Msg("error.field.blank", "message"), ErrorCode.INVALID_REQUEST)
@@ -317,9 +309,9 @@ class ChatService(
         return text
     }
 
-    private fun normalizeImageUrl(value: String?): String? = value?.trim()?.ifBlank { null }
+    internal fun normalizeImageUrl(value: String?): String? = value?.trim()?.ifBlank { null }
 
-    private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean {
+    internal fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean {
         val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
         val roles = principal.roles + dbRoles
         return roles.any { it == UserRole.BOARD || it == UserRole.ADMIN }
@@ -335,7 +327,7 @@ class ChatService(
             expiresAt = conversation.expiresAt
         )
 
-    private fun toMessageDto(message: ChatMessageEntity): ChatMessageDto {
+    internal fun toMessageDto(message: ChatMessageEntity): ChatMessageDto {
         val sender = message.sender
         val guest = message.guest
         val senderType = if (sender != null) SENDER_TYPE_MEMBER else SENDER_TYPE_GUEST
@@ -356,6 +348,9 @@ class ChatService(
     companion object {
         const val CONVERSATION_TYPE_EVENT = "event"
         const val CONVERSATION_TYPE_MOMENT = "moment"
+
+        /** Eindeutiger Schlüssel des einen Chats je Event (Spalte `direct_key`). */
+        fun eventConversationKey(eventId: UUID) = "event:$eventId"
         const val SENDER_TYPE_MEMBER = "member"
         const val SENDER_TYPE_GUEST = "guest"
         const val UNKNOWN_SENDER_NAME = "Unbekannt"

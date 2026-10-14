@@ -1,5 +1,6 @@
 import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
@@ -8,14 +9,40 @@ import { StatisticsDataService } from './statistics-data.service';
 import type { StatisticsView } from './statistics.types';
 
 const view: StatisticsView = {
-  consumption: [
-    { member: 'Max M.', liters: 18 },
-    { member: 'Lisa S.', liters: 12 },
+  periodDays: 90,
+  totalItems: 42,
+  myItems: 9,
+  myRank: 2,
+  topConsumers: [
+    { memberId: 'm-1', displayName: 'Max Mustermann', count: 18 },
+    { memberId: 'm-2', displayName: 'Lisa Schmidt', count: 9 },
   ],
   attendancePercent: 83,
-  spending: { total: '240.00', currency: 'EUR', changePercent: 14, trend: [3, 5, 7] },
-  topRounds: [{ member: 'Sebastian Müller', rounds: 12 }],
-  drinkRanking: [{ drink: 'Helles (Augustiner)', sharePercent: 64 }],
+  spending: {
+    total: '240.00',
+    currency: 'EUR',
+    changePercent: 14,
+    weekly: ['10.00', '20.00', '0.00', '30.00', '40.00', '50.00', '60.00', '30.00'],
+  },
+  itemRanking: [{ name: 'Helles', count: 27, sharePercent: 64 }],
+  topEvents: [{ eventId: 'e-1', title: 'Sommerfest', count: 30 }],
+};
+
+const emptyView: StatisticsView = {
+  periodDays: 90,
+  totalItems: 0,
+  myItems: 0,
+  myRank: null,
+  topConsumers: [],
+  attendancePercent: null,
+  spending: {
+    total: '0.00',
+    currency: 'EUR',
+    changePercent: null,
+    weekly: ['0.00', '0.00', '0.00', '0.00', '0.00', '0.00', '0.00', '0.00'],
+  },
+  itemRanking: [],
+  topEvents: [],
 };
 
 describe('StatisticsComponent', () => {
@@ -25,6 +52,7 @@ describe('StatisticsComponent', () => {
     TestBed.configureTestingModule({
       imports: [StatisticsComponent],
       providers: [
+        provideRouter([]),
         { provide: StatisticsDataService, useValue: data },
         { provide: PLATFORM_ID, useValue: platform },
       ],
@@ -43,37 +71,66 @@ describe('StatisticsComponent', () => {
     data = { loadStatistics: vi.fn(() => of(view)) };
   });
 
-  it('renders the aggregate cards with values and reuses ui primitives', async () => {
+  it('renders the real aggregates in the cards', async () => {
     const fixture = await create();
     const root = fixture.nativeElement as HTMLElement;
+    const text = html(fixture);
 
-    expect(html(fixture)).toContain('Eber-Analytik');
-    expect(html(fixture)).toContain('Bierkonsum diesen Monat');
-    expect(html(fixture)).toContain('83%');
-    expect(html(fixture)).toContain('12 Runden');
-    expect(html(fixture)).toContain('64% Beliebtheit');
-    expect(html(fixture)).toContain('240,00');
+    expect(text).toContain('Eber-Analytik');
+    expect(text).toContain('letzten 90 Tage');
+    expect(text).toContain('Max Mustermann');
+    expect(text).toContain('18 Striche');
+    expect(text).toContain('Platz 2');
+    expect(text).toContain('83%');
+    expect(text).toContain('240,00');
+    expect(text).toContain('+14% gegenüber den 30 Tagen davor');
+    expect(text).toContain('Helles');
+    expect(text).toContain('64% (27 Stück)');
+    expect(text).toContain('Sommerfest');
+    expect(text).not.toContain('Rundengeber');
 
-    // Shared ui/ primitives instead of bespoke markup.
-    expect(root.querySelector('vereint-stat-card')).toBeTruthy();
-    expect(root.querySelectorAll('vereint-info-panel').length).toBe(2);
     expect(root.querySelectorAll('.bar-fill').length).toBe(2);
+    expect(root.querySelectorAll('.trend-bar').length).toBe(8);
     expect(root.querySelector('.ring')).toBeTruthy();
+    const link = root.querySelector<HTMLAnchorElement>('a.rank-link');
+    expect(link?.getAttribute('href')).toBe('/events/e-1');
   });
 
-  it('shows an empty hint when there are no aggregates', async () => {
+  it('highlights the own rank in the leaderboard', async () => {
+    const fixture = await create();
+    const rows = (fixture.nativeElement as HTMLElement).querySelectorAll('.bar-row');
+    expect(rows[0].classList.contains('bar-row-me')).toBe(false);
+    expect(rows[1].classList.contains('bar-row-me')).toBe(true);
+    expect(rows[1].textContent).toContain('Du');
+  });
+
+  it('shows friendly texts for missing attendance and comparison values', async () => {
     data.loadStatistics.mockReturnValue(
-      of({
-        consumption: [],
-        attendancePercent: 0,
-        spending: { total: '0.00', currency: 'EUR', changePercent: 0, trend: [] },
-        topRounds: [],
-        drinkRanking: [],
-      } satisfies StatisticsView),
+      of({ ...view, attendancePercent: null, spending: { ...view.spending, changePercent: null } }),
     );
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('.ring')).toBeNull();
+    expect(root.querySelector('[data-testid="attendance-empty"]')).toBeTruthy();
+    expect(html(fixture)).not.toContain('gegenüber den 30 Tagen davor');
+  });
+
+  it('shows an empty hint when there is no data at all', async () => {
+    data.loadStatistics.mockReturnValue(of(emptyView));
     const fixture = await create();
     expect(html(fixture)).toContain('Noch keine Auswertungen');
     expect((fixture.nativeElement as HTMLElement).querySelector('.ring')).toBeNull();
+  });
+
+  it('shows card empty states when only some data exists', async () => {
+    data.loadStatistics.mockReturnValue(of({ ...emptyView, attendancePercent: 50 }));
+    const fixture = await create();
+    const text = html(fixture);
+    expect(text).toContain('noch keine Striche');
+    expect(text).toContain('Noch keine Artikel verkauft.');
+    expect(text).toContain('Noch keine Striche bei Events.');
+    expect(text).toContain('keinen Umsatz');
+    expect(text).toContain('50%');
   });
 
   it('shows a neutral retry state on error without leaking data', async () => {
@@ -91,7 +148,6 @@ describe('StatisticsComponent', () => {
 
     expect(root.querySelector('[data-testid="ssr-placeholder"]')).toBeTruthy();
     expect(html(fixture)).toContain('im Browser');
-    // Aggregates must never render server-side.
     expect(root.querySelector('.ring')).toBeNull();
     expect(root.querySelector('.bar-fill')).toBeNull();
     expect(html(fixture)).not.toContain('83%');

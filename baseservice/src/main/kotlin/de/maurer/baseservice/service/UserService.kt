@@ -130,6 +130,22 @@ class UserService(
         return toProfileDto(user)
     }
 
+    /** Aktive Mitglieder für Auswahllisten; für alle Angemeldeten sichtbar. */
+    @Transactional(readOnly = true)
+    fun directory(principal: UserPrincipal): List<MemberDirectoryEntryDto> {
+        getOrCreateUser(principal)
+        return userRepository.findByDisabled(false)
+            .sortedBy { it.displayName.lowercase() }
+            .map { user ->
+                MemberDirectoryEntryDto(
+                    id = user.id.toString(),
+                    displayName = user.displayName,
+                    boardRole = user.boardRole?.name,
+                    roles = rolesOf(user.id)
+                )
+            }
+    }
+
     /**
      * Paginierte, gefilterte und sortierte Benutzerliste für Vorstand und Administration.
      */

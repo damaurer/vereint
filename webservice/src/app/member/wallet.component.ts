@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { forkJoin, switchMap } from 'rxjs';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
@@ -53,14 +54,9 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
             [label]="'member.balance.current' | t"
             [amount]="formatMoney(view.balance.creditBalance, view.balance.currency)"
             [negative]="isNegative(view.balance.creditBalance)"
-            [showTopup]="true"
+            [showTopup]="canManageTreasury()"
             (topup)="onTopup()"
           />
-          @if (topupRequested()) {
-            <p class="member-hint" role="status">
-              {{ 'member.balance.topupHint' | t }}
-            </p>
-          }
 
           <vereint-info-panel icon="treasury" [title]="'member.wallet.treasurerTitle' | t">
             {{ 'member.wallet.treasurerHint' | t }}
@@ -147,10 +143,12 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
 })
 export class WalletComponent implements OnInit, OnDestroy {
   private readonly api = inject(MemberApiService);
+  private readonly router = inject(Router);
 
   protected readonly load = new AsyncState<WalletView>();
   protected readonly filter = signal<LedgerFilter>('all');
-  protected readonly topupRequested = signal(false);
+  /** Nur Vorstand und Administration buchen Aufladungen (in der Kasse). */
+  protected readonly canManageTreasury = signal(false);
   protected readonly formatMoney = formatMoney;
   protected readonly formatDateTime = formatDateTime;
   protected readonly entryTypeLabel = entryTypeLabel;
@@ -166,9 +164,13 @@ export class WalletComponent implements OnInit, OnDestroy {
   /** Filtert die Historie clientseitig nach der gewählten Chip-Auswahl. */
   protected visibleEntries(entries: LedgerEntry[]): LedgerEntry[] {
     const active = this.filter();
-    if (active === 'topup') return entries.filter((entry) => Number(entry.amount) > 0);
-    if (active === 'spend') return entries.filter((entry) => Number(entry.amount) < 0);
-    return entries;
+    // Oben steht die neueste Buchung (der Server liefert aufsteigend).
+    const newestFirst = [...entries].sort(
+      (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+    );
+    if (active === 'topup') return newestFirst.filter((entry) => Number(entry.amount) > 0);
+    if (active === 'spend') return newestFirst.filter((entry) => Number(entry.amount) < 0);
+    return newestFirst;
   }
 
   /** Negatives Guthaben/Buchung (dezimale Zeichenkette) für rote Darstellung. */
@@ -177,22 +179,24 @@ export class WalletComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * „Aufladen“ ist ein reiner UI-Hinweis: die eigentliche Buchung erfolgt
-   * serverseitig durch den Kassenwart, nicht clientseitig.
+   * Mitglieder laden nicht selbst auf. Vorstand/Admin springen in die Kasse,
+   * wo die eigentliche Buchung erfolgt.
    */
   protected onTopup(): void {
-    this.topupRequested.set(true);
+    if (this.canManageTreasury()) void this.router.navigateByUrl('/board/treasury');
   }
 
   protected reload(): void {
     this.load.run(
       this.api.loadProfile().pipe(
-        switchMap((profile) =>
-          forkJoin({
+        switchMap((profile) => {
+          const roles: readonly string[] = profile.roles ?? [];
+          this.canManageTreasury.set(roles.includes('board') || roles.includes('admin'));
+          return forkJoin({
             balance: this.api.getBalance(profile.id),
             entries: this.api.listEntries(profile.id),
-          }),
-        ),
+          });
+        }),
       ),
     );
   }

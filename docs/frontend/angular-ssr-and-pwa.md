@@ -44,10 +44,17 @@ Die Progressive Web App (`pwa/`) gewährleistet Installationsfähigkeit (A2HS - 
 | Ressourcentyp | Caching-Strategie | Begründung |
 | :--- | :--- | :--- |
 | **Statische Bundles (JS, CSS)** | `Cache-First` (Cache-Busting via Hash) | Maximale Ladegeschwindigkeit bei wiederholten Aufrufen. |
-| **Bilder & Icons (SVG, WebP)** | `Stale-While-Revalidate` | Schnelle Offline-Verfügbarkeit von Vereinslogo und Getränkebildern. |
+| **Bilder & Icons (SVG, WebP)** | `Network-First` mit Cache-Fallback | Vereinslogo und Icons bleiben offline sichtbar. |
 | **API-Anfragen (`/api/*`)** | `Network-Only` (kein Caching) | Kassen- und Transaktionsdaten dürfen niemals veraltet sein. |
-| **SSR-Seitenanfragen** | `Network-First` mit Offline-Fallback | Liefert stets aktuelle Seiteninhalte; Offline-Screen bei Verbindungsverlust. |
+| **SSR-Seitenanfragen** | `Network-Only` mit `/offline.html` als Fallback | Seiten enthalten persönliche Daten und werden deshalb nie gecacht; ohne Netz erscheint die Offline-Seite. |
 
 ### 2. VAPID Web Push im Service Worker
 - Der Service Worker registriert einen `push`-Event-Listener.
-- Bei Eintreffen einer verschlüsselten VAPID-Push-Nachricht zeigt der Service Worker eine native Systembenachrichtigung mit Titel, Nachrichtentext, Vereins-Icon und Klick-Routing direkt in die jeweilige Ansicht (z. B. Event-Details oder Chat).
+- Der Server sendet Pushes **ohne Nutzlast**; beim Push-Dienst (Google, Mozilla, Apple) landen also keine Inhalte. Der Service Worker lädt die neueste ungelesene Mitteilung über `/api/v1/notifications` mit der Sitzung nach und zeigt sie als Systembenachrichtigung. Ohne gültige Sitzung erscheint nur „Du hast eine neue Mitteilung.“
+- Ein Klick öffnet `/notifications`. Die Zahl ungelesener Mitteilungen erscheint als App-Badge, wo das Betriebssystem es unterstützt.
+- Opt-in pro Gerät im Profil und auf der Mitteilungsseite (`PwaSettingsComponent`, `PushNotificationsService`). Beim App-Start wird ein bestehendes Abo erneut beim Server angemeldet und bei geändertem VAPID-Schlüssel ersetzt.
+- iPhone/iPad: Web Push gibt es nur in der installierten App (Home-Bildschirm, iOS 16.4+). Das Profil zeigt dafür die Installationsanleitung.
+
+### 3. Installation
+- Manifest mit Icons (inkl. maskable), Shortcuts (Events, Chat, Guthaben, Mitteilungen) und `start_url` `/dashboard`.
+- `InstallPromptService` fängt `beforeinstallprompt` ab; das Profil zeigt dann „Installieren“. Auf iOS erscheint die Anleitung „Teilen → Zum Home-Bildschirm“.

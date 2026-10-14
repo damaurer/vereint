@@ -2,9 +2,11 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { CHAT_LIST_REFRESH_MS } from '../chat/chat-api.service';
 import { AuthService } from '../auth/auth.service';
 import { AuthSessionUser } from '../auth/auth.types';
+import { ChatApiService } from '../chat/chat-api.service';
 import { NotificationsApiService } from '../notifications/notifications-api.service';
 import { AppShellComponent } from './app-shell.component';
 import { BreakpointService } from './breakpoint.service';
@@ -18,6 +20,8 @@ describe('AppShellComponent', () => {
   const viewport = signal<Viewport>('web');
   let session: AuthSessionUser | null;
   let unread: number;
+  let chatUnread: number;
+  let chatUnreadCalls: number;
 
   const member = (roles: AuthSessionUser['roles'], permissions: string[] = []): AuthSessionUser => ({
     uid: 'u-1',
@@ -39,6 +43,15 @@ describe('AppShellComponent', () => {
           provide: NotificationsApiService,
           useValue: { unreadCount: () => of({ unread }) },
         },
+        {
+          provide: ChatApiService,
+          useValue: {
+            unreadCount: () => {
+              chatUnreadCalls += 1;
+              return of({ unread: chatUnread });
+            },
+          },
+        },
       ],
     });
     const fixture = TestBed.createComponent(AppShellComponent);
@@ -53,6 +66,8 @@ describe('AppShellComponent', () => {
   beforeEach(() => {
     session = member(['member']);
     unread = 0;
+    chatUnread = 0;
+    chatUnreadCalls = 0;
     viewport.set('web');
   });
 
@@ -144,5 +159,56 @@ describe('AppShellComponent', () => {
     const text = el(fixture).textContent ?? '';
     expect(text).toContain('Administration');
     expect(text).toContain('Vorstand');
+  });
+
+  const chatLink = (root: HTMLElement, selector: string) =>
+    Array.from(root.querySelectorAll<HTMLAnchorElement>(selector)).find(
+      (node) => node.getAttribute('href') === '/chat',
+    );
+
+  it('shows the unread chat count on the chat entry in the sidebar', async () => {
+    chatUnread = 5;
+    const fixture = await create();
+    const link = chatLink(el(fixture), 'a.shell-nav-link');
+    expect(link?.querySelector('.shell-nav-count')?.textContent?.trim()).toBe('5');
+    expect(link?.getAttribute('aria-label')).toBe('Chat, 5 ungelesen');
+  });
+
+  it('shows the unread chat count in the mobile bottom bar', async () => {
+    viewport.set('mobile');
+    chatUnread = 120;
+    const fixture = await create();
+    const link = chatLink(el(fixture), 'a.shell-bottom-link');
+    expect(link?.querySelector('.shell-nav-count')?.textContent?.trim()).toBe('99+');
+  });
+
+  it('hides the chat badge when nothing is unread', async () => {
+    const fixture = await create();
+    expect(el(fixture).querySelector('.shell-nav-count')).toBeNull();
+    expect(chatLink(el(fixture), 'a.shell-nav-link')?.getAttribute('aria-label')).toBeNull();
+  });
+
+  it('refreshes the chat count periodically and stops on destroy', async () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = await create();
+      const initial = chatUnreadCalls;
+      expect(initial).toBeGreaterThan(0);
+      chatUnread = 2;
+      vi.advanceTimersByTime(CHAT_LIST_REFRESH_MS);
+      fixture.detectChanges();
+      expect(chatUnreadCalls).toBe(initial + 1);
+      expect(chatLink(el(fixture), 'a.shell-nav-link')?.querySelector('.shell-nav-count')?.textContent?.trim()).toBe('2');
+      fixture.destroy();
+      vi.advanceTimersByTime(CHAT_LIST_REFRESH_MS * 2);
+      expect(chatUnreadCalls).toBe(initial + 1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('shows the statistics entry to a plain member', async () => {
+    const fixture = await create();
+    expect(el(fixture).querySelector('a[href="/statistik"]')).toBeTruthy();
   });
 });

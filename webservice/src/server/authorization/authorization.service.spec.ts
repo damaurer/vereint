@@ -84,6 +84,7 @@ describe('Authorization & Access Resolver Service', () => {
       expect(resolvePathAppContext('/app')).toEqual({ appContext: 'memberPwa' });
       expect(resolvePathAppContext('/dashboard')).toEqual({ appContext: 'memberPwa' });
       expect(resolvePathAppContext('/wallet')).toEqual({ appContext: 'memberPwa' });
+      expect(resolvePathAppContext('/events/new')).toEqual({ appContext: 'memberPwa' });
       expect(resolvePathAppContext('/unknown')).toBeNull();
     });
   });
@@ -363,6 +364,35 @@ describe('Authorization & Access Resolver Service', () => {
       expect(second.fromCache).toBe(true);
       expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(accessDecisionCacheSize()).toBe(1);
+    });
+
+    it('re-checks a cached event denial once, so freshly invited members get in', async () => {
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(okResponse(decision({ allowedAppContexts: ['memberPwa'] })))
+        .mockResolvedValueOnce(
+          okResponse(decision({ allowedAppContexts: ['memberPwa', 'event'], eventScopes: ['evt-new'] })),
+        );
+      vi.stubGlobal('fetch', mockFetch);
+      const options = { identity: memberIdentity, accessToken: 'token', sessionId: 'session-invite' };
+
+      await resolveAccessDecision(options);
+      const result = await checkResourceAccess({ ...options, appContext: 'event', eventId: 'evt-new' });
+
+      expect(result.outcome).toBe('allowed');
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('stays denied when the fresh decision denies too', async () => {
+      const mockFetch = vi.fn().mockResolvedValue(okResponse(decision()));
+      vi.stubGlobal('fetch', mockFetch);
+      const options = { identity: memberIdentity, accessToken: 'token', sessionId: 'session-denied' };
+
+      await resolveAccessDecision(options);
+      const result = await checkResourceAccess({ ...options, appContext: 'event', eventId: 'evt-other' });
+
+      expect(result.outcome).toBe('denied');
+      expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
     it('keeps the ttl short', () => {

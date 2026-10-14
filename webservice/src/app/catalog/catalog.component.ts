@@ -88,6 +88,10 @@ type CatalogTab = 'drinks' | 'food';
           }
         </div>
 
+        @if (proposeInfo(); as info) {
+          <p class="manage-action-info" role="status">{{ info }}</p>
+        }
+
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
@@ -557,6 +561,11 @@ type CatalogTab = 'drinks' | 'food';
         gap: 0.75rem;
         margin-top: 1rem;
       }
+      .manage-action-info {
+        color: #15803d;
+        font-weight: 600;
+        margin: 0 0 1rem;
+      }
       .form-error {
         color: #b91c1c;
         font-size: 0.85rem;
@@ -643,6 +652,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
   protected readonly showFoodModal = signal(false);
   protected readonly submitting = signal(false);
   protected readonly formError = signal<string | null>(null);
+  /** Rückmeldung nach einem Vorschlag: Mitglieder sehen nur freigegebene Getränke. */
+  protected readonly proposeInfo = signal<string | null>(null);
 
   // Propose Drink Form
   protected newDrinkName = '';
@@ -791,6 +802,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       next: () => {
         this.submitting.set(false);
         this.closeProposeModal();
+        this.proposeInfo.set(translate('catalog.proposeInfo', { name: payload.name }));
         this.reload();
       },
       error: (err: unknown) => {
