@@ -39,7 +39,8 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den interaktiven Austausch zw
 - **Services**:
   - `ChatService`: Nachrichtenverwaltung und Berechtigungsprüfung (`chat.member`, `chat.event`).
   - `NotificationService`: Erstellung von In-App-Notifications und Auslösen des Push-Versands.
-  - `VapidPushSender`: Erzeugt RFC-8292-konforme VAPID-Header und verschlüsselt Payloads über WebPush-Krypto (`p256dh`, `auth`).
+  - `PushDispatcher`: Stellt nach dem Commit im Hintergrund zu und entfernt ungültige Abos (`404`/`410`).
+  - `VapidPushSender`: Erzeugt RFC-8292-konforme VAPID-Header und sendet Pushes ohne Nutzlast; der Service Worker lädt den Inhalt autorisiert nach.
   - `NoOpPushSender`: Fallback für lokale Tests ohne konfigurierte VAPID-Keys.
 - **Entitäten**: `ConversationEntity`, `ConversationMemberEntity`, `ChatMessageEntity`, `NotificationEntity`, `PushSubscriptionEntity`.
 
@@ -121,10 +122,11 @@ sequenceDiagram
     Spring->>DB: INSERT INTO notifications (user_id, title, body, type, read = false)
     Spring->>DB: SELECT * FROM push_subscriptions WHERE user_id = :userId
     loop Für jedes aktive Abonnement
-        Note over Spring: Signiert VAPID JWT mit privatem Server-Key<br/>Verschlüsselt Payload mit p256dh & auth
-        Spring->>PushService: POST <endpoint> (Encrypted Payload + Authorization: vapid t=...)
+        Note over Spring: Nach dem Commit, im Hintergrund:<br/>signiert VAPID JWT mit privatem Server-Key
+        Spring->>PushService: POST <endpoint> (ohne Nutzlast, Authorization: vapid t=...)
         PushService-->>Spring: 201 Created
         PushService->>Member: Push Event an Service Worker
-        Member->>Member: Zeigt System-Notification im Betriebssystem
+        Member->>Spring: GET /api/v1/notifications (Sitzung)
+        Member->>Member: Zeigt neueste ungelesene Mitteilung als System-Notification
     end
 ```

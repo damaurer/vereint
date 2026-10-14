@@ -7,8 +7,9 @@
  * Worker kann dieses TypeScript nicht importieren).
  *
  * Grundsatz (siehe docs/architektur.md und docs/deployment.md):
- * - Nur sichere, öffentliche, statische Assets und die App-Shell werden
- *   gecacht (`deny by default`).
+ * - Nur sichere, öffentliche, statische Assets werden gecacht (`deny by
+ *   default`). HTML-Seiten nicht, weil das SSR persönliche Daten einbettet;
+ *   ohne Netz zeigt der Worker stattdessen `/offline.html`.
  * - Niemals gecacht: alles unter `/api/`, Nicht-GET-Requests, cross-origin
  *   sowie Antworten mit `Cache-Control: no-store` oder `private`.
  * - Die verbindliche Autorisierung bleibt serverseitig (Express-Auslieferung,
@@ -80,6 +81,13 @@ export function isPrivateResponse(cacheControlHeader: string | null | undefined)
 }
 
 /**
+ * Hash-Segment im Dateinamen, z. B. `main-5RAM3QJT.js` (Angular/esbuild) oder
+ * `styles.deadbeef99.css`. Mindestens eine Ziffer oder ein Großbuchstabe, damit
+ * gewöhnliche Wörter wie `-something.png` nicht als unveränderlich gelten.
+ */
+const HASHED_FILE_PATTERN = /[.-](?=[A-Za-z0-9_]*[0-9A-Z])[A-Za-z0-9_]{8,}\.[a-z0-9]+$/;
+
+/**
  * Gehashte Build-Artefakte (`main-<hash>.js`, `styles-<hash>.css`, Fonts)
  * dürfen als `immutable` cache-first bedient werden. Erkennung anhand eines
  * Hash-Segments im Dateinamen.
@@ -87,5 +95,5 @@ export function isPrivateResponse(cacheControlHeader: string | null | undefined)
 export function isImmutableHashedAsset(pathname: string): boolean {
   if (!isCacheableAssetPath(pathname)) return false;
   const file = pathname.split('/').pop() ?? '';
-  return /[.-][0-9a-f]{8,}\.[a-z0-9]+$/i.test(file);
+  return HASHED_FILE_PATTERN.test(file);
 }
