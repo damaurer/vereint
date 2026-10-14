@@ -17,7 +17,9 @@ data class NotificationDto(
     val body: String,
     val type: String,
     val read: Boolean,
-    val createdAt: Instant
+    val createdAt: Instant,
+    /** Ziel in der App, z. B. `/events/{id}`; `null` ohne eigenes Ziel. */
+    val link: String? = null
 )
 
 /** Anzahl ungelesener Benachrichtigungen des Aufrufers. */
@@ -78,6 +80,25 @@ data class SendNotificationRequest(
 
     @field:Size(max = 64, message = "type {validation.size.max}")
     val type: String? = null
+)
+
+/** Rundbrief an ausgewählte Mitglieder (`userIds`) oder an alle aktiven Mitglieder. */
+data class BroadcastNotificationRequest(
+    val userIds: List<String>? = null,
+
+    val allMembers: Boolean? = null,
+
+    @field:NotBlank(message = "title {validation.notBlank}")
+    @field:Size(max = 255, message = "title {validation.size.max}")
+    val title: String? = null,
+
+    @field:NotBlank(message = "body {validation.notBlank}")
+    @field:Size(max = 4000, message = "body {validation.size.max}")
+    val body: String? = null
+)
+
+data class BroadcastResultDto(
+    val sent: Int
 )
 
 /** Öffentlicher VAPID-Schlüssel, den der Browser zum Abonnieren benötigt. */

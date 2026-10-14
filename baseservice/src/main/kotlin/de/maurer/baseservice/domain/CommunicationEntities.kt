@@ -29,6 +29,22 @@ class ConversationEntity(
     @Column(name = "expires_at")
     var expiresAt: Instant? = null,
 
+    /** Sortierte Nutzer-IDs eines Direktchats; garantiert genau einen Chat je Paar. */
+    @Column(name = "direct_key", length = 80, unique = true)
+    var directKey: String? = null,
+
+    /** Angepinnte Infotafel des Vereinschats (verschlüsselt gespeichert). */
+    @Convert(converter = EncryptedStringConverter::class)
+    @Column(name = "pinned_text")
+    var pinnedText: String? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pinned_by")
+    var pinnedBy: UserEntity? = null,
+
+    @Column(name = "pinned_at")
+    var pinnedAt: Instant? = null,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),
@@ -60,7 +76,11 @@ class ConversationMemberEntity(
 
     @CreatedDate
     @Column(name = "joined_at", nullable = false, updatable = false)
-    var joinedAt: Instant = Instant.now()
+    var joinedAt: Instant = Instant.now(),
+
+    /** Zeitpunkt der zuletzt gelesenen Nachricht; Grundlage für ungelesene Zähler. */
+    @Column(name = "last_read_at")
+    var lastReadAt: Instant? = null
 )
 
 @Entity
@@ -96,6 +116,28 @@ class ChatMessageEntity(
 )
 
 @Entity
+@Table(name = "chat_reactions")
+class ChatReactionEntity(
+    @Id
+    @Column(name = "id", nullable = false)
+    var id: UUID = UUID.randomUUID(),
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "message_id", nullable = false)
+    var message: ChatMessageEntity? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    var user: UserEntity? = null,
+
+    @Column(name = "emoji", length = 16, nullable = false)
+    var emoji: String = "",
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: Instant = Instant.now()
+)
+
+@Entity
 @Table(name = "notifications")
 @EntityListeners(AuditingEntityListener::class)
 class NotificationEntity(
@@ -120,6 +162,10 @@ class NotificationEntity(
 
     @Column(name = "read", nullable = false)
     var read: Boolean = false,
+
+    /** Optionales Ziel in der App, z. B. `/events/{id}` für Einladungen. */
+    @Column(name = "link", length = 512)
+    var link: String? = null,
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

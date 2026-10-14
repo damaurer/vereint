@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.eq
+import org.mockito.ArgumentMatchers.isNull
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
@@ -151,7 +152,7 @@ class MomentServiceTest {
 
         verify(momentSessionRepository).save(any(MomentSessionEntity::class.java) ?: MomentSessionEntity())
         verify(chatService).createMomentConversation(any(EventEntity::class.java) ?: ev, eq("Gemeinsames Anstoßen") ?: "Gemeinsames Anstoßen")
-        verify(notificationService).notifyUsers(anyCollection(), anyString(), anyString(), eq("moment") ?: "moment")
+        verify(notificationService).notifyUsers(anyCollection(), anyString(), anyString(), eq("moment") ?: "moment", isNull())
         verify(auditService).recordMomentAction(
             eq(caller) ?: caller,
             eq(AuditService.ACTION_MOMENT_STARTED) ?: "",

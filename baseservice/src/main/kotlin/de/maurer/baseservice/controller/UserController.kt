@@ -65,6 +65,11 @@ class UserController(
         return ResponseEntity.ok(users)
     }
 
+    @GetMapping("/directory")
+    @Operation(summary = "Mitgliederverzeichnis", description = "Aktive Mitglieder mit Namen und Rollen für Auswahllisten (alle Angemeldeten)")
+    fun directory(): ResponseEntity<List<MemberDirectoryEntryDto>> =
+        ResponseEntity.ok(userService.directory(authContext.getRequiredPrincipal()))
+
     @GetMapping("/{id}")
     @Operation(summary = "Benutzerprofil nach ID abrufen", description = "Liefert das Benutzerprofil für Administratoren oder den Eigentümer")
     fun getUserById(@PathVariable id: String): ResponseEntity<UserProfileDto> {

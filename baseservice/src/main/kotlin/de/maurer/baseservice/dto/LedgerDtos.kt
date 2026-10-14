@@ -115,6 +115,15 @@ data class LedgerEntryDto(
  * `creditBalance` = Topups − Payouts − Kredit-Käufe ± Korrekturen. Käufe im Modus
  * `revenueOnly` verändern das Guthaben nicht, erhöhen aber den Umsatz.
  */
+/** Zeile der Guthabenübersicht in der Kasse. */
+data class MemberBalanceOverviewDto(
+    val memberId: String,
+    val displayName: String,
+    val currency: String,
+    val creditBalance: BigDecimal,
+    val lastEntryAt: Instant?
+)
+
 data class MemberBalanceDto(
     val memberId: String,
     val currency: String,

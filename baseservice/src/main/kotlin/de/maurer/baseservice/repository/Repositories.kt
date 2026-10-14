@@ -55,6 +55,40 @@ interface EventParticipantRepository : JpaRepository<EventParticipantEntity, UUI
     fun findByUserId(userId: UUID): List<EventParticipantEntity>
     fun findByEventIdAndUserId(eventId: UUID, userId: UUID): Optional<EventParticipantEntity>
     fun countByEventId(eventId: UUID): Long
+
+    /** Eingeladene, die noch keine Einladung bekommen haben, bei veröffentlichten bzw. laufenden Events. */
+    @Query(
+        """
+        select p from EventParticipantEntity p join fetch p.event e join fetch p.user u
+        where p.invitationSentAt is null
+          and e.status in :statuses
+          and (e.invitationNotifyAt is null or e.invitationNotifyAt <= :now)
+          and e.startsAt > :now
+          and u.disabled = false
+        """
+    )
+    fun findDueInvitations(
+        @Param("statuses") statuses: Collection<EventStatus>,
+        @Param("now") now: Instant
+    ): List<EventParticipantEntity>
+
+    /** Teilnehmer mit fälliger Erinnerung; der genaue Zeitpunkt wird je Event im Dienst geprüft. */
+    @Query(
+        """
+        select p from EventParticipantEntity p join fetch p.event e join fetch p.user u
+        where p.reminderSentAt is null
+          and p.rsvp <> :declined
+          and e.reminderHoursBefore is not null
+          and e.status in :statuses
+          and e.startsAt > :now
+          and u.disabled = false
+        """
+    )
+    fun findReminderCandidates(
+        @Param("statuses") statuses: Collection<EventStatus>,
+        @Param("declined") declined: RsvpStatus,
+        @Param("now") now: Instant
+    ): List<EventParticipantEntity>
 }
 
 @Repository
@@ -137,6 +171,10 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
     @EntityGraph(attributePaths = ["event", "member", "drink", "actor"])
     fun findByEventId(eventId: UUID): List<LedgerEntryEntity>
 
+    /** Buchungen ab einem Zeitpunkt für die Vereinsstatistik. */
+    @EntityGraph(attributePaths = ["event", "member", "drink", "food", "purchaseSnapshot", "reversesEntry"])
+    fun findByCreatedAtGreaterThanEqual(since: Instant): List<LedgerEntryEntity>
+
     /** Bereits vorhandene Gegenbuchungen zu einer Ursprungsbuchung (Doppelkorrektur vermeiden). */
     fun findByReversesEntryId(reversesEntryId: UUID): List<LedgerEntryEntity>
 
@@ -176,6 +214,8 @@ interface IdempotencyRecordRepository : JpaRepository<IdempotencyRecordEntity, U
 @Repository
 interface ConversationRepository : JpaRepository<ConversationEntity, UUID> {
     fun findByEventId(eventId: UUID): List<ConversationEntity>
+    fun findFirstByTypeOrderByCreatedAtAsc(type: String): Optional<ConversationEntity>
+    fun findByDirectKey(directKey: String): Optional<ConversationEntity>
 }
 
 @Repository
@@ -190,6 +230,28 @@ interface ConversationMemberRepository : JpaRepository<ConversationMemberEntity,
 @Repository
 interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
     fun findByConversationIdOrderByCreatedAtAsc(conversationId: UUID): List<ChatMessageEntity>
+    fun findFirstByConversationIdOrderByCreatedAtDesc(conversationId: UUID): Optional<ChatMessageEntity>
+
+    /** Ungelesene Nachrichten anderer (Mitglieder oder Gäste) seit `after`. */
+    @Query(
+        """
+        select count(m) from ChatMessageEntity m left join m.sender s
+        where m.conversation.id = :conversationId
+          and m.createdAt > :after
+          and (s is null or s.id <> :userId)
+        """
+    )
+    fun countUnread(
+        @Param("conversationId") conversationId: UUID,
+        @Param("userId") userId: UUID,
+        @Param("after") after: Instant
+    ): Long
+}
+
+@Repository
+interface ChatReactionRepository : JpaRepository<ChatReactionEntity, UUID> {
+    fun findByMessageIdIn(messageIds: Collection<UUID>): List<ChatReactionEntity>
+    fun findByMessageIdAndUserIdAndEmoji(messageId: UUID, userId: UUID, emoji: String): Optional<ChatReactionEntity>
 }
 
 @Repository

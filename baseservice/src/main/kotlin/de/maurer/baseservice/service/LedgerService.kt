@@ -55,6 +55,29 @@ class LedgerService(
     private val auditService: AuditService
 ) {
 
+    /**
+     * Guthabenübersicht aller aktiven Mitglieder für die Kasse (Vorstand/Admin),
+     * sortiert nach Namen.
+     */
+    @Transactional(readOnly = true)
+    fun listBalances(principal: UserPrincipal): List<MemberBalanceOverviewDto> {
+        val caller = userService.getOrCreateUser(principal)
+        requireLedgerWrite(caller, principal)
+        return userRepository.findByDisabled(false)
+            .sortedBy { it.displayName.lowercase() }
+            .map { member ->
+                val entries = ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(member.id)
+                val balance = computeBalance(member, entries)
+                MemberBalanceOverviewDto(
+                    memberId = balance.memberId,
+                    displayName = member.displayName,
+                    currency = balance.currency,
+                    creditBalance = balance.creditBalance,
+                    lastEntryAt = entries.lastOrNull()?.createdAt
+                )
+            }
+    }
+
     @Transactional(readOnly = true)
     fun getMemberBalance(memberId: UUID, principal: UserPrincipal): MemberBalanceDto {
         val caller = userService.getOrCreateUser(principal)
