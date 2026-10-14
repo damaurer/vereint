@@ -10,6 +10,7 @@ import { resolveSafeReturnTo } from '../auth/redirect';
 import { createCorrelationId, logSecurityEvent } from '../auth/security-log';
 import { createSessionFromTokens, destroySession } from '../auth/session.service';
 import { serverEnvironment } from '../config/environment';
+import { resolveAccessDecision } from '../authorization/authorization.service';
 
 export const authRoutes = Router();
 
@@ -165,11 +166,29 @@ authRoutes.get('/keycloak', (req, res, next) => {
  * Rohe Token-Claims verlassen den Server nicht: geliefert werden ausschließlich
  * `subject`, `displayName`, `roles`, `boardRole` und `permissions`
  * (`docs/authentifizierung.md`).
+ *
+ * `permissions` vereint die Permissions aus dem Token mit denen, die der
+ * Fachservice über den Access Resolver aus Rollen und `drinkRecorder`-Flag
+ * ableitet (`RolePermissionMatrix`). Keycloak stellt keinen eigenen
+ * `permissions`-Claim aus; ohne diese Ableitung fehlte z. B. `purchase.tablet`
+ * und das Thekenterminal wäre in der Oberfläche nie erreichbar. Ist der
+ * Resolver nicht erreichbar, bleibt es bei den Token-Permissions; die
+ * eigentliche Autorisierung jedes Aufrufs prüft weiterhin der Fachservice.
  */
-function respondWithIdentity(req: Request, res: Response): void {
+async function respondWithIdentity(req: Request, res: Response): Promise<void> {
   if (!req.identity) {
     res.status(401).json({ authenticated: false, code: 'oidc_session_expired' });
     return;
+  }
+
+  const permissions = new Set(req.identity.permissions ?? []);
+  const resolved = await resolveAccessDecision({
+    identity: req.identity,
+    accessToken: req.sessionData?.tokens.accessToken,
+    sessionId: req.sessionData?.sessionId,
+  });
+  if (resolved.outcome === 'resolved' && resolved.decision && !resolved.decision.disabled) {
+    for (const permission of resolved.decision.permissions) permissions.add(permission);
   }
 
   res.status(200).json({
@@ -179,17 +198,17 @@ function respondWithIdentity(req: Request, res: Response): void {
       displayName: req.identity.displayName ?? null,
       roles: req.identity.roles,
       boardRole: req.identity.boardRole ?? null,
-      permissions: req.identity.permissions ?? [],
+      permissions: [...permissions],
     },
   });
 }
 
-authRoutes.get('/me', (req, res) => {
-  respondWithIdentity(req, res);
+authRoutes.get('/me', (req, res, next) => {
+  void respondWithIdentity(req, res).catch(next);
 });
 
-authRoutes.get('/session', (req, res) => {
-  respondWithIdentity(req, res);
+authRoutes.get('/session', (req, res, next) => {
+  void respondWithIdentity(req, res).catch(next);
 });
 
 /**
