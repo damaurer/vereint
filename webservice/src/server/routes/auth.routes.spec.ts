@@ -99,6 +99,26 @@ describe('auth.routes', () => {
       expect(state.returnTo).toBe('/events/test-event');
     });
 
+    it('passes the app language to Keycloak as ui_locales', async () => {
+      const chosen = await originalFetch(`${baseUrl}/api/auth/login`, {
+        redirect: 'manual',
+        headers: { cookie: 'vereint.lang=en', 'accept-language': 'de-DE' },
+      });
+      expect(chosen.headers.get('location')).toContain('ui_locales=en');
+
+      const browser = await originalFetch(`${baseUrl}/api/auth/login`, {
+        redirect: 'manual',
+        headers: { 'accept-language': 'en-US,en;q=0.9' },
+      });
+      expect(browser.headers.get('location')).toContain('ui_locales=en');
+
+      const unsupported = await originalFetch(`${baseUrl}/api/auth/login`, {
+        redirect: 'manual',
+        headers: { 'accept-language': 'fr-FR' },
+      });
+      expect(unsupported.headers.get('location')).toContain('ui_locales=de');
+    });
+
     it('drops a malicious returnTo before storing the transaction state', async () => {
       for (const malicious of ['//evil.example.com', 'https://evil.example.com/app', '/unknown-area']) {
         const response = await originalFetch(

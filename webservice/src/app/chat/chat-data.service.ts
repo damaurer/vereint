@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import type { ChatMessage, ChatOverview } from './chat.model';
+import { translate } from '../i18n/i18n.service';
 
 /**
  * Clientseitige Datenschicht der Chat-Oberflächen (TICKET-035).
@@ -33,7 +34,7 @@ export class ChatDataService {
     const message: ChatMessage = {
       id: `local-${Date.now()}`,
       authorId: ChatDataService.CURRENT_USER,
-      authorName: 'Du',
+      authorName: translate('chat.you'),
       createdAt: new Date().toISOString(),
       text,
       reactions: [],

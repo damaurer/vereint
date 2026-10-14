@@ -6,6 +6,7 @@ import { eventStatusLabel, formatDateTime } from './member-format';
 import type { EventStatus, EventSummary } from '../api/api.types';
 import { EventCardComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
 
 /**
  * Eventübersicht eines Mitglieds (TICKET-024, Redesign TICKET-034).
@@ -16,24 +17,24 @@ import { StateComponent } from '../ui/state.component';
  */
 @Component({
   selector: 'app-member-events',
-  imports: [StateComponent, RouterLink, EventCardComponent],
+  imports: [StateComponent, RouterLink, EventCardComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="events-title">
-        <span class="eyebrow">Mitglied</span>
-        <h1 id="events-title">Events</h1>
-        <p>Deine Events und Teilnahmen.</p>
+        <span class="eyebrow">{{ 'member.events.eyebrow' | t }}</span>
+        <h1 id="events-title">{{ 'member.events.title' | t }}</h1>
+        <p>{{ 'member.events.intro' | t }}</p>
 
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Die Events werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'member.events.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Events nicht verfügbar"
+            [title]="'member.events.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -41,8 +42,8 @@ import { StateComponent } from '../ui/state.component';
           @if (events.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Events"
-              message="Aktuell nimmst du an keinem Event teil."
+              [title]="'member.events.emptyTitle' | t"
+              [message]="'member.events.emptyMessage' | t"
             />
           } @else {
             <ul class="events-list">

@@ -20,6 +20,8 @@ import {
   type StatusTone,
 } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { activeLocale, translate } from '../i18n/i18n.service';
 
 interface AdminView {
   users: UserSummary[];
@@ -35,40 +37,40 @@ const BOARD_ROLES = ['', 'chair', 'treasurer', 'secretary', 'assessor'] as const
 
 /** Optionen des clientseitigen Rollenfilters der Mitgliedertabelle. */
 const ROLE_FILTERS = [
-  { value: 'all', label: 'Rolle: Alle' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'board', label: 'Vorstand' },
-  { value: 'member', label: 'Mitglied' },
+  { value: 'all', labelKey: 'admin.members.roleFilterAll' },
+  { value: 'admin', labelKey: 'admin.roles.admin' },
+  { value: 'board', labelKey: 'admin.roles.board' },
+  { value: 'member', labelKey: 'admin.roles.member' },
 ] as const;
 type RoleFilter = (typeof ROLE_FILTERS)[number]['value'];
 
 /** Seitengröße der clientseitigen Paginierung (siehe Mockup). */
 const PAGE_SIZE = 6;
 
-/** Deutscher Klartext der angezeigten Mitgliederrolle. */
+/** Klartext der angezeigten Mitgliederrolle in der aktiven Sprache. */
 function memberRoleLabel(user: UserSummary): string {
-  if (user.roles.includes('admin')) return 'Admin';
+  if (user.roles.includes('admin')) return translate('admin.roles.admin');
   switch (user.boardRole) {
     case 'chair':
-      return 'Vorsitz';
+      return translate('admin.roles.chair');
     case 'treasurer':
-      return 'Kassenwart';
+      return translate('admin.roles.treasurer');
     case 'secretary':
-      return 'Schriftwart';
+      return translate('admin.roles.secretary');
     case 'assessor':
-      return 'Beisitzer';
+      return translate('admin.roles.assessor');
     default:
       break;
   }
-  if (user.roles.includes('board')) return 'Vorstand';
-  return 'Mitglied';
+  if (user.roles.includes('board')) return translate('admin.roles.board');
+  return translate('admin.roles.member');
 }
 
 /** Nur das Datum eines ISO-Zeitstempels (Beitrittsdatum). */
 function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium' }).format(date);
+  return new Intl.DateTimeFormat(activeLocale(), { dateStyle: 'medium' }).format(date);
 }
 
 /**
@@ -95,17 +97,17 @@ function formatDate(iso: string): string {
     StatusBadgeComponent,
     RolesMatrixComponent,
     InviteModalComponent,
+    TranslatePipe,
   ],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="admin-title">
-        <span class="eyebrow">Administration</span>
-        <h1 id="admin-title">Mitglieder &amp; Gruppen</h1>
-        <p>Mitglieder, Rollen und Einladungen der „Durstigen Eber“.</p>
-        
-        <vereint-info-panel icon="admin" title="Administration">
-          Rollen und Berechtigungen werden serverseitig autorisiert; hier wird die
-          Verwaltung nur vorbereitet.
+        <span class="eyebrow">{{ 'admin.eyebrow' | t }}</span>
+        <h1 id="admin-title">{{ 'admin.title' | t }}</h1>
+        <p>{{ 'admin.intro' | t }}</p>
+
+        <vereint-info-panel icon="admin" [title]="'admin.eyebrow' | t">
+          {{ 'admin.infoPanel' | t }}
         </vereint-info-panel>
 
         @if (actionError(); as err) {
@@ -118,13 +120,13 @@ function formatDate(iso: string): string {
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Benutzer und Protokoll werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'admin.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Administration nicht verfügbar"
+            [title]="'admin.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -132,41 +134,41 @@ function formatDate(iso: string): string {
           <div class="admin-toolbar">
             <div class="admin-filters">
               <label class="manage-field manage-field-grow">
-                <span class="sr-only">Mitglieder suchen</span>
+                <span class="sr-only">{{ 'admin.members.search' | t }}</span>
                 <input
                   name="search"
                   [ngModel]="search()"
                   (ngModelChange)="onSearch($event)"
-                  placeholder="Mitglieder suchen …"
-                  aria-label="Mitglieder suchen"
+                  [placeholder]="'admin.members.searchPlaceholder' | t"
+                  [attr.aria-label]="'admin.members.search' | t"
                 />
               </label>
               <label class="manage-field">
-                <span class="sr-only">Nach Rolle filtern</span>
+                <span class="sr-only">{{ 'admin.members.roleFilter' | t }}</span>
                 <select
                   name="roleFilter"
                   [ngModel]="roleFilter()"
                   (ngModelChange)="onRoleFilter($event)"
-                  aria-label="Nach Rolle filtern"
+                  [attr.aria-label]="'admin.members.roleFilter' | t"
                 >
                   @for (option of roleFilters; track option.value) {
-                    <option [value]="option.value">{{ option.label }}</option>
+                    <option [value]="option.value">{{ option.labelKey | t }}</option>
                   }
                 </select>
               </label>
             </div>
             <button type="button" class="member-button" (click)="openInvite()">
-              + Mitglied einladen
+              {{ 'admin.members.invite' | t }}
             </button>
           </div>
 
-          <h2 class="member-subtitle">Mitglieder ({{ filteredUsers().length }})</h2>
+          <h2 class="member-subtitle">{{ 'admin.members.heading' | t: { count: filteredUsers().length } }}</h2>
           <vereint-data-table
-            [columns]="columns"
+            [columns]="columns()"
             [rows]="pagedUsers()"
             [cellTemplate]="cell"
             [trackBy]="trackUser"
-            emptyLabel="Für die aktuelle Suche wurden keine Mitglieder gefunden."
+            [emptyLabel]="'admin.members.empty' | t"
           />
 
           <ng-template #cell let-user let-column="column">
@@ -177,7 +179,7 @@ function formatDate(iso: string): string {
               @case ('name') {
                 <span class="admin-name">
                   {{ user.displayName }}
-                  @if (user.disabled) { <em class="admin-disabled">(deaktiviert)</em> }
+                  @if (user.disabled) { <em class="admin-disabled">{{ 'admin.members.disabledMark' | t }}</em> }
                 </span>
               }
               @case ('email') {
@@ -194,7 +196,7 @@ function formatDate(iso: string): string {
               }
               @case ('status') {
                 <vereint-status-badge
-                  [label]="user.disabled ? 'Inaktiv' : 'Aktiv'"
+                  [label]="(user.disabled ? 'admin.members.statusInactive' : 'admin.members.statusActive') | t"
                   [tone]="statusTone(user)"
                 />
               }
@@ -203,7 +205,7 @@ function formatDate(iso: string): string {
               }
               @case ('actions') {
                 <button type="button" class="member-button" (click)="selectUser(user.id)">
-                  Bearbeiten
+                  {{ 'admin.members.edit' | t }}
                 </button>
               }
             }
@@ -212,8 +214,7 @@ function formatDate(iso: string): string {
           @if (filteredUsers().length > 0) {
             <div class="admin-pagination">
               <span class="member-list-meta">
-                Zeige {{ rangeStart() }}–{{ rangeEnd() }} von
-                {{ filteredUsers().length }} Mitgliedern
+                {{ 'admin.members.range' | t: { start: rangeStart(), end: rangeEnd(), total: filteredUsers().length } }}
               </span>
               <span class="admin-pagination-actions">
                 <button
@@ -222,7 +223,7 @@ function formatDate(iso: string): string {
                   [disabled]="page() === 0"
                   (click)="prevPage()"
                 >
-                  Zurück
+                  {{ 'admin.members.prev' | t }}
                 </button>
                 <button
                   type="button"
@@ -230,7 +231,7 @@ function formatDate(iso: string): string {
                   [disabled]="page() >= totalPages() - 1"
                   (click)="nextPage()"
                 >
-                  Weiter
+                  {{ 'admin.members.next' | t }}
                 </button>
               </span>
             </div>
@@ -240,12 +241,12 @@ function formatDate(iso: string): string {
             <p class="manage-action-error" role="alert">{{ serr }}</p>
           }
           @if (selected(); as user) {
-            <h2 class="member-subtitle">{{ user.displayName }} bearbeiten</h2>
-            <p class="member-list-meta">ID: {{ user.id }}</p>
+            <h2 class="member-subtitle">{{ 'admin.user.editTitle' | t: { name: user.displayName } }}</h2>
+            <p class="member-list-meta">{{ 'admin.user.id' | t: { id: user.id } }}</p>
 
             <form class="manage-form" (ngSubmit)="saveRoles(user.id)">
               <fieldset class="admin-fieldset">
-                <legend>Rollen</legend>
+                <legend>{{ 'admin.user.roles' | t }}</legend>
                 @for (role of assignableRoles; track role) {
                   <label class="admin-check">
                     <input type="checkbox" [(ngModel)]="roleState[role]" [name]="'role-' + role" />
@@ -253,42 +254,42 @@ function formatDate(iso: string): string {
                   </label>
                 }
               </fieldset>
-              <button type="submit" class="member-button" [disabled]="busy()">Rollen speichern</button>
+              <button type="submit" class="member-button" [disabled]="busy()">{{ 'admin.user.saveRoles' | t }}</button>
             </form>
 
             <form class="manage-form manage-inline" (ngSubmit)="saveProfile(user.id)">
               <label class="manage-field">
-                <span>Vorstands-Unterrolle</span>
+                <span>{{ 'admin.user.boardRole' | t }}</span>
                 <select name="boardRole" [(ngModel)]="boardRole">
                   @for (value of boardRoles; track value) {
-                    <option [value]="value">{{ value || 'keine' }}</option>
+                    <option [value]="value">{{ value || ('admin.user.noBoardRole' | t) }}</option>
                   }
                 </select>
               </label>
               <label class="admin-check">
                 <input type="checkbox" name="drinkRecorder" [(ngModel)]="drinkRecorder" />
-                <span>Drink Recorder</span>
+                <span>{{ 'admin.user.drinkRecorder' | t }}</span>
               </label>
-              <button type="submit" class="member-button" [disabled]="busy()">Profil speichern</button>
+              <button type="submit" class="member-button" [disabled]="busy()">{{ 'admin.user.saveProfile' | t }}</button>
             </form>
 
             <form class="manage-form manage-inline" (ngSubmit)="toggleStatus(user.id)">
               <label class="admin-check">
                 <input type="checkbox" name="disabled" [(ngModel)]="disabled" />
-                <span>Deaktiviert</span>
+                <span>{{ 'admin.user.disabled' | t }}</span>
               </label>
-              <button type="submit" class="member-button" [disabled]="busy()">Status speichern</button>
+              <button type="submit" class="member-button" [disabled]="busy()">{{ 'admin.user.saveStatus' | t }}</button>
             </form>
           }
 
           <app-admin-roles-matrix [roleCounts]="roleCounts()" />
 
-          <h2 class="member-subtitle">Audit-Protokoll ({{ view.audit.length }})</h2>
+          <h2 class="member-subtitle">{{ 'admin.audit.heading' | t: { count: view.audit.length } }}</h2>
           @if (view.audit.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Einträge"
-              message="Es liegen keine Protokolleinträge vor."
+              [title]="'admin.audit.emptyTitle' | t"
+              [message]="'admin.audit.emptyMessage' | t"
             />
           } @else {
             <ul class="member-list">
@@ -301,7 +302,7 @@ function formatDate(iso: string): string {
                     <span class="member-chat-text">{{ entry.details }}</span>
                   }
                   <span class="member-list-meta">
-                    {{ entry.actorDisplayName ?? 'System' }} · {{ formatDateTime(entry.createdAt) }}
+                    {{ entry.actorDisplayName ?? ('admin.audit.system' | t) }} · {{ formatDateTime(entry.createdAt) }}
                   </span>
                 </li>
               }
@@ -489,16 +490,16 @@ export class AdminComponent implements OnInit, OnDestroy {
   protected disabled = false;
 
   /** Spalten der Mitgliedertabelle (geteilte `DataTable`, Zellen via Vorlage). */
-  protected readonly columns: DataTableColumn<UserSummary>[] = [
-    { key: 'avatar', header: 'Avatar' },
-    { key: 'name', header: 'Name' },
-    { key: 'email', header: 'E-Mail' },
-    { key: 'role', header: 'Rolle' },
-    { key: 'balance', header: 'Guthaben' },
-    { key: 'status', header: 'Status' },
-    { key: 'joined', header: 'Beitrittsdatum' },
-    { key: 'actions', header: 'Aktionen' },
-  ];
+  protected readonly columns = computed<DataTableColumn<UserSummary>[]>(() => [
+    { key: 'avatar', header: translate('admin.columns.avatar') },
+    { key: 'name', header: translate('admin.columns.name') },
+    { key: 'email', header: translate('admin.columns.email') },
+    { key: 'role', header: translate('admin.columns.role') },
+    { key: 'balance', header: translate('admin.columns.balance') },
+    { key: 'status', header: translate('admin.columns.status') },
+    { key: 'joined', header: translate('admin.columns.joined') },
+    { key: 'actions', header: translate('admin.columns.actions') },
+  ]);
 
   protected readonly trackUser = (_index: number, user: UserSummary): string => user.id;
 
@@ -594,7 +595,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   protected saveRoles(userId: string): void {
     const roles = this.assignableRoles.filter((role) => this.roleState[role]);
-    this.runAction(this.api.assignRoles(userId, { roles }), 'Rollen gespeichert.');
+    this.runAction(this.api.assignRoles(userId, { roles }), translate('admin.user.rolesSaved'));
   }
 
   protected saveProfile(userId: string): void {
@@ -603,14 +604,14 @@ export class AdminComponent implements OnInit, OnDestroy {
         boardRole: this.boardRole || null,
         drinkRecorder: this.drinkRecorder,
       }),
-      'Profil gespeichert.',
+      translate('admin.user.profileSaved'),
     );
   }
 
   protected toggleStatus(userId: string): void {
     this.runAction(
       this.api.updateStatus(userId, { disabled: this.disabled }),
-      'Status gespeichert.',
+      translate('admin.user.statusSaved'),
     );
   }
 }

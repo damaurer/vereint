@@ -9,23 +9,25 @@ import { AsyncState } from '../member/async-state';
 import { formatDateTime } from '../member/member-format';
 import { StatusBadgeComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 @Component({
   selector: 'app-notifications',
-  imports: [StateComponent, StatusBadgeComponent, PwaSettingsComponent],
+  imports: [StateComponent, StatusBadgeComponent, TranslatePipe, PwaSettingsComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="notifications-title">
         <div class="notifications-header">
           <div>
-            <span class="eyebrow">Mitteilungen</span>
+            <span class="eyebrow">{{ 'notifications.eyebrow' | t }}</span>
             <div class="title-with-badge">
-              <h1 id="notifications-title">Benachrichtigungen</h1>
+              <h1 id="notifications-title">{{ 'notifications.title' | t }}</h1>
               @if (unreadCount() > 0) {
-                <vereint-status-badge [label]="unreadCount() + ' ungelesen'" tone="warning" />
+                <vereint-status-badge [label]="'notifications.unread' | t: { count: unreadCount() }" tone="warning" />
               }
             </div>
-            <p>Bleibe über Events, Vereinsankündigungen und Neuigkeiten auf dem Laufenden.</p>
+            <p>{{ 'notifications.intro' | t }}</p>
           </div>
 
           <div class="header-actions">
@@ -36,7 +38,7 @@ import { StateComponent } from '../ui/state.component';
                 [disabled]="busy()"
                 (click)="markAllAsRead()"
               >
-                Alle als gelesen markieren
+                {{ 'notifications.markAllRead' | t }}
               </button>
             }
           </div>
@@ -47,13 +49,13 @@ import { StateComponent } from '../ui/state.component';
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Benachrichtigungen werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'notifications.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Benachrichtigungen nicht verfügbar"
+            [title]="'notifications.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -61,11 +63,11 @@ import { StateComponent } from '../ui/state.component';
           @if (notifications.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Benachrichtigungen"
-              message="Du hast aktuell keine Benachrichtigungen."
+              [title]="'notifications.emptyTitle' | t"
+              [message]="'notifications.emptyMessage' | t"
             />
           } @else {
-            <ul class="notifications-list" aria-label="Benachrichtigungsliste">
+            <ul class="notifications-list" [attr.aria-label]="'notifications.listLabel' | t">
               @for (item of notifications; track item.id) {
                 <li class="notification-item" [class.unread]="!item.read">
                   <div class="notification-head">
@@ -90,7 +92,7 @@ import { StateComponent } from '../ui/state.component';
                         [disabled]="busy()"
                         (click)="markAsRead(item.id)"
                       >
-                        Als gelesen markieren
+                        {{ 'notifications.markRead' | t }}
                       </button>
                     </div>
                   }
@@ -244,6 +246,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.notificationsApi.unreadCount().subscribe({
       next: (res) => this.unreadCount.set(res.unread),
     });
+
   }
 
   protected markAsRead(id: string): void {
@@ -277,17 +280,17 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   protected typeLabel(type: string): string {
     switch (type) {
       case 'event':
-        return 'Event';
+        return translate('notifications.type.event');
       case 'ledger':
-        return 'Kasse';
+        return translate('notifications.type.ledger');
       case 'announcement':
-        return 'Ankündigung';
+        return translate('notifications.type.announcement');
       case 'system':
-        return 'System';
+        return translate('notifications.type.system');
       case 'moment':
-        return 'Moment';
+        return translate('notifications.type.moment');
       default:
-        return type || 'Info';
+        return type || translate('notifications.type.info');
     }
   }
 

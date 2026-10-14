@@ -2,6 +2,8 @@ import { Component, computed, input, signal } from '@angular/core';
 import { IconComponent } from '../ui/icon.component';
 import type { GeoJsonFeatureDto, MomentMapGeoJsonDto } from '../api/api.types';
 import { formatDateTime } from '../member/member-format';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 interface MapPin {
   id: string;
@@ -23,26 +25,25 @@ interface MapPin {
  */
 @Component({
   selector: 'app-moment-map',
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   template: `
-    <section class="moment-map-section" aria-label="Weltkarte der Teilnehmer">
+    <section class="moment-map-section" [attr.aria-label]="'moments.map.ariaLabel' | t">
       <div class="map-header">
         <div>
-          <h3 class="map-title">Interaktive Teilnehmerkarte</h3>
+          <h3 class="map-title">{{ 'moments.map.title' | t }}</h3>
           <p class="map-subtitle">
-            Standorte von Teilnehmern mit aktiver Standortfreigabe (Opt-in).
+            {{ 'moments.map.subtitle' | t }}
           </p>
         </div>
-        <span class="map-badge">{{ pins().length }} Standorte</span>
+        <span class="map-badge">{{ 'moments.map.count' | t: { count: pins().length } }}</span>
       </div>
 
       @if (pins().length === 0) {
         <div class="map-empty" role="status">
           <vereint-icon class="map-empty-icon" name="location" />
-          <strong>Keine Standorte geteilt</strong>
+          <strong>{{ 'moments.map.emptyTitle' | t }}</strong>
           <p>
-            Für diesen Moment liegen keine Standortdaten vor. Standorte werden DSGVO-konform
-            ausschließlich mit freiwilliger Freigabe (Opt-in) erfasst.
+            {{ 'moments.map.emptyMessage' | t }}
           </p>
         </div>
       } @else {
@@ -51,7 +52,7 @@ interface MapPin {
             class="world-map-svg"
             viewBox="0 0 800 450"
             role="img"
-            aria-label="Weltkarte mit Teilnehmer-Pins"
+            [attr.aria-label]="'moments.map.svgLabel' | t"
           >
             <defs>
               <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -136,7 +137,7 @@ interface MapPin {
 
           <!-- Detailkarte für ausgewählten Pin -->
           @if (selectedPin(); as active) {
-            <div class="pin-popup" role="dialog" aria-label="Pin Details">
+            <div class="pin-popup" role="dialog" [attr.aria-label]="'moments.map.pinDetails' | t">
               <div class="pin-popup-head">
                 <span class="pin-popup-title">
                   {{ getEmoji(active.reaction) }} {{ active.name }}
@@ -144,7 +145,7 @@ interface MapPin {
                 <button
                   type="button"
                   class="pin-popup-close"
-                  aria-label="Schließen"
+                  [attr.aria-label]="'common.close' | t"
                   (click)="clearSelection()"
                 >
                   <vereint-icon name="close" />
@@ -152,7 +153,7 @@ interface MapPin {
               </div>
 
               @if (active.statusText) {
-                <p class="pin-popup-text">„{{ active.statusText }}“</p>
+                <p class="pin-popup-text">{{ 'moments.quote' | t: { text: active.statusText } }}</p>
               }
 
               <div class="pin-popup-meta">
@@ -169,7 +170,7 @@ interface MapPin {
 
         <!-- Standorte Liste -->
         <div class="pin-list-container">
-          <h4 class="pin-list-title">Geteilte Standorte</h4>
+          <h4 class="pin-list-title">{{ 'moments.map.listTitle' | t }}</h4>
           <ul class="pin-list">
             @for (pin of pins(); track pin.id) {
               <li
@@ -448,7 +449,7 @@ export class MomentMapComponent {
         const y = Math.max(10, Math.min(440, ((90 - lat) / 180) * 450));
 
         const props = f.properties || {};
-        const name = (props['userName'] || props['name'] || `Teilnehmer ${idx + 1}`) as string;
+        const name = (props['userName'] || props['name'] || translate('moments.map.fallbackName', { number: idx + 1 })) as string;
         const reaction = (props['reaction'] || 'TOAST') as string;
         const statusText = props['statusText'] as string | undefined;
         const createdAt = props['createdAt'] as string | undefined;

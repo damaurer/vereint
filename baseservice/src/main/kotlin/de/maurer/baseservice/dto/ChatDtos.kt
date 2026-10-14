@@ -12,11 +12,11 @@ import java.time.Instant
  * über den Chat übertragen.
  */
 data class SendMessageRequest(
-    @field:NotBlank(message = "message darf nicht leer sein")
-    @field:Size(max = 4000, message = "message darf höchstens 4000 Zeichen lang sein")
+    @field:NotBlank(message = "message {validation.notBlank}")
+    @field:Size(max = 4000, message = "message {validation.size.max}")
     val message: String? = null,
 
-    @field:Size(max = 512, message = "imageUrl darf höchstens 512 Zeichen lang sein")
+    @field:Size(max = 512, message = "imageUrl {validation.size.max}")
     val imageUrl: String? = null
 )
 

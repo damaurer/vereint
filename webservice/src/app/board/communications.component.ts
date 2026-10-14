@@ -11,6 +11,8 @@ import type { UserSummary } from '../auth/auth.types';
 import type { AuditLogEntry } from '../api/api.types';
 import { InfoPanelComponent, RoleChipComponent, StatusBadgeComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 interface CommunicationsView {
   recipients: UserSummary[];
@@ -30,19 +32,18 @@ interface CommunicationsView {
  */
 @Component({
   selector: 'app-board-communications',
-  imports: [StateComponent, FormsModule, RouterLink, InfoPanelComponent, RoleChipComponent, StatusBadgeComponent],
+  imports: [StateComponent, FormsModule, RouterLink, InfoPanelComponent, RoleChipComponent, StatusBadgeComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="comm-title">
-        <span class="eyebrow">Schriftwart</span>
-        <h1 id="comm-title">Infotafeln &amp; Rundbriefe</h1>
-        <p>Mitteilungen an Mitglieder und versendete Benachrichtigungen.</p>
-        <a class="member-back" routerLink="/board">← Zum Vorstand</a>
+        <span class="eyebrow">{{ 'board.comms.eyebrow' | t }}</span>
+        <h1 id="comm-title">{{ 'board.comms.title' | t }}</h1>
+        <p>{{ 'board.comms.intro' | t }}</p>
+        <a class="member-back" routerLink="/board">{{ 'board.backToBoard' | t }}</a>
 
-        <h2 class="member-subtitle">Pinnwand (Chat-Infotafeln)</h2>
-        <vereint-info-panel icon="pin" title="Info vom Schriftwart">
-          Angepinnte Infotafeln erscheinen oben im Chat. Verfasse unten einen
-          neuen Rundbrief, um alle Mitglieder zu erreichen.
+        <h2 class="member-subtitle">{{ 'board.comms.pinboardTitle' | t }}</h2>
+        <vereint-info-panel icon="pin" [title]="'board.comms.infoTitle' | t">
+          {{ 'board.comms.infoText' | t }}
         </vereint-info-panel>
 
         @if (actionError(); as err) {
@@ -52,40 +53,40 @@ interface CommunicationsView {
           <p class="manage-action-info" role="status">{{ info }}</p>
         }
 
-        <h2 class="member-subtitle">Meldung verfassen</h2>
+        <h2 class="member-subtitle">{{ 'board.comms.composeTitle' | t }}</h2>
         <form class="manage-form" (ngSubmit)="send()">
           <label class="manage-field">
-            <span>Empfänger (Mitglieds-ID)</span>
+            <span>{{ 'board.comms.recipientId' | t }}</span>
             <input name="userId" [(ngModel)]="form.userId" required />
           </label>
           <label class="manage-field">
-            <span>Titel</span>
+            <span>{{ 'board.comms.messageTitle' | t }}</span>
             <input name="title" [(ngModel)]="form.title" maxlength="255" required />
           </label>
           <label class="manage-field manage-field-grow">
-            <span>Text</span>
+            <span>{{ 'board.comms.messageBody' | t }}</span>
             <textarea name="body" [(ngModel)]="form.body" maxlength="4000" required></textarea>
           </label>
-          <button type="submit" class="member-button" [disabled]="busy()">Senden</button>
+          <button type="submit" class="member-button" [disabled]="busy()">{{ 'board.comms.send' | t }}</button>
         </form>
 
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Empfänger und Protokoll werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'board.comms.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Kommunikation nicht verfügbar"
+            [title]="'board.comms.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
         } @else if (load.data(); as view) {
-          <h2 class="member-subtitle">Empfänger ({{ view.recipients.length }})</h2>
+          <h2 class="member-subtitle">{{ 'board.comms.recipientsHeading' | t: { count: view.recipients.length } }}</h2>
           @if (view.recipients.length === 0) {
-            <p class="member-muted">Keine Mitglieder sichtbar.</p>
+            <p class="member-muted">{{ 'board.comms.noRecipients' | t }}</p>
           } @else {
             <ul class="member-list">
               @for (recipient of view.recipients; track recipient.id) {
@@ -96,19 +97,19 @@ interface CommunicationsView {
                   }
                   <span class="member-list-meta">{{ recipient.id }}</span>
                   <button type="button" class="member-button" (click)="pick(recipient.id)">
-                    Als Empfänger
+                    {{ 'board.comms.pickRecipient' | t }}
                   </button>
                 </li>
               }
             </ul>
           }
 
-          <h2 class="member-subtitle">Rundbriefe / Meldungen ({{ view.audit.length }})</h2>
+          <h2 class="member-subtitle">{{ 'board.comms.sentHeading' | t: { count: view.audit.length } }}</h2>
           @if (view.audit.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Einträge"
-              message="Es wurden noch keine Mitteilungen protokolliert."
+              [title]="'board.audit.emptyTitle' | t"
+              [message]="'board.comms.sentEmpty' | t"
             />
           } @else {
             <ul class="member-list">
@@ -117,7 +118,7 @@ interface CommunicationsView {
                   <span class="member-list-title">
                     {{ auditTargetLabel(entry.targetEntity) }} · {{ entry.action }}
                   </span>
-                  <vereint-status-badge label="Gesendet" [tone]="'success'" />
+                  <vereint-status-badge [label]="'board.comms.sent' | t" [tone]="'success'" />
                   @if (entry.details) {
                     <span class="member-chat-text">{{ entry.details }}</span>
                   }
@@ -221,7 +222,7 @@ export class CommunicationsComponent implements OnInit, OnDestroy {
     this.api.sendNotification({ userId, title, body }).subscribe({
       next: () => {
         this.busy.set(false);
-        this.actionInfo.set('Mitteilung gesendet.');
+        this.actionInfo.set(translate('board.comms.sentInfo'));
         this.form = { userId: '', title: '', body: '' };
         this.reload();
       },

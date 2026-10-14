@@ -1,5 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { translate } from '../i18n/i18n.service';
 import { AuthMeResponse, AuthSessionUser } from './auth.types';
 
 /**
@@ -103,17 +104,17 @@ export class AuthService {
   describeError(error: unknown): string {
     switch (this.errorCode(error)) {
       case 'invalid_state':
-        return 'Die Anmeldung ist abgelaufen. Bitte erneut starten.';
+        return translate('auth.errors.invalidState');
       case 'oidc_session_expired':
-        return 'Die Sitzung ist abgelaufen. Bitte erneut anmelden.';
+        return translate('errors.api.sessionExpired');
       case 'account_disabled':
-        return 'Dieses Konto ist deaktiviert.';
+        return translate('auth.errors.accountDisabled');
       case 'oidc_login_failed':
-        return 'Die Anmeldung über Keycloak ist fehlgeschlagen.';
+        return translate('auth.errors.oidcLoginFailed');
       case 'auth-browser-only':
-        return 'Der Anmeldedienst ist auf diesem Gerät nicht verfügbar.';
+        return translate('auth.errors.browserOnly');
       default:
-        return 'Die Anmeldung ist fehlgeschlagen.';
+        return translate('auth.errors.generic');
     }
   }
 

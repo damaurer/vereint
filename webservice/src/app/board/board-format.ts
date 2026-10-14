@@ -1,35 +1,37 @@
+import { translate } from '../i18n/i18n.service';
+
 /**
  * Anzeigehelfer der Verwaltungs- und Tablet-Kontexte (TICKET-026). Die
  * Formatierung findet ausschließlich clientseitig statt; die Ansichten werden im
  * Browser gerendert.
  */
 
-/** Deutscher Klartext der Audit-Zielarten (`targetEntity`). */
+/** Klartext der Audit-Zielarten (`targetEntity`) in der aktiven Sprache. */
 export function auditTargetLabel(targetEntity: string): string {
   switch (targetEntity) {
     case 'Ledger':
-      return 'Finanzen';
+      return translate('board.auditTarget.ledger');
     case 'Notification':
-      return 'Kommunikation';
+      return translate('board.auditTarget.notification');
     case 'User':
-      return 'Benutzer';
+      return translate('board.auditTarget.user');
     default:
       return targetEntity;
   }
 }
 
-/** Deutscher Klartext der Vorstands-Unterrolle (`BoardRole`). */
+/** Klartext der Vorstands-Unterrolle (`BoardRole`) in der aktiven Sprache. */
 export function boardRoleLabel(boardRole: string | null): string {
   switch (boardRole) {
     case 'chair':
-      return 'Vorsitz';
+      return translate('board.boardRole.chair');
     case 'treasurer':
-      return 'Kassenwart';
+      return translate('board.boardRole.treasurer');
     case 'secretary':
-      return 'Schriftführer';
+      return translate('board.boardRole.secretary');
     case 'assessor':
-      return 'Beisitzer';
+      return translate('board.boardRole.assessor');
     default:
-      return 'Vorstand';
+      return translate('board.boardRole.board');
   }
 }

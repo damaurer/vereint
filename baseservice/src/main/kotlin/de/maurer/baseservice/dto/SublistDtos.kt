@@ -8,28 +8,28 @@ import java.math.BigDecimal
 import java.time.Instant
 
 data class CreateSublistRequest(
-    @field:NotBlank(message = "name darf nicht leer sein")
-    @field:Size(max = 255, message = "name darf höchstens 255 Zeichen lang sein")
+    @field:NotBlank(message = "name {validation.notBlank}")
+    @field:Size(max = 255, message = "name {validation.size.max}")
     val name: String? = null,
 
-    @field:Size(max = 4000, message = "description darf höchstens 4000 Zeichen lang sein")
+    @field:Size(max = 4000, message = "description {validation.size.max}")
     val description: String? = null
 )
 
 data class UpdateSublistRequest(
-    @field:Size(min = 1, max = 255, message = "name muss zwischen 1 und 255 Zeichen lang sein")
+    @field:Size(min = 1, max = 255, message = "name {validation.size.range}")
     val name: String? = null,
 
-    @field:Size(max = 4000, message = "description darf höchstens 4000 Zeichen lang sein")
+    @field:Size(max = 4000, message = "description {validation.size.max}")
     val description: String? = null
 )
 
 data class AddSublistItemRequest(
-    @field:NotBlank(message = "drinkId darf nicht leer sein")
+    @field:NotBlank(message = "drinkId {validation.notBlank}")
     val drinkId: String? = null,
 
-    @field:DecimalMin(value = "0.00", message = "defaultPrice darf nicht negativ sein")
-    @field:Digits(integer = 8, fraction = 2, message = "defaultPrice erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
+    @field:DecimalMin(value = "0.00", message = "defaultPrice {validation.notNegative}")
+    @field:Digits(integer = 8, fraction = 2, message = "defaultPrice {validation.digits}")
     val defaultPrice: BigDecimal? = null
 )
 

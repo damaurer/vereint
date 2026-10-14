@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, TemplateRef } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { TranslatePipe } from '../i18n';
 
 /** Spaltendefinition der Daten-Tabelle (TICKET-032). */
 export interface DataTableColumn<T> {
@@ -20,7 +21,7 @@ export interface DataTableColumn<T> {
 @Component({
   selector: 'vereint-data-table',
   standalone: true,
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <table class="ui-table">
@@ -49,7 +50,7 @@ export interface DataTableColumn<T> {
           </tr>
         } @empty {
           <tr>
-            <td class="ui-table-empty" [attr.colspan]="columns.length">{{ emptyLabel }}</td>
+            <td class="ui-table-empty" [attr.colspan]="columns.length">{{ emptyLabel ?? ('ui.dataTable.empty' | t) }}</td>
           </tr>
         }
       </tbody>
@@ -59,7 +60,8 @@ export interface DataTableColumn<T> {
 export class DataTableComponent<T = Record<string, unknown>> {
   @Input() columns: DataTableColumn<T>[] = [];
   @Input() rows: T[] = [];
-  @Input() emptyLabel = 'Keine Einträge vorhanden.';
+  /** Ohne Angabe: „Keine Einträge vorhanden.“ in der aktiven Sprache. */
+  @Input() emptyLabel: string | null = null;
   @Input() cellTemplate: TemplateRef<unknown> | null = null;
   @Input() trackBy: ((index: number, row: T) => unknown) | null = null;
 
