@@ -45,6 +45,48 @@ describe('MemberApiService', () => {
     reqParticipants.flush([]);
   });
 
+  it('creates an event and answers an invitation', () => {
+    service.createEvent({ title: 'Grillen', startsAt: '2026-07-01T16:00:00.000Z', status: 'draft' }).subscribe();
+    const create = httpMock.expectOne('/api/v1/events');
+    expect(create.request.method).toBe('POST');
+    expect(create.request.body).toEqual({ title: 'Grillen', startsAt: '2026-07-01T16:00:00.000Z', status: 'draft' });
+    create.flush({});
+
+    service.respondToEvent('e-1', 'maybe').subscribe();
+    const rsvp = httpMock.expectOne('/api/v1/events/e-1/rsvp');
+    expect(rsvp.request.method).toBe('PUT');
+    expect(rsvp.request.body).toEqual({ status: 'maybe' });
+    rsvp.flush({});
+  });
+
+  it('reads the member directory', () => {
+    service.listDirectory().subscribe();
+    const req = httpMock.expectOne('/api/v1/users/directory');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
+  it('uses the conversation endpoints for the event chat', () => {
+    service.getEventConversation('e-1').subscribe();
+    httpMock.expectOne('/api/v1/events/e-1/chat').flush({ id: 'c-1' });
+
+    service.listConversationMessages('c-1').subscribe();
+    const list = httpMock.expectOne('/api/v1/conversations/c-1/messages');
+    expect(list.request.method).toBe('GET');
+    list.flush([]);
+
+    service.sendConversationMessage('c-1', 'Hallo').subscribe();
+    const send = httpMock.expectOne('/api/v1/conversations/c-1/messages');
+    expect(send.request.method).toBe('POST');
+    expect(send.request.body).toEqual({ message: 'Hallo' });
+    send.flush({});
+
+    service.markConversationRead('c-1').subscribe();
+    const read = httpMock.expectOne('/api/v1/conversations/c-1/read');
+    expect(read.request.method).toBe('POST');
+    read.flush({});
+  });
+
   it('reads balance and entries by member id', () => {
     service.getBalance('m-1').subscribe();
     const reqBalance = httpMock.expectOne('/api/v1/ledger/members/m-1/balance');

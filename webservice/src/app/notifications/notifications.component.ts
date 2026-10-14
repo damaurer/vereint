@@ -1,4 +1,6 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { describeApiError } from '../api/api-client.service';
 import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
 import {
   NotificationsApiService,
@@ -14,7 +16,7 @@ import { translate } from '../i18n/i18n.service';
 
 @Component({
   selector: 'app-notifications',
-  imports: [StateComponent, StatusBadgeComponent, PwaSettingsComponent, TranslatePipe],
+  imports: [StateComponent, StatusBadgeComponent, PwaSettingsComponent, RouterLink, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="notifications-title">
@@ -84,16 +86,52 @@ import { translate } from '../i18n/i18n.service';
 
                   <p class="item-body">{{ item.body }}</p>
 
-                  @if (!item.read) {
+                  @if (answered()[item.id]; as answer) {
+                    <p class="item-answered" role="status">{{ answeredText(answer) }}</p>
+                  }
+                  @if (rsvpErrors()[item.id]; as error) {
+                    <p class="item-error" role="alert">{{ error }}</p>
+                  }
+
+                  @if (item.link || !item.read) {
                     <div class="item-actions">
-                      <button
-                        type="button"
-                        class="btn-secondary-sm"
-                        [disabled]="busy()"
-                        (click)="markAsRead(item.id)"
-                      >
-                        {{ 'notifications.markRead' | t }}
-                      </button>
+                      @if (item.type === 'event_invitation' && eventIdOf(item.link); as eventId) {
+                        @if (answered()[item.id] !== 'accepted') {
+                          <button
+                            type="button"
+                            class="btn-primary-sm item-accept"
+                            [disabled]="busy()"
+                            (click)="respond(item, eventId, 'accepted')"
+                          >
+                            {{ 'member.rsvp.accept' | t }}
+                          </button>
+                        }
+                        @if (answered()[item.id] !== 'declined') {
+                          <button
+                            type="button"
+                            class="btn-secondary-sm item-decline"
+                            [disabled]="busy()"
+                            (click)="respond(item, eventId, 'declined')"
+                          >
+                            {{ 'member.rsvp.decline' | t }}
+                          </button>
+                        }
+                      }
+                      @if (item.link) {
+                        <a class="btn-secondary-sm item-open" [routerLink]="item.link">
+                          {{ (eventIdOf(item.link) ? 'notifications.openEvent' : 'notifications.open') | t }}
+                        </a>
+                      }
+                      @if (!item.read) {
+                        <button
+                          type="button"
+                          class="btn-secondary-sm"
+                          [disabled]="busy()"
+                          (click)="markAsRead(item.id)"
+                        >
+                          {{ 'notifications.markRead' | t }}
+                        </button>
+                      }
                     </div>
                   }
                 </li>
@@ -189,8 +227,38 @@ import { translate } from '../i18n/i18n.service';
       }
       .item-actions {
         display: flex;
+        flex-wrap: wrap;
         justify-content: flex-end;
+        gap: 0.5rem;
         margin-top: 0.25rem;
+      }
+      .item-actions a,
+      .item-actions button {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.25rem;
+        text-decoration: none;
+      }
+      .btn-primary-sm {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background-color: var(--color-brand, #3b82f6);
+        color: var(--color-on-brand, #ffffff);
+        border: 1px solid var(--color-brand, #3b82f6);
+        border-radius: var(--radius-sm, 0.375rem);
+        cursor: pointer;
+      }
+      .item-answered {
+        margin: 0;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-success, #15803d);
+      }
+      .item-error {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--color-danger, #b91c1c);
       }
       .member-button-outline {
         padding: 0.5rem 1rem;
@@ -227,6 +295,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   /** Geteilt mit dem Glocken-Badge in der Shell. */
   protected readonly unreadCount = inject(UnreadBadgeStore).count;
   protected readonly busy = signal(false);
+  /** Antworten auf Einladungen, die in dieser Ansicht gegeben wurden. */
+  protected readonly answered = signal<Record<string, 'accepted' | 'declined'>>({});
+  protected readonly rsvpErrors = signal<Record<string, string>>({});
 
   protected readonly formatDateTime = formatDateTime;
 
@@ -276,8 +347,45 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Event-ID aus einem Link der Form `/events/{id}`; sonst `null`. */
+  protected eventIdOf(link: string | null | undefined): string | null {
+    const match = /^\/events\/([^/?#]+)\/?$/.exec(link ?? '');
+    return match && match[1] !== 'new' ? decodeURIComponent(match[1]) : null;
+  }
+
+  protected answeredText(answer: 'accepted' | 'declined'): string {
+    return translate(answer === 'accepted' ? 'notifications.answered.accepted' : 'notifications.answered.declined');
+  }
+
+  /** Zu- oder Absage direkt aus der Einladung; markiert sie danach als gelesen. */
+  protected respond(item: NotificationItem, eventId: string, status: 'accepted' | 'declined'): void {
+    this.busy.set(true);
+    this.rsvpErrors.update((map) => {
+      const next = { ...map };
+      delete next[item.id];
+      return next;
+    });
+    this.notificationsApi.respondToEvent(eventId, status).subscribe({
+      next: () => {
+        this.busy.set(false);
+        this.answered.update((map) => ({ ...map, [item.id]: status }));
+        if (!item.read) this.markAsRead(item.id);
+      },
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.rsvpErrors.update((map) => ({ ...map, [item.id]: describeApiError(error) }));
+      },
+    });
+  }
+
   protected typeLabel(type: string): string {
     switch (type) {
+      case 'event_invitation':
+        return translate('notifications.type.eventInvitation');
+      case 'event_reminder':
+        return translate('notifications.type.eventReminder');
+      case 'event_cancelled':
+        return translate('notifications.type.eventCancelled');
       case 'event':
         return translate('notifications.type.event');
       case 'ledger':
@@ -295,6 +403,12 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   protected typeTone(type: string): StatusTone {
     switch (type) {
+      case 'event_invitation':
+        return 'success';
+      case 'event_reminder':
+        return 'warning';
+      case 'event_cancelled':
+        return 'danger';
       case 'event':
         return 'success';
       case 'ledger':

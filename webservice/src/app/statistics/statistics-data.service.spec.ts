@@ -1,22 +1,30 @@
-import { firstValueFrom } from 'rxjs';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { ApiClient } from '../api/api-client.service';
 import { StatisticsDataService } from './statistics-data.service';
+import type { StatisticsView } from './statistics.types';
 
 describe('StatisticsDataService', () => {
-  it('provides consistent sample aggregates for every card', async () => {
-    const service = new StatisticsDataService();
-    const view = await firstValueFrom(service.loadStatistics());
+  let service: StatisticsDataService;
+  let httpMock: HttpTestingController;
 
-    expect(view.consumption.length).toBeGreaterThan(0);
-    expect(view.attendancePercent).toBeGreaterThanOrEqual(0);
-    expect(view.attendancePercent).toBeLessThanOrEqual(100);
-    expect(view.spending.trend.length).toBeGreaterThan(0);
-    expect(view.topRounds.length).toBeGreaterThan(0);
-    expect(view.drinkRanking.length).toBeGreaterThan(0);
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [StatisticsDataService, ApiClient, provideHttpClient(), provideHttpClientTesting()],
+    });
+    service = TestBed.inject(StatisticsDataService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
 
-    // Rankings are ordered descending so the presentation stays stable.
-    const rounds = view.topRounds.map((entry) => entry.rounds);
-    expect([...rounds].sort((a, b) => b - a)).toEqual(rounds);
-    const shares = view.drinkRanking.map((entry) => entry.sharePercent);
-    expect([...shares].sort((a, b) => b - a)).toEqual(shares);
+  afterEach(() => httpMock.verify());
+
+  it('loads the club statistics from the backend', () => {
+    let result: StatisticsView | undefined;
+    service.loadStatistics().subscribe((value) => (result = value));
+    const req = httpMock.expectOne('/api/v1/statistics');
+    expect(req.request.method).toBe('GET');
+    req.flush({ periodDays: 90, totalItems: 0 });
+    expect(result?.periodDays).toBe(90);
   });
 });

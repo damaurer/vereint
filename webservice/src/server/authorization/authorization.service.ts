@@ -89,6 +89,9 @@ export function resolvePathAppContext(pathname: string): PathAppContextMatch | n
   if (clean.startsWith('/events/')) {
     const parts = clean.split('/');
     const eventId = parts[2];
+    if (eventId === 'new' && parts.length === 3) {
+      return { appContext: 'memberPwa' };
+    }
     if (parts[3] === 'manage') {
       return { appContext: 'eventOwner', eventId, isManage: true };
     }

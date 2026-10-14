@@ -19,6 +19,12 @@ export interface UpdateEventPayload {
   startsAt?: string;
   endsAt?: string | null;
   status?: EventStatus;
+  /** Einladungen zu diesem Zeitpunkt verschicken. */
+  invitationNotifyAt?: string | null;
+  /** `true` = bei Veröffentlichung einladen (löscht einen gesetzten Zeitpunkt). */
+  inviteOnPublish?: boolean;
+  /** Erinnerung so viele Stunden vor Beginn; `0` = keine. */
+  reminderHoursBefore?: number;
 }
 
 /** Teilnehmerrolle innerhalb eines Events. */

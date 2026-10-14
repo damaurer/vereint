@@ -4,6 +4,11 @@ import { ApiClient } from '../api/api-client.service';
 import type { PagedResponse, UserSummary } from '../auth/auth.types';
 import type {
   AuditLogEntry,
+  BroadcastPayload,
+  BroadcastResult,
+  ConversationSummary,
+  DirectoryMember,
+  MemberBalanceOverview,
   CorrectionPayload,
   EventLedgerSummary,
   EventSummary,
@@ -54,6 +59,11 @@ export class BoardApiService {
     );
   }
 
+  /** Guthabenübersicht aller Mitglieder (`GET /ledger/balances`). */
+  listBalances(): Observable<MemberBalanceOverview[]> {
+    return this.api.get<MemberBalanceOverview[]>('/ledger/balances');
+  }
+
   /** Guthaben einer beliebigen Person (`GET /ledger/members/{id}/balance`). */
   getBalance(memberId: string): Observable<MemberBalance> {
     return this.api.get<MemberBalance>(
@@ -92,6 +102,26 @@ export class BoardApiService {
     const trimmed = (search ?? '').trim();
     const path = trimmed ? `/users?search=${encodeURIComponent(trimmed)}` : '/users';
     return this.api.get<PagedResponse<UserSummary>>(path);
+  }
+
+  /** Aktive Mitglieder zur Empfängerauswahl (`GET /users/directory`). */
+  listDirectory(): Observable<DirectoryMember[]> {
+    return this.api.get<DirectoryMember[]>('/users/directory');
+  }
+
+  /** Rundbrief an ausgewählte oder alle Mitglieder (`POST /notifications/broadcast`). */
+  broadcast(payload: BroadcastPayload): Observable<BroadcastResult> {
+    return this.api.post<BroadcastResult>('/notifications/broadcast', payload);
+  }
+
+  /** Vereinschat inkl. angepinnter Infotafel (`GET /conversations/club`). */
+  getClubConversation(): Observable<ConversationSummary> {
+    return this.api.get<ConversationSummary>('/conversations/club');
+  }
+
+  /** Infotafel des Vereinschats setzen oder mit `null` entfernen (`PUT /conversations/club/pin`). */
+  pinClubNotice(text: string | null): Observable<ConversationSummary> {
+    return this.api.put<ConversationSummary>('/conversations/club/pin', { text });
   }
 
   /** Benachrichtigung an ein Mitglied senden (`POST /notifications`). */

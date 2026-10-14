@@ -84,6 +84,7 @@ describe('Authorization & Access Resolver Service', () => {
       expect(resolvePathAppContext('/app')).toEqual({ appContext: 'memberPwa' });
       expect(resolvePathAppContext('/dashboard')).toEqual({ appContext: 'memberPwa' });
       expect(resolvePathAppContext('/wallet')).toEqual({ appContext: 'memberPwa' });
+      expect(resolvePathAppContext('/events/new')).toEqual({ appContext: 'memberPwa' });
       expect(resolvePathAppContext('/unknown')).toBeNull();
     });
   });

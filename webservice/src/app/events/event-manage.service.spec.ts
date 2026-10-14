@@ -32,6 +32,32 @@ describe('EventManageService', () => {
     req.flush({});
   });
 
+  it('invites members via POST /invitations', () => {
+    service.inviteMembers('e-1', { userIds: ['u-2', 'u-3'] }).subscribe();
+
+    const req = http.expectOne('/api/v1/events/e-1/invitations');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ userIds: ['u-2', 'u-3'] });
+    req.flush([]);
+  });
+
+  it('loads the pick lists for members, approved drinks and sublists', () => {
+    service.listDirectory().subscribe();
+    http.expectOne('/api/v1/users/directory').flush([]);
+    service.listCatalogDrinks().subscribe();
+    http.expectOne('/api/v1/drinks?status=approved').flush([]);
+    service.listSublists().subscribe();
+    http.expectOne('/api/v1/sublists').flush([]);
+  });
+
+  it('sends the invitation timing with the event update', () => {
+    service.updateEvent('e-1', { inviteOnPublish: true, reminderHoursBefore: 0 }).subscribe();
+
+    const req = http.expectOne('/api/v1/events/e-1');
+    expect(req.request.body).toEqual({ inviteOnPublish: true, reminderHoursBefore: 0 });
+    req.flush({});
+  });
+
   it('adds a participant via POST', () => {
     service.addParticipant('e-1', { userId: 'u-2', role: 'coHost' }).subscribe();
 

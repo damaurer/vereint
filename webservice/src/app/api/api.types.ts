@@ -48,6 +48,19 @@ export interface EventSummary {
   endsAt: string | null;
   ownerId: string;
   ownerDisplayName: string;
+  location?: string | null;
+  /** Eigene Antwort, falls man eingeladen ist. */
+  myRsvp?: RsvpStatus | null;
+}
+
+/** Antwort eines Eingeladenen; `invited` heißt: noch keine Antwort. */
+export type RsvpStatus = 'invited' | 'accepted' | 'maybe' | 'declined';
+
+export interface RsvpCounts {
+  invited: number;
+  accepted: number;
+  maybe: number;
+  declined: number;
 }
 
 /** Eventdetails (`GET /api/v1/events/{id}`). */
@@ -64,6 +77,62 @@ export interface EventDetail {
   participantCount: number;
   createdAt: string;
   updatedAt: string;
+  /** Ab wann Eingeladene benachrichtigt werden; `null` = bei Veröffentlichung. */
+  invitationNotifyAt?: string | null;
+  /** Erinnerung so viele Stunden vor Beginn; `null` = keine. */
+  reminderHoursBefore?: number | null;
+  myRsvp?: RsvpStatus | null;
+  rsvpCounts?: RsvpCounts;
+  canManage?: boolean;
+}
+
+/** Neues Event (`POST /api/v1/events`). */
+export interface CreateEventPayload {
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  startsAt: string;
+  endsAt?: string | null;
+  status?: 'draft' | 'published';
+  invitationNotifyAt?: string | null;
+  reminderHoursBefore?: number | null;
+  inviteUserIds?: string[];
+  inviteAllMembers?: boolean;
+}
+
+/** Mitglieder einladen (`POST /api/v1/events/{id}/invitations`). */
+export interface InviteMembersPayload {
+  userIds?: string[];
+  allMembers?: boolean;
+}
+
+/** Eintrag des Mitgliederverzeichnisses (`GET /api/v1/users/directory`, alle Angemeldeten). */
+export interface DirectoryMember {
+  id: string;
+  displayName: string;
+  boardRole: string | null;
+  roles: string[];
+}
+
+/** Zeile der Guthabenübersicht (`GET /api/v1/ledger/balances`, Vorstand/Admin). */
+export interface MemberBalanceOverview {
+  memberId: string;
+  displayName: string;
+  currency: string;
+  creditBalance: string;
+  lastEntryAt: string | null;
+}
+
+/** Rundbrief (`POST /api/v1/notifications/broadcast`, Vorstand/Admin). */
+export interface BroadcastPayload {
+  userIds?: string[];
+  allMembers?: boolean;
+  title: string;
+  body: string;
+}
+
+export interface BroadcastResult {
+  sent: number;
 }
 
 /** Teilnehmer eines Events (`GET /api/v1/events/{id}/participants`). */
@@ -72,6 +141,8 @@ export interface EventParticipant {
   displayName: string;
   role: string;
   joinedAt: string;
+  rsvp?: RsvpStatus;
+  rsvpAt?: string | null;
 }
 
 /**
@@ -177,6 +248,8 @@ export interface NotificationMessage {
   type: string;
   read: boolean;
   createdAt: string;
+  /** Ziel in der App, z. B. `/events/{id}`. */
+  link?: string | null;
 }
 
 /** Versenden einer Benachrichtigung (`POST /api/v1/notifications`, nur Vorstand/Admin). */
@@ -430,4 +503,61 @@ export interface MomentSummaryDto {
   uniqueParticipants: number;
   summary: string;
   completedAt: string;
+}
+
+// --- Chat (`/api/v1/conversations`) ---
+
+export type ConversationType = 'club' | 'direct' | 'event' | 'moment';
+
+export interface ChatReaction {
+  emoji: string;
+  count: number;
+  reactedByMe: boolean;
+}
+
+/** Nachricht einer Konversation. `senderType` ist `member` oder `guest`. */
+export interface ChatMessageDto {
+  id: string;
+  conversationId: string;
+  senderType: 'member' | 'guest';
+  senderId: string | null;
+  senderName: string;
+  message: string;
+  imageUrl: string | null;
+  createdAt: string;
+  reactions?: ChatReaction[];
+}
+
+export interface PinnedNote {
+  text: string;
+  authorName: string;
+  pinnedAt: string;
+}
+
+/** Eintrag der Chat-Übersicht (`GET /api/v1/conversations`). */
+export interface ConversationSummary {
+  id: string;
+  type: ConversationType;
+  title: string;
+  eventId: string | null;
+  partnerId: string | null;
+  partnerName: string | null;
+  lastMessage: { senderName: string; message: string; createdAt: string } | null;
+  unreadCount: number;
+  pinned: PinnedNote | null;
+  canWrite: boolean;
+}
+
+// --- Statistik (`GET /api/v1/statistics`, alle Angemeldeten) ---
+
+export interface ClubStatistics {
+  periodDays: number;
+  totalItems: number;
+  myItems: number;
+  myRank: number | null;
+  topConsumers: { memberId: string; displayName: string; count: number }[];
+  attendancePercent: number | null;
+  spending: { total: string; currency: string; changePercent: number | null; weekly: string[] };
+  itemRanking: { name: string; count: number; sharePercent: number }[];
+  topEvents: { eventId: string; title: string; count: number }[];
 }

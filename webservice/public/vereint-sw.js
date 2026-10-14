@@ -6,7 +6,8 @@
  *   einer Fehlerseite des Browsers `/offline.html` zeigen.
  * - Web Push: Der Server sendet Pushes ohne Nutzlast. Der Worker lädt die
  *   eigentliche Mitteilung autorisiert über `/api/v1/notifications` nach und
- *   zeigt sie als Systembenachrichtigung an.
+ *   zeigt sie als Systembenachrichtigung an. Einladungen zu Events tragen die
+ *   Aktionen „Zusagen“/„Absagen“, die direkt `PUT /api/v1/events/{id}/rsvp` aufrufen.
  *
  * Cache-Regeln (deny by default) spiegeln `src/app/pwa/service-worker-cache-policy.ts`;
  * beide Dateien synchron halten. Niemals gecacht werden `/api/`, Nicht-GET,
@@ -148,6 +149,8 @@ async function showLatestNotification() {
   let title = 'Vereint';
   let body = 'Du hast eine neue Mitteilung.';
   let tag = 'vereint-notification';
+  let data = { url: '/notifications' };
+  let actions;
 
   try {
     const response = await fetch('/api/v1/notifications', {
@@ -163,6 +166,15 @@ async function showLatestNotification() {
         title = latest.title;
         body = truncate(latest.body, 180);
         tag = `vereint-${latest.id}`;
+        if (isAppLink(latest.link)) data = { url: latest.link };
+        const eventId = eventIdFromLink(latest.link);
+        if (latest.type === 'event_invitation' && eventId) {
+          data = { ...data, eventId, notificationId: latest.id };
+          actions = [
+            { action: 'accept', title: 'Zusagen' },
+            { action: 'decline', title: 'Absagen' },
+          ];
+        }
       }
     }
   } catch {
@@ -175,8 +187,19 @@ async function showLatestNotification() {
     tag,
     icon: NOTIFICATION_ICON,
     lang: 'de',
-    data: { url: '/notifications' },
+    data,
+    ...(actions ? { actions } : {}),
   });
+}
+
+/** Nur app-interne Pfade (`/…`, nicht `//…`) dienen als Klickziel. */
+function isAppLink(link) {
+  return typeof link === 'string' && link.startsWith('/') && !link.startsWith('//');
+}
+
+function eventIdFromLink(link) {
+  const match = /^\/events\/([^/?#]+)\/?$/.exec(typeof link === 'string' ? link : '');
+  return match ? match[1] : null;
 }
 
 function truncate(text, max) {
@@ -195,9 +218,44 @@ async function updateAppBadge(count) {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = new URL(event.notification.data?.url || '/notifications', self.location.origin);
+  const data = event.notification.data || {};
+  const target = new URL(data.url || '/notifications', self.location.origin);
+  if ((event.action === 'accept' || event.action === 'decline') && data.eventId) {
+    event.waitUntil(answerInvitation(data, event.action === 'accept' ? 'accepted' : 'declined', target.href));
+    return;
+  }
   event.waitUntil(openOrFocus(target.href));
 });
+
+// Antwort direkt aus der Benachrichtigung, ohne ein Fenster zu öffnen.
+async function answerInvitation(data, status, fallbackHref) {
+  try {
+    const response = await fetch(`/api/v1/events/${encodeURIComponent(data.eventId)}/rsvp`, {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok) throw new Error(`rsvp ${response.status}`);
+    if (data.notificationId) {
+      await fetch(`/api/v1/notifications/${encodeURIComponent(data.notificationId)}/read`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+      }).catch(() => undefined);
+    }
+    await self.registration.showNotification('Vereint', {
+      body: status === 'accepted' ? 'Du hast zugesagt.' : 'Du hast abgesagt.',
+      tag: `vereint-rsvp-${data.eventId}`,
+      icon: NOTIFICATION_ICON,
+      lang: 'de',
+      data: { url: fallbackHref },
+    });
+  } catch {
+    // Ohne Sitzung oder Netz: das Event öffnen, dort kann man antworten.
+    await openOrFocus(fallbackHref);
+  }
+}
 
 async function openOrFocus(href) {
   const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });

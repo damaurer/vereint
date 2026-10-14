@@ -29,6 +29,7 @@ const PRIVATE_CLIENT_PATHS: readonly string[] = [
   'wallet',
   'purchases',
   'events',
+  'events/new',
   'events/:eventId',
   'events/:eventId/manage',
   'guest/:eventId',

@@ -802,9 +802,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       next: () => {
         this.submitting.set(false);
         this.closeProposeModal();
-        this.proposeInfo.set(
-          `„${payload.name}“ wurde vorgeschlagen. Nach der Freigabe durch den Vorstand erscheint es im Katalog.`,
-        );
+        this.proposeInfo.set(translate('catalog.proposeInfo', { name: payload.name }));
         this.reload();
       },
       error: (err: unknown) => {

@@ -5,7 +5,6 @@ import {
   buildNavSections,
   buildPanelNav,
   buildPrimaryNav,
-  STATISTICS_PERMISSION,
   TABLET_PERMISSION,
 } from './nav-model';
 
@@ -34,24 +33,22 @@ describe('nav-model', () => {
     expect(ids(items)).toEqual(['home', 'events', 'chat', 'wallet']);
   });
 
-  it('hides gated member pages without the permission (deny by default)', () => {
+  it('shows the member pages, including statistics, without extra permissions', () => {
     const items = buildMoreNav(session({ roles: ['member'], permissions: [] }));
     expect(ids(items)).toContain('profil');
     expect(ids(items)).toContain('notifications');
-    expect(ids(items)).not.toContain('statistik');
+    expect(ids(items)).toContain('statistik');
   });
 
-  it('reveals the statistics entry only with the statistics permission', () => {
-    const items = buildMoreNav(
-      session({ roles: ['member'], permissions: [STATISTICS_PERMISSION] }),
-    );
-    expect(ids(items)).toContain('statistik');
+  it('hides the tablet terminal without its permission (deny by default)', () => {
+    const items = buildMoreNav(session({ roles: ['member'], permissions: [] }));
+    expect(ids(items)).not.toContain('tablet');
   });
 
   it('makes every page reachable on every device via primary + more', () => {
     const admin = session({
       roles: ['admin'],
-      permissions: [STATISTICS_PERMISSION, TABLET_PERMISSION],
+      permissions: [TABLET_PERMISSION],
     });
     const reachable = [...ids(buildPrimaryNav(admin)), ...ids(buildMoreNav(admin))];
     const sectioned = buildNavSections(admin).flatMap((section) => ids(section.items));
@@ -92,7 +89,7 @@ describe('nav-model', () => {
   it('renders only unrestricted entries without a session (deny by default)', () => {
     const primary = buildPrimaryNav(null);
     expect(ids(primary)).toEqual(['home', 'events', 'chat', 'wallet']);
-    expect(ids(buildMoreNav(null))).not.toContain('statistik');
+    expect(ids(buildMoreNav(null))).not.toContain('tablet');
     expect(buildPanelNav(null)).toEqual([]);
   });
 });
