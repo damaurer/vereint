@@ -1,6 +1,5 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, REQUEST, computed, inject, signal } from '@angular/core';
-import de from './locales/de.json';
 import {
   DEFAULT_LANGUAGE,
   LANGUAGES,
@@ -16,7 +15,29 @@ export { LANGUAGE_COOKIE, readCookie } from './language-cookie';
 
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
-const FALLBACK: Dictionary = de as Dictionary;
+/** Geladene Wörterbücher je Sprachcode; jede Sprache wird höchstens einmal geladen. */
+const loaded = new Map<string, Dictionary>();
+
+/** Deutsch als Rückfall für fehlende Schlüssel; leer, solange es nicht geladen ist. */
+function fallback(): Dictionary {
+  return loaded.get(DEFAULT_LANGUAGE) ?? {};
+}
+
+/**
+ * Legt ein Wörterbuch ohne Nachladen ab. Für Unit-Tests (`src/test-setup.ts`), damit
+ * Komponenten ohne App-Initializer sofort deutsche Texte zeigen.
+ */
+export function preloadLanguage(code: string, dictionary: Dictionary): void {
+  loaded.set(code, dictionary);
+}
+
+async function loadDictionary(language: LanguageDefinition): Promise<Dictionary> {
+  const cached = loaded.get(language.code);
+  if (cached) return cached;
+  const dictionary = (await language.load()).default as Dictionary;
+  loaded.set(language.code, dictionary);
+  return dictionary;
+}
 
 /** Zuletzt initialisierte Instanz; Grundlage für {@link translate} außerhalb von DI. */
 let active: I18nService | undefined;
@@ -36,7 +57,7 @@ export class I18nService {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly request = inject(REQUEST, { optional: true });
 
-  private readonly dictionary = signal<Dictionary>(FALLBACK);
+  private readonly dictionary = signal<Dictionary>(fallback());
 
   readonly languages: readonly LanguageDefinition[] = LANGUAGES;
   readonly language = signal(DEFAULT_LANGUAGE);
@@ -61,7 +82,7 @@ export class I18nService {
   }
 
   t(key: string, params?: TranslationParams): string {
-    return translateWith(this.locale(), this.dictionary(), FALLBACK, key, params);
+    return translateWith(this.locale(), this.dictionary(), fallback(), key, params);
   }
 
   private detect(): string {
@@ -74,8 +95,11 @@ export class I18nService {
   private async apply(code: string): Promise<void> {
     const language = findLanguage(code) ?? findLanguage(DEFAULT_LANGUAGE)!;
     try {
-      const dictionary =
-        language.code === DEFAULT_LANGUAGE ? FALLBACK : ((await language.load()).default as Dictionary);
+      // Deutsch immer mitladen: Es füllt Lücken anderer Sprachen.
+      const [dictionary] = await Promise.all([
+        loadDictionary(language),
+        loadDictionary(findLanguage(DEFAULT_LANGUAGE)!),
+      ]);
       this.dictionary.set(dictionary);
       this.language.set(language.code);
     } catch {
@@ -103,7 +127,7 @@ export class I18nService {
  */
 export function translate(key: string, params?: TranslationParams): string {
   if (active) return active.t(key, params);
-  return translateWith('de-DE', FALLBACK, FALLBACK, key, params);
+  return translateWith('de-DE', fallback(), fallback(), key, params);
 }
 
 /** BCP-47-Locale der aktiven Sprache für `Intl`-Formate außerhalb von DI. */

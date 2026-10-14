@@ -6,8 +6,8 @@
  * 2. Hier einen Eintrag ergänzen.
  *
  * Deutsch ist Standard- und Rückfallsprache: Fehlt ein Schlüssel in einer
- * anderen Sprache, erscheint der deutsche Text. Deutsch wird deshalb fest
- * eingebunden, alle anderen Sprachen werden erst bei Bedarf nachgeladen.
+ * anderen Sprache, erscheint der deutsche Text. Jede Sprache ist ein eigener
+ * Chunk und wird erst geladen, wenn sie gebraucht wird (Deutsch immer mit).
  */
 
 export type Dictionary = { readonly [key: string]: string | Dictionary };
@@ -19,7 +19,7 @@ export interface LanguageDefinition {
   readonly label: string;
   /** BCP-47-Locale für Datums-, Zahlen- und Währungsformate. */
   readonly locale: string;
-  /** Lädt das Wörterbuch (bei Deutsch entfällt das, siehe `i18n.service.ts`). */
+  /** Lädt das Wörterbuch als eigenen Chunk. */
   readonly load: () => Promise<{ default: Dictionary }>;
 }
 
