@@ -1,11 +1,11 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { forkJoin, map, switchMap, type Observable } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
+import { forkJoin, map, switchMap } from 'rxjs';
 import { describeApiError } from '../api/api-client.service';
 import { AsyncState } from './async-state';
-import { MemberApiService } from './member-api.service';
+import { MemberApiService, type RsvpAnswer } from './member-api.service';
 import { eventStatusLabel, formatDateTime, formatMoney } from './member-format';
-import type { EventStatus, EventSummary, MemberBalance, MemberProfile } from '../api/api.types';
+import type { EventStatus, EventSummary, MemberBalance, MemberProfile, RsvpStatus } from '../api/api.types';
 import {
   BalanceCardComponent,
   EventCardComponent,
@@ -83,14 +83,9 @@ interface DashboardView {
                 [label]="'member.balance.current' | t"
                 [amount]="formatMoney(view.balance.creditBalance, view.balance.currency)"
                 [negative]="isNegative(view.balance.creditBalance)"
-                [showTopup]="true"
+                [showTopup]="canTopup(view.profile)"
                 (topup)="onTopup()"
               />
-              @if (topupRequested()) {
-                <p class="member-hint" role="status">
-                  {{ 'member.balance.topupHint' | t }}
-                </p>
-              }
               <a class="dash-more" routerLink="/wallet">
                 {{ 'member.dashboard.statementLink' | t }} <vereint-icon name="chevron-right" />
               </a>
@@ -107,28 +102,35 @@ interface DashboardView {
                     [statusTone]="eventTone(event.status)"
                   />
                 </a>
-                @if (attending() !== null) {
+                @if (rsvp(); as myAnswer) {
                   <div class="dash-rsvp" role="group" [attr.aria-label]="'member.dashboard.rsvpGroup' | t">
-                    @if (attending()) {
+                    @if (myAnswer === 'accepted') {
                       <span class="dash-rsvp-state">
                         <vereint-icon name="check" /> {{ 'member.dashboard.attending' | t }}
                       </span>
-                      <button
-                        type="button"
-                        class="dash-rsvp-secondary"
-                        [disabled]="rsvpBusy()"
-                        (click)="setAttendance(event.id, view.profile.id, false)"
-                      >
-                        {{ 'member.rsvp.decline' | t }}
-                      </button>
-                    } @else {
+                    } @else if (myAnswer === 'declined') {
+                      <span class="dash-rsvp-state dash-rsvp-declined">{{ 'member.dashboard.declined' | t }}</span>
+                    } @else if (myAnswer === 'maybe') {
+                      <span class="dash-rsvp-state dash-rsvp-maybe">{{ 'member.dashboard.maybe' | t }}</span>
+                    }
+                    @if (myAnswer !== 'accepted') {
                       <button
                         type="button"
                         class="member-button dash-rsvp-primary"
                         [disabled]="rsvpBusy()"
-                        (click)="setAttendance(event.id, view.profile.id, true)"
+                        (click)="answer(event.id, 'accepted')"
                       >
                         <vereint-icon name="check" /> {{ 'member.rsvp.accept' | t }}
+                      </button>
+                    }
+                    @if (myAnswer !== 'declined') {
+                      <button
+                        type="button"
+                        class="dash-rsvp-secondary"
+                        [disabled]="rsvpBusy()"
+                        (click)="answer(event.id, 'declined')"
+                      >
+                        {{ 'member.rsvp.decline' | t }}
                       </button>
                     }
                   </div>
@@ -250,6 +252,12 @@ interface DashboardView {
         color: var(--color-success);
         font-weight: 700;
       }
+      .dash-rsvp-declined {
+        color: var(--color-danger);
+      }
+      .dash-rsvp-maybe {
+        color: var(--color-text-muted);
+      }
       .dash-rsvp-secondary {
         min-height: 2.75rem;
         padding: 0 1rem;
@@ -334,11 +342,11 @@ interface DashboardView {
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly api = inject(MemberApiService);
+  private readonly router = inject(Router);
 
   protected readonly load = new AsyncState<DashboardView>();
-  protected readonly topupRequested = signal(false);
-  /** Teilnahme am nächsten Termin: `null` = unbekannt oder keine Zusage möglich. */
-  protected readonly attending = signal<boolean | null>(null);
+  /** Eigene Antwort zum nächsten Termin: `null` = nicht eingeladen oder keine Antwort möglich. */
+  protected readonly rsvp = signal<RsvpStatus | null>(null);
   protected readonly rsvpBusy = signal(false);
   protected readonly rsvpError = signal<string | null>(null);
   protected readonly formatMoney = formatMoney;
@@ -417,11 +425,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * „Aufladen“ ist ein reiner UI-Hinweis: die eigentliche Buchung erfolgt
-   * serverseitig durch den Kassenwart, nicht clientseitig.
+   * Aufladen bucht nur der Vorstand bzw. Admin über die Kasse; Mitglieder
+   * sehen den Button deshalb nicht (sie können ihr Guthaben nicht selbst aufladen).
    */
+  protected canTopup(profile: MemberProfile): boolean {
+    const roles = profile.roles ?? [];
+    return roles.includes('board') || roles.includes('admin');
+  }
+
+  /** Führt Vorstand/Admin zur Kasse, wo Aufladungen gebucht werden. */
   protected onTopup(): void {
-    this.topupRequested.set(true);
+    void this.router.navigate(['/board/treasury']);
   }
 
   ngOnDestroy(): void {
@@ -448,30 +462,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return event.status === 'published' && Date.parse(event.startsAt) >= now.getTime();
   }
 
-  /** Lädt, ob das Mitglied beim nächsten Termin schon zugesagt hat. */
+  /** Übernimmt die eigene Antwort zum nächsten Termin aus der Eventliste. */
   private loadAttendance(view: DashboardView): void {
-    this.attending.set(null);
     this.rsvpError.set(null);
     const event = this.nextEvent(view.events);
-    if (!event || !this.canRsvp(event)) return;
-    this.api.listParticipants(event.id).subscribe({
-      next: (participants) =>
-        this.attending.set(participants.some((p) => p.userId === view.profile.id)),
-      error: () => this.attending.set(null),
-    });
+    this.rsvp.set(event && this.canRsvp(event) ? (event.myRsvp ?? null) : null);
   }
 
-  /** Zu- oder Absage direkt von der Startseite (gleiche Endpunkte wie die Eventseite). */
-  protected setAttendance(eventId: string, userId: string, attend: boolean): void {
+  /** Zu- oder Absage direkt von der Startseite (`PUT /events/{id}/rsvp`). */
+  protected answer(eventId: string, status: RsvpAnswer): void {
     this.rsvpBusy.set(true);
     this.rsvpError.set(null);
-    const request: Observable<unknown> = attend
-      ? this.api.addParticipant(eventId, { userId, role: 'participant' })
-      : this.api.removeParticipant(eventId, userId);
-    request.subscribe({
-      next: () => {
+    this.api.respondToEvent(eventId, status).subscribe({
+      next: (event) => {
         this.rsvpBusy.set(false);
-        this.attending.set(attend);
+        this.rsvp.set(event.myRsvp ?? status);
       },
       error: (error: unknown) => {
         this.rsvpBusy.set(false);

@@ -16,11 +16,13 @@ const events: EventSummary[] = [
     endsAt: null,
     ownerId: 'o-1',
     ownerDisplayName: 'Bob',
+    location: 'Vereinsheim',
+    myRsvp: 'invited',
   },
 ];
 
 describe('EventsComponent', () => {
-  let api: { listEvents: ReturnType<typeof vi.fn> };
+  let api: { listEvents: ReturnType<typeof vi.fn>; respondToEvent: ReturnType<typeof vi.fn> };
 
   const create = async () => {
     TestBed.configureTestingModule({
@@ -38,13 +40,41 @@ describe('EventsComponent', () => {
     (fixture.nativeElement as HTMLElement).textContent ?? '';
 
   beforeEach(() => {
-    api = { listEvents: vi.fn(() => of(events)) };
+    api = {
+      listEvents: vi.fn(() => of(events)),
+      respondToEvent: vi.fn((id: string, status: string) => of({ id, myRsvp: status })),
+    };
   });
 
   it('lists the events with a status badge', async () => {
     const fixture = await create();
     expect(html(fixture)).toContain('Sommerfest');
     expect(html(fixture)).toContain('Aktiv');
+  });
+
+  it('offers a visible create button', async () => {
+    const fixture = await create();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('.events-create') as HTMLAnchorElement;
+    expect(link.textContent).toContain('Event anlegen');
+    expect(link.getAttribute('href')).toBe('/events/new');
+  });
+
+  it('lets invited members answer via the rsvp endpoint', async () => {
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(html(fixture)).toContain('Offen');
+    (root.querySelector('.events-accept') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(api.respondToEvent).toHaveBeenCalledWith('e-1', 'accepted');
+    expect(html(fixture)).toContain('Zugesagt');
+    expect(root.querySelector('.events-accept')).toBeNull();
+    expect(root.querySelector('.events-decline')).toBeTruthy();
+  });
+
+  it('shows no answer buttons for events without invitation', async () => {
+    api.listEvents.mockReturnValue(of([{ ...events[0], myRsvp: null }]));
+    const fixture = await create();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.events-rsvp')).toBeNull();
   });
 
   it('shows an empty state when there are no events', async () => {

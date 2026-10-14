@@ -101,3 +101,15 @@ data class AssignPermissionsRequest(
 data class UpdateUserStatusRequest(
     val disabled: Boolean
 )
+
+/**
+ * Eintrag des Mitgliederverzeichnisses, das alle Angemeldeten sehen (z. B. für
+ * Direktnachrichten, Einladungen und die Auswahl im Vorstand). Bewusst ohne
+ * E-Mail-Adresse und Keycloak-Kennung.
+ */
+data class MemberDirectoryEntryDto(
+    val id: String,
+    val displayName: String,
+    val boardRole: String?,
+    val roles: Set<String>
+)

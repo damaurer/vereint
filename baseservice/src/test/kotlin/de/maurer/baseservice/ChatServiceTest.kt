@@ -141,7 +141,7 @@ class ChatServiceTest {
 
         `when`(userService.getOrCreateUser(principal)).thenReturn(owner)
         `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(event))
-        `when`(conversationRepository.findByEventId(eventId)).thenReturn(listOf(conversation(event)))
+        `when`(conversationRepository.findByDirectKey(ChatService.eventConversationKey(eventId))).thenReturn(Optional.of(conversation(event)))
         `when`(chatMessageRepository.save(anyMessage())).thenAnswer { it.arguments[0] }
 
         val dto = chatService.sendMessage(eventId, SendMessageRequest(message = "Hallo"), principal)
@@ -180,7 +180,7 @@ class ChatServiceTest {
         `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(event))
         `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, otherId))
             .thenReturn(Optional.of(EventParticipantEntity(event = event, user = other)))
-        `when`(conversationRepository.findByEventId(eventId)).thenReturn(listOf(conversation(event)))
+        `when`(conversationRepository.findByDirectKey(ChatService.eventConversationKey(eventId))).thenReturn(Optional.of(conversation(event)))
         `when`(chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId)).thenReturn(emptyList())
 
         val messages = chatService.listMessages(eventId, principal)
@@ -197,7 +197,7 @@ class ChatServiceTest {
 
         `when`(userService.getOrCreateUser(principal)).thenReturn(board)
         `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(event))
-        `when`(conversationRepository.findByEventId(eventId)).thenReturn(listOf(conversation(event)))
+        `when`(conversationRepository.findByDirectKey(ChatService.eventConversationKey(eventId))).thenReturn(Optional.of(conversation(event)))
         `when`(chatMessageRepository.save(anyMessage())).thenAnswer { it.arguments[0] }
 
         val dto = chatService.sendMessage(eventId, SendMessageRequest(message = "Moderation"), principal)
@@ -228,7 +228,7 @@ class ChatServiceTest {
         val guest = guest(event, SecureTokens.sha256Hex(rawToken))
 
         `when`(eventGuestRepository.findByGuestTokenHash(SecureTokens.sha256Hex(rawToken))).thenReturn(Optional.of(guest))
-        `when`(conversationRepository.findByEventId(eventId)).thenReturn(listOf(conversation(event)))
+        `when`(conversationRepository.findByDirectKey(ChatService.eventConversationKey(eventId))).thenReturn(Optional.of(conversation(event)))
         `when`(chatMessageRepository.save(anyMessage())).thenAnswer { it.arguments[0] }
 
         val dto = chatService.sendGuestMessage(eventId, rawToken, SendMessageRequest(message = "Hallo vom Gast"))

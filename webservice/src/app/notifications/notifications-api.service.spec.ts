@@ -6,12 +6,18 @@ import { NotificationsApiService } from './notifications-api.service';
 
 describe('NotificationsApiService', () => {
   let service: NotificationsApiService;
-  let api: { get: ReturnType<typeof vi.fn>; post: ReturnType<typeof vi.fn>; delete: ReturnType<typeof vi.fn> };
+  let api: {
+    get: ReturnType<typeof vi.fn>;
+    post: ReturnType<typeof vi.fn>;
+    put: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     api = {
       get: vi.fn(() => of([])),
       post: vi.fn(() => of({})),
+      put: vi.fn(() => of({})),
       delete: vi.fn(() => of(undefined)),
     };
 
@@ -22,6 +28,11 @@ describe('NotificationsApiService', () => {
       ],
     });
     service = TestBed.inject(NotificationsApiService);
+  });
+
+  it('answers an event invitation via the rsvp endpoint', () => {
+    service.respondToEvent('e 1', 'accepted');
+    expect(api.put).toHaveBeenCalledWith('/events/e%201/rsvp', { status: 'accepted' });
   });
 
   it('lists notifications and gets unread count', () => {

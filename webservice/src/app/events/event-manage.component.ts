@@ -1,11 +1,16 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { forkJoin, type Observable } from 'rxjs';
+import { catchError, forkJoin, of, type Observable } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { eventStatusLabel, formatDateTime, formatMoney } from '../member/member-format';
 import { describeApiError } from '../api/api-client.service';
-import type { EventDetail, EventParticipant, MemberProfile } from '../api/api.types';
+import type { DirectoryMember, EventDetail, EventParticipant, FoodSummary, MemberProfile } from '../api/api.types';
+import type { DrinkSummaryDto } from '../catalog/catalog-api.service';
+import type { SublistSummaryDto } from '../sublists/sublists-api.service';
+import { rsvpLabelKey, rsvpTone } from '../member/member-api.service';
+import { REMINDER_HOUR_OPTIONS, isoToLocalInput, localInputToIso, reminderLabelKey } from './event-datetime';
+import { MemberPickerComponent } from './member-picker.component';
 import {
   InfoPanelComponent,
   StatusBadgeComponent,
@@ -19,7 +24,7 @@ import type {
   EventFood,
   EventStatus,
   Invite,
-  ParticipantRole,
+  UpdateEventPayload,
 } from './event-manage.types';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
@@ -36,6 +41,10 @@ interface ManageSections {
   food: EventFood[];
   invites: Invite[];
   messages: ChatMessage[];
+  directory: DirectoryMember[];
+  catalogDrinks: DrinkSummaryDto[];
+  catalogFood: FoodSummary[];
+  sublists: SublistSummaryDto[];
 }
 
 /** Auswählbare Eventstatuswerte für das Stammdatenformular. */
@@ -60,7 +69,7 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
  */
 @Component({
   selector: 'app-event-manage',
-  imports: [StateComponent, FormsModule, RouterLink, InfoPanelComponent, StatusBadgeComponent, TranslatePipe],
+  imports: [StateComponent, FormsModule, RouterLink, InfoPanelComponent, StatusBadgeComponent, MemberPickerComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="manage-title">
@@ -123,10 +132,43 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                 <textarea name="description" [(ngModel)]="form.description" maxlength="4000"></textarea>
               </label>
               <label class="manage-field">
+                <span>{{ 'events.manage.details.start' | t }}</span>
+                <input type="datetime-local" name="startsAt" [(ngModel)]="form.startsAt" required />
+              </label>
+              <label class="manage-field">
+                <span>{{ 'events.manage.details.end' | t }}</span>
+                <input type="datetime-local" name="endsAt" [(ngModel)]="form.endsAt" />
+              </label>
+              <label class="manage-field">
                 <span>{{ 'events.manage.details.status' | t }}</span>
                 <select name="status" [(ngModel)]="form.status">
                   @for (value of statusValues; track value) {
                     <option [value]="value">{{ eventStatusLabel(value) }}</option>
+                  }
+                </select>
+              </label>
+              <fieldset class="manage-fieldset">
+                <legend>{{ 'events.create.notifyHeading' | t }}</legend>
+                <label class="manage-radio">
+                  <input type="radio" name="timing" value="onPublish" [(ngModel)]="form.timing" />
+                  {{ 'events.create.notifyOnPublish' | t }}
+                </label>
+                <label class="manage-radio">
+                  <input type="radio" name="timing" value="at" [(ngModel)]="form.timing" />
+                  {{ 'events.create.notifyAt' | t }}
+                </label>
+                @if (form.timing === 'at') {
+                  <label class="manage-field">
+                    <span>{{ 'events.create.notifyAtTime' | t }}</span>
+                    <input type="datetime-local" name="notifyAt" [(ngModel)]="form.notifyAt" required />
+                  </label>
+                }
+              </fieldset>
+              <label class="manage-field">
+                <span>{{ 'events.create.reminder' | t }}</span>
+                <select name="reminder" [(ngModel)]="form.reminderHours">
+                  @for (option of reminderOptions; track option) {
+                    <option [ngValue]="option">{{ reminderLabel(option) }}</option>
                   }
                 </select>
               </label>
@@ -142,15 +184,21 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                 <ul class="member-list">
                   @for (participant of data.participants; track participant.userId) {
                     <li class="member-list-item manage-row">
-                      <span class="member-list-title">{{ participant.displayName }}</span>
+                      <span class="member-list-title">
+                        {{ participant.displayName }}
+                        @if (participant.role === 'coHost') {
+                          <small class="member-muted">· {{ 'events.manage.participants.roleCoHost' | t }}</small>
+                        }
+                      </span>
                       <vereint-status-badge
-                        [label]="participantRoleLabel(participant.role)"
-                        [tone]="participantTone(participant.role)"
+                        [label]="participant.rsvp ? (rsvpLabelKey(participant.rsvp) | t) : participantRoleLabel(participant.role)"
+                        [tone]="participant.rsvp ? rsvpTone(participant.rsvp) : participantTone(participant.role)"
                       />
                       <button
                         type="button"
                         class="member-button member-button-danger"
                         [disabled]="busy()"
+                        [attr.aria-label]="'events.manage.participants.removeNamed' | t: { name: participant.displayName }"
                         (click)="removeParticipant(participant.userId)"
                       >
                         {{ 'events.manage.remove' | t }}
@@ -159,19 +207,21 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                   }
                 </ul>
               }
-              <form class="manage-form manage-inline" (ngSubmit)="addParticipant()">
-                <label class="manage-field">
-                  <span>{{ 'events.manage.participants.id' | t }}</span>
-                  <input name="participantId" [(ngModel)]="participantForm.userId" required />
-                </label>
-                <label class="manage-field">
-                  <span>{{ 'events.manage.participants.role' | t }}</span>
-                  <select name="participantRole" [(ngModel)]="participantForm.role">
-                    <option value="participant">{{ 'events.manage.participants.roleParticipant' | t }}</option>
-                    <option value="coHost">{{ 'events.manage.participants.roleCoHost' | t }}</option>
-                  </select>
-                </label>
-                <button type="submit" class="member-button" [disabled]="busy()">{{ 'events.manage.participants.add' | t }}</button>
+              <form class="manage-form manage-invite" (ngSubmit)="inviteMembers()">
+                <app-member-picker
+                  [legend]="'events.manage.participants.inviteLegend' | t"
+                  [members]="data.directory"
+                  [excludeIds]="participantIds(data.participants)"
+                  [(selected)]="inviteIds"
+                  [(allMembers)]="inviteAll"
+                />
+                <button
+                  type="submit"
+                  class="member-button"
+                  [disabled]="busy() || (!inviteAll && inviteIds.length === 0)"
+                >
+                  {{ 'events.manage.participants.invite' | t }}
+                </button>
               </form>
 
               <!-- Eventgetränke -->
@@ -182,7 +232,10 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                 <ul class="member-list">
                   @for (drink of data.drinks; track drink.id) {
                     <li class="member-list-item manage-row">
-                      <span class="member-list-title">{{ drink.drinkName }}</span>
+                      <span class="member-list-title">
+                        {{ drink.drinkName }}
+                        <small class="manage-id">{{ drink.drinkId }}</small>
+                      </span>
                       <span class="member-list-meta">
                         {{ formatMoney(drink.price, drink.currency) }}
                         @if (drink.effectiveCostPrice) {
@@ -203,8 +256,13 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
               }
               <form class="manage-form manage-inline" (ngSubmit)="addDrink()">
                 <label class="manage-field">
-                  <span>{{ 'events.manage.drinks.id' | t }}</span>
-                  <input name="drinkId" [(ngModel)]="drinkForm.drinkId" required />
+                  <span>{{ 'events.manage.drinks.pick' | t }}</span>
+                  <select name="drinkId" [(ngModel)]="drinkForm.drinkId" required>
+                    <option value="">{{ 'events.manage.choose' | t }}</option>
+                    @for (drink of availableDrinks(data); track drink.id) {
+                      <option [value]="drink.id">{{ drink.name }} · {{ formatMoney(drink.defaultPrice + '', drink.currency) }}</option>
+                    }
+                  </select>
                 </label>
                 <label class="manage-field">
                   <span>{{ 'events.manage.priceOptional' | t }}</span>
@@ -222,8 +280,13 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
               </form>
               <form class="manage-form manage-inline" (ngSubmit)="assignSublist()">
                 <label class="manage-field">
-                  <span>{{ 'events.manage.drinks.sublistId' | t }}</span>
-                  <input name="sublistId" [(ngModel)]="sublistId" required />
+                  <span>{{ 'events.manage.drinks.sublistPick' | t }}</span>
+                  <select name="sublistId" [(ngModel)]="sublistId" required>
+                    <option value="">{{ 'events.manage.choose' | t }}</option>
+                    @for (sublist of data.sublists; track sublist.id) {
+                      <option [value]="sublist.id">{{ sublist.name }} ({{ sublist.itemCount }})</option>
+                    }
+                  </select>
                 </label>
                 <button type="submit" class="member-button" [disabled]="busy()">{{ 'events.manage.drinks.assignSublist' | t }}</button>
               </form>
@@ -236,7 +299,10 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                 <ul class="member-list">
                   @for (item of data.food; track item.id) {
                     <li class="member-list-item manage-row">
-                      <span class="member-list-title">{{ item.foodName }}</span>
+                      <span class="member-list-title">
+                        {{ item.foodName }}
+                        <small class="manage-id">{{ item.foodId }}</small>
+                      </span>
                       <span class="member-list-meta">
                         {{ formatMoney(item.effectivePrice, item.currency) }}
                         @if (item.price === null) { <small>{{ 'events.manage.food.default' | t }}</small> }
@@ -257,8 +323,13 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
               }
               <form class="manage-form manage-inline" (ngSubmit)="addFood()">
                 <label class="manage-field">
-                  <span>{{ 'events.manage.food.id' | t }}</span>
-                  <input name="foodId" [(ngModel)]="foodForm.foodId" required />
+                  <span>{{ 'events.manage.food.pick' | t }}</span>
+                  <select name="foodId" [(ngModel)]="foodForm.foodId" required>
+                    <option value="">{{ 'events.manage.choose' | t }}</option>
+                    @for (food of availableFood(data); track food.id) {
+                      <option [value]="food.id">{{ food.name }} · {{ formatMoney(food.defaultPrice + '', food.currency) }}</option>
+                    }
+                  </select>
                 </label>
                 <label class="manage-field">
                   <span>{{ 'events.manage.priceOptional' | t }}</span>
@@ -375,6 +446,35 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
         border-radius: 0.5rem;
         font: inherit;
       }
+      .manage-fieldset {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        flex: 1 1 100%;
+        margin: 0;
+        padding: 0.75rem;
+        border: 1px solid var(--color-border, #e2e8f0);
+        border-radius: 0.5rem;
+      }
+      .manage-radio {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 2.5rem;
+      }
+      .manage-invite {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .manage-invite button {
+        align-self: flex-start;
+      }
+      .manage-id {
+        display: block;
+        font-size: 0.7rem;
+        color: var(--color-text-muted, #64748b);
+        word-break: break-all;
+      }
       .manage-row {
         display: flex;
         align-items: center;
@@ -420,13 +520,26 @@ export class EventManageComponent implements OnInit, OnDestroy {
   protected readonly isManager = computed(() => {
     const head = this.header.data();
     if (!head) return false;
+    if (head.event.canManage) return true;
     const isOwner = head.event.ownerId === head.profile.id;
     const isBoard = head.profile.roles.includes('board') || head.profile.roles.includes('admin');
     return isOwner || isBoard;
   });
 
-  protected readonly form = { title: '', description: '', location: '', status: 'draft' as EventStatus };
-  protected participantForm: { userId: string; role: ParticipantRole } = { userId: '', role: 'participant' };
+  protected readonly form = {
+    title: '',
+    description: '',
+    location: '',
+    startsAt: '',
+    endsAt: '',
+    status: 'draft' as EventStatus,
+    timing: 'onPublish' as 'onPublish' | 'at',
+    notifyAt: '',
+    reminderHours: null as number | null,
+  };
+  protected readonly reminderOptions = REMINDER_HOUR_OPTIONS;
+  protected inviteIds: string[] = [];
+  protected inviteAll = false;
   protected drinkForm = { drinkId: '', price: '', costPrice: '', currency: '' };
   protected foodForm = { foodId: '', price: '', costPrice: '', currency: '' };
   protected sublistId = '';
@@ -436,6 +549,33 @@ export class EventManageComponent implements OnInit, OnDestroy {
   protected readonly eventStatusLabel = eventStatusLabel;
   protected readonly formatDateTime = formatDateTime;
   protected readonly formatMoney = formatMoney;
+  protected readonly rsvpLabelKey = rsvpLabelKey;
+  protected readonly rsvpTone = rsvpTone;
+
+  protected reminderLabel(hours: number | null): string {
+    const { key, count } = reminderLabelKey(hours);
+    return translate(key, { count });
+  }
+
+  protected participantIds(participants: EventParticipant[]): string[] {
+    return participants.map((p) => p.userId);
+  }
+
+  /** Freigegebene Getränke, die dem Event noch nicht zugewiesen sind. */
+  protected availableDrinks(data: ManageSections): DrinkSummaryDto[] {
+    const assigned = new Set(data.drinks.map((d) => d.drinkId));
+    return data.catalogDrinks
+      .filter((d) => d.active !== false && !assigned.has(d.id))
+      .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  }
+
+  /** Aktive Speisen, die dem Event noch nicht zugewiesen sind. */
+  protected availableFood(data: ManageSections): FoodSummary[] {
+    const assigned = new Set(data.food.map((f) => f.foodId));
+    return data.catalogFood
+      .filter((f) => f.active !== false && !assigned.has(f.id))
+      .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  }
 
   /** Ordnet den Eventstatus einer Badge-Farbe der geteilten Primitive zu. */
   protected eventTone(status: EventStatus): StatusTone {
@@ -481,6 +621,11 @@ export class EventManageComponent implements OnInit, OnDestroy {
         this.form.description = head.event.description ?? '';
         this.form.location = head.event.location ?? '';
         this.form.status = head.event.status;
+        this.form.startsAt = isoToLocalInput(head.event.startsAt);
+        this.form.endsAt = isoToLocalInput(head.event.endsAt);
+        this.form.timing = head.event.invitationNotifyAt ? 'at' : 'onPublish';
+        this.form.notifyAt = isoToLocalInput(head.event.invitationNotifyAt);
+        this.form.reminderHours = head.event.reminderHoursBefore || null;
         if (this.isManager()) {
           this.loadSections();
         }
@@ -496,6 +641,11 @@ export class EventManageComponent implements OnInit, OnDestroy {
         food: this.service.listEventFood(this.eventId),
         invites: this.service.listInvites(this.eventId),
         messages: this.service.listMessages(this.eventId),
+        // Auswahllisten: fehlen sie, bleibt die Verwaltung trotzdem nutzbar.
+        directory: this.service.listDirectory().pipe(catchError(() => of([]))),
+        catalogDrinks: this.service.listCatalogDrinks().pipe(catchError(() => of([]))),
+        catalogFood: this.service.listClubFood().pipe(catchError(() => of([]))),
+        sublists: this.service.listSublists().pipe(catchError(() => of([]))),
       }),
     );
   }
@@ -518,38 +668,62 @@ export class EventManageComponent implements OnInit, OnDestroy {
     });
   }
 
-  protected saveEvent(): void {
-    this.busy.set(true);
-    this.actionError.set(null);
-    this.actionInfo.set(null);
-    this.service
-      .updateEvent(this.eventId, {
-        title: this.form.title.trim(),
-        description: this.form.description.trim() || null,
-        location: this.form.location.trim() || null,
-        status: this.form.status,
-      })
-      .subscribe({
-        next: (updated) => {
-          this.busy.set(false);
-          this.actionInfo.set(translate('events.manage.info.detailsSaved'));
-          this.header.data.set({ event: updated, profile: this.header.data()!.profile });
-        },
-        error: (error: unknown) => {
-          this.busy.set(false);
-          this.actionError.set(describeApiError(error));
-        },
-      });
+  /** Baut die Änderung der Stammdaten; ein Fehlertext, falls etwas fehlt. */
+  protected buildUpdate(): UpdateEventPayload | string {
+    const title = this.form.title.trim();
+    if (!title) return translate('events.create.errors.title');
+    const startsAt = localInputToIso(this.form.startsAt);
+    if (!startsAt) return translate('events.create.errors.start');
+    const endsAt = localInputToIso(this.form.endsAt);
+    if (endsAt && endsAt < startsAt) return translate('events.create.errors.end');
+    const payload: UpdateEventPayload = {
+      title,
+      description: this.form.description.trim() || null,
+      location: this.form.location.trim() || null,
+      startsAt,
+      endsAt,
+      status: this.form.status,
+      reminderHoursBefore: this.form.reminderHours ?? 0,
+    };
+    if (this.form.timing === 'at') {
+      const notifyAt = localInputToIso(this.form.notifyAt);
+      if (!notifyAt) return translate('events.create.errors.notifyAt');
+      payload.invitationNotifyAt = notifyAt;
+    } else {
+      payload.inviteOnPublish = true;
+    }
+    return payload;
   }
 
-  protected addParticipant(): void {
-    const userId = this.participantForm.userId.trim();
-    if (!userId) return;
-    this.runAction(
-      this.service.addParticipant(this.eventId, { userId, role: this.participantForm.role }),
-      translate('events.manage.info.participantAdded'),
-    );
-    this.participantForm = { userId: '', role: 'participant' };
+  protected saveEvent(): void {
+    const payload = this.buildUpdate();
+    this.actionInfo.set(null);
+    if (typeof payload === 'string') {
+      this.actionError.set(payload);
+      return;
+    }
+    this.busy.set(true);
+    this.actionError.set(null);
+    this.service.updateEvent(this.eventId, payload).subscribe({
+      next: (updated) => {
+        this.busy.set(false);
+        this.actionInfo.set(translate('events.manage.info.detailsSaved'));
+        this.header.data.set({ event: updated, profile: this.header.data()!.profile });
+      },
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.actionError.set(describeApiError(error));
+      },
+    });
+  }
+
+  /** Lädt die gewählten bzw. alle Mitglieder ein. */
+  protected inviteMembers(): void {
+    if (!this.inviteAll && this.inviteIds.length === 0) return;
+    const payload = this.inviteAll ? { allMembers: true } : { userIds: [...this.inviteIds] };
+    this.runAction(this.service.inviteMembers(this.eventId, payload), translate('events.manage.info.membersInvited'));
+    this.inviteIds = [];
+    this.inviteAll = false;
   }
 
   protected removeParticipant(userId: string): void {

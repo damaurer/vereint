@@ -3,6 +3,8 @@ package de.maurer.baseservice.service
 import de.maurer.baseservice.domain.NotificationEntity
 import de.maurer.baseservice.domain.PushSubscriptionEntity
 import de.maurer.baseservice.domain.UserEntity
+import de.maurer.baseservice.dto.BroadcastNotificationRequest
+import de.maurer.baseservice.dto.BroadcastResultDto
 import de.maurer.baseservice.dto.NotificationDto
 import de.maurer.baseservice.dto.PushSubscriptionDto
 import de.maurer.baseservice.dto.RegisterPushSubscriptionRequest
@@ -172,13 +174,49 @@ class NotificationService(
     }
 
     /**
+     * Rundbrief des Vorstands an ausgewählte Mitglieder oder an alle aktiven
+     * Mitglieder. Jede Person bekommt eine eigene Mitteilung samt Push.
+     */
+    fun broadcast(request: BroadcastNotificationRequest, principal: UserPrincipal): BroadcastResultDto {
+        val caller = userService.getOrCreateUser(principal)
+        requireBoardOrAdmin(caller, principal)
+
+        val title = require(request.title, "title")
+        val body = require(request.body, "body")
+        val targets = if (request.allMembers == true) {
+            userRepository.findByDisabled(false)
+        } else {
+            val ids = request.userIds.orEmpty().map { Identifiers.parseUuid(it, "userIds") }.distinct()
+            if (ids.isEmpty()) {
+                throw InvalidRequestException(Msg("error.notification.noRecipients"), ErrorCode.INVALID_REQUEST)
+            }
+            val found = userRepository.findAllById(ids)
+            if (found.size != ids.size) {
+                val missing = ids - found.map { it.id }.toSet()
+                throw ResourceNotFoundException(Msg("error.user.notFound", missing.first()), ErrorCode.NOT_FOUND)
+            }
+            found
+        }
+        val notifications = notifyUsers(targets, title, body, DEFAULT_TYPE)
+        notifications.forEach {
+            auditService.recordNotification(
+                caller,
+                AuditService.ACTION_NOTIFICATION_SENT,
+                it.id,
+                "target=${it.user?.id}; type=$DEFAULT_TYPE"
+            )
+        }
+        return BroadcastResultDto(sent = notifications.size)
+    }
+
+    /**
      * Interner Einstiegspunkt für andere Slices, um ein Mitglied zu benachrichtigen
      * (z. B. Einladungen, Ledger-Ereignisse). Speichert die Benachrichtigung und
      * stellt sie – sofern konfiguriert – nach dem Commit per Web Push zu.
      */
-    fun notifyUser(target: UserEntity, title: String, body: String, type: String): NotificationEntity {
+    fun notifyUser(target: UserEntity, title: String, body: String, type: String, link: String? = null): NotificationEntity {
         val notification = notificationRepository.save(
-            NotificationEntity(user = target, title = title, body = body, type = type)
+            NotificationEntity(user = target, title = title, body = body, type = type, link = link)
         )
         pushDispatcher.dispatch(listOf(target.id), PushMessage(title = title, body = body, type = type))
         return notification
@@ -187,9 +225,15 @@ class NotificationService(
     /**
      * Versendet eine Benachrichtigung an mehrere Empfänger (z. B. Event-Teilnehmer bei neuem Moment).
      */
-    fun notifyUsers(targets: Collection<UserEntity>, title: String, body: String, type: String): List<NotificationEntity> {
+    fun notifyUsers(
+        targets: Collection<UserEntity>,
+        title: String,
+        body: String,
+        type: String,
+        link: String? = null
+    ): List<NotificationEntity> {
         val notifications = targets.map {
-            notificationRepository.save(NotificationEntity(user = it, title = title, body = body, type = type))
+            notificationRepository.save(NotificationEntity(user = it, title = title, body = body, type = type, link = link))
         }
         pushDispatcher.dispatch(targets.map { it.id }, PushMessage(title = title, body = body, type = type))
         return notifications
@@ -227,6 +271,7 @@ class NotificationService(
             body = notification.body,
             type = notification.type,
             read = notification.read,
+            link = notification.link,
             createdAt = notification.createdAt
         )
 

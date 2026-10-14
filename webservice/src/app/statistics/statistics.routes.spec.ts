@@ -1,7 +1,6 @@
 import type { Route } from '@angular/router';
 import { routes } from '../app.routes';
 import { authGuard, permissionGuard } from '../auth/auth.guards';
-import { STATISTICS_PERMISSION } from '../shell/nav-model';
 
 /** Sucht rekursiv die erste Route mit dem gegebenen Pfad. */
 function findRoute(all: Route[], path: string): Route | undefined {
@@ -13,7 +12,7 @@ function findRoute(all: Route[], path: string): Route | undefined {
   return undefined;
 }
 
-describe('statistik route (deny by default)', () => {
+describe('statistik route', () => {
   const route = findRoute(routes, 'statistik');
 
   it('is registered as a lazily loaded child route', () => {
@@ -21,12 +20,13 @@ describe('statistik route (deny by default)', () => {
     expect(route?.loadComponent).toBeTypeOf('function');
   });
 
-  it('is guarded by both auth and permission guards', () => {
-    expect(route?.canActivate).toContain(authGuard);
-    expect(route?.canActivate).toContain(permissionGuard);
+  it('is open to every signed-in member (auth guard only)', () => {
+    expect(route?.canActivate).toEqual([authGuard]);
+    expect(route?.canActivate).not.toContain(permissionGuard);
   });
 
-  it('requires the statistics permission via route data', () => {
-    expect(route?.data?.['permissions']).toEqual([STATISTICS_PERMISSION]);
+  it('no longer requires the statistics permission', () => {
+    expect(route?.data?.['permissions']).toBeUndefined();
+    expect(route?.data?.['title']).toBe('routes.statistics.title');
   });
 });

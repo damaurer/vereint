@@ -1,0 +1,7 @@
+.env.e2e
+node_modules/
+test-results/
+playwright-report/
+.auth/
+.ca/
+stack-logs.txt

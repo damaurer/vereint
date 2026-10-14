@@ -2,6 +2,7 @@ import type { ProblemDetails, RequestIdentity, UserRole, BoardRole, AppContext }
 import { createCorrelationId, logSecurityEvent } from '../auth/security-log';
 import { serverEnvironment } from '../config/environment';
 import {
+  invalidateAccessDecision as dropCachedDecision,
   readAccessDecision,
   readStaleAccessDecision,
   writeAccessDecision,
@@ -88,6 +89,9 @@ export function resolvePathAppContext(pathname: string): PathAppContextMatch | n
   if (clean.startsWith('/events/')) {
     const parts = clean.split('/');
     const eventId = parts[2];
+    if (eventId === 'new' && parts.length === 3) {
+      return { appContext: 'memberPwa' };
+    }
     if (parts[3] === 'manage') {
       return { appContext: 'eventOwner', eventId, isManage: true };
     }
@@ -419,6 +423,13 @@ export async function checkResourceAccess(options: CheckResourceAccessOptions): 
 
   if (appContext === 'eventOwner' || appContext === 'event') {
     const isAllowed = evaluateEventAccess(decision, appContext, eventId);
+    // Event-Zugehörigkeiten ändern sich laufend (Einladung, Teilnahme). Eine
+    // Ablehnung aus dem Cache wird deshalb einmal frisch beim Fachservice
+    // geprüft, statt neu Eingeladene bis zum Ablauf der TTL auszusperren.
+    if (!isAllowed && resolved.fromCache && options.sessionId) {
+      dropCachedDecision(options.sessionId);
+      return checkResourceAccess(options);
+    }
     return { outcome: isAllowed ? 'allowed' : 'denied', decision };
   }
 

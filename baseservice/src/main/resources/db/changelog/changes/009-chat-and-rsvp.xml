@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+    <property name="text.type" value="TEXT" dbms="postgresql"/>
+    <property name="text.type" value="VARCHAR(65535)" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 120. Vereinschat und Direktnachrichten: Lesestand je Mitglied, eine
+         eindeutige Paarung je Direktchat und eine angepinnte Infotafel. -->
+    <changeSet id="120-conversation-read-state-and-direct-chats" author="claude">
+        <addColumn tableName="conversation_members">
+            <column name="last_read_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </addColumn>
+        <addColumn tableName="conversations">
+            <column name="direct_key" type="VARCHAR(80)"/>
+            <column name="pinned_text" type="${text.type}"/>
+            <column name="pinned_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_conversations_pinned_by" references="users(id)"/>
+            </column>
+            <column name="pinned_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </addColumn>
+        <addUniqueConstraint tableName="conversations" columnNames="direct_key" constraintName="uk_conversations_direct_key"/>
+        <createIndex tableName="conversation_members" indexName="idx_conversation_members_user">
+            <column name="user_id"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="conversation_members" indexName="idx_conversation_members_user"/>
+            <dropUniqueConstraint tableName="conversations" constraintName="uk_conversations_direct_key"/>
+            <dropColumn tableName="conversations" columnName="pinned_at"/>
+            <dropColumn tableName="conversations" columnName="pinned_by"/>
+            <dropColumn tableName="conversations" columnName="pinned_text"/>
+            <dropColumn tableName="conversations" columnName="direct_key"/>
+            <dropColumn tableName="conversation_members" columnName="last_read_at"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 121. Reaktionen auf Chatnachrichten (ein Emoji je Mitglied und Nachricht). -->
+    <changeSet id="121-chat-reactions" author="claude">
+        <createTable tableName="chat_reactions">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="message_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_chat_reactions_message" references="chat_messages(id)" deleteCascade="true"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_chat_reactions_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="emoji" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="chat_reactions" columnNames="message_id, user_id, emoji" constraintName="uk_chat_reactions_message_user_emoji"/>
+        <rollback>
+            <dropTable tableName="chat_reactions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 122. Einladungen: Zu-/Absage je Teilnehmer, Versandzeitpunkte und die
+         im Event einstellbaren Benachrichtigungszeitpunkte. Bestehende
+         Teilnehmer galten bisher als zugesagt und wurden nie benachrichtigt;
+         sie bekommen deshalb keine nachträgliche Einladung. -->
+    <changeSet id="122-event-rsvp" author="claude">
+        <addColumn tableName="event_participants">
+            <column name="rsvp" type="VARCHAR(16)" defaultValue="invited">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rsvp_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="invitation_sent_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="reminder_sent_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </addColumn>
+        <update tableName="event_participants">
+            <column name="rsvp" value="accepted"/>
+            <column name="invitation_sent_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </update>
+        <sql>ALTER TABLE event_participants ADD CONSTRAINT ck_event_participants_rsvp CHECK (rsvp IN ('invited', 'accepted', 'maybe', 'declined'))</sql>
+        <addColumn tableName="events">
+            <column name="invitation_notify_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="reminder_hours_before" type="INTEGER"/>
+        </addColumn>
+        <addColumn tableName="notifications">
+            <column name="link" type="VARCHAR(512)"/>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="notifications" columnName="link"/>
+            <dropColumn tableName="events" columnName="reminder_hours_before"/>
+            <dropColumn tableName="events" columnName="invitation_notify_at"/>
+            <sql>ALTER TABLE event_participants DROP CONSTRAINT ck_event_participants_rsvp</sql>
+            <dropColumn tableName="event_participants" columnName="reminder_sent_at"/>
+            <dropColumn tableName="event_participants" columnName="invitation_sent_at"/>
+            <dropColumn tableName="event_participants" columnName="rsvp_at"/>
+            <dropColumn tableName="event_participants" columnName="rsvp"/>
+        </rollback>
+    </changeSet>
+    <!-- 123. Genau ein Vereinschat, genau ein Chat je Event und jedes Mitglied
+         nur einmal je Chat, auch bei parallelen ersten Aufrufen. Doppelte
+         Mitgliedszeilen (vorher moeglich) werden auf die aelteste reduziert. -->
+    <changeSet id="123-unique-conversations-and-members" author="claude">
+        <sql dbms="postgresql">
+            DELETE FROM conversation_members a USING conversation_members b
+            WHERE a.user_id IS NOT NULL AND a.conversation_id = b.conversation_id AND a.user_id = b.user_id
+              AND (a.joined_at &gt; b.joined_at OR (a.joined_at = b.joined_at AND a.id::text &gt; b.id::text))
+        </sql>
+        <sql dbms="postgresql">
+            DELETE FROM conversation_members a USING conversation_members b
+            WHERE a.guest_id IS NOT NULL AND a.conversation_id = b.conversation_id AND a.guest_id = b.guest_id
+              AND (a.joined_at &gt; b.joined_at OR (a.joined_at = b.joined_at AND a.id::text &gt; b.id::text))
+        </sql>
+        <addUniqueConstraint tableName="conversation_members" columnNames="conversation_id, user_id"
+                             constraintName="uk_conversation_members_user"/>
+        <addUniqueConstraint tableName="conversation_members" columnNames="conversation_id, guest_id"
+                             constraintName="uk_conversation_members_guest"/>
+        <sql>
+            UPDATE conversations SET direct_key = 'club'
+            WHERE id = (SELECT c.id FROM conversations c WHERE c.type = 'club' AND c.direct_key IS NULL
+                        ORDER BY c.created_at, c.id LIMIT 1)
+              AND NOT EXISTS (SELECT 1 FROM conversations k WHERE k.direct_key = 'club')
+        </sql>
+        <sql>
+            UPDATE conversations SET direct_key = CONCAT('event:', CAST(event_id AS VARCHAR(36)))
+            WHERE type = 'event' AND event_id IS NOT NULL AND direct_key IS NULL
+              AND NOT EXISTS (
+                SELECT 1 FROM conversations o
+                WHERE o.type = 'event' AND o.event_id = conversations.event_id
+                  AND (o.created_at &lt; conversations.created_at
+                       OR (o.created_at = conversations.created_at AND CAST(o.id AS VARCHAR(36)) &lt; CAST(conversations.id AS VARCHAR(36)))))
+        </sql>
+        <rollback>
+            <dropUniqueConstraint tableName="conversation_members" constraintName="uk_conversation_members_guest"/>
+            <dropUniqueConstraint tableName="conversation_members" constraintName="uk_conversation_members_user"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -71,6 +71,13 @@ export const routes: Routes = [
     loadComponent: () => import('./member/events.component').then((m) => m.EventsComponent),
   },
   {
+    // Muss vor `events/:eventId` stehen, sonst gilt `new` als Event-ID.
+    path: 'events/new',
+    canActivate: [authGuard],
+    data: { title: 'routes.eventCreate.title', description: 'routes.eventCreate.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./events/event-create.component').then((m) => m.EventCreateComponent),
+  },
+  {
     path: 'events/:eventId',
     canActivate: [authGuard],
     data: { title: 'routes.eventDetail.title', description: 'routes.eventDetail.description', access: 'routes.access.protected' },
@@ -196,13 +203,13 @@ export const routes: Routes = [
     loadComponent: () => import('./tablet/tablet.component').then((m) => m.TabletComponent),
   },
   {
+    // Statistik sehen alle Angemeldeten (eigene Werte und Vereinsranking).
     path: 'statistik',
-    canActivate: [authGuard, permissionGuard],
+    canActivate: [authGuard],
     data: {
       title: 'routes.statistics.title',
       description: 'routes.statistics.description',
       access: 'routes.access.statistics',
-      permissions: ['statistics.view'],
     },
     loadComponent: () =>
       import('./statistics/statistics.component').then((m) => m.StatisticsComponent),

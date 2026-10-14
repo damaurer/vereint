@@ -106,6 +106,27 @@ export function resolveServerEnvironment(env: Record<string, string | undefined>
 }
 
 /**
+ * Hosts, für die Angular SSR rendern darf. Angular lehnt jeden anderen
+ * `Host`-Header ab (SSRF-Schutz); `angular.json` enthält nur die lokalen
+ * Entwicklungs-Hosts. Die öffentliche Domain stammt deshalb aus
+ * `PUBLIC_BASE_URL`, weitere Hosts optional aus `NG_ALLOWED_HOSTS`.
+ */
+export function ssrAllowedHosts(publicBaseUrl: string, extraHosts?: string): string[] {
+  const hosts = new Set<string>();
+  try {
+    const url = new URL(publicBaseUrl);
+    hosts.add(url.host);
+    hosts.add(url.hostname);
+  } catch {
+    // Eine ungültige Basis-URL fügt keinen Host hinzu.
+  }
+  for (const host of (extraHosts ?? '').split(',')) {
+    if (host.trim()) hosts.add(host.trim());
+  }
+  return [...hosts];
+}
+
+/**
  * Prüft die Pflichtwerte der Serverkonfiguration. Fehlende oder zu kurze
  * Secrets führen zum Startabbruch; ein stiller Fallback auf bekannte Werte
  * ist ausgeschlossen (`deny by default`).

@@ -24,7 +24,10 @@ export interface NavItem {
   requiredPermissions?: string[];
 }
 
-/** Permission, die den Zugriff auf die Statistiken freischaltet. */
+/**
+ * Frühere Permission der Statistik. Die Statistik ist inzwischen für alle
+ * Angemeldeten sichtbar; die Konstante bleibt für bestehende Importe erhalten.
+ */
 export const STATISTICS_PERMISSION = 'statistics.view';
 
 /** Permission, die die Tablet-Erfassung freischaltet. */
@@ -58,7 +61,6 @@ export const SECONDARY_NAV: readonly NavItem[] = [
     labelKey: 'nav.items.statistik',
     icon: 'stats',
     route: '/statistik',
-    requiredPermissions: [STATISTICS_PERMISSION],
   },
   { id: 'profil', labelKey: 'nav.items.profil', icon: 'user', route: '/profile' },
 ];

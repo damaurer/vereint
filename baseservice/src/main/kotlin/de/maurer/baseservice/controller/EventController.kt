@@ -78,6 +78,26 @@ class EventController(
         return ResponseEntity.status(HttpStatus.CREATED).body(participant)
     }
 
+    @PostMapping("/{id}/invitations")
+    @Operation(summary = "Mitglieder einladen", description = "Lädt ausgewählte oder alle aktiven Mitglieder ein (Owner sowie Vorstand/Admin)")
+    fun inviteMembers(
+        @PathVariable id: String,
+        @Valid @RequestBody request: InviteMembersRequest
+    ): ResponseEntity<List<EventParticipantDto>> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(eventService.inviteMembers(eventId(id), request, principal))
+    }
+
+    @PutMapping("/{id}/rsvp")
+    @Operation(summary = "Zu- oder absagen", description = "Antwort des eingeladenen Mitglieds: accepted, maybe oder declined")
+    fun respond(
+        @PathVariable id: String,
+        @Valid @RequestBody request: RsvpRequest
+    ): ResponseEntity<EventDto> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(eventService.respond(eventId(id), request, principal))
+    }
+
     @DeleteMapping("/{id}/participants/{userId}")
     @Operation(summary = "Teilnehmer entfernen", description = "Entfernt einen Teilnehmer (nur Owner sowie Vorstand/Admin)")
     fun removeParticipant(

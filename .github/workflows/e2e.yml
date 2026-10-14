@@ -1,0 +1,82 @@
+name: E2E-Tests
+
+# Startet den kompletten Produktions-Stack (deploy/compose.yaml mit den
+# Anpassungen aus e2e/compose.e2e.yaml: Keycloak, baseservice, webservice,
+# Postgres, S3-Ersatz, Caddy mit Test-CA) und testet die App mit Playwright
+# im Browser unter https://vereint.test:8443.
+#
+# Laeuft bei jedem Pull Request und Push auf develop, qs und main. Bei
+# Fehlern liegen Playwright-Report (mit Trace und Video) und die Logs aller
+# Dienste als Artefakt am Lauf. Lokal: siehe e2e/README.md.
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - qs
+  pull_request:
+    branches:
+      - develop
+      - main
+      - qs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  e2e:
+    name: Playwright gegen den echten Stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: e2e
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Testdomain auf den Runner zeigen lassen
+        run: echo "127.0.0.1 vereint.test" | sudo tee -a /etc/hosts
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Abhaengigkeiten installieren
+        run: npm ci
+
+      - name: Chromium fuer Playwright installieren
+        run: npx playwright install --with-deps chromium
+
+      - name: Stack bauen und starten
+        run: ./stack.sh up
+
+      - name: E2E-Tests ausfuehren
+        run: npx playwright test
+
+      - name: Logs der Dienste sichern
+        if: failure()
+        run: ./stack.sh logs > stack-logs.txt 2>&1 || true
+
+      - name: Report hochladen
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+            e2e/stack-logs.txt
+          retention-days: 7
+
+      - name: Stack entfernen
+        if: always()
+        run: ./stack.sh down || true

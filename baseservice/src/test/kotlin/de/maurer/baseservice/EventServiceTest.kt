@@ -17,6 +17,7 @@ import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.service.EventInvitationService
 import de.maurer.baseservice.service.EventService
 import de.maurer.baseservice.service.UserService
 import org.junit.jupiter.api.Assertions.*
@@ -51,6 +52,9 @@ class EventServiceTest {
     @Mock
     private lateinit var userService: UserService
 
+    @Mock
+    private lateinit var eventInvitationService: EventInvitationService
+
     private lateinit var eventService: EventService
 
     private val ownerId: UUID = UUID.randomUUID()
@@ -66,7 +70,8 @@ class EventServiceTest {
             eventParticipantRepository,
             userRepository,
             userRoleRepository,
-            userService
+            userService,
+            eventInvitationService
         )
         `when`(eventParticipantRepository.countByEventId(any(UUID::class.java) ?: eventId)).thenReturn(0L)
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: ownerId)).thenReturn(emptyList())

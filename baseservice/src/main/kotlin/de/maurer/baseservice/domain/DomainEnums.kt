@@ -107,6 +107,18 @@ enum class BoardRole {
     }
 }
 
+/** Antwort eines eingeladenen Mitglieds auf ein Event; die Datenbank erzwingt sie über `ck_event_participants_rsvp`. */
+enum class RsvpStatus {
+    invited,
+    accepted,
+    maybe,
+    declined;
+
+    companion object {
+        fun fromValue(value: String?): RsvpStatus? = entries.firstOrNull { it.name == value }
+    }
+}
+
 enum class GuestStatus {
     pending,
     active,

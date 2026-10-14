@@ -36,7 +36,13 @@
     "rsvp": {
       "accept": "Zusagen",
       "maybe": "Vielleicht",
-      "decline": "Absagen"
+      "decline": "Absagen",
+      "status": {
+        "invited": "Offen",
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt"
+      }
     },
     "balance": {
       "current": "Aktueller Stand",
@@ -79,7 +85,9 @@
           "title": "Mitteilungen",
           "sub": "Neuigkeiten vom Verein"
         }
-      }
+      },
+      "declined": "Du hast abgesagt",
+      "maybe": "Du hast mit Vielleicht geantwortet"
     },
     "events": {
       "eyebrow": "Mitglied",
@@ -88,7 +96,9 @@
       "loadingMessage": "Die Events werden abgerufen.",
       "unavailable": "Events nicht verfügbar",
       "emptyTitle": "Keine Events",
-      "emptyMessage": "Aktuell nimmst du an keinem Event teil."
+      "emptyMessage": "Aktuell nimmst du an keinem Event teil.",
+      "create": "Event anlegen",
+      "rsvpGroup": "Antwort für {title}"
     },
     "eventDetail": {
       "eyebrow": "Event",
@@ -118,6 +128,30 @@
       "role": {
         "coHost": "Co-Gastgeber",
         "participant": "Teilnehmer"
+      },
+      "manage": "Verwalten",
+      "countsLabel": "Antworten der Eingeladenen",
+      "counts": {
+        "accepted": "Zugesagt: {count}",
+        "maybe": "Vielleicht: {count}",
+        "declined": "Abgesagt: {count}",
+        "invited": "Offen: {count}"
+      },
+      "myRsvp": {
+        "invited": "Du bist eingeladen. Bist du dabei?",
+        "accepted": "Du hast zugesagt.",
+        "maybe": "Du hast mit Vielleicht geantwortet.",
+        "declined": "Du hast abgesagt. Du kannst deine Antwort jederzeit ändern."
+      },
+      "chat": {
+        "heading": "Event-Chat",
+        "empty": "Noch keine Nachrichten. Schreib die erste!",
+        "closed": "Das Event ist abgesagt oder archiviert. Der Chat ist nur noch lesbar.",
+        "message": "Nachricht",
+        "placeholder": "Nachricht schreiben",
+        "send": "Senden",
+        "loading": "Der Chat wird geladen.",
+        "unavailable": "Der Chat ist für dich nicht verfügbar."
       }
     },
     "purchases": {
@@ -197,7 +231,16 @@
       "announcement": "Ankündigung",
       "system": "System",
       "info": "Info",
-      "moment": "Moment"
+      "moment": "Moment",
+      "eventInvitation": "Einladung",
+      "eventReminder": "Erinnerung",
+      "eventCancelled": "Abgesagt"
+    },
+    "open": "Öffnen",
+    "openEvent": "Zum Event",
+    "answered": {
+      "accepted": "Du hast zugesagt.",
+      "declined": "Du hast abgesagt."
     }
   },
   "shell": {
@@ -211,7 +254,8 @@
     "wallet": "Guthaben",
     "logout": "Abmelden",
     "notifications": "Mitteilungen",
-    "notificationsUnread": "Mitteilungen, {count} ungelesen"
+    "notificationsUnread": "Mitteilungen, {count} ungelesen",
+    "chatUnread": "{label}, {count} ungelesen"
   },
   "nav": {
     "items": {
@@ -408,10 +452,14 @@
     "statistics": {
       "title": "Statistik",
       "description": "Konsum, Anwesenheit, Ausgaben-Verlauf und Rankings der Eber-Analytik."
+    },
+    "eventCreate": {
+      "title": "Event anlegen",
+      "description": "Neues Event planen und Mitglieder einladen."
     }
   },
   "chat": {
-    "eyebrow": "Stammtisch-Messenger",
+    "eyebrow": "Vereinschat",
     "title": "Chat",
     "toDirectMessages": "Direktnachrichten →",
     "loadingMessage": "Die Konversationen werden abgerufen.",
@@ -422,15 +470,27 @@
     "list": {
       "ariaLabel": "Konversationen",
       "newMessage": "+ Neue Nachricht",
-      "groupOnline": "{count} online"
+      "groupOnline": "{count} online",
+      "clubChat": "Vereinschat",
+      "eventChats": "Event-Chats",
+      "noEventChats": "Du hast gerade keine Event-Chats. Sie erscheinen, sobald du zu einem Event eingeladen bist.",
+      "noMessages": "Noch keine Nachrichten"
     },
     "thread": {
       "back": "← Zurück",
       "membersOnline": "{count} Mitglieder online",
-      "pinnedTitle": "Info vom Schriftwart ({name})",
+      "pinnedTitle": "Infotafel von {name}",
       "emptyTitle": "Noch keine Nachrichten",
       "emptyMessage": "Schreibe die erste Nachricht in diese Konversation.",
-      "addReaction": "Reaktion hinzufügen"
+      "addReaction": "Reaktion hinzufügen",
+      "toEvent": "Zum Event",
+      "loadingMessage": "Die Nachrichten werden abgerufen.",
+      "loadFailed": "Nachrichten nicht verfügbar",
+      "guest": "Gast",
+      "image": "Bild zur Nachricht",
+      "reactionLabel": "Reaktion {emoji}, {count}",
+      "reactWith": "Mit {emoji} reagieren",
+      "reactionFailed": "Die Reaktion konnte nicht gespeichert werden. Bitte erneut versuchen."
     },
     "composer": {
       "attach": "Anhang hinzufügen",
@@ -438,19 +498,31 @@
       "addDrink": "Getränk einfügen",
       "send": "Senden",
       "sendFailed": "Nachricht konnte nicht gesendet werden. Bitte erneut versuchen.",
-      "attachUnavailable": "Anhänge sind derzeit nicht verfügbar."
+      "attachUnavailable": "Anhänge sind derzeit nicht verfügbar.",
+      "readOnly": "In diesem Chat kannst du nicht mehr schreiben."
     },
     "direct": {
       "eyebrow": "Direktnachrichten",
       "title": "Einzelgespräche",
       "badge": "DMs",
-      "toGroupChat": "← Zum Gruppen-Chat",
+      "toGroupChat": "← Zum Vereinschat",
       "unavailable": "Direktnachrichten nicht verfügbar",
       "searchLabel": "Mitglieder durchsuchen",
       "searchPlaceholder": "Mitglieder durchsuchen…",
       "conversations": "Konversationen ({count})",
       "emptyTitle": "Keine Konversationen",
-      "emptyMessage": "Es gibt keine passenden Einzelgespräche."
+      "emptyMessage": "Es gibt keine passenden Einzelgespräche.",
+      "emptyStart": "Du hast noch keine Einzelgespräche. Starte eins mit „Neue Nachricht“.",
+      "noneSelectedTitle": "Kein Gespräch ausgewählt",
+      "noneSelectedMessage": "Wähle links ein Gespräch oder starte ein neues.",
+      "pickerTitle": "Neue Nachricht",
+      "pickerSearchLabel": "Mitglied suchen",
+      "pickerSearchPlaceholder": "Name eingeben…",
+      "pickerLoading": "Die Mitglieder werden abgerufen.",
+      "pickerUnavailable": "Mitglieder nicht verfügbar",
+      "pickerEmptyTitle": "Keine Mitglieder gefunden",
+      "pickerEmptyMessage": "Kein Mitglied passt zu deiner Suche.",
+      "pickerStarting": "Wird geöffnet…"
     }
   },
   "moments": {
@@ -682,7 +754,8 @@
       "addBarcode": "Fehler beim Hinzufügen des Barcodes.",
       "saveFood": "Fehler beim Speichern der Speise.",
       "createFood": "Fehler beim Anlegen der Speise."
-    }
+    },
+    "proposeInfo": "„{name}“ wurde vorgeschlagen. Nach der Freigabe durch den Vorstand erscheint es im Katalog."
   },
   "sublists": {
     "header": {
@@ -961,16 +1034,16 @@
     "comms": {
       "eyebrow": "Schriftwart",
       "title": "Infotafeln & Rundbriefe",
-      "intro": "Mitteilungen an Mitglieder und versendete Benachrichtigungen.",
-      "pinboardTitle": "Pinnwand (Chat-Infotafeln)",
+      "intro": "Infotafel im Vereinschat, Rundbriefe an Mitglieder und versendete Benachrichtigungen.",
+      "pinboardTitle": "Infotafel im Vereinschat",
       "infoTitle": "Info vom Schriftwart",
-      "infoText": "Angepinnte Infotafeln erscheinen oben im Chat. Verfasse unten einen neuen Rundbrief, um alle Mitglieder zu erreichen.",
+      "infoText": "Die Infotafel steht oben im Vereinschat und ist für alle Mitglieder sichtbar.",
       "composeTitle": "Meldung verfassen",
       "recipientId": "Empfänger (Mitglieds-ID)",
       "messageTitle": "Titel",
       "messageBody": "Text",
       "send": "Senden",
-      "loadingMessage": "Empfänger und Protokoll werden abgerufen.",
+      "loadingMessage": "Versendete Mitteilungen werden abgerufen.",
       "unavailable": "Kommunikation nicht verfügbar",
       "recipientsHeading": "Empfänger ({count})",
       "noRecipients": "Keine Mitglieder sichtbar.",
@@ -978,12 +1051,44 @@
       "sentHeading": "Rundbriefe / Meldungen ({count})",
       "sentEmpty": "Es wurden noch keine Mitteilungen protokolliert.",
       "sent": "Gesendet",
-      "sentInfo": "Mitteilung gesendet."
+      "sentInfo": "Mitteilung gesendet.",
+      "pin": {
+        "loading": "Infotafel wird abgerufen.",
+        "unavailable": "Infotafel nicht verfügbar",
+        "current": "Aktuell angepinnt",
+        "meta": "Von {name}, {date}",
+        "none": "Aktuell ist keine Infotafel angepinnt.",
+        "label": "Infotafel",
+        "save": "Anpinnen",
+        "remove": "Entfernen",
+        "saved": "Infotafel angepinnt.",
+        "removed": "Infotafel entfernt."
+      },
+      "recipients": {
+        "legend": "Empfänger",
+        "all": "Alle Mitglieder",
+        "selected": "Ausgewählte Mitglieder",
+        "loading": "Mitglieder werden abgerufen.",
+        "search": "Empfänger suchen",
+        "searchPlaceholder": "Name eingeben",
+        "chosen": {
+          "one": "{count} Empfänger ausgewählt",
+          "other": "{count} Empfänger ausgewählt"
+        },
+        "remove": "{name} entfernen",
+        "none": "Keine Mitglieder gefunden.",
+        "missing": "Wähle mindestens ein Mitglied aus."
+      },
+      "sentCount": {
+        "zero": "Niemand hat die Mitteilung erhalten.",
+        "one": "{count} Mitglied hat die Mitteilung erhalten.",
+        "other": "{count} Mitglieder haben die Mitteilung erhalten."
+      }
     },
     "treasury": {
       "eyebrow": "Kassenwart",
       "title": "Bierkasse verwalten",
-      "intro": "Eventabrechnungen, Guthaben und Kassenbuchungen.",
+      "intro": "Guthaben aller Mitglieder, Kassenbuchungen und Eventabrechnungen.",
       "infoTitle": "Bierkasse",
       "infoText": "Buchungen sind idempotent. Preis, Modus und Freigabe bestimmt ausschließlich der Fachservice.",
       "eventsLoading": "Events werden abgerufen.",
@@ -1027,7 +1132,29 @@
         "correct": "Korrigieren",
         "topupDone": "Aufladung gebucht.",
         "payoutDone": "Auszahlung gebucht.",
-        "correctionDone": "Korrektur gebucht."
+        "correctionDone": "Korrektur gebucht.",
+        "topupTitle": "Guthaben aufladen",
+        "payoutTitle": "Guthaben auszahlen",
+        "correctionTitle": "Buchung korrigieren",
+        "correctionEntry": "Buchung",
+        "correctionPlaceholder": "Buchung wählen",
+        "correctionOption": "{date} · {type} · {amount}",
+        "noCorrectable": "Es gibt keine Buchung, die du korrigieren kannst.",
+        "reversed": "Korrigiert",
+        "pick": "Zur Korrektur wählen",
+        "pickAria": "{entry} zur Korrektur wählen"
+      },
+      "members": {
+        "title": "Mitglieder und Guthaben",
+        "loading": "Guthaben werden abgerufen.",
+        "statMembers": "Mitglieder",
+        "statNegative": "Im Minus",
+        "search": "Mitglied suchen",
+        "searchPlaceholder": "Name eingeben",
+        "empty": "Keine Mitglieder gefunden.",
+        "lastEntry": "Letzte Buchung: {date}",
+        "noEntry": "Noch keine Buchung",
+        "id": "ID {id}"
       }
     }
   },
@@ -1053,7 +1180,9 @@
         "location": "Ort",
         "description": "Beschreibung",
         "status": "Status",
-        "save": "Stammdaten speichern"
+        "save": "Stammdaten speichern",
+        "start": "Beginn",
+        "end": "Ende"
       },
       "participants": {
         "heading": "Teilnehmer & Anwesenheit ({count})",
@@ -1062,7 +1191,10 @@
         "role": "Rolle",
         "roleParticipant": "Teilnehmer",
         "roleCoHost": "Co-Gastgeber",
-        "add": "Hinzufügen"
+        "add": "Hinzufügen",
+        "inviteLegend": "Mitglieder einladen",
+        "invite": "Einladen",
+        "removeNamed": "{name} entfernen"
       },
       "drinks": {
         "heading": "Getränke ({count})",
@@ -1070,14 +1202,17 @@
         "id": "Getränke-ID",
         "add": "Getränk hinzufügen",
         "sublistId": "Sublist-ID",
-        "assignSublist": "Sublist zuweisen"
+        "assignSublist": "Sublist zuweisen",
+        "pick": "Getränk aus dem Katalog",
+        "sublistPick": "Sublist"
       },
       "food": {
         "heading": "Speisen ({count})",
         "empty": "Noch keine Speisen zugewiesen.",
         "default": "(Standard)",
         "id": "Speisen-ID",
-        "add": "Speise hinzufügen"
+        "add": "Speise hinzufügen",
+        "pick": "Speise aus dem Katalog"
       },
       "invites": {
         "heading": "Einladungen ({count})",
@@ -1108,7 +1243,51 @@
         "sublistAssigned": "Sublist zugewiesen.",
         "inviteCreated": "Einladung erstellt.",
         "inviteRevoked": "Einladung widerrufen.",
-        "messageSent": "Nachricht gesendet."
+        "messageSent": "Nachricht gesendet.",
+        "membersInvited": "Mitglieder eingeladen."
+      },
+      "choose": "Bitte wählen"
+    },
+    "picker": {
+      "allMembers": "Alle Mitglieder einladen",
+      "search": "Mitglied suchen",
+      "searchPlaceholder": "Name eingeben",
+      "empty": "Keine weiteren Mitglieder verfügbar.",
+      "noMatch": "Kein Mitglied passt zur Suche.",
+      "selected": "{count} ausgewählt"
+    },
+    "reminder": {
+      "none": "Keine Erinnerung",
+      "hours": "{count} Stunden vorher",
+      "days": {
+        "one": "1 Tag vorher",
+        "other": "{count} Tage vorher"
+      },
+      "week": "1 Woche vorher"
+    },
+    "create": {
+      "eyebrow": "Neues Event",
+      "back": "← Zu den Events",
+      "title": "Event anlegen",
+      "intro": "Plane ein Event und lade Mitglieder ein. Pflichtfelder sind mit * markiert.",
+      "name": "Titel",
+      "description": "Beschreibung",
+      "location": "Ort",
+      "start": "Beginn",
+      "end": "Ende",
+      "invitees": "Eingeladene",
+      "notifyHeading": "Benachrichtigung der Eingeladenen",
+      "notifyOnPublish": "Sofort bei Veröffentlichung",
+      "notifyAt": "Zu einem Zeitpunkt",
+      "notifyAtTime": "Zeitpunkt der Benachrichtigung",
+      "reminder": "Erinnerung",
+      "saveDraft": "Als Entwurf speichern",
+      "publish": "Veröffentlichen und einladen",
+      "errors": {
+        "title": "Bitte gib einen Titel ein.",
+        "start": "Bitte gib den Beginn an.",
+        "end": "Das Ende muss nach dem Beginn liegen.",
+        "notifyAt": "Bitte gib den Zeitpunkt der Benachrichtigung an."
       }
     }
   },
@@ -1124,20 +1303,37 @@
     "unavailable": "Statistiken nicht verfügbar",
     "empty": {
       "title": "Noch keine Auswertungen",
-      "message": "Sobald Käufe und Anwesenheiten erfasst sind, erscheinen hier Kennzahlen."
+      "message": "Sobald Striche, Umsätze oder Zusagen erfasst sind, erscheinen hier Kennzahlen."
     },
     "consumption": {
-      "ariaLabel": "Bierkonsum diesen Monat",
-      "title": "Bierkonsum diesen Monat (Liter)"
+      "ariaLabel": "Rangliste nach Strichen",
+      "title": "Rangliste",
+      "total": "Striche im Verein",
+      "mine": "Deine Striche",
+      "myRank": "Dein Platz",
+      "rankValue": "Platz {rank}",
+      "noRank": "Noch kein Platz",
+      "you": "Du",
+      "count": {
+        "one": "{count} Strich",
+        "other": "{count} Striche"
+      },
+      "empty": "In diesem Zeitraum gibt es noch keine Striche."
     },
     "attendance": {
-      "title": "Anwesenheitsquote",
-      "ringLabel": "Anwesenheitsquote {percent} Prozent"
+      "title": "Zusagequote",
+      "ringLabel": "Zusagequote {percent} Prozent",
+      "hint": "Anteil der Zusagen an allen beantworteten Einladungen.",
+      "empty": "Noch keine Zusagen erfasst. Sobald Einladungen beantwortet sind, siehst du hier die Quote."
     },
     "spending": {
-      "title": "Ausgaben-Verlauf",
+      "title": "Umsatz 30 Tage",
       "thisMonth": "Ausgaben diesen Monat",
-      "trendHint": "{change}% vs. Vormonat"
+      "trendHint": "{change}% gegenüber den 30 Tagen davor",
+      "total": "Umsatz der letzten 30 Tage",
+      "weekly": "Verlauf der letzten 8 Wochen",
+      "weeklyLabel": "Umsatz je Woche, älteste zuerst: {values}",
+      "empty": "In den letzten 8 Wochen gab es keinen Umsatz."
     },
     "topRounds": {
       "title": "Top-Rundengeber",
@@ -1149,6 +1345,16 @@
     "drinkRanking": {
       "title": "Getränke-Ranking",
       "share": "{percent}% Beliebtheit"
+    },
+    "intro": "Auswertungen der letzten {days} Tage.",
+    "items": {
+      "title": "Beliebteste Artikel",
+      "share": "{percent}% ({count} Stück)",
+      "empty": "Noch keine Artikel verkauft."
+    },
+    "topEvents": {
+      "title": "Events mit den meisten Strichen",
+      "empty": "Noch keine Striche bei Events."
     }
   },
   "guest": {
