@@ -8,6 +8,10 @@ fotografiert jede Ansicht als die Person, die sie im Alltag nutzt: Handy
 
 Nur lokal verwenden: Das Skript ändert Benutzer im Keycloak-Entwicklungsrealm.
 
+Voraussetzung im Webservice: Der Produktions-Build braucht die Fixes aus PR #13
+(Styles trotz CSP, Berechtigungen der Sitzung für das Thekenterminal). Ohne sie
+fehlen die Styles und das Terminal bleibt gesperrt.
+
 ## Ablauf
 
 1. Lokale Umgebung mit **leeren** Datenbanken starten (der Seed legt bei jedem

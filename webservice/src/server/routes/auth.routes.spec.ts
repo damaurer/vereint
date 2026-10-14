@@ -307,51 +307,6 @@ describe('auth.routes', () => {
     });
   });
 
-  describe('permissions derived by the access resolver', () => {
-    it('adds the permissions the access resolver derives from the roles', async () => {
-      const tokens = await signTokenPair({
-        subject: 'u-tablet-test',
-        nonce: 'nonce-tablet',
-        accessClaims: { realm_access: { roles: ['tabletRecorder'] } },
-        idClaims: { email: 'theke@vereint.local', name: 'Theke' },
-      });
-      mockTokenEndpoint(tokens);
-      const tokenFetch = globalThis.fetch;
-      globalThis.fetch = vi.fn().mockImplementation(async (url: string | URL | Request, init?: RequestInit) => {
-        const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url;
-        if (urlStr.endsWith('/api/v1/auth/access')) {
-          return new Response(
-            JSON.stringify({
-              subject: 'u-tablet-test',
-              roles: [],
-              permissions: ['purchase.tablet'],
-              allowedAppContexts: ['tabletRecorder'],
-              ownedEvents: [],
-              disabled: false,
-            }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } },
-          );
-        }
-        return tokenFetch(url, init);
-      });
-
-      const loginRes = await originalFetch(`${baseUrl}/api/auth/callback?code=code-tablet&state=valid_state_abc`, {
-        headers: { Cookie: stateCookie({ nonce: 'nonce-tablet' }) },
-        redirect: 'manual',
-      });
-      const sessionCookie = loginRes.headers.getSetCookie().find((c) => c.startsWith('vereint_session='));
-      expect(sessionCookie).toBeDefined();
-
-      const meRes = await originalFetch(`${baseUrl}/api/auth/session`, {
-        headers: { Cookie: sessionCookie!.split(';')[0] },
-      });
-
-      expect(meRes.status).toBe(200);
-      const meData = (await meRes.json()) as { identity: { permissions: string[] } };
-      expect(meData.identity.permissions).toContain('purchase.tablet');
-    });
-  });
-
   describe('POST /api/auth/session', () => {
     it('rejects the removed legacy id token endpoint', async () => {
       vi.spyOn(console, 'warn').mockImplementation(() => undefined);

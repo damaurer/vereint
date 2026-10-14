@@ -4,7 +4,7 @@ import { map, switchMap } from 'rxjs';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
 import { formatDateTime, formatMoney } from './member-format';
-import type { LedgerEntry, PurchaseSnapshot } from '../api/api.types';
+import type { LedgerEntry } from '../api/api.types';
 import { StatusBadgeComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
 
@@ -56,14 +56,14 @@ import { StateComponent } from '../ui/state.component';
                     <img
                       class="receipt-image"
                       [src]="purchase.snapshot!.imageReference"
-                      [alt]="itemName(purchase.snapshot!)"
+                      [alt]="purchase.snapshot!.drinkName"
                     />
                   } @else {
-                    <span class="receipt-image receipt-image-fallback" aria-hidden="true"><vereint-icon [name]="purchase.snapshot!.itemType === 'FOOD' ? 'food' : 'beer'" /></span>
+                    <span class="receipt-image receipt-image-fallback" aria-hidden="true"><vereint-icon name="beer" /></span>
                   }
                   <div class="receipt-body">
                     <div class="receipt-head">
-                      <span class="receipt-name">{{ itemName(purchase.snapshot!) }}</span>
+                      <span class="receipt-name">{{ purchase.snapshot!.drinkName }}</span>
                       <span class="receipt-price">
                         {{ formatMoney(purchase.snapshot!.unitPrice, purchase.snapshot!.currency) }}
                       </span>
@@ -73,11 +73,9 @@ import { StateComponent } from '../ui/state.component';
                       @if (purchase.snapshot!.barcode) {
                         <span class="receipt-barcode">Barcode {{ purchase.snapshot!.barcode }}</span>
                       }
-                      @if (purchase.snapshot!.catalogVersion !== null) {
-                        <vereint-status-badge
-                          [label]="'Katalog v' + purchase.snapshot!.catalogVersion"
-                        />
-                      }
+                      <vereint-status-badge
+                        [label]="'Katalog v' + purchase.snapshot!.catalogVersion"
+                      />
                     </div>
                   </div>
                 </li>
@@ -173,11 +171,6 @@ export class PurchasesComponent implements OnInit, OnDestroy {
 
   protected readonly load = new AsyncState<LedgerEntry[]>();
   protected readonly formatMoney = formatMoney;
-
-  /** Name des gekauften Artikels; Speisen tragen ihn in `foodName`. */
-  protected itemName(snapshot: PurchaseSnapshot): string {
-    return snapshot.drinkName ?? snapshot.foodName ?? '';
-  }
   protected readonly formatDateTime = formatDateTime;
 
   ngOnInit(): void {

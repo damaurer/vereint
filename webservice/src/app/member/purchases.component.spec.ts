@@ -76,24 +76,6 @@ describe('PurchasesComponent', () => {
     expect(html(fixture)).toContain('Katalog v3');
   });
 
-  it('names food purchases and hides a missing catalog version', async () => {
-    const food = entry('f-1', true);
-    food.snapshot = {
-      itemType: 'FOOD',
-      drinkName: null,
-      foodName: 'Käsespätzle',
-      imageReference: null,
-      barcode: null,
-      unitPrice: '7.50',
-      currency: 'EUR',
-      catalogVersion: null,
-    };
-    api.listEntries.mockReturnValue(of([food]));
-    const fixture = await create();
-    expect(html(fixture)).toContain('Käsespätzle');
-    expect(html(fixture)).not.toContain('Katalog v');
-  });
-
   it('shows an empty state when there are no purchases', async () => {
     api.listEntries.mockReturnValue(of([entry('t-1', false)]));
     const fixture = await create();
