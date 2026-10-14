@@ -3,7 +3,7 @@ import type { Server } from 'node:http';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionData } from '../auth/auth.types';
 import { applyTestEnvironmentOverrides, serverEnvironment } from '../config/environment';
-import { apiProxy } from './api-proxy.middleware';
+import { API_PROXY_MAX_UPLOAD, apiProxy } from './api-proxy.middleware';
 
 describe('api-proxy.middleware', () => {
   let app: express.Express;
@@ -35,7 +35,7 @@ describe('api-proxy.middleware', () => {
       req.sessionData = injectedSession;
       next();
     });
-    app.use('/api/v1', apiProxy);
+    app.use('/api/v1', express.raw({ type: 'multipart/form-data', limit: API_PROXY_MAX_UPLOAD }), apiProxy);
 
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => {
@@ -111,6 +111,31 @@ describe('api-proxy.middleware', () => {
     });
 
     expect(capturedAuth).toBe('Bearer access-token-abc');
+  });
+
+  it('forwards multipart uploads byte for byte with their boundary', async () => {
+    let captured: { body: Buffer; contentType: string | null } | undefined;
+    globalThis.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      captured = {
+        body: Buffer.from(init?.body as Uint8Array),
+        contentType: new Headers(init?.headers).get('content-type'),
+      };
+      return new Response(JSON.stringify({ id: 'image-1' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+
+    const form = new FormData();
+    const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff]);
+    form.set('file', new Blob([bytes], { type: 'image/png' }), 'bild.png');
+    form.set('purpose', 'event');
+
+    const response = await originalFetch(`${baseUrl}/api/v1/images`, { method: 'POST', body: form });
+
+    expect(response.status).toBe(201);
+    expect(captured?.contentType).toMatch(/^multipart\/form-data; boundary=/);
+    expect(captured?.body.includes(Buffer.from(bytes))).toBe(true);
   });
 
   it('forwards POST bodies and the Idempotency-Key header', async () => {

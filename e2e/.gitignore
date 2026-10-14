@@ -1,0 +1,11 @@
+.env.e2e
+node_modules/
+test-results/
+playwright-report/
+.auth/
+.ca/
+explore.mjs
+explore2.mjs
+seed.mts
+seed2.mts
+explore3.mjs

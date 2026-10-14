@@ -13,18 +13,21 @@ import { invalidateAccessDecision } from './server/authorization/authorization.s
 import {
   applyDeliveryHeaders,
   attachCspNonce,
+  cspNonceOf,
   isPrivateDeliveryPath,
   securityHeaders,
 } from './server/authorization/delivery.middleware';
 import { sanitizeTransferState } from './server/authorization/transfer-state';
-import { assertServerEnvironment, serverEnvironment } from './server/config/environment';
+import { assertServerEnvironment, serverEnvironment, ssrAllowedHosts } from './server/config/environment';
 import { authRoutes } from './server/routes/auth.routes';
 import { inviteRoutes } from './server/invites/invite.routes';
-import { apiProxy } from './server/api/api-proxy.middleware';
+import { API_PROXY_MAX_UPLOAD, apiProxy } from './server/api/api-proxy.middleware';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 const app = express();
-const angularApp = new AngularNodeAppEngine();
+const angularApp = new AngularNodeAppEngine({
+  allowedHosts: ssrAllowedHosts(serverEnvironment.publicBaseUrl, process.env['NG_ALLOWED_HOSTS']),
+});
 
 // Kompression vor allen statischen Routen; `no-store`-Antworten bleiben
 // unverändert komprimierbar, weil `Vary: Accept-Encoding` gesetzt wird.
@@ -51,7 +54,7 @@ app.use('/login/oauth2/code', authRoutes);
 app.use('/api/invites', inviteRoutes);
 // Auslieferungs-Proxy: hängt das Session-Token an und leitet die fachliche API
 // an Spring weiter. Keine Fachlogik; `deny by default` ohne gültige Session.
-app.use('/api/v1', apiProxy);
+app.use('/api/v1', express.raw({ type: 'multipart/form-data', limit: API_PROXY_MAX_UPLOAD }), apiProxy);
 app.use(authorizePages);
 // `cacheControl: false`: Die Cache-Regeln stammen ausschließlich aus
 // `applyDeliveryHeaders` und dürfen nicht doppelt vergeben werden.
@@ -69,7 +72,7 @@ app.use((req, res, next) => {
   const isPrivateContext = isPrivateDeliveryPath(req.path);
 
   angularApp
-    .handle(req)
+    .handle(req, { cspNonce: cspNonceOf(res) })
     .then(async (response) => {
       if (!response) {
         next();

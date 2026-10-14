@@ -1,0 +1,69 @@
+# E2E-Variante des Produktions-Stacks (deploy/compose.yaml).
+#
+# Wird ausschliesslich zusammen mit deploy/compose.yaml genutzt, siehe
+# e2e/stack.sh. Getestet wird damit genau die Produktionskonfiguration
+# (Caddy-Routing inkl. /kc, Keycloak-Image mit Produktions-Realm, eigene
+# Images, Verschluesselung an), nur mit diesen Abweichungen:
+#   - Domain https://vereint.test:8443 mit einer Test-CA statt Let's Encrypt
+#     (e2e/Caddyfile). Der Browser loest vereint.test per Chromium-Flag auf
+#     127.0.0.1 auf, die Container ueber den Netzwerk-Alias von Caddy.
+#   - S3Mock statt AWS S3, Daten in temporaeren Volumes statt /srv.
+
+services:
+  caddy:
+    environment:
+      PUBLIC_DOMAIN: vereint.test:8443
+    ports: !override
+      - "127.0.0.1:8443:8443"
+    volumes: !override
+      - ../e2e/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile.prod:ro
+      - ../e2e/.ca:/e2e-ca:ro
+    networks:
+      default:
+        aliases: !override
+          - vereint.test
+
+  postgres:
+    volumes: !override
+      - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/10-init-databases.sh:ro
+    tmpfs:
+      - /var/lib/postgresql/data
+
+  keycloak:
+    environment:
+      KC_HOSTNAME: https://vereint.test:8443/kc
+      PUBLIC_BASE_URL: https://vereint.test:8443
+
+  baseservice:
+    environment:
+      KEYCLOAK_ISSUER_URI: https://vereint.test:8443/kc/realms/vereint
+      VEREIN_CORS_ALLOWED_ORIGINS: https://vereint.test:8443
+      S3_ENDPOINT: http://object-storage:9090
+      S3_PATH_STYLE_ACCESS: "true"
+    depends_on:
+      object-storage:
+        condition: service_healthy
+
+  webservice:
+    environment:
+      PUBLIC_BASE_URL: https://vereint.test:8443
+      KEYCLOAK_ISSUER_URI: https://vereint.test:8443/kc/realms/vereint
+      NODE_EXTRA_CA_CERTS: /e2e-ca/root.crt
+    volumes:
+      - ../e2e/.ca/root.crt:/e2e-ca/root.crt:ro
+
+  # S3-kompatibler Testspeicher (prueft keine Signaturen). Der Bucket wird beim
+  # Start angelegt.
+  object-storage:
+    image: adobe/s3mock:4.7.0
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: ${S3_BUCKET}
+      COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT: "false"
+    ports:
+      - "127.0.0.1:9090:9090"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9090/"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
