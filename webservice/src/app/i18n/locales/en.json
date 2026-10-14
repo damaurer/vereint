@@ -1,0 +1,66 @@
+{
+  "common": {
+    "loading": "Loading …",
+    "save": "Save",
+    "saving": "Saving …",
+    "cancel": "Cancel",
+    "close": "Close",
+    "retry": "Try again"
+  },
+  "errors": {
+    "api": {
+      "network": "The service cannot be reached.",
+      "unavailable": "The service is currently unavailable. Please try again later.",
+      "sessionExpired": "Your session has expired. Please sign in again.",
+      "permissionDenied": "You do not have permission for this action.",
+      "notFound": "The requested item was not found.",
+      "invalid": "The input is invalid. Please check it and try again.",
+      "generic": "The action could not be completed. Please try again later."
+    }
+  },
+  "member": {
+    "entryType": {
+      "purchase": "Purchase",
+      "topup": "Top-up",
+      "payout": "Payout",
+      "correction": "Correction"
+    },
+    "eventStatus": {
+      "draft": "Draft",
+      "published": "Published",
+      "active": "Active",
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "archived": "Archived"
+    }
+  },
+  "profile": {
+    "title": "My profile",
+    "loadingMessage": "Loading your profile.",
+    "unavailable": "Profile not available",
+    "noRoles": "no roles",
+    "beerWithMe": {
+      "title": "BeerWithMe status",
+      "hint": "Up for a spontaneous beer nearby."
+    },
+    "theme": {
+      "title": "Appearance",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "language": {
+      "title": "Language"
+    },
+    "displayName": "Display name",
+    "email": "Email",
+    "saved": "Profile updated.",
+    "personalDetails": "Personal details",
+    "status": "Status",
+    "statusActive": "Active",
+    "statusDisabled": "Disabled",
+    "memberSince": "Member since",
+    "recording": "Recording",
+    "recordingActive": "Tally recording active"
+  }
+}

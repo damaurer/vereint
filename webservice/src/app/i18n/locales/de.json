@@ -1,0 +1,66 @@
+{
+  "common": {
+    "loading": "Wird geladen …",
+    "save": "Speichern",
+    "saving": "Wird gespeichert …",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "retry": "Erneut versuchen"
+  },
+  "errors": {
+    "api": {
+      "network": "Der Fachservice ist nicht erreichbar.",
+      "unavailable": "Der Dienst ist gerade nicht erreichbar. Bitte später erneut versuchen.",
+      "sessionExpired": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+      "permissionDenied": "Für diese Aktion fehlen die erforderlichen Rechte.",
+      "notFound": "Der angeforderte Eintrag wurde nicht gefunden.",
+      "invalid": "Die Eingabe ist ungültig. Bitte prüfen und erneut versuchen.",
+      "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen."
+    }
+  },
+  "member": {
+    "entryType": {
+      "purchase": "Kauf",
+      "topup": "Aufladung",
+      "payout": "Auszahlung",
+      "correction": "Korrektur"
+    },
+    "eventStatus": {
+      "draft": "Entwurf",
+      "published": "Veröffentlicht",
+      "active": "Aktiv",
+      "cancelled": "Abgesagt",
+      "completed": "Abgeschlossen",
+      "archived": "Archiviert"
+    }
+  },
+  "profile": {
+    "title": "Mein Profil",
+    "loadingMessage": "Das Profil wird abgerufen.",
+    "unavailable": "Profil nicht verfügbar",
+    "noRoles": "keine Rollen",
+    "beerWithMe": {
+      "title": "BeerWithMe Status",
+      "hint": "Verfügbar für ein spontanes Bier in der Nähe."
+    },
+    "theme": {
+      "title": "Darstellung",
+      "system": "System",
+      "light": "Hell",
+      "dark": "Dunkel"
+    },
+    "language": {
+      "title": "Sprache"
+    },
+    "displayName": "Anzeigename",
+    "email": "E-Mail",
+    "saved": "Profil aktualisiert.",
+    "personalDetails": "Persönliche Angaben",
+    "status": "Status",
+    "statusActive": "Aktiv",
+    "statusDisabled": "Deaktiviert",
+    "memberSince": "Mitglied seit",
+    "recording": "Erfassung",
+    "recordingActive": "Strichlisten-Erfassung aktiv"
+  }
+}
