@@ -643,5 +643,227 @@
       "locationShared": "Location shared ({lat}, {lng})"
     },
     "quote": "“{text}”"
+  },
+  "catalog": {
+    "header": {
+      "eyebrow": "Club catalogue",
+      "title": "Drinks & food catalogue",
+      "intro": "Overview of all club drinks, barcodes and food offerings."
+    },
+    "actions": {
+      "proposeDrink": "+ Propose drink",
+      "createFood": "+ Add new dish"
+    },
+    "tabs": {
+      "label": "Catalogue sections",
+      "drinks": "Drinks catalogue",
+      "food": "Food catalogue"
+    },
+    "filter": {
+      "searchPlaceholder": "Search by name or category …",
+      "allStatuses": "All statuses",
+      "approvedOnly": "Approved only",
+      "proposedOnly": "Proposed only",
+      "rejectedOnly": "Rejected only"
+    },
+    "state": {
+      "loadingMessage": "Fetching catalogue data.",
+      "unavailable": "Catalogue unavailable",
+      "noDrinksTitle": "No drinks found",
+      "noDrinksMessage": "No matching drinks were found.",
+      "noFoodTitle": "No dishes found",
+      "noFoodMessage": "No matching dishes were found."
+    },
+    "card": {
+      "generalCategory": "General",
+      "active": "Active",
+      "inactive": "Inactive",
+      "detailsAndBarcodes": "Details & barcodes",
+      "approve": "Approve",
+      "reject": "Reject",
+      "edit": "Edit"
+    },
+    "drinkStatus": {
+      "approved": "Approved",
+      "proposed": "Proposed",
+      "rejected": "Rejected"
+    },
+    "propose": {
+      "title": "Propose drink",
+      "name": "Drink name *",
+      "namePlaceholder": "e.g. Eber-Bräu Zwickl",
+      "categoryPlaceholder": "e.g. lager, wheat beer, alcohol-free",
+      "pricePlaceholder": "e.g. 2.50",
+      "descriptionPlaceholder": "Special features, brewery, etc.",
+      "barcode": "Barcode (optional)",
+      "barcodePlaceholder": "e.g. 4012345678901",
+      "submit": "Submit proposal"
+    },
+    "form": {
+      "category": "Category",
+      "defaultPrice": "Default price (€) *",
+      "description": "Description",
+      "requiredFields": "Please fill in all required fields."
+    },
+    "detail": {
+      "fallbackTitle": "Drink details",
+      "category": "Category:",
+      "status": "Status:",
+      "defaultPrice": "Default price:",
+      "barcodesHeading": "Assigned barcodes",
+      "noBarcodes": "No barcodes stored.",
+      "removeBarcode": "Remove barcode",
+      "newBarcodePlaceholder": "Enter new barcode …",
+      "addBarcode": "+ Add barcode"
+    },
+    "food": {
+      "editTitle": "Edit dish",
+      "createTitle": "Add new dish",
+      "name": "Dish name *",
+      "namePlaceholder": "e.g. bratwurst roll",
+      "categoryPlaceholder": "e.g. grill, snack, vegetarian",
+      "pricePlaceholder": "e.g. 3.50",
+      "costPrice": "Cost price (€)",
+      "costPricePlaceholder": "e.g. 1.80",
+      "descriptionPlaceholder": "Ingredients, allergens, notes",
+      "activeLabel": "Dish active and orderable"
+    },
+    "errors": {
+      "propose": "Failed to submit the proposal.",
+      "addBarcode": "Failed to add the barcode.",
+      "saveFood": "Failed to save the dish.",
+      "createFood": "Failed to create the dish."
+    }
+  },
+  "sublists": {
+    "header": {
+      "eyebrow": "Event preparation",
+      "title": "Drink lists",
+      "intro": "Create and manage reusable drink configurations for events."
+    },
+    "actions": {
+      "create": "+ Create new sublist"
+    },
+    "info": {
+      "title": "Reusable drink lists",
+      "body": "Sublists let you put together a preselection of drinks with event-specific prices and assign it to any event with one click."
+    },
+    "state": {
+      "loadingMessage": "Fetching sublists.",
+      "unavailable": "Sublists unavailable",
+      "emptyTitle": "No sublists yet",
+      "emptyMessage": "Create your first sublist to preconfigure drinks for events."
+    },
+    "card": {
+      "drinkCount": {
+        "one": "{count} drink",
+        "other": "{count} drinks"
+      },
+      "manageItems": "Manage entries ({count})",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "form": {
+      "editTitle": "Edit sublist",
+      "createTitle": "Create new sublist",
+      "name": "Sublist name *",
+      "namePlaceholder": "e.g. regular get-together",
+      "description": "Description",
+      "descriptionPlaceholder": "e.g. standard selection of beers and soft drinks for regular get-togethers",
+      "nameRequired": "Please enter a name."
+    },
+    "detail": {
+      "fallbackTitle": "Sublist details",
+      "itemsTitle": "Included drinks ({count})",
+      "noItems": "This sublist does not contain any drinks yet.",
+      "price": "Price: {price}",
+      "catalogPrice": "Default catalogue price",
+      "removeItem": "Remove from sublist"
+    },
+    "addItem": {
+      "title": "+ Add drink",
+      "selectPlaceholder": "Choose a drink from the catalogue …",
+      "option": "{name} (default: {price})",
+      "customPricePlaceholder": "Custom price (€)",
+      "submit": "Add"
+    },
+    "errors": {
+      "update": "Failed to update the sublist.",
+      "create": "Failed to create the sublist.",
+      "addItem": "Failed to add the drink."
+    }
+  },
+  "tablet": {
+    "row": {
+      "strokesFor": "Tally marks for {name}"
+    },
+    "revenue": {
+      "eveningTitle": "Sponsor the whole evening",
+      "roundTitle": "Buy a round",
+      "scope": "Scope",
+      "oneRound": "One round",
+      "recipients": "Recipients",
+      "hint": "Valid until everyone has taken a drink. Thanks to the idempotency key, double clicks are not booked twice.",
+      "confirmEvening": "Sponsor evening",
+      "confirmRound": "Buy round"
+    },
+    "overlay": {
+      "title": "Drinks menu & food",
+      "hint": "Choose the item for the tally sheet.",
+      "categories": "Categories",
+      "drinksChip": "Drinks ({count})",
+      "foodChip": "Food ({count})",
+      "drinks": "Drinks",
+      "food": "Food",
+      "selected": "Currently selected: {name}",
+      "noneSelected": "No item selected yet.",
+      "confirm": "Confirm selection"
+    },
+    "terminal": {
+      "backToPortal": "← Back to the club portal",
+      "standaloneMode": "Standalone terminal mode",
+      "leaveMode": "Leave terminal mode"
+    },
+    "header": {
+      "eyebrow": "Drink Recorder",
+      "terminalTitle": "Tally sheet terminal",
+      "title": "Bar terminal",
+      "intro": "Tally sheet for active events."
+    },
+    "state": {
+      "eventsLoading": "Fetching active events.",
+      "unavailable": "Recording unavailable",
+      "contextLoading": "Fetching members and drinks.",
+      "notPossibleTitle": "Recording not possible",
+      "notPossibleMessage": "This event has no enabled members or drinks."
+    },
+    "events": {
+      "heading": "Active events ({count})",
+      "emptyTitle": "No active events",
+      "emptyMessage": "No event is currently enabled for recording.",
+      "select": "Select"
+    },
+    "tally": {
+      "heading": "Tally sheet",
+      "activeItem": "Item: {name} · {price}",
+      "activeDrink": "Drink: {name} · {price}",
+      "chooseItem": "Choose item",
+      "booked": "Mark recorded: {label}",
+      "undo": "Undo",
+      "quickbookLabel": "Active item for quick booking:",
+      "round": "Buy a round",
+      "evening": "Sponsor the whole evening"
+    },
+    "messages": {
+      "undoNotPossible": "Only marks from this session can be undone here. The board corrects older bookings.",
+      "undone": "Mark undone.",
+      "purchaseRecorded": "Purchase recorded.",
+      "eveningBooked": "Evening sponsorship booked.",
+      "roundBooked": "Round booked."
+    },
+    "fallback": {
+      "member": "Member",
+      "item": "Item"
+    }
   }
 }

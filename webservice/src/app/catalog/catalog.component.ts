@@ -19,43 +19,45 @@ import {
   type StatusTone,
 } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 type CatalogTab = 'drinks' | 'food';
 
 @Component({
   selector: 'app-catalog',
-  imports: [StateComponent, IconComponent, FormsModule, ModalComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, FormsModule, ModalComponent, StatusBadgeComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="catalog-title">
         <div class="catalog-header">
           <div>
-            <span class="eyebrow">Vereinskatalog</span>
-            <h1 id="catalog-title">Getränke- &amp; Speisenkatalog</h1>
-            <p>Übersicht aller Vereinsgetränke, Barcodes und Verpflegungsangebote.</p>
+            <span class="eyebrow">{{ 'catalog.header.eyebrow' | t }}</span>
+            <h1 id="catalog-title">{{ 'catalog.header.title' | t }}</h1>
+            <p>{{ 'catalog.header.intro' | t }}</p>
           </div>
           <div class="catalog-header-actions">
             @if (activeTab() === 'drinks') {
               <button type="button" class="member-button" (click)="openProposeModal()">
-                + Getränk vorschlagen
+                {{ 'catalog.actions.proposeDrink' | t }}
               </button>
             } @else if (isBoardOrAdmin()) {
               <button type="button" class="member-button" (click)="openCreateFoodModal()">
-                + Neue Speise anlegen
+                {{ 'catalog.actions.createFood' | t }}
               </button>
             }
           </div>
         </div>
 
         <!-- Tabs -->
-        <nav class="catalog-tabs" aria-label="Katalogbereiche">
+        <nav class="catalog-tabs" [attr.aria-label]="'catalog.tabs.label' | t">
           <button
             type="button"
             class="tab-btn"
             [class.active]="activeTab() === 'drinks'"
             (click)="setTab('drinks')"
           >
-            <vereint-icon name="beer" /> Getränkekatalog
+            <vereint-icon name="beer" /> {{ 'catalog.tabs.drinks' | t }}
           </button>
           <button
             type="button"
@@ -63,7 +65,7 @@ type CatalogTab = 'drinks' | 'food';
             [class.active]="activeTab() === 'food'"
             (click)="setTab('food')"
           >
-            <vereint-icon name="food" /> Speisenkatalog
+            <vereint-icon name="food" /> {{ 'catalog.tabs.food' | t }}
           </button>
         </nav>
 
@@ -73,15 +75,15 @@ type CatalogTab = 'drinks' | 'food';
             type="search"
             class="filter-input search-input"
             [(ngModel)]="searchQuery"
-            placeholder="Suchen nach Name oder Kategorie …"
+            [placeholder]="'catalog.filter.searchPlaceholder' | t"
           />
 
           @if (activeTab() === 'drinks' && isBoardOrAdmin()) {
             <select class="filter-input select-input" [(ngModel)]="statusFilter" (change)="reload()">
-              <option value="">Alle Status</option>
-              <option value="approved">Nur Freigegebene</option>
-              <option value="proposed">Nur Vorgeschlagene</option>
-              <option value="rejected">Nur Abgelehnte</option>
+              <option value="">{{ 'catalog.filter.allStatuses' | t }}</option>
+              <option value="approved">{{ 'catalog.filter.approvedOnly' | t }}</option>
+              <option value="proposed">{{ 'catalog.filter.proposedOnly' | t }}</option>
+              <option value="rejected">{{ 'catalog.filter.rejectedOnly' | t }}</option>
             </select>
           }
         </div>
@@ -89,13 +91,13 @@ type CatalogTab = 'drinks' | 'food';
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Katalogdaten werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'catalog.state.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Katalog nicht verfügbar"
+            [title]="'catalog.state.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -105,8 +107,8 @@ type CatalogTab = 'drinks' | 'food';
             @if (filteredDrinks().length === 0) {
               <vereint-state
                 kind="empty"
-                title="Keine Getränke gefunden"
-                message="Es wurden keine passenden Getränke gefunden."
+                [title]="'catalog.state.noDrinksTitle' | t"
+                [message]="'catalog.state.noDrinksMessage' | t"
               />
             } @else {
               <div class="catalog-grid">
@@ -115,7 +117,7 @@ type CatalogTab = 'drinks' | 'food';
                     <div class="catalog-card-header">
                       <div>
                         <h3 class="catalog-card-title">{{ drink.name }}</h3>
-                        <span class="catalog-card-category">{{ drink.category || 'Allgemein' }}</span>
+                        <span class="catalog-card-category">{{ drink.category || ('catalog.card.generalCategory' | t) }}</span>
                       </div>
                       <vereint-status-badge
                         [label]="drinkStatusLabel(drink.status)"
@@ -133,7 +135,7 @@ type CatalogTab = 'drinks' | 'food';
                         class="btn-secondary-sm"
                         (click)="openDrinkDetail(drink.id)"
                       >
-                        Details &amp; Barcodes
+                        {{ 'catalog.card.detailsAndBarcodes' | t }}
                       </button>
 
                       @if (isBoardOrAdmin() && drink.status === 'proposed') {
@@ -142,14 +144,14 @@ type CatalogTab = 'drinks' | 'food';
                           class="btn-primary-sm"
                           (click)="approveDrink(drink.id)"
                         >
-                          Freigeben
+                          {{ 'catalog.card.approve' | t }}
                         </button>
                         <button
                           type="button"
                           class="btn-danger-sm"
                           (click)="rejectDrink(drink.id)"
                         >
-                          Ablehnen
+                          {{ 'catalog.card.reject' | t }}
                         </button>
                       }
                     </div>
@@ -164,8 +166,8 @@ type CatalogTab = 'drinks' | 'food';
             @if (filteredFoods().length === 0) {
               <vereint-state
                 kind="empty"
-                title="Keine Speisen gefunden"
-                message="Es wurden keine passenden Speisen gefunden."
+                [title]="'catalog.state.noFoodTitle' | t"
+                [message]="'catalog.state.noFoodMessage' | t"
               />
             } @else {
               <div class="catalog-grid">
@@ -174,10 +176,10 @@ type CatalogTab = 'drinks' | 'food';
                     <div class="catalog-card-header">
                       <div>
                         <h3 class="catalog-card-title">{{ food.name }}</h3>
-                        <span class="catalog-card-category">{{ food.category || 'Allgemein' }}</span>
+                        <span class="catalog-card-category">{{ food.category || ('catalog.card.generalCategory' | t) }}</span>
                       </div>
                       <vereint-status-badge
-                        [label]="food.active ? 'Aktiv' : 'Inaktiv'"
+                        [label]="(food.active ? 'catalog.card.active' : 'catalog.card.inactive') | t"
                         [tone]="food.active ? 'success' : 'neutral'"
                       />
                     </div>
@@ -193,7 +195,7 @@ type CatalogTab = 'drinks' | 'food';
                           class="btn-secondary-sm"
                           (click)="openEditFoodModal(food.id)"
                         >
-                          Bearbeiten
+                          {{ 'catalog.card.edit' | t }}
                         </button>
                       </div>
                     }
@@ -208,22 +210,22 @@ type CatalogTab = 'drinks' | 'food';
       <!-- Propose Drink Modal -->
       <vereint-modal
         [open]="showProposeModal()"
-        title="Getränk vorschlagen"
+        [title]="'catalog.propose.title' | t"
         (closed)="closeProposeModal()"
       >
         <form (submit)="submitDrinkProposal($event)" class="modal-form">
           <label class="form-field">
-            <span>Name des Getränks *</span>
-            <input [(ngModel)]="newDrinkName" name="name" required placeholder="z. B. Eber-Bräu Zwickl" />
+            <span>{{ 'catalog.propose.name' | t }}</span>
+            <input [(ngModel)]="newDrinkName" name="name" required [placeholder]="'catalog.propose.namePlaceholder' | t" />
           </label>
 
           <label class="form-field">
-            <span>Kategorie</span>
-            <input [(ngModel)]="newDrinkCategory" name="category" placeholder="z. B. Helles, Weizen, Alkoholfrei" />
+            <span>{{ 'catalog.form.category' | t }}</span>
+            <input [(ngModel)]="newDrinkCategory" name="category" [placeholder]="'catalog.propose.categoryPlaceholder' | t" />
           </label>
 
           <label class="form-field">
-            <span>Standardpreis (€) *</span>
+            <span>{{ 'catalog.form.defaultPrice' | t }}</span>
             <input
               type="number"
               step="0.10"
@@ -231,23 +233,23 @@ type CatalogTab = 'drinks' | 'food';
               [(ngModel)]="newDrinkPrice"
               name="price"
               required
-              placeholder="z. B. 2.50"
+              [placeholder]="'catalog.propose.pricePlaceholder' | t"
             />
           </label>
 
           <label class="form-field">
-            <span>Beschreibung</span>
+            <span>{{ 'catalog.form.description' | t }}</span>
             <textarea
               [(ngModel)]="newDrinkDescription"
               name="description"
               rows="3"
-              placeholder="Besonderheiten, Brauerei, etc."
+              [placeholder]="'catalog.propose.descriptionPlaceholder' | t"
             ></textarea>
           </label>
 
           <label class="form-field">
-            <span>Barcode (optional)</span>
-            <input [(ngModel)]="newDrinkBarcode" name="barcode" placeholder="z. B. 4012345678901" />
+            <span>{{ 'catalog.propose.barcode' | t }}</span>
+            <input [(ngModel)]="newDrinkBarcode" name="barcode" [placeholder]="'catalog.propose.barcodePlaceholder' | t" />
           </label>
 
           @if (formError()) {
@@ -255,9 +257,9 @@ type CatalogTab = 'drinks' | 'food';
           }
 
           <div class="modal-actions">
-            <button type="button" class="btn-secondary-sm" (click)="closeProposeModal()">Abbrechen</button>
+            <button type="button" class="btn-secondary-sm" (click)="closeProposeModal()">{{ 'common.cancel' | t }}</button>
             <button type="submit" class="member-button" [disabled]="submitting()">
-              {{ submitting() ? 'Wird gespeichert …' : 'Vorschlag einreichen' }}
+              {{ (submitting() ? 'common.saving' : 'catalog.propose.submit') | t }}
             </button>
           </div>
         </form>
@@ -266,23 +268,23 @@ type CatalogTab = 'drinks' | 'food';
       <!-- Drink Detail & Barcode Modal -->
       <vereint-modal
         [open]="showDrinkDetailModal()"
-        [title]="selectedDrink()?.name ?? 'Getränkedetails'"
+        [title]="selectedDrink()?.name ?? ('catalog.detail.fallbackTitle' | t)"
         (closed)="closeDrinkDetailModal()"
       >
         @if (selectedDrink(); as drink) {
           <div class="drink-detail-modal">
             <p class="drink-detail-meta">
-              <strong>Kategorie:</strong> {{ drink.category || 'Allgemein' }} |
-              <strong>Status:</strong> {{ drinkStatusLabel(drink.status) }} |
-              <strong>Standardpreis:</strong> {{ formatPrice(drink.defaultPrice, drink.currency) }}
+              <strong>{{ 'catalog.detail.category' | t }}</strong> {{ drink.category || ('catalog.card.generalCategory' | t) }} |
+              <strong>{{ 'catalog.detail.status' | t }}</strong> {{ drinkStatusLabel(drink.status) }} |
+              <strong>{{ 'catalog.detail.defaultPrice' | t }}</strong> {{ formatPrice(drink.defaultPrice, drink.currency) }}
             </p>
             @if (drink.description) {
               <p class="drink-detail-desc">{{ drink.description }}</p>
             }
 
-            <h4 class="barcode-heading">Zugeordnete Barcodes</h4>
+            <h4 class="barcode-heading">{{ 'catalog.detail.barcodesHeading' | t }}</h4>
             @if (drink.barcodes.length === 0) {
-              <p class="text-muted">Keine Barcodes hinterlegt.</p>
+              <p class="text-muted">{{ 'catalog.detail.noBarcodes' | t }}</p>
             } @else {
               <ul class="barcode-list">
                 @for (bc of drink.barcodes; track bc.id) {
@@ -292,7 +294,7 @@ type CatalogTab = 'drinks' | 'food';
                       <button
                         type="button"
                         class="btn-icon-danger"
-                        title="Barcode entfernen"
+                        [title]="'catalog.detail.removeBarcode' | t"
                         (click)="removeBarcode(drink.id, bc.id)"
                       >
                         <vereint-icon name="close" />
@@ -309,11 +311,11 @@ type CatalogTab = 'drinks' | 'food';
                   type="text"
                   [(ngModel)]="newBarcodeValue"
                   name="newBarcode"
-                  placeholder="Neuen Barcode erfassen …"
+                  [placeholder]="'catalog.detail.newBarcodePlaceholder' | t"
                   required
                 />
                 <button type="submit" class="member-button-sm" [disabled]="submitting()">
-                  + Barcode hinzufügen
+                  {{ 'catalog.detail.addBarcode' | t }}
                 </button>
               </form>
             }
@@ -324,22 +326,22 @@ type CatalogTab = 'drinks' | 'food';
       <!-- Food Create/Edit Modal -->
       <vereint-modal
         [open]="showFoodModal()"
-        [title]="editingFoodId() ? 'Speise bearbeiten' : 'Neue Speise anlegen'"
+        [title]="(editingFoodId() ? 'catalog.food.editTitle' : 'catalog.food.createTitle') | t"
         (closed)="closeFoodModal()"
       >
         <form (submit)="submitFoodForm($event)" class="modal-form">
           <label class="form-field">
-            <span>Name der Speise *</span>
-            <input [(ngModel)]="foodFormName" name="foodName" required placeholder="z. B. Bratwurstsemmel" />
+            <span>{{ 'catalog.food.name' | t }}</span>
+            <input [(ngModel)]="foodFormName" name="foodName" required [placeholder]="'catalog.food.namePlaceholder' | t" />
           </label>
 
           <label class="form-field">
-            <span>Kategorie</span>
-            <input [(ngModel)]="foodFormCategory" name="foodCategory" placeholder="z. B. Grill, Snack, Vegetarisch" />
+            <span>{{ 'catalog.form.category' | t }}</span>
+            <input [(ngModel)]="foodFormCategory" name="foodCategory" [placeholder]="'catalog.food.categoryPlaceholder' | t" />
           </label>
 
           <label class="form-field">
-            <span>Standardpreis (€) *</span>
+            <span>{{ 'catalog.form.defaultPrice' | t }}</span>
             <input
               type="number"
               step="0.10"
@@ -347,36 +349,36 @@ type CatalogTab = 'drinks' | 'food';
               [(ngModel)]="foodFormPrice"
               name="foodPrice"
               required
-              placeholder="z. B. 3.50"
+              [placeholder]="'catalog.food.pricePlaceholder' | t"
             />
           </label>
 
           <label class="form-field">
-            <span>Selbstkostenpreis (€)</span>
+            <span>{{ 'catalog.food.costPrice' | t }}</span>
             <input
               type="number"
               step="0.10"
               min="0"
               [(ngModel)]="foodFormCostPrice"
               name="foodCostPrice"
-              placeholder="z. B. 1.80"
+              [placeholder]="'catalog.food.costPricePlaceholder' | t"
             />
           </label>
 
           <label class="form-field">
-            <span>Beschreibung</span>
+            <span>{{ 'catalog.form.description' | t }}</span>
             <textarea
               [(ngModel)]="foodFormDescription"
               name="foodDescription"
               rows="3"
-              placeholder="Zutaten, Allergene, Hinweise"
+              [placeholder]="'catalog.food.descriptionPlaceholder' | t"
             ></textarea>
           </label>
 
           @if (editingFoodId()) {
             <label class="form-field checkbox-field">
               <input type="checkbox" [(ngModel)]="foodFormActive" name="foodActive" />
-              <span>Speise aktiv und bestellbar</span>
+              <span>{{ 'catalog.food.activeLabel' | t }}</span>
             </label>
           }
 
@@ -385,9 +387,9 @@ type CatalogTab = 'drinks' | 'food';
           }
 
           <div class="modal-actions">
-            <button type="button" class="btn-secondary-sm" (click)="closeFoodModal()">Abbrechen</button>
+            <button type="button" class="btn-secondary-sm" (click)="closeFoodModal()">{{ 'common.cancel' | t }}</button>
             <button type="submit" class="member-button" [disabled]="submitting()">
-              {{ submitting() ? 'Wird gespeichert …' : 'Speichern' }}
+              {{ (submitting() ? 'common.saving' : 'common.save') | t }}
             </button>
           </div>
         </form>
@@ -728,11 +730,11 @@ export class CatalogComponent implements OnInit, OnDestroy {
   protected drinkStatusLabel(status: string): string {
     switch (status) {
       case 'approved':
-        return 'Freigegeben';
+        return translate('catalog.drinkStatus.approved');
       case 'proposed':
-        return 'Vorgeschlagen';
+        return translate('catalog.drinkStatus.proposed');
       case 'rejected':
-        return 'Abgelehnt';
+        return translate('catalog.drinkStatus.rejected');
       default:
         return status;
     }
@@ -769,7 +771,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   protected submitDrinkProposal(event: Event): void {
     event.preventDefault();
     if (!this.newDrinkName.trim() || this.newDrinkPrice === null) {
-      this.formError.set('Bitte füllen Sie alle Pflichtfelder aus.');
+      this.formError.set(translate('catalog.form.requiredFields'));
       return;
     }
 
@@ -793,7 +795,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       },
       error: (err: unknown) => {
         this.submitting.set(false);
-        this.formError.set((err as Error)?.message || 'Fehler beim Einreichen des Vorschlags.');
+        this.formError.set((err as Error)?.message || translate('catalog.errors.propose'));
       },
     });
   }
@@ -841,7 +843,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       },
       error: (err: unknown) => {
         this.submitting.set(false);
-        this.formError.set((err as Error)?.message || 'Fehler beim Hinzufügen des Barcodes.');
+        this.formError.set((err as Error)?.message || translate('catalog.errors.addBarcode'));
       },
     });
   }
@@ -889,7 +891,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   protected submitFoodForm(event: Event): void {
     event.preventDefault();
     if (!this.foodFormName.trim() || this.foodFormPrice === null) {
-      this.formError.set('Bitte füllen Sie alle Pflichtfelder aus.');
+      this.formError.set(translate('catalog.form.requiredFields'));
       return;
     }
 
@@ -915,7 +917,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
           },
           error: (err: unknown) => {
             this.submitting.set(false);
-            this.formError.set((err as Error)?.message || 'Fehler beim Speichern der Speise.');
+            this.formError.set((err as Error)?.message || translate('catalog.errors.saveFood'));
           },
         });
     } else {
@@ -935,7 +937,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
         },
         error: (err: unknown) => {
           this.submitting.set(false);
-          this.formError.set((err as Error)?.message || 'Fehler beim Anlegen der Speise.');
+          this.formError.set((err as Error)?.message || translate('catalog.errors.createFood'));
         },
       });
     }
