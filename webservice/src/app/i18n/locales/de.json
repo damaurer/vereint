@@ -62,5 +62,371 @@
     "memberSince": "Mitglied seit",
     "recording": "Erfassung",
     "recordingActive": "Strichlisten-Erfassung aktiv"
+  },
+  "admin": {
+    "eyebrow": "Administration",
+    "title": "Mitglieder & Gruppen",
+    "intro": "Mitglieder, Rollen und Einladungen der „Durstigen Eber“.",
+    "infoPanel": "Rollen und Berechtigungen werden serverseitig autorisiert; hier wird die Verwaltung nur vorbereitet.",
+    "loadingMessage": "Benutzer und Protokoll werden abgerufen.",
+    "unavailable": "Administration nicht verfügbar",
+    "roles": {
+      "admin": "Admin",
+      "board": "Vorstand",
+      "member": "Mitglied",
+      "chair": "Vorsitz",
+      "treasurer": "Kassenwart",
+      "secretary": "Schriftwart",
+      "assessor": "Beisitzer",
+      "host": "Gastgeber"
+    },
+    "members": {
+      "search": "Mitglieder suchen",
+      "searchPlaceholder": "Mitglieder suchen …",
+      "roleFilter": "Nach Rolle filtern",
+      "roleFilterAll": "Rolle: Alle",
+      "invite": "+ Mitglied einladen",
+      "heading": "Mitglieder ({count})",
+      "empty": "Für die aktuelle Suche wurden keine Mitglieder gefunden.",
+      "disabledMark": "(deaktiviert)",
+      "statusActive": "Aktiv",
+      "statusInactive": "Inaktiv",
+      "edit": "Bearbeiten",
+      "range": "Zeige {start}–{end} von {total} Mitgliedern",
+      "prev": "Zurück",
+      "next": "Weiter"
+    },
+    "columns": {
+      "avatar": "Avatar",
+      "name": "Name",
+      "email": "E-Mail",
+      "role": "Rolle",
+      "balance": "Guthaben",
+      "status": "Status",
+      "joined": "Beitrittsdatum",
+      "actions": "Aktionen"
+    },
+    "user": {
+      "editTitle": "{name} bearbeiten",
+      "id": "ID: {id}",
+      "roles": "Rollen",
+      "saveRoles": "Rollen speichern",
+      "boardRole": "Vorstands-Unterrolle",
+      "noBoardRole": "keine",
+      "drinkRecorder": "Drink Recorder",
+      "saveProfile": "Profil speichern",
+      "disabled": "Deaktiviert",
+      "saveStatus": "Status speichern",
+      "rolesSaved": "Rollen gespeichert.",
+      "profileSaved": "Profil gespeichert.",
+      "statusSaved": "Status gespeichert."
+    },
+    "audit": {
+      "heading": "Audit-Protokoll ({count})",
+      "emptyTitle": "Keine Einträge",
+      "emptyMessage": "Es liegen keine Protokolleinträge vor.",
+      "system": "System"
+    },
+    "invite": {
+      "title": "Mitglied einladen",
+      "email": "E-Mail-Adresse",
+      "startRole": "Startrolle",
+      "roleMemberDefault": "Mitglied (Standard)",
+      "message": "Persönliche Nachricht (optional)",
+      "messagePlaceholder": "Servus! Komm auf einen Krug vorbei bei unserer Stammtisch-App.",
+      "send": "Einladung senden",
+      "openTitle": "Offene Einladungen",
+      "emptyTitle": "Keine offenen Einladungen",
+      "emptyMessage": "Aktuell sind keine Einladungen ausstehend.",
+      "expired": "Abgelaufen",
+      "pending": "Ausstehend",
+      "renew": "Erneuern",
+      "invalidEmail": "Bitte eine gültige E-Mail-Adresse eingeben.",
+      "queued": "Einladung vorgemerkt.",
+      "renewed": "Einladung erneuert."
+    },
+    "matrix": {
+      "title": "Rollen & Berechtigungen",
+      "saved": "Berechtigungen gespeichert.",
+      "permission": "Berechtigung",
+      "hint": "Systemrechte sind global für Vereint geschützt.",
+      "discard": "Verwerfen",
+      "save": "Änderungen speichern",
+      "permissions": {
+        "credit": "Guthaben verwalten (Aufladen / Buchen)",
+        "events": "Events & Stammtische erstellen / planen",
+        "notify": "Gruppen-Benachrichtigungen senden",
+        "attendance": "Anwesenheitsabfrage starten",
+        "invite": "Neue Mitglieder einladen",
+        "tally": "Strichliste aller Mitglieder editieren",
+        "stats": "Statistiken und Eber-Analytik einsehen",
+        "moderate": "Chat-Beiträge löschen / moderieren",
+        "pin": "Info Panels an Pinnwand heften"
+      }
+    }
+  },
+  "board": {
+    "backToBoard": "← Zum Vorstand",
+    "auditTarget": {
+      "ledger": "Finanzen",
+      "notification": "Kommunikation",
+      "user": "Benutzer"
+    },
+    "boardRole": {
+      "chair": "Vorsitz",
+      "treasurer": "Kassenwart",
+      "secretary": "Schriftführer",
+      "assessor": "Beisitzer",
+      "board": "Vorstand"
+    },
+    "audit": {
+      "emptyTitle": "Keine Einträge",
+      "emptyMessage": "Für die erlaubten Bereiche liegen keine Protokolleinträge vor.",
+      "system": "System"
+    },
+    "overview": {
+      "eyebrow": "Vorstand",
+      "title": "Eber-Führungsstab",
+      "intro": "Moderation, Finanzübersichten und vorbereitete Mitteilungen.",
+      "infoTitle": "Vorstandsbereich",
+      "infoText": "Verwalte hier die Bierkasse, versende wichtige Ankündigungen oder plane die nächsten Stammtisch-Sitzungen.",
+      "panelsTitle": "Rollenspezifische Verwaltung",
+      "panelsNav": "Vorstandsbereiche",
+      "treasuryTitle": "Kassenwart · Kasse & Finanzen",
+      "treasuryDesc": "Bierkasse, Guthaben und Buchungen",
+      "commsTitle": "Schriftwart · Kommunikation",
+      "commsDesc": "Ankündigungen und Pinnwand",
+      "loadingMessage": "Events und Protokoll werden abgerufen.",
+      "unavailable": "Vorstandsbereich nicht verfügbar",
+      "statEvents": "Sichtbare Events",
+      "statActions": "Letzte Aktionen",
+      "eventsHeading": "Gastgeber · Events ({count})",
+      "eventsEmptyTitle": "Keine Events",
+      "eventsEmptyMessage": "Aktuell sind keine Events zur Moderation sichtbar.",
+      "moderate": "Moderieren",
+      "auditHeading": "Letzte Aktionen ({count})"
+    },
+    "comms": {
+      "eyebrow": "Schriftwart",
+      "title": "Infotafeln & Rundbriefe",
+      "intro": "Mitteilungen an Mitglieder und versendete Benachrichtigungen.",
+      "pinboardTitle": "Pinnwand (Chat-Infotafeln)",
+      "infoTitle": "Info vom Schriftwart",
+      "infoText": "Angepinnte Infotafeln erscheinen oben im Chat. Verfasse unten einen neuen Rundbrief, um alle Mitglieder zu erreichen.",
+      "composeTitle": "Meldung verfassen",
+      "recipientId": "Empfänger (Mitglieds-ID)",
+      "messageTitle": "Titel",
+      "messageBody": "Text",
+      "send": "Senden",
+      "loadingMessage": "Empfänger und Protokoll werden abgerufen.",
+      "unavailable": "Kommunikation nicht verfügbar",
+      "recipientsHeading": "Empfänger ({count})",
+      "noRecipients": "Keine Mitglieder sichtbar.",
+      "pickRecipient": "Als Empfänger",
+      "sentHeading": "Rundbriefe / Meldungen ({count})",
+      "sentEmpty": "Es wurden noch keine Mitteilungen protokolliert.",
+      "sent": "Gesendet",
+      "sentInfo": "Mitteilung gesendet."
+    },
+    "treasury": {
+      "eyebrow": "Kassenwart",
+      "title": "Bierkasse verwalten",
+      "intro": "Eventabrechnungen, Guthaben und Kassenbuchungen.",
+      "infoTitle": "Bierkasse",
+      "infoText": "Buchungen sind idempotent. Preis, Modus und Freigabe bestimmt ausschließlich der Fachservice.",
+      "eventsLoading": "Events werden abgerufen.",
+      "unavailable": "Kasse nicht verfügbar",
+      "statEvents": "Events mit Abrechnung",
+      "eventsHeading": "Events ({count})",
+      "eventsEmpty": "Es sind keine Events mit Abrechnung sichtbar.",
+      "summaryButton": "Abrechnung",
+      "summary": {
+        "title": "Eventabrechnung",
+        "revenue": "Umsatz: {amount}",
+        "cost": "Wareneinsatz: {amount}",
+        "profit": "Reingewinn: {amount}",
+        "credit": "Kreditverzehr: {amount}",
+        "entries": "Buchungen: {count}"
+      },
+      "lookup": {
+        "title": "Guthaben nachschlagen",
+        "memberId": "Mitglieds-ID",
+        "show": "Anzeigen",
+        "loading": "Guthaben und Buchungen werden abgerufen.",
+        "balance": "Guthaben",
+        "entriesHeading": "Buchungen ({count})",
+        "noEntries": "Keine Buchungen."
+      },
+      "columns": {
+        "type": "Art",
+        "date": "Datum",
+        "amount": "Betrag"
+      },
+      "booking": {
+        "title": "Buchen",
+        "topupMemberId": "Aufladen · Mitglieds-ID",
+        "payoutMemberId": "Auszahlen · Mitglieds-ID",
+        "correctionEntryId": "Korrektur · Ursprungsbuchung",
+        "amount": "Betrag",
+        "note": "Notiz",
+        "reason": "Grund",
+        "topup": "Aufladen",
+        "payout": "Auszahlen",
+        "correct": "Korrigieren",
+        "topupDone": "Aufladung gebucht.",
+        "payoutDone": "Auszahlung gebucht.",
+        "correctionDone": "Korrektur gebucht."
+      }
+    }
+  },
+  "events": {
+    "manage": {
+      "eyebrow": "Gastgeber",
+      "back": "← Zum Event",
+      "loadingMessage": "Die Eventverwaltung wird vorbereitet.",
+      "unavailable": "Verwaltung nicht verfügbar",
+      "title": "{title} verwalten",
+      "nextDate": "Nächster Termin",
+      "noRights": "Keine Verwaltungsrechte",
+      "noRightsHint": "Nur der Gastgeber dieses Events (oder der Vorstand) kann es verwalten.",
+      "remove": "Entfernen",
+      "costPrice": "EK: {amount}",
+      "priceOptional": "Preis (optional)",
+      "costPriceOptional": "EK (optional)",
+      "fallback": "Fallback",
+      "currency": "Währung",
+      "details": {
+        "title": "Stammdaten",
+        "name": "Titel",
+        "location": "Ort",
+        "description": "Beschreibung",
+        "status": "Status",
+        "save": "Stammdaten speichern"
+      },
+      "participants": {
+        "heading": "Teilnehmer & Anwesenheit ({count})",
+        "empty": "Noch keine Teilnehmer.",
+        "id": "Teilnehmer-ID",
+        "role": "Rolle",
+        "roleParticipant": "Teilnehmer",
+        "roleCoHost": "Co-Gastgeber",
+        "add": "Hinzufügen"
+      },
+      "drinks": {
+        "heading": "Getränke ({count})",
+        "empty": "Noch keine Getränke zugewiesen.",
+        "id": "Getränke-ID",
+        "add": "Getränk hinzufügen",
+        "sublistId": "Sublist-ID",
+        "assignSublist": "Sublist zuweisen"
+      },
+      "food": {
+        "heading": "Speisen ({count})",
+        "empty": "Noch keine Speisen zugewiesen.",
+        "default": "(Standard)",
+        "id": "Speisen-ID",
+        "add": "Speise hinzufügen"
+      },
+      "invites": {
+        "heading": "Einladungen ({count})",
+        "createdTitle": "Einladung erstellt",
+        "createdHint": "Dieser Link wird nur einmal angezeigt:",
+        "empty": "Keine aktiven Einladungen.",
+        "active": "aktiv",
+        "inactive": "inaktiv",
+        "revoke": "Widerrufen",
+        "validMinutes": "Gültig (Minuten)",
+        "maxUses": "Max. Nutzungen",
+        "create": "Gasteinladung erzeugen"
+      },
+      "chat": {
+        "heading": "Event-Chat ({count})",
+        "empty": "Noch keine Nachrichten.",
+        "message": "Nachricht",
+        "send": "Senden"
+      },
+      "info": {
+        "detailsSaved": "Stammdaten gespeichert.",
+        "participantAdded": "Teilnehmer hinzugefügt.",
+        "participantRemoved": "Teilnehmer entfernt.",
+        "drinkAdded": "Getränk hinzugefügt.",
+        "drinkRemoved": "Getränk entfernt.",
+        "foodAdded": "Speise hinzugefügt.",
+        "foodRemoved": "Speise entfernt.",
+        "sublistAssigned": "Sublist zugewiesen.",
+        "inviteCreated": "Einladung erstellt.",
+        "inviteRevoked": "Einladung widerrufen.",
+        "messageSent": "Nachricht gesendet."
+      }
+    }
+  },
+  "statistics": {
+    "ariaLabel": "Statistiken und Eber-Analytik",
+    "eyebrow": "Statistiken",
+    "title": "Eber-Analytik",
+    "ssr": {
+      "title": "Diagramme werden im Browser geladen",
+      "message": "Aggregierte Auswertungen erscheinen erst nach dem Laden im Browser."
+    },
+    "loadingMessage": "Die Auswertungen werden abgerufen.",
+    "unavailable": "Statistiken nicht verfügbar",
+    "empty": {
+      "title": "Noch keine Auswertungen",
+      "message": "Sobald Käufe und Anwesenheiten erfasst sind, erscheinen hier Kennzahlen."
+    },
+    "consumption": {
+      "ariaLabel": "Bierkonsum diesen Monat",
+      "title": "Bierkonsum diesen Monat (Liter)"
+    },
+    "attendance": {
+      "title": "Anwesenheitsquote",
+      "ringLabel": "Anwesenheitsquote {percent} Prozent"
+    },
+    "spending": {
+      "title": "Ausgaben-Verlauf",
+      "thisMonth": "Ausgaben diesen Monat",
+      "trendHint": "{change}% vs. Vormonat"
+    },
+    "topRounds": {
+      "title": "Top-Rundengeber",
+      "rounds": {
+        "one": "{count} Runde",
+        "other": "{count} Runden"
+      }
+    },
+    "drinkRanking": {
+      "title": "Getränke-Ranking",
+      "share": "{percent}% Beliebtheit"
+    }
+  },
+  "guest": {
+    "event": {
+      "eyebrow": "Gastzugang",
+      "defaultTitle": "Event-Chat",
+      "intro": "Als Gast hast du Zugriff auf den Event-Chat.",
+      "noAccess": "Kein Gastzugang",
+      "noAccessHint": "Dieser Link enthält kein gültiges Gast-Token. Bitte den Einladungslink erneut öffnen.",
+      "loadingMessage": "Der Event-Chat wird abgerufen.",
+      "unavailable": "Chat nicht verfügbar",
+      "empty": "Noch keine Nachrichten.",
+      "message": "Nachricht",
+      "placeholder": "Nachricht schreiben …",
+      "send": "Senden"
+    },
+    "invite": {
+      "badge": "Einladung",
+      "title": "Event-Einladung annehmen",
+      "invalidTitle": "Ungültiger Einladungslink",
+      "invalidHint": "Dieser Link enthält kein Einladungs-Token. Bitte nutzen Sie den vollständigen Link aus Ihrer Einladung.",
+      "backHome": "Zurück zur Startseite",
+      "checking": "Einladung wird geprüft und aktiviert …",
+      "failed": "Einladung konnte nicht eingelöst werden",
+      "home": "Zur Startseite",
+      "description": "Geben Sie optional Ihren Namen ein, um dem Event als Gast beizutreten.",
+      "nameLabel": "Ihr Name / Spitzname (optional)",
+      "namePlaceholder": "z. B. Max Mustermann",
+      "joining": "Beitreten …",
+      "join": "Event beitreten"
+    }
   }
 }
