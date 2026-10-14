@@ -6,7 +6,12 @@ import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.domain.LedgerEntryEntity
+import de.maurer.baseservice.domain.NotificationEntity
 import de.maurer.baseservice.repository.AuditLogRepository
+import de.maurer.baseservice.repository.LedgerEntryRepository
+import de.maurer.baseservice.repository.NotificationRepository
+import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
@@ -43,13 +48,25 @@ class AuditLogServiceTest {
     @Mock
     private lateinit var userRoleRepository: UserRoleRepository
 
+    @Mock
+    private lateinit var userRepository: UserRepository
+
+    @Mock
+    private lateinit var ledgerEntryRepository: LedgerEntryRepository
+
+    @Mock
+    private lateinit var notificationRepository: NotificationRepository
+
     private lateinit var service: AuditLogService
 
     private val callerId: UUID = UUID.randomUUID()
 
     @BeforeEach
     fun setup() {
-        service = AuditLogService(auditLogRepository, userService, userRoleRepository)
+        service = AuditLogService(
+            auditLogRepository, userService, userRoleRepository,
+            userRepository, ledgerEntryRepository, notificationRepository
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -211,5 +228,33 @@ class AuditLogServiceTest {
         )
 
         assertEquals(AuditLogService.MAX_PAGE_SIZE, page.size)
+    }
+
+    @Test
+    fun `audit entries name the affected member and notification subject instead of ids`() {
+        `when`(userService.getOrCreateUser(principal(UserRole.ADMIN))).thenReturn(caller())
+        val member = UserEntity(id = UUID.randomUUID(), keycloakSubject = "sub-m", displayName = "Erika Muster")
+        val notification = NotificationEntity(user = member, title = "Sommerfest", body = "Kommt alle", type = "general")
+        val ledgerEntry = LedgerEntryEntity(member = member)
+        fun entry(target: String, targetId: UUID) = AuditLogEntity(
+            id = UUID.randomUUID(), actor = caller(), action = "X", targetEntity = target,
+            targetId = targetId.toString(), details = null, createdAt = Instant.now()
+        )
+        val entries = listOf(
+            entry(AuditService.TARGET_USER, member.id),
+            entry(AuditService.TARGET_LEDGER, ledgerEntry.id),
+            entry(AuditService.TARGET_NOTIFICATION, notification.id)
+        )
+        `when`(auditLogRepository.findAll(anySpecification(), anyPageable())).thenAnswer { invocation ->
+            PageImpl(entries, invocation.arguments[1] as Pageable, 3)
+        }
+        `when`(userRepository.findAllById(setOf(member.id))).thenReturn(listOf(member))
+        `when`(ledgerEntryRepository.findByIdIn(setOf(ledgerEntry.id))).thenReturn(listOf(ledgerEntry))
+        `when`(notificationRepository.findAllById(setOf(notification.id))).thenReturn(listOf(notification))
+
+        val content = service.listAuditLogs(null, null, null, null, Pageable.unpaged(), principal(UserRole.ADMIN)).content
+
+        assertEquals(listOf("Erika Muster", "Erika Muster", "Erika Muster"), content.map { it.targetName })
+        assertEquals("Sommerfest", content[2].targetTitle)
     }
 }

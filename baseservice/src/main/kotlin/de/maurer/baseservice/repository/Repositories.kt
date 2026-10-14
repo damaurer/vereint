@@ -180,6 +180,10 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
     @EntityGraph(attributePaths = ["event", "member", "drink", "food", "purchaseSnapshot", "reversesEntry"])
     fun findByCreatedAtGreaterThanEqual(since: Instant): List<LedgerEntryEntity>
 
+    /** Mehrere Buchungen samt Mitglied, z. B. um Audit-Einträge mit Namen anzuzeigen. */
+    @EntityGraph(attributePaths = ["member"])
+    fun findByIdIn(ids: Collection<UUID>): List<LedgerEntryEntity>
+
     /** Bereits vorhandene Gegenbuchungen zu einer Ursprungsbuchung (Doppelkorrektur vermeiden). */
     fun findByReversesEntryId(reversesEntryId: UUID): List<LedgerEntryEntity>
 

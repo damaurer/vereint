@@ -232,10 +232,7 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                 <ul class="member-list">
                   @for (drink of data.drinks; track drink.id) {
                     <li class="member-list-item manage-row">
-                      <span class="member-list-title">
-                        {{ drink.drinkName }}
-                        <small class="manage-id">{{ drink.drinkId }}</small>
-                      </span>
+                      <span class="member-list-title">{{ drink.drinkName }}</span>
                       <span class="member-list-meta">
                         {{ formatMoney(drink.price, drink.currency) }}
                         @if (drink.effectiveCostPrice) {
@@ -299,10 +296,7 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                 <ul class="member-list">
                   @for (item of data.food; track item.id) {
                     <li class="member-list-item manage-row">
-                      <span class="member-list-title">
-                        {{ item.foodName }}
-                        <small class="manage-id">{{ item.foodId }}</small>
-                      </span>
+                      <span class="member-list-title">{{ item.foodName }}</span>
                       <span class="member-list-meta">
                         {{ formatMoney(item.effectivePrice, item.currency) }}
                         @if (item.price === null) { <small>{{ 'events.manage.food.default' | t }}</small> }
@@ -468,12 +462,6 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
       }
       .manage-invite button {
         align-self: flex-start;
-      }
-      .manage-id {
-        display: block;
-        font-size: 0.7rem;
-        color: var(--color-text-muted, #64748b);
-        word-break: break-all;
       }
       .manage-row {
         display: flex;

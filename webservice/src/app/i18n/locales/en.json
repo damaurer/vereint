@@ -191,7 +191,8 @@
         "topup": "Top-ups",
         "spend": "Spending",
         "empty": "No transactions for this filter."
-      }
+      },
+      "reversal": "Reversal: {name}"
     }
   },
   "profile": {
@@ -1098,6 +1099,35 @@
       "notification": "Communication",
       "user": "Users"
     },
+    "auditAction": {
+      "NOTIFICATION_SENT": "Notification sent",
+      "USER_ROLES_CHANGED": "Roles changed",
+      "USER_PERMISSIONS_CHANGED": "Permissions changed",
+      "USER_STATUS_CHANGED": "Status changed",
+      "USER_PROFILE_ADMIN_UPDATED": "Profile edited",
+      "USER_REGISTERED_BY_INVITE": "Registered via invite",
+      "LEDGER_TOPUP": "Top-up",
+      "LEDGER_PAYOUT": "Payout",
+      "LEDGER_CORRECTION": "Correction",
+      "LEDGER_PURCHASE": "Purchase",
+      "MOMENT_STARTED": "Moment started",
+      "MOMENT_COMPLETED": "Moment ended"
+    },
+    "auditDetail": {
+      "amount": "Amount",
+      "note": "Note",
+      "old": "Before",
+      "new": "After",
+      "roles": "Roles",
+      "displayName": "Name",
+      "disabled": "Disabled",
+      "boardRole": "Board role",
+      "title": "Title",
+      "topic": "Topic",
+      "durationMinutes": "Duration (min)"
+    },
+    "auditRecipient": "to {name}",
+    "auditMember": "Concerns {name}",
     "boardRole": {
       "chair": "Chair",
       "treasurer": "Treasurer",
