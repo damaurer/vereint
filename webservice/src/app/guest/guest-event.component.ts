@@ -7,6 +7,7 @@ import { describeApiError } from '../api/api-client.service';
 import type { ChatMessage } from '../events/event-manage.types';
 import { GuestEventService } from './guest-event.service';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
 
 /**
  * Gastoberfläche eines Events (TICKET-025).
@@ -21,29 +22,29 @@ import { StateComponent } from '../ui/state.component';
  */
 @Component({
   selector: 'app-guest-event',
-  imports: [StateComponent, FormsModule],
+  imports: [StateComponent, FormsModule, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="guest-title">
-        <span class="eyebrow">Gastzugang</span>
-        <h1 id="guest-title">{{ eventTitle() ?? 'Event-Chat' }}</h1>
-        <p>Als Gast hast du Zugriff auf den Event-Chat.</p>
+        <span class="eyebrow">{{ 'guest.event.eyebrow' | t }}</span>
+        <h1 id="guest-title">{{ eventTitle() ?? ('guest.event.defaultTitle' | t) }}</h1>
+        <p>{{ 'guest.event.intro' | t }}</p>
 
         @if (!guestToken) {
           <div class="state-card state-error" role="alert">
-            <strong>Kein Gastzugang</strong>
-            <span>Dieser Link enthält kein gültiges Gast-Token. Bitte den Einladungslink erneut öffnen.</span>
+            <strong>{{ 'guest.event.noAccess' | t }}</strong>
+            <span>{{ 'guest.event.noAccessHint' | t }}</span>
           </div>
         } @else if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Der Event-Chat wird abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'guest.event.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Chat nicht verfügbar"
+            [title]="'guest.event.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -52,7 +53,7 @@ import { StateComponent } from '../ui/state.component';
             <p class="guest-action-error" role="alert">{{ err }}</p>
           }
           @if (messages.length === 0) {
-            <p class="member-muted">Noch keine Nachrichten.</p>
+            <p class="member-muted">{{ 'guest.event.empty' | t }}</p>
           } @else {
             <ul class="member-list guest-chat">
               @for (message of messages; track message.id) {
@@ -66,16 +67,16 @@ import { StateComponent } from '../ui/state.component';
           }
           <form class="guest-form" (ngSubmit)="send()">
             <label class="guest-field">
-              <span class="visually-hidden">Nachricht</span>
+              <span class="visually-hidden">{{ 'guest.event.message' | t }}</span>
               <input
                 name="guestMessage"
                 [(ngModel)]="message"
                 maxlength="4000"
-                placeholder="Nachricht schreiben …"
+                [placeholder]="'guest.event.placeholder' | t"
                 required
               />
             </label>
-            <button type="submit" class="member-button" [disabled]="busy()">Senden</button>
+            <button type="submit" class="member-button" [disabled]="busy()">{{ 'guest.event.send' | t }}</button>
           </form>
         }
       </section>

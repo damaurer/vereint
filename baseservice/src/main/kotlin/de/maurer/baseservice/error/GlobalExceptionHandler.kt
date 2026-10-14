@@ -21,15 +21,21 @@ import org.springframework.web.servlet.resource.NoResourceFoundException
 /**
  * Einheitliches Fehlerformat nach RFC 7807 (`ProblemDetail`) mit den VEREINT-Extensions
  * `code` und `traceId`. Der `traceId`-Wert entspricht dem Response-Header `X-Request-Id`.
+ *
+ * Der `detail`-Text wird in der Sprache der Anfrage (`Accept-Language`) geliefert; der
+ * `code` bleibt sprachunabhängig. Interne Exception-Texte (z. B. von Spring Security)
+ * gelangen nicht in die Antwort, sondern werden durch übersetzte Standardtexte ersetzt.
  */
 @RestControllerAdvice
-class GlobalExceptionHandler {
+class GlobalExceptionHandler(
+    private val messages: ErrorMessageResolver
+) {
 
     private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     @ExceptionHandler(ApiException::class)
     fun handleApiException(ex: ApiException, request: HttpServletRequest): ResponseEntity<ProblemDetail> =
-        problem(ex.status, ex.errorCode, ex.message, request, ex.details)
+        problem(ex.status, ex.errorCode, messages.resolve(ex, request), request, ex.details)
 
     @ExceptionHandler(SpringAccessDeniedException::class)
     fun handleSpringAccessDenied(
@@ -38,7 +44,7 @@ class GlobalExceptionHandler {
     ): ResponseEntity<ProblemDetail> = problem(
         HttpStatus.FORBIDDEN,
         ErrorCode.PERMISSION_DENIED,
-        ex.message ?: "Access is denied",
+        messages.resolve("error.security.accessDenied", request),
         request
     )
 
@@ -49,7 +55,7 @@ class GlobalExceptionHandler {
     ): ResponseEntity<ProblemDetail> = problem(
         HttpStatus.UNAUTHORIZED,
         ErrorCode.ACCESS_DENIED,
-        ex.message ?: "Authentication required",
+        messages.resolve("error.security.authenticationRequired", request),
         request
     )
 
@@ -63,7 +69,7 @@ class GlobalExceptionHandler {
         return problem(
             HttpStatus.BAD_REQUEST,
             ErrorCode.VALIDATION_FAILED,
-            "Validation failed for request parameters",
+            messages.resolve("error.validation.failed", request),
             request,
             details
         )
@@ -78,7 +84,7 @@ class GlobalExceptionHandler {
         return problem(
             HttpStatus.BAD_REQUEST,
             ErrorCode.VALIDATION_FAILED,
-            "Validation failed for request parameters",
+            messages.resolve("error.validation.failed", request),
             request,
             details
         )
@@ -93,7 +99,7 @@ class GlobalExceptionHandler {
         return problem(
             HttpStatus.BAD_REQUEST,
             ErrorCode.VALIDATION_FAILED,
-            "Validation failed for request parameters",
+            messages.resolve("error.validation.failed", request),
             request,
             details
         )
@@ -108,7 +114,7 @@ class GlobalExceptionHandler {
         return problem(
             HttpStatus.CONFLICT,
             ErrorCode.CONCURRENT_MODIFICATION,
-            "Resource was modified concurrently, please retry with the current state",
+            messages.resolve("error.concurrentModification.retry", request),
             request
         )
     }
@@ -122,7 +128,7 @@ class GlobalExceptionHandler {
         return problem(
             HttpStatus.CONFLICT,
             ErrorCode.DATA_INTEGRITY_VIOLATION,
-            "Request violates a data integrity constraint",
+            messages.resolve("error.dataIntegrity", request),
             request
         )
     }
@@ -134,7 +140,7 @@ class GlobalExceptionHandler {
     ): ResponseEntity<ProblemDetail> = problem(
         HttpStatus.NOT_FOUND,
         ErrorCode.NOT_FOUND,
-        ex.message ?: "Resource not found",
+        messages.resolve("error.default.notFound", request),
         request
     )
 
@@ -147,7 +153,7 @@ class GlobalExceptionHandler {
         return problem(
             HttpStatus.INTERNAL_SERVER_ERROR,
             ErrorCode.INTERNAL_ERROR,
-            "An internal server error occurred",
+            messages.resolve("error.internal", request),
             request
         )
     }

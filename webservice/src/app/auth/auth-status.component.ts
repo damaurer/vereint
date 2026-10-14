@@ -1,12 +1,14 @@
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 import { AuthService } from './auth.service';
 
 export type AuthStatusMode = 'error' | 'loggedOut';
 
 @Component({
   selector: 'app-auth-status',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe],
   templateUrl: './auth-status.component.html',
   styleUrl: './auth-status.component.css',
 })
@@ -21,7 +23,7 @@ export class AuthStatusComponent {
   protected readonly isError = computed(() => this.mode() === 'error');
 
   protected readonly title = computed(() => {
-    return this.isError() ? 'Anmeldung fehlgeschlagen' : 'Abgemeldet';
+    return translate(this.isError() ? 'auth.status.loginFailed' : 'auth.status.loggedOutTitle');
   });
 
   protected readonly errorMessage = computed(() => {

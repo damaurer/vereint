@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { ModalComponent, RoleChipComponent } from '../ui';
+import { TranslatePipe } from '../i18n';
 import { formatMoney } from '../member/member-format';
 import type { EventDrink, EventFood } from '../events/event-manage.types';
 
@@ -15,25 +16,25 @@ export interface SelectedItem {
 @Component({
   selector: 'app-drink-overlay',
   standalone: true,
-  imports: [ModalComponent, RoleChipComponent],
+  imports: [ModalComponent, RoleChipComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <vereint-modal
       [open]="open"
-      title="Getränkekarte & Speiseangebot"
+      [title]="'tablet.overlay.title' | t"
       [dismissible]="true"
       (closed)="closed.emit()"
     >
-      <p class="overlay-hint">Wähle den Verkaufsartikel für die Strichliste.</p>
+      <p class="overlay-hint">{{ 'tablet.overlay.hint' | t }}</p>
 
-      <div class="overlay-chips" role="group" aria-label="Kategorien">
+      <div class="overlay-chips" role="group" [attr.aria-label]="'tablet.overlay.categories' | t">
         <button
           type="button"
           class="overlay-tab-chip"
           [class.is-active]="activeCategory === 'drinks'"
           (click)="activeCategory = 'drinks'"
         >
-          <vereint-role-chip [label]="'Getränke (' + drinks.length + ')'" [tone]="activeCategory === 'drinks' ? 'accent' : 'default'" />
+          <vereint-role-chip [label]="'tablet.overlay.drinksChip' | t: { count: drinks.length }" [tone]="activeCategory === 'drinks' ? 'accent' : 'default'" />
         </button>
         <button
           type="button"
@@ -41,12 +42,12 @@ export interface SelectedItem {
           [class.is-active]="activeCategory === 'food'"
           (click)="activeCategory = 'food'"
         >
-          <vereint-role-chip [label]="'Speisen (' + foods.length + ')'" [tone]="activeCategory === 'food' ? 'accent' : 'default'" />
+          <vereint-role-chip [label]="'tablet.overlay.foodChip' | t: { count: foods.length }" [tone]="activeCategory === 'food' ? 'accent' : 'default'" />
         </button>
       </div>
 
       @if (activeCategory === 'drinks') {
-        <div class="overlay-grid" role="listbox" aria-label="Getränke">
+        <div class="overlay-grid" role="listbox" [attr.aria-label]="'tablet.overlay.drinks' | t">
           @for (drink of drinks; track drink.id) {
             <button
               type="button"
@@ -62,7 +63,7 @@ export interface SelectedItem {
           }
         </div>
       } @else {
-        <div class="overlay-grid" role="listbox" aria-label="Speisen">
+        <div class="overlay-grid" role="listbox" [attr.aria-label]="'tablet.overlay.food' | t">
           @for (item of foods; track item.id) {
             <button
               type="button"
@@ -82,9 +83,9 @@ export interface SelectedItem {
       <footer class="overlay-confirm">
         <span class="overlay-selected">
           @if (selectedItemName(); as name) {
-            Aktuell ausgewählt: {{ name }}
+            {{ 'tablet.overlay.selected' | t: { name: name } }}
           } @else {
-            Noch kein Artikel gewählt.
+            {{ 'tablet.overlay.noneSelected' | t }}
           }
         </span>
         <button
@@ -93,7 +94,7 @@ export interface SelectedItem {
           [disabled]="!selectedId"
           (click)="confirm.emit()"
         >
-          Auswahl bestätigen
+          {{ 'tablet.overlay.confirm' | t }}
         </button>
       </footer>
     </vereint-modal>

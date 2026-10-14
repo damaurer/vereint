@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClient } from '../api/api-client.service';
+import { translate } from '../i18n';
 
 export type MemberInviteStatus = 'active' | 'used' | 'expired' | 'revoked';
 
@@ -68,24 +69,18 @@ export class MemberInvitesApiService {
   }
 }
 
+const INVITE_ERROR_KEYS: Readonly<Record<string, string>> = {
+  not_found: 'notFound',
+  invitation_expired: 'expired',
+  invitation_revoked: 'revoked',
+  invitation_used_up: 'usedUp',
+  email_already_registered: 'emailTaken',
+  password_rejected: 'passwordRejected',
+  registration_unavailable: 'unavailable',
+};
+
 /** Benutzertexte für die Fehlercodes rund um Einladungslinks. */
 export function describeInviteError(code: string): string | null {
-  switch (code) {
-    case 'not_found':
-      return 'Dieser Einladungslink ist ungültig. Bitte prüfe, ob du den ganzen Link geöffnet hast.';
-    case 'invitation_expired':
-      return 'Dieser Einladungslink ist abgelaufen. Bitte den Vorstand um einen neuen Link.';
-    case 'invitation_revoked':
-      return 'Dieser Einladungslink wurde zurückgezogen. Bitte den Vorstand um einen neuen Link.';
-    case 'invitation_used_up':
-      return 'Dieser Einladungslink wurde schon verwendet. Bitte den Vorstand um einen neuen Link.';
-    case 'email_already_registered':
-      return 'Für diese E-Mail-Adresse gibt es schon ein Konto. Melde dich damit an oder setze dein Passwort zurück.';
-    case 'password_rejected':
-      return 'Das Passwort erfüllt die Vorgaben nicht. Bitte wähle ein längeres Passwort.';
-    case 'registration_unavailable':
-      return 'Die Registrierung ist gerade nicht möglich. Bitte versuche es später noch einmal.';
-    default:
-      return null;
-  }
+  const key = Object.hasOwn(INVITE_ERROR_KEYS, code) ? INVITE_ERROR_KEYS[code] : undefined;
+  return key ? translate(`admin.invite.errors.${key}`) : null;
 }

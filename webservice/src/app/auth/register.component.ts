@@ -5,6 +5,7 @@ import { MemberInvitesApiService, describeInviteError } from '../invites/member-
 import { formatDateTime } from '../member/member-format';
 import { AuthService } from './auth.service';
 import { EMAIL_PATTERN } from './auth.types';
+import { TranslatePipe, translate } from '../i18n';
 
 type RegisterState = 'checking' | 'invalid' | 'form' | 'done';
 
@@ -25,15 +26,15 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
  */
 @Component({
   selector: 'app-register',
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   styleUrl: './auth-status.component.css',
   template: `
     <div class="vereint-shell">
       <aside class="vereint-brand" aria-hidden="true">
         <div class="vereint-brand-inner">
           <img src="vereint-logo-mono.svg" alt="" class="vereint-brand-logo" width="440" height="140" />
-          <p class="vereint-brand-claim">Dein Verein. Vereint.</p>
-          <p class="vereint-brand-sub">Mitglieder, Events, Kasse und Theke an einem Ort – sicher und auf jedem Gerät.</p>
+          <p class="vereint-brand-claim">{{ 'auth.status.brandClaim' | t }}</p>
+          <p class="vereint-brand-sub">{{ 'auth.status.brandSub' | t }}</p>
         </div>
         <div class="vereint-brand-nodes"></div>
       </aside>
@@ -49,9 +50,9 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
         <section class="vereint-card" aria-labelledby="register-title">
           <div class="vereint-card-header">
             <div class="vereint-card-heading">
-              <p class="vereint-eyebrow">Einladung</p>
+              <p class="vereint-eyebrow">{{ 'auth.register.eyebrow' | t }}</p>
               <h1 class="vereint-title" id="register-title">
-                {{ state() === 'done' ? 'Willkommen im Verein!' : 'Mitglied werden' }}
+                {{ (state() === 'done' ? 'auth.register.doneTitle' : 'auth.register.title') | t }}
               </h1>
             </div>
           </div>
@@ -59,39 +60,39 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
           <div class="vereint-card-body">
             @switch (state()) {
               @case ('checking') {
-                <p class="vereint-subtitle" role="status">Einladungslink wird geprüft …</p>
+                <p class="vereint-subtitle" role="status">{{ 'auth.register.checking' | t }}</p>
               }
               @case ('invalid') {
                 <div class="state-card state-error login-error" role="alert">
-                  <strong>Registrierung nicht möglich</strong>
+                  <strong>{{ 'auth.register.invalidTitle' | t }}</strong>
                   <span>{{ error() }}</span>
                 </div>
                 <div class="login-form">
-                  <button type="button" (click)="login()">Zur Anmeldung</button>
+                  <button type="button" (click)="login()">{{ 'auth.register.toLogin' | t }}</button>
                 </div>
               }
               @case ('form') {
                 <p class="vereint-subtitle">
-                  Du wurdest eingeladen. Lege dein Konto an, danach kannst du dich sofort anmelden.
+                  {{ 'auth.register.intro' | t }}
                   @if (expiresAt()) {
-                    Der Link gilt bis {{ formatDateTime(expiresAt()!) }}.
+                    {{ 'auth.register.validUntil' | t: { date: formatDateTime(expiresAt()!) } }}
                   }
                 </p>
                 <form class="register-form" (ngSubmit)="submit()" novalidate>
                   <label class="member-field">
-                    <span>Vorname</span>
+                    <span>{{ 'auth.register.firstName' | t }}</span>
                     <input name="firstName" autocomplete="given-name" required maxlength="100" [(ngModel)]="firstName" />
                   </label>
                   <label class="member-field">
-                    <span>Nachname</span>
+                    <span>{{ 'auth.register.lastName' | t }}</span>
                     <input name="lastName" autocomplete="family-name" required maxlength="100" [(ngModel)]="lastName" />
                   </label>
                   <label class="member-field">
-                    <span>E-Mail-Adresse</span>
+                    <span>{{ 'auth.register.email' | t }}</span>
                     <input name="email" type="email" autocomplete="email" required maxlength="254" [(ngModel)]="email" />
                   </label>
                   <label class="member-field">
-                    <span>Passwort (mindestens {{ minPasswordLength }} Zeichen)</span>
+                    <span>{{ 'auth.register.password' | t: { min: minPasswordLength } }}</span>
                     <input
                       name="password"
                       type="password"
@@ -103,7 +104,7 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
                     />
                   </label>
                   <label class="member-field">
-                    <span>Passwort wiederholen</span>
+                    <span>{{ 'auth.register.passwordRepeat' | t }}</span>
                     <input
                       name="passwordRepeat"
                       type="password"
@@ -122,18 +123,17 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
 
                   <div class="login-form">
                     <button type="submit" [disabled]="submitting()">
-                      {{ submitting() ? 'Konto wird angelegt …' : 'Konto anlegen' }}
+                      {{ (submitting() ? 'auth.register.submitting' : 'auth.register.submit') | t }}
                     </button>
                   </div>
                 </form>
               }
               @case ('done') {
                 <p class="vereint-subtitle">
-                  Dein Konto für {{ registeredEmail() }} ist angelegt. Melde dich jetzt mit deiner
-                  E-Mail-Adresse und deinem Passwort an.
+                  {{ 'auth.register.done' | t: { email: registeredEmail() } }}
                 </p>
                 <div class="login-form">
-                  <button type="button" (click)="login()">Jetzt anmelden</button>
+                  <button type="button" (click)="login()">{{ 'auth.register.loginNow' | t }}</button>
                 </div>
               }
             }
@@ -185,7 +185,7 @@ export class RegisterComponent {
       globalThis.history.replaceState(null, '', globalThis.location.pathname);
     }
     if (!TOKEN_PATTERN.test(token)) {
-      this.fail('Dieser Link enthält keinen gültigen Einladungscode. Bitte öffne den vollständigen Link aus deiner Einladung.');
+      this.fail(translate('auth.register.errors.noToken'));
       return;
     }
     this.token = token;
@@ -205,19 +205,19 @@ export class RegisterComponent {
     const email = this.email.trim();
 
     if (!firstName || !lastName) {
-      this.error.set('Bitte Vor- und Nachnamen angeben.');
+      this.error.set(translate('auth.register.errors.nameRequired'));
       return;
     }
     if (!EMAIL_PATTERN.test(email)) {
-      this.error.set('Bitte eine gültige E-Mail-Adresse eingeben.');
+      this.error.set(translate('auth.register.errors.emailInvalid'));
       return;
     }
     if (this.password.length < MIN_PASSWORD_LENGTH) {
-      this.error.set(`Das Passwort muss mindestens ${MIN_PASSWORD_LENGTH} Zeichen lang sein.`);
+      this.error.set(translate('auth.register.errors.passwordTooShort', { min: MIN_PASSWORD_LENGTH }));
       return;
     }
     if (this.password !== this.passwordRepeat) {
-      this.error.set('Die beiden Passwörter stimmen nicht überein.');
+      this.error.set(translate('auth.register.errors.passwordMismatch'));
       return;
     }
 
@@ -260,8 +260,8 @@ export class RegisterComponent {
   private describe(err: unknown): string {
     const code = err instanceof ApiError ? err.code : '';
     if (code === 'validation_failed' || code === 'invalid_request') {
-      return 'Bitte prüfe deine Eingaben. Das Passwort muss mindestens 10 Zeichen lang sein.';
+      return translate('auth.register.errors.checkInput', { min: MIN_PASSWORD_LENGTH });
     }
-    return describeInviteError(code) ?? 'Die Registrierung ist gerade nicht möglich. Bitte versuche es später noch einmal.';
+    return describeInviteError(code) ?? translate('admin.invite.errors.unavailable');
   }
 }

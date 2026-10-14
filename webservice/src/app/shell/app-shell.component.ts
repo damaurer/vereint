@@ -27,6 +27,8 @@ import { AuthService } from '../auth/auth.service';
 import { AuthSessionUser } from '../auth/auth.types';
 import { NotificationsApiService } from '../notifications/notifications-api.service';
 import { UnreadBadgeStore } from '../notifications/unread-badge.store';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 import { BreakpointService } from './breakpoint.service';
 import { BottomSheetComponent } from '../ui/bottom-sheet.component';
 import { IconComponent } from '../ui/icon.component';
@@ -42,7 +44,7 @@ const SUBSET_MATCH: IsActiveMatchOptions = {
 };
 const EXACT_MATCH: IsActiveMatchOptions = { ...SUBSET_MATCH, paths: 'exact' };
 
-/** Seitentitel aus `route.data.title` der tiefsten aktiven Route. */
+/** Übersetzungsschlüssel des Seitentitels aus `route.data.title` der tiefsten aktiven Route. */
 function titleOf(root: ActivatedRouteSnapshot): string {
   let route: ActivatedRouteSnapshot | null = root;
   let title = '';
@@ -72,7 +74,14 @@ function titleOf(root: ActivatedRouteSnapshot): string {
 @Component({
   selector: 'vereint-app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, BottomSheetComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    IconComponent,
+    BottomSheetComponent,
+    TranslatePipe,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-shell.component.html',
 })
@@ -132,8 +141,11 @@ export class AppShellComponent implements OnInit, OnDestroy {
     return (first + last).toUpperCase();
   });
 
-  /** Titel der aktuellen Seite (aus `route.data.title`). */
-  readonly pageTitle = computed(() => this.titleSignal() || 'Vereint');
+  /** Titel der aktuellen Seite (Schlüssel aus `route.data.title`, folgt der Sprache). */
+  readonly pageTitle = computed(() => {
+    const key = this.titleSignal();
+    return key ? translate(key) : 'Vereint';
+  });
 
   /** Ungelesene Mitteilungen für das Glocken-Badge (nur im Browser geladen). */
   readonly unread;
@@ -148,7 +160,9 @@ export class AppShellComponent implements OnInit, OnDestroy {
   /** Zugängliche Bezeichnung der Glocke inklusive Anzahl. */
   readonly bellLabel = computed(() => {
     const count = this.unread();
-    return count > 0 ? `Mitteilungen, ${count} ungelesen` : 'Mitteilungen';
+    return count > 0
+      ? translate('shell.notificationsUnread', { count })
+      : translate('shell.notifications');
   });
 
   readonly moreOpen = signal(false);

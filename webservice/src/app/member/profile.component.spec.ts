@@ -6,6 +6,7 @@ import { ApiError } from '../api/api-client.service';
 import type { MemberProfile } from '../api/api.types';
 import { MemberApiService } from './member-api.service';
 import { ProfileComponent } from './profile.component';
+import { I18nService } from '../i18n';
 
 const profile: MemberProfile = {
   id: 'm-1',
@@ -86,6 +87,25 @@ describe('ProfileComponent', () => {
     expect(options[2].getAttribute('aria-checked')).toBe('true');
     options[0].click();
     expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
+  });
+
+  it('switches the language from the profile and re-renders the texts', async () => {
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    const options = Array.from(root.querySelectorAll('.profile-language-option')) as HTMLButtonElement[];
+    expect(options.map((o) => o.textContent?.trim())).toEqual(['Deutsch', 'English']);
+    expect(html(fixture)).toContain('Anzeigename');
+
+    options[1].click();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(html(fixture)).toContain('Display name');
+    });
+    expect(document.documentElement.lang).toBe('en');
+    expect(document.cookie).toContain('vereint.lang=en');
+
+    await TestBed.inject(I18nService).use('de');
+    document.cookie = 'vereint.lang=; Path=/; Max-Age=0';
   });
 
   it('shows a retry state when loading fails', async () => {

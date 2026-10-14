@@ -2,6 +2,7 @@ package de.maurer.baseservice.identity
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.maurer.baseservice.error.EmailAlreadyRegisteredException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.PasswordRejectedException
 import de.maurer.baseservice.error.RegistrationUnavailableException
 import org.slf4j.LoggerFactory
@@ -63,22 +64,20 @@ class KeycloakIdentityProvisioner(
                 val subject = location.substringAfterLast('/', "")
                 if (subject.isBlank()) {
                     log.error("registration keycloak_create_user missing_location")
-                    throw RegistrationUnavailableException("Keycloak hat keine Benutzer-ID geliefert")
+                    throw RegistrationUnavailableException()
                 }
                 return subject
             }
-            409 -> throw EmailAlreadyRegisteredException(
-                "Für diese E-Mail-Adresse gibt es bereits ein Konto. Bitte melde dich an oder setze dein Passwort zurück."
-            )
+            409 -> throw EmailAlreadyRegisteredException()
             400 -> {
                 // Keycloak liefert bei verletzter Passwortrichtlinie einen
                 // `errorMessage`-Schlüssel wie `invalidPasswordMinLengthMessage`.
                 val error = errorMessage(response.body())
                 log.warn("registration keycloak_create_user status=400 error={}", error)
                 if (error.contains("password", ignoreCase = true)) {
-                    throw PasswordRejectedException("Das Passwort erfüllt die Vorgaben nicht")
+                    throw PasswordRejectedException()
                 }
-                throw RegistrationUnavailableException("Keycloak hat die Registrierung abgelehnt")
+                throw RegistrationUnavailableException()
             }
             else -> {
                 log.error("registration keycloak_create_user status={}", response.statusCode())
@@ -149,7 +148,7 @@ class KeycloakIdentityProvisioner(
 /** Ersatz, solange die Registrierung nicht konfiguriert ist. */
 class DisabledIdentityProvisioner : IdentityProvisioner {
     override fun createAccount(account: NewAccount): String =
-        throw RegistrationUnavailableException("Die Registrierung ist auf diesem Server nicht eingerichtet")
+        throw RegistrationUnavailableException(Msg("error.memberInvite.registrationDisabled"))
 
     override fun deleteAccount(subject: String) = Unit
 }

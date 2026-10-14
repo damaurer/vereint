@@ -19,6 +19,7 @@ import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.InvitationExpiredException
 import de.maurer.baseservice.error.InvitationRevokedException
 import de.maurer.baseservice.error.InvitationUsedUpException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.identity.IdentityProvisioner
 import de.maurer.baseservice.identity.NewAccount
@@ -114,7 +115,7 @@ class MemberInviteService(
     fun revokeInvite(id: UUID, principal: UserPrincipal): MemberInviteDto {
         val caller = requireBoardOrAdmin(principal)
         val invite = memberInviteRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Einladung mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.memberInvite.notFoundById", id), ErrorCode.NOT_FOUND)
         }
         if (!invite.revoked) {
             invite.revokedAt = Instant.now(clock)
@@ -144,11 +145,11 @@ class MemberInviteService(
         val lastName = request.lastName?.trim().orEmpty()
         val password = request.password.orEmpty()
         if (email.isEmpty() || firstName.isEmpty() || lastName.isEmpty()) {
-            throw InvalidRequestException("Vorname, Nachname und E-Mail sind erforderlich", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.memberInvite.fieldsRequired"), ErrorCode.INVALID_REQUEST)
         }
         if (password.length < MIN_PASSWORD_LENGTH || password.length > MAX_PASSWORD_LENGTH) {
             throw InvalidRequestException(
-                "Das Passwort muss $MIN_PASSWORD_LENGTH bis $MAX_PASSWORD_LENGTH Zeichen lang sein",
+                Msg("error.memberInvite.passwordLength", MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -161,9 +162,7 @@ class MemberInviteService(
                 requireUsable(invite)
 
                 if (userRepository.existsByEmailIgnoreCase(email)) {
-                    throw EmailAlreadyRegisteredException(
-                        "Für diese E-Mail-Adresse gibt es bereits ein Konto. Bitte melde dich an oder setze dein Passwort zurück."
-                    )
+                    throw EmailAlreadyRegisteredException()
                 }
 
                 val subject = identityProvisioner.createAccount(NewAccount(email, firstName, lastName, password))
@@ -218,17 +217,17 @@ class MemberInviteService(
     }
 
     // Neutrale Meldung ohne Tokenwert; ungültige Links liefern 404.
-    private fun notFound() = ResourceNotFoundException("Einladung nicht gefunden", ErrorCode.NOT_FOUND)
+    private fun notFound() = ResourceNotFoundException(Msg("error.memberInvite.notFound"), ErrorCode.NOT_FOUND)
 
     private fun requireUsable(invite: MemberInviteEntity) {
         if (invite.revoked) {
-            throw InvitationRevokedException("Die Einladung wurde widerrufen", ErrorCode.INVITATION_REVOKED)
+            throw InvitationRevokedException()
         }
         if (invite.isExpired(Instant.now(clock))) {
-            throw InvitationExpiredException("Die Einladung ist abgelaufen", ErrorCode.INVITATION_EXPIRED)
+            throw InvitationExpiredException()
         }
         if (invite.exhausted) {
-            throw InvitationUsedUpException("Die Einladung wurde bereits verwendet", ErrorCode.INVITATION_USED_UP)
+            throw InvitationUsedUpException()
         }
     }
 
@@ -238,7 +237,7 @@ class MemberInviteService(
         val roles = principal.roles + dbRoles
         if (roles.none { it == UserRole.BOARD || it == UserRole.ADMIN }) {
             throw AccessDeniedException(
-                "Nur Vorstand und Administration dürfen Mitglieder einladen",
+                Msg("error.memberInvite.manageDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }

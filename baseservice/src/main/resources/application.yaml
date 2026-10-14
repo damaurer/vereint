@@ -9,6 +9,12 @@ server:
 spring:
   application:
     name: baseservice
+  # Benutzerseitige Fehler- und Validierungstexte (i18n/messages*.properties);
+  # Sprache aus Accept-Language, siehe vereint.i18n und docs/baseservice/i18n.md
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
   datasource:
     url: ${VEREINT_DB_URL:jdbc:postgresql://localhost:5432/vereint}
     username: ${VEREINT_DB_USERNAME:vereint}
@@ -34,6 +40,11 @@ spring:
           jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8082/realms/vereint/protocol/openid-connect/certs}
 
 vereint:
+  i18n:
+    # Sprachen der Fehlertexte; default-locale ist Standard- und Rückfallsprache.
+    # Neue Sprache: i18n/messages_<code>.properties anlegen und hier ergänzen.
+    supported-locales: ${VEREINT_I18N_SUPPORTED_LOCALES:de,en}
+    default-locale: de
   cors:
     # Ausschließlich explizite Ursprünge; Wildcards werden verworfen
     allowed-origins: ${VEREIN_CORS_ALLOWED_ORIGINS:http://localhost:4200}

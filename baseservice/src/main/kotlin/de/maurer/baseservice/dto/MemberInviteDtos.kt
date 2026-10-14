@@ -8,15 +8,15 @@ import jakarta.validation.constraints.Size
 import java.time.Instant
 
 data class CreateMemberInviteRequest(
-    @field:Size(max = 120, message = "label darf höchstens 120 Zeichen lang sein")
+    @field:Size(max = 120, message = "label {validation.size.max}")
     val label: String? = null,
 
-    @field:Min(value = 1, message = "expiresInDays muss mindestens 1 sein")
-    @field:Max(value = 30, message = "expiresInDays darf höchstens 30 sein")
+    @field:Min(value = 1, message = "expiresInDays {validation.min}")
+    @field:Max(value = 30, message = "expiresInDays {validation.max}")
     val expiresInDays: Int? = null,
 
-    @field:Min(value = 1, message = "maxUses muss mindestens 1 sein")
-    @field:Max(value = 50, message = "maxUses darf höchstens 50 sein")
+    @field:Min(value = 1, message = "maxUses {validation.min}")
+    @field:Max(value = 50, message = "maxUses {validation.max}")
     val maxUses: Int? = null
 )
 
@@ -46,8 +46,8 @@ data class CreateMemberInviteResponse(
 )
 
 data class MemberInviteTokenRequest(
-    @field:NotBlank(message = "token darf nicht leer sein")
-    @field:Size(max = 256, message = "token ist zu lang")
+    @field:NotBlank(message = "token {validation.notBlank}")
+    @field:Size(max = 256, message = "token {validation.size.max}")
     val token: String? = null
 )
 
@@ -56,25 +56,25 @@ data class MemberInvitePreviewDto(
 )
 
 data class RegisterMemberRequest(
-    @field:NotBlank(message = "token darf nicht leer sein")
-    @field:Size(max = 256, message = "token ist zu lang")
+    @field:NotBlank(message = "token {validation.notBlank}")
+    @field:Size(max = 256, message = "token {validation.size.max}")
     val token: String? = null,
 
-    @field:NotBlank(message = "Vorname darf nicht leer sein")
-    @field:Size(max = 100, message = "Vorname darf höchstens 100 Zeichen lang sein")
+    @field:NotBlank(message = "firstName {validation.notBlank}")
+    @field:Size(max = 100, message = "firstName {validation.size.max}")
     val firstName: String? = null,
 
-    @field:NotBlank(message = "Nachname darf nicht leer sein")
-    @field:Size(max = 100, message = "Nachname darf höchstens 100 Zeichen lang sein")
+    @field:NotBlank(message = "lastName {validation.notBlank}")
+    @field:Size(max = 100, message = "lastName {validation.size.max}")
     val lastName: String? = null,
 
-    @field:NotBlank(message = "E-Mail darf nicht leer sein")
-    @field:Email(message = "E-Mail ist ungültig")
-    @field:Size(max = 254, message = "E-Mail darf höchstens 254 Zeichen lang sein")
+    @field:NotBlank(message = "email {validation.notBlank}")
+    @field:Email(message = "email {validation.email}")
+    @field:Size(max = 254, message = "email {validation.size.max}")
     val email: String? = null,
 
-    @field:NotBlank(message = "Passwort darf nicht leer sein")
-    @field:Size(min = 10, max = 128, message = "Passwort muss 10 bis 128 Zeichen lang sein")
+    @field:NotBlank(message = "password {validation.notBlank}")
+    @field:Size(min = 10, max = 128, message = "password {validation.size.range}")
     val password: String? = null
 ) {
     /** Token und Passwort erscheinen nie in Logs. */

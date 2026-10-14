@@ -10,19 +10,16 @@ import { formatDateTime } from '../member/member-format';
 import { ModalComponent, StatusBadgeComponent, type StatusTone } from '../ui';
 import { IconComponent } from '../ui/icon.component';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe, translate } from '../i18n';
 
 /** Auswählbare Gültigkeitsdauer eines Links in Tagen. */
-const VALIDITY_OPTIONS = [
-  { days: 1, label: '1 Tag' },
-  { days: 7, label: '7 Tage' },
-  { days: 30, label: '30 Tage' },
-] as const;
+const VALIDITY_DAYS = [1, 7, 30] as const;
 
-const STATUS_LABELS: Record<MemberInviteStatus, { label: string; tone: StatusTone }> = {
-  active: { label: 'Offen', tone: 'warning' },
-  used: { label: 'Verwendet', tone: 'success' },
-  expired: { label: 'Abgelaufen', tone: 'neutral' },
-  revoked: { label: 'Zurückgezogen', tone: 'danger' },
+const STATUS_TONES: Record<MemberInviteStatus, StatusTone> = {
+  active: 'warning',
+  used: 'success',
+  expired: 'neutral',
+  revoked: 'danger',
 };
 
 /**
@@ -37,60 +34,63 @@ const STATUS_LABELS: Record<MemberInviteStatus, { label: string; tone: StatusTon
  */
 @Component({
   selector: 'app-admin-invite-modal',
-  imports: [StateComponent, IconComponent, FormsModule, ModalComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, FormsModule, ModalComponent, StatusBadgeComponent, TranslatePipe],
   template: `
-    <vereint-modal [open]="open" title="Mitglied einladen" (closed)="close()">
+    <vereint-modal [open]="open" [title]="'admin.invite.title' | t" (closed)="close()">
       @if (created(); as link) {
         <section class="invite-created" aria-labelledby="invite-created-title">
-          <h3 class="member-subtitle" id="invite-created-title">Einladungslink erstellt</h3>
+          <h3 class="member-subtitle" id="invite-created-title">{{ 'admin.invite.createdTitle' | t }}</h3>
           <p class="member-hint">
-            Schick diesen Link an die Person, zum Beispiel per Messenger oder E-Mail. Er wird nur
-            jetzt angezeigt und gilt bis {{ formatDateTime(link.expiresAt) }}.
+            {{ 'admin.invite.createdHint' | t: { date: formatDateTime(link.expiresAt) } }}
           </p>
           <input
             class="invite-link"
             name="inviteLink"
             readonly
             [value]="link.url"
-            aria-label="Einladungslink"
+            [attr.aria-label]="'admin.invite.linkLabel' | t"
             (focus)="selectAll($event)"
           />
           <div class="invite-actions">
             @if (canShare) {
               <button type="button" class="member-button member-button-ghost" (click)="share(link.url)">
-                <vereint-icon name="send" /> Teilen
+                <vereint-icon name="send" /> {{ 'admin.invite.share' | t }}
               </button>
             }
             <button type="button" class="member-button" (click)="copy(link.url)">
-              {{ copied() ? 'Kopiert' : 'Link kopieren' }}
+              {{ (copied() ? 'admin.invite.copied' : 'admin.invite.copy') | t }}
             </button>
           </div>
           <button type="button" class="invite-text-button" (click)="created.set(null)">
-            Weiteren Link erstellen
+            {{ 'admin.invite.another' | t }}
           </button>
         </section>
       } @else {
         <form class="invite-form" (ngSubmit)="create()">
           <p class="member-hint">
-            Die eingeladene Person registriert sich über den Link selbst und ist danach normales
-            Mitglied.
+            {{ 'admin.invite.intro' | t }}
           </p>
           <label class="manage-field manage-field-grow">
-            <span>Für wen? (optional, nur zum Wiedererkennen)</span>
-            <input name="inviteLabel" maxlength="120" [(ngModel)]="label" placeholder="z. B. Anna Neumann" />
+            <span>{{ 'admin.invite.labelField' | t }}</span>
+            <input
+              name="inviteLabel"
+              maxlength="120"
+              [(ngModel)]="label"
+              [placeholder]="'admin.invite.labelPlaceholder' | t"
+            />
           </label>
 
           <div class="invite-row-fields">
             <label class="manage-field">
-              <span>Gültig für</span>
+              <span>{{ 'admin.invite.validity' | t }}</span>
               <select name="inviteValidity" [(ngModel)]="validityDays">
-                @for (option of validityOptions; track option.days) {
-                  <option [ngValue]="option.days">{{ option.label }}</option>
+                @for (days of validityOptions; track days) {
+                  <option [ngValue]="days">{{ 'admin.invite.validityDays' | t: { count: days } }}</option>
                 }
               </select>
             </label>
             <label class="manage-field">
-              <span>Anzahl Personen</span>
+              <span>{{ 'admin.invite.maxUses' | t }}</span>
               <input name="inviteMaxUses" type="number" min="1" max="50" [(ngModel)]="maxUses" />
             </label>
           </div>
@@ -101,42 +101,46 @@ const STATUS_LABELS: Record<MemberInviteStatus, { label: string; tone: StatusTon
 
           <div class="invite-actions">
             <button type="button" class="member-button member-button-ghost" (click)="close()">
-              Abbrechen
+              {{ 'common.cancel' | t }}
             </button>
             <button type="submit" class="member-button" [disabled]="busy()">
-              <vereint-icon name="send" /> Link erstellen
+              <vereint-icon name="send" /> {{ 'admin.invite.create' | t }}
             </button>
           </div>
         </form>
       }
 
       <section class="invite-open" aria-labelledby="invite-open-title">
-        <h3 class="member-subtitle" id="invite-open-title">Einladungslinks</h3>
+        <h3 class="member-subtitle" id="invite-open-title">{{ 'admin.invite.listTitle' | t }}</h3>
         @if (loading()) {
-          <vereint-state kind="loading" title="Einladungen werden geladen" />
+          <vereint-state kind="loading" [title]="'admin.invite.loading' | t" />
         } @else if (listError()) {
-          <vereint-state kind="error" title="Einladungen nicht geladen" [message]="listError()!" />
+          <vereint-state kind="error" [title]="'admin.invite.loadFailed' | t" [message]="listError()!" />
         } @else if (invites().length === 0) {
           <vereint-state
             kind="empty"
-            title="Noch keine Einladungen"
-            message="Erstelle oben einen Link für die erste Person."
+            [title]="'admin.invite.emptyTitle' | t"
+            [message]="'admin.invite.emptyMessage' | t"
           />
         } @else {
           <ul class="member-list">
             @for (invite of invites(); track invite.id) {
               <li class="member-list-item invite-row">
                 <span class="invite-meta">
-                  <span class="member-list-title">{{ invite.label || 'Ohne Bezeichnung' }}</span>
+                  <span class="member-list-title">{{ invite.label || ('admin.invite.noLabel' | t) }}</span>
                   <span class="member-list-meta">
-                    {{ invite.usesCount }} von {{ invite.maxUses }} verwendet · gültig bis
-                    {{ formatDateTime(invite.expiresAt) }}
+                    {{
+                      'admin.invite.usage'
+                        | t: { used: invite.usesCount, max: invite.maxUses, date: formatDateTime(invite.expiresAt) }
+                    }}
                   </span>
                   @if (invite.registeredMembers.length > 0) {
-                    <span class="member-list-meta">Registriert: {{ invite.registeredMembers.join(', ') }}</span>
+                    <span class="member-list-meta">{{
+                      'admin.invite.registered' | t: { names: invite.registeredMembers.join(', ') }
+                    }}</span>
                   }
                 </span>
-                <vereint-status-badge [label]="statusLabel(invite.status)" [tone]="statusTone(invite.status)" />
+                <vereint-status-badge [label]="'admin.invite.status.' + invite.status | t" [tone]="statusTone(invite.status)" />
                 @if (invite.status === 'active') {
                   <button
                     type="button"
@@ -144,7 +148,7 @@ const STATUS_LABELS: Record<MemberInviteStatus, { label: string; tone: StatusTon
                     [disabled]="busy()"
                     (click)="revoke(invite)"
                   >
-                    Zurückziehen
+                    {{ 'admin.invite.revoke' | t }}
                   </button>
                 }
               </li>
@@ -228,7 +232,7 @@ export class InviteModalComponent implements OnChanges {
   @Input() open = false;
   @Output() closed = new EventEmitter<void>();
 
-  protected readonly validityOptions = VALIDITY_OPTIONS;
+  protected readonly validityOptions = VALIDITY_DAYS;
   protected readonly formatDateTime = formatDateTime;
   protected readonly canShare =
     typeof globalThis.navigator !== 'undefined' && typeof globalThis.navigator.share === 'function';
@@ -270,7 +274,7 @@ export class InviteModalComponent implements OnChanges {
     if (this.busy()) return;
     const maxUses = Math.trunc(Number(this.maxUses));
     if (!Number.isFinite(maxUses) || maxUses < 1 || maxUses > 50) {
-      this.error.set('Die Anzahl Personen muss zwischen 1 und 50 liegen.');
+      this.error.set(translate('admin.invite.maxUsesInvalid'));
       return;
     }
     this.error.set(null);
@@ -314,13 +318,17 @@ export class InviteModalComponent implements OnChanges {
       await globalThis.navigator.clipboard.writeText(url);
       this.copied.set(true);
     } catch {
-      this.error.set('Kopieren nicht möglich. Bitte den Link markieren und manuell kopieren.');
+      this.error.set(translate('admin.invite.copyFailed'));
     }
   }
 
   protected async share(url: string): Promise<void> {
     try {
-      await globalThis.navigator.share({ title: 'Einladung zu Vereint', text: 'Hier kannst du dich als Mitglied registrieren:', url });
+      await globalThis.navigator.share({
+        title: translate('admin.invite.shareTitle'),
+        text: translate('admin.invite.shareText'),
+        url,
+      });
     } catch {
       // Abgebrochenes Teilen ist kein Fehler.
     }
@@ -330,12 +338,8 @@ export class InviteModalComponent implements OnChanges {
     (event.target as HTMLInputElement).select();
   }
 
-  protected statusLabel(status: MemberInviteStatus): string {
-    return STATUS_LABELS[status]?.label ?? status;
-  }
-
   protected statusTone(status: MemberInviteStatus): StatusTone {
-    return STATUS_LABELS[status]?.tone ?? 'neutral';
+    return STATUS_TONES[status] ?? 'neutral';
   }
 
   protected close(): void {
