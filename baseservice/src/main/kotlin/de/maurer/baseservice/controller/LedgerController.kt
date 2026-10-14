@@ -70,6 +70,30 @@ class LedgerController(
         return ResponseEntity.status(HttpStatus.CREATED).body(entry)
     }
 
+    @PostMapping("/purchases/preview")
+    @Operation(
+        summary = "Barcodekauf vorab prüfen",
+        description = "Liefert Getränk, Preis je laufendem Event und eigenes Guthaben zu einem gescannten Barcode, ohne zu buchen"
+    )
+    fun previewPurchase(@Valid @RequestBody request: PurchasePreviewRequest): ResponseEntity<PurchasePreviewDto> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(ledgerService.previewBarcodePurchase(request, principal))
+    }
+
+    @PostMapping("/purchases/{entryId}/undo")
+    @Operation(
+        summary = "Eigenen Barcodekauf zurücknehmen",
+        description = "Bucht eine Gegenbuchung zu einem eigenen Barcodekauf innerhalb eines kurzen Zeitfensters"
+    )
+    fun undoPurchase(
+        @PathVariable("entryId") entryId: String,
+        @RequestHeader(value = IDEMPOTENCY_HEADER, required = false) idempotencyKey: String?
+    ): ResponseEntity<LedgerEntryDto> {
+        val principal = authContext.getRequiredPrincipal()
+        val entry = ledgerService.undoBarcodePurchase(Identifiers.parseUuid(entryId, "entryId"), idempotencyKey, principal)
+        return ResponseEntity.status(HttpStatus.CREATED).body(entry)
+    }
+
     @PostMapping("/topups")
     @Operation(summary = "Guthaben aufladen", description = "Bucht eine idempotente Guthaben-Aufladung (nur Vorstand/Admin)")
     fun topup(

@@ -12,6 +12,7 @@ import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.EventDrinkRepository
+import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.IdempotencyRecordRepository
 import de.maurer.baseservice.repository.LedgerEntryRepository
@@ -51,6 +52,7 @@ class LedgerService(
     private val eventRepository: EventRepository,
     private val drinkBarcodeRepository: DrinkBarcodeRepository,
     private val eventDrinkRepository: EventDrinkRepository,
+    private val eventParticipantRepository: EventParticipantRepository,
     private val userService: UserService,
     private val auditService: AuditService
 ) {
@@ -313,7 +315,8 @@ class LedgerService(
      * serverseitig bestimmt: Käufer ist stets der angemeldete Benutzer, Preis/Währung
      * stammen aus dem Eventgetränk, der Modus ist `credit` (persönliches Verzehrbudget).
      *
-     * Der Kauf ist nur an einem aktiven Event und für ein dort selbstbedienbares,
+     * Der Kauf ist nur an einem aktiven Event, zu dem der Käufer gehört (eingeladen,
+     * Veranstalter oder Vorstand/Admin), und für ein dort selbstbedienbares,
      * freigegebenes Getränk möglich. Es entsteht ein unveränderlicher Beleg-Snapshot.
      * Wiederholungen mit demselben Idempotency-Key erzeugen keine Doppelbuchung.
      */
@@ -331,6 +334,12 @@ class LedgerService(
             throw EventNotActiveException(
                 Msg("error.ledger.barcodeEventNotActive"),
                 ErrorCode.EVENT_NOT_ACTIVE
+            )
+        }
+        if (!canBuyAt(caller, principal, event)) {
+            throw AccessDeniedException(
+                Msg("error.ledger.barcodeNotParticipant"),
+                ErrorCode.ACCESS_DENIED
             )
         }
 
@@ -388,6 +397,121 @@ class LedgerService(
                         catalogVersion = eventDrink.catalogVersion
                     )
                 }
+            )
+        )
+    }
+
+    /**
+     * Zeigt dem Mitglied vor dem Bezahlen, welches Getränk zum Barcode gehört, was
+     * es an welchem laufenden Event kostet und wie viel Guthaben vorhanden ist. Es
+     * gelten dieselben Regeln wie bei [purchaseByBarcode]; gebucht wird nichts.
+     */
+    @Transactional(readOnly = true)
+    fun previewBarcodePurchase(request: PurchasePreviewRequest, principal: UserPrincipal): PurchasePreviewDto {
+        val caller = userService.getOrCreateUser(principal)
+        requireMember(caller, principal)
+        val barcode = normalizeBarcode(request.barcode)
+        val drink = resolveDrinkByBarcode(barcode)
+        val requestedEventId = request.eventId?.trim()?.ifBlank { null }?.let { parseId(it, "eventId") }
+
+        val options = eventDrinkRepository.findByDrinkId(drink.id)
+            .filter { it.selfServiceEnabled }
+            .mapNotNull { eventDrink -> eventDrink.event?.let { it to eventDrink } }
+            .filter { (event, _) ->
+                event.status == EventStatus.active &&
+                    (requestedEventId == null || event.id == requestedEventId) &&
+                    canBuyAt(caller, principal, event)
+            }
+            .sortedByDescending { (event, _) -> event.startsAt }
+            .map { (event, eventDrink) ->
+                PurchaseOptionDto(
+                    eventId = event.id.toString(),
+                    eventTitle = event.title,
+                    unitPrice = eventDrink.price.setScale(2),
+                    currency = eventDrink.currency
+                )
+            }
+        if (options.isEmpty()) {
+            throw ApiException(
+                ErrorCode.DRINK_NOT_IN_EVENT,
+                Msg("error.ledger.noOpenEventForDrink", drink.name),
+                HttpStatus.NOT_FOUND
+            )
+        }
+
+        val balance = computeBalance(caller, ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(caller.id))
+        return PurchasePreviewDto(
+            barcode = barcode,
+            drinkId = drink.id.toString(),
+            drinkName = drink.name,
+            imageReference = drink.imageReference,
+            options = options,
+            creditBalance = balance.creditBalance,
+            balanceCurrency = balance.currency
+        )
+    }
+
+    /**
+     * Nimmt einen eigenen Barcodekauf zurück, so wie das Tablet einen eben
+     * gesetzten Strich zurücknehmen darf: genau eine Gegenbuchung, nur für eigene
+     * Barcodekäufe und nur innerhalb von [PURCHASE_UNDO_WINDOW]. Ältere Käufe
+     * korrigiert der Vorstand. Wiederholungen mit demselben Idempotency-Key liefern
+     * die bereits erzeugte Gegenbuchung.
+     */
+    fun undoBarcodePurchase(
+        entryId: UUID,
+        idempotencyKey: String?,
+        principal: UserPrincipal,
+        now: Instant = Instant.now()
+    ): LedgerEntryDto {
+        val caller = userService.getOrCreateUser(principal)
+        requireMember(caller, principal)
+        val key = requireIdempotencyKey(idempotencyKey)
+        val original = ledgerEntryRepository.findById(entryId)
+            .filter { it.member?.id == caller.id }
+            .orElseThrow {
+                ResourceNotFoundException(Msg("error.ledger.entryNotFound", entryId), ErrorCode.NOT_FOUND)
+            }
+        val replay = ledgerEntryRepository.findByIdempotencyKey(key).orElse(null)
+        if (replay != null && replay.reversesEntry?.id == original.id) {
+            return toDto(replay)
+        }
+        if (original.entryType != LedgerEntryType.purchase || original.source != PurchaseSource.pwaBarcode) {
+            throw InvalidRequestException(
+                Msg("error.ledger.undoOnlyBarcode"),
+                ErrorCode.INVALID_REQUEST
+            )
+        }
+        if (original.createdAt.isBefore(now.minus(PURCHASE_UNDO_WINDOW))) {
+            throw InvalidRequestException(
+                Msg("error.ledger.purchaseUndoWindowExpired", PURCHASE_UNDO_WINDOW.toMinutes()),
+                ErrorCode.INVALID_REQUEST
+            )
+        }
+        if (ledgerEntryRepository.findByReversesEntryId(original.id).isNotEmpty()) {
+            throw ApiException(
+                ErrorCode.LEDGER_ALREADY_CORRECTED,
+                Msg("error.ledger.alreadyUndone", original.id),
+                HttpStatus.CONFLICT
+            )
+        }
+        return appendWrite(
+            AppendWriteCommand(
+                scope = SCOPE_CORRECTION,
+                key = key,
+                entryType = LedgerEntryType.correction,
+                member = caller,
+                event = original.event,
+                drink = original.drink,
+                food = original.food,
+                amount = original.amount,
+                currency = original.currency,
+                accountingMode = original.accountingMode,
+                source = null,
+                actor = caller,
+                reversesEntry = original,
+                auditAction = AuditService.ACTION_LEDGER_CORRECTION,
+                note = "member-undo; event=${original.event?.id ?: "-"}"
             )
         )
     }
@@ -797,6 +921,12 @@ class LedgerService(
         }
     }
 
+    /** Wer an einem Event kaufen darf: Vorstand/Admin, Veranstalter und Eingeladene. */
+    private fun canBuyAt(caller: UserEntity, principal: UserPrincipal, event: EventEntity): Boolean =
+        isBoardOrAdmin(caller, principal) ||
+            event.owner?.id == caller.id ||
+            eventParticipantRepository.findByEventIdAndUserId(event.id, caller.id).isPresent
+
     private fun requireEvent(id: UUID): EventEntity =
         eventRepository.findById(id).orElseThrow {
             ResourceNotFoundException(Msg("error.event.notFound", id), ErrorCode.NOT_FOUND)
@@ -927,6 +1057,9 @@ class LedgerService(
 
         /** Wie lange ein Tablet einen eigenen Strich selbst zurücknehmen darf. */
         val TABLET_UNDO_WINDOW: Duration = Duration.ofMinutes(10)
+
+        /** Wie lange ein Mitglied einen eigenen Barcodekauf selbst zurücknehmen darf. */
+        val PURCHASE_UNDO_WINDOW: Duration = TABLET_UNDO_WINDOW
         private val WHITESPACE_REGEX = Regex("\\s+")
     }
 }

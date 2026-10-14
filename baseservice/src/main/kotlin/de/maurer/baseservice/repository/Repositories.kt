@@ -134,6 +134,7 @@ interface DrinkSublistItemRepository : JpaRepository<DrinkSublistItemEntity, UUI
 interface EventDrinkRepository : JpaRepository<EventDrinkEntity, UUID> {
     fun findByEventId(eventId: UUID): List<EventDrinkEntity>
     fun findByEventIdAndDrinkId(eventId: UUID, drinkId: UUID): Optional<EventDrinkEntity>
+    fun findByDrinkId(drinkId: UUID): List<EventDrinkEntity>
 }
 
 @Repository
