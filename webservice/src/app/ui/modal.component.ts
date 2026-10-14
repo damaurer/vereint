@@ -6,6 +6,7 @@ import {
   Input,
   Output,
 } from '@angular/core';
+import { TranslatePipe } from '../i18n';
 import { IconComponent } from './icon.component';
 
 /**
@@ -17,7 +18,7 @@ import { IconComponent } from './icon.component';
  */
 @Component({
   selector: 'vereint-modal',
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -35,7 +36,7 @@ import { IconComponent } from './icon.component';
             <button
               type="button"
               class="ui-icon-button"
-              aria-label="Schließen"
+              [attr.aria-label]="'common.close' | t"
               (click)="requestClose()"
             >
               <vereint-icon name="close" />

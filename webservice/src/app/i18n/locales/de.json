@@ -62,5 +62,215 @@
     "memberSince": "Mitglied seit",
     "recording": "Erfassung",
     "recordingActive": "Strichlisten-Erfassung aktiv"
+  },
+  "shell": {
+    "brandHome": "Vereint – zur Startseite",
+    "guestTag": "Gast",
+    "skipLink": "Zum Inhalt springen",
+    "mainNav": "Hauptnavigation",
+    "more": "Mehr",
+    "account": "Konto",
+    "profile": "Profil",
+    "wallet": "Guthaben",
+    "logout": "Abmelden",
+    "notifications": "Mitteilungen",
+    "notificationsUnread": "Mitteilungen, {count} ungelesen"
+  },
+  "nav": {
+    "items": {
+      "home": "Start",
+      "events": "Events",
+      "chat": "Chat",
+      "wallet": "Guthaben",
+      "moments": "Moments",
+      "direct": "Direktnachrichten",
+      "purchases": "Käufe",
+      "notifications": "Mitteilungen",
+      "catalog": "Getränkekatalog",
+      "sublists": "Getränkelisten",
+      "statistik": "Statistik",
+      "profil": "Profil",
+      "board": "Vorstand",
+      "treasury": "Kasse & Finanzen",
+      "communications": "Kommunikation",
+      "admin": "Administration",
+      "tablet": "Thekenterminal"
+    },
+    "sections": {
+      "club": "Verein",
+      "account": "Mein Konto",
+      "bar": "Theke",
+      "admin": "Verwaltung"
+    }
+  },
+  "ui": {
+    "balanceCard": {
+      "label": "Guthaben",
+      "topup": "Aufladen"
+    },
+    "dataTable": {
+      "empty": "Keine Einträge vorhanden."
+    },
+    "heroGreeting": {
+      "eyebrow": "Hallo"
+    },
+    "stepper": {
+      "decrease": "Verringern",
+      "increase": "Erhöhen",
+      "quantity": "Menge"
+    }
+  },
+  "auth": {
+    "status": {
+      "eyebrow": "Öffentlich",
+      "brandClaim": "Dein Verein. Vereint.",
+      "brandSub": "Mitglieder, Events, Kasse und Theke an einem Ort – sicher und auf jedem Gerät.",
+      "loginFailed": "Anmeldung fehlgeschlagen",
+      "loggedOutTitle": "Abgemeldet",
+      "loggedOutMessage": "Sie wurden erfolgreich abgemeldet.",
+      "retryLogin": "Erneut anmelden"
+    },
+    "errors": {
+      "invalidState": "Die Anmeldung ist abgelaufen. Bitte erneut starten.",
+      "accountDisabled": "Dieses Konto ist deaktiviert.",
+      "oidcLoginFailed": "Die Anmeldung über Keycloak ist fehlgeschlagen.",
+      "browserOnly": "Der Anmeldedienst ist auf diesem Gerät nicht verfügbar.",
+      "generic": "Die Anmeldung ist fehlgeschlagen."
+    }
+  },
+  "errorPages": {
+    "toDashboard": "Zum Dashboard",
+    "toHome": "Zur Startseite",
+    "forbidden": {
+      "title": "Zugriff verweigert",
+      "description": "Für diese Seite fehlen Ihnen die erforderlichen Berechtigungen oder Ihre Sitzung ist nicht mehr gültig.",
+      "signInAgain": "Neu anmelden"
+    },
+    "notFound": {
+      "title": "Seite nicht gefunden",
+      "description": "Die von Ihnen aufgerufene Seite existiert nicht, wurde verschoben oder die Adresse ist fehlerhaft."
+    }
+  },
+  "routes": {
+    "placeholder": {
+      "title": "Feature-Platzhalter",
+      "message": "Diese Seite ist für die SSR- und Rechteprüfung vorbereitet.",
+      "toHome": "Zur Startseite"
+    },
+    "access": {
+      "public": "Öffentlich",
+      "invite": "Gültiger Einladungscode erforderlich",
+      "denied": "Zugriff verweigert",
+      "protected": "Geschützter Bereich",
+      "guestToken": "Gültiges Gast-Token erforderlich",
+      "boardOrAdmin": "Vorstand oder Admin",
+      "admin": "Admin",
+      "drinkRecorder": "drinkRecorder",
+      "statistics": "Statistiken einsehen"
+    },
+    "authError": {
+      "title": "Anmeldefehler",
+      "description": "Fehler während der Anmeldung über Keycloak."
+    },
+    "loggedOut": {
+      "title": "Abgemeldet",
+      "description": "Erfolgreich abgemeldet."
+    },
+    "inviteAccept": {
+      "title": "Einladung annehmen",
+      "description": "Einladung annehmen oder Gastaktivierung."
+    },
+    "forbidden": {
+      "title": "Kein Zugriff",
+      "description": "Für diese Seite fehlen die erforderlichen Rechte."
+    },
+    "notFound": {
+      "title": "Nicht gefunden",
+      "description": "Die angeforderte Seite existiert nicht."
+    },
+    "dashboard": {
+      "title": "Start",
+      "description": "Persönliche Übersicht und teilnehmende Events."
+    },
+    "profile": {
+      "title": "Profil",
+      "description": "Persönliche Kontodaten und Provider."
+    },
+    "wallet": {
+      "title": "Guthaben",
+      "description": "Persönliches Guthaben und Ledger."
+    },
+    "purchases": {
+      "title": "Käufe",
+      "description": "Historische Käufe mit unveränderlichen Snapshots."
+    },
+    "events": {
+      "title": "Events",
+      "description": "Eventübersicht und Eventdetails."
+    },
+    "eventDetail": {
+      "title": "Event",
+      "description": "Eventdetails, Getränkeliste und Chat."
+    },
+    "eventManage": {
+      "title": "Event verwalten",
+      "description": "Stammdaten, Einladungen, Getränke und Chat des eigenen Events."
+    },
+    "guestEvent": {
+      "title": "Gast-Event",
+      "description": "Freigegebene Eventdetails und Event-Chat."
+    },
+    "catalog": {
+      "title": "Getränkekatalog",
+      "description": "Globaler Katalog und Vorschläge."
+    },
+    "sublists": {
+      "title": "Getränkelisten",
+      "description": "Wiederverwendbare Getränkelisten."
+    },
+    "chat": {
+      "title": "Chat",
+      "description": "Mitglieds- und Event-Chats."
+    },
+    "directMessages": {
+      "title": "Direktnachrichten",
+      "description": "Persönliche Einzelgespräche."
+    },
+    "notifications": {
+      "title": "Mitteilungen",
+      "description": "In-App- und Push-Benachrichtigungen."
+    },
+    "moments": {
+      "title": "Moments",
+      "description": "Gemeinschaftsmomente & Rituale für aktive Events."
+    },
+    "eventMoments": {
+      "title": "Event Moments",
+      "description": "Gemeinschaftsmomente & Rituale für dieses Event."
+    },
+    "board": {
+      "title": "Vorstand",
+      "description": "Moderation, Finanzübersichten und vorbereitete Notifications."
+    },
+    "treasury": {
+      "title": "Kasse & Finanzen",
+      "description": "Finanzübersichten und Buchungen."
+    },
+    "communications": {
+      "title": "Kommunikation",
+      "description": "Mitteilungen und Ankündigungen."
+    },
+    "admin": {
+      "title": "Administration",
+      "description": "Mitglieder, Rollen und Audit-Ansichten."
+    },
+    "tablet": {
+      "title": "Thekenterminal",
+      "description": "Manuelle Getränkeerfassung für den Drink Recorder."
+    },
+    "statistics": {
+      "title": "Statistik",
+      "description": "Konsum, Anwesenheit, Ausgaben-Verlauf und Rankings der Eber-Analytik."
+    }
   }
 }

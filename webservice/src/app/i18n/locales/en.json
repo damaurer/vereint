@@ -62,5 +62,215 @@
     "memberSince": "Member since",
     "recording": "Recording",
     "recordingActive": "Tally recording active"
+  },
+  "shell": {
+    "brandHome": "Vereint – go to home page",
+    "guestTag": "Guest",
+    "skipLink": "Skip to content",
+    "mainNav": "Main navigation",
+    "more": "More",
+    "account": "Account",
+    "profile": "Profile",
+    "wallet": "Balance",
+    "logout": "Sign out",
+    "notifications": "Notifications",
+    "notificationsUnread": "Notifications, {count} unread"
+  },
+  "nav": {
+    "items": {
+      "home": "Home",
+      "events": "Events",
+      "chat": "Chat",
+      "wallet": "Balance",
+      "moments": "Moments",
+      "direct": "Direct messages",
+      "purchases": "Purchases",
+      "notifications": "Notifications",
+      "catalog": "Drinks catalogue",
+      "sublists": "Drinks lists",
+      "statistik": "Statistics",
+      "profil": "Profile",
+      "board": "Board",
+      "treasury": "Treasury & finances",
+      "communications": "Communications",
+      "admin": "Administration",
+      "tablet": "Bar terminal"
+    },
+    "sections": {
+      "club": "Club",
+      "account": "My account",
+      "bar": "Bar",
+      "admin": "Management"
+    }
+  },
+  "ui": {
+    "balanceCard": {
+      "label": "Balance",
+      "topup": "Top up"
+    },
+    "dataTable": {
+      "empty": "No entries yet."
+    },
+    "heroGreeting": {
+      "eyebrow": "Hello"
+    },
+    "stepper": {
+      "decrease": "Decrease",
+      "increase": "Increase",
+      "quantity": "Quantity"
+    }
+  },
+  "auth": {
+    "status": {
+      "eyebrow": "Public",
+      "brandClaim": "Your club. Vereint.",
+      "brandSub": "Members, events, treasury and bar in one place – secure and on every device.",
+      "loginFailed": "Sign-in failed",
+      "loggedOutTitle": "Signed out",
+      "loggedOutMessage": "You have been signed out successfully.",
+      "retryLogin": "Sign in again"
+    },
+    "errors": {
+      "invalidState": "The sign-in has expired. Please start again.",
+      "accountDisabled": "This account is disabled.",
+      "oidcLoginFailed": "Signing in via Keycloak failed.",
+      "browserOnly": "The sign-in service is not available on this device.",
+      "generic": "Sign-in failed."
+    }
+  },
+  "errorPages": {
+    "toDashboard": "Go to dashboard",
+    "toHome": "Go to home page",
+    "forbidden": {
+      "title": "Access denied",
+      "description": "You do not have the required permissions for this page, or your session is no longer valid.",
+      "signInAgain": "Sign in again"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "description": "The page you requested does not exist, has been moved, or the address is incorrect."
+    }
+  },
+  "routes": {
+    "placeholder": {
+      "title": "Feature placeholder",
+      "message": "This page is prepared for SSR and permission checks.",
+      "toHome": "Go to home page"
+    },
+    "access": {
+      "public": "Public",
+      "invite": "Valid invitation code required",
+      "denied": "Access denied",
+      "protected": "Protected area",
+      "guestToken": "Valid guest token required",
+      "boardOrAdmin": "Board or admin",
+      "admin": "Admin",
+      "drinkRecorder": "Drink recorder",
+      "statistics": "View statistics"
+    },
+    "authError": {
+      "title": "Sign-in error",
+      "description": "Error while signing in via Keycloak."
+    },
+    "loggedOut": {
+      "title": "Signed out",
+      "description": "Signed out successfully."
+    },
+    "inviteAccept": {
+      "title": "Accept invitation",
+      "description": "Accept an invitation or activate guest access."
+    },
+    "forbidden": {
+      "title": "No access",
+      "description": "You lack the required permissions for this page."
+    },
+    "notFound": {
+      "title": "Not found",
+      "description": "The requested page does not exist."
+    },
+    "dashboard": {
+      "title": "Home",
+      "description": "Personal overview and events you are attending."
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Personal account details and provider."
+    },
+    "wallet": {
+      "title": "Balance",
+      "description": "Personal balance and ledger."
+    },
+    "purchases": {
+      "title": "Purchases",
+      "description": "Past purchases with immutable snapshots."
+    },
+    "events": {
+      "title": "Events",
+      "description": "Event overview and event details."
+    },
+    "eventDetail": {
+      "title": "Event",
+      "description": "Event details, drinks list and chat."
+    },
+    "eventManage": {
+      "title": "Manage event",
+      "description": "Details, invitations, drinks and chat of your own event."
+    },
+    "guestEvent": {
+      "title": "Guest event",
+      "description": "Shared event details and event chat."
+    },
+    "catalog": {
+      "title": "Drinks catalogue",
+      "description": "Global catalogue and suggestions."
+    },
+    "sublists": {
+      "title": "Drinks lists",
+      "description": "Reusable drinks lists."
+    },
+    "chat": {
+      "title": "Chat",
+      "description": "Member and event chats."
+    },
+    "directMessages": {
+      "title": "Direct messages",
+      "description": "Personal one-to-one conversations."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "In-app and push notifications."
+    },
+    "moments": {
+      "title": "Moments",
+      "description": "Shared moments & rituals for active events."
+    },
+    "eventMoments": {
+      "title": "Event Moments",
+      "description": "Shared moments & rituals for this event."
+    },
+    "board": {
+      "title": "Board",
+      "description": "Moderation, financial overviews and prepared notifications."
+    },
+    "treasury": {
+      "title": "Treasury & finances",
+      "description": "Financial overviews and transactions."
+    },
+    "communications": {
+      "title": "Communications",
+      "description": "Notifications and announcements."
+    },
+    "admin": {
+      "title": "Administration",
+      "description": "Members, roles and audit views."
+    },
+    "tablet": {
+      "title": "Bar terminal",
+      "description": "Manual drink entry for the drink recorder."
+    },
+    "statistics": {
+      "title": "Statistics",
+      "description": "Consumption, attendance, spending history and rankings from Eber analytics."
+    }
   }
 }

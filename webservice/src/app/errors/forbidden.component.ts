@@ -1,23 +1,24 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../i18n';
 import { StatusBadgeComponent } from '../ui';
 
 @Component({
   selector: 'app-forbidden',
-  imports: [RouterLink, StatusBadgeComponent],
+  imports: [RouterLink, StatusBadgeComponent, TranslatePipe],
   template: `
     <div class="error-page-container">
       <div class="error-card">
         <div class="error-header">
           <vereint-status-badge label="403" tone="danger" />
-          <h1 class="error-title">Zugriff verweigert</h1>
+          <h1 class="error-title">{{ 'errorPages.forbidden.title' | t }}</h1>
         </div>
         <p class="error-description">
-          Für diese Seite fehlen Ihnen die erforderlichen Berechtigungen oder Ihre Sitzung ist nicht mehr gültig.
+          {{ 'errorPages.forbidden.description' | t }}
         </p>
         <div class="error-actions">
-          <a routerLink="/dashboard" class="btn btn-primary">Zum Dashboard</a>
-          <a routerLink="/" class="btn btn-secondary">Neu anmelden</a>
+          <a routerLink="/dashboard" class="btn btn-primary">{{ 'errorPages.toDashboard' | t }}</a>
+          <a routerLink="/" class="btn btn-secondary">{{ 'errorPages.forbidden.signInAgain' | t }}</a>
         </div>
       </div>
     </div>
