@@ -103,10 +103,13 @@
             class="shell-icon-button"
             routerLink="/notifications"
             routerLinkActive="is-active"
-            aria-label="Mitteilungen"
-            title="Mitteilungen"
+            [attr.aria-label]="bellLabel()"
+            [attr.title]="bellLabel()"
           >
             <vereint-icon name="bell" />
+            @if (unreadBadge(); as badge) {
+              <span class="shell-badge" aria-hidden="true">{{ badge }}</span>
+            }
           </a>
           @if (viewport() !== 'mobile') {
             <div class="shell-profile-menu">

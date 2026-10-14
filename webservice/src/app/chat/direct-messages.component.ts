@@ -14,6 +14,7 @@ import { AsyncState } from '../member/async-state';
 import { AvatarBadgeComponent, StatusBadgeComponent } from '../ui';
 import { ChatDataService } from './chat-data.service';
 import type { ChatOverview, DirectConversation } from './chat.model';
+import { StateComponent } from '../ui/state.component';
 
 /**
  * Direktnachrichten-Liste (TICKET-035).
@@ -29,7 +30,7 @@ import type { ChatOverview, DirectConversation } from './chat.model';
  */
 @Component({
   selector: 'app-direct-messages',
-  imports: [FormsModule, RouterLink, AvatarBadgeComponent, StatusBadgeComponent],
+  imports: [StateComponent, FormsModule, RouterLink, AvatarBadgeComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card chat-card" aria-labelledby="dm-title">
@@ -43,16 +44,18 @@ import type { ChatOverview, DirectConversation } from './chat.model';
         <a class="member-back" routerLink="/chat">← Zum Gruppen-Chat</a>
 
         @if (isBusy()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Die Konversationen werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Die Konversationen werden abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Direktnachrichten nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Direktnachrichten nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (model(); as data) {
           <label class="dm-search">
             <span class="dm-search-label">Mitglieder durchsuchen</span>
@@ -68,10 +71,11 @@ import type { ChatOverview, DirectConversation } from './chat.model';
 
           <h2 class="member-subtitle">Konversationen ({{ filtered().length }})</h2>
           @if (filtered().length === 0) {
-            <div class="state-card" role="status">
-              <strong>Keine Konversationen</strong>
-              <span>Es gibt keine passenden Einzelgespräche.</span>
-            </div>
+            <vereint-state
+              kind="empty"
+              title="Keine Konversationen"
+              message="Es gibt keine passenden Einzelgespräche."
+            />
           } @else {
             <ul class="dm-list">
               @for (conversation of filtered(); track conversation.id) {

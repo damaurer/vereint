@@ -26,6 +26,7 @@ import { formatDateTime } from '../member/member-format';
 import { ModalComponent } from '../ui';
 import { MomentMapComponent } from './moment-map.component';
 import { MomentTimelineComponent } from './moment-timeline.component';
+import { StateComponent } from '../ui/state.component';
 
 export interface TopicOption {
   value: string;
@@ -49,7 +50,7 @@ export interface QuickReaction {
  */
 @Component({
   selector: 'app-moments',
-  imports: [
+  imports: [StateComponent, 
     IconComponent,
     FormsModule,
     RouterLink,
@@ -124,16 +125,18 @@ export interface QuickReaction {
 
         <!-- Status / Fehler / Ladezustand -->
         @if (isBusy()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Moments und Ritual-Feeds werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Moments und Ritual-Feeds werden abgerufen."
+          />
         } @else if (loadError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Nicht verfügbar</strong>
-            <span>{{ loadError() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Nicht verfügbar"
+            [message]="loadError()"
+            (retry)="reload()"
+          />
         } @else if (eventId()) {
           <!-- Hauptaktionsbereich -->
           <div class="action-bar">

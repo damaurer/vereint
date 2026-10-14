@@ -206,6 +206,84 @@ class LedgerService(
     }
 
     /**
+     * Macht einen eben erfassten Strichlisten-Kauf am Tablet rückgängig.
+     *
+     * Das Thekentablet darf keine allgemeinen Korrekturen buchen. Damit ein
+     * versehentlicher Strich trotzdem sofort zurückgenommen werden kann, erlaubt
+     * diese Methode genau eine Gegenbuchung, wenn die Ursprungsbuchung
+     * - ein manueller Tablet-Kauf an genau diesem Event ist,
+     * - vom selben Tablet-Benutzer erfasst wurde und
+     * - höchstens [TABLET_UNDO_WINDOW] alt ist.
+     * Alles andere bleibt eine Korrektur durch Vorstand/Admin. Wiederholungen mit
+     * demselben Idempotency-Key liefern die bereits erzeugte Gegenbuchung.
+     */
+    fun undoTabletPurchase(
+        eventId: UUID,
+        entryId: UUID,
+        actor: UserEntity,
+        idempotencyKey: String?,
+        now: Instant = Instant.now()
+    ): LedgerEntryDto {
+        val key = requireIdempotencyKey(idempotencyKey)
+        val original = ledgerEntryRepository.findById(entryId).orElseThrow {
+            ResourceNotFoundException("Buchung mit ID '$entryId' nicht gefunden", ErrorCode.NOT_FOUND)
+        }
+        val replay = ledgerEntryRepository.findByIdempotencyKey(key).orElse(null)
+        if (replay != null && replay.reversesEntry?.id == original.id) {
+            return toDto(replay)
+        }
+        if (original.entryType != LedgerEntryType.purchase ||
+            original.source != PurchaseSource.tabletManual ||
+            original.event?.id != eventId
+        ) {
+            throw InvalidRequestException(
+                "Nur Strichlisten-Käufe dieses Events können am Tablet zurückgenommen werden",
+                ErrorCode.INVALID_REQUEST
+            )
+        }
+        if (original.actor?.id != actor.id) {
+            throw AccessDeniedException(
+                "Nur der erfassende Tablet-Benutzer kann diesen Strich zurücknehmen",
+                ErrorCode.ACCESS_DENIED
+            )
+        }
+        if (original.createdAt.isBefore(now.minus(TABLET_UNDO_WINDOW))) {
+            throw InvalidRequestException(
+                "Der Strich ist älter als ${TABLET_UNDO_WINDOW.toMinutes()} Minuten; bitte den Vorstand um eine Korrektur",
+                ErrorCode.INVALID_REQUEST
+            )
+        }
+        if (ledgerEntryRepository.findByReversesEntryId(original.id).isNotEmpty()) {
+            throw ApiException(
+                ErrorCode.LEDGER_ALREADY_CORRECTED,
+                "Buchung '${original.id}' wurde bereits zurückgenommen",
+                HttpStatus.CONFLICT
+            )
+        }
+        val member = original.member
+            ?: throw ResourceNotFoundException("Ursprungsbuchung ohne Mitglied", ErrorCode.NOT_FOUND)
+        return appendWrite(
+            AppendWriteCommand(
+                scope = SCOPE_CORRECTION,
+                key = key,
+                entryType = LedgerEntryType.correction,
+                member = member,
+                event = original.event,
+                drink = original.drink,
+                food = original.food,
+                amount = original.amount,
+                currency = original.currency,
+                accountingMode = original.accountingMode,
+                source = null,
+                actor = actor,
+                reversesEntry = original,
+                auditAction = AuditService.ACTION_LEDGER_CORRECTION,
+                note = "tablet-undo; event=$eventId"
+            )
+        )
+    }
+
+    /**
      * PWA-Barcodekauf eines Mitglieds (TICKET-016). Der Client liefert nur Event und
      * gescannten Barcode; Käufer, Preis, Währung, Getränk und Abrechnungsmodus werden
      * serverseitig bestimmt: Käufer ist stets der angemeldete Benutzer, Preis/Währung
@@ -822,6 +900,9 @@ class LedgerService(
         const val SCOPE_CORRECTION = "ledger-correction"
         const val SCOPE_PURCHASE = "ledger-purchase"
         val IDEMPOTENCY_TTL: Duration = Duration.ofDays(30)
+
+        /** Wie lange ein Tablet einen eigenen Strich selbst zurücknehmen darf. */
+        val TABLET_UNDO_WINDOW: Duration = Duration.ofMinutes(10)
         private val WHITESPACE_REGEX = Regex("\\s+")
     }
 }

@@ -85,6 +85,26 @@ class TabletRecorderController(
         return ResponseEntity.status(HttpStatus.CREATED).body(entry)
     }
 
+    @PostMapping("/events/{eventId}/purchases/{entryId}/undo")
+    @Operation(
+        summary = "Strich zurücknehmen",
+        description = "Bucht eine Gegenbuchung zu einem eben vom selben Tablet erfassten Strich (nur Tablet-Recorder, begrenztes Zeitfenster)"
+    )
+    fun undoPurchase(
+        @PathVariable("eventId") id: String,
+        @PathVariable("entryId") entryId: String,
+        @RequestHeader(value = IDEMPOTENCY_HEADER, required = false) idempotencyKey: String?
+    ): ResponseEntity<LedgerEntryDto> {
+        val principal = authContext.getRequiredPrincipal()
+        val entry = tabletRecorderService.undoPurchase(
+            eventId(id),
+            Identifiers.parseUuid(entryId, "entryId"),
+            idempotencyKey,
+            principal
+        )
+        return ResponseEntity.status(HttpStatus.CREATED).body(entry)
+    }
+
     @PostMapping("/events/{eventId}/rounds")
     @Operation(
         summary = "Runde erfassen",

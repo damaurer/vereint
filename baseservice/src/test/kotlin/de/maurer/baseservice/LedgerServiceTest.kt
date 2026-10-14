@@ -34,6 +34,8 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.quality.Strictness
 import java.math.BigDecimal
+import java.time.Duration
+import java.time.Instant
 import java.util.Optional
 import java.util.UUID
 
@@ -786,5 +788,109 @@ class LedgerServiceTest {
         assertEquals(0, BigDecimal("4.50").compareTo(dto.snapshot?.unitPrice))
         assertEquals(0, BigDecimal("2.00").compareTo(dto.snapshot?.costPrice))
         assertEquals(0, BigDecimal("2.50").compareTo(dto.snapshot?.profit))
+    }
+
+    private val tabletEventId: UUID = UUID.randomUUID()
+
+    private fun tabletPurchase(
+        actor: UserEntity = admin(),
+        createdAt: Instant = Instant.now(),
+        source: PurchaseSource = PurchaseSource.tabletManual
+    ) = LedgerEntryEntity(
+        entryType = LedgerEntryType.purchase,
+        event = EventEntity(id = tabletEventId, title = "Stammtisch"),
+        member = member(),
+        drink = DrinkCatalogEntity(id = UUID.randomUUID(), name = "Helles"),
+        amount = BigDecimal("3.20"),
+        currency = "EUR",
+        accountingMode = AccountingMode.credit,
+        source = source,
+        actor = actor,
+        idempotencyKey = "tablet-purchase-1",
+        createdAt = createdAt
+    )
+
+    @Test
+    fun `tablet undo reverses an own fresh tally with a compensating entry`() {
+        val original = tabletPurchase()
+        `when`(ledgerEntryRepository.findById(original.id)).thenReturn(Optional.of(original))
+        `when`(ledgerEntryRepository.findByReversesEntryId(original.id)).thenReturn(emptyList())
+        `when`(ledgerEntryRepository.save(anyLedgerEntry())).thenAnswer { it.arguments[0] }
+
+        val dto = ledgerService.undoTabletPurchase(tabletEventId, original.id, admin(), "idem-undo-1")
+
+        assertEquals(LedgerEntryType.correction.name, dto.entryType)
+        assertEquals(original.id.toString(), dto.reversesEntryId)
+        assertEquals(0, BigDecimal("3.20").compareTo(dto.amount))
+    }
+
+    @Test
+    fun `tablet undo replays the same compensating entry for the same key`() {
+        val original = tabletPurchase()
+        val reversal = LedgerEntryEntity(
+            entryType = LedgerEntryType.correction,
+            member = member(),
+            amount = BigDecimal("3.20"),
+            reversesEntry = original,
+            idempotencyKey = "idem-undo-1"
+        )
+        `when`(ledgerEntryRepository.findById(original.id)).thenReturn(Optional.of(original))
+        `when`(ledgerEntryRepository.findByIdempotencyKey("idem-undo-1")).thenReturn(Optional.of(reversal))
+
+        val dto = ledgerService.undoTabletPurchase(tabletEventId, original.id, admin(), "idem-undo-1")
+
+        assertEquals(reversal.id.toString(), dto.id)
+        verify(ledgerEntryRepository, never()).save(anyLedgerEntry())
+    }
+
+    @Test
+    fun `tablet undo rejects a tally recorded by someone else`() {
+        val original = tabletPurchase(actor = member())
+        `when`(ledgerEntryRepository.findById(original.id)).thenReturn(Optional.of(original))
+
+        assertThrows(AccessDeniedException::class.java) {
+            ledgerService.undoTabletPurchase(tabletEventId, original.id, admin(), "idem-undo-2")
+        }
+        verify(ledgerEntryRepository, never()).save(anyLedgerEntry())
+    }
+
+    @Test
+    fun `tablet undo rejects a tally older than the undo window`() {
+        val original = tabletPurchase(
+            createdAt = Instant.now().minus(LedgerService.TABLET_UNDO_WINDOW).minus(Duration.ofMinutes(1))
+        )
+        `when`(ledgerEntryRepository.findById(original.id)).thenReturn(Optional.of(original))
+
+        assertThrows(InvalidRequestException::class.java) {
+            ledgerService.undoTabletPurchase(tabletEventId, original.id, admin(), "idem-undo-3")
+        }
+    }
+
+    @Test
+    fun `tablet undo rejects non-tablet purchases and other events`() {
+        val barcode = tabletPurchase(source = PurchaseSource.pwaBarcode)
+        `when`(ledgerEntryRepository.findById(barcode.id)).thenReturn(Optional.of(barcode))
+        assertThrows(InvalidRequestException::class.java) {
+            ledgerService.undoTabletPurchase(tabletEventId, barcode.id, admin(), "idem-undo-4")
+        }
+
+        val original = tabletPurchase()
+        `when`(ledgerEntryRepository.findById(original.id)).thenReturn(Optional.of(original))
+        assertThrows(InvalidRequestException::class.java) {
+            ledgerService.undoTabletPurchase(UUID.randomUUID(), original.id, admin(), "idem-undo-5")
+        }
+    }
+
+    @Test
+    fun `tablet undo rejects a tally that was already reversed`() {
+        val original = tabletPurchase()
+        `when`(ledgerEntryRepository.findById(original.id)).thenReturn(Optional.of(original))
+        `when`(ledgerEntryRepository.findByReversesEntryId(original.id))
+            .thenReturn(listOf(LedgerEntryEntity(entryType = LedgerEntryType.correction, reversesEntry = original)))
+
+        val error = assertThrows(ApiException::class.java) {
+            ledgerService.undoTabletPurchase(tabletEventId, original.id, admin(), "idem-undo-6")
+        }
+        assertEquals(ErrorCode.LEDGER_ALREADY_CORRECTED, error.errorCode)
     }
 }

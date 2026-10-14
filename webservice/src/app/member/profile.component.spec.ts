@@ -75,6 +75,19 @@ describe('ProfileComponent', () => {
     expect(api.updateProfile).not.toHaveBeenCalled();
   });
 
+  it('switches the theme from the profile', async () => {
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    const options = Array.from(root.querySelectorAll('.profile-theme-option')) as HTMLButtonElement[];
+    expect(options.map((o) => o.textContent?.trim())).toEqual(['System', 'Hell', 'Dunkel']);
+    options[2].click();
+    fixture.detectChanges();
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(options[2].getAttribute('aria-checked')).toBe('true');
+    options[0].click();
+    expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
+  });
+
   it('shows a retry state when loading fails', async () => {
     api.loadProfile.mockReturnValue(throwError(() => new ApiError(503, 'service_unavailable', '')));
 

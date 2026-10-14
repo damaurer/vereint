@@ -59,6 +59,9 @@ interface TabletInternals {
   standalone: () => boolean;
   toggleStandalone(): void;
   quickBook(memberId: string): void;
+  undoLast(): void;
+  lastBooking: () => { memberId: string; label: string } | null;
+  actionError: () => string | null;
 }
 
 describe('TabletComponent', () => {
@@ -70,6 +73,7 @@ describe('TabletComponent', () => {
     recordPurchase: ReturnType<typeof vi.fn>;
     recordRound: ReturnType<typeof vi.fn>;
     recordEvening: ReturnType<typeof vi.fn>;
+    undoPurchase: ReturnType<typeof vi.fn>;
   };
 
   const create = async () => {
@@ -96,6 +100,7 @@ describe('TabletComponent', () => {
       recordPurchase: vi.fn(() => of(entry)),
       recordRound: vi.fn(() => of([entry])),
       recordEvening: vi.fn(() => of([entry])),
+      undoPurchase: vi.fn(() => of({ id: 'l-2' } as LedgerEntry)),
     };
   });
 
@@ -127,6 +132,65 @@ describe('TabletComponent', () => {
     expect(payload).toEqual({ memberId: 'm-1', eventDrinkId: 'd-1' });
     expect(typeof key).toBe('string');
     expect(cmp.tallyFor('m-1')).toBe(1);
+  });
+
+  it('undoes the last own tally with a counter-booking', async () => {
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as TabletInternals;
+    cmp.selectEvent('e-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    cmp.selectActiveDrink('d-1');
+    cmp.onTallyIncrease('m-1');
+    fixture.detectChanges();
+    expect(cmp.lastBooking()?.memberId).toBe('m-1');
+    expect(html(fixture)).toContain('Rückgängig');
+    cmp.undoLast();
+    expect(api.undoPurchase).toHaveBeenCalledTimes(1);
+    const [eventId, entryId, key] = api.undoPurchase.mock.calls[0];
+    expect(eventId).toBe('e-1');
+    expect(entryId).toBe('l-1');
+    expect(typeof key).toBe('string');
+    expect(cmp.tallyFor('m-1')).toBe(0);
+    expect(cmp.lastBooking()).toBeNull();
+  });
+
+  it('does not undo tallies that were not booked in this session', async () => {
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as TabletInternals;
+    cmp.selectEvent('e-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    cmp.onTallyDecrease('m-1');
+    expect(api.undoPurchase).not.toHaveBeenCalled();
+    expect(cmp.actionError()).toContain('Vorstand');
+  });
+
+  it('restores the tally when the undo fails', async () => {
+    api.undoPurchase.mockReturnValue(throwError(() => new ApiError(409, 'ledger_already_corrected', '')));
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as TabletInternals;
+    cmp.selectEvent('e-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    cmp.selectActiveDrink('d-1');
+    cmp.onTallyIncrease('m-1');
+    cmp.onTallyDecrease('m-1');
+    expect(cmp.tallyFor('m-1')).toBe(1);
+    expect(cmp.actionError()).toBeTruthy();
+  });
+
+  it('removes the optimistic tally when the purchase fails', async () => {
+    api.recordPurchase.mockReturnValue(throwError(() => new ApiError(500, 'internal_error', '')));
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as TabletInternals;
+    cmp.selectEvent('e-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    cmp.selectActiveDrink('d-1');
+    cmp.onTallyIncrease('m-1');
+    expect(cmp.tallyFor('m-1')).toBe(0);
+    expect(cmp.lastBooking()).toBeNull();
   });
 
   it('opens the drink overlay instead of booking when no drink is active', async () => {

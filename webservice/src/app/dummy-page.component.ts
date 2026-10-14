@@ -1,9 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { StateComponent } from './ui/state.component';
 
 @Component({
   selector: 'app-dummy-page',
-  imports: [RouterLink],
+  imports: [StateComponent, RouterLink],
   template: `
     <main class="page-shell">
       <section class="page-card vereint-card" aria-labelledby="page-title">
@@ -15,10 +16,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
         </div>
         <div class="vereint-card-body">
           <p class="vereint-subtitle">{{ description }}</p>
-          <div class="state-card" role="status">
-            <strong>Feature-Platzhalter</strong>
-            <span>Diese Seite ist für die SSR- und Rechteprüfung vorbereitet.</span>
-          </div>
+          <vereint-state
+            kind="empty"
+            title="Feature-Platzhalter"
+            message="Diese Seite ist für die SSR- und Rechteprüfung vorbereitet."
+          />
           <a routerLink="/">Zur Startseite</a>
         </div>
       </section>

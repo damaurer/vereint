@@ -14,6 +14,7 @@ export { InfoPanelComponent } from './info-panel.component';
 export { ModalComponent } from './modal.component';
 export { RoleChipComponent } from './role-chip.component';
 export { StatCardComponent } from './stat-card.component';
+export { StateComponent, type StateKind } from './state.component';
 export { StatusBadgeComponent, type StatusTone } from './status-badge.component';
 export { StepperComponent } from './stepper.component';
 export { IconComponent } from './icon.component';

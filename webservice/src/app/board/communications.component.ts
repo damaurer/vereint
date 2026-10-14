@@ -10,6 +10,7 @@ import { BoardApiService } from './board-api.service';
 import type { UserSummary } from '../auth/auth.types';
 import type { AuditLogEntry } from '../api/api.types';
 import { InfoPanelComponent, RoleChipComponent, StatusBadgeComponent } from '../ui';
+import { StateComponent } from '../ui/state.component';
 
 interface CommunicationsView {
   recipients: UserSummary[];
@@ -29,7 +30,7 @@ interface CommunicationsView {
  */
 @Component({
   selector: 'app-board-communications',
-  imports: [FormsModule, RouterLink, InfoPanelComponent, RoleChipComponent, StatusBadgeComponent],
+  imports: [StateComponent, FormsModule, RouterLink, InfoPanelComponent, RoleChipComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="comm-title">
@@ -69,16 +70,18 @@ interface CommunicationsView {
         </form>
 
         @if (load.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Empfänger und Protokoll werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Empfänger und Protokoll werden abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Kommunikation nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Kommunikation nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (load.data(); as view) {
           <h2 class="member-subtitle">Empfänger ({{ view.recipients.length }})</h2>
           @if (view.recipients.length === 0) {
@@ -102,10 +105,11 @@ interface CommunicationsView {
 
           <h2 class="member-subtitle">Rundbriefe / Meldungen ({{ view.audit.length }})</h2>
           @if (view.audit.length === 0) {
-            <div class="state-card" role="status">
-              <strong>Keine Einträge</strong>
-              <span>Es wurden noch keine Mitteilungen protokolliert.</span>
-            </div>
+            <vereint-state
+              kind="empty"
+              title="Keine Einträge"
+              message="Es wurden noch keine Mitteilungen protokolliert."
+            />
           } @else {
             <ul class="member-list">
               @for (entry of view.audit; track entry.id) {

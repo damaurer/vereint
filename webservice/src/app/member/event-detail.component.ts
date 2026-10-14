@@ -8,6 +8,7 @@ import { MemberApiService } from './member-api.service';
 import { eventStatusLabel, formatDateTime } from './member-format';
 import type { EventDetail, EventParticipant, MemberProfile, MomentSessionDto, MomentSummaryDto } from '../api/api.types';
 import { AvatarBadgeComponent, StatusBadgeComponent, type StatusTone } from '../ui';
+import { StateComponent } from '../ui/state.component';
 
 interface EventDetailView {
   event: EventDetail;
@@ -32,7 +33,7 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
  */
 @Component({
   selector: 'app-member-event-detail',
-  imports: [IconComponent, RouterLink, AvatarBadgeComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, RouterLink, AvatarBadgeComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="event-title">
@@ -41,16 +42,18 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
         <a class="member-back" routerLink="/events">← Zu den Events</a>
 
         @if (load.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Die Eventdetails werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Die Eventdetails werden abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Event nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Event nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (load.data(); as view) {
           <article class="detail-head">
             <div class="detail-head-top">

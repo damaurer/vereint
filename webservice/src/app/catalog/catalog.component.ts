@@ -18,12 +18,13 @@ import {
   StatusBadgeComponent,
   type StatusTone,
 } from '../ui';
+import { StateComponent } from '../ui/state.component';
 
 type CatalogTab = 'drinks' | 'food';
 
 @Component({
   selector: 'app-catalog',
-  imports: [IconComponent, FormsModule, ModalComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, FormsModule, ModalComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="catalog-title">
@@ -86,24 +87,27 @@ type CatalogTab = 'drinks' | 'food';
         </div>
 
         @if (load.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Katalogdaten werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Katalogdaten werden abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Katalog nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Katalog nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else {
           <!-- Drinks Tab Content -->
           @if (activeTab() === 'drinks') {
             @if (filteredDrinks().length === 0) {
-              <div class="state-card" role="status">
-                <strong>Keine Getränke gefunden</strong>
-                <span>Es wurden keine passenden Getränke gefunden.</span>
-              </div>
+              <vereint-state
+                kind="empty"
+                title="Keine Getränke gefunden"
+                message="Es wurden keine passenden Getränke gefunden."
+              />
             } @else {
               <div class="catalog-grid">
                 @for (drink of filteredDrinks(); track drink.id) {
@@ -158,10 +162,11 @@ type CatalogTab = 'drinks' | 'food';
           <!-- Food Tab Content -->
           @if (activeTab() === 'food') {
             @if (filteredFoods().length === 0) {
-              <div class="state-card" role="status">
-                <strong>Keine Speisen gefunden</strong>
-                <span>Es wurden keine passenden Speisen gefunden.</span>
-              </div>
+              <vereint-state
+                kind="empty"
+                title="Keine Speisen gefunden"
+                message="Es wurden keine passenden Speisen gefunden."
+              />
             } @else {
               <div class="catalog-grid">
                 @for (food of filteredFoods(); track food.id) {

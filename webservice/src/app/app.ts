@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { PwaService } from './pwa/pwa.service';
 import { ServiceWorkerCleanupService } from './service-worker-cleanup.service';
+import { ThemeService } from './shell/theme.service';
 
 @Component({
   imports: [RouterOutlet],
@@ -15,9 +16,11 @@ export class App implements OnInit {
   constructor(
     private readonly serviceWorkerCleanup: ServiceWorkerCleanupService,
     private readonly pwa: PwaService,
+    private readonly theme: ThemeService,
   ) {}
 
   ngOnInit(): void {
+    this.theme.init();
     void this.startServiceWorkers();
   }
 

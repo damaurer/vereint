@@ -72,6 +72,11 @@ Alle UI-Komponenten sind als **Angular Standalone Components** ohne externe UI-F
 - **Neue Icons**: In `icons.ts` als Formen-Daten ergänzen (kein `innerHTML`, SSR-sicher). Der Test `icon.component.spec.ts` prüft, dass alles im 24er-Raster liegt.
 - **Emojis** bleiben dort, wo sie Inhalt sind (Reaktionen im Chat, Moments-Rituale), nicht als Bedienelement.
 
+### 12. `StateComponent` (`state.component.ts`)
+- **Zweck**: Eine Lade-, Leer- und Fehleranzeige für alle Seiten statt eigener `state-card`-Blöcke.
+- **Nutzung**: `<vereint-state kind="loading" title="Wird geladen …" message="…" />`, `kind="empty"` für leere Listen, `kind="error"` mit `[message]="load.errorMessage()"` und `(retry)="reload()"`. Der Knopf „Erneut versuchen“ erscheint nur, wenn `retry` gebunden ist.
+- **Barrierefreiheit**: Laden und Leer werden als `status` angesagt, Fehler als `alert`.
+
 ## 🧭 Navigation (`webservice/src/app/shell`)
 
 `nav-model.ts` ist die einzige Quelle für alle Ziele, gruppiert in **Verein**, **Mein Konto**, **Theke** und **Verwaltung** (nur mit Rolle/Permission).
@@ -83,6 +88,12 @@ Alle UI-Komponenten sind als **Angular Standalone Components** ohne externe UI-F
 | Desktop | Gruppierte Seitenleiste mit allen Seiten; Kopfzeile mit Seitentitel, Mitteilungen und Profil-Menü (Profil, Guthaben, Abmelden). |
 
 Der Seitentitel in der Kopfzeile kommt aus `route.data.title`; Titel und Navigationslabel sollen gleich lauten.
+
+Die Glocke zeigt die Zahl ungelesener Mitteilungen (`GET /notifications/unread-count`). Der Wert liegt in `UnreadBadgeStore`, den auch die Mitteilungsseite beim Lesen aktualisiert.
+
+## 🌗 Hell- und Dunkelmodus
+
+`ThemeService` (`shell/theme.service.ts`) setzt `data-theme` auf `<html>`: „System“ entfernt das Attribut (dann gilt `prefers-color-scheme`), „Hell“ und „Dunkel“ setzen es fest. Die Wahl trifft man im Profil; sie liegt nur im Browser (`localStorage`, Schlüssel `vereint.theme`).
 
 ## 📱 App-Icons (`webservice/public`)
 

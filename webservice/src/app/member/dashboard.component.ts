@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { forkJoin, map, switchMap } from 'rxjs';
+import { forkJoin, map, switchMap, type Observable } from 'rxjs';
+import { describeApiError } from '../api/api-client.service';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
 import { eventStatusLabel, formatDateTime, formatMoney } from './member-format';
@@ -14,6 +15,7 @@ import {
   type IconName,
   type StatusTone,
 } from '../ui';
+import { StateComponent } from '../ui/state.component';
 
 interface DashboardShortcut {
   route: string;
@@ -40,7 +42,7 @@ interface DashboardView {
  */
 @Component({
   selector: 'app-member-dashboard',
-  imports: [
+  imports: [StateComponent, 
     RouterLink,
     HeroGreetingComponent,
     EventCardComponent,
@@ -52,16 +54,18 @@ interface DashboardView {
     <main class="page-shell">
       <section class="page-card member-card" aria-label="Persönliche Übersicht">
         @if (load.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Deine Übersicht wird abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Deine Übersicht wird abgerufen."
+          />
         } @else if (load.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Übersicht nicht verfügbar</strong>
-            <span>{{ load.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Übersicht nicht verfügbar"
+            [message]="load.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (load.data(); as view) {
           <vereint-hero-greeting
             eyebrow="Servus"
@@ -100,6 +104,35 @@ interface DashboardView {
                     [statusTone]="eventTone(event.status)"
                   />
                 </a>
+                @if (attending() !== null) {
+                  <div class="dash-rsvp" role="group" aria-label="Teilnahme am nächsten Termin">
+                    @if (attending()) {
+                      <span class="dash-rsvp-state">
+                        <vereint-icon name="check" /> Du bist dabei
+                      </span>
+                      <button
+                        type="button"
+                        class="dash-rsvp-secondary"
+                        [disabled]="rsvpBusy()"
+                        (click)="setAttendance(event.id, view.profile.id, false)"
+                      >
+                        Absagen
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="member-button dash-rsvp-primary"
+                        [disabled]="rsvpBusy()"
+                        (click)="setAttendance(event.id, view.profile.id, true)"
+                      >
+                        <vereint-icon name="check" /> Zusagen
+                      </button>
+                    }
+                  </div>
+                  @if (rsvpError(); as error) {
+                    <p class="member-hint dash-rsvp-error" role="alert">{{ error }}</p>
+                  }
+                }
                 <a class="dash-more" routerLink="/events">
                   Alle Events <vereint-icon name="chevron-right" />
                 </a>
@@ -194,6 +227,44 @@ interface DashboardView {
         margin: 0;
       }
 
+      .dash-rsvp {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem 0.75rem;
+        margin-top: 0.35rem;
+      }
+      .dash-rsvp-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 2.75rem;
+      }
+      .dash-rsvp-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: var(--color-success);
+        font-weight: 700;
+      }
+      .dash-rsvp-secondary {
+        min-height: 2.75rem;
+        padding: 0 1rem;
+        border: 1px solid var(--color-border-dark);
+        border-radius: 0.5rem;
+        background: transparent;
+        color: var(--color-text);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .dash-rsvp-secondary:disabled {
+        opacity: 0.6;
+        cursor: progress;
+      }
+      .dash-rsvp-error {
+        color: var(--color-danger);
+      }
       .dash-grid {
         display: grid;
         gap: var(--space-2);
@@ -263,6 +334,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   protected readonly load = new AsyncState<DashboardView>();
   protected readonly topupRequested = signal(false);
+  /** Teilnahme am nächsten Termin: `null` = unbekannt oder keine Zusage möglich. */
+  protected readonly attending = signal<boolean | null>(null);
+  protected readonly rsvpBusy = signal(false);
+  protected readonly rsvpError = signal<string | null>(null);
   protected readonly formatMoney = formatMoney;
   protected readonly formatDateTime = formatDateTime;
   protected readonly eventStatusLabel = eventStatusLabel;
@@ -340,6 +415,45 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }).pipe(map((rest) => ({ profile, ...rest }))),
         ),
       ),
+      (view) => this.loadAttendance(view),
     );
+  }
+
+  /** Zusagen ist nur für veröffentlichte oder laufende, nicht vergangene Termine möglich. */
+  protected canRsvp(event: EventSummary, now: Date = new Date()): boolean {
+    if (event.status === 'active') return true;
+    return event.status === 'published' && Date.parse(event.startsAt) >= now.getTime();
+  }
+
+  /** Lädt, ob das Mitglied beim nächsten Termin schon zugesagt hat. */
+  private loadAttendance(view: DashboardView): void {
+    this.attending.set(null);
+    this.rsvpError.set(null);
+    const event = this.nextEvent(view.events);
+    if (!event || !this.canRsvp(event)) return;
+    this.api.listParticipants(event.id).subscribe({
+      next: (participants) =>
+        this.attending.set(participants.some((p) => p.userId === view.profile.id)),
+      error: () => this.attending.set(null),
+    });
+  }
+
+  /** Zu- oder Absage direkt von der Startseite (gleiche Endpunkte wie die Eventseite). */
+  protected setAttendance(eventId: string, userId: string, attend: boolean): void {
+    this.rsvpBusy.set(true);
+    this.rsvpError.set(null);
+    const request: Observable<unknown> = attend
+      ? this.api.addParticipant(eventId, { userId, role: 'participant' })
+      : this.api.removeParticipant(eventId, userId);
+    request.subscribe({
+      next: () => {
+        this.rsvpBusy.set(false);
+        this.attending.set(attend);
+      },
+      error: (error: unknown) => {
+        this.rsvpBusy.set(false);
+        this.rsvpError.set(describeApiError(error));
+      },
+    });
   }
 }

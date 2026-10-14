@@ -21,6 +21,7 @@ import type {
   Invite,
   ParticipantRole,
 } from './event-manage.types';
+import { StateComponent } from '../ui/state.component';
 
 interface ManageHeader {
   event: EventDetail;
@@ -57,7 +58,7 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
  */
 @Component({
   selector: 'app-event-manage',
-  imports: [FormsModule, RouterLink, InfoPanelComponent, StatusBadgeComponent],
+  imports: [StateComponent, FormsModule, RouterLink, InfoPanelComponent, StatusBadgeComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="manage-title">
@@ -65,16 +66,18 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
         <a class="member-back" [routerLink]="['/events', eventId]">← Zum Event</a>
 
         @if (header.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Die Eventverwaltung wird vorbereitet.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Die Eventverwaltung wird vorbereitet."
+          />
         } @else if (header.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Verwaltung nicht verfügbar</strong>
-            <span>{{ header.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Verwaltung nicht verfügbar"
+            [message]="header.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (header.data(); as head) {
           <h1 id="manage-title">{{ head.event.title }} verwalten</h1>
           <p class="manage-status">

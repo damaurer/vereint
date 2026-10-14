@@ -13,6 +13,7 @@ import { RevenueSheetComponent, type RevenueKind } from './revenue-sheet.compone
 import { StatusBadgeComponent } from '../ui';
 import type { EventDrink, EventFood } from '../events/event-manage.types';
 import type { LedgerEntry, TabletEvent, TabletMember, TabletRevenuePayload } from '../api/api.types';
+import { StateComponent } from '../ui/state.component';
 
 interface EventContext {
   members: TabletMember[];
@@ -34,7 +35,7 @@ interface EventContext {
  */
 @Component({
   selector: 'app-tablet',
-  imports: [
+  imports: [StateComponent, 
     IconComponent,
     RouterLink,
     StatusBadgeComponent,
@@ -76,23 +77,26 @@ interface EventContext {
         }
 
         @if (events.isLoading()) {
-          <div class="state-card" role="status" aria-live="polite">
-            <strong>Wird geladen …</strong>
-            <span>Aktive Events werden abgerufen.</span>
-          </div>
+          <vereint-state
+            kind="loading"
+            title="Wird geladen …"
+            message="Aktive Events werden abgerufen."
+          />
         } @else if (events.isError()) {
-          <div class="state-card state-error" role="alert">
-            <strong>Erfassung nicht verfügbar</strong>
-            <span>{{ events.errorMessage() }}</span>
-            <button type="button" class="member-button" (click)="reload()">Erneut versuchen</button>
-          </div>
+          <vereint-state
+            kind="error"
+            title="Erfassung nicht verfügbar"
+            [message]="events.errorMessage()"
+            (retry)="reload()"
+          />
         } @else if (events.data(); as list) {
           <h2 class="member-subtitle">Aktive Events ({{ list.length }})</h2>
           @if (list.length === 0) {
-            <div class="state-card" role="status">
-              <strong>Keine aktiven Events</strong>
-              <span>Derzeit ist kein Event für die Erfassung freigegeben.</span>
-            </div>
+            <vereint-state
+              kind="empty"
+              title="Keine aktiven Events"
+              message="Derzeit ist kein Event für die Erfassung freigegeben."
+            />
           } @else {
             <ul class="member-list">
               @for (event of list; track event.id) {
@@ -118,18 +122,20 @@ interface EventContext {
 
         @if (selectedEventId()) {
           @if (context.isLoading()) {
-            <div class="state-card" role="status" aria-live="polite">
-              <strong>Wird geladen …</strong>
-              <span>Mitglieder und Getränke werden abgerufen.</span>
-            </div>
+            <vereint-state
+              kind="loading"
+              title="Wird geladen …"
+              message="Mitglieder und Getränke werden abgerufen."
+            />
           } @else if (context.isError()) {
             <p class="manage-action-error" role="alert">{{ context.errorMessage() }}</p>
           } @else if (context.data(); as ctx) {
             @if (ctx.members.length === 0 || ctx.drinks.length === 0) {
-              <div class="state-card" role="status">
-                <strong>Erfassung nicht möglich</strong>
-                <span>Für dieses Event fehlen freigegebene Mitglieder oder Getränke.</span>
-              </div>
+              <vereint-state
+                kind="empty"
+                title="Erfassung nicht möglich"
+                message="Für dieses Event fehlen freigegebene Mitglieder oder Getränke."
+              />
             } @else {
               <div class="tally-head">
                 <h2 class="member-subtitle">Strichliste</h2>
@@ -154,6 +160,16 @@ interface EventContext {
                   />
                 }
               </div>
+
+              @if (lastBooking(); as last) {
+                <div class="undo-bar" role="status">
+                  <vereint-icon name="check" />
+                  <span class="undo-text">Strich erfasst: {{ last.label }}</span>
+                  <button type="button" class="undo-button" [disabled]="busy()" (click)="undoLast()">
+                    <vereint-icon name="arrow-left" /> Rückgängig
+                  </button>
+                </div>
+              }
 
               <div class="quickbook-bar">
                 <span class="quickbook-label">Aktiver Artikel für Schnellbuchung:</span>
@@ -243,10 +259,50 @@ interface EventContext {
         gap: 0.75rem;
       }
       .tally-list {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
         gap: 0.6rem;
         margin: 0.75rem 0 1.25rem;
+      }
+      .undo-bar {
+        position: sticky;
+        bottom: 0.75rem;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0 0 1rem;
+        padding: 0.6rem 0.6rem 0.6rem 1rem;
+        border-radius: var(--radius-md, 0.75rem);
+        background: var(--vereint-ink, #1b1f3b);
+        color: #ffffff;
+        box-shadow: 0 10px 24px -10px rgba(15, 23, 42, 0.5);
+      }
+      :host-context([data-viewport='mobile']) .undo-bar {
+        bottom: calc(var(--shell-bottom-height) + env(safe-area-inset-bottom) + 0.5rem);
+      }
+      .undo-text {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .undo-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-height: 3rem;
+        padding: 0 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 999px;
+        background: transparent;
+        color: #ffffff;
+        font: inherit;
+        font-weight: 700;
+        white-space: nowrap;
+        cursor: pointer;
       }
       .tally-actions {
         display: flex;
@@ -346,6 +402,10 @@ export class TabletComponent implements OnInit, OnDestroy {
   protected readonly drinkOverlayOpen = signal(false);
   protected readonly revenueSheetOpen = signal(false);
   protected readonly tallies = signal<Record<string, number>>({});
+  /** Buchungs-IDs der in dieser Sitzung erfassten Striche je Mitglied (für „−“/Rückgängig). */
+  private readonly booked = signal<Record<string, string[]>>({});
+  /** Letzter erfasster Strich für die Rückgängig-Leiste. */
+  protected readonly lastBooking = signal<{ memberId: string; label: string } | null>(null);
 
   protected purchaseForm: { memberId: string; eventDrinkId?: string; eventFoodId?: string } = {
     memberId: '',
@@ -476,12 +536,49 @@ export class TabletComponent implements OnInit, OnDestroy {
     this.recordPurchase();
   }
 
-  /** Verringert die angezeigten Striche eines Mitglieds (keine Gegenbuchung). */
+  /**
+   * Nimmt den letzten in dieser Sitzung erfassten Strich eines Mitglieds zurück.
+   * Der Server bucht dafür eine Gegenbuchung (nur eigene, frische Striche).
+   * Ohne eigenen Strich in dieser Sitzung bleibt die Anzeige unverändert und es
+   * erscheint ein Hinweis auf die Korrektur durch den Vorstand.
+   */
   protected onTallyDecrease(memberId: string): void {
+    const eventId = this.selectedEventId();
+    const stack = this.booked()[memberId] ?? [];
+    const entryId = stack[stack.length - 1];
+    if (!eventId || !entryId) {
+      this.actionError.set(
+        'Hier lassen sich nur Striche dieser Sitzung zurücknehmen. Ältere Buchungen korrigiert der Vorstand.',
+      );
+      return;
+    }
+    this.booked.update((current) => ({ ...current, [memberId]: stack.slice(0, -1) }));
     this.tallies.update((current) => ({
       ...current,
       [memberId]: Math.max(0, (current[memberId] ?? 0) - 1),
     }));
+    if (this.lastBooking()?.memberId === memberId) this.lastBooking.set(null);
+    this.busy.set(true);
+    this.actionError.set(null);
+    this.actionInfo.set(null);
+    this.api.undoPurchase(eventId, entryId, newIdempotencyKey()).subscribe({
+      next: () => {
+        this.busy.set(false);
+        this.actionInfo.set('Strich zurückgenommen.');
+      },
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.booked.update((current) => ({ ...current, [memberId]: [...(current[memberId] ?? []), entryId] }));
+        this.tallies.update((current) => ({ ...current, [memberId]: (current[memberId] ?? 0) + 1 }));
+        this.actionError.set(describeApiError(error));
+      },
+    });
+  }
+
+  /** Rückgängig-Leiste: nimmt den zuletzt erfassten Strich zurück. */
+  protected undoLast(): void {
+    const last = this.lastBooking();
+    if (last) this.onTallyDecrease(last.memberId);
   }
 
   /** Öffnet das Runden-/Abend-Sheet und wählt zunächst alle Mitglieder vor. */
@@ -558,19 +655,54 @@ export class TabletComponent implements OnInit, OnDestroy {
     const eventId = this.selectedEventId();
     const { memberId, eventDrinkId, eventFoodId } = this.purchaseForm;
     if (!eventId || !memberId || (!eventDrinkId && !eventFoodId)) return;
-    this.runAction(
-      this.api.recordPurchase(
+    const label = this.bookingLabel(memberId, eventDrinkId || eventFoodId || '');
+    this.busy.set(true);
+    this.actionError.set(null);
+    this.actionInfo.set(null);
+    this.api
+      .recordPurchase(
         eventId,
         {
           memberId,
           eventDrinkId: eventDrinkId || undefined,
           eventFoodId: eventFoodId || undefined,
         },
-        newIdempotencyKey()
-      ),
-      'Kauf erfasst.',
-    );
+        newIdempotencyKey(),
+      )
+      .subscribe({
+        next: (entry) => {
+          this.busy.set(false);
+          if (entry?.id) {
+            this.booked.update((current) => ({
+              ...current,
+              [memberId]: [...(current[memberId] ?? []), entry.id],
+            }));
+            this.lastBooking.set({ memberId, label });
+          }
+          this.actionInfo.set('Kauf erfasst.');
+        },
+        error: (error: unknown) => {
+          this.busy.set(false);
+          // Fehlgeschlagene Buchung: den optimistisch gezählten Strich wieder entfernen.
+          this.tallies.update((current) => ({
+            ...current,
+            [memberId]: Math.max(0, (current[memberId] ?? 0) - 1),
+          }));
+          this.actionError.set(describeApiError(error));
+        },
+      });
     this.purchaseForm = { memberId: '', eventDrinkId: '', eventFoodId: '' };
+  }
+
+  /** „Bob · Helles“ für die Rückgängig-Leiste. */
+  private bookingLabel(memberId: string, itemId: string): string {
+    const ctx = this.context.data();
+    const member = ctx?.members.find((m) => m.memberId === memberId)?.displayName ?? 'Mitglied';
+    const item =
+      ctx?.drinks.find((d) => d.id === itemId)?.drinkName ??
+      ctx?.food.find((f) => f.id === itemId)?.foodName ??
+      'Artikel';
+    return `${member} · ${item}`;
   }
 
   protected recordRevenue(): void {
