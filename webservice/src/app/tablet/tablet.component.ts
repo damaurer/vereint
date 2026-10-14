@@ -14,6 +14,8 @@ import { StatusBadgeComponent } from '../ui';
 import type { EventDrink, EventFood } from '../events/event-manage.types';
 import type { LedgerEntry, TabletEvent, TabletMember, TabletRevenuePayload } from '../api/api.types';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 interface EventContext {
   members: TabletMember[];
@@ -35,30 +37,32 @@ interface EventContext {
  */
 @Component({
   selector: 'app-tablet',
-  imports: [StateComponent, 
+  imports: [
+    StateComponent,
     IconComponent,
     RouterLink,
     StatusBadgeComponent,
     StrichlisteRowComponent,
     DrinkOverlayComponent,
     RevenueSheetComponent,
+    TranslatePipe,
   ],
   template: `
     <main class="page-shell" [class.terminal-standalone]="standalone()">
       <section class="page-card member-card" aria-labelledby="tablet-title">
         @if (standalone()) {
           <div class="terminal-bar">
-            <a class="terminal-portal" routerLink="/dashboard">← Zurück zum Stammtisch-Portal</a>
+            <a class="terminal-portal" routerLink="/dashboard">{{ 'tablet.terminal.backToPortal' | t }}</a>
             <span class="terminal-flag">
-              <span class="terminal-dot" aria-hidden="true"></span> Standalone Terminal Modus
+              <span class="terminal-dot" aria-hidden="true"></span> {{ 'tablet.terminal.standaloneMode' | t }}
             </span>
           </div>
         } @else {
-          <span class="eyebrow">Drink Recorder</span>
+          <span class="eyebrow">{{ 'tablet.header.eyebrow' | t }}</span>
         }
-        <h1 id="tablet-title">{{ standalone() ? 'Strichliste Terminal' : 'Thekenterminal' }}</h1>
+        <h1 id="tablet-title">{{ (standalone() ? 'tablet.header.terminalTitle' : 'tablet.header.title') | t }}</h1>
         @if (!standalone()) {
-          <p>Strichliste für aktive Events.</p>
+          <p>{{ 'tablet.header.intro' | t }}</p>
         }
         <button
           type="button"
@@ -66,7 +70,7 @@ interface EventContext {
           [attr.aria-pressed]="standalone()"
           (click)="toggleStandalone()"
         >
-          {{ standalone() ? 'Terminal-Modus verlassen' : 'Standalone Terminal Modus' }}
+          {{ (standalone() ? 'tablet.terminal.leaveMode' : 'tablet.terminal.standaloneMode') | t }}
         </button>
 
         @if (actionError(); as err) {
@@ -79,23 +83,23 @@ interface EventContext {
         @if (events.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Aktive Events werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'tablet.state.eventsLoading' | t"
           />
         } @else if (events.isError()) {
           <vereint-state
             kind="error"
-            title="Erfassung nicht verfügbar"
+            [title]="'tablet.state.unavailable' | t"
             [message]="events.errorMessage()"
             (retry)="reload()"
           />
         } @else if (events.data(); as list) {
-          <h2 class="member-subtitle">Aktive Events ({{ list.length }})</h2>
+          <h2 class="member-subtitle">{{ 'tablet.events.heading' | t: { count: list.length } }}</h2>
           @if (list.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine aktiven Events"
-              message="Derzeit ist kein Event für die Erfassung freigegeben."
+              [title]="'tablet.events.emptyTitle' | t"
+              [message]="'tablet.events.emptyMessage' | t"
             />
           } @else {
             <ul class="member-list">
@@ -112,7 +116,7 @@ interface EventContext {
                     [class.is-active]="selectedEventId() === event.id"
                     (click)="selectEvent(event.id)"
                   >
-                    Auswählen
+                    {{ 'tablet.events.select' | t }}
                   </button>
                 </li>
               }
@@ -124,8 +128,8 @@ interface EventContext {
           @if (context.isLoading()) {
             <vereint-state
               kind="loading"
-              title="Wird geladen …"
-              message="Mitglieder und Getränke werden abgerufen."
+              [title]="'common.loading' | t"
+              [message]="'tablet.state.contextLoading' | t"
             />
           } @else if (context.isError()) {
             <p class="manage-action-error" role="alert">{{ context.errorMessage() }}</p>
@@ -133,19 +137,19 @@ interface EventContext {
             @if (ctx.members.length === 0 || ctx.drinks.length === 0) {
               <vereint-state
                 kind="empty"
-                title="Erfassung nicht möglich"
-                message="Für dieses Event fehlen freigegebene Mitglieder oder Getränke."
+                [title]="'tablet.state.notPossibleTitle' | t"
+                [message]="'tablet.state.notPossibleMessage' | t"
               />
             } @else {
               <div class="tally-head">
-                <h2 class="member-subtitle">Strichliste</h2>
+                <h2 class="member-subtitle">{{ 'tablet.tally.heading' | t }}</h2>
                 <button type="button" class="member-button ghost" (click)="openDrinkOverlay()">
                   @if (activeItem(ctx); as item) {
-                    Artikel: {{ item.name }} · {{ formatMoney(item.price, item.currency) }}
+                    {{ 'tablet.tally.activeItem' | t: { name: item.name, price: formatMoney(item.price, item.currency) } }}
                   } @else if (activeDrink(ctx); as drink) {
-                    Getränk: {{ drink.drinkName }} · {{ formatMoney(drink.price, drink.currency) }}
+                    {{ 'tablet.tally.activeDrink' | t: { name: drink.drinkName, price: formatMoney(drink.price, drink.currency) } }}
                   } @else {
-                    Artikel wählen
+                    {{ 'tablet.tally.chooseItem' | t }}
                   }
                 </button>
               </div>
@@ -164,15 +168,15 @@ interface EventContext {
               @if (lastBooking(); as last) {
                 <div class="undo-bar" role="status">
                   <vereint-icon name="check" />
-                  <span class="undo-text">Strich erfasst: {{ last.label }}</span>
+                  <span class="undo-text">{{ 'tablet.tally.booked' | t: { label: last.label } }}</span>
                   <button type="button" class="undo-button" [disabled]="busy()" (click)="undoLast()">
-                    <vereint-icon name="arrow-left" /> Rückgängig
+                    <vereint-icon name="arrow-left" /> {{ 'tablet.tally.undo' | t }}
                   </button>
                 </div>
               }
 
               <div class="quickbook-bar">
-                <span class="quickbook-label">Aktiver Artikel für Schnellbuchung:</span>
+                <span class="quickbook-label">{{ 'tablet.tally.quickbookLabel' | t }}</span>
                 <button
                   type="button"
                   class="member-button quickbook-drink"
@@ -183,7 +187,7 @@ interface EventContext {
                   } @else if (activeDrink(ctx); as drink) {
                     {{ drink.drinkName }} · {{ formatMoney(drink.price, drink.currency) }}
                   } @else {
-                    Artikel wählen
+                    {{ 'tablet.tally.chooseItem' | t }}
                   }
                 </button>
               </div>
@@ -195,7 +199,7 @@ interface EventContext {
                   [disabled]="busy()"
                   (click)="openRevenueSheet('round', ctx.members)"
                 >
-                  <vereint-icon name="beer" /> Runde ausgeben
+                  <vereint-icon name="beer" /> {{ 'tablet.tally.round' | t }}
                 </button>
                 <button
                   type="button"
@@ -203,7 +207,7 @@ interface EventContext {
                   [disabled]="busy()"
                   (click)="openRevenueSheet('evening', ctx.members)"
                 >
-                  <vereint-icon name="crown" /> Ganzen Abend stiften
+                  <vereint-icon name="crown" /> {{ 'tablet.tally.evening' | t }}
                 </button>
               </div>
 
@@ -548,7 +552,7 @@ export class TabletComponent implements OnInit, OnDestroy {
     const entryId = stack[stack.length - 1];
     if (!eventId || !entryId) {
       this.actionError.set(
-        'Hier lassen sich nur Striche dieser Sitzung zurücknehmen. Ältere Buchungen korrigiert der Vorstand.',
+        translate('tablet.messages.undoNotPossible'),
       );
       return;
     }
@@ -564,7 +568,7 @@ export class TabletComponent implements OnInit, OnDestroy {
     this.api.undoPurchase(eventId, entryId, newIdempotencyKey()).subscribe({
       next: () => {
         this.busy.set(false);
-        this.actionInfo.set('Strich zurückgenommen.');
+        this.actionInfo.set(translate('tablet.messages.undone'));
       },
       error: (error: unknown) => {
         this.busy.set(false);
@@ -679,7 +683,7 @@ export class TabletComponent implements OnInit, OnDestroy {
             }));
             this.lastBooking.set({ memberId, label });
           }
-          this.actionInfo.set('Kauf erfasst.');
+          this.actionInfo.set(translate('tablet.messages.purchaseRecorded'));
         },
         error: (error: unknown) => {
           this.busy.set(false);
@@ -697,11 +701,11 @@ export class TabletComponent implements OnInit, OnDestroy {
   /** „Bob · Helles“ für die Rückgängig-Leiste. */
   private bookingLabel(memberId: string, itemId: string): string {
     const ctx = this.context.data();
-    const member = ctx?.members.find((m) => m.memberId === memberId)?.displayName ?? 'Mitglied';
+    const member = ctx?.members.find((m) => m.memberId === memberId)?.displayName ?? translate('tablet.fallback.member');
     const item =
       ctx?.drinks.find((d) => d.id === itemId)?.drinkName ??
       ctx?.food.find((f) => f.id === itemId)?.foodName ??
-      'Artikel';
+      translate('tablet.fallback.item');
     return `${member} · ${item}`;
   }
 
@@ -722,7 +726,7 @@ export class TabletComponent implements OnInit, OnDestroy {
         : this.api.recordRound(eventId, payload, key);
     this.runAction(
       source,
-      this.revenueForm.kind === 'evening' ? 'Abendaktion gebucht.' : 'Runde gebucht.',
+      translate(this.revenueForm.kind === 'evening' ? 'tablet.messages.eveningBooked' : 'tablet.messages.roundBooked'),
     );
     this.revenueForm = { eventDrinkId: '', eventFoodId: '', kind: this.revenueForm.kind };
     this.revenueSelection = {};

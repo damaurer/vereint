@@ -62,5 +62,227 @@
     "memberSince": "Mitglied seit",
     "recording": "Erfassung",
     "recordingActive": "Strichlisten-Erfassung aktiv"
+  },
+  "catalog": {
+    "header": {
+      "eyebrow": "Vereinskatalog",
+      "title": "Getränke- & Speisenkatalog",
+      "intro": "Übersicht aller Vereinsgetränke, Barcodes und Verpflegungsangebote."
+    },
+    "actions": {
+      "proposeDrink": "+ Getränk vorschlagen",
+      "createFood": "+ Neue Speise anlegen"
+    },
+    "tabs": {
+      "label": "Katalogbereiche",
+      "drinks": "Getränkekatalog",
+      "food": "Speisenkatalog"
+    },
+    "filter": {
+      "searchPlaceholder": "Suchen nach Name oder Kategorie …",
+      "allStatuses": "Alle Status",
+      "approvedOnly": "Nur Freigegebene",
+      "proposedOnly": "Nur Vorgeschlagene",
+      "rejectedOnly": "Nur Abgelehnte"
+    },
+    "state": {
+      "loadingMessage": "Katalogdaten werden abgerufen.",
+      "unavailable": "Katalog nicht verfügbar",
+      "noDrinksTitle": "Keine Getränke gefunden",
+      "noDrinksMessage": "Es wurden keine passenden Getränke gefunden.",
+      "noFoodTitle": "Keine Speisen gefunden",
+      "noFoodMessage": "Es wurden keine passenden Speisen gefunden."
+    },
+    "card": {
+      "generalCategory": "Allgemein",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "detailsAndBarcodes": "Details & Barcodes",
+      "approve": "Freigeben",
+      "reject": "Ablehnen",
+      "edit": "Bearbeiten"
+    },
+    "drinkStatus": {
+      "approved": "Freigegeben",
+      "proposed": "Vorgeschlagen",
+      "rejected": "Abgelehnt"
+    },
+    "propose": {
+      "title": "Getränk vorschlagen",
+      "name": "Name des Getränks *",
+      "namePlaceholder": "z. B. Eber-Bräu Zwickl",
+      "categoryPlaceholder": "z. B. Helles, Weizen, Alkoholfrei",
+      "pricePlaceholder": "z. B. 2.50",
+      "descriptionPlaceholder": "Besonderheiten, Brauerei, etc.",
+      "barcode": "Barcode (optional)",
+      "barcodePlaceholder": "z. B. 4012345678901",
+      "submit": "Vorschlag einreichen"
+    },
+    "form": {
+      "category": "Kategorie",
+      "defaultPrice": "Standardpreis (€) *",
+      "description": "Beschreibung",
+      "requiredFields": "Bitte füllen Sie alle Pflichtfelder aus."
+    },
+    "detail": {
+      "fallbackTitle": "Getränkedetails",
+      "category": "Kategorie:",
+      "status": "Status:",
+      "defaultPrice": "Standardpreis:",
+      "barcodesHeading": "Zugeordnete Barcodes",
+      "noBarcodes": "Keine Barcodes hinterlegt.",
+      "removeBarcode": "Barcode entfernen",
+      "newBarcodePlaceholder": "Neuen Barcode erfassen …",
+      "addBarcode": "+ Barcode hinzufügen"
+    },
+    "food": {
+      "editTitle": "Speise bearbeiten",
+      "createTitle": "Neue Speise anlegen",
+      "name": "Name der Speise *",
+      "namePlaceholder": "z. B. Bratwurstsemmel",
+      "categoryPlaceholder": "z. B. Grill, Snack, Vegetarisch",
+      "pricePlaceholder": "z. B. 3.50",
+      "costPrice": "Selbstkostenpreis (€)",
+      "costPricePlaceholder": "z. B. 1.80",
+      "descriptionPlaceholder": "Zutaten, Allergene, Hinweise",
+      "activeLabel": "Speise aktiv und bestellbar"
+    },
+    "errors": {
+      "propose": "Fehler beim Einreichen des Vorschlags.",
+      "addBarcode": "Fehler beim Hinzufügen des Barcodes.",
+      "saveFood": "Fehler beim Speichern der Speise.",
+      "createFood": "Fehler beim Anlegen der Speise."
+    }
+  },
+  "sublists": {
+    "header": {
+      "eyebrow": "Event-Vorbereitung",
+      "title": "Getränkelisten",
+      "intro": "Erstelle und verwalte wiederverwendbare Getränkekonfigurationen für Events."
+    },
+    "actions": {
+      "create": "+ Neue Sublist erstellen"
+    },
+    "info": {
+      "title": "Wiederverwendbare Getränkelisten",
+      "body": "Sublists ermöglichen es dir, eine Vorauswahl an Getränken mit spezifischen Event-Preisen zusammenzustellen und mit einem Klick jedem Event zuzuweisen."
+    },
+    "state": {
+      "loadingMessage": "Sublists werden abgerufen.",
+      "unavailable": "Sublists nicht verfügbar",
+      "emptyTitle": "Keine Sublists vorhanden",
+      "emptyMessage": "Erstelle deine erste Sublist, um Getränke für Events vorzukonfigurieren."
+    },
+    "card": {
+      "drinkCount": {
+        "one": "{count} Getränk",
+        "other": "{count} Getränke"
+      },
+      "manageItems": "Einträge verwalten ({count})",
+      "edit": "Bearbeiten",
+      "delete": "Löschen"
+    },
+    "form": {
+      "editTitle": "Sublist bearbeiten",
+      "createTitle": "Neue Sublist erstellen",
+      "name": "Name der Sublist *",
+      "namePlaceholder": "z. B. Standard-Stammtisch",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "z. B. Standardauswahl an Bieren und Softdrinks für reguläre Stammtische",
+      "nameRequired": "Bitte geben Sie einen Namen ein."
+    },
+    "detail": {
+      "fallbackTitle": "Sublist-Details",
+      "itemsTitle": "Enthaltene Getränke ({count})",
+      "noItems": "Noch keine Getränke in dieser Sublist enthalten.",
+      "price": "Preis: {price}",
+      "catalogPrice": "Standardkatalogpreis",
+      "removeItem": "Aus Sublist entfernen"
+    },
+    "addItem": {
+      "title": "+ Getränk hinzufügen",
+      "selectPlaceholder": "Getränk aus Katalog wählen …",
+      "option": "{name} (Standard: {price})",
+      "customPricePlaceholder": "Abweichender Preis (€)",
+      "submit": "Hinzufügen"
+    },
+    "errors": {
+      "update": "Fehler beim Aktualisieren der Sublist.",
+      "create": "Fehler beim Anlegen der Sublist.",
+      "addItem": "Fehler beim Hinzufügen des Getränks."
+    }
+  },
+  "tablet": {
+    "row": {
+      "strokesFor": "Striche für {name}"
+    },
+    "revenue": {
+      "eveningTitle": "Ganzen Abend stiften",
+      "roundTitle": "Runde ausgeben",
+      "scope": "Umfang",
+      "oneRound": "Eine Runde",
+      "recipients": "Empfänger",
+      "hint": "Gültig, bis alle ein Getränk genommen haben. Doppelte Klicks werden über den Idempotency-Key nicht doppelt gebucht.",
+      "confirmEvening": "Abend stiften",
+      "confirmRound": "Runde ausgeben"
+    },
+    "overlay": {
+      "title": "Getränkekarte & Speiseangebot",
+      "hint": "Wähle den Verkaufsartikel für die Strichliste.",
+      "categories": "Kategorien",
+      "drinksChip": "Getränke ({count})",
+      "foodChip": "Speisen ({count})",
+      "drinks": "Getränke",
+      "food": "Speisen",
+      "selected": "Aktuell ausgewählt: {name}",
+      "noneSelected": "Noch kein Artikel gewählt.",
+      "confirm": "Auswahl bestätigen"
+    },
+    "terminal": {
+      "backToPortal": "← Zurück zum Stammtisch-Portal",
+      "standaloneMode": "Standalone Terminal Modus",
+      "leaveMode": "Terminal-Modus verlassen"
+    },
+    "header": {
+      "eyebrow": "Drink Recorder",
+      "terminalTitle": "Strichliste Terminal",
+      "title": "Thekenterminal",
+      "intro": "Strichliste für aktive Events."
+    },
+    "state": {
+      "eventsLoading": "Aktive Events werden abgerufen.",
+      "unavailable": "Erfassung nicht verfügbar",
+      "contextLoading": "Mitglieder und Getränke werden abgerufen.",
+      "notPossibleTitle": "Erfassung nicht möglich",
+      "notPossibleMessage": "Für dieses Event fehlen freigegebene Mitglieder oder Getränke."
+    },
+    "events": {
+      "heading": "Aktive Events ({count})",
+      "emptyTitle": "Keine aktiven Events",
+      "emptyMessage": "Derzeit ist kein Event für die Erfassung freigegeben.",
+      "select": "Auswählen"
+    },
+    "tally": {
+      "heading": "Strichliste",
+      "activeItem": "Artikel: {name} · {price}",
+      "activeDrink": "Getränk: {name} · {price}",
+      "chooseItem": "Artikel wählen",
+      "booked": "Strich erfasst: {label}",
+      "undo": "Rückgängig",
+      "quickbookLabel": "Aktiver Artikel für Schnellbuchung:",
+      "round": "Runde ausgeben",
+      "evening": "Ganzen Abend stiften"
+    },
+    "messages": {
+      "undoNotPossible": "Hier lassen sich nur Striche dieser Sitzung zurücknehmen. Ältere Buchungen korrigiert der Vorstand.",
+      "undone": "Strich zurückgenommen.",
+      "purchaseRecorded": "Kauf erfasst.",
+      "eveningBooked": "Abendaktion gebucht.",
+      "roundBooked": "Runde gebucht."
+    },
+    "fallback": {
+      "member": "Mitglied",
+      "item": "Artikel"
+    }
   }
 }
