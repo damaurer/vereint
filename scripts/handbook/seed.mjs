@@ -175,13 +175,19 @@ export async function seedAppData(sessions) {
 
   // Events.
   const allMembers = ['member', 'board', 'admin', 'jonas', 'mia', 'felix'];
-  const createEvent = async (owner, spec, participants, status) => {
+  // Eingeladene erhalten eine Einladung und antworten (Zusage, Vielleicht, Absage).
+  const createEvent = async (owner, spec, invitees, status, answers = {}) => {
     const event = await api[owner].post('/events', spec);
-    for (const key of participants) {
+    const userIds = invitees.filter((key) => key !== owner).map((key) => ids[key]);
+    if (userIds.length > 0) await api[owner].post(`/events/${event.id}/invitations`, { userIds });
+    // Antworten sind nur bei veröffentlichten Events möglich, danach folgt der Endstatus.
+    await api[owner].put(`/events/${event.id}`, { status: 'published' });
+    for (const key of invitees) {
       if (key === owner) continue;
-      await api[owner].post(`/events/${event.id}/participants`, { userId: ids[key], role: 'participant' });
+      const answer = answers[key] ?? 'accepted';
+      if (answer !== 'invited') await api[key].put(`/events/${event.id}/rsvp`, { status: answer });
     }
-    if (status) await api[owner].put(`/events/${event.id}`, { status });
+    if (status && status !== 'published') await api[owner].put(`/events/${event.id}`, { status });
     return event;
   };
 
@@ -209,8 +215,9 @@ export async function seedAppData(sessions) {
       startsAt: at(4, 9, 0),
       endsAt: at(4, 17, 0),
     },
-    ['member', 'jonas', 'mia'],
+    ['member', 'jonas', 'mia', 'felix'],
     'published',
+    { mia: 'maybe', felix: 'declined' },
   );
   const weihnachten = await createEvent(
     'board',
@@ -220,8 +227,9 @@ export async function seedAppData(sessions) {
       location: 'Gasthaus Post, Saal',
       startsAt: at(60, 19, 0),
     },
-    ['board', 'admin', 'jonas', 'mia', 'felix'],
+    ['board', 'member', 'admin', 'jonas', 'mia', 'felix'],
     'published',
+    { member: 'invited', mia: 'invited' },
   );
   await createEvent(
     'board',
@@ -276,6 +284,29 @@ export async function seedAppData(sessions) {
     await api[key].post(`/events/${event.id}/chat/messages`, { message });
   }
 
+  // Vereinschat und Direktnachrichten.
+  const clubChat = (await api.board.get('/conversations')).find((c) => c.type === 'club');
+  const clubMessages = [
+    ['board', 'Hallo zusammen, die Getränkeliste fürs Sommerfest ist abgerechnet. Danke an alle Helfer!'],
+    ['jonas', 'Weiß jemand, ob der Schlüssel fürs Vereinsheim wieder beim Wirt liegt?'],
+    ['admin', 'Ja, liegt hinter der Theke.'],
+    ['mia', 'Für die Weihnachtsfeier suchen wir noch Preise für die Tombola 🎁'],
+  ];
+  if (clubChat) {
+    for (const [key, message] of clubMessages) await api[key].post(`/conversations/${clubChat.id}/messages`, { message });
+  }
+  const direct = async (from, to, lines) => {
+    const conversation = await api[from].post('/conversations/direct', { userId: ids[to] });
+    for (const [key, message] of lines) await api[key].post(`/conversations/${conversation.id}/messages`, { message });
+  };
+  await direct('member', 'jonas', [
+    ['jonas', 'Hast du am Samstag noch einen Platz im Auto frei?'],
+    ['member', 'Klar, ich hol dich um 8:15 ab.'],
+  ]);
+  await direct('board', 'member', [
+    ['board', 'Danke fürs Aushelfen an der Theke letzte Woche!'],
+  ]);
+
   // Ein Moment am laufenden Abend.
   try {
     const moment = await api.board.post(`/events/${stammtisch.id}/moments`, {
@@ -290,15 +321,15 @@ export async function seedAppData(sessions) {
     console.warn(`Moment konnte nicht angelegt werden: ${error.message}`);
   }
 
-  // Mitteilungen vom Vorstand.
-  for (const key of ['member', 'jonas', 'mia', 'felix']) {
-    await api.board.post('/notifications', {
-      userId: ids[key],
-      title: 'Mitgliederversammlung am 15. November',
-      body: 'Die Einladung mit Tagesordnung hängt im Vereinsheim aus. Bitte sagt bis Monatsende zu.',
-      type: 'announcement',
-    });
-  }
+  // Rundbrief und Infotafel vom Vorstand.
+  await api.board.post('/notifications/broadcast', {
+    allMembers: true,
+    title: 'Mitgliederversammlung am 15. November',
+    body: 'Die Einladung mit Tagesordnung hängt im Vereinsheim aus. Bitte sagt bis Monatsende zu.',
+  });
+  await api.board.put('/conversations/club/pin', {
+    text: 'Mitgliederversammlung am 15. November um 19 Uhr im Vereinsheim.',
+  });
 
   // Gast-Einladung für den Stammtisch (Link für die Gast-Anleitung).
   const invite = await api.board.post(`/events/${stammtisch.id}/invites`, { maxUses: 5, expiresInMinutes: 7 * 24 * 60, role: 'guest' });

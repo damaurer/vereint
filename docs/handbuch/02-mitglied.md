@@ -6,26 +6,32 @@ Für alle Vereinsmitglieder. Anmeldung, Navigation und Profil stehen in den [Ers
 
 | Ich möchte … | So geht's |
 | :--- | :--- |
-| zu einem Termin zusagen | **Start** → Nächster Termin → **Zusagen**, oder **Events** → Event → **Zusagen** |
+| zu einem Termin zusagen | **Events** → **Zusagen** bei der Einladung, oder direkt in der Push-Nachricht |
+| selbst ein Event planen | **Events** → **Event anlegen** |
+| mit allen im Verein schreiben | **Chat** → **Vereinschat** |
+| jemandem persönlich schreiben | **Mehr → Direktnachrichten** → **Neue Nachricht** |
+| sehen, wer am meisten Striche hat | **Mehr → Statistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
 | beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments ansehen** |
 | ein neues Getränk vorschlagen | **Mehr → Getränkekatalog** → **Getränk vorschlagen** |
 
-## Termine und Zusagen
+## Einladungen und Zusagen
 
-<img src="bilder/m-start-termin.png" alt="Nächster Termin auf der Startseite" width="300" align="right">
+<img src="bilder/m-events.png" alt="Eventliste mit Zusagen" width="300" align="right">
 
-Auf der **Startseite** steht dein nächster Termin. Mit **Zusagen** meldest du dich an, mit **Absagen** wieder ab. Sobald du zugesagt hast, steht dort „Du bist dabei“.
+Wirst du zu einem Event eingeladen, bekommst du eine Mitteilung, mit eingeschaltetem Push auch aufs Handy. Wann die Einladung verschickt wird, legt der Gastgeber fest; manche Events schicken vorher noch eine Erinnerung.
 
-<br clear="right">
+Antworten kannst du an drei Stellen:
 
-<img src="bilder/m-events.png" alt="Eventliste" width="300" align="right">
+- direkt in der **Push-Nachricht** mit **Zusagen** oder **Absagen**,
+- unter **Events**: Bei offenen Einladungen steht „Offen“ mit **Zusagen** und **Absagen**,
+- auf der Eventseite mit **Zusagen**, **Vielleicht** oder **Absagen**.
 
-Unter **Events** findest du alle Termine, zu denen du gehörst. Jede Karte zeigt Titel, Datum, Uhrzeit, Gastgeber und den Stand:
+Deine Antwort kannst du bis zum Event jederzeit ändern. Die Karten zeigen außerdem den Stand des Events:
 
-- **Veröffentlicht**: Der Termin steht fest, du kannst zusagen.
+- **Veröffentlicht**: Der Termin steht fest, du kannst antworten.
 - **Aktiv**: Der Abend läuft gerade, die Theke ist geöffnet.
 - **Abgeschlossen**: Der Termin ist vorbei.
 
@@ -35,10 +41,67 @@ Unter **Events** findest du alle Termine, zu denen du gehörst. Jede Karte zeigt
 
 Tippe auf ein Event, um die Details zu sehen:
 
-- Datum, Ende und Ort. **Route öffnen** startet die Navigation zum Treffpunkt.
-- **Deine Antwort**: **Zusagen**, **Vielleicht** oder **Absagen**. Deine aktuelle Wahl ist grün hinterlegt.
-- **Anwesenheit**: wer dabei ist.
-- **Moments & Rituale**: laufende und vergangene Gemeinschaftsmomente dieses Events.
+- Datum, Ende, Ort und Gastgeber. **Route öffnen** startet die Navigation zum Treffpunkt.
+- **Deine Antwort**: Deine aktuelle Wahl ist grün hinterlegt.
+- **Anwesenheit**: wer eingeladen ist und wie viele zugesagt, vielleicht gesagt, abgesagt oder noch nicht geantwortet haben.
+- **Event-Chat** und **Moments & Rituale** weiter unten.
+
+Auf der **Startseite** steht außerdem immer dein nächster Termin.
+
+<br clear="right">
+
+<img src="bilder/m-event-chat.png" alt="Event-Chat" width="300" align="right">
+
+**Event-Chat**: Alle Eingeladenen eines Events können hier miteinander schreiben, zum Beispiel für Fahrgemeinschaften. Nachricht unten eintippen und **Senden**. Den Chat findest du auch unter **Chat** in der Liste der Event-Chats.
+
+<br clear="right">
+
+## Selbst ein Event anlegen
+
+<img src="bilder/m-event-neu.png" alt="Event anlegen" width="300" align="right">
+
+Jedes Mitglied kann ein Event planen, etwa eine Wanderung oder einen Grillabend. Du bist dann der Gastgeber.
+
+1. **Events** → **Event anlegen**.
+2. **Titel** und **Beginn** eintragen (Pflicht), dazu Beschreibung, Ort und Ende.
+
+<br clear="right">
+
+<img src="bilder/m-event-neu-einladen.png" alt="Mitglieder einladen und Benachrichtigung wählen" width="300" align="right">
+
+3. **Eingeladene**: Mitglieder per Namen suchen und anhaken, oder **Alle Mitglieder einladen**.
+4. **Benachrichtigung der Eingeladenen**: **Sofort bei Veröffentlichung** oder **Zu einem Zeitpunkt**, etwa eine Woche vorher.
+5. **Erinnerung**: optional eine Erinnerung vor dem Beginn.
+6. **Veröffentlichen und einladen** verschickt die Einladungen. Mit **Als Entwurf speichern** bleibt das Event noch unsichtbar.
+
+Danach verwaltest du dein Event wie im [Leitfaden Vorstand](03-vorstand.md#ein-event-vorbereiten) beschrieben.
+
+<br clear="right">
+
+## Chat
+
+<img src="bilder/m-chat.png" alt="Chatübersicht" width="300" align="right">
+
+Unter **Chat** (untere Leiste) stehen oben der **Vereinschat** für alle Mitglieder und darunter die **Event-Chats** deiner Events. Jede Zeile zeigt die letzte Nachricht; eine Zahl rechts steht für ungelesene Nachrichten.
+
+<br clear="right">
+
+<img src="bilder/m-vereinschat.png" alt="Vereinschat" width="300" align="right">
+
+Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Vereinschat kann der Vorstand eine **Infotafel** anheften, etwa einen wichtigen Termin.
+
+- Unten Nachricht eintippen und senden.
+- Mit **+** unter einer Nachricht reagierst du mit einem Emoji.
+- **← Zurück** führt zur Liste.
+
+<br clear="right">
+
+<img src="bilder/m-direkt.png" alt="Direktnachrichten" width="300" align="right">
+
+**Direktnachrichten** (über **Mehr** oder oben im Chat) sind Gespräche zu zweit, die nur ihr beide seht.
+
+- **Neue Nachricht** oder **Mitglieder durchsuchen**: Person wählen und losschreiben.
+- Bestehende Gespräche stehen unter **Konversationen**.
 
 <br clear="right">
 
@@ -51,7 +114,7 @@ Vereint führt für dich ein Guthabenkonto, die „Bierkasse“. Alles, was an d
 - Oben steht der **aktuelle Stand**.
 - In der **Historie** siehst du jede Buchung. Mit **Alle**, **Aufladungen** und **Ausgaben** filterst du die Liste.
 
-**Aufladen**: Gib das Geld beim Kassenwart ab. Er bucht den Betrag ein, danach erscheint er hier als „Aufladung“. Der Knopf **Aufladen** erinnert dich nur daran; selbst buchen kannst du nicht.
+**Aufladen**: Gib das Geld beim Kassenwart ab. Er bucht den Betrag ein, danach erscheint er hier als „Aufladung“. Selbst aufladen kannst du nicht.
 
 Ein Guthaben kann auch ins Minus gehen. Dann bitte zeitnah beim Kassenwart ausgleichen.
 
@@ -73,11 +136,11 @@ Stimmt etwas nicht, sprich den Thekendienst oder den Kassenwart an. Der Thekendi
 
 <img src="bilder/m-mitteilungen.png" alt="Mitteilungen" width="300" align="right">
 
-Die **Glocke** oben rechts (oder **Mehr → Mitteilungen**) sammelt alles, was der Verein dir mitteilt: Ankündigungen des Vorstands, neue Moments und Neuigkeiten zu deinen Events.
+Die **Glocke** oben rechts (oder **Mehr → Mitteilungen**) sammelt alles, was der Verein dir mitteilt: Rundbriefe des Vorstands, Einladungen und Erinnerungen zu Events und neue Moments.
 
 - Ungelesene Mitteilungen haben einen Punkt und einen farbigen Rand.
 - **Als gelesen markieren** gilt für eine Mitteilung, **Alle als gelesen markieren** für alle.
-- **Push aktivieren** schickt dir Mitteilungen auch dann aufs Handy, wenn Vereint geschlossen ist. Das Handy fragt einmal nach deiner Erlaubnis.
+- Oben kannst du unter **Mitteilungen auf diesem Gerät** Push einschalten, genauso wie im Profil (siehe [Erste Schritte](01-erste-schritte.md#mitteilungen-aufs-handy-push)).
 
 <br clear="right">
 
@@ -110,5 +173,18 @@ Ist ein Moment vorbei, landet er unter **Archivierte Moments & Rituale**.
 Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen des Vereins mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, oben kannst du suchen.
 
 Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, Kategorie und Preis vor. Der Vorstand prüft den Vorschlag und gibt ihn frei. Bis dahin steht er als „Vorgeschlagen“ in der Liste.
+
+<br clear="right">
+
+## Statistik
+
+<img src="bilder/m-statistik.png" alt="Statistik" width="300" align="right">
+
+Unter **Mehr → Statistik** siehst du Auswertungen der letzten 90 Tage:
+
+- **Rangliste**: Striche im ganzen Verein, deine eigenen Striche und dein Platz.
+- **Zusagequote**: wie viele Einladungen mit Zusage beantwortet wurden.
+- **Umsatz 30 Tage** mit dem Verlauf der letzten acht Wochen.
+- **Beliebteste Artikel** und **Events mit den meisten Strichen**.
 
 <br clear="right">

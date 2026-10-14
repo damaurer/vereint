@@ -2,15 +2,12 @@
 
 `capture.mjs` erzeugt alle Bilder in `docs/handbuch/bilder` neu. Es legt in einer
 frischen lokalen Umgebung Demo-Daten an (`seed.mjs`: Mitglieder, Getränke,
-Events, Guthaben, Striche, Chat, Moments, Mitteilungen, eine Gasteinladung) und
+Events mit Zusagen, Guthaben, Striche, Vereins-, Event- und Direktchats, Moments,
+Rundbrief und Infotafel, eine Gasteinladung) und
 fotografiert jede Ansicht als die Person, die sie im Alltag nutzt: Handy
 (390 × 844), Thekentablet quer (1180 × 820) oder Rechner (1280 × 860).
 
 Nur lokal verwenden: Das Skript ändert Benutzer im Keycloak-Entwicklungsrealm.
-
-Voraussetzung im Webservice: Der Produktions-Build braucht die Fixes aus PR #13
-(Styles trotz CSP, Berechtigungen der Sitzung für das Thekenterminal). Ohne sie
-fehlen die Styles und das Terminal bleibt gesperrt.
 
 ## Ablauf
 
@@ -40,7 +37,8 @@ fehlen die Styles und das Terminal bleibt gesperrt.
    npm install
    set -a && . ../../.env && set +a   # Keycloak-Admin und Seed-Passwörter
    npm run capture                    # alle Bilder
-   node capture.mjs t-runde m-guthaben  # nur einzelne Bilder
+   node capture.mjs t-runde m-guthaben  # nur einzelne Bilder (legt neue Demo-Daten an)
+   node capture.mjs --reuse m-chat      # einzelne Bilder mit den Daten des letzten Laufs
    ```
 
 Neue Bilder ergänzt man als Eintrag in `SHOTS` in `capture.mjs`.

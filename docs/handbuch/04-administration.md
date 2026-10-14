@@ -12,7 +12,7 @@ Unter **Verwaltung → Administration** stehen alle Mitglieder mit E-Mail, Rolle
 - **Aktiv** heißt: Das Mitglied kann sich anmelden und die App nutzen.
 - **Bearbeiten** öffnet die Einstellungen eines Mitglieds.
 
-Neue Mitglieder registrieren sich selbst über **Registrieren** auf der Anmeldeseite oder werden im Anmeldesystem (Keycloak) angelegt. Nach ihrer ersten Anmeldung erscheinen sie in dieser Liste. „Mitglied einladen“ ist noch eine Vorschau und verschickt keine Einladung.
+Neue Mitglieder werden derzeit im Anmeldesystem (Keycloak) angelegt. Nach ihrer ersten Anmeldung erscheinen sie in dieser Liste. „Mitglied einladen“ ist noch eine Vorschau und verschickt keine Einladung; die Einladung per Link ist in Arbeit.
 
 ## Ein Mitglied bearbeiten
 

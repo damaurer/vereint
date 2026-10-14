@@ -6,9 +6,9 @@ Dieses Handbuch erklärt Vereint aus Sicht der Menschen, die die App im Vereinsa
 
 | Ich bin … | Was ich mit Vereint mache | Leitfaden |
 | :--- | :--- | :--- |
-| **Alle** | Anmelden, sich zurechtfinden, Profil und Darstellung | [Erste Schritte](01-erste-schritte.md) |
-| **Mitglied** | Termine zusagen, Guthaben und Käufe prüfen, Mitteilungen lesen, Moments | [Leitfaden Mitglied](02-mitglied.md) |
-| **Vorstand** (z. B. Kassenwart, Schriftwart) | Guthaben buchen, Events vorbereiten, Getränke freigeben, Mitteilungen senden | [Leitfaden Vorstand](03-vorstand.md) |
+| **Alle** | Anmelden, sich zurechtfinden, Profil, Sprache, App installieren, Push | [Erste Schritte](01-erste-schritte.md) |
+| **Mitglied** | Einladungen beantworten, Events planen, chatten, Guthaben und Käufe prüfen, Moments, Statistik | [Leitfaden Mitglied](02-mitglied.md) |
+| **Vorstand** (z. B. Kassenwart, Schriftwart) | Guthaben buchen, Events vorbereiten, Getränke freigeben, Rundbriefe und Infotafel | [Leitfaden Vorstand](03-vorstand.md) |
 | **Administrator** | Mitglieder verwalten, Rollen vergeben, Konten sperren | [Leitfaden Administration](04-administration.md) |
 | **Thekendienst** (Tablet an der Theke) | Striche erfassen, korrigieren, Runden ausgeben | [Leitfaden Thekenterminal](05-thekenterminal.md) |
 | **Gast** ohne Vereinskonto | Über einen Einladungslink am Event-Chat teilnehmen | [Leitfaden Gast](06-gast.md) |
@@ -27,13 +27,8 @@ Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mit
 
 ## Gut zu wissen: noch nicht fertige Bereiche
 
-Ein paar Ansichten sind in der App schon sichtbar, arbeiten aber noch nicht mit echten Daten. Dieses Handbuch beschreibt sie deshalb nicht im Detail:
-
-- **Chat** (Reiter unten) und **Direktnachrichten** zeigen derzeit Beispielunterhaltungen. Echte Nachrichten laufen im **Event-Chat**, den Gastgeber in „Event verwalten“ und Gäste über ihren Einladungslink sehen.
-- In der **Administration** sind „Mitglied einladen“ und die Tabelle „Rollen & Berechtigungen“ nur eine Vorschau. Mitglieder werden derzeit im Anmeldesystem angelegt.
-- **Statistik** ist für niemanden freigeschaltet.
-- **Neue Events** lassen sich in der App noch nicht anlegen; bestehende Events können Gastgeber bearbeiten.
-- Einige Formulare für Vorstand und Gastgeber fragen nach technischen Kennungen (Mitglieds-ID, Getränke-ID, Buchungs-ID). Die Mitglieds-ID steht unter „Kommunikation“, die anderen zeigt die App noch nicht an.
+- In der **Administration** sind „Mitglied einladen“ und die Tabelle „Rollen & Berechtigungen“ noch eine Vorschau. Die Einladung neuer Mitglieder per Link ist in Arbeit; bis dahin werden Mitglieder im Anmeldesystem angelegt.
+- Push-Nachrichten kommen erst an, wenn der Betreiber Push auf dem Server eingerichtet hat.
 
 ## Bilder neu erzeugen
 

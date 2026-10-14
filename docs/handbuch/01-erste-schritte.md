@@ -32,7 +32,7 @@ Die Startseite zeigt auf einen Blick:
 - wie viele **Events** und **Buchungen** du hast,
 - einen **Schnellzugriff** auf Moments, Getränkekatalog, Käufe und Mitteilungen.
 
-Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, wie viele davon noch ungelesen sind.
+Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, wie viele davon noch ungelesen sind. Auch am Reiter **Chat** zeigt eine rote Zahl ungelesene Nachrichten.
 
 <br clear="right">
 
@@ -44,7 +44,7 @@ Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, w
 
 - **Verein**: Moments, Direktnachrichten
 - **Mein Konto**: Käufe, Mitteilungen, Profil
-- **Theke**: Getränkekatalog, Getränkelisten
+- **Theke**: Getränkekatalog, Getränkelisten, Statistik
 - **Verwaltung**: nur für Vorstand, Administration und Theke
 
 Ganz unten im Mehr-Menü meldest du dich mit **Abmelden** ab.
@@ -53,14 +53,41 @@ Ganz unten im Mehr-Menü meldest du dich mit **Abmelden** ab.
 
 <br clear="right">
 
-## Profil und Darstellung
+## Profil, Darstellung und Sprache
 
 <img src="bilder/profil.png" alt="Profil" width="300" align="right">
 
 Unter **Mehr → Profil** siehst du deine Kontodaten und deine Rollen.
 
-- **Anzeigename**: So sehen dich die anderen, etwa in Teilnehmerlisten und am Thekenterminal. Ändern und **Speichern** tippen.
+- **Anzeigename**: So sehen dich die anderen, etwa im Chat, in Teilnehmerlisten und am Thekenterminal. Ändern und **Speichern** tippen.
 - **Darstellung**: **System** folgt der Einstellung deines Geräts, **Hell** und **Dunkel** legen das Aussehen fest.
+- **Sprache**: **Deutsch** oder **English**. Die Wahl gilt sofort für die ganze App und auch für die Anmeldeseite. Hast du nichts gewählt, nimmt Vereint die Sprache deines Browsers.
 - **BeerWithMe Status** ist eine Vorschau und wird noch nicht an andere übertragen.
+
+<br clear="right">
+
+## Vereint als App auf dem Handy
+
+<img src="bilder/profil-geraet.png" alt="App installieren und Mitteilungen im Profil" width="300" align="right">
+
+Vereint lässt sich wie eine App auf den Startbildschirm legen. Sie startet dann ohne Browserleiste und lädt schneller. Im Profil steht unter **App auf diesem Gerät**, wie es auf deinem Gerät geht:
+
+- **Android und Rechner**: Gibt es einen Knopf **Installieren**, tippe darauf. Sonst im Browsermenü **App installieren** oder **Zum Startbildschirm** wählen.
+- **iPhone und iPad**: In Safari unten auf **Teilen** tippen, dann **Zum Home-Bildschirm**.
+
+Ist Vereint installiert, steht dort „Vereint ist installiert.“
+
+## Mitteilungen aufs Handy (Push)
+
+Unter **Mitteilungen auf diesem Gerät** schaltest du Push-Nachrichten ein. Dann bekommst du Mitteilungen des Vereins, Einladungen und Erinnerungen zu Events auch, wenn Vereint geschlossen ist.
+
+1. Schalter einschalten.
+2. Das Handy fragt einmal, ob Vereint Mitteilungen senden darf. Mit **Erlauben** bestätigen.
+
+Gut zu wissen:
+
+- Die Einstellung gilt je Gerät. Auf Handy und Rechner schaltest du sie getrennt ein.
+- Auf **iPhone und iPad** geht Push erst, wenn Vereint auf dem Home-Bildschirm installiert ist.
+- Steht dort „Im Browser blockiert“ (wie im Bild), hast du die Erlaubnis früher abgelehnt. Erlaube Mitteilungen dann in den Website-Einstellungen deines Browsers und lade die Seite neu.
 
 <br clear="right">

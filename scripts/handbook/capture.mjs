@@ -6,17 +6,21 @@
 //
 //   node capture.mjs                  # Demo-Daten anlegen und alle Bilder aufnehmen
 //   node capture.mjs m-guthaben t-runde # nur ausgewählte Bilder (IDs siehe SHOTS)
+//   node capture.mjs --reuse m-chat     # ohne neuen Seed, mit den Daten des letzten Laufs
 //
 // Der Seed läuft bei jedem Aufruf; deshalb vor jedem Lauf die Datenbanken
 // zurücksetzen (siehe README.md).
 
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { APP_URL, PEOPLE, login, seedAppData, seedKeycloakUsers } from './seed.mjs';
 
-const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '../../docs/handbuch/bilder');
+const HERE = dirname(fileURLToPath(import.meta.url));
+const OUT_DIR = join(HERE, '../../docs/handbuch/bilder');
+// Ergebnis des letzten Seeds, damit `--reuse` einzelne Bilder ohne neuen Seed aufnimmt.
+const SEED_FILE = join(HERE, '.seed.json');
 
 const PHONE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
 const TABLET = { viewport: { width: 1180, height: 820 }, deviceScaleFactor: 2, hasTouch: true };
@@ -34,7 +38,9 @@ const open = async (page, path) => {
 
 /** Scrollt eine Überschrift knapp unter die Kopfzeile. */
 const scrollToHeading = async (page, text, offset = 72) => {
-  await page.getByRole('heading', { name: text }).first().evaluate((el, offset) => {
+  const heading = page.getByRole('heading', { name: text }).first();
+  const target = (await heading.count()) > 0 ? heading : page.getByText(text, { exact: true }).first();
+  await target.evaluate((el, offset) => {
     const top = el.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: 'instant' });
   }, offset);
@@ -77,17 +83,17 @@ const SHOTS = [
     device: PHONE,
     run: async (page) => open(page, '/profile'),
   },
-
-  // Mitglied
   {
-    id: 'm-start-termin',
+    id: 'profil-geraet',
     who: 'member',
     device: PHONE,
     run: async (page) => {
-      await open(page, '/dashboard');
-      await scrollToHeading(page, 'Nächster Termin');
+      await open(page, '/profile');
+      await scrollToHeading(page, 'Sprache', 72);
     },
   },
+
+  // Mitglied
   { id: 'm-events', who: 'member', device: PHONE, run: async (page) => open(page, '/events') },
   {
     id: 'm-event',
@@ -95,6 +101,53 @@ const SHOTS = [
     device: PHONE,
     run: async (page, data) => open(page, `/events/${data.events.stammtisch.id}`),
   },
+  {
+    id: 'm-event-chat',
+    who: 'member',
+    device: PHONE,
+    run: async (page, data) => {
+      await open(page, `/events/${data.events.stammtisch.id}`);
+      await scrollToHeading(page, 'Event-Chat');
+    },
+  },
+  {
+    id: 'm-event-neu',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/events/new');
+      await page.getByRole('textbox', { name: 'Titel' }).fill('Grillabend am Vereinsheim');
+      await page.getByRole('textbox', { name: 'Beschreibung' }).fill('Jeder bringt etwas für das Buffet mit, Getränke gibt es an der Theke.');
+      await page.getByRole('textbox', { name: 'Ort', exact: true }).fill('Vereinsheim, Terrasse');
+      await page.getByLabel('Beginn', { exact: false }).first().fill('2026-10-24T18:00');
+      await page.locator(':focus').evaluate((el) => el.blur());
+      await page.waitForTimeout(300);
+    },
+  },
+  {
+    id: 'm-event-neu-einladen',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/events/new');
+      await page.getByRole('checkbox', { name: 'Jonas Keller' }).check();
+      await page.getByRole('checkbox', { name: 'Mia Schulz' }).check();
+      await scrollToHeading(page, 'Eingeladene', 90);
+    },
+  },
+  { id: 'm-chat', who: 'member', device: PHONE, run: async (page) => open(page, '/chat') },
+  {
+    id: 'm-vereinschat',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/chat');
+      await page.locator('button.chat-conversation').first().click();
+      await settle(page);
+    },
+  },
+  { id: 'm-direkt', who: 'member', device: PHONE, run: async (page) => open(page, '/direktnachrichten') },
+  { id: 'm-statistik', who: 'member', device: PHONE, run: async (page) => open(page, '/statistik') },
   { id: 'm-guthaben', who: 'member', device: PHONE, run: async (page) => open(page, '/wallet') },
   { id: 'm-kaeufe', who: 'member', device: PHONE, run: async (page) => open(page, '/purchases') },
   { id: 'm-mitteilungen', who: 'member', device: PHONE, run: async (page) => open(page, '/notifications') },
@@ -142,7 +195,18 @@ const SHOTS = [
     device: PHONE,
     run: async (page) => {
       await open(page, '/board/treasury');
-      await scrollToHeading(page, 'Buchen');
+      await page.getByText('Lena Hoffmann', { exact: true }).first().click();
+      await settle(page);
+      await scrollToHeading(page, 'Guthaben aufladen', 330);
+    },
+  },
+  {
+    id: 'v-event-teilnehmer',
+    who: 'board',
+    device: PHONE,
+    run: async (page, data) => {
+      await open(page, `/events/${data.events.stammtisch.id}/manage`);
+      await scrollToHeading(page, /^Teilnehmer & Anwesenheit/);
     },
   },
   {
@@ -192,6 +256,15 @@ const SHOTS = [
   },
   { id: 'v-getraenkelisten', who: 'board', device: PHONE, run: async (page) => open(page, '/sublists') },
   { id: 'v-kommunikation', who: 'board', device: PHONE, run: async (page) => open(page, '/board/communications') },
+  {
+    id: 'v-rundbrief',
+    who: 'board',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/board/communications');
+      await scrollToHeading(page, 'Meldung verfassen');
+    },
+  },
 
   // Administration (am Rechner)
   { id: 'a-mitglieder', who: 'admin', device: DESKTOP, run: async (page) => open(page, '/admin') },
@@ -266,17 +339,25 @@ const SHOTS = [
 ];
 
 async function main() {
-  const only = process.argv.slice(2);
+  const reuse = process.argv.includes('--reuse');
+  const only = process.argv.slice(2).filter((arg) => arg !== '--reuse');
 
   await mkdir(OUT_DIR, { recursive: true });
   await seedKeycloakUsers();
 
-  const browser = await chromium.launch();
+  // --lang: Datums- und Zeitfelder des Browsers im deutschen Format.
+  const browser = await chromium.launch({ args: ['--lang=de-DE'], env: { ...process.env, LANG: 'de_DE.UTF-8', LANGUAGE: 'de' } });
   try {
-    const seedSessions = {};
-    for (const [key, person] of Object.entries(PEOPLE)) seedSessions[key] = await login(browser, person);
-    const data = await seedAppData(seedSessions);
-    for (const session of Object.values(seedSessions)) await session.context.close();
+    let data;
+    if (reuse) {
+      data = JSON.parse(await readFile(SEED_FILE, 'utf8'));
+    } else {
+      const seedSessions = {};
+      for (const [key, person] of Object.entries(PEOPLE)) seedSessions[key] = await login(browser, person);
+      data = await seedAppData(seedSessions);
+      for (const session of Object.values(seedSessions)) await session.context.close();
+      await writeFile(SEED_FILE, JSON.stringify(data));
+    }
 
     // Je Person und Gerät eine angemeldete Sitzung, wiederverwendet über alle Bilder.
     const sessions = new Map();

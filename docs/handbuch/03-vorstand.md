@@ -8,17 +8,15 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr → Verwaltung**, am Re
 
 | Ich möchte … | So geht's |
 | :--- | :--- |
-| Bargeld als Guthaben einbuchen | **Kasse & Finanzen** → Buchen → **Aufladen** |
-| Guthaben auszahlen | **Kasse & Finanzen** → Buchen → **Auszahlen** |
+| Bargeld als Guthaben einbuchen | **Kasse & Finanzen** → Mitglied antippen → **Aufladen** |
+| Guthaben auszahlen | **Kasse & Finanzen** → Mitglied antippen → **Auszahlen** |
+| ein neues Event planen | **Events** → **Event anlegen** |
 | sehen, was ein Abend eingebracht hat | **Kasse & Finanzen** → Event → **Abrechnung** |
 | Titel, Ort oder Status eines Events ändern | **Vorstand** → Event → **Moderieren** |
 | einen Gast einladen | Event moderieren → **Einladungen** → **Gasteinladung erzeugen** |
 | ein vorgeschlagenes Getränk freigeben | **Getränkekatalog** → Vorschlag → **Freigeben** |
-| allen eine Nachricht schicken | **Kommunikation** → Meldung verfassen |
-
-## Die Mitglieds-ID
-
-Einige Formulare fragen nach der **Mitglieds-ID**, einer langen Kennung wie `4e689dd9-f8fe-…`. Du findest sie unter **Kommunikation** in der Mitgliederliste unter jedem Namen. Dort füllt **Als Empfänger** sie direkt in das Nachrichtenformular ein. Für die Kasse kopierst du sie von dort.
+| allen eine Nachricht schicken | **Kommunikation** → Meldung verfassen → **Alle Mitglieder** |
+| einen Hinweis oben im Vereinschat anheften | **Kommunikation** → Infotafel → **Anpinnen** |
 
 ## Vorstandsübersicht
 
@@ -39,13 +37,25 @@ Einige Formulare fragen nach der **Mitglieds-ID**, einer langen Kennung wie `4e6
 
 Hier verwaltet der Kassenwart die Bierkasse.
 
-**Abrechnung eines Abends**: Tippe bei einem Event auf **Abrechnung**.
+**Mitglieder und Guthaben**: Oben steht, wie viele Mitglieder es gibt und wie viele im Minus sind. Darunter die Liste aller Mitglieder mit Guthaben und letzter Buchung. Mit **Mitglied suchen** findest du jemanden schnell über den Namen.
+
+<br clear="right">
+
+<img src="bilder/v-kasse-buchen.png" alt="Guthaben eines Mitglieds buchen" width="300" align="right">
+
+Tippe auf ein Mitglied. Es öffnen sich sein Guthaben, alle seine Buchungen und die Formulare zum Buchen:
+
+1. **Guthaben aufladen**: Betrag und eine Notiz (z. B. „Bareinzahlung Stammtisch“) eintragen, **Aufladen** tippen. Das Mitglied sieht die Aufladung sofort in seinem Guthaben.
+2. **Guthaben auszahlen**: genauso, wenn jemand Guthaben bar zurückbekommt, etwa beim Austritt.
+3. **Buchung korrigieren**: Buchungen werden nie gelöscht. Eine falsche Buchung hebst du mit einer Gegenbuchung auf: Buchung in der Auswahl wählen (oder in der Liste darunter auf **Zur Korrektur wählen** tippen), einen Grund eintragen und **Korrigieren** tippen. Beide Buchungen bleiben sichtbar, so ist jede Änderung nachvollziehbar.
+
+**Schließen** klappt das Mitglied wieder zu. Jede Buchung wird genau einmal ausgeführt, auch wenn du versehentlich doppelt tippst.
 
 <br clear="right">
 
 <img src="bilder/v-abrechnung.png" alt="Eventabrechnung" width="300" align="right">
 
-Die Eventabrechnung zeigt:
+**Abrechnung eines Abends**: Tippe unter **Events** bei einem Event auf **Abrechnung**. Die Eventabrechnung zeigt:
 
 - **Umsatz**: alles, was an diesem Abend gebucht wurde,
 - **Wareneinsatz**: was die verkauften Artikel im Einkauf gekostet haben,
@@ -53,29 +63,15 @@ Die Eventabrechnung zeigt:
 - **Kreditverzehr**: der Teil, der von Guthaben abgebucht wurde,
 - **Buchungen**: Anzahl der Einzelbuchungen.
 
-**Guthaben nachschlagen**: Mitglieds-ID eingeben und **Anzeigen** tippen. Du siehst Kontostand und Buchungen dieses Mitglieds.
-
-<br clear="right">
-
-<img src="bilder/v-kasse-buchen.png" alt="Buchen" width="300" align="right">
-
-**Buchen**:
-
-1. **Aufladen**: Mitglieds-ID, Betrag und eine Notiz (z. B. „Bareinzahlung Stammtisch“) eintragen, **Aufladen** tippen. Das Mitglied sieht die Aufladung sofort in seinem Guthaben.
-2. **Auszahlen**: genauso, wenn jemand Guthaben bar zurückbekommt, etwa beim Austritt.
-3. **Korrektur**: Buchungen werden nie gelöscht. Eine falsche Buchung hebst du mit einer Gegenbuchung auf: Kennung der ursprünglichen Buchung und einen Grund eintragen. Beide Buchungen bleiben sichtbar, so ist jede Änderung nachvollziehbar. Die Kennung einer Buchung zeigt die App bisher nicht an; bis dahin hilft die Administration.
-
-Jede Buchung wird genau einmal ausgeführt, auch wenn du versehentlich doppelt tippst.
-
 <br clear="right">
 
 ## Ein Event vorbereiten
 
-Events moderierst du über **Vorstand** → **Moderieren**. Gastgeber eines Events kommen auch über die Eventseite dorthin.
+Ein neues Event legst du unter **Events** → **Event anlegen** an, wie im [Leitfaden Mitglied](02-mitglied.md#selbst-ein-event-anlegen) beschrieben. Bestehende Events moderierst du über **Vorstand** → **Moderieren**. Gastgeber eines Events kommen auch über die Eventseite dorthin.
 
 <img src="bilder/v-event-verwalten.png" alt="Event verwalten" width="300" align="right">
 
-**Stammdaten**: Titel, Ort und Beschreibung ändern, dann **Stammdaten speichern**.
+**Stammdaten**: Titel, Ort, Beschreibung, Beginn und Ende ändern, dazu wann die Eingeladenen benachrichtigt werden und ob es eine Erinnerung gibt. Dann **Stammdaten speichern**.
 
 Über **Status** steuerst du den Ablauf:
 
@@ -87,7 +83,13 @@ Events moderierst du über **Vorstand** → **Moderieren**. Gastgeber eines Even
 
 Stelle ein Event am Abend selbst auf **Aktiv**, sonst erscheint es nicht am Thekenterminal.
 
-**Teilnehmer & Anwesenheit**: Liste aller Teilnehmenden. **Entfernen** nimmt jemanden heraus. Zum Hinzufügen Mitglieds-ID eintragen, Rolle wählen (Teilnehmer oder Co-Gastgeber) und **Hinzufügen** tippen.
+<br clear="right">
+
+<img src="bilder/v-event-teilnehmer.png" alt="Teilnehmer und Einladungen" width="300" align="right">
+
+**Teilnehmer & Anwesenheit**: alle Eingeladenen mit ihrer Antwort (Zugesagt, Vielleicht, Abgesagt, Offen). **Entfernen** nimmt jemanden heraus.
+
+**Mitglieder einladen**: Namen suchen und anhaken, oder **Alle Mitglieder einladen**, dann **Einladen**. Die neuen Eingeladenen bekommen eine Mitteilung.
 
 <br clear="right">
 
@@ -95,7 +97,7 @@ Stelle ein Event am Abend selbst auf **Aktiv**, sonst erscheint es nicht am Thek
 
 **Getränke** und **Speisen**: zeigen, was an diesem Abend an der Theke angeboten wird, mit Verkaufspreis und Einkaufspreis (EK). **Entfernen** nimmt einen Artikel aus dem Angebot.
 
-Zum Hinzufügen fragt das Formular nach der technischen ID des Getränks oder einer Getränkeliste. Die App zeigt diese IDs bisher nicht an; bitte wende dich dafür an die Administration.
+Zum Hinzufügen unter **Getränk aus dem Katalog** ein Getränk wählen, optional einen abweichenden Preis und EK eintragen und **Getränk hinzufügen** tippen. Schneller geht es mit **Sublist**: eine Getränkeliste wählen und **Sublist zuweisen**. Speisen fügst du genauso unter **Speise aus dem Katalog** hinzu.
 
 <br clear="right">
 
@@ -141,14 +143,26 @@ Mitglieder können neue Getränke vorschlagen. Vorschläge stehen im **Getränke
 
 ## Kommunikation
 
-<img src="bilder/v-kommunikation.png" alt="Kommunikation" width="300" align="right">
+<img src="bilder/v-kommunikation.png" alt="Infotafel im Vereinschat" width="300" align="right">
 
-Hier schickt der Schriftwart Mitteilungen an Mitglieder. Sie erscheinen bei den Empfängern unter der Glocke und, wenn eingeschaltet, als Push-Nachricht.
+Hier verschickt der Schriftwart Rundbriefe und pflegt die Infotafel.
 
-1. In der Mitgliederliste weiter unten bei der gewünschten Person **Als Empfänger** tippen.
+**Infotafel im Vereinschat**: ein kurzer Hinweis, der oben im Vereinschat für alle sichtbar bleibt, etwa der nächste wichtige Termin.
+
+1. Text unter **Infotafel** eintragen.
+2. **Anpinnen** tippen. Unter **Aktuell angepinnt** siehst du, was gerade oben steht.
+3. **Entfernen** nimmt die Infotafel wieder ab.
+
+<br clear="right">
+
+<img src="bilder/v-rundbrief.png" alt="Rundbrief verfassen" width="300" align="right">
+
+**Meldung verfassen**: ein Rundbrief, der bei den Empfängern unter der Glocke und, wenn eingeschaltet, als Push-Nachricht ankommt.
+
+1. **Empfänger**: **Alle Mitglieder** oder **Ausgewählte Mitglieder**. Bei Auswahl Namen suchen und anhaken.
 2. **Titel** und **Text** eingeben.
 3. **Senden** tippen.
 
-Eine Mitteilung geht immer an eine Person. Für eine Nachricht an alle wiederholst du das für jedes Mitglied.
+Unter **Rundbriefe / Meldungen** steht, was zuletzt verschickt wurde.
 
 <br clear="right">
