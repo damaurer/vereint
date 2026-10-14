@@ -14,11 +14,14 @@ test.describe('Mitteilungen', () => {
 
     const { page } = board;
     await page.goto('/board/communications');
-    await page.getByLabel('Empfänger (Mitglieds-ID)').fill(memberId);
+    await page.getByLabel('Ausgewählte Mitglieder').check();
+    await page.getByLabel('Empfänger suchen').fill('Mia');
+    await page.getByRole('checkbox', { name: 'Mia Mitglied' }).check();
     await page.getByLabel('Titel').fill(title);
     await page.getByLabel('Text').fill(body);
     await page.getByRole('button', { name: 'Senden' }).click();
     await expect(page.getByText('Mitteilung gesendet.')).toBeVisible();
+    await expect(page.getByText(/1 (Mitglied|Empfänger)/)).toBeVisible();
 
     await member.page.goto('/dashboard');
     await expect(member.page.getByRole('link', { name: 'Mitteilungen, 1 ungelesen' })).toBeVisible();

@@ -21,17 +21,24 @@ test.describe('Guthaben und Thekenterminal', () => {
     await test.step('Kassenwart laedt 20 € auf', async () => {
       const { page } = board;
       await page.goto('/board/treasury');
-      await page.getByLabel('Aufladen · Mitglieds-ID').fill(memberId);
-      const form = page.locator('form').filter({ has: page.getByLabel('Aufladen · Mitglieds-ID') });
+      await page.getByLabel('Mitglied suchen').fill('Mia');
+      await page.getByRole('button', { name: /Mia Mitglied/ }).click();
+      const form = page.locator('form').filter({ has: page.getByRole('button', { name: 'Aufladen' }) });
       await form.getByLabel('Betrag').fill('20');
       await form.getByLabel('Notiz').fill('E2E Aufladung');
       await form.getByRole('button', { name: 'Aufladen' }).click();
       await expect.poll(() => member.api.balance(memberId)).toBe(start + 20);
+      await expect(page.getByText('Aufladung gebucht.')).toBeVisible();
     });
 
-    await test.step('Mitglied sieht das neue Guthaben', async () => {
+    await test.step('Mitglied sieht das neue Guthaben, aber keine Aufladen-Funktion', async () => {
       await member.page.goto('/wallet');
       await expect(member.page.getByText(euro(start + 20)).first()).toBeVisible();
+      await expect(member.page.getByRole('main').getByRole('button', { name: /Aufladen/ })).toHaveCount(0);
+      await expect(member.page.getByRole('main').getByRole('link', { name: /Aufladen/ })).toHaveCount(0);
+      await member.page.goto('/dashboard');
+      await expect(member.page.getByRole('main').getByRole('button', { name: /Aufladen/ })).toHaveCount(0);
+      await expect(member.page.getByRole('main').getByRole('link', { name: /Aufladen/ })).toHaveCount(0);
     });
 
     await test.step('Theke bucht einen Strich', async () => {
