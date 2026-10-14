@@ -27,6 +27,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'wallet', renderMode: RenderMode.Client },
   { path: 'purchases', renderMode: RenderMode.Client },
   { path: 'events', renderMode: RenderMode.Client },
+  { path: 'events/new', renderMode: RenderMode.Client },
   { path: 'events/:eventId', renderMode: RenderMode.Client },
   { path: 'events/:eventId/manage', renderMode: RenderMode.Client },
   { path: 'guest/:eventId', renderMode: RenderMode.Client },

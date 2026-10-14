@@ -1,56 +1,35 @@
-import { isPlatformBrowser } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
-import { IconComponent } from '../ui/icon.component';
-import { forkJoin } from 'rxjs';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { describeApiError } from '../api/api-client.service';
+import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
 import {
   NotificationsApiService,
   type NotificationItem,
-  type PushSubscriptionItem,
-  type RegisterPushSubscriptionRequest,
 } from './notifications-api.service';
 import { UnreadBadgeStore } from './unread-badge.store';
 import { AsyncState } from '../member/async-state';
 import { formatDateTime } from '../member/member-format';
 import { StatusBadgeComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
-
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
-  if (!buffer) return '';
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return window.btoa(binary);
-}
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 @Component({
   selector: 'app-notifications',
-  imports: [StateComponent, IconComponent, StatusBadgeComponent],
+  imports: [StateComponent, StatusBadgeComponent, PwaSettingsComponent, RouterLink, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="notifications-title">
         <div class="notifications-header">
           <div>
-            <span class="eyebrow">Mitteilungen</span>
+            <span class="eyebrow">{{ 'notifications.eyebrow' | t }}</span>
             <div class="title-with-badge">
-              <h1 id="notifications-title">Benachrichtigungen</h1>
+              <h1 id="notifications-title">{{ 'notifications.title' | t }}</h1>
               @if (unreadCount() > 0) {
-                <vereint-status-badge [label]="unreadCount() + ' ungelesen'" tone="warning" />
+                <vereint-status-badge [label]="'notifications.unread' | t: { count: unreadCount() }" tone="warning" />
               }
             </div>
-            <p>Bleibe über Events, Vereinsankündigungen und Neuigkeiten auf dem Laufenden.</p>
+            <p>{{ 'notifications.intro' | t }}</p>
           </div>
 
           <div class="header-actions">
@@ -61,69 +40,24 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
                 [disabled]="busy()"
                 (click)="markAllAsRead()"
               >
-                Alle als gelesen markieren
+                {{ 'notifications.markAllRead' | t }}
               </button>
             }
           </div>
         </div>
 
-        <!-- Web Push Card -->
-        <div class="push-card">
-          <div class="push-card-content">
-            <vereint-icon class="push-icon" name="bell" />
-            <div>
-              <h3 class="push-title">Web-Push-Benachrichtigungen</h3>
-              <p class="push-desc">
-                @if (isPushSubscribed()) {
-                  Push-Benachrichtigungen sind für dieses Gerät aktiviert.
-                } @else {
-                  Erhalte sofortige Benachrichtigungen zu Events, Thekendienst und Vereinsnews auch bei geschlossenem Browser.
-                }
-              </p>
-            </div>
-          </div>
-
-          <div class="push-actions">
-            @if (isPushSubscribed()) {
-              @if (currentSubscription(); as sub) {
-                <button
-                  type="button"
-                  class="btn-danger-sm"
-                  [disabled]="busy()"
-                  (click)="unsubscribePush(sub.id)"
-                >
-                  Push deaktivieren
-                </button>
-              }
-            } @else {
-              <button
-                type="button"
-                class="member-button"
-                [disabled]="busy() || !pushSupported()"
-                (click)="subscribePush()"
-              >
-                {{ pushSupported() ? 'Push aktivieren' : 'Push nicht unterstützt' }}
-              </button>
-            }
-          </div>
-        </div>
-
-        @if (pushMessage()) {
-          <div class="state-card state-info" role="status">
-            <span>{{ pushMessage() }}</span>
-          </div>
-        }
+        <vereint-pwa-settings [showInstall]="false" />
 
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Benachrichtigungen werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'notifications.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Benachrichtigungen nicht verfügbar"
+            [title]="'notifications.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -131,11 +65,11 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
           @if (notifications.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Benachrichtigungen"
-              message="Du hast aktuell keine Benachrichtigungen."
+              [title]="'notifications.emptyTitle' | t"
+              [message]="'notifications.emptyMessage' | t"
             />
           } @else {
-            <ul class="notifications-list" aria-label="Benachrichtigungsliste">
+            <ul class="notifications-list" [attr.aria-label]="'notifications.listLabel' | t">
               @for (item of notifications; track item.id) {
                 <li class="notification-item" [class.unread]="!item.read">
                   <div class="notification-head">
@@ -152,16 +86,52 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
 
                   <p class="item-body">{{ item.body }}</p>
 
-                  @if (!item.read) {
+                  @if (answered()[item.id]; as answer) {
+                    <p class="item-answered" role="status">{{ answeredText(answer) }}</p>
+                  }
+                  @if (rsvpErrors()[item.id]; as error) {
+                    <p class="item-error" role="alert">{{ error }}</p>
+                  }
+
+                  @if (item.link || !item.read) {
                     <div class="item-actions">
-                      <button
-                        type="button"
-                        class="btn-secondary-sm"
-                        [disabled]="busy()"
-                        (click)="markAsRead(item.id)"
-                      >
-                        Als gelesen markieren
-                      </button>
+                      @if (item.type === 'event_invitation' && eventIdOf(item.link); as eventId) {
+                        @if (answered()[item.id] !== 'accepted') {
+                          <button
+                            type="button"
+                            class="btn-primary-sm item-accept"
+                            [disabled]="busy()"
+                            (click)="respond(item, eventId, 'accepted')"
+                          >
+                            {{ 'member.rsvp.accept' | t }}
+                          </button>
+                        }
+                        @if (answered()[item.id] !== 'declined') {
+                          <button
+                            type="button"
+                            class="btn-secondary-sm item-decline"
+                            [disabled]="busy()"
+                            (click)="respond(item, eventId, 'declined')"
+                          >
+                            {{ 'member.rsvp.decline' | t }}
+                          </button>
+                        }
+                      }
+                      @if (item.link) {
+                        <a class="btn-secondary-sm item-open" [routerLink]="item.link">
+                          {{ (eventIdOf(item.link) ? 'notifications.openEvent' : 'notifications.open') | t }}
+                        </a>
+                      }
+                      @if (!item.read) {
+                        <button
+                          type="button"
+                          class="btn-secondary-sm"
+                          [disabled]="busy()"
+                          (click)="markAsRead(item.id)"
+                        >
+                          {{ 'notifications.markRead' | t }}
+                        </button>
+                      }
                     </div>
                   }
                 </li>
@@ -193,38 +163,6 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
       .header-actions {
         display: flex;
         gap: 0.5rem;
-      }
-      .push-card {
-        background: var(--color-surface-subtle, #f8fafc);
-        border: 1px solid var(--color-border, #e2e8f0);
-        border-radius: var(--radius-md, 0.75rem);
-        padding: 1.25rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-bottom: 1.5rem;
-      }
-      .push-card-content {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-      .push-icon {
-        font-size: 1.75rem;
-      }
-      .push-title {
-        margin: 0 0 0.25rem 0;
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--color-text, #0f172a);
-      }
-      .push-desc {
-        margin: 0;
-        font-size: 0.85rem;
-        color: var(--color-text-muted, #64748b);
-        max-width: 32rem;
       }
       .notifications-list {
         list-style: none;
@@ -289,8 +227,38 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
       }
       .item-actions {
         display: flex;
+        flex-wrap: wrap;
         justify-content: flex-end;
+        gap: 0.5rem;
         margin-top: 0.25rem;
+      }
+      .item-actions a,
+      .item-actions button {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.25rem;
+        text-decoration: none;
+      }
+      .btn-primary-sm {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background-color: var(--color-brand, #3b82f6);
+        color: var(--color-on-brand, #ffffff);
+        border: 1px solid var(--color-brand, #3b82f6);
+        border-radius: var(--radius-sm, 0.375rem);
+        cursor: pointer;
+      }
+      .item-answered {
+        margin: 0;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-success, #15803d);
+      }
+      .item-error {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--color-danger, #b91c1c);
       }
       .member-button-outline {
         padding: 0.5rem 1rem;
@@ -317,57 +285,28 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
         border-radius: var(--radius-sm, 0.375rem);
         cursor: pointer;
       }
-      .btn-danger-sm {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-        font-weight: 600;
-        background-color: #fee2e2;
-        color: #b91c1c;
-        border: none;
-        border-radius: var(--radius-sm, 0.375rem);
-        cursor: pointer;
-      }
-      .state-info {
-        background-color: #eff6ff;
-        border: 1px solid #bfdbfe;
-        color: #1e40af;
-        padding: 0.75rem 1rem;
-        border-radius: var(--radius-md, 0.5rem);
-        margin-bottom: 1.5rem;
-      }
     `,
   ],
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
   private readonly notificationsApi = inject(NotificationsApiService);
-  private readonly platformId = inject(PLATFORM_ID);
 
   protected readonly load = new AsyncState<NotificationItem[]>();
   /** Geteilt mit dem Glocken-Badge in der Shell. */
   protected readonly unreadCount = inject(UnreadBadgeStore).count;
   protected readonly busy = signal(false);
-
-  // Push state
-  protected readonly pushSupported = signal(false);
-  protected readonly isPushSubscribed = signal(false);
-  protected readonly currentSubscription = signal<PushSubscriptionItem | null>(null);
-  protected readonly pushMessage = signal<string | null>(null);
+  /** Antworten auf Einladungen, die in dieser Ansicht gegeben wurden. */
+  protected readonly answered = signal<Record<string, 'accepted' | 'declined'>>({});
+  protected readonly rsvpErrors = signal<Record<string, string>>({});
 
   protected readonly formatDateTime = formatDateTime;
 
   ngOnInit(): void {
-    this.checkPushSupport();
     this.reload();
   }
 
   ngOnDestroy(): void {
     this.load.destroy();
-  }
-
-  private checkPushSupport(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
-    this.pushSupported.set(supported);
   }
 
   protected reload(): void {
@@ -378,20 +317,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.notificationsApi.unreadCount().subscribe({
       next: (res) => this.unreadCount.set(res.unread),
     });
-
-    if (isPlatformBrowser(this.platformId)) {
-      this.notificationsApi.listSubscriptions().subscribe({
-        next: (subs) => {
-          if (subs.length > 0) {
-            this.isPushSubscribed.set(true);
-            this.currentSubscription.set(subs[0]);
-          } else {
-            this.isPushSubscribed.set(false);
-            this.currentSubscription.set(null);
-          }
-        },
-      });
-    }
   }
 
   protected markAsRead(id: string): void {
@@ -422,123 +347,74 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     });
   }
 
-  protected async subscribePush(): Promise<void> {
-    if (!isPlatformBrowser(this.platformId)) return;
-    this.busy.set(true);
-    this.pushMessage.set(null);
-
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        this.busy.set(false);
-        this.pushMessage.set('Berechtigung für Benachrichtigungen wurde nicht erteilt.');
-        return;
-      }
-
-      this.notificationsApi.vapidPublicKey().subscribe({
-        next: async (vapid) => {
-          if (!vapid.enabled || !vapid.publicKey) {
-            this.busy.set(false);
-            this.pushMessage.set('Web-Push ist auf dem Server derzeit nicht aktiviert.');
-            return;
-          }
-
-          try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(vapid.publicKey) as BufferSource,
-            });
-
-            const p256dhBuffer = subscription.getKey('p256dh');
-            const authBuffer = subscription.getKey('auth');
-
-            const payload: RegisterPushSubscriptionRequest = {
-              endpoint: subscription.endpoint,
-              p256dh: arrayBufferToBase64(p256dhBuffer),
-              auth: arrayBufferToBase64(authBuffer),
-              userAgent: navigator.userAgent,
-            };
-
-            this.notificationsApi.registerSubscription(payload).subscribe({
-              next: (saved) => {
-                this.busy.set(false);
-                this.isPushSubscribed.set(true);
-                this.currentSubscription.set(saved);
-                this.pushMessage.set('Web-Push-Benachrichtigungen erfolgreich aktiviert!');
-              },
-              error: (err: unknown) => {
-                this.busy.set(false);
-                this.pushMessage.set((err as Error)?.message || 'Fehler beim Registrieren des Push-Abonnements.');
-              },
-            });
-          } catch (err: unknown) {
-            this.busy.set(false);
-            this.pushMessage.set((err as Error)?.message || 'PushManager-Registrierung fehlgeschlagen.');
-          }
-        },
-        error: (err: unknown) => {
-          this.busy.set(false);
-          this.pushMessage.set((err as Error)?.message || 'VAPID-Schlüssel konnte nicht abgerufen werden.');
-        },
-      });
-    } catch (err: unknown) {
-      this.busy.set(false);
-      this.pushMessage.set((err as Error)?.message || 'Fehler bei der Push-Aktivierung.');
-    }
+  /** Event-ID aus einem Link der Form `/events/{id}`; sonst `null`. */
+  protected eventIdOf(link: string | null | undefined): string | null {
+    const match = /^\/events\/([^/?#]+)\/?$/.exec(link ?? '');
+    return match && match[1] !== 'new' ? decodeURIComponent(match[1]) : null;
   }
 
-  protected unsubscribePush(subscriptionId: string): void {
-    this.busy.set(true);
-    this.pushMessage.set(null);
+  protected answeredText(answer: 'accepted' | 'declined'): string {
+    return translate(answer === 'accepted' ? 'notifications.answered.accepted' : 'notifications.answered.declined');
+  }
 
-    this.notificationsApi.deleteSubscription(subscriptionId).subscribe({
-      next: async () => {
-        if (isPlatformBrowser(this.platformId) && 'serviceWorker' in navigator) {
-          try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.getSubscription();
-            if (subscription) {
-              await subscription.unsubscribe();
-            }
-          } catch {
-            // Ignore client-side unsubscribe error
-          }
-        }
+  /** Zu- oder Absage direkt aus der Einladung; markiert sie danach als gelesen. */
+  protected respond(item: NotificationItem, eventId: string, status: 'accepted' | 'declined'): void {
+    this.busy.set(true);
+    this.rsvpErrors.update((map) => {
+      const next = { ...map };
+      delete next[item.id];
+      return next;
+    });
+    this.notificationsApi.respondToEvent(eventId, status).subscribe({
+      next: () => {
         this.busy.set(false);
-        this.isPushSubscribed.set(false);
-        this.currentSubscription.set(null);
-        this.pushMessage.set('Push-Benachrichtigungen deaktiviert.');
+        this.answered.update((map) => ({ ...map, [item.id]: status }));
+        if (!item.read) this.markAsRead(item.id);
       },
-      error: (err: unknown) => {
+      error: (error: unknown) => {
         this.busy.set(false);
-        this.pushMessage.set((err as Error)?.message || 'Fehler beim Abbestellen des Push-Abonnements.');
+        this.rsvpErrors.update((map) => ({ ...map, [item.id]: describeApiError(error) }));
       },
     });
   }
 
   protected typeLabel(type: string): string {
     switch (type) {
+      case 'event_invitation':
+        return translate('notifications.type.eventInvitation');
+      case 'event_reminder':
+        return translate('notifications.type.eventReminder');
+      case 'event_cancelled':
+        return translate('notifications.type.eventCancelled');
       case 'event':
-        return 'Event';
+        return translate('notifications.type.event');
       case 'ledger':
-        return 'Kasse';
+        return translate('notifications.type.ledger');
       case 'announcement':
-        return 'Ankündigung';
+        return translate('notifications.type.announcement');
       case 'system':
-        return 'System';
+        return translate('notifications.type.system');
+      case 'moment':
+        return translate('notifications.type.moment');
       default:
-        return type || 'Info';
+        return type || translate('notifications.type.info');
     }
   }
 
   protected typeTone(type: string): StatusTone {
     switch (type) {
+      case 'event_invitation':
+        return 'success';
+      case 'event_reminder':
+        return 'warning';
+      case 'event_cancelled':
+        return 'danger';
       case 'event':
         return 'success';
       case 'ledger':
         return 'warning';
       case 'announcement':
+      case 'moment':
         return 'success';
       case 'system':
         return 'neutral';

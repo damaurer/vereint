@@ -54,7 +54,8 @@ class VapidPushSender(
                 .timeout(Duration.ofSeconds(15))
                 .header("Authorization", "vapid t=$token, k=${properties.publicKey}")
                 .header("TTL", ttlSeconds().toString())
-                .header("Content-Length", "0")
+                // Kein eigener `Content-Length`-Header: der HttpClient setzt ihn für
+                // `noBody()` selbst und lehnt ihn als eingeschränkten Header ab.
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build()
 

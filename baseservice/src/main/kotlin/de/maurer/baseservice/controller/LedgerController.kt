@@ -30,6 +30,11 @@ class LedgerController(
 
     private fun eventId(id: String) = Identifiers.parseUuid(id, "eventId")
 
+    @GetMapping("/balances")
+    @Operation(summary = "Guthabenübersicht", description = "Guthaben aller aktiven Mitglieder (Vorstand/Administration)")
+    fun listBalances(): ResponseEntity<List<MemberBalanceOverviewDto>> =
+        ResponseEntity.ok(ledgerService.listBalances(authContext.getRequiredPrincipal()))
+
     @GetMapping("/members/{memberId}/balance")
     @Operation(summary = "Guthaben abrufen", description = "Liefert das Guthaben einer Person (eigenes bzw. für Vorstand/Admin beliebiges)")
     fun getBalance(@PathVariable("memberId") id: String): ResponseEntity<MemberBalanceDto> {

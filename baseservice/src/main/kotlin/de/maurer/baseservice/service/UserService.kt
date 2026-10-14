@@ -46,7 +46,7 @@ class UserService(
      */
     fun getOrCreateUser(principal: UserPrincipal): UserEntity {
         if (principal.subject.isBlank()) {
-            throw AccessDeniedException("Gültiges Keycloak-Subject erforderlich", ErrorCode.ACCESS_DENIED)
+            throw AccessDeniedException(Msg("error.user.subjectRequired"), ErrorCode.ACCESS_DENIED)
         }
 
         userRepository.findByKeycloakSubject(principal.subject).orElse(null)?.let { return requireEnabled(it) }
@@ -56,7 +56,7 @@ class UserService(
         } catch (ex: DataIntegrityViolationException) {
             userRepository.findByKeycloakSubject(principal.subject).orElseThrow {
                 ProfileNotFoundException(
-                    "Benutzerprofil konnte nicht angelegt werden: ${ex.javaClass.simpleName}",
+                    Msg("error.user.provisioningFailed", ex.javaClass.simpleName),
                     ErrorCode.PROFILE_NOT_FOUND
                 )
             }
@@ -68,7 +68,7 @@ class UserService(
 
     private fun requireEnabled(user: UserEntity): UserEntity {
         if (user.disabled) {
-            throw AccountDisabledException("Benutzerkonto ist deaktiviert", ErrorCode.ACCOUNT_DISABLED)
+            throw AccountDisabledException(Msg("error.user.disabled"), ErrorCode.ACCOUNT_DISABLED)
         }
         return user
     }
@@ -86,7 +86,7 @@ class UserService(
         if (request.displayName != null) {
             val name = request.displayName.trim()
             if (name.isBlank()) {
-                throw InvalidRequestException("Anzeigename darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.user.displayNameBlank"), ErrorCode.INVALID_REQUEST)
             }
             user.displayName = name
             updated = true
@@ -114,20 +114,36 @@ class UserService(
         val isAdmin = isAdmin(principal, callerUser)
 
         val user = userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Benutzer mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
         }
 
         val isSelf = callerUser.id == user.id || callerUser.keycloakSubject == user.keycloakSubject
 
         if (!isAdmin && !isSelf) {
-            throw AccessDeniedException("Keine Berechtigung zum Anzeigen dieses Profils", ErrorCode.ACCESS_DENIED)
+            throw AccessDeniedException(Msg("error.user.profileViewDenied"), ErrorCode.ACCESS_DENIED)
         }
 
         if (!isAdmin && user.disabled) {
-            throw AccessDeniedException("Keine Berechtigung zum Anzeigen dieses Profils", ErrorCode.ACCESS_DENIED)
+            throw AccessDeniedException(Msg("error.user.profileViewDenied"), ErrorCode.ACCESS_DENIED)
         }
 
         return toProfileDto(user)
+    }
+
+    /** Aktive Mitglieder für Auswahllisten; für alle Angemeldeten sichtbar. */
+    @Transactional(readOnly = true)
+    fun directory(principal: UserPrincipal): List<MemberDirectoryEntryDto> {
+        getOrCreateUser(principal)
+        return userRepository.findByDisabled(false)
+            .sortedBy { it.displayName.lowercase() }
+            .map { user ->
+                MemberDirectoryEntryDto(
+                    id = user.id.toString(),
+                    displayName = user.displayName,
+                    boardRole = user.boardRole?.name,
+                    roles = rolesOf(user.id)
+                )
+            }
     }
 
     /**
@@ -144,13 +160,13 @@ class UserService(
         val callerUser = getOrCreateUser(principal)
         if (!isBoardOrAdmin(principal, callerUser)) {
             throw AccessDeniedException(
-                "Nur Administratoren und Vorstandsmitglieder können Benutzer auflisten",
+                Msg("error.user.listDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
 
         if (role != null && !RolePermissionMatrix.ASSIGNABLE_ROLES.contains(role)) {
-            throw InvalidRequestException("Ungültiger Rollenfilter: '$role'", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.user.invalidRoleFilter", role), ErrorCode.INVALID_REQUEST)
         }
 
         val effectivePageable = normalizePageable(pageable)
@@ -189,7 +205,7 @@ class UserService(
         requireAdmin(principal, callerUser)
 
         val user = userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Benutzer mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
         }
 
         val touchesPrivileges = request.roles != null || request.permissions != null || request.disabled != null
@@ -202,7 +218,7 @@ class UserService(
         if (request.displayName != null) {
             val name = request.displayName.trim()
             if (name.isBlank()) {
-                throw InvalidRequestException("Anzeigename darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.user.displayNameBlank"), ErrorCode.INVALID_REQUEST)
             }
             user.displayName = name
             updated = true
@@ -237,7 +253,7 @@ class UserService(
         if (request.boardRole != null) {
             val boardRole = request.boardRole.trim()
             if (boardRole.isNotBlank() && !BoardRole.ALL.contains(boardRole)) {
-                throw InvalidRequestException("Ungültige Vorstandsrolle: '$boardRole'", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.user.invalidBoardRole", boardRole), ErrorCode.INVALID_REQUEST)
             }
             user.boardRole = DomainBoardRole.fromValue(boardRole)
             updated = true
@@ -271,7 +287,7 @@ class UserService(
         requireAdmin(principal, callerUser)
 
         val user = userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Benutzer mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
         }
         requireNotSelf(callerUser, user)
 
@@ -286,7 +302,7 @@ class UserService(
         requireAdmin(principal, callerUser)
 
         val user = userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Benutzer mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
         }
         requireNotSelf(callerUser, user)
 
@@ -301,7 +317,7 @@ class UserService(
         requireAdmin(principal, callerUser)
 
         val user = userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Benutzer mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
         }
         requireNotSelf(callerUser, user)
 
@@ -379,7 +395,7 @@ class UserService(
     private fun setRolesForUser(actor: UserEntity, user: UserEntity, roles: Set<String>) {
         val invalidRoles = roles.filter { !RolePermissionMatrix.ASSIGNABLE_ROLES.contains(it) }
         if (invalidRoles.isNotEmpty()) {
-            throw InvalidRequestException("Ungültige Rollen: $invalidRoles", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.user.invalidRoles", invalidRoles), ErrorCode.INVALID_REQUEST)
         }
 
         val previousRoles = rolesOf(user.id)
@@ -431,7 +447,7 @@ class UserService(
     private fun requireNotSelf(callerUser: UserEntity, target: UserEntity) {
         if (callerUser.id == target.id || callerUser.keycloakSubject == target.keycloakSubject) {
             throw SelfPrivilegeChangeDeniedException(
-                "Rollen, Berechtigungen und Status der eigenen Identität können nicht geändert werden",
+                Msg("error.user.selfPrivilegeChange"),
                 ErrorCode.SELF_PRIVILEGE_CHANGE_DENIED
             )
         }
@@ -445,7 +461,7 @@ class UserService(
         }
         if (userRepository.countActiveUsersWithRole(AssignedRole.admin) <= 1) {
             throw LastAdminProtectedException(
-                "Es muss mindestens ein aktives Adminkonto verbleiben",
+                Msg("error.user.lastAdmin"),
                 ErrorCode.LAST_ADMIN_PROTECTED
             )
         }
@@ -453,7 +469,7 @@ class UserService(
 
     private fun requireAdmin(principal: UserPrincipal, callerUser: UserEntity) {
         if (!isAdmin(principal, callerUser)) {
-            throw AccessDeniedException("Administratorrechte erforderlich", ErrorCode.ACCESS_DENIED)
+            throw AccessDeniedException(Msg("error.user.adminRequired"), ErrorCode.ACCESS_DENIED)
         }
     }
 

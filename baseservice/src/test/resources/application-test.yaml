@@ -23,6 +23,9 @@ spring:
           jwk-set-uri: http://localhost:8080/realms/vereint/protocol/openid-connect/certs
 
 vereint:
+  scheduling:
+    # Einladungen/Erinnerungen rufen Tests direkt auf statt zeitgesteuert.
+    enabled: false
   cors:
     allowed-origins: http://localhost:4200,http://localhost:8080
   encryption:

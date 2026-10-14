@@ -2,6 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClient } from '../api/api-client.service';
 import type {
+  ChatMessageDto,
+  ConversationSummary,
+  CreateEventPayload,
+  DirectoryMember,
   EventDetail,
   EventParticipant,
   EventSummary,
@@ -13,6 +17,7 @@ import type {
   MomentResponseDto,
   MomentSessionDto,
   MomentSummaryDto,
+  RsvpStatus,
   StartMomentRequest,
   SubmitMomentResponseRequest,
   UpdateProfilePayload,
@@ -54,14 +59,39 @@ export class MemberApiService {
     return this.api.get<EventParticipant[]>(`/events/${encodeURIComponent(eventId)}/participants`);
   }
 
-  /** Fügt einen Teilnehmer hinzu (`POST /api/v1/events/{id}/participants`). */
-  addParticipant(eventId: string, payload: { userId: string; role?: string }): Observable<EventParticipant> {
-    return this.api.post<EventParticipant>(`/events/${encodeURIComponent(eventId)}/participants`, payload);
+  /** Legt ein Event an (`POST /api/v1/events`); jedes Mitglied darf das. */
+  createEvent(payload: CreateEventPayload): Observable<EventDetail> {
+    return this.api.post<EventDetail>('/events', payload);
   }
 
-  /** Entfernt einen Teilnehmer (`DELETE /api/v1/events/{id}/participants/{userId}`). */
-  removeParticipant(eventId: string, userId: string): Observable<void> {
-    return this.api.delete<void>(`/events/${encodeURIComponent(eventId)}/participants/${encodeURIComponent(userId)}`);
+  /** Eigene Antwort auf eine Einladung (`PUT /api/v1/events/{id}/rsvp`). */
+  respondToEvent(eventId: string, status: RsvpAnswer): Observable<EventDetail> {
+    return this.api.put<EventDetail>(`/events/${encodeURIComponent(eventId)}/rsvp`, { status });
+  }
+
+  /** Mitgliederverzeichnis zur Auswahl per Name (`GET /api/v1/users/directory`). */
+  listDirectory(): Observable<DirectoryMember[]> {
+    return this.api.get<DirectoryMember[]>('/users/directory');
+  }
+
+  /** Konversation des Event-Chats (`GET /api/v1/events/{id}/chat`). */
+  getEventConversation(eventId: string): Observable<Pick<ConversationSummary, 'id'>> {
+    return this.api.get<Pick<ConversationSummary, 'id'>>(`/events/${encodeURIComponent(eventId)}/chat`);
+  }
+
+  /** Nachrichten einer Konversation (`GET /api/v1/conversations/{id}/messages`). */
+  listConversationMessages(conversationId: string): Observable<ChatMessageDto[]> {
+    return this.api.get<ChatMessageDto[]>(`/conversations/${encodeURIComponent(conversationId)}/messages`);
+  }
+
+  /** Sendet eine Nachricht (`POST /api/v1/conversations/{id}/messages`). */
+  sendConversationMessage(conversationId: string, message: string): Observable<ChatMessageDto> {
+    return this.api.post<ChatMessageDto>(`/conversations/${encodeURIComponent(conversationId)}/messages`, { message });
+  }
+
+  /** Setzt den Lesestand auf jetzt (`POST /api/v1/conversations/{id}/read`). */
+  markConversationRead(conversationId: string): Observable<ConversationSummary> {
+    return this.api.post<ConversationSummary>(`/conversations/${encodeURIComponent(conversationId)}/read`, {});
   }
 
   /** Eigenes Guthaben (`GET /api/v1/ledger/members/{memberId}/balance`). */
@@ -121,5 +151,27 @@ export class MemberApiService {
   /** Archivierte/abgeschlossene Moments eines Events (`GET /api/v1/events/{eventId}/moments/history`). */
   listMomentHistory(eventId: string): Observable<MomentSummaryDto[]> {
     return this.api.get<MomentSummaryDto[]>(`/events/${encodeURIComponent(eventId)}/moments/history`);
+  }
+}
+
+/** Antwort, die ein Eingeladener selbst geben kann. */
+export type RsvpAnswer = Exclude<RsvpStatus, 'invited'>;
+
+/** Übersetzungsschlüssel des RSVP-Status (Chips, Teilnehmerliste). */
+export function rsvpLabelKey(status: RsvpStatus): string {
+  return `member.rsvp.status.${status}`;
+}
+
+/** Farbton des RSVP-Chips. */
+export function rsvpTone(status: RsvpStatus): 'success' | 'warning' | 'danger' | 'neutral' {
+  switch (status) {
+    case 'accepted':
+      return 'success';
+    case 'maybe':
+      return 'warning';
+    case 'declined':
+      return 'danger';
+    default:
+      return 'neutral';
   }
 }

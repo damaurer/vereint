@@ -93,12 +93,19 @@ function forwardHeaders(req: Request, traceId: string, accessToken?: string): He
 
 const METHODS_WITHOUT_BODY = new Set(['GET', 'HEAD']);
 
-function serializeBody(req: Request): { body?: string; contentType?: string } {
+/** Obergrenze für Datei-Uploads (Bilder); entspricht `spring.servlet.multipart.max-request-size`. */
+export const API_PROXY_MAX_UPLOAD = '6mb';
+
+function serializeBody(req: Request): { body?: string | Uint8Array<ArrayBuffer>; contentType?: string } {
   if (METHODS_WITHOUT_BODY.has(req.method)) return {};
   const raw = req.body;
   if (raw === undefined || raw === null || raw === '') return {};
   if (typeof raw === 'string') return { body: raw, contentType: 'application/json' };
-  if (Buffer.isBuffer(raw)) return { body: raw.toString('utf8'), contentType: 'application/json' };
+  // Uploads (`multipart/form-data`) liegen als unveränderter Buffer vor und
+  // gehen samt Original-`Content-Type` (mit Boundary) an den Fachservice.
+  if (Buffer.isBuffer(raw)) {
+    return { body: new Uint8Array(raw), contentType: req.header('content-type') ?? 'application/octet-stream' };
+  }
   if (typeof raw === 'object' && Object.keys(raw).length === 0) return {};
   return { body: JSON.stringify(raw), contentType: 'application/json' };
 }

@@ -12,8 +12,8 @@ import type { IconName } from '../ui/icons';
 export interface NavItem {
   /** Stabile Kennung, u. a. für Tests und `trackBy`. */
   id: string;
-  /** Sichtbares Label (Sidebar/Bottom-Bar) bzw. `aria-label` (Icon-Rail). */
-  label: string;
+  /** Übersetzungsschlüssel des sichtbaren Labels (Sidebar/Bottom-Bar) bzw. `aria-label` (Icon-Rail). */
+  labelKey: string;
   /** Icon aus dem Vereint-Icon-Set. */
   icon: IconName;
   /** Zielroute (absoluter Pfad). */
@@ -24,7 +24,10 @@ export interface NavItem {
   requiredPermissions?: string[];
 }
 
-/** Permission, die den Zugriff auf die Statistiken freischaltet. */
+/**
+ * Frühere Permission der Statistik. Die Statistik ist inzwischen für alle
+ * Angemeldeten sichtbar; die Konstante bleibt für bestehende Importe erhalten.
+ */
 export const STATISTICS_PERMISSION = 'statistics.view';
 
 /** Permission, die die Tablet-Erfassung freischaltet. */
@@ -36,10 +39,10 @@ export const TABLET_PERMISSION = 'purchase.tablet';
  * zuerst in der Seitenleiste.
  */
 export const PRIMARY_NAV: readonly NavItem[] = [
-  { id: 'home', label: 'Start', icon: 'home', route: '/dashboard' },
-  { id: 'events', label: 'Events', icon: 'events', route: '/events' },
-  { id: 'chat', label: 'Chat', icon: 'chat', route: '/chat' },
-  { id: 'wallet', label: 'Guthaben', icon: 'wallet', route: '/wallet' },
+  { id: 'home', labelKey: 'nav.items.home', icon: 'home', route: '/dashboard' },
+  { id: 'events', labelKey: 'nav.items.events', icon: 'events', route: '/events' },
+  { id: 'chat', labelKey: 'nav.items.chat', icon: 'chat', route: '/chat' },
+  { id: 'wallet', labelKey: 'nav.items.wallet', icon: 'wallet', route: '/wallet' },
 ];
 
 /**
@@ -47,20 +50,19 @@ export const PRIMARY_NAV: readonly NavItem[] = [
  * erscheinen in der Seitenleiste und im „Mehr“-Sheet.
  */
 export const SECONDARY_NAV: readonly NavItem[] = [
-  { id: 'moments', label: 'Moments', icon: 'moments', route: '/moments' },
-  { id: 'direct', label: 'Direktnachrichten', icon: 'direct-message', route: '/direktnachrichten' },
-  { id: 'purchases', label: 'Käufe', icon: 'receipt', route: '/purchases' },
-  { id: 'notifications', label: 'Mitteilungen', icon: 'bell', route: '/notifications' },
-  { id: 'catalog', label: 'Getränkekatalog', icon: 'catalog', route: '/catalog' },
-  { id: 'sublists', label: 'Getränkelisten', icon: 'lists', route: '/sublists' },
+  { id: 'moments', labelKey: 'nav.items.moments', icon: 'moments', route: '/moments' },
+  { id: 'direct', labelKey: 'nav.items.direct', icon: 'direct-message', route: '/direktnachrichten' },
+  { id: 'purchases', labelKey: 'nav.items.purchases', icon: 'receipt', route: '/purchases' },
+  { id: 'notifications', labelKey: 'nav.items.notifications', icon: 'bell', route: '/notifications' },
+  { id: 'catalog', labelKey: 'nav.items.catalog', icon: 'catalog', route: '/catalog' },
+  { id: 'sublists', labelKey: 'nav.items.sublists', icon: 'lists', route: '/sublists' },
   {
     id: 'statistik',
-    label: 'Statistik',
+    labelKey: 'nav.items.statistik',
     icon: 'stats',
     route: '/statistik',
-    requiredPermissions: [STATISTICS_PERMISSION],
   },
-  { id: 'profil', label: 'Profil', icon: 'user', route: '/profile' },
+  { id: 'profil', labelKey: 'nav.items.profil', icon: 'user', route: '/profile' },
 ];
 
 /**
@@ -70,35 +72,35 @@ export const SECONDARY_NAV: readonly NavItem[] = [
 export const PANEL_NAV: readonly NavItem[] = [
   {
     id: 'board',
-    label: 'Vorstand',
+    labelKey: 'nav.items.board',
     icon: 'board',
     route: '/board',
     requiredRoles: ['board', 'admin'],
   },
   {
     id: 'treasury',
-    label: 'Kasse & Finanzen',
+    labelKey: 'nav.items.treasury',
     icon: 'treasury',
     route: '/board/treasury',
     requiredRoles: ['board', 'admin'],
   },
   {
     id: 'communications',
-    label: 'Kommunikation',
+    labelKey: 'nav.items.communications',
     icon: 'megaphone',
     route: '/board/communications',
     requiredRoles: ['board', 'admin'],
   },
   {
     id: 'admin',
-    label: 'Administration',
+    labelKey: 'nav.items.admin',
     icon: 'admin',
     route: '/admin',
     requiredRoles: ['admin'],
   },
   {
     id: 'tablet',
-    label: 'Thekenterminal',
+    labelKey: 'nav.items.tablet',
     icon: 'terminal',
     route: '/tablet',
     requiredPermissions: [TABLET_PERMISSION],
@@ -108,17 +110,18 @@ export const PANEL_NAV: readonly NavItem[] = [
 /** Abschnitt der Seitenleiste bzw. des „Mehr“-Sheets. */
 export interface NavSection {
   id: 'club' | 'account' | 'bar' | 'admin';
-  label: string;
+  /** Übersetzungsschlüssel der Abschnittsüberschrift. */
+  labelKey: string;
   items: NavItem[];
 }
 
-const SECTION_LAYOUT: readonly { id: NavSection['id']; label: string; ids: readonly string[] }[] = [
-  { id: 'club', label: 'Verein', ids: ['home', 'events', 'moments', 'chat', 'direct'] },
-  { id: 'account', label: 'Mein Konto', ids: ['wallet', 'purchases', 'notifications', 'profil'] },
-  { id: 'bar', label: 'Theke', ids: ['catalog', 'sublists', 'statistik'] },
+const SECTION_LAYOUT: readonly { id: NavSection['id']; labelKey: string; ids: readonly string[] }[] = [
+  { id: 'club', labelKey: 'nav.sections.club', ids: ['home', 'events', 'moments', 'chat', 'direct'] },
+  { id: 'account', labelKey: 'nav.sections.account', ids: ['wallet', 'purchases', 'notifications', 'profil'] },
+  { id: 'bar', labelKey: 'nav.sections.bar', ids: ['catalog', 'sublists', 'statistik'] },
   {
     id: 'admin',
-    label: 'Verwaltung',
+    labelKey: 'nav.sections.admin',
     ids: ['board', 'treasury', 'communications', 'admin', 'tablet'],
   },
 ];
@@ -178,7 +181,7 @@ export function buildNavSections(session: AuthSessionUser | null): NavSection[] 
   const visible = new Map(filterNavItems(ALL_NAV, session).map((item) => [item.id, item]));
   return SECTION_LAYOUT.map((section) => ({
     id: section.id,
-    label: section.label,
+    labelKey: section.labelKey,
     items: section.ids.flatMap((id) => visible.get(id) ?? []),
   })).filter((section) => section.items.length > 0);
 }

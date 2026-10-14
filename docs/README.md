@@ -28,6 +28,7 @@ docs/
 │   ├── 03-security-and-authorization.md  # SecurityFilterChain, JWT, Matrix V2, AuthContext & CORS
 │   ├── 04-persistence-and-migrations.md  # Entities, Repositories, Optimistic Locking & Liquibase
 │   ├── 05-error-handling-and-observability.md # ApiException, ErrorCode, RFC 7807, Actuator & OpenAPI
+│   ├── i18n.md                           # Mehrsprachige Fehler- und Validierungstexte
 │   ├── 06-integrations.md                # Objektspeicher (S3/In-Memory), Web-Push (VAPID) & Chat
 │   └── 07-extending-the-service.md       # How-Tos, Testing (MockMvc/Testcontainers), Troubleshooting & PR-Checkliste
 │
@@ -53,6 +54,7 @@ docs/
 │
 ├── frontend/                             # Client-Architektur & UI-Bibliothek
 │   ├── angular-ssr-and-pwa.md            # Angular 22 SSR, Express BFF & PWA-Caching
+│   ├── i18n.md                           # Mehrsprachigkeit: neue Sprache hinzufügen, Texte im Code
 │   └── ui-components-and-design-system.md # Optimus Design Tokens & UI-Komponentenbibliothek
 │
 ├── api/                                  # API-Referenz & Integrationsverträge

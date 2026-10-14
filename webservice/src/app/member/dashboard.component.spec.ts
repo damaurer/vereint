@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
@@ -7,7 +7,7 @@ import type { EventSummary, MemberBalance, MemberProfile } from '../api/api.type
 import { DashboardComponent } from './dashboard.component';
 import { MemberApiService } from './member-api.service';
 
-const profile = { id: 'm-1', displayName: 'Alice' } as MemberProfile;
+const profile = { id: 'm-1', displayName: 'Alice', roles: ['member'] } as unknown as MemberProfile;
 
 const balance: MemberBalance = {
   memberId: 'm-1',
@@ -29,6 +29,7 @@ const events: EventSummary[] = [
     endsAt: null,
     ownerId: 'o-1',
     ownerDisplayName: 'Bob',
+    myRsvp: 'invited',
   },
 ];
 
@@ -37,9 +38,7 @@ describe('DashboardComponent', () => {
     loadProfile: ReturnType<typeof vi.fn>;
     getBalance: ReturnType<typeof vi.fn>;
     listEvents: ReturnType<typeof vi.fn>;
-    listParticipants: ReturnType<typeof vi.fn>;
-    addParticipant: ReturnType<typeof vi.fn>;
-    removeParticipant: ReturnType<typeof vi.fn>;
+    respondToEvent: ReturnType<typeof vi.fn>;
   };
 
   const create = async () => {
@@ -62,9 +61,7 @@ describe('DashboardComponent', () => {
       loadProfile: vi.fn(() => of(profile)),
       getBalance: vi.fn(() => of(balance)),
       listEvents: vi.fn(() => of(events)),
-      listParticipants: vi.fn(() => of([])),
-      addParticipant: vi.fn(() => of({ userId: 'm-1', displayName: 'Alice' })),
-      removeParticipant: vi.fn(() => of(undefined)),
+      respondToEvent: vi.fn((id: string, status: string) => of({ id, myRsvp: status })),
     };
   });
 
@@ -84,33 +81,38 @@ describe('DashboardComponent', () => {
     expect(root.querySelectorAll('vereint-stat-card').length).toBe(2);
   });
 
-  it('lets the member accept the next event from the dashboard', async () => {
+  it('lets an invited member accept the next event via the rsvp endpoint', async () => {
     const fixture = await create();
     const root = fixture.nativeElement as HTMLElement;
-    expect(api.listParticipants).toHaveBeenCalledWith('e-1');
     const accept = root.querySelector('.dash-rsvp-primary') as HTMLButtonElement;
     expect(accept.textContent).toContain('Zusagen');
     accept.click();
     fixture.detectChanges();
-    expect(api.addParticipant).toHaveBeenCalledWith('e-1', { userId: 'm-1', role: 'participant' });
+    expect(api.respondToEvent).toHaveBeenCalledWith('e-1', 'accepted');
     expect(html(fixture)).toContain('Du bist dabei');
   });
 
-  it('lets an attending member decline from the dashboard', async () => {
-    api.listParticipants.mockReturnValue(of([{ userId: 'm-1', displayName: 'Alice' }]));
+  it('lets an attending member decline and change their mind again', async () => {
+    api.listEvents.mockReturnValue(of([{ ...events[0], myRsvp: 'accepted' }]));
     const fixture = await create();
     const root = fixture.nativeElement as HTMLElement;
     expect(html(fixture)).toContain('Du bist dabei');
     (root.querySelector('.dash-rsvp-secondary') as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(api.removeParticipant).toHaveBeenCalledWith('e-1', 'm-1');
-    expect(html(fixture)).toContain('Zusagen');
+    expect(api.respondToEvent).toHaveBeenCalledWith('e-1', 'declined');
+    expect(html(fixture)).toContain('Du hast abgesagt');
+    expect((root.querySelector('.dash-rsvp-primary') as HTMLButtonElement).textContent).toContain('Zusagen');
+  });
+
+  it('offers no RSVP when the member is not invited', async () => {
+    api.listEvents.mockReturnValue(of([{ ...events[0], myRsvp: null }]));
+    const fixture = await create();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.dash-rsvp')).toBeNull();
   });
 
   it('offers no RSVP for cancelled events', async () => {
     api.listEvents.mockReturnValue(of([{ ...events[0], status: 'cancelled' }]));
     const fixture = await create();
-    expect(api.listParticipants).not.toHaveBeenCalled();
     expect((fixture.nativeElement as HTMLElement).querySelector('.dash-rsvp')).toBeNull();
   });
 
@@ -121,15 +123,18 @@ describe('DashboardComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('vereint-event-card')).toBeNull();
   });
 
-  it('reveals a treasurer hint when requesting a top-up', async () => {
+  it('hides the top-up button for plain members', async () => {
     const fixture = await create();
-    const root = fixture.nativeElement as HTMLElement;
+    expect((fixture.nativeElement as HTMLElement).querySelector('vereint-balance-card button')).toBeNull();
+  });
 
-    const topup = root.querySelector<HTMLButtonElement>('vereint-balance-card button')!;
+  it('sends board members to the treasury for top-ups', async () => {
+    api.loadProfile.mockReturnValue(of({ ...profile, roles: ['member', 'board'] }));
+    const fixture = await create();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const topup = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('vereint-balance-card button')!;
     topup.click();
-    fixture.detectChanges();
-
-    expect(html(fixture)).toContain('über den Kassenwart');
+    expect(navigate).toHaveBeenCalledWith(['/board/treasury']);
   });
 
   it('shows a retry state on error', async () => {

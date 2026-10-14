@@ -11,15 +11,15 @@ import java.time.Instant
 const val INVITE_ROLE_PATTERN = "^(guest)?$"
 
 data class CreateInviteRequest(
-    @field:Min(value = 1, message = "maxUses muss mindestens 1 sein")
-    @field:Max(value = 10000, message = "maxUses darf höchstens 10000 sein")
+    @field:Min(value = 1, message = "maxUses {validation.min}")
+    @field:Max(value = 10000, message = "maxUses {validation.max}")
     val maxUses: Int? = null,
 
-    @field:Min(value = 1, message = "expiresInMinutes muss mindestens 1 sein")
-    @field:Max(value = 129600, message = "expiresInMinutes darf höchstens 129600 (90 Tage) sein")
+    @field:Min(value = 1, message = "expiresInMinutes {validation.min}")
+    @field:Max(value = 129600, message = "expiresInMinutes {validation.invite.expiresInMinutes.max}")
     val expiresInMinutes: Long? = null,
 
-    @field:Pattern(regexp = INVITE_ROLE_PATTERN, message = "role muss guest oder leer sein")
+    @field:Pattern(regexp = INVITE_ROLE_PATTERN, message = "role {validation.invite.role.allowed}")
     val role: String? = null
 )
 
@@ -55,10 +55,10 @@ data class InviteDto(
 )
 
 data class AcceptInviteRequest(
-    @field:NotBlank(message = "token darf nicht leer sein")
+    @field:NotBlank(message = "token {validation.notBlank}")
     val token: String? = null,
 
-    @field:Size(max = 255, message = "displayName darf höchstens 255 Zeichen lang sein")
+    @field:Size(max = 255, message = "displayName {validation.size.max}")
     val displayName: String? = null
 )
 

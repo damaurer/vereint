@@ -99,6 +99,26 @@ describe('auth.routes', () => {
       expect(state.returnTo).toBe('/events/test-event');
     });
 
+    it('passes the app language to Keycloak as ui_locales', async () => {
+      const chosen = await originalFetch(`${baseUrl}/api/auth/login`, {
+        redirect: 'manual',
+        headers: { cookie: 'vereint.lang=en', 'accept-language': 'de-DE' },
+      });
+      expect(chosen.headers.get('location')).toContain('ui_locales=en');
+
+      const browser = await originalFetch(`${baseUrl}/api/auth/login`, {
+        redirect: 'manual',
+        headers: { 'accept-language': 'en-US,en;q=0.9' },
+      });
+      expect(browser.headers.get('location')).toContain('ui_locales=en');
+
+      const unsupported = await originalFetch(`${baseUrl}/api/auth/login`, {
+        redirect: 'manual',
+        headers: { 'accept-language': 'fr-FR' },
+      });
+      expect(unsupported.headers.get('location')).toContain('ui_locales=de');
+    });
+
     it('drops a malicious returnTo before storing the transaction state', async () => {
       for (const malicious of ['//evil.example.com', 'https://evil.example.com/app', '/unknown-area']) {
         const response = await originalFetch(
@@ -304,6 +324,52 @@ describe('auth.routes', () => {
         'subject',
       ]);
       expect(meData.identity['email']).toBeUndefined();
+    });
+  });
+
+  describe('GET /api/auth/me permissions', () => {
+    it('adds the permissions of the backend role matrix to the identity', async () => {
+      const tokens = await signTokenPair({
+        subject: 'u-terminal',
+        nonce: 'nonce-terminal',
+        accessClaims: { realm_access: { roles: ['tabletRecorder', 'member'] } },
+        idClaims: { name: 'Theke' },
+      });
+      mockTokenEndpoint(tokens);
+      const tokenFetch = globalThis.fetch;
+      globalThis.fetch = vi.fn().mockImplementation(async (url: string | URL | Request, init?: RequestInit) => {
+        const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url;
+        if (urlStr.endsWith('/api/v1/auth/access')) {
+          return new Response(
+            JSON.stringify({
+              subject: 'u-terminal',
+              roles: ['tabletRecorder', 'member'],
+              drinkRecorder: true,
+              permissions: ['purchase.tablet', 'profile.read.self'],
+              allowedAppContexts: ['memberPwa', 'tabletRecorder'],
+              eventScopes: [],
+              ownedEvents: [],
+              disabled: false,
+              matrixVersion: 2,
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+          );
+        }
+        return (tokenFetch as typeof fetch)(url, init);
+      });
+
+      const loginRes = await originalFetch(`${baseUrl}/api/auth/callback?code=code2&state=valid_state_abc`, {
+        headers: { Cookie: stateCookie({ nonce: 'nonce-terminal' }) },
+        redirect: 'manual',
+      });
+      const sessionCookie = loginRes.headers.getSetCookie().find((c) => c.startsWith('vereint_session='));
+
+      const meRes = await originalFetch(`${baseUrl}/api/auth/me`, {
+        headers: { Cookie: sessionCookie!.split(';')[0] },
+      });
+      const meData = (await meRes.json()) as { identity: { permissions: string[] } };
+
+      expect(meData.identity.permissions).toContain('purchase.tablet');
     });
   });
 

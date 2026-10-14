@@ -8,6 +8,7 @@ import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.EventNotActiveException
 import de.maurer.baseservice.error.IdempotencyConflictException
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.EventDrinkRepository
@@ -54,6 +55,29 @@ class LedgerService(
     private val auditService: AuditService
 ) {
 
+    /**
+     * Guthabenübersicht aller aktiven Mitglieder für die Kasse (Vorstand/Admin),
+     * sortiert nach Namen.
+     */
+    @Transactional(readOnly = true)
+    fun listBalances(principal: UserPrincipal): List<MemberBalanceOverviewDto> {
+        val caller = userService.getOrCreateUser(principal)
+        requireLedgerWrite(caller, principal)
+        return userRepository.findByDisabled(false)
+            .sortedBy { it.displayName.lowercase() }
+            .map { member ->
+                val entries = ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(member.id)
+                val balance = computeBalance(member, entries)
+                MemberBalanceOverviewDto(
+                    memberId = balance.memberId,
+                    displayName = member.displayName,
+                    currency = balance.currency,
+                    creditBalance = balance.creditBalance,
+                    lastEntryAt = entries.lastOrNull()?.createdAt
+                )
+            }
+    }
+
     @Transactional(readOnly = true)
     fun getMemberBalance(memberId: UUID, principal: UserPrincipal): MemberBalanceDto {
         val caller = userService.getOrCreateUser(principal)
@@ -76,7 +100,7 @@ class LedgerService(
         val caller = userService.getOrCreateUser(principal)
         if (!isBoardOrAdmin(caller, principal)) {
             throw AccessDeniedException(
-                "Nur Vorstand und Administration dürfen die Eventabrechnung einsehen",
+                Msg("error.ledger.eventSummaryDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -168,23 +192,23 @@ class LedgerService(
         val key = requireIdempotencyKey(idempotencyKey)
         val originalId = parseId(request.originalEntryId, "originalEntryId")
         val original = ledgerEntryRepository.findById(originalId).orElseThrow {
-            ResourceNotFoundException("Buchung mit ID '$originalId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.ledger.entryNotFound", originalId), ErrorCode.NOT_FOUND)
         }
         if (original.entryType == LedgerEntryType.correction) {
             throw InvalidRequestException(
-                "Eine Gegenbuchung kann nicht erneut korrigiert werden",
+                Msg("error.ledger.correctionOfCorrection"),
                 ErrorCode.INVALID_REQUEST
             )
         }
         if (ledgerEntryRepository.findByReversesEntryId(originalId).isNotEmpty()) {
             throw ApiException(
                 ErrorCode.LEDGER_ALREADY_CORRECTED,
-                "Buchung '$originalId' wurde bereits korrigiert",
+                Msg("error.ledger.alreadyCorrected", originalId),
                 HttpStatus.CONFLICT
             )
         }
         val member = original.member
-            ?: throw ResourceNotFoundException("Ursprungsbuchung ohne Mitglied", ErrorCode.NOT_FOUND)
+            ?: throw ResourceNotFoundException(Msg("error.ledger.originalWithoutMember"), ErrorCode.NOT_FOUND)
         return appendWrite(
             AppendWriteCommand(
                 scope = SCOPE_CORRECTION,
@@ -226,7 +250,7 @@ class LedgerService(
     ): LedgerEntryDto {
         val key = requireIdempotencyKey(idempotencyKey)
         val original = ledgerEntryRepository.findById(entryId).orElseThrow {
-            ResourceNotFoundException("Buchung mit ID '$entryId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.ledger.entryNotFound", entryId), ErrorCode.NOT_FOUND)
         }
         val replay = ledgerEntryRepository.findByIdempotencyKey(key).orElse(null)
         if (replay != null && replay.reversesEntry?.id == original.id) {
@@ -237,31 +261,31 @@ class LedgerService(
             original.event?.id != eventId
         ) {
             throw InvalidRequestException(
-                "Nur Strichlisten-Käufe dieses Events können am Tablet zurückgenommen werden",
+                Msg("error.ledger.undoOnlyTally"),
                 ErrorCode.INVALID_REQUEST
             )
         }
         if (original.actor?.id != actor.id) {
             throw AccessDeniedException(
-                "Nur der erfassende Tablet-Benutzer kann diesen Strich zurücknehmen",
+                Msg("error.ledger.undoOnlyRecorder"),
                 ErrorCode.ACCESS_DENIED
             )
         }
         if (original.createdAt.isBefore(now.minus(TABLET_UNDO_WINDOW))) {
             throw InvalidRequestException(
-                "Der Strich ist älter als ${TABLET_UNDO_WINDOW.toMinutes()} Minuten; bitte den Vorstand um eine Korrektur",
+                Msg("error.ledger.undoWindowExpired", TABLET_UNDO_WINDOW.toMinutes()),
                 ErrorCode.INVALID_REQUEST
             )
         }
         if (ledgerEntryRepository.findByReversesEntryId(original.id).isNotEmpty()) {
             throw ApiException(
                 ErrorCode.LEDGER_ALREADY_CORRECTED,
-                "Buchung '${original.id}' wurde bereits zurückgenommen",
+                Msg("error.ledger.alreadyUndone", original.id),
                 HttpStatus.CONFLICT
             )
         }
         val member = original.member
-            ?: throw ResourceNotFoundException("Ursprungsbuchung ohne Mitglied", ErrorCode.NOT_FOUND)
+            ?: throw ResourceNotFoundException(Msg("error.ledger.originalWithoutMember"), ErrorCode.NOT_FOUND)
         return appendWrite(
             AppendWriteCommand(
                 scope = SCOPE_CORRECTION,
@@ -305,7 +329,7 @@ class LedgerService(
         val event = requireEvent(parseId(request.eventId, "eventId"))
         if (event.status != EventStatus.active) {
             throw EventNotActiveException(
-                "Für dieses Event können derzeit keine Barcodekäufe gebucht werden",
+                Msg("error.ledger.barcodeEventNotActive"),
                 ErrorCode.EVENT_NOT_ACTIVE
             )
         }
@@ -315,14 +339,14 @@ class LedgerService(
         val eventDrink = eventDrinkRepository.findByEventIdAndDrinkId(event.id, drink.id).orElseThrow {
             ApiException(
                 ErrorCode.DRINK_NOT_IN_EVENT,
-                "Das Getränk zu Barcode '$barcode' ist nicht Teil der Eventauswahl",
+                Msg("error.ledger.drinkNotInEvent", barcode),
                 HttpStatus.NOT_FOUND
             )
         }
         if (!eventDrink.selfServiceEnabled) {
             throw ApiException(
                 ErrorCode.SELF_SERVICE_DISABLED,
-                "Für dieses Getränk ist die Selbstbedienung im Event deaktiviert",
+                Msg("error.ledger.selfServiceDisabled"),
                 HttpStatus.FORBIDDEN
             )
         }
@@ -506,7 +530,7 @@ class LedgerService(
     ): LedgerEntryDto {
         if (source != PurchaseSource.round && source != PurchaseSource.evening) {
             throw InvalidRequestException(
-                "source muss round oder evening sein",
+                Msg("error.ledger.invalidSource"),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -566,7 +590,7 @@ class LedgerService(
     ): LedgerEntryDto {
         if (source != PurchaseSource.round && source != PurchaseSource.evening) {
             throw InvalidRequestException(
-                "source muss round oder evening sein",
+                Msg("error.ledger.invalidSource"),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -646,7 +670,7 @@ class LedgerService(
                 return toDto(existing)
             }
             throw IdempotencyConflictException(
-                "Idempotenzschlüssel '${cmd.key}' wurde bereits für einen anderen Vorgang verwendet",
+                Msg("error.idempotency.conflict", cmd.key),
                 ErrorCode.IDEMPOTENCY_CONFLICT
             )
         }
@@ -742,7 +766,7 @@ class LedgerService(
         if (caller.id == memberId) return
         if (isBoardOrAdmin(caller, principal)) return
         throw AccessDeniedException(
-            "Keine Berechtigung zum Anzeigen dieses Guthabens",
+            Msg("error.ledger.balanceViewDenied"),
             ErrorCode.ACCESS_DENIED
         )
     }
@@ -750,7 +774,7 @@ class LedgerService(
     private fun requireLedgerWrite(caller: UserEntity, principal: UserPrincipal) {
         if (!isBoardOrAdmin(caller, principal)) {
             throw AccessDeniedException(
-                "Nur Vorstand und Administration dürfen Kassenbuchungen vornehmen",
+                Msg("error.ledger.cashDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -767,7 +791,7 @@ class LedgerService(
         }
         if (!allowed) {
             throw AccessDeniedException(
-                "Nur Mitglieder dürfen Barcodekäufe für das eigene Konto ausführen",
+                Msg("error.ledger.barcodeMembersOnly"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -775,7 +799,7 @@ class LedgerService(
 
     private fun requireEvent(id: UUID): EventEntity =
         eventRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Event mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.event.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     /**
@@ -786,12 +810,12 @@ class LedgerService(
         val barcodeEntity = drinkBarcodeRepository.findByBarcode(barcode)
             .filter { it.active }
             .orElseThrow {
-                ResourceNotFoundException("Kein Getränk zu Barcode '$barcode' gefunden", ErrorCode.NOT_FOUND)
+                ResourceNotFoundException(Msg("error.drink.barcodeNotFound", barcode), ErrorCode.NOT_FOUND)
             }
         val drink = barcodeEntity.drink
-            ?: throw ResourceNotFoundException("Kein Getränk zu Barcode '$barcode' gefunden", ErrorCode.NOT_FOUND)
+            ?: throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", barcode), ErrorCode.NOT_FOUND)
         if (drink.status != DrinkStatus.approved || !drink.active) {
-            throw ResourceNotFoundException("Kein Getränk zu Barcode '$barcode' gefunden", ErrorCode.NOT_FOUND)
+            throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", barcode), ErrorCode.NOT_FOUND)
         }
         return drink
     }
@@ -799,11 +823,11 @@ class LedgerService(
     private fun normalizeBarcode(value: String?): String {
         val normalized = value?.replace(WHITESPACE_REGEX, "").orEmpty()
         if (normalized.isBlank()) {
-            throw InvalidRequestException("barcode darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "barcode"), ErrorCode.INVALID_REQUEST)
         }
         if (normalized.length > MAX_BARCODE_LENGTH) {
             throw InvalidRequestException(
-                "barcode darf höchstens $MAX_BARCODE_LENGTH Zeichen lang sein",
+                Msg("error.field.tooLong", "barcode", MAX_BARCODE_LENGTH),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -820,15 +844,15 @@ class LedgerService(
 
     private fun requireUser(id: UUID): UserEntity =
         userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Benutzer mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     private fun parseId(value: String?, field: String): UUID = Identifiers.parseUuid(value, field)
 
     private fun requirePositiveAmount(amount: BigDecimal?): BigDecimal {
-        val value = amount ?: throw InvalidRequestException("amount ist erforderlich", ErrorCode.INVALID_REQUEST)
+        val value = amount ?: throw InvalidRequestException(Msg("error.field.required", "amount"), ErrorCode.INVALID_REQUEST)
         if (value.signum() <= 0) {
-            throw InvalidRequestException("amount muss größer als 0 sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.ledger.amountNotPositive"), ErrorCode.INVALID_REQUEST)
         }
         return value
     }
@@ -837,13 +861,13 @@ class LedgerService(
         val key = value?.trim()
         if (key.isNullOrBlank()) {
             throw InvalidRequestException(
-                "Header 'Idempotency-Key' ist für finanzielle Schreibvorgänge erforderlich",
+                Msg("error.idempotency.keyRequired"),
                 ErrorCode.IDEMPOTENCY_KEY_REQUIRED
             )
         }
         if (key.length > MAX_IDEMPOTENCY_KEY_LENGTH) {
             throw InvalidRequestException(
-                "Idempotency-Key darf höchstens $MAX_IDEMPOTENCY_KEY_LENGTH Zeichen lang sein",
+                Msg("error.field.tooLong", "Idempotency-Key", MAX_IDEMPOTENCY_KEY_LENGTH),
                 ErrorCode.INVALID_REQUEST
             )
         }

@@ -17,44 +17,44 @@ private const val CURRENCY_PATTERN = "^[A-Za-z]{3}$"
  * positiv; das Vorzeichen ergibt sich aus der Buchungsart.
  */
 data class TopupRequest(
-    @field:NotBlank(message = "memberId darf nicht leer sein")
+    @field:NotBlank(message = "memberId {validation.notBlank}")
     val memberId: String? = null,
 
-    @field:NotNull(message = "amount ist erforderlich")
-    @field:DecimalMin(value = "0.01", message = "amount muss größer als 0 sein")
-    @field:Digits(integer = 8, fraction = 2, message = "amount darf höchstens zwei Nachkommastellen haben")
+    @field:NotNull(message = "amount {validation.required}")
+    @field:DecimalMin(value = "0.01", message = "amount {validation.positive}")
+    @field:Digits(integer = 8, fraction = 2, message = "amount {validation.twoDecimals}")
     val amount: BigDecimal? = null,
 
-    @field:Pattern(regexp = CURRENCY_PATTERN, message = "currency muss ein dreistelliger ISO-4217-Code sein")
+    @field:Pattern(regexp = CURRENCY_PATTERN, message = "currency {validation.currencyIso}")
     val currency: String? = null,
 
-    @field:Size(max = 255, message = "note darf höchstens 255 Zeichen lang sein")
+    @field:Size(max = 255, message = "note {validation.size.max}")
     val note: String? = null
 )
 
 /** Guthaben-Auszahlung (`payout`). */
 data class PayoutRequest(
-    @field:NotBlank(message = "memberId darf nicht leer sein")
+    @field:NotBlank(message = "memberId {validation.notBlank}")
     val memberId: String? = null,
 
-    @field:NotNull(message = "amount ist erforderlich")
-    @field:DecimalMin(value = "0.01", message = "amount muss größer als 0 sein")
-    @field:Digits(integer = 8, fraction = 2, message = "amount darf höchstens zwei Nachkommastellen haben")
+    @field:NotNull(message = "amount {validation.required}")
+    @field:DecimalMin(value = "0.01", message = "amount {validation.positive}")
+    @field:Digits(integer = 8, fraction = 2, message = "amount {validation.twoDecimals}")
     val amount: BigDecimal? = null,
 
-    @field:Pattern(regexp = CURRENCY_PATTERN, message = "currency muss ein dreistelliger ISO-4217-Code sein")
+    @field:Pattern(regexp = CURRENCY_PATTERN, message = "currency {validation.currencyIso}")
     val currency: String? = null,
 
-    @field:Size(max = 255, message = "note darf höchstens 255 Zeichen lang sein")
+    @field:Size(max = 255, message = "note {validation.size.max}")
     val note: String? = null
 )
 
 /** Korrektur einer bestehenden Buchung als Gegenbuchung. */
 data class CorrectionRequest(
-    @field:NotBlank(message = "originalEntryId darf nicht leer sein")
+    @field:NotBlank(message = "originalEntryId {validation.notBlank}")
     val originalEntryId: String? = null,
 
-    @field:Size(max = 255, message = "reason darf höchstens 255 Zeichen lang sein")
+    @field:Size(max = 255, message = "reason {validation.size.max}")
     val reason: String? = null
 )
 
@@ -67,11 +67,11 @@ data class CorrectionRequest(
  * Benutzer.
  */
 data class PurchaseRequest(
-    @field:NotBlank(message = "eventId darf nicht leer sein")
+    @field:NotBlank(message = "eventId {validation.notBlank}")
     val eventId: String? = null,
 
-    @field:NotBlank(message = "barcode darf nicht leer sein")
-    @field:Size(max = 128, message = "barcode darf höchstens 128 Zeichen lang sein")
+    @field:NotBlank(message = "barcode {validation.notBlank}")
+    @field:Size(max = 128, message = "barcode {validation.size.max}")
     val barcode: String? = null
 )
 
@@ -115,6 +115,15 @@ data class LedgerEntryDto(
  * `creditBalance` = Topups − Payouts − Kredit-Käufe ± Korrekturen. Käufe im Modus
  * `revenueOnly` verändern das Guthaben nicht, erhöhen aber den Umsatz.
  */
+/** Zeile der Guthabenübersicht in der Kasse. */
+data class MemberBalanceOverviewDto(
+    val memberId: String,
+    val displayName: String,
+    val currency: String,
+    val creditBalance: BigDecimal,
+    val lastEntryAt: Instant?
+)
+
 data class MemberBalanceDto(
     val memberId: String,
     val currency: String,

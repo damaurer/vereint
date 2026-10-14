@@ -10,6 +10,8 @@ import { resolveSafeReturnTo } from '../auth/redirect';
 import { createCorrelationId, logSecurityEvent } from '../auth/security-log';
 import { createSessionFromTokens, destroySession } from '../auth/session.service';
 import { serverEnvironment } from '../config/environment';
+import { resolveAccessDecision } from '../authorization/authorization.service';
+import { requestLanguage } from '../../app/i18n/language-cookie';
 
 export const authRoutes = Router();
 
@@ -41,6 +43,8 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
     redirectUri,
     returnTo,
     scope: customScope,
+    // Keycloak zeigt Anmeldung/Registrierung in der Sprache der App.
+    uiLocales: requestLanguage(req.headers.cookie, req.headers['accept-language']),
   });
 
   setOidcStateCookie(res, stateString);
@@ -165,11 +169,26 @@ authRoutes.get('/keycloak', (req, res, next) => {
  * Rohe Token-Claims verlassen den Server nicht: geliefert werden ausschließlich
  * `subject`, `displayName`, `roles`, `boardRole` und `permissions`
  * (`docs/authentifizierung.md`).
+ *
+ * Die Permissions stammen aus der Rollen-Matrix des Fachservices
+ * (`/api/v1/auth/access`, kurz gecacht). Keycloak stellt keinen
+ * `permissions`-Claim aus; ohne diese Ergänzung blieben Seiten mit
+ * Permission-Guard (z. B. die Thekenerfassung) für alle gesperrt.
  */
-function respondWithIdentity(req: Request, res: Response): void {
+async function respondWithIdentity(req: Request, res: Response): Promise<void> {
   if (!req.identity) {
     res.status(401).json({ authenticated: false, code: 'oidc_session_expired' });
     return;
+  }
+
+  const permissions = new Set(req.identity.permissions ?? []);
+  const resolved = await resolveAccessDecision({
+    identity: req.identity,
+    accessToken: req.sessionData?.tokens.accessToken,
+    sessionId: req.sessionData?.sessionId,
+  });
+  if (resolved.outcome === 'resolved' && resolved.decision) {
+    for (const permission of resolved.decision.permissions) permissions.add(permission);
   }
 
   res.status(200).json({
@@ -179,17 +198,17 @@ function respondWithIdentity(req: Request, res: Response): void {
       displayName: req.identity.displayName ?? null,
       roles: req.identity.roles,
       boardRole: req.identity.boardRole ?? null,
-      permissions: req.identity.permissions ?? [],
+      permissions: [...permissions],
     },
   });
 }
 
-authRoutes.get('/me', (req, res) => {
-  respondWithIdentity(req, res);
+authRoutes.get('/me', (req, res, next) => {
+  respondWithIdentity(req, res).catch(next);
 });
 
-authRoutes.get('/session', (req, res) => {
-  respondWithIdentity(req, res);
+authRoutes.get('/session', (req, res, next) => {
+  respondWithIdentity(req, res).catch(next);
 });
 
 /**

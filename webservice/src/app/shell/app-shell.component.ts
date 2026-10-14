@@ -27,6 +27,10 @@ import { AuthService } from '../auth/auth.service';
 import { AuthSessionUser } from '../auth/auth.types';
 import { NotificationsApiService } from '../notifications/notifications-api.service';
 import { UnreadBadgeStore } from '../notifications/unread-badge.store';
+import { CHAT_LIST_REFRESH_MS } from '../chat/chat-api.service';
+import { ChatUnreadStore } from '../chat/chat-unread.store';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 import { BreakpointService } from './breakpoint.service';
 import { BottomSheetComponent } from '../ui/bottom-sheet.component';
 import { IconComponent } from '../ui/icon.component';
@@ -42,7 +46,7 @@ const SUBSET_MATCH: IsActiveMatchOptions = {
 };
 const EXACT_MATCH: IsActiveMatchOptions = { ...SUBSET_MATCH, paths: 'exact' };
 
-/** Seitentitel aus `route.data.title` der tiefsten aktiven Route. */
+/** Übersetzungsschlüssel des Seitentitels aus `route.data.title` der tiefsten aktiven Route. */
 function titleOf(root: ActivatedRouteSnapshot): string {
   let route: ActivatedRouteSnapshot | null = root;
   let title = '';
@@ -72,15 +76,54 @@ function titleOf(root: ActivatedRouteSnapshot): string {
 @Component({
   selector: 'vereint-app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, BottomSheetComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    IconComponent,
+    BottomSheetComponent,
+    TranslatePipe,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app-shell.component.html',
+  styles: [
+    `
+      .shell-rail-link,
+      .shell-bottom-link {
+        position: relative;
+      }
+      .shell-nav-count {
+        min-width: 1.15rem;
+        height: 1.15rem;
+        padding: 0 0.3rem;
+        border-radius: 999px;
+        background-color: var(--color-danger);
+        color: #ffffff;
+        font-size: 0.68rem;
+        font-weight: 700;
+        line-height: 1.15rem;
+        text-align: center;
+      }
+      .shell-nav-link .shell-nav-count {
+        margin-left: auto;
+      }
+      .shell-rail-link .shell-nav-count,
+      .shell-bottom-link .shell-nav-count {
+        position: absolute;
+        top: 0.1rem;
+        left: calc(50% + 0.3rem);
+        border: 2px solid var(--color-surface);
+        line-height: 0.85rem;
+      }
+    `,
+  ],
 })
 export class AppShellComponent implements OnInit, OnDestroy {
   private readonly sessionSignal = signal<AuthSessionUser | null>(null);
   private readonly urlSignal = signal<string>('');
   private readonly titleSignal = signal<string>('');
   private routerSub: Subscription | null = null;
+  private chatTimer: ReturnType<typeof setInterval> | null = null;
 
   /** Aktueller Viewport (Signal des Breakpoint-Service). */
   readonly viewport;
@@ -132,8 +175,11 @@ export class AppShellComponent implements OnInit, OnDestroy {
     return (first + last).toUpperCase();
   });
 
-  /** Titel der aktuellen Seite (aus `route.data.title`). */
-  readonly pageTitle = computed(() => this.titleSignal() || 'Vereint');
+  /** Titel der aktuellen Seite (Schlüssel aus `route.data.title`, folgt der Sprache). */
+  readonly pageTitle = computed(() => {
+    const key = this.titleSignal();
+    return key ? translate(key) : 'Vereint';
+  });
 
   /** Ungelesene Mitteilungen für das Glocken-Badge (nur im Browser geladen). */
   readonly unread;
@@ -148,7 +194,19 @@ export class AppShellComponent implements OnInit, OnDestroy {
   /** Zugängliche Bezeichnung der Glocke inklusive Anzahl. */
   readonly bellLabel = computed(() => {
     const count = this.unread();
-    return count > 0 ? `Mitteilungen, ${count} ungelesen` : 'Mitteilungen';
+    return count > 0
+      ? translate('shell.notificationsUnread', { count })
+      : translate('shell.notifications');
+  });
+
+  /** Ungelesene Chat-Nachrichten für das Badge am Chat-Eintrag. */
+  readonly chatUnread;
+
+  /** Badge-Text am Chat-Eintrag (ab 100 gekürzt). */
+  readonly chatBadge = computed(() => {
+    const count = this.chatUnread();
+    if (count <= 0) return null;
+    return count > 99 ? '99+' : String(count);
   });
 
   readonly moreOpen = signal(false);
@@ -163,6 +221,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
   ) {
     this.viewport = this.breakpoints.viewport;
     this.unread = this.injector.get(UnreadBadgeStore).count;
+    this.chatUnread = this.injector.get(ChatUnreadStore).count;
   }
 
   ngOnInit(): void {
@@ -175,14 +234,34 @@ export class AppShellComponent implements OnInit, OnDestroy {
         this.titleSignal.set(titleOf(this.router.routerState.snapshot.root));
         this.closeMenus();
         this.refreshUnread();
+        this.refreshChatUnread();
       });
 
     if (isPlatformBrowser(this.platformId)) {
       void this.auth.getSession().then((session) => {
         this.sessionSignal.set(session);
         this.refreshUnread();
+        this.refreshChatUnread();
       });
+      this.chatTimer = setInterval(() => {
+        if (typeof document === 'undefined' || document.visibilityState !== 'hidden') {
+          this.refreshChatUnread();
+        }
+      }, CHAT_LIST_REFRESH_MS);
     }
+  }
+
+  /** Lädt die Summe ungelesener Chat-Nachrichten (nur Browser, mit Session, kein Gast). */
+  private refreshChatUnread(): void {
+    if (!isPlatformBrowser(this.platformId) || !this.sessionSignal() || this.isGuest()) return;
+    this.injector.get(ChatUnreadStore).refresh();
+  }
+
+  /** Zugängliche Bezeichnung eines Eintrags; nur der Chat trägt die Ungelesen-Anzahl. */
+  navAriaLabel(item: NavItem): string | null {
+    const count = this.chatUnread();
+    if (item.id !== 'chat' || count <= 0) return null;
+    return translate('shell.chatUnread', { label: translate(item.labelKey), count });
   }
 
   /**
@@ -202,6 +281,8 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routerSub?.unsubscribe();
+    if (this.chatTimer !== null) clearInterval(this.chatTimer);
+    this.chatTimer = null;
   }
 
   trackNav(_index: number, item: NavItem): string {

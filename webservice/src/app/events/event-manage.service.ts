@@ -1,7 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClient } from '../api/api-client.service';
-import type { EventDetail, EventParticipant, MemberProfile, FoodSummary } from '../api/api.types';
+import type {
+  DirectoryMember,
+  EventDetail,
+  EventParticipant,
+  FoodSummary,
+  InviteMembersPayload,
+  MemberProfile,
+} from '../api/api.types';
+import type { DrinkSummaryDto } from '../catalog/catalog-api.service';
+import type { SublistSummaryDto } from '../sublists/sublists-api.service';
 import type {
   AddEventDrinkPayload,
   AddEventFoodPayload,
@@ -60,6 +69,26 @@ export class EventManageService {
   /** Fügt einen Teilnehmer hinzu (`POST /events/{id}/participants`). */
   addParticipant(eventId: string, payload: AddParticipantPayload): Observable<EventParticipant> {
     return this.api.post<EventParticipant>(`${this.eventPath(eventId)}/participants`, payload);
+  }
+
+  /** Lädt Mitglieder ein (`POST /events/{id}/invitations`). */
+  inviteMembers(eventId: string, payload: InviteMembersPayload): Observable<EventParticipant[]> {
+    return this.api.post<EventParticipant[]>(`${this.eventPath(eventId)}/invitations`, payload);
+  }
+
+  /** Mitgliederverzeichnis für die Auswahl per Name (`GET /users/directory`). */
+  listDirectory(): Observable<DirectoryMember[]> {
+    return this.api.get<DirectoryMember[]>('/users/directory');
+  }
+
+  /** Freigegebene Katalog-Getränke für die Auswahl per Name (`GET /drinks?status=approved`). */
+  listCatalogDrinks(): Observable<DrinkSummaryDto[]> {
+    return this.api.get<DrinkSummaryDto[]>('/drinks?status=approved');
+  }
+
+  /** Sublists für die Auswahl per Name (`GET /sublists`). */
+  listSublists(): Observable<SublistSummaryDto[]> {
+    return this.api.get<SublistSummaryDto[]>('/sublists');
   }
 
   /** Entfernt einen Teilnehmer (`DELETE /events/{id}/participants/{userId}`). */

@@ -8,7 +8,7 @@ import de.maurer.baseservice.dto.SendNotificationRequest
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.ResourceNotFoundException
-import de.maurer.baseservice.push.PushDeliveryResult
+import de.maurer.baseservice.push.PushDispatcher
 import de.maurer.baseservice.push.PushMessage
 import de.maurer.baseservice.push.PushSender
 import de.maurer.baseservice.push.PushTarget
@@ -56,6 +56,9 @@ class NotificationServiceTest {
     private lateinit var pushSender: PushSender
 
     @Mock
+    private lateinit var pushDispatcher: PushDispatcher
+
+    @Mock
     private lateinit var auditService: AuditService
 
     private lateinit var service: NotificationService
@@ -72,6 +75,7 @@ class NotificationServiceTest {
             userRoleRepository,
             userService,
             pushSender,
+            pushDispatcher,
             auditService
         )
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: callerId)).thenReturn(emptyList())
@@ -214,25 +218,14 @@ class NotificationServiceTest {
     }
 
     @Test
-    fun `sendNotification stores, dispatches push and prunes gone subscriptions`() {
+    fun `sendNotification stores the notification and hands push to the dispatcher`() {
         val admin = caller()
         val target = other()
         val principal = UserPrincipal(subject = "sub-caller", roles = setOf(UserRole.ADMIN))
-        val liveSub = PushSubscriptionEntity(endpoint = "https://push.example/live", p256dh = "a", auth = "b", user = target)
-        val goneSub = PushSubscriptionEntity(endpoint = "https://push.example/gone", p256dh = "a", auth = "b", user = target)
 
         `when`(userService.getOrCreateUser(principal)).thenReturn(admin)
         `when`(userRepository.findById(otherId)).thenReturn(Optional.of(target))
         `when`(notificationRepository.save(anyNotification())).thenAnswer { it.arguments[0] }
-        `when`(pushSubscriptionRepository.findByUserId(otherId)).thenReturn(listOf(liveSub, goneSub))
-        `when`(pushSender.send(anyTarget(), anyMessage())).thenAnswer {
-            val t = it.arguments[0] as PushTarget
-            if (t.endpoint.endsWith("gone")) {
-                PushDeliveryResult(t.subscriptionId, success = false, statusCode = 410, gone = true)
-            } else {
-                PushDeliveryResult(t.subscriptionId, success = true, statusCode = 201)
-            }
-        }
 
         val dto = service.sendNotification(
             SendNotificationRequest(userId = otherId.toString(), title = "Hi", body = "Text", type = "invite"),
@@ -241,13 +234,28 @@ class NotificationServiceTest {
 
         assertEquals("Hi", dto.title)
         assertEquals("invite", dto.type)
-        verify(pushSubscriptionRepository).delete(goneSub)
-        verify(pushSubscriptionRepository, never()).delete(liveSub)
+        verify(pushDispatcher).dispatch(listOf(otherId), PushMessage(title = "Hi", body = "Text", type = "invite"))
+        verify(pushSender, never()).send(anyTarget(), anyMessage())
         verify(auditService).recordNotification(
             eq(admin) ?: admin,
             eq(AuditService.ACTION_NOTIFICATION_SENT) ?: "",
             any(UUID::class.java) ?: UUID.randomUUID(),
             anyString()
+        )
+    }
+
+    @Test
+    fun `notifyUsers stores one notification per recipient and dispatches once`() {
+        val first = caller()
+        val second = other()
+        `when`(notificationRepository.save(anyNotification())).thenAnswer { it.arguments[0] }
+
+        val stored = service.notifyUsers(listOf(first, second), "Neuer Moment", "Sei dabei", "moment")
+
+        assertEquals(2, stored.size)
+        verify(pushDispatcher).dispatch(
+            listOf(callerId, otherId),
+            PushMessage(title = "Neuer Moment", body = "Sei dabei", type = "moment")
         )
     }
 

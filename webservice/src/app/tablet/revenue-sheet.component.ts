@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { BottomSheetComponent, AvatarBadgeComponent } from '../ui';
+import { TranslatePipe } from '../i18n';
 import type { TabletMember } from '../api/api.types';
 
 /** Umfang einer Revenue-Only-Aktion des Terminals. */
@@ -17,16 +18,16 @@ export type RevenueKind = 'round' | 'evening';
 @Component({
   selector: 'app-revenue-sheet',
   standalone: true,
-  imports: [BottomSheetComponent, AvatarBadgeComponent],
+  imports: [BottomSheetComponent, AvatarBadgeComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <vereint-bottom-sheet
       [open]="open"
-      [title]="kind === 'evening' ? 'Ganzen Abend stiften' : 'Runde ausgeben'"
+      [title]="(kind === 'evening' ? 'tablet.revenue.eveningTitle' : 'tablet.revenue.roundTitle') | t"
       [dismissible]="true"
       (closed)="closed.emit()"
     >
-      <div class="sheet-modes" role="group" aria-label="Umfang">
+      <div class="sheet-modes" role="group" [attr.aria-label]="'tablet.revenue.scope' | t">
         <button
           type="button"
           class="sheet-mode"
@@ -34,7 +35,7 @@ export type RevenueKind = 'round' | 'evening';
           [attr.aria-pressed]="kind === 'round'"
           (click)="kindChange.emit('round')"
         >
-          Eine Runde
+          {{ 'tablet.revenue.oneRound' | t }}
         </button>
         <button
           type="button"
@@ -43,11 +44,11 @@ export type RevenueKind = 'round' | 'evening';
           [attr.aria-pressed]="kind === 'evening'"
           (click)="kindChange.emit('evening')"
         >
-          Ganzen Abend stiften
+          {{ 'tablet.revenue.eveningTitle' | t }}
         </button>
       </div>
 
-      <p class="sheet-label">Empfänger</p>
+      <p class="sheet-label">{{ 'tablet.revenue.recipients' | t }}</p>
       <ul class="sheet-list">
         @for (member of members; track member.memberId) {
           <li class="sheet-item">
@@ -65,8 +66,7 @@ export type RevenueKind = 'round' | 'evening';
       </ul>
 
       <p class="sheet-hint" role="note">
-        Gültig, bis alle ein Getränk genommen haben. Doppelte Klicks werden über
-        den Idempotency-Key nicht doppelt gebucht.
+        {{ 'tablet.revenue.hint' | t }}
       </p>
 
       <button
@@ -75,7 +75,7 @@ export type RevenueKind = 'round' | 'evening';
         [disabled]="disabled"
         (click)="confirm.emit()"
       >
-        {{ kind === 'evening' ? 'Abend stiften' : 'Runde ausgeben' }}
+        {{ (kind === 'evening' ? 'tablet.revenue.confirmEvening' : 'tablet.revenue.confirmRound') | t }}
       </button>
     </vereint-bottom-sheet>
   `,

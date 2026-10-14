@@ -1,5 +1,7 @@
 package de.maurer.baseservice.controller
 
+import de.maurer.baseservice.dto.BroadcastNotificationRequest
+import de.maurer.baseservice.dto.BroadcastResultDto
 import de.maurer.baseservice.dto.NotificationDto
 import de.maurer.baseservice.dto.PushSubscriptionDto
 import de.maurer.baseservice.dto.RegisterPushSubscriptionRequest
@@ -97,6 +99,13 @@ class NotificationController(
         val id = Identifiers.parseUuid(subscriptionIdValue, "subscriptionId")
         notificationService.deleteSubscription(id, principal)
         return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/broadcast")
+    @Operation(summary = "Rundbrief senden", description = "Benachrichtigt ausgewählte oder alle aktiven Mitglieder (nur Vorstand/Administration)")
+    fun broadcast(@Valid @RequestBody request: BroadcastNotificationRequest): ResponseEntity<BroadcastResultDto> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.status(HttpStatus.CREATED).body(notificationService.broadcast(request, principal))
     }
 
     @PostMapping

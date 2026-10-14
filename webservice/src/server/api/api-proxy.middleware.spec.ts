@@ -3,7 +3,7 @@ import type { Server } from 'node:http';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionData } from '../auth/auth.types';
 import { applyTestEnvironmentOverrides, serverEnvironment } from '../config/environment';
-import { apiProxy } from './api-proxy.middleware';
+import { API_PROXY_MAX_UPLOAD, apiProxy } from './api-proxy.middleware';
 
 describe('api-proxy.middleware', () => {
   let app: express.Express;
@@ -35,7 +35,7 @@ describe('api-proxy.middleware', () => {
       req.sessionData = injectedSession;
       next();
     });
-    app.use('/api/v1', apiProxy);
+    app.use('/api/v1', express.raw({ type: 'multipart/form-data', limit: API_PROXY_MAX_UPLOAD }), apiProxy);
 
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => {
@@ -111,6 +111,41 @@ describe('api-proxy.middleware', () => {
     });
 
     expect(capturedAuth).toBe('Bearer access-token-abc');
+  });
+
+  it('forwards multipart uploads byte for byte with their boundary', async () => {
+    let captured: { body: Buffer; contentType: string | null } | undefined;
+    globalThis.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      captured = {
+        body: Buffer.from(init?.body as Uint8Array),
+        contentType: new Headers(init?.headers).get('content-type'),
+      };
+      return new Response(JSON.stringify({ id: 'image-1' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+
+    const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff]);
+    const boundary = 'vereint-test-boundary';
+    const form = Buffer.concat([
+      Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="bild.png"\r\n` +
+          'Content-Type: image/png\r\n\r\n',
+      ),
+      bytes,
+      Buffer.from(`\r\n--${boundary}--\r\n`),
+    ]);
+
+    const response = await originalFetch(`${baseUrl}/api/v1/images`, {
+      method: 'POST',
+      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      body: new Uint8Array(form),
+    });
+
+    expect(response.status).toBe(201);
+    expect(captured?.contentType).toBe(`multipart/form-data; boundary=${boundary}`);
+    expect(captured?.body.equals(form)).toBe(true);
   });
 
   it('forwards POST bodies and the Idempotency-Key header', async () => {

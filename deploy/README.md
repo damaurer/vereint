@@ -35,6 +35,10 @@ Rollback exakt genauso wieder.
   Auch Datenbank-Dumps und Bucket-Inhalte sind ohne diesen Schlüssel unlesbar.
 - **Keycloak-Verwaltung nicht öffentlich:** Admin-Konsole und Master-Realm
   liefern von außen 404. Erreichbar sind sie nur per Tunnel (siehe unten).
+- **Web Push:** Terraform erzeugt das VAPID-Schlüsselpaar und legt es unter
+  `/vereint/VAPID_*` ab. Pushes enthalten keine Inhalte; das Gerät lädt die
+  Mitteilung mit seiner Sitzung nach. Geht der Schlüssel verloren, ist nichts
+  verloren: Geräte melden sich beim nächsten App-Start mit dem neuen Schlüssel an.
 - **Secrets** stehen nur im SSM Parameter Store. `bin/fetch-env.sh` schreibt sie
   bei jedem Deployment in `.env` (nur für root lesbar).
 - Container laufen ohne Root (eigene Images), mit `no-new-privileges` und

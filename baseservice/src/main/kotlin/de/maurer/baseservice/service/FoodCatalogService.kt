@@ -9,6 +9,7 @@ import de.maurer.baseservice.dto.UpdateFoodRequest
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.FoodCatalogRepository
 import de.maurer.baseservice.repository.UserRoleRepository
@@ -51,7 +52,7 @@ class FoodCatalogService(
         val food = requireFood(id)
         if (!food.active && !isBoardOrAdmin(caller, principal)) {
             throw AccessDeniedException(
-                "Nur Vorstand und Administration dürfen inaktive Speisen einsehen",
+                Msg("error.food.inactiveViewDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -62,23 +63,23 @@ class FoodCatalogService(
         val caller = userService.getOrCreateUser(principal)
         if (!isBoardOrAdmin(caller, principal)) {
             throw AccessDeniedException(
-                "Nur Vorstand und Administration dürfen Speisen im Vereinskatalog anlegen",
+                Msg("error.food.createDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
 
         val name = normalizeName(request.name)
         if (name.isBlank()) {
-            throw InvalidRequestException("name darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "name"), ErrorCode.INVALID_REQUEST)
         }
         val defaultPrice = request.defaultPrice
-            ?: throw InvalidRequestException("defaultPrice ist erforderlich", ErrorCode.INVALID_REQUEST)
+            ?: throw InvalidRequestException(Msg("error.field.required", "defaultPrice"), ErrorCode.INVALID_REQUEST)
         if (defaultPrice.signum() < 0) {
-            throw InvalidRequestException("defaultPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.negative", "defaultPrice"), ErrorCode.INVALID_REQUEST)
         }
         val costPrice = request.costPrice ?: BigDecimal.ZERO
         if (costPrice.signum() < 0) {
-            throw InvalidRequestException("costPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.negative", "costPrice"), ErrorCode.INVALID_REQUEST)
         }
 
         val food = FoodCatalogEntity(
@@ -99,7 +100,7 @@ class FoodCatalogService(
         val caller = userService.getOrCreateUser(principal)
         if (!isBoardOrAdmin(caller, principal)) {
             throw AccessDeniedException(
-                "Nur Vorstand und Administration dürfen Speisen im Vereinskatalog bearbeiten",
+                Msg("error.food.updateDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -109,7 +110,7 @@ class FoodCatalogService(
         if (request.name != null) {
             val name = normalizeName(request.name)
             if (name.isBlank()) {
-                throw InvalidRequestException("name darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.blank", "name"), ErrorCode.INVALID_REQUEST)
             }
             food.name = name
         }
@@ -121,13 +122,13 @@ class FoodCatalogService(
         }
         if (request.defaultPrice != null) {
             if (request.defaultPrice.signum() < 0) {
-                throw InvalidRequestException("defaultPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.negative", "defaultPrice"), ErrorCode.INVALID_REQUEST)
             }
             food.defaultPrice = request.defaultPrice
         }
         if (request.costPrice != null) {
             if (request.costPrice.signum() < 0) {
-                throw InvalidRequestException("costPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.negative", "costPrice"), ErrorCode.INVALID_REQUEST)
             }
             food.costPrice = request.costPrice
         }
@@ -144,7 +145,7 @@ class FoodCatalogService(
 
     private fun requireFood(id: UUID): FoodCatalogEntity =
         foodCatalogRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Speise mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.food.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =

@@ -12,11 +12,11 @@ import java.time.Instant
  * über den Chat übertragen.
  */
 data class SendMessageRequest(
-    @field:NotBlank(message = "message darf nicht leer sein")
-    @field:Size(max = 4000, message = "message darf höchstens 4000 Zeichen lang sein")
+    @field:NotBlank(message = "message {validation.notBlank}")
+    @field:Size(max = 4000, message = "message {validation.size.max}")
     val message: String? = null,
 
-    @field:Size(max = 512, message = "imageUrl darf höchstens 512 Zeichen lang sein")
+    @field:Size(max = 512, message = "imageUrl {validation.size.max}")
     val imageUrl: String? = null
 )
 
@@ -46,5 +46,65 @@ data class ChatMessageDto(
     val senderName: String,
     val message: String,
     val imageUrl: String?,
+    val createdAt: Instant,
+    val reactions: List<ChatReactionDto> = emptyList()
+)
+
+/** Zusammengefasste Reaktionen auf eine Nachricht. */
+data class ChatReactionDto(
+    val emoji: String,
+    val count: Int,
+    val reactedByMe: Boolean
+)
+
+/** Vorschau der letzten Nachricht einer Konversation. */
+data class ChatMessagePreviewDto(
+    val senderName: String,
+    val message: String,
     val createdAt: Instant
+)
+
+/**
+ * Eintrag der Chat-Übersicht: Vereinschat (`club`), Direktnachricht (`direct`)
+ * oder Event-Chat (`event`). `partnerId`/`partnerName` gibt es nur bei
+ * Direktnachrichten; die Infotafel nur im Vereinschat.
+ */
+data class ConversationSummaryDto(
+    val id: String,
+    val type: String,
+    val title: String,
+    val eventId: String?,
+    val partnerId: String?,
+    val partnerName: String?,
+    val lastMessage: ChatMessagePreviewDto?,
+    val unreadCount: Long,
+    val pinned: PinnedNoteDto?,
+    val canWrite: Boolean
+)
+
+data class PinnedNoteDto(
+    val text: String,
+    val authorName: String,
+    val pinnedAt: Instant
+)
+
+data class ChatUnreadCountDto(
+    val unread: Long
+)
+
+data class StartDirectConversationRequest(
+    @field:NotBlank(message = "userId {validation.notBlank}")
+    val userId: String? = null
+)
+
+data class ToggleReactionRequest(
+    @field:NotBlank(message = "emoji {validation.notBlank}")
+    @field:Size(max = 16, message = "emoji {validation.size.max}")
+    val emoji: String? = null
+)
+
+/** Infotafel setzen (`text`) oder entfernen (leer bzw. `null`). */
+data class PinNoteRequest(
+    @field:Size(max = 2000, message = "text {validation.size.max}")
+    val text: String? = null
 )

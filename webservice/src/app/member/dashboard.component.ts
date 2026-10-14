@@ -1,11 +1,11 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { forkJoin, map, switchMap, type Observable } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
+import { forkJoin, map, switchMap } from 'rxjs';
 import { describeApiError } from '../api/api-client.service';
 import { AsyncState } from './async-state';
-import { MemberApiService } from './member-api.service';
+import { MemberApiService, type RsvpAnswer } from './member-api.service';
 import { eventStatusLabel, formatDateTime, formatMoney } from './member-format';
-import type { EventStatus, EventSummary, MemberBalance, MemberProfile } from '../api/api.types';
+import type { EventStatus, EventSummary, MemberBalance, MemberProfile, RsvpStatus } from '../api/api.types';
 import {
   BalanceCardComponent,
   EventCardComponent,
@@ -16,12 +16,14 @@ import {
   type StatusTone,
 } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 interface DashboardShortcut {
   route: string;
   icon: IconName;
-  title: string;
-  sub: string;
+  titleKey: string;
+  subKey: string;
 }
 
 interface DashboardView {
@@ -49,52 +51,48 @@ interface DashboardView {
     BalanceCardComponent,
     StatCardComponent,
     IconComponent,
+    TranslatePipe,
   ],
   template: `
     <main class="page-shell">
-      <section class="page-card member-card" aria-label="Persönliche Übersicht">
+      <section class="page-card member-card" [attr.aria-label]="'member.dashboard.ariaLabel' | t">
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Deine Übersicht wird abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'member.dashboard.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Übersicht nicht verfügbar"
+            [title]="'member.dashboard.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
         } @else if (load.data(); as view) {
           <vereint-hero-greeting
-            eyebrow="Servus"
+            [eyebrow]="'member.dashboard.eyebrow' | t"
             [name]="view.profile.displayName"
             [subtitle]="greeting()"
           />
 
           <div class="dash-top">
             <section class="dash-block" aria-labelledby="dash-balance">
-              <h2 id="dash-balance" class="dash-heading">Dein Guthaben</h2>
+              <h2 id="dash-balance" class="dash-heading">{{ 'member.dashboard.balanceHeading' | t }}</h2>
               <vereint-balance-card
-                label="Aktueller Stand"
+                [label]="'member.balance.current' | t"
                 [amount]="formatMoney(view.balance.creditBalance, view.balance.currency)"
                 [negative]="isNegative(view.balance.creditBalance)"
-                [showTopup]="true"
+                [showTopup]="canTopup(view.profile)"
                 (topup)="onTopup()"
               />
-              @if (topupRequested()) {
-                <p class="member-hint" role="status">
-                  Aufladungen erfolgen über den Kassenwart. Bitte sprich ihn direkt an.
-                </p>
-              }
               <a class="dash-more" routerLink="/wallet">
-                Kontoauszug ansehen <vereint-icon name="chevron-right" />
+                {{ 'member.dashboard.statementLink' | t }} <vereint-icon name="chevron-right" />
               </a>
             </section>
 
             <section class="dash-block" aria-labelledby="dash-next">
-              <h2 id="dash-next" class="dash-heading">Nächster Termin</h2>
+              <h2 id="dash-next" class="dash-heading">{{ 'member.dashboard.nextEventHeading' | t }}</h2>
               @if (nextEvent(view.events); as event) {
                 <a class="dash-event-link" [routerLink]="['/events', event.id]">
                   <vereint-event-card
@@ -104,28 +102,35 @@ interface DashboardView {
                     [statusTone]="eventTone(event.status)"
                   />
                 </a>
-                @if (attending() !== null) {
-                  <div class="dash-rsvp" role="group" aria-label="Teilnahme am nächsten Termin">
-                    @if (attending()) {
+                @if (rsvp(); as myAnswer) {
+                  <div class="dash-rsvp" role="group" [attr.aria-label]="'member.dashboard.rsvpGroup' | t">
+                    @if (myAnswer === 'accepted') {
                       <span class="dash-rsvp-state">
-                        <vereint-icon name="check" /> Du bist dabei
+                        <vereint-icon name="check" /> {{ 'member.dashboard.attending' | t }}
                       </span>
-                      <button
-                        type="button"
-                        class="dash-rsvp-secondary"
-                        [disabled]="rsvpBusy()"
-                        (click)="setAttendance(event.id, view.profile.id, false)"
-                      >
-                        Absagen
-                      </button>
-                    } @else {
+                    } @else if (myAnswer === 'declined') {
+                      <span class="dash-rsvp-state dash-rsvp-declined">{{ 'member.dashboard.declined' | t }}</span>
+                    } @else if (myAnswer === 'maybe') {
+                      <span class="dash-rsvp-state dash-rsvp-maybe">{{ 'member.dashboard.maybe' | t }}</span>
+                    }
+                    @if (myAnswer !== 'accepted') {
                       <button
                         type="button"
                         class="member-button dash-rsvp-primary"
                         [disabled]="rsvpBusy()"
-                        (click)="setAttendance(event.id, view.profile.id, true)"
+                        (click)="answer(event.id, 'accepted')"
                       >
-                        <vereint-icon name="check" /> Zusagen
+                        <vereint-icon name="check" /> {{ 'member.rsvp.accept' | t }}
+                      </button>
+                    }
+                    @if (myAnswer !== 'declined') {
+                      <button
+                        type="button"
+                        class="dash-rsvp-secondary"
+                        [disabled]="rsvpBusy()"
+                        (click)="answer(event.id, 'declined')"
+                      >
+                        {{ 'member.rsvp.decline' | t }}
                       </button>
                     }
                   </div>
@@ -134,29 +139,29 @@ interface DashboardView {
                   }
                 }
                 <a class="dash-more" routerLink="/events">
-                  Alle Events <vereint-icon name="chevron-right" />
+                  {{ 'member.dashboard.allEvents' | t }} <vereint-icon name="chevron-right" />
                 </a>
               } @else {
                 <div class="dash-empty">
                   <vereint-icon name="events" [size]="28" />
-                  <p class="member-muted">Aktuell keine Events.</p>
+                  <p class="member-muted">{{ 'member.dashboard.noEvents' | t }}</p>
                 </div>
               }
             </section>
           </div>
 
           <div class="dash-grid">
-            <vereint-stat-card icon="events" label="Deine Events" [value]="view.events.length" />
-            <vereint-stat-card icon="receipt" label="Buchungen" [value]="view.balance.entryCount" />
+            <vereint-stat-card icon="events" [label]="'member.dashboard.statEvents' | t" [value]="view.events.length" />
+            <vereint-stat-card icon="receipt" [label]="'member.dashboard.statEntries' | t" [value]="view.balance.entryCount" />
           </div>
 
-          <h2 class="dash-heading">Schnellzugriff</h2>
-          <nav class="dash-shortcuts" aria-label="Schnellzugriff">
+          <h2 class="dash-heading">{{ 'member.dashboard.shortcutsHeading' | t }}</h2>
+          <nav class="dash-shortcuts" [attr.aria-label]="'member.dashboard.shortcutsHeading' | t">
             @for (shortcut of shortcuts; track shortcut.route) {
               <a class="dash-shortcut-card" [routerLink]="shortcut.route">
                 <span class="dash-shortcut-icon"><vereint-icon [name]="shortcut.icon" /></span>
-                <span class="dash-shortcut-title">{{ shortcut.title }}</span>
-                <span class="dash-shortcut-sub">{{ shortcut.sub }}</span>
+                <span class="dash-shortcut-title">{{ shortcut.titleKey | t }}</span>
+                <span class="dash-shortcut-sub">{{ shortcut.subKey | t }}</span>
               </a>
             }
           </nav>
@@ -247,6 +252,12 @@ interface DashboardView {
         color: var(--color-success);
         font-weight: 700;
       }
+      .dash-rsvp-declined {
+        color: var(--color-danger);
+      }
+      .dash-rsvp-maybe {
+        color: var(--color-text-muted);
+      }
       .dash-rsvp-secondary {
         min-height: 2.75rem;
         padding: 0 1rem;
@@ -331,11 +342,11 @@ interface DashboardView {
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly api = inject(MemberApiService);
+  private readonly router = inject(Router);
 
   protected readonly load = new AsyncState<DashboardView>();
-  protected readonly topupRequested = signal(false);
-  /** Teilnahme am nächsten Termin: `null` = unbekannt oder keine Zusage möglich. */
-  protected readonly attending = signal<boolean | null>(null);
+  /** Eigene Antwort zum nächsten Termin: `null` = nicht eingeladen oder keine Antwort möglich. */
+  protected readonly rsvp = signal<RsvpStatus | null>(null);
   protected readonly rsvpBusy = signal(false);
   protected readonly rsvpError = signal<string | null>(null);
   protected readonly formatMoney = formatMoney;
@@ -344,18 +355,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   /** Kacheln „Schnellzugriff“: die Ziele hinter „Mehr“, die man oft braucht. */
   protected readonly shortcuts: readonly DashboardShortcut[] = [
-    { route: '/moments', icon: 'moments', title: 'Moments', sub: 'Anstoßen & Rituale' },
-    { route: '/catalog', icon: 'catalog', title: 'Getränkekatalog', sub: 'Getränke & Speisen' },
-    { route: '/purchases', icon: 'receipt', title: 'Käufe', sub: 'Was du getrunken hast' },
-    { route: '/notifications', icon: 'bell', title: 'Mitteilungen', sub: 'Neuigkeiten vom Verein' },
+    {
+      route: '/moments',
+      icon: 'moments',
+      titleKey: 'member.dashboard.shortcuts.moments.title',
+      subKey: 'member.dashboard.shortcuts.moments.sub',
+    },
+    {
+      route: '/catalog',
+      icon: 'catalog',
+      titleKey: 'member.dashboard.shortcuts.catalog.title',
+      subKey: 'member.dashboard.shortcuts.catalog.sub',
+    },
+    {
+      route: '/purchases',
+      icon: 'receipt',
+      titleKey: 'member.dashboard.shortcuts.purchases.title',
+      subKey: 'member.dashboard.shortcuts.purchases.sub',
+    },
+    {
+      route: '/notifications',
+      icon: 'bell',
+      titleKey: 'member.dashboard.shortcuts.notifications.title',
+      subKey: 'member.dashboard.shortcuts.notifications.sub',
+    },
   ];
 
   /** Tageszeitabhängiger Untertitel der Begrüßung. */
   protected greeting(now: Date = new Date()): string {
     const hour = now.getHours();
-    if (hour < 11) return 'Guten Morgen, schön dass du da bist.';
-    if (hour < 17) return 'Schön, dass du wieder da bist.';
-    return 'Guten Abend. Wer ist heute am Stammtisch?';
+    if (hour < 11) return translate('member.dashboard.greeting.morning');
+    if (hour < 17) return translate('member.dashboard.greeting.day');
+    return translate('member.dashboard.greeting.evening');
   }
 
   ngOnInit(): void {
@@ -394,11 +425,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * „Aufladen“ ist ein reiner UI-Hinweis: die eigentliche Buchung erfolgt
-   * serverseitig durch den Kassenwart, nicht clientseitig.
+   * Aufladen bucht nur der Vorstand bzw. Admin über die Kasse; Mitglieder
+   * sehen den Button deshalb nicht (sie können ihr Guthaben nicht selbst aufladen).
    */
+  protected canTopup(profile: MemberProfile): boolean {
+    const roles = profile.roles ?? [];
+    return roles.includes('board') || roles.includes('admin');
+  }
+
+  /** Führt Vorstand/Admin zur Kasse, wo Aufladungen gebucht werden. */
   protected onTopup(): void {
-    this.topupRequested.set(true);
+    void this.router.navigate(['/board/treasury']);
   }
 
   ngOnDestroy(): void {
@@ -425,30 +462,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return event.status === 'published' && Date.parse(event.startsAt) >= now.getTime();
   }
 
-  /** Lädt, ob das Mitglied beim nächsten Termin schon zugesagt hat. */
+  /** Übernimmt die eigene Antwort zum nächsten Termin aus der Eventliste. */
   private loadAttendance(view: DashboardView): void {
-    this.attending.set(null);
     this.rsvpError.set(null);
     const event = this.nextEvent(view.events);
-    if (!event || !this.canRsvp(event)) return;
-    this.api.listParticipants(event.id).subscribe({
-      next: (participants) =>
-        this.attending.set(participants.some((p) => p.userId === view.profile.id)),
-      error: () => this.attending.set(null),
-    });
+    this.rsvp.set(event && this.canRsvp(event) ? (event.myRsvp ?? null) : null);
   }
 
-  /** Zu- oder Absage direkt von der Startseite (gleiche Endpunkte wie die Eventseite). */
-  protected setAttendance(eventId: string, userId: string, attend: boolean): void {
+  /** Zu- oder Absage direkt von der Startseite (`PUT /events/{id}/rsvp`). */
+  protected answer(eventId: string, status: RsvpAnswer): void {
     this.rsvpBusy.set(true);
     this.rsvpError.set(null);
-    const request: Observable<unknown> = attend
-      ? this.api.addParticipant(eventId, { userId, role: 'participant' })
-      : this.api.removeParticipant(eventId, userId);
-    request.subscribe({
-      next: () => {
+    this.api.respondToEvent(eventId, status).subscribe({
+      next: (event) => {
         this.rsvpBusy.set(false);
-        this.attending.set(attend);
+        this.rsvp.set(event.myRsvp ?? status);
       },
       error: (error: unknown) => {
         this.rsvpBusy.set(false);

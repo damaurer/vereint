@@ -27,17 +27,22 @@ import { ModalComponent } from '../ui';
 import { MomentMapComponent } from './moment-map.component';
 import { MomentTimelineComponent } from './moment-timeline.component';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 export interface TopicOption {
   value: string;
-  label: string;
+  /** i18n-Schlüssel der Bezeichnung. */
+  labelKey: string;
   emoji: string;
-  description: string;
+  /** i18n-Schlüssel der Beschreibung. */
+  descriptionKey: string;
 }
 
 export interface QuickReaction {
   value: string;
-  label: string;
+  /** i18n-Schlüssel der Bezeichnung. */
+  labelKey: string;
   emoji: string;
 }
 
@@ -50,13 +55,15 @@ export interface QuickReaction {
  */
 @Component({
   selector: 'app-moments',
-  imports: [StateComponent, 
+  imports: [
+    StateComponent,
     IconComponent,
     FormsModule,
     RouterLink,
     ModalComponent,
     MomentTimelineComponent,
     MomentMapComponent,
+    TranslatePipe,
   ],
   template: `
     <main class="page-shell">
@@ -64,14 +71,14 @@ export interface QuickReaction {
         <!-- Kopfbereich -->
         <header class="moments-header">
           <div>
-            <span class="eyebrow">Gemeinschaftsmomente & Rituale</span>
+            <span class="eyebrow">{{ 'moments.eyebrow' | t }}</span>
             <h1 id="moments-title">Moments</h1>
           </div>
           <div class="header-actions">
             @if (eventId()) {
-              <a class="member-back" [routerLink]="['/events', eventId()]">← Zum Event</a>
+              <a class="member-back" [routerLink]="['/events', eventId()]">{{ 'moments.backToEvent' | t }}</a>
             } @else {
-              <a class="member-back" routerLink="/events">← Alle Events</a>
+              <a class="member-back" routerLink="/events">{{ 'moments.allEvents' | t }}</a>
             }
           </div>
         </header>
@@ -79,14 +86,14 @@ export interface QuickReaction {
         <!-- Event-Auswahl (wenn nicht direkt über Event-Route geöffnet) -->
         @if (!routeEventId()) {
           <div class="event-picker-section">
-            <label for="event-select" class="picker-label">Aktives Event auswählen:</label>
+            <label for="event-select" class="picker-label">{{ 'moments.picker.label' | t }}</label>
             <select
               id="event-select"
               class="member-select"
               [ngModel]="selectedEventId()"
               (ngModelChange)="onSelectEvent($event)"
             >
-              <option value="" disabled>-- Bitte Event wählen --</option>
+              <option value="" disabled>{{ 'moments.picker.placeholder' | t }}</option>
               @for (ev of events(); track ev.id) {
                 <option [value]="ev.id">{{ ev.title }} ({{ formatEventDate(ev.startsAt) }})</option>
               }
@@ -100,8 +107,8 @@ export interface QuickReaction {
             <div class="push-alert-body">
               <vereint-icon class="push-alert-icon" name="bell" />
               <div>
-                <strong>Neuer Moment gestartet: „{{ banner.title }}“</strong>
-                <p>Möchtest du beitreten und eine Reaktion oder einen Status teilen?</p>
+                <strong>{{ 'moments.push.title' | t: { title: banner.title } }}</strong>
+                <p>{{ 'moments.push.message' | t }}</p>
               </div>
             </div>
             <div class="push-alert-actions">
@@ -110,14 +117,14 @@ export interface QuickReaction {
                 class="member-button btn-sm"
                 (click)="openRespondModal(banner.id)"
               >
-                Jetzt Beitreten
+                {{ 'moments.push.join' | t }}
               </button>
               <button
                 type="button"
                 class="member-button btn-subtle btn-sm"
                 (click)="dismissPushBanner()"
               >
-                Ausblenden
+                {{ 'moments.push.dismiss' | t }}
               </button>
             </div>
           </div>
@@ -127,13 +134,13 @@ export interface QuickReaction {
         @if (isBusy()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Moments und Ritual-Feeds werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'moments.loadingMessage' | t"
           />
         } @else if (loadError()) {
           <vereint-state
             kind="error"
-            title="Nicht verfügbar"
+            [title]="'moments.unavailable' | t"
             [message]="loadError()"
             (retry)="reload()"
           />
@@ -145,13 +152,13 @@ export interface QuickReaction {
               class="member-button btn-primary"
               (click)="openStartModal()"
             >
-              + Neuen Moment starten
+              {{ 'moments.actions.start' | t }}
             </button>
 
             @if (activeSessions().length > 0) {
               <div class="active-count-badge">
                 <span class="pulse-dot"></span>
-                <span>{{ activeSessions().length }} aktiver Moment</span>
+                <span>{{ 'moments.actions.activeCount' | t: { count: activeSessions().length } }}</span>
               </div>
             }
           </div>
@@ -160,17 +167,16 @@ export interface QuickReaction {
           @if (activeSessions().length === 0) {
             <div class="empty-moments-card">
               <vereint-icon class="empty-icon" name="moments" />
-              <h3>Kein aktiver Moment</h3>
+              <h3>{{ 'moments.empty.title' | t }}</h3>
               <p>
-                Aktuell läuft kein Ritual oder Gemeinschaftsmoment für dieses Event.
-                Starte jetzt ein gemeinsames Anstoßen, ein Gebet oder einen Fan-Jubel!
+                {{ 'moments.empty.message' | t }}
               </p>
               <button
                 type="button"
                 class="member-button"
                 (click)="openStartModal()"
               >
-                Moment initiieren
+                {{ 'moments.empty.initiate' | t }}
               </button>
             </div>
           } @else {
@@ -193,13 +199,14 @@ export interface QuickReaction {
                   <h3 class="session-title">{{ session.title }}</h3>
 
                   @if (session.message) {
-                    <p class="session-message">„{{ session.message }}“</p>
+                    <p class="session-message">{{ 'moments.quote' | t: { text: session.message } }}</p>
                   }
 
                   <div class="session-meta">
-                    <span class="session-creator">Von {{ session.creatorName }}</span>
+                    <span class="session-creator">{{ 'moments.session.by' | t: { name: session.creatorName } }}</span>
                     <span class="session-responses-count">
-                      <vereint-icon name="chat" /> {{ session.responsesCount }} Antworten
+                      <vereint-icon name="chat" />
+                      {{ 'moments.session.responses' | t: { count: session.responsesCount } }}
                     </span>
                   </div>
 
@@ -209,7 +216,7 @@ export interface QuickReaction {
                       class="member-button btn-sm"
                       (click)="openRespondModal(session.id)"
                     >
-                      + Reagieren
+                      {{ 'moments.session.react' | t }}
                     </button>
 
                     @if (session.conversationId) {
@@ -218,7 +225,7 @@ export interface QuickReaction {
                         [routerLink]="['/chat']"
                         [queryParams]="{ conversationId: session.conversationId }"
                       >
-                        <vereint-icon name="chat" /> 24h-Chat
+                        <vereint-icon name="chat" /> {{ 'moments.session.chat' | t }}
                       </a>
                     }
 
@@ -226,9 +233,9 @@ export interface QuickReaction {
                       type="button"
                       class="member-button btn-sm btn-subtle"
                       (click)="completeMoment(session.id)"
-                      title="Moment abschließen und im Event-Verlauf archivieren"
+                      [title]="'moments.session.completeTitle' | t"
                     >
-                      Abschließen
+                      {{ 'moments.session.complete' | t }}
                     </button>
                   </div>
                 </article>
@@ -241,7 +248,7 @@ export interface QuickReaction {
             <section class="selected-detail-section" aria-labelledby="detail-title">
               <div class="detail-header">
                 <div>
-                  <span class="eyebrow">Ausgewählter Moment</span>
+                  <span class="eyebrow">{{ 'moments.detail.eyebrow' | t }}</span>
                   <h2 id="detail-title">{{ detail.session.title }}</h2>
                 </div>
 
@@ -255,7 +262,7 @@ export interface QuickReaction {
                     role="tab"
                     [attr.aria-selected]="activeTab() === 'timeline'"
                   >
-                    Timeline ({{ detail.responses.length }})
+                    {{ 'moments.detail.timelineTab' | t: { count: detail.responses.length } }}
                   </button>
                   <button
                     type="button"
@@ -265,23 +272,23 @@ export interface QuickReaction {
                     role="tab"
                     [attr.aria-selected]="activeTab() === 'map'"
                   >
-                    Weltkarte ({{ detail.mapGeoJson.features.length }})
+                    {{ 'moments.detail.mapTab' | t: { count: detail.mapGeoJson.features.length } }}
                   </button>
                 </div>
               </div>
 
               <!-- Schnelle Reaktionsleiste -->
               <div class="quick-reaction-bar">
-                <span class="quick-label">Schnell reagieren:</span>
+                <span class="quick-label">{{ 'moments.detail.quickLabel' | t }}</span>
                 <div class="quick-buttons">
                   @for (q of quickReactions; track q.value) {
                     <button
                       type="button"
                       class="quick-btn"
                       (click)="submitQuickReaction(detail.session.id, q.value)"
-                      [title]="q.label"
+                      [title]="q.labelKey | t"
                     >
-                      {{ q.emoji }} {{ q.label }}
+                      {{ q.emoji }} {{ q.labelKey | t }}
                     </button>
                   }
                   <button
@@ -289,7 +296,7 @@ export interface QuickReaction {
                     class="quick-btn btn-custom"
                     (click)="openRespondModal(detail.session.id)"
                   >
-                    + Status & Text
+                    {{ 'moments.detail.custom' | t }}
                   </button>
                 </div>
               </div>
@@ -309,7 +316,7 @@ export interface QuickReaction {
           <!-- Historie / Abgeschlossene Moments -->
           @if (history().length > 0) {
             <section class="history-section" aria-labelledby="history-title">
-              <h3 id="history-title" class="history-heading">Archivierte Moments & Rituale</h3>
+              <h3 id="history-title" class="history-heading">{{ 'moments.history.title' | t }}</h3>
               <ul class="history-list">
                 @for (item of history(); track item.momentId) {
                   <li class="history-item">
@@ -322,8 +329,14 @@ export interface QuickReaction {
                     </div>
                     <p class="history-summary">{{ item.summary }}</p>
                     <div class="history-stats">
-                      <span><vereint-icon name="users" /> {{ item.uniqueParticipants }} Teilnehmer</span>
-                      <span><vereint-icon name="chat" /> {{ item.totalResponses }} Beiträge</span>
+                      <span>
+                        <vereint-icon name="users" />
+                        {{ 'moments.history.participants' | t: { count: item.uniqueParticipants } }}
+                      </span>
+                      <span>
+                        <vereint-icon name="chat" />
+                        {{ 'moments.history.contributions' | t: { count: item.totalResponses } }}
+                      </span>
                     </div>
                   </li>
                 }
@@ -336,26 +349,26 @@ export interface QuickReaction {
       <!-- Modal: Neuen Moment starten -->
       <vereint-modal
         [open]="startModalOpen()"
-        title="Neuen Moment initiieren"
+        [title]="'moments.start.title' | t"
         (close)="closeStartModal()"
       >
         <form class="member-form" (ngSubmit)="submitStartMoment()">
           <div class="form-group">
-            <label for="moment-title-input" class="form-label">Titel des Rituals / Moments *</label>
+            <label for="moment-title-input" class="form-label">{{ 'moments.start.titleLabel' | t }}</label>
             <input
               id="moment-title-input"
               type="text"
               class="member-input"
               [(ngModel)]="newTitle"
               name="title"
-              placeholder="z. B. Gemeinsames Anstoßen, Abendgebet, Jubelwelle"
+              [placeholder]="'moments.start.titlePlaceholder' | t"
               required
               maxlength="255"
             />
           </div>
 
           <div class="form-group">
-            <label class="form-label">Thema / Ritualtyp *</label>
+            <label class="form-label">{{ 'moments.start.topicLabel' | t }}</label>
             <div class="topic-grid">
               @for (opt of topicOptions; track opt.value) {
                 <label
@@ -370,8 +383,8 @@ export interface QuickReaction {
                   />
                   <span class="topic-option-emoji">{{ opt.emoji }}</span>
                   <span class="topic-option-info">
-                    <strong>{{ opt.label }}</strong>
-                    <small>{{ opt.description }}</small>
+                    <strong>{{ opt.labelKey | t }}</strong>
+                    <small>{{ opt.descriptionKey | t }}</small>
                   </span>
                 </label>
               }
@@ -379,31 +392,31 @@ export interface QuickReaction {
           </div>
 
           <div class="form-group">
-            <label for="moment-message-input" class="form-label">Nachricht / Impuls (optional)</label>
+            <label for="moment-message-input" class="form-label">{{ 'moments.start.messageLabel' | t }}</label>
             <textarea
               id="moment-message-input"
               class="member-textarea"
               [(ngModel)]="newMessage"
               name="message"
-              placeholder="z. B. Ein Hoch auf unseren Verein! Wer stößt aus der Ferne mit an?"
+              [placeholder]="'moments.start.messagePlaceholder' | t"
               maxlength="500"
               rows="3"
             ></textarea>
           </div>
 
           <div class="form-group">
-            <label for="moment-duration-select" class="form-label">Dauer des Moments</label>
+            <label for="moment-duration-select" class="form-label">{{ 'moments.start.durationLabel' | t }}</label>
             <select
               id="moment-duration-select"
               class="member-select"
               [(ngModel)]="newDurationMinutes"
               name="durationMinutes"
             >
-              <option [ngValue]="15">15 Minuten (Kurzer Impuls)</option>
-              <option [ngValue]="30">30 Minuten</option>
-              <option [ngValue]="60">1 Stunde (Standard)</option>
-              <option [ngValue]="120">2 Stunden</option>
-              <option [ngValue]="1440">24 Stunden (Tagesritual)</option>
+              <option [ngValue]="15">{{ 'moments.start.duration.m15' | t }}</option>
+              <option [ngValue]="30">{{ 'moments.start.duration.m30' | t }}</option>
+              <option [ngValue]="60">{{ 'moments.start.duration.h1' | t }}</option>
+              <option [ngValue]="120">{{ 'moments.start.duration.h2' | t }}</option>
+              <option [ngValue]="1440">{{ 'moments.start.duration.h24' | t }}</option>
             </select>
           </div>
 
@@ -415,7 +428,7 @@ export interface QuickReaction {
                 name="consent"
                 (change)="onConsentToggle($event)"
               />
-              <span><vereint-icon name="location" /> Meinen Standort für die Weltkarte freigeben (DSGVO Opt-in)</span>
+              <span><vereint-icon name="location" /> {{ 'moments.start.consent' | t }}</span>
             </label>
             @if (geoStatus()) {
               <small class="geo-status-text">{{ geoStatus() }}</small>
@@ -432,14 +445,14 @@ export interface QuickReaction {
               class="member-button btn-subtle"
               (click)="closeStartModal()"
             >
-              Abbrechen
+              {{ 'common.cancel' | t }}
             </button>
             <button
               type="submit"
               class="member-button btn-primary"
               [disabled]="submittingForm() || !newTitle.trim()"
             >
-              {{ submittingForm() ? 'Wird gestartet …' : 'Moment jetzt starten' }}
+              {{ (submittingForm() ? 'moments.start.submitting' : 'moments.start.submit') | t }}
             </button>
           </div>
         </form>
@@ -448,12 +461,12 @@ export interface QuickReaction {
       <!-- Modal: Statusbeitrag / Reaktion einreichen -->
       <vereint-modal
         [open]="respondModalOpen()"
-        title="Status & Reaktion teilen"
+        [title]="'moments.respond.title' | t"
         (close)="closeRespondModal()"
       >
         <form class="member-form" (ngSubmit)="submitResponseForm()">
           <div class="form-group">
-            <label class="form-label">Reaktion auswählen *</label>
+            <label class="form-label">{{ 'moments.respond.reactionLabel' | t }}</label>
             <div class="reaction-picker-grid">
               @for (q of quickReactions; track q.value) {
                 <button
@@ -463,21 +476,21 @@ export interface QuickReaction {
                   (click)="respondReaction = q.value"
                 >
                   <span class="reaction-emoji">{{ q.emoji }}</span>
-                  <span class="reaction-name">{{ q.label }}</span>
+                  <span class="reaction-name">{{ q.labelKey | t }}</span>
                 </button>
               }
             </div>
           </div>
 
           <div class="form-group">
-            <label for="status-text-input" class="form-label">Persönlicher Status (optional)</label>
+            <label for="status-text-input" class="form-label">{{ 'moments.respond.statusLabel' | t }}</label>
             <input
               id="status-text-input"
               type="text"
               class="member-input"
               [(ngModel)]="respondStatusText"
               name="statusText"
-              placeholder="z. B. Schöne Grüße aus Hamburg! 🍺"
+              [placeholder]="'moments.respond.statusPlaceholder' | t"
               maxlength="255"
             />
           </div>
@@ -490,7 +503,7 @@ export interface QuickReaction {
                 name="respondConsent"
                 (change)="onRespondConsentToggle($event)"
               />
-              <span><vereint-icon name="location" /> Aktuellen Standort für diesen Beitrag auf der Weltkarte teilen</span>
+              <span><vereint-icon name="location" /> {{ 'moments.respond.consent' | t }}</span>
             </label>
             @if (respondGeoStatus()) {
               <small class="geo-status-text">{{ respondGeoStatus() }}</small>
@@ -507,14 +520,14 @@ export interface QuickReaction {
               class="member-button btn-subtle"
               (click)="closeRespondModal()"
             >
-              Abbrechen
+              {{ 'common.cancel' | t }}
             </button>
             <button
               type="submit"
               class="member-button btn-primary"
               [disabled]="submittingResponse() || !respondReaction"
             >
-              {{ submittingResponse() ? 'Wird gesendet …' : 'Beitrag absenden' }}
+              {{ (submittingResponse() ? 'moments.respond.submitting' : 'moments.respond.submit') | t }}
             </button>
           </div>
         </form>
@@ -999,20 +1012,20 @@ export class MomentsComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
 
   protected readonly topicOptions: TopicOption[] = [
-    { value: 'toast', label: 'Gemeinsames Anstoßen', emoji: '🍻', description: 'Für Stammtische & Feste' },
-    { value: 'prayer', label: 'Gebet & Fürbitte', emoji: '🙏', description: 'Für Kirchen- & Glaubensgemeinschaften' },
-    { value: 'cheer', label: 'Jubeln & Anfeuern', emoji: '📣', description: 'Für Sport- & Fan-Clubs' },
-    { value: 'checkin', label: 'Spontaner Check-in', emoji: '📍', description: 'Präsenz & Standort teilen' },
-    { value: 'other', label: 'Sonstiger Impuls', emoji: '✨', description: 'Freie Gemeinschaftsaktion' },
+    topic('toast', '🍻'),
+    topic('prayer', '🙏'),
+    topic('cheer', '📣'),
+    topic('checkin', '📍'),
+    topic('other', '✨'),
   ];
 
   protected readonly quickReactions: QuickReaction[] = [
-    { value: 'TOAST', label: 'Anstoßen', emoji: '🍻' },
-    { value: 'PRAYER', label: 'Gebet', emoji: '🙏' },
-    { value: 'CHEER', label: 'Jubel', emoji: '📣' },
-    { value: 'THUMBS_UP', label: 'Daumen hoch', emoji: '👍' },
-    { value: 'CELEBRATE', label: 'Feiern', emoji: '🎉' },
-    { value: 'HEART', label: 'Herz', emoji: '❤️' },
+    { value: 'TOAST', labelKey: 'moments.reactions.toast', emoji: '🍻' },
+    { value: 'PRAYER', labelKey: 'moments.reactions.prayer', emoji: '🙏' },
+    { value: 'CHEER', labelKey: 'moments.reactions.cheer', emoji: '📣' },
+    { value: 'THUMBS_UP', labelKey: 'moments.reactions.thumbsUp', emoji: '👍' },
+    { value: 'CELEBRATE', labelKey: 'moments.reactions.celebrate', emoji: '🎉' },
+    { value: 'HEART', labelKey: 'moments.reactions.heart', emoji: '❤️' },
   ];
 
   // Async States
@@ -1196,17 +1209,20 @@ export class MomentsComponent implements OnInit, OnDestroy {
     const checked = (event.target as HTMLInputElement).checked;
     this.newConsent = checked;
     if (checked && isPlatformBrowser(this.platformId) && navigator.geolocation) {
-      this.geoStatus.set('Ermittle GPS-Standort …');
+      this.geoStatus.set(translate('moments.geo.locating'));
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           this.newLatitude = pos.coords.latitude;
           this.newLongitude = pos.coords.longitude;
           this.geoStatus.set(
-            `Standort erfasst: ${pos.coords.latitude.toFixed(2)}°, ${pos.coords.longitude.toFixed(2)}°`,
+            translate('moments.geo.captured', {
+              lat: pos.coords.latitude.toFixed(2),
+              lng: pos.coords.longitude.toFixed(2),
+            }),
           );
         },
         () => {
-          this.geoStatus.set('Standortermittlung fehlgeschlagen oder im Browser verweigert.');
+          this.geoStatus.set(translate('moments.geo.failedOrDenied'));
           this.newLatitude = null;
           this.newLongitude = null;
         },
@@ -1245,9 +1261,9 @@ export class MomentsComponent implements OnInit, OnDestroy {
       error: (err: unknown) => {
         this.submittingForm.set(false);
         if (err instanceof ApiError) {
-          this.formError.set(err.message || 'Fehler beim Starten des Moments.');
+          this.formError.set(err.message || translate('moments.start.error'));
         } else {
-          this.formError.set('Moment konnte nicht gestartet werden.');
+          this.formError.set(translate('moments.start.failed'));
         }
       },
     });
@@ -1274,17 +1290,20 @@ export class MomentsComponent implements OnInit, OnDestroy {
     const checked = (event.target as HTMLInputElement).checked;
     this.respondConsent = checked;
     if (checked && isPlatformBrowser(this.platformId) && navigator.geolocation) {
-      this.respondGeoStatus.set('Ermittle GPS-Standort …');
+      this.respondGeoStatus.set(translate('moments.geo.locating'));
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           this.respondLatitude = pos.coords.latitude;
           this.respondLongitude = pos.coords.longitude;
           this.respondGeoStatus.set(
-            `Standort erfasst: ${pos.coords.latitude.toFixed(2)}°, ${pos.coords.longitude.toFixed(2)}°`,
+            translate('moments.geo.captured', {
+              lat: pos.coords.latitude.toFixed(2),
+              lng: pos.coords.longitude.toFixed(2),
+            }),
           );
         },
         () => {
-          this.respondGeoStatus.set('Standortermittlung fehlgeschlagen.');
+          this.respondGeoStatus.set(translate('moments.geo.failed'));
           this.respondLatitude = null;
           this.respondLongitude = null;
         },
@@ -1321,9 +1340,9 @@ export class MomentsComponent implements OnInit, OnDestroy {
       error: (err: unknown) => {
         this.submittingResponse.set(false);
         if (err instanceof ApiError) {
-          this.respondError.set(err.message || 'Fehler beim Absenden.');
+          this.respondError.set(err.message || translate('moments.respond.error'));
         } else {
-          this.respondError.set('Status konnte nicht gesendet werden.');
+          this.respondError.set(translate('moments.respond.failed'));
         }
       },
     });
@@ -1359,7 +1378,7 @@ export class MomentsComponent implements OnInit, OnDestroy {
   // --- Formatters & Helpers ---
   protected getTopicLabel(topic: string): string {
     const found = this.topicOptions.find((t) => t.value === topic);
-    return found ? `${found.emoji} ${found.label}` : topic;
+    return found ? `${found.emoji} ${translate(found.labelKey)}` : topic;
   }
 
   protected formatTime(iso: string): string {
@@ -1372,10 +1391,20 @@ export class MomentsComponent implements OnInit, OnDestroy {
 
   protected formatRemainingTime(expiresAt: string): string {
     const diffMs = new Date(expiresAt).getTime() - Date.now();
-    if (diffMs <= 0) return 'Abgelaufen';
+    if (diffMs <= 0) return translate('moments.remaining.expired');
     const minutes = Math.floor(diffMs / (1000 * 60));
-    if (minutes < 60) return `noch ${minutes} Min aktiv`;
+    if (minutes < 60) return translate('moments.remaining.minutes', { count: minutes });
     const hours = Math.floor(minutes / 60);
-    return `noch ${hours} Std aktiv`;
+    return translate('moments.remaining.hours', { count: hours });
   }
+}
+
+/** Themenoption; Bezeichnung und Beschreibung liegen unter `moments.topics.<value>`. */
+function topic(value: string, emoji: string): TopicOption {
+  return {
+    value,
+    labelKey: `moments.topics.${value}.label`,
+    emoji,
+    descriptionKey: `moments.topics.${value}.description`,
+  };
 }

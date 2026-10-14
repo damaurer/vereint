@@ -4,9 +4,10 @@ import { map, switchMap } from 'rxjs';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
 import { formatDateTime, formatMoney } from './member-format';
-import type { LedgerEntry } from '../api/api.types';
+import type { LedgerEntry, PurchaseSnapshot } from '../api/api.types';
 import { StatusBadgeComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
 
 /**
  * Historische Käufe eines Mitglieds (TICKET-024, Redesign TICKET-033).
@@ -19,25 +20,25 @@ import { StateComponent } from '../ui/state.component';
  */
 @Component({
   selector: 'app-member-purchases',
-  imports: [StateComponent, IconComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, StatusBadgeComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="purchases-title">
-        <span class="eyebrow">Belege</span>
-        <h1 id="purchases-title">Käufe</h1>
-        <p>Deine Käufe mit unveränderlichem Beleg.</p>
+        <span class="eyebrow">{{ 'member.purchases.eyebrow' | t }}</span>
+        <h1 id="purchases-title">{{ 'member.purchases.title' | t }}</h1>
+        <p>{{ 'member.purchases.intro' | t }}</p>
 
 
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Die Käufe werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'member.purchases.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Käufe nicht verfügbar"
+            [title]="'member.purchases.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -45,8 +46,8 @@ import { StateComponent } from '../ui/state.component';
           @if (purchases.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Käufe"
-              message="Du hast bisher keine Getränke gekauft."
+              [title]="'member.purchases.emptyTitle' | t"
+              [message]="'member.purchases.emptyMessage' | t"
             />
           } @else {
             <ul class="receipt-list">
@@ -56,14 +57,14 @@ import { StateComponent } from '../ui/state.component';
                     <img
                       class="receipt-image"
                       [src]="purchase.snapshot!.imageReference"
-                      [alt]="purchase.snapshot!.drinkName"
+                      [alt]="itemName(purchase.snapshot!)"
                     />
                   } @else {
-                    <span class="receipt-image receipt-image-fallback" aria-hidden="true"><vereint-icon name="beer" /></span>
+                    <span class="receipt-image receipt-image-fallback" aria-hidden="true"><vereint-icon [name]="purchase.snapshot!.itemType === 'FOOD' ? 'food' : 'beer'" /></span>
                   }
                   <div class="receipt-body">
                     <div class="receipt-head">
-                      <span class="receipt-name">{{ purchase.snapshot!.drinkName }}</span>
+                      <span class="receipt-name">{{ itemName(purchase.snapshot!) }}</span>
                       <span class="receipt-price">
                         {{ formatMoney(purchase.snapshot!.unitPrice, purchase.snapshot!.currency) }}
                       </span>
@@ -71,11 +72,13 @@ import { StateComponent } from '../ui/state.component';
                     <span class="receipt-meta">{{ formatDateTime(purchase.createdAt) }}</span>
                     <div class="receipt-tags">
                       @if (purchase.snapshot!.barcode) {
-                        <span class="receipt-barcode">Barcode {{ purchase.snapshot!.barcode }}</span>
+                        <span class="receipt-barcode">{{ 'member.purchases.barcode' | t: { code: purchase.snapshot!.barcode } }}</span>
                       }
-                      <vereint-status-badge
-                        [label]="'Katalog v' + purchase.snapshot!.catalogVersion"
-                      />
+                      @if (purchase.snapshot!.catalogVersion !== null) {
+                        <vereint-status-badge
+                          [label]="'member.purchases.catalogVersion' | t: { version: purchase.snapshot!.catalogVersion }"
+                        />
+                      }
                     </div>
                   </div>
                 </li>
@@ -172,6 +175,11 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   protected readonly load = new AsyncState<LedgerEntry[]>();
   protected readonly formatMoney = formatMoney;
   protected readonly formatDateTime = formatDateTime;
+
+  /** Name des gekauften Artikels; Speisen tragen ihn in `foodName`. */
+  protected itemName(snapshot: PurchaseSnapshot): string {
+    return snapshot.drinkName ?? snapshot.foodName ?? '';
+  }
 
   ngOnInit(): void {
     this.reload();

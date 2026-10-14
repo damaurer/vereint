@@ -5,7 +5,7 @@
         <img class="shell-brand-mark" src="vereint-app-icon.svg" alt="" width="28" height="28" />
         <span class="shell-brand-name">Vereint</span>
       </span>
-      <span class="shell-guest-tag">Gast</span>
+      <span class="shell-guest-tag">{{ 'shell.guestTag' | t }}</span>
     </header>
     <div class="shell-content">
       <router-outlet />
@@ -13,14 +13,14 @@
   </div>
 } @else {
   <div class="shell" [attr.data-viewport]="viewport()">
-    <a class="shell-skip-link" href="#shell-main-content">Zum Inhalt springen</a>
+    <a class="shell-skip-link" href="#shell-main-content">{{ 'shell.skipLink' | t }}</a>
 
     @if (viewport() === 'web') {
       <aside class="shell-sidebar">
         <a
           class="shell-brand shell-brand-row"
           routerLink="/dashboard"
-          aria-label="Vereint – zur Startseite"
+          [attr.aria-label]="'shell.brandHome' | t"
         >
           <img class="shell-brand-mark" src="vereint-app-icon.svg" alt="" width="32" height="32" />
           <span class="shell-brand-name">Vereint</span>
@@ -29,19 +29,23 @@
           <nav
             class="shell-nav"
             [class.shell-nav-panel]="section.id === 'admin'"
-            [attr.aria-label]="section.label"
+            [attr.aria-label]="section.labelKey | t"
           >
-            <p class="shell-nav-heading">{{ section.label }}</p>
+            <p class="shell-nav-heading">{{ section.labelKey | t }}</p>
             @for (item of section.items; track trackNav($index, item)) {
               <a
                 class="shell-nav-link"
                 [routerLink]="item.route"
+                [attr.aria-label]="navAriaLabel(item)"
                 routerLinkActive="is-active"
                 [routerLinkActiveOptions]="activeOptions(item)"
                 ariaCurrentWhenActive="page"
               >
                 <vereint-icon class="shell-nav-icon" [name]="item.icon" />
-                <span class="shell-nav-label">{{ item.label }}</span>
+                <span class="shell-nav-label">{{ item.labelKey | t }}</span>
+                @if (item.id === 'chat' && chatBadge(); as badge) {
+                  <span class="shell-nav-count" aria-hidden="true">{{ badge }}</span>
+                }
               </a>
             }
           </nav>
@@ -49,20 +53,24 @@
       </aside>
     } @else if (viewport() === 'tablet') {
       <aside class="shell-rail">
-        <a class="shell-rail-brand" routerLink="/dashboard" aria-label="Vereint – zur Startseite">
+        <a class="shell-rail-brand" routerLink="/dashboard" [attr.aria-label]="'shell.brandHome' | t">
           <img class="shell-brand-mark" src="vereint-app-icon.svg" alt="" width="36" height="36" />
         </a>
-        <nav class="shell-rail-nav" aria-label="Hauptnavigation">
+        <nav class="shell-rail-nav" [attr.aria-label]="'shell.mainNav' | t">
           @for (item of primaryNav(); track trackNav($index, item)) {
             <a
               class="shell-rail-link"
               [routerLink]="item.route"
+              [attr.aria-label]="navAriaLabel(item)"
               routerLinkActive="is-active"
               [routerLinkActiveOptions]="activeOptions(item)"
               ariaCurrentWhenActive="page"
             >
               <vereint-icon class="shell-rail-icon" [name]="item.icon" />
-              <span class="shell-rail-label">{{ item.label }}</span>
+              <span class="shell-rail-label">{{ item.labelKey | t }}</span>
+              @if (item.id === 'chat' && chatBadge(); as badge) {
+                <span class="shell-nav-count" aria-hidden="true">{{ badge }}</span>
+              }
             </a>
           }
           <button
@@ -74,7 +82,7 @@
             (click)="openMore()"
           >
             <vereint-icon class="shell-rail-icon" name="more" />
-            <span class="shell-rail-label">Mehr</span>
+            <span class="shell-rail-label">{{ 'shell.more' | t }}</span>
           </button>
         </nav>
       </aside>
@@ -86,7 +94,7 @@
           <a
             class="shell-topbar-brand"
             routerLink="/dashboard"
-            aria-label="Vereint – zur Startseite"
+            [attr.aria-label]="'shell.brandHome' | t"
           >
             <img
               class="shell-brand-mark"
@@ -121,7 +129,7 @@
                 (click)="toggleProfile($event)"
               >
                 <span class="shell-profile-avatar" aria-hidden="true">{{ initials() }}</span>
-                <span class="shell-profile-name">{{ displayName() ?? 'Konto' }}</span>
+                <span class="shell-profile-name">{{ displayName() ?? ('shell.account' | t) }}</span>
                 <vereint-icon name="chevron-down" />
               </button>
               @if (profileOpen()) {
@@ -132,7 +140,7 @@
                     routerLink="/profile"
                     (click)="closeMenus()"
                   >
-                    <vereint-icon name="user" /> Profil
+                    <vereint-icon name="user" /> {{ 'shell.profile' | t }}
                   </a>
                   <a
                     class="shell-menu-item"
@@ -140,10 +148,10 @@
                     routerLink="/wallet"
                     (click)="closeMenus()"
                   >
-                    <vereint-icon name="wallet" /> Guthaben
+                    <vereint-icon name="wallet" /> {{ 'shell.wallet' | t }}
                   </a>
                   <button type="button" class="shell-menu-item" role="menuitem" (click)="logout()">
-                    <vereint-icon name="logout" /> Abmelden
+                    <vereint-icon name="logout" /> {{ 'shell.logout' | t }}
                   </button>
                 </div>
               }
@@ -157,17 +165,21 @@
       </div>
 
       @if (viewport() === 'mobile') {
-        <nav class="shell-bottom-bar" aria-label="Hauptnavigation">
+        <nav class="shell-bottom-bar" [attr.aria-label]="'shell.mainNav' | t">
           @for (item of primaryNav(); track trackNav($index, item)) {
             <a
               class="shell-bottom-link"
               [routerLink]="item.route"
+              [attr.aria-label]="navAriaLabel(item)"
               routerLinkActive="is-active"
               [routerLinkActiveOptions]="activeOptions(item)"
               ariaCurrentWhenActive="page"
             >
               <vereint-icon class="shell-bottom-icon" [name]="item.icon" />
-              <span class="shell-bottom-label">{{ item.label }}</span>
+              <span class="shell-bottom-label">{{ item.labelKey | t }}</span>
+              @if (item.id === 'chat' && chatBadge(); as badge) {
+                <span class="shell-nav-count" aria-hidden="true">{{ badge }}</span>
+              }
             </a>
           }
           <button
@@ -179,17 +191,17 @@
             (click)="openMore()"
           >
             <vereint-icon class="shell-bottom-icon" name="more" />
-            <span class="shell-bottom-label">Mehr</span>
+            <span class="shell-bottom-label">{{ 'shell.more' | t }}</span>
           </button>
         </nav>
       }
     </div>
 
-    <vereint-bottom-sheet [open]="moreOpen()" title="Mehr" (closed)="closeMenus()">
+    <vereint-bottom-sheet [open]="moreOpen()" [title]="'shell.more' | t" (closed)="closeMenus()">
       <div class="shell-more">
         @for (section of moreSections(); track section.id) {
-          <nav class="shell-more-section" [attr.aria-label]="section.label">
-            <p class="shell-nav-heading">{{ section.label }}</p>
+          <nav class="shell-more-section" [attr.aria-label]="section.labelKey | t">
+            <p class="shell-nav-heading">{{ section.labelKey | t }}</p>
             <div class="shell-more-grid">
               @for (item of section.items; track trackNav($index, item)) {
                 <a
@@ -200,14 +212,14 @@
                   (click)="closeMenus()"
                 >
                   <vereint-icon class="shell-more-icon" [name]="item.icon" />
-                  <span>{{ item.label }}</span>
+                  <span>{{ item.labelKey | t }}</span>
                 </a>
               }
             </div>
           </nav>
         }
         <button type="button" class="shell-more-logout" (click)="logout()">
-          <vereint-icon name="logout" /> Abmelden
+          <vereint-icon name="logout" /> {{ 'shell.logout' | t }}
         </button>
       </div>
     </vereint-bottom-sheet>

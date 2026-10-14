@@ -10,6 +10,7 @@ import de.maurer.baseservice.dto.UpdateEventFoodRequest
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.EventFoodRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
@@ -43,7 +44,7 @@ class EventFoodService(
         val event = requireEvent(eventId)
         if (!canViewEvent(caller, principal, event)) {
             throw AccessDeniedException(
-                "Keine Berechtigung zum Anzeigen der Eventspeisen",
+                Msg("error.eventFood.viewDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -62,18 +63,18 @@ class EventFoodService(
 
         if (eventFoodRepository.findByEventIdAndFoodId(eventId, food.id).isPresent) {
             throw InvalidRequestException(
-                "Die Speise ist bereits in der Eventauswahl enthalten",
+                Msg("error.eventFood.alreadyAdded"),
                 ErrorCode.INVALID_REQUEST
             )
         }
 
         val price = request.price
         if (price != null && price.signum() < 0) {
-            throw InvalidRequestException("price darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.negative", "price"), ErrorCode.INVALID_REQUEST)
         }
         val costPrice = request.costPrice
         if (costPrice != null && costPrice.signum() < 0) {
-            throw InvalidRequestException("costPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.negative", "costPrice"), ErrorCode.INVALID_REQUEST)
         }
 
         val eventFood = EventFoodEntity(
@@ -103,13 +104,13 @@ class EventFoodService(
 
         if (request.price != null) {
             if (request.price.signum() < 0) {
-                throw InvalidRequestException("price darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.negative", "price"), ErrorCode.INVALID_REQUEST)
             }
             eventFood.price = request.price
         }
         if (request.costPrice != null) {
             if (request.costPrice.signum() < 0) {
-                throw InvalidRequestException("costPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.negative", "costPrice"), ErrorCode.INVALID_REQUEST)
             }
             eventFood.costPrice = request.costPrice
         }
@@ -132,21 +133,21 @@ class EventFoodService(
 
     private fun requireEvent(id: UUID): EventEntity =
         eventRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Event mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.event.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     private fun requireFood(id: UUID): FoodCatalogEntity =
         foodCatalogRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Speise mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.food.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     private fun requireEventFood(eventId: UUID, eventFoodId: UUID): EventFoodEntity {
         val entity = eventFoodRepository.findById(eventFoodId).orElseThrow {
-            ResourceNotFoundException("Eventspeise mit ID '$eventFoodId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.eventFood.notFound", eventFoodId), ErrorCode.NOT_FOUND)
         }
         if (entity.event?.id != eventId) {
             throw ResourceNotFoundException(
-                "Eventspeise '$eventFoodId' gehört nicht zu Event '$eventId'",
+                Msg("error.eventFood.wrongEvent", eventFoodId, eventId),
                 ErrorCode.NOT_FOUND
             )
         }
@@ -156,7 +157,7 @@ class EventFoodService(
     private fun requireManage(caller: UserEntity, principal: UserPrincipal, event: EventEntity) {
         if (!isBoardOrAdmin(caller, principal) && event.owner?.id != caller.id) {
             throw AccessDeniedException(
-                "Nur der Event-Owner sowie Vorstand und Administration dürfen die Eventspeisen verwalten",
+                Msg("error.eventFood.manageDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -185,13 +186,13 @@ class EventFoodService(
     private fun parseId(value: String?, field: String): UUID {
         val trimmed = value?.trim()
         if (trimmed.isNullOrEmpty()) {
-            throw InvalidRequestException("$field darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", field), ErrorCode.INVALID_REQUEST)
         }
         return try {
             UUID.fromString(trimmed)
         } catch (_: IllegalArgumentException) {
             throw InvalidRequestException(
-                "Ungültige Kennung für '$field': '$trimmed' ist keine UUID",
+                Msg("error.field.invalidUuid", field, trimmed),
                 ErrorCode.INVALID_REQUEST
             )
         }

@@ -436,7 +436,9 @@ class AccessResolverService(
             contexts.add(AppContext.ADMIN)
         }
 
-        if (drinkRecorder) {
+        // Admins besitzen `purchase.tablet` (RolePermissionMatrix) und duerfen
+        // die Thekenerfassung daher auch oeffnen.
+        if (drinkRecorder || isAdmin) {
             contexts.add(AppContext.TABLET_RECORDER)
         }
 

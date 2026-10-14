@@ -3,6 +3,8 @@ package de.maurer.baseservice.service
 import de.maurer.baseservice.domain.NotificationEntity
 import de.maurer.baseservice.domain.PushSubscriptionEntity
 import de.maurer.baseservice.domain.UserEntity
+import de.maurer.baseservice.dto.BroadcastNotificationRequest
+import de.maurer.baseservice.dto.BroadcastResultDto
 import de.maurer.baseservice.dto.NotificationDto
 import de.maurer.baseservice.dto.PushSubscriptionDto
 import de.maurer.baseservice.dto.RegisterPushSubscriptionRequest
@@ -12,10 +14,11 @@ import de.maurer.baseservice.dto.VapidPublicKeyDto
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.push.PushMessage
 import de.maurer.baseservice.push.PushSender
-import de.maurer.baseservice.push.PushTarget
+import de.maurer.baseservice.push.PushDispatcher
 import de.maurer.baseservice.repository.NotificationRepository
 import de.maurer.baseservice.repository.PushSubscriptionRepository
 import de.maurer.baseservice.repository.UserRepository
@@ -23,7 +26,6 @@ import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.support.Identifiers
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -48,10 +50,9 @@ class NotificationService(
     private val userRoleRepository: UserRoleRepository,
     private val userService: UserService,
     private val pushSender: PushSender,
+    private val pushDispatcher: PushDispatcher,
     private val auditService: AuditService
 ) {
-
-    private val log = LoggerFactory.getLogger(NotificationService::class.java)
 
     // --- Benachrichtigungen des Aufrufers ---
 
@@ -70,12 +71,12 @@ class NotificationService(
     fun markRead(notificationId: UUID, principal: UserPrincipal): NotificationDto {
         val caller = userService.getOrCreateUser(principal)
         val notification = notificationRepository.findById(notificationId).orElseThrow {
-            ResourceNotFoundException("Benachrichtigung mit ID '$notificationId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.notification.notFound", notificationId), ErrorCode.NOT_FOUND)
         }
         // deny by default: fremde Benachrichtigungen werden nicht offengelegt
         if (notification.user?.id != caller.id) {
             throw ResourceNotFoundException(
-                "Benachrichtigung mit ID '$notificationId' nicht gefunden",
+                Msg("error.notification.notFound", notificationId),
                 ErrorCode.NOT_FOUND
             )
         }
@@ -128,11 +129,11 @@ class NotificationService(
     fun deleteSubscription(subscriptionId: UUID, principal: UserPrincipal) {
         val caller = userService.getOrCreateUser(principal)
         val subscription = pushSubscriptionRepository.findById(subscriptionId).orElseThrow {
-            ResourceNotFoundException("Abonnement mit ID '$subscriptionId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.notification.subscriptionNotFound", subscriptionId), ErrorCode.NOT_FOUND)
         }
         if (subscription.user?.id != caller.id) {
             throw ResourceNotFoundException(
-                "Abonnement mit ID '$subscriptionId' nicht gefunden",
+                Msg("error.notification.subscriptionNotFound", subscriptionId),
                 ErrorCode.NOT_FOUND
             )
         }
@@ -151,7 +152,7 @@ class NotificationService(
 
         val targetId = Identifiers.parseUuid(request.userId, "userId")
         val target = userRepository.findById(targetId).orElseThrow {
-            ResourceNotFoundException("Benutzer mit ID '$targetId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.user.notFound", targetId), ErrorCode.NOT_FOUND)
         }
         val title = require(request.title, "title")
         val body = require(request.body, "body")
@@ -161,70 +162,81 @@ class NotificationService(
             NotificationEntity(user = target, title = title, body = body, type = type)
         )
 
-        val dispatched = dispatchPush(target, PushMessage(title = title, body = body, type = type))
+        pushDispatcher.dispatch(listOf(target.id), PushMessage(title = title, body = body, type = type))
 
         auditService.recordNotification(
             caller,
             AuditService.ACTION_NOTIFICATION_SENT,
             notification.id,
-            "target=${target.id}; type=$type; delivered=$dispatched"
+            "target=${target.id}; type=$type"
         )
         return toDto(notification)
     }
 
     /**
+     * Rundbrief des Vorstands an ausgewählte Mitglieder oder an alle aktiven
+     * Mitglieder. Jede Person bekommt eine eigene Mitteilung samt Push.
+     */
+    fun broadcast(request: BroadcastNotificationRequest, principal: UserPrincipal): BroadcastResultDto {
+        val caller = userService.getOrCreateUser(principal)
+        requireBoardOrAdmin(caller, principal)
+
+        val title = require(request.title, "title")
+        val body = require(request.body, "body")
+        val targets = if (request.allMembers == true) {
+            userRepository.findByDisabled(false)
+        } else {
+            val ids = request.userIds.orEmpty().map { Identifiers.parseUuid(it, "userIds") }.distinct()
+            if (ids.isEmpty()) {
+                throw InvalidRequestException(Msg("error.notification.noRecipients"), ErrorCode.INVALID_REQUEST)
+            }
+            val found = userRepository.findAllById(ids)
+            if (found.size != ids.size) {
+                val missing = ids - found.map { it.id }.toSet()
+                throw ResourceNotFoundException(Msg("error.user.notFound", missing.first()), ErrorCode.NOT_FOUND)
+            }
+            found
+        }
+        val notifications = notifyUsers(targets, title, body, DEFAULT_TYPE)
+        notifications.forEach {
+            auditService.recordNotification(
+                caller,
+                AuditService.ACTION_NOTIFICATION_SENT,
+                it.id,
+                "target=${it.user?.id}; type=$DEFAULT_TYPE"
+            )
+        }
+        return BroadcastResultDto(sent = notifications.size)
+    }
+
+    /**
      * Interner Einstiegspunkt für andere Slices, um ein Mitglied zu benachrichtigen
      * (z. B. Einladungen, Ledger-Ereignisse). Speichert die Benachrichtigung und
-     * stellt sie – sofern konfiguriert – per Web Push zu.
+     * stellt sie – sofern konfiguriert – nach dem Commit per Web Push zu.
      */
-    fun notifyUser(target: UserEntity, title: String, body: String, type: String): NotificationEntity {
+    fun notifyUser(target: UserEntity, title: String, body: String, type: String, link: String? = null): NotificationEntity {
         val notification = notificationRepository.save(
-            NotificationEntity(user = target, title = title, body = body, type = type)
+            NotificationEntity(user = target, title = title, body = body, type = type, link = link)
         )
-        dispatchPush(target, PushMessage(title = title, body = body, type = type))
+        pushDispatcher.dispatch(listOf(target.id), PushMessage(title = title, body = body, type = type))
         return notification
     }
 
     /**
      * Versendet eine Benachrichtigung an mehrere Empfänger (z. B. Event-Teilnehmer bei neuem Moment).
      */
-    fun notifyUsers(targets: Collection<UserEntity>, title: String, body: String, type: String): List<NotificationEntity> {
-        return targets.map { notifyUser(it, title, body, type) }
-    }
-
-    /**
-     * Stellt eine Nachricht an alle Abonnements des Empfängers zu und entfernt
-     * dauerhaft ungültige Abonnements (`404`/`410`). Liefert die Anzahl der
-     * erfolgreichen Zustellungen.
-     */
-    private fun dispatchPush(target: UserEntity, message: PushMessage): Int {
-        val subscriptions = pushSubscriptionRepository.findByUserId(target.id)
-        var delivered = 0
-        subscriptions.forEach { subscription ->
-            val result = pushSender.send(
-                PushTarget(
-                    subscriptionId = subscription.id.toString(),
-                    endpoint = subscription.endpoint,
-                    p256dh = subscription.p256dh,
-                    auth = subscription.auth
-                ),
-                message
-            )
-            when {
-                result.success -> delivered++
-                result.gone -> {
-                    pushSubscriptionRepository.delete(subscription)
-                    log.info("removed gone push subscription={} user={}", subscription.id, target.id)
-                }
-                else -> log.warn(
-                    "push not delivered subscription={} status={} error={}",
-                    subscription.id,
-                    result.statusCode,
-                    result.error
-                )
-            }
+    fun notifyUsers(
+        targets: Collection<UserEntity>,
+        title: String,
+        body: String,
+        type: String,
+        link: String? = null
+    ): List<NotificationEntity> {
+        val notifications = targets.map {
+            notificationRepository.save(NotificationEntity(user = it, title = title, body = body, type = type, link = link))
         }
-        return delivered
+        pushDispatcher.dispatch(targets.map { it.id }, PushMessage(title = title, body = body, type = type))
+        return notifications
     }
 
     // --- Interne Helfer ---
@@ -232,7 +244,7 @@ class NotificationService(
     private fun requireBoardOrAdmin(caller: UserEntity, principal: UserPrincipal) {
         if (!isBoardOrAdmin(caller, principal)) {
             throw AccessDeniedException(
-                "Nur Vorstand und Administration dürfen Benachrichtigungen versenden",
+                Msg("error.notification.sendDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -247,7 +259,7 @@ class NotificationService(
     private fun require(value: String?, field: String): String {
         val text = value?.trim()
         if (text.isNullOrEmpty()) {
-            throw InvalidRequestException("$field darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", field), ErrorCode.INVALID_REQUEST)
         }
         return text
     }
@@ -259,6 +271,7 @@ class NotificationService(
             body = notification.body,
             type = notification.type,
             read = notification.read,
+            link = notification.link,
             createdAt = notification.createdAt
         )
 

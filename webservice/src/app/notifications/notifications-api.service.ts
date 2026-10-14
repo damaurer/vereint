@@ -9,6 +9,8 @@ export interface NotificationItem {
   type: string;
   read: boolean;
   createdAt: string;
+  /** Ziel in der App, z. B. `/events/{id}` bei Einladungen. */
+  link?: string | null;
 }
 
 export interface UnreadCountResponse {
@@ -55,6 +57,11 @@ export class NotificationsApiService {
 
   markAllRead(): Observable<UnreadCountResponse> {
     return this.api.post<UnreadCountResponse>('/notifications/read-all', {});
+  }
+
+  /** Zu- oder Absage auf eine Event-Einladung (`PUT /events/{id}/rsvp`). */
+  respondToEvent(eventId: string, status: 'accepted' | 'declined'): Observable<unknown> {
+    return this.api.put<unknown>(`/events/${encodeURIComponent(eventId)}/rsvp`, { status });
   }
 
   vapidPublicKey(): Observable<VapidPublicKeyResponse> {

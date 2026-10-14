@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
+import { translate } from '../i18n/i18n.service';
 
 /** Basis-Pfad der fachlichen API; Express leitet ihn an Spring weiter. */
 export const API_BASE_PATH = '/api/v1';
@@ -33,7 +34,7 @@ function mapHttpError(error: HttpErrorResponse): ApiError {
   const status = error.status ?? 0;
 
   if (status === 0) {
-    return new ApiError(0, 'network_error', 'Der Fachservice ist nicht erreichbar.');
+    return new ApiError(0, 'network_error', translate('errors.api.network'));
   }
 
   const problem = (error.error ?? {}) as ProblemBody;
@@ -56,19 +57,19 @@ export function describeApiError(error: unknown): string {
   switch (code) {
     case 'network_error':
     case 'service_unavailable':
-      return 'Der Dienst ist gerade nicht erreichbar. Bitte später erneut versuchen.';
+      return translate('errors.api.unavailable');
     case 'oidc_session_expired':
-      return 'Die Sitzung ist abgelaufen. Bitte erneut anmelden.';
+      return translate('errors.api.sessionExpired');
     case 'permission_denied':
     case 'access_denied':
-      return 'Für diese Aktion fehlen die erforderlichen Rechte.';
+      return translate('errors.api.permissionDenied');
     case 'not_found':
-      return 'Der angeforderte Eintrag wurde nicht gefunden.';
+      return translate('errors.api.notFound');
     case 'validation_error':
     case 'invalid_request':
-      return 'Die Eingabe ist ungültig. Bitte prüfen und erneut versuchen.';
+      return translate('errors.api.invalid');
     default:
-      return 'Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen.';
+      return translate('errors.api.generic');
   }
 }
 
