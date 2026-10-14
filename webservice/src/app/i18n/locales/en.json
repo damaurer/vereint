@@ -235,25 +235,6 @@
     "emptyTitle": "No notifications",
     "emptyMessage": "You have no notifications at the moment.",
     "listLabel": "Notification list",
-    "push": {
-      "title": "Web push notifications",
-      "enabledHint": "Push notifications are enabled on this device.",
-      "disabledHint": "Get instant notifications about events, bar duty and club news, even when your browser is closed.",
-      "enable": "Enable push",
-      "disable": "Disable push",
-      "unsupported": "Push not supported",
-      "message": {
-        "permissionDenied": "Permission for notifications was not granted.",
-        "serverDisabled": "Web push is currently not enabled on the server.",
-        "enabled": "Web push notifications enabled successfully!",
-        "registerFailed": "Failed to register the push subscription.",
-        "pushManagerFailed": "PushManager registration failed.",
-        "vapidFailed": "Could not retrieve the VAPID key.",
-        "enableFailed": "Failed to enable push.",
-        "disabled": "Push notifications disabled.",
-        "unsubscribeFailed": "Failed to cancel the push subscription."
-      }
-    },
     "type": {
       "event": "Event",
       "ledger": "Kitty",
@@ -1448,6 +1429,36 @@
       "namePlaceholder": "e.g. Jane Smith",
       "joining": "Joining …",
       "join": "Join event"
+    }
+  },
+  "pwa": {
+    "install": {
+      "title": "App on this device",
+      "installed": "Vereint is installed.",
+      "prompt": "Opens like an app from your home screen, without the browser bar.",
+      "ios": "In Safari, tap “Share” at the bottom, then “Add to Home Screen”.",
+      "manual": "Choose “Install app” or “Add to Home screen” in your browser menu.",
+      "button": "Install"
+    },
+    "push": {
+      "title": "Notifications on this device",
+      "hint": {
+        "on": "You get new notifications even when the app is closed.",
+        "off": "Get new notifications even when the app is closed.",
+        "blocked": "Blocked in your browser. Allow notifications in the site settings.",
+        "needsInstall": "On iPhone and iPad this only works after adding the app to your home screen.",
+        "unsupported": "This browser does not support notifications.",
+        "checking": "Checking …"
+      },
+      "message": {
+        "permissionDenied": "Vereint can't send notifications without your permission.",
+        "serverDisabled": "Notifications are not set up on the server yet.",
+        "notReady": "The app has not finished loading. Please try again in a moment.",
+        "enabled": "Notifications are on for this device.",
+        "enableFailed": "Notifications could not be turned on. Please try again later.",
+        "disabled": "Notifications are off for this device.",
+        "disableFailed": "Notifications could not be turned off. Please try again later."
+      }
     }
   },
   "scan": {

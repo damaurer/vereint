@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, input } from '@angular/core';
+import { TranslatePipe } from '../i18n';
 import { IconComponent } from '../ui/icon.component';
 import { InstallPromptService } from './install-prompt.service';
 import { PushNotificationsService } from './push-notifications.service';
@@ -10,37 +11,32 @@ import { PushNotificationsService } from './push-notifications.service';
  */
 @Component({
   selector: 'vereint-pwa-settings',
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   template: `
     <div class="pwa-settings">
       @if (showInstall()) {
         <div class="pwa-row">
           <div class="pwa-text">
-            <span class="pwa-title"><vereint-icon name="install" /> App auf diesem Gerät</span>
+            <span class="pwa-title"><vereint-icon name="install" /> {{ 'pwa.install.title' | t }}</span>
             @switch (installMode()) {
               @case ('installed') {
-                <span class="member-muted">Vereint ist installiert.</span>
+                <span class="member-muted">{{ 'pwa.install.installed' | t }}</span>
               }
               @case ('prompt') {
-                <span class="member-muted"
-                  >Startet wie eine App vom Home-Bildschirm, ohne Browserleiste.</span
-                >
+                <span class="member-muted">{{ 'pwa.install.prompt' | t }}</span>
               }
               @case ('ios') {
-                <span class="member-muted">
-                  In Safari unten auf <strong>Teilen</strong> tippen, dann
-                  <strong>Zum Home-Bildschirm</strong>.
-                </span>
+                <span class="member-muted">{{ 'pwa.install.ios' | t }}</span>
               }
               @default {
-                <span class="member-muted"
-                  >Im Browsermenü „App installieren“ oder „Zum Startbildschirm“ wählen.</span
-                >
+                <span class="member-muted">{{ 'pwa.install.manual' | t }}</span>
               }
             }
           </div>
           @if (installMode() === 'prompt') {
-            <button type="button" class="member-button" (click)="install()">Installieren</button>
+            <button type="button" class="member-button" (click)="install()">
+              {{ 'pwa.install.button' | t }}
+            </button>
           }
         </div>
       }
@@ -48,9 +44,9 @@ import { PushNotificationsService } from './push-notifications.service';
       <div class="pwa-row">
         <div class="pwa-text">
           <span class="pwa-title" id="push-label"
-            ><vereint-icon name="bell" /> Mitteilungen auf diesem Gerät</span
+            ><vereint-icon name="bell" /> {{ 'pwa.push.title' | t }}</span
           >
-          <span class="member-muted">{{ pushHint() }}</span>
+          <span class="member-muted">{{ pushHintKey() | t }}</span>
         </div>
         @if (pushToggleable()) {
           <input
@@ -129,20 +125,20 @@ export class PwaSettingsComponent implements OnInit {
     return state === 'on' || state === 'off';
   }
 
-  protected pushHint(): string {
+  protected pushHintKey(): string {
     switch (this.push.state()) {
       case 'on':
-        return 'Du bekommst neue Mitteilungen auch bei geschlossener App.';
+        return 'pwa.push.hint.on';
       case 'off':
-        return 'Neue Mitteilungen auch bei geschlossener App erhalten.';
+        return 'pwa.push.hint.off';
       case 'blocked':
-        return 'Im Browser blockiert. Erlaube Mitteilungen in den Website-Einstellungen.';
+        return 'pwa.push.hint.blocked';
       case 'needs-install':
-        return 'Auf iPhone und iPad erst nach der Installation auf dem Home-Bildschirm möglich.';
+        return 'pwa.push.hint.needsInstall';
       case 'unsupported':
-        return 'Dieser Browser unterstützt keine Mitteilungen.';
+        return 'pwa.push.hint.unsupported';
       default:
-        return 'Wird geprüft …';
+        return 'pwa.push.hint.checking';
     }
   }
 
