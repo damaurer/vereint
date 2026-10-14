@@ -227,6 +227,38 @@
         "email",
         "basic"
       ]
+    },
+    {
+      "id": "vereint-registration",
+      "clientId": "vereint-registration",
+      "name": "VEREINT Registrierung per Einladungslink",
+      "description": "Technische Identität des Fachservices zum Anlegen neuer Mitgliedskonten; ausschließlich Client Credentials, nur realm-management/manage-users.",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_REGISTRATION_CLIENT_SECRET}",
+      "redirectUris": [],
+      "webOrigins": [],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "publicClient": false,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "standard.flow.enabled": "false",
+        "direct.access.grants.enabled": "false",
+        "post.logout.redirect.uris": "-"
+      },
+      "defaultClientScopes": [
+        "basic"
+      ],
+      "optionalClientScopes": []
     }
   ],
   "users": [
@@ -237,6 +269,16 @@
       "realmRoles": [
         "tabletRecorder"
       ]
+    },
+    {
+      "username": "service-account-vereint-registration",
+      "enabled": true,
+      "serviceAccountClientId": "vereint-registration",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users"
+        ]
+      }
     },
     {
       "id": "e0000000-0000-0000-0000-000000000001",

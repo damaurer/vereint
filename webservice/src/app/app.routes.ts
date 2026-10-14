@@ -20,6 +20,11 @@ export const routes: Routes = [
     loadComponent: () => import('./guest/invite-accept.component').then((m) => m.InviteAcceptComponent),
   },
   {
+    path: 'register',
+    data: { title: 'Registrieren', description: 'Mit einem Einladungslink als Mitglied registrieren.', access: 'Gültiger Einladungslink erforderlich' },
+    loadComponent: () => import('./auth/register.component').then((m) => m.RegisterComponent),
+  },
+  {
     path: '403',
     data: { title: 'Kein Zugriff', description: 'Für diese Seite fehlen die erforderlichen Rechte.', access: 'Zugriff verweigert' },
     loadComponent: () => import('./errors/forbidden.component').then((m) => m.ForbiddenComponent),

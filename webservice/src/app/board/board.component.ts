@@ -1,4 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { InviteModalComponent } from '../admin/invite-modal.component';
 import { IconComponent } from '../ui/icon.component';
 import { RouterLink } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
@@ -36,7 +37,15 @@ interface BoardView {
  */
 @Component({
   selector: 'app-board',
-  imports: [StateComponent, IconComponent, RouterLink, InfoPanelComponent, StatCardComponent, StatusBadgeComponent],
+  imports: [
+    StateComponent,
+    IconComponent,
+    RouterLink,
+    InfoPanelComponent,
+    StatCardComponent,
+    StatusBadgeComponent,
+    InviteModalComponent,
+  ],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="board-title">
@@ -61,7 +70,13 @@ interface BoardView {
             <span class="board-panel-title">Schriftwart · Kommunikation</span>
             <span class="board-panel-desc">Ankündigungen und Pinnwand</span>
           </a>
+          <button type="button" class="board-panel" (click)="inviteOpen.set(true)">
+            <vereint-icon class="board-panel-icon" name="users" />
+            <span class="board-panel-title">Mitglied einladen</span>
+            <span class="board-panel-desc">Einladungslink zur Registrierung erstellen</span>
+          </button>
         </nav>
+        <app-admin-invite-modal [open]="inviteOpen()" (closed)="inviteOpen.set(false)" />
 
         @if (load.isLoading()) {
           <vereint-state
@@ -142,6 +157,9 @@ interface BoardView {
         margin: 0.75rem 0 1.5rem;
       }
       .board-panel {
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
         display: flex;
         flex-direction: column;
         gap: 0.2rem;
@@ -190,6 +208,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   private readonly api = inject(BoardApiService);
 
   protected readonly load = new AsyncState<BoardView>();
+  protected readonly inviteOpen = signal(false);
   protected readonly eventStatusLabel = eventStatusLabel;
   protected readonly formatDateTime = formatDateTime;
   protected readonly auditTargetLabel = auditTargetLabel;

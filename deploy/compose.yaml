@@ -86,6 +86,7 @@ services:
       SPRING_API_BASE_URL: http://baseservice:8081
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:?KEYCLOAK_CLIENT_SECRET fehlt}
       KEYCLOAK_TABLET_CLIENT_SECRET: ${KEYCLOAK_TABLET_CLIENT_SECRET:?KEYCLOAK_TABLET_CLIENT_SECRET fehlt}
+      KEYCLOAK_REGISTRATION_CLIENT_SECRET: ${KEYCLOAK_REGISTRATION_CLIENT_SECRET:?KEYCLOAK_REGISTRATION_CLIENT_SECRET fehlt}
     ports:
       - "127.0.0.1:8082:8080"
     depends_on:
@@ -130,6 +131,11 @@ services:
       VAPID_SUBJECT: ${VAPID_SUBJECT:-}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      # Registrierung per Einladungslink: Kontoanlage ueber die Admin-API,
+      # direkt im Container-Netz (Caddy sperrt /kc/admin von aussen).
+      REGISTRATION_ENABLED: "true"
+      KEYCLOAK_ADMIN_BASE_URL: http://keycloak:8080/kc
+      KEYCLOAK_REGISTRATION_CLIENT_SECRET: ${KEYCLOAK_REGISTRATION_CLIENT_SECRET}
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError
     depends_on:
       postgres:

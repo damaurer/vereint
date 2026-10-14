@@ -1,0 +1,267 @@
+import { Component, afterNextRender, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ApiError } from '../api/api-client.service';
+import { MemberInvitesApiService, describeInviteError } from '../invites/member-invites-api.service';
+import { formatDateTime } from '../member/member-format';
+import { AuthService } from './auth.service';
+import { EMAIL_PATTERN } from './auth.types';
+
+type RegisterState = 'checking' | 'invalid' | 'form' | 'done';
+
+/** Muss zu `MemberInviteService.MIN_PASSWORD_LENGTH` im Fachservice passen. */
+export const MIN_PASSWORD_LENGTH = 10;
+
+/** Format eines Einladungstokens (base64url, 32 Byte Zufall). */
+const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
+
+/**
+ * Öffentliche Registrierung per Einladungslink (`/register#<token>`).
+ *
+ * Das Token steht im URL-Fragment: Der Browser schickt es nie an den Server,
+ * es landet daher weder in Zugriffslogs noch im Referer. Die Seite liest es
+ * nach dem Rendern im Browser, entfernt es aus der Adresszeile und schickt es
+ * nur im Body an den Fachservice. Dort entscheidet sich, ob der Link gilt; das
+ * neue Konto erhält ausschließlich die Rolle `member`.
+ */
+@Component({
+  selector: 'app-register',
+  imports: [FormsModule],
+  styleUrl: './auth-status.component.css',
+  template: `
+    <div class="vereint-shell">
+      <aside class="vereint-brand" aria-hidden="true">
+        <div class="vereint-brand-inner">
+          <img src="vereint-logo-mono.svg" alt="" class="vereint-brand-logo" width="440" height="140" />
+          <p class="vereint-brand-claim">Dein Verein. Vereint.</p>
+          <p class="vereint-brand-sub">Mitglieder, Events, Kasse und Theke an einem Ort – sicher und auf jedem Gerät.</p>
+        </div>
+        <div class="vereint-brand-nodes"></div>
+      </aside>
+
+      <main class="vereint-main">
+        <header class="vereint-mobile-header">
+          <span class="vereint-mobile-brand">
+            <img src="vereint-logo.svg" alt="vereint" class="vereint-logo vereint-logo-light" width="440" height="140" />
+            <img src="vereint-logo-mono.svg" alt="vereint" class="vereint-logo vereint-logo-dark" width="440" height="140" />
+          </span>
+        </header>
+
+        <section class="vereint-card" aria-labelledby="register-title">
+          <div class="vereint-card-header">
+            <div class="vereint-card-heading">
+              <p class="vereint-eyebrow">Einladung</p>
+              <h1 class="vereint-title" id="register-title">
+                {{ state() === 'done' ? 'Willkommen im Verein!' : 'Mitglied werden' }}
+              </h1>
+            </div>
+          </div>
+
+          <div class="vereint-card-body">
+            @switch (state()) {
+              @case ('checking') {
+                <p class="vereint-subtitle" role="status">Einladungslink wird geprüft …</p>
+              }
+              @case ('invalid') {
+                <div class="state-card state-error login-error" role="alert">
+                  <strong>Registrierung nicht möglich</strong>
+                  <span>{{ error() }}</span>
+                </div>
+                <div class="login-form">
+                  <button type="button" (click)="login()">Zur Anmeldung</button>
+                </div>
+              }
+              @case ('form') {
+                <p class="vereint-subtitle">
+                  Du wurdest eingeladen. Lege dein Konto an, danach kannst du dich sofort anmelden.
+                  @if (expiresAt()) {
+                    Der Link gilt bis {{ formatDateTime(expiresAt()!) }}.
+                  }
+                </p>
+                <form class="register-form" (ngSubmit)="submit()" novalidate>
+                  <label class="member-field">
+                    <span>Vorname</span>
+                    <input name="firstName" autocomplete="given-name" required maxlength="100" [(ngModel)]="firstName" />
+                  </label>
+                  <label class="member-field">
+                    <span>Nachname</span>
+                    <input name="lastName" autocomplete="family-name" required maxlength="100" [(ngModel)]="lastName" />
+                  </label>
+                  <label class="member-field">
+                    <span>E-Mail-Adresse</span>
+                    <input name="email" type="email" autocomplete="email" required maxlength="254" [(ngModel)]="email" />
+                  </label>
+                  <label class="member-field">
+                    <span>Passwort (mindestens {{ minPasswordLength }} Zeichen)</span>
+                    <input
+                      name="password"
+                      type="password"
+                      autocomplete="new-password"
+                      required
+                      [attr.minlength]="minPasswordLength"
+                      maxlength="128"
+                      [(ngModel)]="password"
+                    />
+                  </label>
+                  <label class="member-field">
+                    <span>Passwort wiederholen</span>
+                    <input
+                      name="passwordRepeat"
+                      type="password"
+                      autocomplete="new-password"
+                      required
+                      maxlength="128"
+                      [(ngModel)]="passwordRepeat"
+                    />
+                  </label>
+
+                  @if (error()) {
+                    <div class="state-card state-error login-error" role="alert">
+                      <span>{{ error() }}</span>
+                    </div>
+                  }
+
+                  <div class="login-form">
+                    <button type="submit" [disabled]="submitting()">
+                      {{ submitting() ? 'Konto wird angelegt …' : 'Konto anlegen' }}
+                    </button>
+                  </div>
+                </form>
+              }
+              @case ('done') {
+                <p class="vereint-subtitle">
+                  Dein Konto für {{ registeredEmail() }} ist angelegt. Melde dich jetzt mit deiner
+                  E-Mail-Adresse und deinem Passwort an.
+                </p>
+                <div class="login-form">
+                  <button type="button" (click)="login()">Jetzt anmelden</button>
+                </div>
+              }
+            }
+          </div>
+        </section>
+      </main>
+    </div>
+  `,
+  styles: [
+    `
+      .register-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+      }
+    `,
+  ],
+})
+export class RegisterComponent {
+  private readonly invites = inject(MemberInvitesApiService);
+  private readonly auth = inject(AuthService);
+
+  protected readonly minPasswordLength = MIN_PASSWORD_LENGTH;
+  protected readonly formatDateTime = formatDateTime;
+
+  protected readonly state = signal<RegisterState>('checking');
+  protected readonly error = signal<string | null>(null);
+  protected readonly expiresAt = signal<string | null>(null);
+  protected readonly submitting = signal(false);
+  protected readonly registeredEmail = signal('');
+
+  protected firstName = '';
+  protected lastName = '';
+  protected email = '';
+  protected password = '';
+  protected passwordRepeat = '';
+
+  private token = '';
+
+  constructor() {
+    afterNextRender(() => this.start(globalThis.location?.hash ?? ''));
+  }
+
+  /** Liest das Token aus dem Fragment und prüft den Link beim Fachservice. */
+  start(hash: string): void {
+    const token = hash.replace(/^#/, '').trim();
+    // Das Token nicht in der Adresszeile oder im Verlauf stehen lassen.
+    if (hash && typeof globalThis.history?.replaceState === 'function') {
+      globalThis.history.replaceState(null, '', globalThis.location.pathname);
+    }
+    if (!TOKEN_PATTERN.test(token)) {
+      this.fail('Dieser Link enthält keinen gültigen Einladungscode. Bitte öffne den vollständigen Link aus deiner Einladung.');
+      return;
+    }
+    this.token = token;
+    this.invites.preview(token).subscribe({
+      next: (preview) => {
+        this.expiresAt.set(preview.expiresAt);
+        this.state.set('form');
+      },
+      error: (err: unknown) => this.fail(this.describe(err)),
+    });
+  }
+
+  protected submit(): void {
+    if (this.submitting()) return;
+    const firstName = this.firstName.trim();
+    const lastName = this.lastName.trim();
+    const email = this.email.trim();
+
+    if (!firstName || !lastName) {
+      this.error.set('Bitte Vor- und Nachnamen angeben.');
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email)) {
+      this.error.set('Bitte eine gültige E-Mail-Adresse eingeben.');
+      return;
+    }
+    if (this.password.length < MIN_PASSWORD_LENGTH) {
+      this.error.set(`Das Passwort muss mindestens ${MIN_PASSWORD_LENGTH} Zeichen lang sein.`);
+      return;
+    }
+    if (this.password !== this.passwordRepeat) {
+      this.error.set('Die beiden Passwörter stimmen nicht überein.');
+      return;
+    }
+
+    this.error.set(null);
+    this.submitting.set(true);
+    this.invites
+      .register({ token: this.token, firstName, lastName, email, password: this.password })
+      .subscribe({
+        next: (result) => {
+          this.submitting.set(false);
+          this.password = '';
+          this.passwordRepeat = '';
+          this.registeredEmail.set(result.email);
+          this.state.set('done');
+        },
+        error: (err: unknown) => {
+          this.submitting.set(false);
+          const code = err instanceof ApiError ? err.code : '';
+          // Ist der Link selbst nicht mehr gültig, hilft das Formular nicht weiter.
+          if (['not_found', 'invitation_expired', 'invitation_revoked', 'invitation_used_up'].includes(code)) {
+            this.fail(this.describe(err));
+            return;
+          }
+          this.error.set(this.describe(err));
+        },
+      });
+  }
+
+  protected login(): void {
+    if (this.auth.isAvailable()) {
+      this.auth.startLogin('/dashboard');
+    }
+  }
+
+  private fail(message: string): void {
+    this.error.set(message);
+    this.state.set('invalid');
+  }
+
+  private describe(err: unknown): string {
+    const code = err instanceof ApiError ? err.code : '';
+    if (code === 'validation_failed' || code === 'invalid_request') {
+      return 'Bitte prüfe deine Eingaben. Das Passwort muss mindestens 10 Zeichen lang sein.';
+    }
+    return describeInviteError(code) ?? 'Die Registrierung ist gerade nicht möglich. Bitte versuche es später noch einmal.';
+  }
+}

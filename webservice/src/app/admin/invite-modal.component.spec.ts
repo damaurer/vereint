@@ -1,74 +1,127 @@
 import { TestBed } from '@angular/core/testing';
+import { of, throwError } from 'rxjs';
+import { vi } from 'vitest';
+import { ApiError } from '../api/api-client.service';
+import { MemberInvitesApiService, type MemberInvite } from '../invites/member-invites-api.service';
 import { InviteModalComponent } from './invite-modal.component';
 
 interface InviteInternals {
-  email: string;
-  role: string;
-  invites(): { id: string; email: string; status: string }[];
+  label: string;
+  maxUses: number;
+  validityDays: number;
+  invites(): MemberInvite[];
+  created(): { url: string; expiresAt: string } | null;
   error(): string | null;
-  info(): string | null;
-  send(): void;
-  renew(id: string): void;
+  create(): void;
+  revoke(invite: MemberInvite): void;
   close(): void;
 }
 
+const invite = (overrides: Partial<MemberInvite> = {}): MemberInvite => ({
+  id: 'inv-1',
+  label: 'Anna Neumann',
+  status: 'active',
+  maxUses: 1,
+  usesCount: 0,
+  expiresAt: '2026-10-21T08:00:00Z',
+  createdAt: '2026-10-14T08:00:00Z',
+  createdByName: 'Vorstand',
+  revokedAt: null,
+  registeredMembers: [],
+  ...overrides,
+});
+
 describe('InviteModalComponent', () => {
+  let api: {
+    list: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+    revoke: ReturnType<typeof vi.fn>;
+  };
+
+  beforeEach(() => {
+    api = {
+      list: vi.fn(() =>
+        of([invite(), invite({ id: 'inv-2', label: null, status: 'used', usesCount: 1, registeredMembers: ['Ben Alt'] })]),
+      ),
+      create: vi.fn(() =>
+        of({ invite: invite({ id: 'inv-new', label: 'Neu' }), token: 'raw-token', registerPath: '/register#raw-token' }),
+      ),
+      revoke: vi.fn(() => of(invite({ status: 'revoked', revokedAt: '2026-10-14T09:00:00Z' }))),
+    };
+  });
+
   const create = (open = true) => {
-    TestBed.configureTestingModule({ imports: [InviteModalComponent] });
+    TestBed.configureTestingModule({
+      imports: [InviteModalComponent],
+      providers: [{ provide: MemberInvitesApiService, useValue: api }],
+    });
     const fixture = TestBed.createComponent(InviteModalComponent);
     fixture.componentRef.setInput('open', open);
     fixture.detectChanges();
     return fixture;
   };
 
-  const html = (fixture: { nativeElement: unknown }) =>
+  const text = (fixture: { nativeElement: unknown }) =>
     (fixture.nativeElement as HTMLElement).textContent ?? '';
 
-  it('renders the form and open invitations when open', () => {
+  it('loads and shows existing links when opened', () => {
     const fixture = create();
-    expect(html(fixture)).toContain('Mitglied einladen');
-    expect(html(fixture)).toContain('Offene Einladungen');
-    expect(html(fixture)).toContain('flo.eber@web.de');
-    expect(html(fixture)).toContain('Abgelaufen');
+    expect(api.list).toHaveBeenCalledOnce();
+    expect(text(fixture)).toContain('Anna Neumann');
+    expect(text(fixture)).toContain('Offen');
+    expect(text(fixture)).toContain('Verwendet');
+    expect(text(fixture)).toContain('Registriert: Ben Alt');
+    expect(text(fixture)).toContain('Zurückziehen');
   });
 
-  it('renders nothing when closed', () => {
+  it('does nothing while closed', () => {
     const fixture = create(false);
-    expect(html(fixture)).not.toContain('Mitglied einladen');
+    expect(api.list).not.toHaveBeenCalled();
+    expect(text(fixture)).not.toContain('Mitglied einladen');
   });
 
-  it('rejects an invalid email and keeps the input', () => {
+  it('creates a link and shows the full URL once', () => {
     const fixture = create();
     const cmp = fixture.componentInstance as unknown as InviteInternals;
-    const before = cmp.invites().length;
-    cmp.email = 'not-an-email';
-    cmp.send();
+    cmp.label = '  Neu  ';
+    cmp.maxUses = 2;
+    cmp.validityDays = 30;
+    cmp.create();
+    fixture.detectChanges();
+
+    expect(api.create).toHaveBeenCalledWith({ label: 'Neu', expiresInDays: 30, maxUses: 2 });
+    expect(cmp.created()?.url).toBe(`${globalThis.location.origin}/register#raw-token`);
+    expect(cmp.invites()[0].id).toBe('inv-new');
+    expect(text(fixture)).toContain('Einladungslink erstellt');
+
+    cmp.close();
+    expect(cmp.created()).toBeNull();
+  });
+
+  it('rejects an out-of-range number of people without calling the API', () => {
+    const fixture = create();
+    const cmp = fixture.componentInstance as unknown as InviteInternals;
+    cmp.maxUses = 0;
+    cmp.create();
     expect(cmp.error()).toBeTruthy();
-    expect(cmp.invites().length).toBe(before);
-    expect(cmp.email).toBe('not-an-email');
+    expect(api.create).not.toHaveBeenCalled();
   });
 
-  it('adds a pending invitation for a valid email', () => {
+  it('shows a readable error when creating fails', () => {
+    api.create.mockReturnValue(throwError(() => new ApiError(403, 'access_denied', 'nope')));
     const fixture = create();
     const cmp = fixture.componentInstance as unknown as InviteInternals;
-    const before = cmp.invites().length;
-    cmp.email = 'neu@example.org';
-    cmp.send();
-    expect(cmp.error()).toBeNull();
-    expect(cmp.info()).toBeTruthy();
-    expect(cmp.invites().length).toBe(before + 1);
-    expect(cmp.invites()[0].email).toBe('neu@example.org');
-    expect(cmp.email).toBe('');
+    cmp.create();
+    expect(cmp.error()).toContain('Rechte');
+    expect(cmp.created()).toBeNull();
   });
 
-  it('renews an expired invitation to pending', () => {
+  it('revokes an open link', () => {
     const fixture = create();
     const cmp = fixture.componentInstance as unknown as InviteInternals;
-    const expired = cmp.invites().find((invite) => invite.status === 'expired');
-    expect(expired).toBeTruthy();
-    cmp.renew(expired!.id);
-    const renewed = cmp.invites().find((invite) => invite.id === expired!.id);
-    expect(renewed?.status).toBe('pending');
+    cmp.revoke(cmp.invites()[0]);
+    expect(api.revoke).toHaveBeenCalledWith('inv-1');
+    expect(cmp.invites()[0].status).toBe('revoked');
   });
 
   it('emits closed when the modal is dismissed', () => {

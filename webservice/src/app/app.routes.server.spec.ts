@@ -17,6 +17,7 @@ const PUBLIC_SERVER_PATHS: readonly string[] = [
   'auth/error',
   'auth/logged-out',
   'invite/accept',
+  'register',
   '403',
   '404',
 ];

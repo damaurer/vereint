@@ -180,13 +180,20 @@ describe('authorizePages Express Middleware', () => {
     expect(redirect).toHaveBeenCalledWith(`/api/auth/login?returnTo=${encodeURIComponent('/board')}`);
   });
 
-  it('redirects valid invite codes to /api/auth/login and invalid to /404', async () => {
+  it('lets the public registration page through', async () => {
+    const { req, res, next, redirect } = createMockReqRes({ path: '/register' });
+    await authorizePages(req, res, next);
+    expect(next).toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it('moves a path invite code into the fragment and sends invalid codes to /404', async () => {
     const { req: validReq, res: validRes, next: validNext, redirect: validRedirect } = createMockReqRes({
       path: '/register/valid-invite-code-12345',
     });
     await authorizePages(validReq, validRes, validNext);
     expect(validNext).not.toHaveBeenCalled();
-    expect(validRedirect).toHaveBeenCalledWith('/api/auth/login');
+    expect(validRedirect).toHaveBeenCalledWith('/register#valid-invite-code-12345');
 
     const { req: invalidReq, res: invalidRes, next: invalidNext, redirect: invalidRedirect } = createMockReqRes({
       path: '/register/invalid',
