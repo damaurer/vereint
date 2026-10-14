@@ -49,7 +49,6 @@ export class StepperComponent {
   increment(): void {
     if (this.value >= this.max) return;
     const next = this.value + this.step;
-    this.value = next;
     this.valueChange.emit(next);
     this.increased.emit(next);
   }
@@ -57,7 +56,6 @@ export class StepperComponent {
   decrement(): void {
     if (this.value <= this.min) return;
     const next = this.value - this.step;
-    this.value = next;
     this.valueChange.emit(next);
     this.decreased.emit(next);
   }

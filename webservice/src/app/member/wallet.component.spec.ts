@@ -106,6 +106,14 @@ describe('WalletComponent', () => {
     expect(negative?.textContent).toContain('7,50');
   });
 
+  it('lists the newest booking first', async () => {
+    const fixture = await create();
+    const titles = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.member-list-title'),
+    ).map((node) => node.textContent?.trim());
+    expect(titles).toEqual(['Kauf', 'Aufladung']);
+  });
+
   it('filters the history to spendings via the chips', async () => {
     const fixture = await create();
     const root = fixture.nativeElement as HTMLElement;

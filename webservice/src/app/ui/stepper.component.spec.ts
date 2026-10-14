@@ -35,6 +35,17 @@ describe('StepperComponent', () => {
     expect(emitted).toEqual([1]);
   });
 
+  it('keeps showing the bound value until the caller changes it', () => {
+    // Die Theke öffnet ohne gewählten Artikel nur das Auswahl-Overlay; der
+    // Stepper darf dann nicht schon einen Strich anzeigen.
+    const fixture = create(0);
+    const [, plus] = buttons(fixture);
+    (plus as HTMLButtonElement).click();
+    fixture.detectChanges();
+    const shown = (fixture.nativeElement as HTMLElement).querySelector('.ui-stepper-value');
+    expect(shown?.textContent?.trim()).toBe('0');
+  });
+
   it('disables the minus button at the minimum', () => {
     const atMin = create(0, 0, 5);
     expect((buttons(atMin)[0] as HTMLButtonElement).disabled).toBe(true);

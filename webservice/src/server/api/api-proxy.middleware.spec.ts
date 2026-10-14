@@ -126,16 +126,26 @@ describe('api-proxy.middleware', () => {
       });
     }) as unknown as typeof fetch;
 
-    const form = new FormData();
-    const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff]);
-    form.set('file', new Blob([bytes], { type: 'image/png' }), 'bild.png');
-    form.set('purpose', 'event');
+    const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff]);
+    const boundary = 'vereint-test-boundary';
+    const form = Buffer.concat([
+      Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="bild.png"\r\n` +
+          'Content-Type: image/png\r\n\r\n',
+      ),
+      bytes,
+      Buffer.from(`\r\n--${boundary}--\r\n`),
+    ]);
 
-    const response = await originalFetch(`${baseUrl}/api/v1/images`, { method: 'POST', body: form });
+    const response = await originalFetch(`${baseUrl}/api/v1/images`, {
+      method: 'POST',
+      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      body: new Uint8Array(form),
+    });
 
     expect(response.status).toBe(201);
-    expect(captured?.contentType).toMatch(/^multipart\/form-data; boundary=/);
-    expect(captured?.body.includes(Buffer.from(bytes))).toBe(true);
+    expect(captured?.contentType).toBe(`multipart/form-data; boundary=${boundary}`);
+    expect(captured?.body.equals(form)).toBe(true);
   });
 
   it('forwards POST bodies and the Idempotency-Key header', async () => {

@@ -165,9 +165,13 @@ export class WalletComponent implements OnInit, OnDestroy {
   /** Filtert die Historie clientseitig nach der gewählten Chip-Auswahl. */
   protected visibleEntries(entries: LedgerEntry[]): LedgerEntry[] {
     const active = this.filter();
-    if (active === 'topup') return entries.filter((entry) => Number(entry.amount) > 0);
-    if (active === 'spend') return entries.filter((entry) => Number(entry.amount) < 0);
-    return entries;
+    // Oben steht die neueste Buchung (der Server liefert aufsteigend).
+    const newestFirst = [...entries].sort(
+      (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+    );
+    if (active === 'topup') return newestFirst.filter((entry) => Number(entry.amount) > 0);
+    if (active === 'spend') return newestFirst.filter((entry) => Number(entry.amount) < 0);
+    return newestFirst;
   }
 
   /** Negatives Guthaben/Buchung (dezimale Zeichenkette) für rote Darstellung. */
