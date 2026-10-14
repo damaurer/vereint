@@ -62,5 +62,215 @@
     "memberSince": "Member since",
     "recording": "Recording",
     "recordingActive": "Tally recording active"
+  },
+  "chat": {
+    "eyebrow": "Club messenger",
+    "title": "Chat",
+    "toDirectMessages": "Direct messages →",
+    "loadingMessage": "Fetching conversations.",
+    "unavailable": "Chat unavailable",
+    "online": "online",
+    "unread": {
+      "one": "{count} unread",
+      "other": "{count} unread"
+    },
+    "you": "You",
+    "list": {
+      "ariaLabel": "Conversations",
+      "newMessage": "+ New message",
+      "groupOnline": "{count} online"
+    },
+    "thread": {
+      "back": "← Back",
+      "membersOnline": {
+        "one": "{count} member online",
+        "other": "{count} members online"
+      },
+      "pinnedTitle": "Note from the secretary ({name})",
+      "emptyTitle": "No messages yet",
+      "emptyMessage": "Write the first message in this conversation.",
+      "addReaction": "Add reaction"
+    },
+    "composer": {
+      "attach": "Add attachment",
+      "placeholder": "Write a message…",
+      "addDrink": "Insert drink",
+      "send": "Send",
+      "sendFailed": "Message could not be sent. Please try again.",
+      "attachUnavailable": "Attachments are currently unavailable."
+    },
+    "direct": {
+      "eyebrow": "Direct messages",
+      "title": "One-to-one chats",
+      "badge": "DMs",
+      "toGroupChat": "← To group chat",
+      "unavailable": "Direct messages unavailable",
+      "searchLabel": "Search members",
+      "searchPlaceholder": "Search members…",
+      "conversations": "Conversations ({count})",
+      "emptyTitle": "No conversations",
+      "emptyMessage": "There are no matching one-to-one chats."
+    }
+  },
+  "moments": {
+    "eyebrow": "Community moments & rituals",
+    "backToEvent": "← To event",
+    "allEvents": "← All events",
+    "loadingMessage": "Fetching moments and ritual feeds.",
+    "unavailable": "Unavailable",
+    "picker": {
+      "label": "Select active event:",
+      "placeholder": "-- Please choose an event --"
+    },
+    "push": {
+      "title": "New moment started: “{title}”",
+      "message": "Would you like to join and share a reaction or status?",
+      "join": "Join now",
+      "dismiss": "Dismiss"
+    },
+    "actions": {
+      "start": "+ Start new moment",
+      "activeCount": {
+        "one": "{count} active moment",
+        "other": "{count} active moments"
+      }
+    },
+    "empty": {
+      "title": "No active moment",
+      "message": "No ritual or community moment is running for this event. Start a joint toast, a prayer or a fan cheer now!",
+      "initiate": "Initiate moment"
+    },
+    "session": {
+      "by": "By {name}",
+      "responses": {
+        "one": "{count} response",
+        "other": "{count} responses"
+      },
+      "react": "+ React",
+      "chat": "24h chat",
+      "complete": "Complete",
+      "completeTitle": "Complete the moment and archive it in the event history"
+    },
+    "detail": {
+      "eyebrow": "Selected moment",
+      "timelineTab": "Timeline ({count})",
+      "mapTab": "World map ({count})",
+      "quickLabel": "Quick reaction:",
+      "custom": "+ Status & text"
+    },
+    "history": {
+      "title": "Archived moments & rituals",
+      "participants": {
+        "one": "{count} participant",
+        "other": "{count} participants"
+      },
+      "contributions": {
+        "one": "{count} post",
+        "other": "{count} posts"
+      }
+    },
+    "start": {
+      "title": "Initiate new moment",
+      "titleLabel": "Title of the ritual / moment *",
+      "titlePlaceholder": "e.g. Joint toast, evening prayer, cheering wave",
+      "topicLabel": "Topic / ritual type *",
+      "messageLabel": "Message / prompt (optional)",
+      "messagePlaceholder": "e.g. Here’s to our club! Who’s raising a glass from afar?",
+      "durationLabel": "Duration of the moment",
+      "duration": {
+        "m15": "15 minutes (short prompt)",
+        "m30": "30 minutes",
+        "h1": "1 hour (default)",
+        "h2": "2 hours",
+        "h24": "24 hours (daily ritual)"
+      },
+      "consent": "Share my location for the world map (GDPR opt-in)",
+      "submit": "Start moment now",
+      "submitting": "Starting …",
+      "error": "Error starting the moment.",
+      "failed": "The moment could not be started."
+    },
+    "respond": {
+      "title": "Share status & reaction",
+      "reactionLabel": "Choose reaction *",
+      "statusLabel": "Personal status (optional)",
+      "statusPlaceholder": "e.g. Greetings from Hamburg! 🍺",
+      "consent": "Share my current location for this post on the world map",
+      "submit": "Submit post",
+      "submitting": "Sending …",
+      "error": "Error submitting.",
+      "failed": "Status could not be sent."
+    },
+    "topics": {
+      "toast": {
+        "label": "Joint toast",
+        "description": "For regulars’ tables & festivities"
+      },
+      "prayer": {
+        "label": "Prayer & intercession",
+        "description": "For church & faith communities"
+      },
+      "cheer": {
+        "label": "Cheering & rooting",
+        "description": "For sports & fan clubs"
+      },
+      "checkin": {
+        "label": "Spontaneous check-in",
+        "description": "Share presence & location"
+      },
+      "other": {
+        "label": "Other prompt",
+        "description": "Open community activity"
+      }
+    },
+    "reactions": {
+      "toast": "Cheers",
+      "prayer": "Prayer",
+      "cheer": "Cheer",
+      "cheering": "Cheering",
+      "thumbsUp": "Thumbs up",
+      "celebrate": "Celebrate",
+      "heart": "Heart",
+      "checkin": "Check-in"
+    },
+    "geo": {
+      "locating": "Determining GPS location …",
+      "captured": "Location captured: {lat}°, {lng}°",
+      "failedOrDenied": "Location lookup failed or was denied in the browser.",
+      "failed": "Location lookup failed."
+    },
+    "remaining": {
+      "expired": "Expired",
+      "minutes": "{count} min left",
+      "hours": {
+        "one": "{count} hr left",
+        "other": "{count} hrs left"
+      }
+    },
+    "map": {
+      "ariaLabel": "World map of participants",
+      "title": "Interactive participant map",
+      "subtitle": "Locations of participants who have opted in to location sharing.",
+      "count": {
+        "one": "{count} location",
+        "other": "{count} locations"
+      },
+      "emptyTitle": "No locations shared",
+      "emptyMessage": "There is no location data for this moment. In line with GDPR, locations are only recorded with voluntary consent (opt-in).",
+      "svgLabel": "World map with participant pins",
+      "pinDetails": "Pin details",
+      "listTitle": "Shared locations",
+      "fallbackName": "Participant {number}"
+    },
+    "timeline": {
+      "title": "Status timeline",
+      "count": {
+        "one": "{count} post",
+        "other": "{count} posts"
+      },
+      "empty": "No status posts shared yet. Be the first to share your reaction!",
+      "locationShared": "Location shared ({lat}, {lng})"
+    },
+    "quote": "“{text}”"
   }
 }
