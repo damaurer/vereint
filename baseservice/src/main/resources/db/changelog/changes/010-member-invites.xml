@@ -15,10 +15,10 @@
         </or>
     </preConditions>
 
-    <!-- 120. Einladungslinks zur Registrierung neuer Mitglieder. In der Datenbank
+    <!-- 130. Einladungslinks zur Registrierung neuer Mitglieder. In der Datenbank
          liegt nur der SHA-256-Hash des Tokens; der Rohwert verlässt den Server
          einmalig beim Erzeugen. -->
-    <changeSet id="120-create-member-invites" author="claude">
+    <changeSet id="130-create-member-invites" author="claude">
         <createTable tableName="member_invites">
             <column name="id" type="${uuid.type}">
                 <constraints primaryKey="true" nullable="false"/>
@@ -60,9 +60,9 @@
         </rollback>
     </changeSet>
 
-    <!-- 121. Wer sich mit welchem Link registriert hat. Ein Konto entsteht genau
+    <!-- 131. Wer sich mit welchem Link registriert hat. Ein Konto entsteht genau
          einmal; `user_id` ist daher eindeutig. -->
-    <changeSet id="121-create-member-invite-redemptions" author="claude">
+    <changeSet id="131-create-member-invite-redemptions" author="claude">
         <createTable tableName="member_invite_redemptions">
             <column name="id" type="${uuid.type}">
                 <constraints primaryKey="true" nullable="false"/>
