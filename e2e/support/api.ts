@@ -69,6 +69,10 @@ export class Api {
     return drink;
   }
 
+  async addBarcode(drinkId: string, barcode: string): Promise<void> {
+    await this.post(`/drinks/${drinkId}/barcodes`, { barcode });
+  }
+
   async addEventDrink(eventId: string, drinkId: string, price: number): Promise<{ id: string }> {
     return this.post(`/events/${eventId}/drinks`, { drinkId, price: price.toFixed(2), currency: 'EUR' });
   }
