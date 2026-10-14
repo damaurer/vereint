@@ -4,6 +4,7 @@ import de.maurer.baseservice.domain.*
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
@@ -214,8 +215,39 @@ interface IdempotencyRecordRepository : JpaRepository<IdempotencyRecordEntity, U
 @Repository
 interface ConversationRepository : JpaRepository<ConversationEntity, UUID> {
     fun findByEventId(eventId: UUID): List<ConversationEntity>
-    fun findFirstByTypeOrderByCreatedAtAsc(type: String): Optional<ConversationEntity>
     fun findByDirectKey(directKey: String): Optional<ConversationEntity>
+
+    /**
+     * Legt den Vereinschat an, falls es ihn noch nicht gibt. Parallele erste
+     * Aufrufe erzeugen so keinen zweiten Chat und keinen Fehler.
+     */
+    @Modifying
+    @Query(
+        value = "INSERT INTO conversations (id, type, title, direct_key, created_at, version) " +
+            "VALUES (:id, :type, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
+        nativeQuery = true
+    )
+    fun insertKeyedIfAbsent(
+        @Param("id") id: UUID,
+        @Param("type") type: String,
+        @Param("title") title: String,
+        @Param("key") key: String
+    ): Int
+
+    /** Wie [insertKeyedIfAbsent], für den einen Chat eines Events. */
+    @Modifying
+    @Query(
+        value = "INSERT INTO conversations (id, type, event_id, title, direct_key, created_at, version) " +
+            "VALUES (:id, :type, :eventId, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
+        nativeQuery = true
+    )
+    fun insertEventIfAbsent(
+        @Param("id") id: UUID,
+        @Param("type") type: String,
+        @Param("eventId") eventId: UUID,
+        @Param("title") title: String?,
+        @Param("key") key: String
+    ): Int
 }
 
 @Repository
@@ -225,6 +257,22 @@ interface ConversationMemberRepository : JpaRepository<ConversationMemberEntity,
     fun findByConversationIdAndUserId(conversationId: UUID, userId: UUID): Optional<ConversationMemberEntity>
     fun findByConversationIdAndGuestId(conversationId: UUID, guestId: UUID): Optional<ConversationMemberEntity>
     fun countByConversationId(conversationId: UUID): Long
+
+    /**
+     * Trägt ein Mitglied ein, falls es noch nicht eingetragen ist. Parallele
+     * Aufrufe (z. B. zweimal „gelesen“ beim Öffnen) erzeugen keine Doppelzeile.
+     */
+    @Modifying
+    @Query(
+        value = "INSERT INTO conversation_members (id, conversation_id, user_id, joined_at) " +
+            "VALUES (:id, :conversationId, :userId, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING",
+        nativeQuery = true
+    )
+    fun insertUserIfAbsent(
+        @Param("id") id: UUID,
+        @Param("conversationId") conversationId: UUID,
+        @Param("userId") userId: UUID
+    ): Int
 }
 
 @Repository

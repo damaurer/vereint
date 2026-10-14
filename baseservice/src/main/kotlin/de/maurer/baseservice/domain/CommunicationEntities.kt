@@ -29,7 +29,11 @@ class ConversationEntity(
     @Column(name = "expires_at")
     var expiresAt: Instant? = null,
 
-    /** Sortierte Nutzer-IDs eines Direktchats; garantiert genau einen Chat je Paar. */
+    /**
+     * Eindeutiger Schlüssel: sortierte Nutzer-IDs eines Direktchats, `club`
+     * für den Vereinschat bzw. `event:{id}` für den Chat eines Events.
+     * Garantiert jeweils genau einen Chat.
+     */
     @Column(name = "direct_key", length = 80, unique = true)
     var directKey: String? = null,
 

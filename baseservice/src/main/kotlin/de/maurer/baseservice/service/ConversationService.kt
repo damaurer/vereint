@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.util.UUID
+import kotlin.jvm.optionals.getOrNull
 
 /**
  * Vereinschat, Direktnachrichten und die gemeinsame Chat-Übersicht.
@@ -180,10 +181,11 @@ class ConversationService(
 
     // --- Interne Helfer ---
 
-    private fun clubConversation(): ConversationEntity =
-        conversationRepository.findFirstByTypeOrderByCreatedAtAsc(TYPE_CLUB).orElseGet {
-            conversationRepository.save(ConversationEntity(type = TYPE_CLUB, title = CLUB_TITLE))
-        }
+    private fun clubConversation(): ConversationEntity {
+        conversationRepository.findByDirectKey(CLUB_KEY).getOrNull()?.let { return it }
+        conversationRepository.insertKeyedIfAbsent(UUID.randomUUID(), TYPE_CLUB, CLUB_TITLE, CLUB_KEY)
+        return conversationRepository.findByDirectKey(CLUB_KEY).orElseThrow()
+    }
 
     /** Event-Chats der eigenen bzw. eingeladenen, noch nicht archivierten Events. */
     private fun eventConversations(caller: UserEntity): List<ConversationEntity> {
@@ -211,10 +213,10 @@ class ConversationService(
         return conversation
     }
 
-    private fun membership(conversation: ConversationEntity, user: UserEntity): ConversationMemberEntity =
-        conversationMemberRepository.findByConversationIdAndUserId(conversation.id, user.id).orElseGet {
-            conversationMemberRepository.save(ConversationMemberEntity(conversation = conversation, user = user))
-        }
+    private fun membership(conversation: ConversationEntity, user: UserEntity): ConversationMemberEntity {
+        chatService.ensureMember(conversation, user)
+        return conversationMemberRepository.findByConversationIdAndUserId(conversation.id, user.id).orElseThrow()
+    }
 
     private fun unreadFor(conversation: ConversationEntity, caller: UserEntity): Long {
         val member = conversationMemberRepository.findByConversationIdAndUserId(conversation.id, caller.id).orElse(null)
@@ -303,6 +305,9 @@ class ConversationService(
         const val TYPE_DIRECT = "direct"
         const val TYPE_EVENT = ChatService.CONVERSATION_TYPE_EVENT
         const val CLUB_TITLE = "Vereinschat"
+
+        /** Eindeutiger Schlüssel des einen Vereinschats (Spalte `direct_key`). */
+        const val CLUB_KEY = "club"
         const val MAX_EMOJI_LENGTH = 16
     }
 }

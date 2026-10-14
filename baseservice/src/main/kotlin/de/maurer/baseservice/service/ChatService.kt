@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+import kotlin.jvm.optionals.getOrNull
 
 /**
  * Fachlicher Slice für den Event-Chat und die Chat-Mitgliedschaften (TICKET-019).
@@ -212,17 +213,10 @@ class ChatService(
      * Event existiert genau eine Konversation vom Typ `event`.
      */
     internal fun requireEventConversation(event: EventEntity): ConversationEntity {
-        val existing = conversationRepository.findByEventId(event.id)
-            .firstOrNull { it.type == CONVERSATION_TYPE_EVENT }
-        if (existing != null) {
-            return existing
-        }
-        val conversation = ConversationEntity(
-            type = CONVERSATION_TYPE_EVENT,
-            event = event,
-            title = event.title
-        )
-        return conversationRepository.save(conversation)
+        val key = eventConversationKey(event.id)
+        conversationRepository.findByDirectKey(key).getOrNull()?.let { return it }
+        conversationRepository.insertEventIfAbsent(UUID.randomUUID(), CONVERSATION_TYPE_EVENT, event.id, event.title, key)
+        return conversationRepository.findByDirectKey(key).orElseThrow()
     }
 
     /** Mitglieder erreichen den Chat als Owner, Teilnehmer oder Vorstand/Administration. */
@@ -291,9 +285,7 @@ class ChatService(
 
     internal fun ensureMember(conversation: ConversationEntity, user: UserEntity) {
         if (conversationMemberRepository.findByConversationIdAndUserId(conversation.id, user.id).isEmpty) {
-            conversationMemberRepository.save(
-                ConversationMemberEntity(conversation = conversation, user = user, guest = null)
-            )
+            conversationMemberRepository.insertUserIfAbsent(UUID.randomUUID(), conversation.id, user.id)
         }
     }
 
@@ -356,6 +348,9 @@ class ChatService(
     companion object {
         const val CONVERSATION_TYPE_EVENT = "event"
         const val CONVERSATION_TYPE_MOMENT = "moment"
+
+        /** Eindeutiger Schlüssel des einen Chats je Event (Spalte `direct_key`). */
+        fun eventConversationKey(eventId: UUID) = "event:$eventId"
         const val SENDER_TYPE_MEMBER = "member"
         const val SENDER_TYPE_GUEST = "guest"
         const val UNKNOWN_SENDER_NAME = "Unbekannt"

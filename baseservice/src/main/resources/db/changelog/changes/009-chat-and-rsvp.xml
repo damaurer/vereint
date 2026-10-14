@@ -107,4 +107,42 @@
             <dropColumn tableName="event_participants" columnName="rsvp"/>
         </rollback>
     </changeSet>
+    <!-- 123. Genau ein Vereinschat, genau ein Chat je Event und jedes Mitglied
+         nur einmal je Chat, auch bei parallelen ersten Aufrufen. Doppelte
+         Mitgliedszeilen (vorher moeglich) werden auf die aelteste reduziert. -->
+    <changeSet id="123-unique-conversations-and-members" author="claude">
+        <sql dbms="postgresql">
+            DELETE FROM conversation_members a USING conversation_members b
+            WHERE a.user_id IS NOT NULL AND a.conversation_id = b.conversation_id AND a.user_id = b.user_id
+              AND (a.joined_at &gt; b.joined_at OR (a.joined_at = b.joined_at AND a.id::text &gt; b.id::text))
+        </sql>
+        <sql dbms="postgresql">
+            DELETE FROM conversation_members a USING conversation_members b
+            WHERE a.guest_id IS NOT NULL AND a.conversation_id = b.conversation_id AND a.guest_id = b.guest_id
+              AND (a.joined_at &gt; b.joined_at OR (a.joined_at = b.joined_at AND a.id::text &gt; b.id::text))
+        </sql>
+        <addUniqueConstraint tableName="conversation_members" columnNames="conversation_id, user_id"
+                             constraintName="uk_conversation_members_user"/>
+        <addUniqueConstraint tableName="conversation_members" columnNames="conversation_id, guest_id"
+                             constraintName="uk_conversation_members_guest"/>
+        <sql>
+            UPDATE conversations SET direct_key = 'club'
+            WHERE id = (SELECT c.id FROM conversations c WHERE c.type = 'club' AND c.direct_key IS NULL
+                        ORDER BY c.created_at, c.id LIMIT 1)
+              AND NOT EXISTS (SELECT 1 FROM conversations k WHERE k.direct_key = 'club')
+        </sql>
+        <sql>
+            UPDATE conversations SET direct_key = CONCAT('event:', CAST(event_id AS VARCHAR(36)))
+            WHERE type = 'event' AND event_id IS NOT NULL AND direct_key IS NULL
+              AND NOT EXISTS (
+                SELECT 1 FROM conversations o
+                WHERE o.type = 'event' AND o.event_id = conversations.event_id
+                  AND (o.created_at &lt; conversations.created_at
+                       OR (o.created_at = conversations.created_at AND CAST(o.id AS VARCHAR(36)) &lt; CAST(conversations.id AS VARCHAR(36)))))
+        </sql>
+        <rollback>
+            <dropUniqueConstraint tableName="conversation_members" constraintName="uk_conversation_members_guest"/>
+            <dropUniqueConstraint tableName="conversation_members" constraintName="uk_conversation_members_user"/>
+        </rollback>
+    </changeSet>
 </databaseChangeLog>
