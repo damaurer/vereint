@@ -68,6 +68,17 @@ vereint:
     public-key: ${VAPID_PUBLIC_KEY:}
     private-key: ${VAPID_PRIVATE_KEY:}
     ttl-seconds: ${VAPID_TTL_SECONDS:2419200}
+  registration:
+    # Registrierung neuer Mitglieder per Einladungslink. Der Fachservice legt
+    # das Konto über die Keycloak-Admin-API mit dem vertraulichen Client
+    # `vereint-registration` an (nur `manage-users`). Das Secret stammt
+    # ausschließlich aus KEYCLOAK_REGISTRATION_CLIENT_SECRET. Ohne Secret
+    # antwortet die Registrierung mit 503.
+    enabled: ${REGISTRATION_ENABLED:false}
+    keycloak-url: ${KEYCLOAK_ADMIN_BASE_URL:http://localhost:8082}
+    realm: ${KEYCLOAK_REALM:vereint}
+    client-id: ${KEYCLOAK_REGISTRATION_CLIENT_ID:vereint-registration}
+    client-secret: ${KEYCLOAK_REGISTRATION_CLIENT_SECRET:}
 
 management:
   endpoints:

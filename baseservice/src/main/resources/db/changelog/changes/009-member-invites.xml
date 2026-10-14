@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 120. Einladungslinks zur Registrierung neuer Mitglieder. In der Datenbank
+         liegt nur der SHA-256-Hash des Tokens; der Rohwert verlässt den Server
+         einmalig beim Erzeugen. -->
+    <changeSet id="120-create-member-invites" author="claude">
+        <createTable tableName="member_invites">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="token_hash" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_member_invites_token_hash"/>
+            </column>
+            <column name="label" type="VARCHAR(120)"/>
+            <column name="created_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_member_invites_creator" references="users(id)"/>
+            </column>
+            <column name="max_uses" type="INTEGER" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="uses_count" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revoked_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="revoked_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_member_invites_revoker" references="users(id)"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>
+            ALTER TABLE member_invites
+            ADD CONSTRAINT ck_member_invites_uses
+            CHECK (max_uses BETWEEN 1 AND 50 AND uses_count BETWEEN 0 AND max_uses)
+        </sql>
+        <rollback>
+            <dropTable tableName="member_invites"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 121. Wer sich mit welchem Link registriert hat. Ein Konto entsteht genau
+         einmal; `user_id` ist daher eindeutig. -->
+    <changeSet id="121-create-member-invite-redemptions" author="claude">
+        <createTable tableName="member_invite_redemptions">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="invite_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_member_invite_redemptions_invite" references="member_invites(id)"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_member_invite_redemptions_user"
+                             foreignKeyName="fk_member_invite_redemptions_user" references="users(id)"/>
+            </column>
+            <column name="redeemed_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="member_invite_redemptions" indexName="ix_member_invite_redemptions_invite">
+            <column name="invite_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="member_invite_redemptions"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -53,6 +53,9 @@ class SecurityConfig(
                         "/api/v1/info",
                         "/api/v1/auth/access/guest",
                         "/api/v1/invites/accept",
+                        // Registrierung per Einladungslink: das Token im Body ist das Geheimnis
+                        "/api/v1/member-invites/preview",
+                        "/api/v1/member-invites/register",
                         // Gast-Chat: das eventgebundene Gast-Token im Header ist das Geheimnis
                         "/api/v1/events/*/chat/guest/**",
                         "/v3/api-docs/**",

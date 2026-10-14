@@ -25,5 +25,6 @@
     <include file="db/changelog/changes/005-ledger-transactions.xml"/>
     <include file="db/changelog/changes/007-food-and-cost-prices.xml"/>
     <include file="db/changelog/changes/008-encrypted-content.xml"/>
+    <include file="db/changelog/changes/009-member-invites.xml"/>
 
 </databaseChangeLog>

@@ -54,6 +54,26 @@ class InvitationRevokedException(
     errorCode: String = ErrorCode.INVITATION_REVOKED
 ) : ApiException(errorCode, message, HttpStatus.GONE)
 
+class InvitationUsedUpException(
+    message: String = "Invitation has already been used",
+    errorCode: String = ErrorCode.INVITATION_USED_UP
+) : ApiException(errorCode, message, HttpStatus.GONE)
+
+class EmailAlreadyRegisteredException(
+    message: String = "An account with this e-mail address already exists",
+    errorCode: String = ErrorCode.EMAIL_ALREADY_REGISTERED
+) : ApiException(errorCode, message, HttpStatus.CONFLICT)
+
+class PasswordRejectedException(
+    message: String = "The password does not meet the requirements",
+    errorCode: String = ErrorCode.PASSWORD_REJECTED
+) : ApiException(errorCode, message, HttpStatus.BAD_REQUEST)
+
+class RegistrationUnavailableException(
+    message: String = "Registration is currently unavailable",
+    errorCode: String = ErrorCode.REGISTRATION_UNAVAILABLE
+) : ApiException(errorCode, message, HttpStatus.SERVICE_UNAVAILABLE)
+
 class IdempotencyConflictException(
     message: String = "Idempotency conflict detected",
     errorCode: String = ErrorCode.IDEMPOTENCY_CONFLICT
