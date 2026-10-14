@@ -23,7 +23,14 @@ import { I18nService, TranslatePipe } from '../i18n';
  */
 @Component({
   selector: 'app-member-profile',
-  imports: [HeroGreetingComponent, RoleChipComponent, IconComponent, StateComponent, PwaSettingsComponent, TranslatePipe],
+  imports: [
+    HeroGreetingComponent,
+    RoleChipComponent,
+    IconComponent,
+    StateComponent,
+    TranslatePipe,
+    PwaSettingsComponent,
+  ],
   templateUrl: './profile.component.html',
   styles: [
     `

@@ -1,6 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { translate } from '../i18n/i18n.service';
 import { NotificationsApiService } from '../notifications/notifications-api.service';
 import { isIosDevice, isStandalone } from './platform';
 
@@ -61,28 +62,28 @@ export class PushNotificationsService {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         this.state.set(permission === 'denied' ? 'blocked' : 'off');
-        this.message.set('Ohne deine Erlaubnis kann Vereint keine Mitteilungen schicken.');
+        this.message.set(translate('pwa.push.message.permissionDenied'));
         return;
       }
       const key = await this.serverKey();
       if (!key) {
-        this.message.set('Mitteilungen sind auf dem Server noch nicht eingerichtet.');
+        this.message.set(translate('pwa.push.message.serverDisabled'));
         return;
       }
       const registration = await this.registration();
       if (!registration) {
         this.message.set(
-          'Die App ist noch nicht vollständig geladen. Bitte gleich noch einmal versuchen.',
+          translate('pwa.push.message.notReady'),
         );
         return;
       }
       const subscription = await this.subscribe(registration, key);
       await this.register(subscription);
       this.state.set('on');
-      this.message.set('Mitteilungen sind auf diesem Gerät aktiv.');
+      this.message.set(translate('pwa.push.message.enabled'));
     } catch {
       this.message.set(
-        'Mitteilungen konnten nicht aktiviert werden. Bitte später erneut versuchen.',
+        translate('pwa.push.message.enableFailed'),
       );
     } finally {
       this.busy.set(false);
@@ -103,10 +104,10 @@ export class PushNotificationsService {
         await subscription.unsubscribe();
       }
       this.state.set('off');
-      this.message.set('Mitteilungen sind auf diesem Gerät aus.');
+      this.message.set(translate('pwa.push.message.disabled'));
     } catch {
       this.message.set(
-        'Mitteilungen konnten nicht deaktiviert werden. Bitte später erneut versuchen.',
+        translate('pwa.push.message.disableFailed'),
       );
     } finally {
       this.busy.set(false);
