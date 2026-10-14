@@ -1,23 +1,24 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../i18n';
 import { StatusBadgeComponent } from '../ui';
 
 @Component({
   selector: 'app-not-found',
-  imports: [RouterLink, StatusBadgeComponent],
+  imports: [RouterLink, StatusBadgeComponent, TranslatePipe],
   template: `
     <div class="error-page-container">
       <div class="error-card">
         <div class="error-header">
           <vereint-status-badge label="404" tone="neutral" />
-          <h1 class="error-title">Seite nicht gefunden</h1>
+          <h1 class="error-title">{{ 'errorPages.notFound.title' | t }}</h1>
         </div>
         <p class="error-description">
-          Die von Ihnen aufgerufene Seite existiert nicht, wurde verschoben oder die Adresse ist fehlerhaft.
+          {{ 'errorPages.notFound.description' | t }}
         </p>
         <div class="error-actions">
-          <a routerLink="/dashboard" class="btn btn-primary">Zum Dashboard</a>
-          <a routerLink="/" class="btn btn-secondary">Zur Startseite</a>
+          <a routerLink="/dashboard" class="btn btn-primary">{{ 'errorPages.toDashboard' | t }}</a>
+          <a routerLink="/" class="btn btn-secondary">{{ 'errorPages.toHome' | t }}</a>
         </div>
       </div>
     </div>

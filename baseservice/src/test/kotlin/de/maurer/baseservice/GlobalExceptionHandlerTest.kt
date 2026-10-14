@@ -32,6 +32,11 @@ data class TestValidationPayload(
     val name: String? = null
 )
 
+data class TestLocalizedValidationPayload(
+    @field:NotBlank(message = "name {validation.notBlank}")
+    val name: String? = null
+)
+
 @RestController
 @RequestMapping("/api/v1/test-errors")
 class TestErrorController {
@@ -74,6 +79,12 @@ class TestErrorController {
 
     @GetMapping("/boom")
     fun boom(): Nothing = throw IllegalStateException("unexpected failure that must not leak to the client")
+
+    @GetMapping("/translated")
+    fun translated(): Nothing = throw ResourceNotFoundException(Msg("error.event.notFound", "42"))
+
+    @PostMapping("/validate-localized")
+    fun validateLocalized(@Valid @RequestBody payload: TestLocalizedValidationPayload): String = payload.name ?: ""
 
     @PostMapping("/validate")
     fun validate(@Valid @RequestBody payload: TestValidationPayload): String = payload.name ?: ""
@@ -205,7 +216,7 @@ class GlobalExceptionHandlerTest {
             .andExpect(status().isInternalServerError)
             .andExpect(jsonPath("$.code").value(ErrorCode.INTERNAL_ERROR))
             .andExpect(jsonPath("$.status").value(500))
-            .andExpect(jsonPath("$.detail").value("An internal server error occurred"))
+            .andExpect(jsonPath("$.detail").value("Ein interner Serverfehler ist aufgetreten"))
             .andExpect(
                 content().string(
                     org.hamcrest.Matchers.not(
@@ -215,5 +226,42 @@ class GlobalExceptionHandlerTest {
             )
             .andExpect(jsonPath("$.traceId").exists())
             .andExpect(header().exists(RequestIdFilter.HEADER_NAME))
+    }
+    @Test
+    fun `delivers translated details in the requested language, German by default`() {
+        mockMvc.perform(get("/api/v1/test-errors/translated").with(jwt()))
+            .andExpect(status().isNotFound)
+            .andExpect(jsonPath("$.code").value(ErrorCode.NOT_FOUND))
+            .andExpect(jsonPath("$.detail").value("Event mit ID '42' nicht gefunden"))
+        mockMvc.perform(get("/api/v1/test-errors/translated").header("Accept-Language", "de").with(jwt()))
+            .andExpect(jsonPath("$.detail").value("Event mit ID '42' nicht gefunden"))
+        mockMvc.perform(get("/api/v1/test-errors/translated").header("Accept-Language", "en").with(jwt()))
+            .andExpect(jsonPath("$.code").value(ErrorCode.NOT_FOUND))
+            .andExpect(jsonPath("$.detail").value("Event with ID '42' not found"))
+        mockMvc.perform(get("/api/v1/test-errors/translated").header("Accept-Language", "fr-FR").with(jwt()))
+            .andExpect(jsonPath("$.detail").value("Event mit ID '42' nicht gefunden"))
+    }
+
+    @Test
+    fun `translates generic texts and bean validation messages`() {
+        mockMvc.perform(get("/api/v1/test-errors/boom").header("Accept-Language", "en-GB,en;q=0.9").with(jwt()))
+            .andExpect(jsonPath("$.detail").value("An internal server error occurred"))
+        mockMvc.perform(
+            post("/api/v1/test-errors/validate-localized")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"  \"}")
+                .with(jwt())
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.details[0]").value("name: name darf nicht leer sein"))
+        mockMvc.perform(
+            post("/api/v1/test-errors/validate-localized")
+                .header("Accept-Language", "en")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"  \"}")
+                .with(jwt())
+        )
+            .andExpect(jsonPath("$.detail").value("Validation failed for request parameters"))
+            .andExpect(jsonPath("$.details[0]").value("name: name must not be blank"))
     }
 }

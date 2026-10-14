@@ -10,18 +10,18 @@ import java.time.Instant
 private const val EVENT_FOOD_CURRENCY_PATTERN = "^[A-Za-z]{3}$"
 
 data class AddEventFoodRequest(
-    @field:NotBlank(message = "foodId darf nicht leer sein")
+    @field:NotBlank(message = "foodId {validation.notBlank}")
     val foodId: String? = null,
 
-    @field:DecimalMin(value = "0.00", message = "price darf nicht negativ sein")
-    @field:Digits(integer = 8, fraction = 2, message = "price erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
+    @field:DecimalMin(value = "0.00", message = "price {validation.notNegative}")
+    @field:Digits(integer = 8, fraction = 2, message = "price {validation.digits}")
     val price: BigDecimal? = null,
 
-    @field:DecimalMin(value = "0.00", message = "costPrice darf nicht negativ sein")
-    @field:Digits(integer = 8, fraction = 2, message = "costPrice erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
+    @field:DecimalMin(value = "0.00", message = "costPrice {validation.notNegative}")
+    @field:Digits(integer = 8, fraction = 2, message = "costPrice {validation.digits}")
     val costPrice: BigDecimal? = null,
 
-    @field:Pattern(regexp = EVENT_FOOD_CURRENCY_PATTERN, message = "currency muss ein dreistelliger Währungscode sein")
+    @field:Pattern(regexp = EVENT_FOOD_CURRENCY_PATTERN, message = "currency {validation.currency}")
     val currency: String? = null,
 
     val selfServiceEnabled: Boolean? = null,
@@ -30,15 +30,15 @@ data class AddEventFoodRequest(
 )
 
 data class UpdateEventFoodRequest(
-    @field:DecimalMin(value = "0.00", message = "price darf nicht negativ sein")
-    @field:Digits(integer = 8, fraction = 2, message = "price erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
+    @field:DecimalMin(value = "0.00", message = "price {validation.notNegative}")
+    @field:Digits(integer = 8, fraction = 2, message = "price {validation.digits}")
     val price: BigDecimal? = null,
 
-    @field:DecimalMin(value = "0.00", message = "costPrice darf nicht negativ sein")
-    @field:Digits(integer = 8, fraction = 2, message = "costPrice erlaubt höchstens 8 Vor- und 2 Nachkommastellen")
+    @field:DecimalMin(value = "0.00", message = "costPrice {validation.notNegative}")
+    @field:Digits(integer = 8, fraction = 2, message = "costPrice {validation.digits}")
     val costPrice: BigDecimal? = null,
 
-    @field:Pattern(regexp = EVENT_FOOD_CURRENCY_PATTERN, message = "currency muss ein dreistelliger Währungscode sein")
+    @field:Pattern(regexp = EVENT_FOOD_CURRENCY_PATTERN, message = "currency {validation.currency}")
     val currency: String? = null,
 
     val selfServiceEnabled: Boolean? = null,

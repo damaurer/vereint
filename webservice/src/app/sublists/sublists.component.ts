@@ -14,39 +14,48 @@ import { CatalogApiService, type DrinkSummaryDto } from '../catalog/catalog-api.
 import { AsyncState } from '../member/async-state';
 import { InfoPanelComponent, ModalComponent, StatusBadgeComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 @Component({
   selector: 'app-sublists',
-  imports: [StateComponent, IconComponent, FormsModule, InfoPanelComponent, ModalComponent, StatusBadgeComponent],
+  imports: [
+    StateComponent,
+    IconComponent,
+    FormsModule,
+    InfoPanelComponent,
+    ModalComponent,
+    StatusBadgeComponent,
+    TranslatePipe,
+  ],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="sublists-title">
         <div class="sublists-header">
           <div>
-            <span class="eyebrow">Event-Vorbereitung</span>
-            <h1 id="sublists-title">Getränkelisten</h1>
-            <p>Erstelle und verwalte wiederverwendbare Getränkekonfigurationen für Events.</p>
+            <span class="eyebrow">{{ 'sublists.header.eyebrow' | t }}</span>
+            <h1 id="sublists-title">{{ 'sublists.header.title' | t }}</h1>
+            <p>{{ 'sublists.header.intro' | t }}</p>
           </div>
           <button type="button" class="member-button" (click)="openCreateModal()">
-            + Neue Sublist erstellen
+            {{ 'sublists.actions.create' | t }}
           </button>
         </div>
 
-        <vereint-info-panel icon="lists" title="Wiederverwendbare Getränkelisten">
-          Sublists ermöglichen es dir, eine Vorauswahl an Getränken mit spezifischen Event-Preisen
-          zusammenzustellen und mit einem Klick jedem Event zuzuweisen.
+        <vereint-info-panel icon="lists" [title]="'sublists.info.title' | t">
+          {{ 'sublists.info.body' | t }}
         </vereint-info-panel>
 
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Sublists werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'sublists.state.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Sublists nicht verfügbar"
+            [title]="'sublists.state.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -54,8 +63,8 @@ import { StateComponent } from '../ui/state.component';
           @if (sublists.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Sublists vorhanden"
-              message="Erstelle deine erste Sublist, um Getränke für Events vorzukonfigurieren."
+              [title]="'sublists.state.emptyTitle' | t"
+              [message]="'sublists.state.emptyMessage' | t"
             />
           } @else {
             <div class="sublists-grid">
@@ -64,7 +73,7 @@ import { StateComponent } from '../ui/state.component';
                   <div class="sublist-card-head">
                     <h3 class="sublist-card-title">{{ sublist.name }}</h3>
                     <vereint-status-badge
-                      [label]="sublist.itemCount + (sublist.itemCount === 1 ? ' Getränk' : ' Getränke')"
+                      [label]="'sublists.card.drinkCount' | t: { count: sublist.itemCount }"
                       tone="neutral"
                     />
                   </div>
@@ -79,21 +88,21 @@ import { StateComponent } from '../ui/state.component';
                       class="btn-primary-sm"
                       (click)="openDetailModal(sublist.id)"
                     >
-                      Einträge verwalten ({{ sublist.itemCount }})
+                      {{ 'sublists.card.manageItems' | t: { count: sublist.itemCount } }}
                     </button>
                     <button
                       type="button"
                       class="btn-secondary-sm"
                       (click)="openEditModal(sublist)"
                     >
-                      Bearbeiten
+                      {{ 'sublists.card.edit' | t }}
                     </button>
                     <button
                       type="button"
                       class="btn-danger-sm"
                       (click)="deleteSublist(sublist.id)"
                     >
-                      Löschen
+                      {{ 'sublists.card.delete' | t }}
                     </button>
                   </div>
                 </article>
@@ -106,22 +115,22 @@ import { StateComponent } from '../ui/state.component';
       <!-- Create / Edit Sublist Modal -->
       <vereint-modal
         [open]="showEditModal()"
-        [title]="editingSublistId() ? 'Sublist bearbeiten' : 'Neue Sublist erstellen'"
+        [title]="(editingSublistId() ? 'sublists.form.editTitle' : 'sublists.form.createTitle') | t"
         (closed)="closeEditModal()"
       >
         <form (submit)="submitSublistForm($event)" class="modal-form">
           <label class="form-field">
-            <span>Name der Sublist *</span>
-            <input [(ngModel)]="sublistFormName" name="sublistName" required placeholder="z. B. Standard-Stammtisch" />
+            <span>{{ 'sublists.form.name' | t }}</span>
+            <input [(ngModel)]="sublistFormName" name="sublistName" required [placeholder]="'sublists.form.namePlaceholder' | t" />
           </label>
 
           <label class="form-field">
-            <span>Beschreibung</span>
+            <span>{{ 'sublists.form.description' | t }}</span>
             <textarea
               [(ngModel)]="sublistFormDescription"
               name="sublistDescription"
               rows="3"
-              placeholder="z. B. Standardauswahl an Bieren und Softdrinks für reguläre Stammtische"
+              [placeholder]="'sublists.form.descriptionPlaceholder' | t"
             ></textarea>
           </label>
 
@@ -130,9 +139,9 @@ import { StateComponent } from '../ui/state.component';
           }
 
           <div class="modal-actions">
-            <button type="button" class="btn-secondary-sm" (click)="closeEditModal()">Abbrechen</button>
+            <button type="button" class="btn-secondary-sm" (click)="closeEditModal()">{{ 'common.cancel' | t }}</button>
             <button type="submit" class="member-button" [disabled]="submitting()">
-              {{ submitting() ? 'Wird gespeichert …' : 'Speichern' }}
+              {{ (submitting() ? 'common.saving' : 'common.save') | t }}
             </button>
           </div>
         </form>
@@ -141,7 +150,7 @@ import { StateComponent } from '../ui/state.component';
       <!-- Sublist Details & Items Modal -->
       <vereint-modal
         [open]="showDetailModal()"
-        [title]="selectedSublist()?.name ?? 'Sublist-Details'"
+        [title]="selectedSublist()?.name ?? ('sublists.detail.fallbackTitle' | t)"
         (closed)="closeDetailModal()"
       >
         @if (selectedSublist(); as sublist) {
@@ -150,10 +159,10 @@ import { StateComponent } from '../ui/state.component';
               <p class="sublist-detail-desc">{{ sublist.description }}</p>
             }
 
-            <h4 class="sublist-items-title">Enthaltene Getränke ({{ sublist.items.length }})</h4>
+            <h4 class="sublist-items-title">{{ 'sublists.detail.itemsTitle' | t: { count: sublist.items.length } }}</h4>
 
             @if (sublist.items.length === 0) {
-              <p class="text-muted">Noch keine Getränke in dieser Sublist enthalten.</p>
+              <p class="text-muted">{{ 'sublists.detail.noItems' | t }}</p>
             } @else {
               <ul class="sublist-items-list">
                 @for (item of sublist.items; track item.id) {
@@ -161,15 +170,15 @@ import { StateComponent } from '../ui/state.component';
                     <div>
                       <span class="sublist-item-name">{{ item.drinkName }}</span>
                       @if (item.defaultPrice !== null && item.defaultPrice !== undefined) {
-                        <span class="sublist-item-price">Preis: {{ formatPrice(item.defaultPrice) }}</span>
+                        <span class="sublist-item-price">{{ 'sublists.detail.price' | t: { price: formatPrice(item.defaultPrice) } }}</span>
                       } @else {
-                        <span class="sublist-item-price-default">Standardkatalogpreis</span>
+                        <span class="sublist-item-price-default">{{ 'sublists.detail.catalogPrice' | t }}</span>
                       }
                     </div>
                     <button
                       type="button"
                       class="btn-icon-danger"
-                      title="Aus Sublist entfernen"
+                      [title]="'sublists.detail.removeItem' | t"
                       (click)="removeItem(sublist.id, item.id)"
                     >
                       <vereint-icon name="close" />
@@ -181,13 +190,13 @@ import { StateComponent } from '../ui/state.component';
 
             <!-- Add Item Form -->
             <form class="add-item-form" (submit)="addItem($event, sublist.id)">
-              <h4 class="add-item-title">+ Getränk hinzufügen</h4>
+              <h4 class="add-item-title">{{ 'sublists.addItem.title' | t }}</h4>
               <div class="add-item-inputs">
                 <select [(ngModel)]="newDrinkId" name="selectedDrink" class="item-select" required>
-                  <option value="" disabled selected>Getränk aus Katalog wählen …</option>
+                  <option value="" disabled selected>{{ 'sublists.addItem.selectPlaceholder' | t }}</option>
                   @for (drink of availableDrinks(); track drink.id) {
                     <option [value]="drink.id">
-                      {{ drink.name }} (Standard: {{ formatPrice(drink.defaultPrice) }})
+                      {{ 'sublists.addItem.option' | t: { name: drink.name, price: formatPrice(drink.defaultPrice) } }}
                     </option>
                   }
                 </select>
@@ -199,11 +208,11 @@ import { StateComponent } from '../ui/state.component';
                   [(ngModel)]="newCustomPrice"
                   name="customPrice"
                   class="price-input"
-                  placeholder="Abweichender Preis (€)"
+                  [placeholder]="'sublists.addItem.customPricePlaceholder' | t"
                 />
 
                 <button type="submit" class="member-button-sm" [disabled]="submitting() || !newDrinkId">
-                  Hinzufügen
+                  {{ 'sublists.addItem.submit' | t }}
                 </button>
               </div>
             </form>
@@ -480,7 +489,7 @@ export class SublistsComponent implements OnInit, OnDestroy {
   protected submitSublistForm(event: Event): void {
     event.preventDefault();
     if (!this.sublistFormName.trim()) {
-      this.formError.set('Bitte geben Sie einen Namen ein.');
+      this.formError.set(translate('sublists.form.nameRequired'));
       return;
     }
 
@@ -501,7 +510,7 @@ export class SublistsComponent implements OnInit, OnDestroy {
         },
         error: (err: unknown) => {
           this.submitting.set(false);
-          this.formError.set((err as Error)?.message || 'Fehler beim Aktualisieren der Sublist.');
+          this.formError.set((err as Error)?.message || translate('sublists.errors.update'));
         },
       });
     } else {
@@ -517,7 +526,7 @@ export class SublistsComponent implements OnInit, OnDestroy {
         },
         error: (err: unknown) => {
           this.submitting.set(false);
-          this.formError.set((err as Error)?.message || 'Fehler beim Anlegen der Sublist.');
+          this.formError.set((err as Error)?.message || translate('sublists.errors.create'));
         },
       });
     }
@@ -566,7 +575,7 @@ export class SublistsComponent implements OnInit, OnDestroy {
       },
       error: (err: unknown) => {
         this.submitting.set(false);
-        this.formError.set((err as Error)?.message || 'Fehler beim Hinzufügen des Getränks.');
+        this.formError.set((err as Error)?.message || translate('sublists.errors.addItem'));
       },
     });
   }

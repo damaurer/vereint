@@ -9,6 +9,8 @@ import { eventStatusLabel, formatDateTime } from './member-format';
 import type { EventDetail, EventParticipant, MemberProfile, MomentSessionDto, MomentSummaryDto } from '../api/api.types';
 import { AvatarBadgeComponent, StatusBadgeComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 interface EventDetailView {
   event: EventDetail;
@@ -33,24 +35,24 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
  */
 @Component({
   selector: 'app-member-event-detail',
-  imports: [StateComponent, IconComponent, RouterLink, AvatarBadgeComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, RouterLink, AvatarBadgeComponent, StatusBadgeComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="event-title">
-        <span class="eyebrow">Event</span>
+        <span class="eyebrow">{{ 'member.eventDetail.eyebrow' | t }}</span>
 
-        <a class="member-back" routerLink="/events">← Zu den Events</a>
+        <a class="member-back" routerLink="/events">{{ 'member.eventDetail.back' | t }}</a>
 
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Die Eventdetails werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'member.eventDetail.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Event nicht verfügbar"
+            [title]="'member.eventDetail.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -66,7 +68,7 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
             <ul class="detail-meta">
               <li><vereint-icon name="events" /> {{ formatDateTime(view.event.startsAt) }}</li>
               @if (view.event.endsAt) {
-                <li><vereint-icon name="clock" /> bis {{ formatDateTime(view.event.endsAt) }}</li>
+                <li><vereint-icon name="clock" /> {{ 'member.eventDetail.until' | t: { date: formatDateTime(view.event.endsAt) } }}</li>
               }
               @if (view.event.location) {
                 <li><vereint-icon name="location" /> {{ view.event.location }}</li>
@@ -75,7 +77,7 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
             </ul>
             @if (view.event.location) {
               <button type="button" class="member-button route-button" (click)="openRoute(view.event.location)">
-                Route öffnen
+                {{ 'member.eventDetail.openRoute' | t }}
               </button>
             }
           </article>
@@ -84,8 +86,8 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
             <p class="member-description">{{ view.event.description }}</p>
           }
 
-          <h2 class="member-subtitle">Deine Antwort</h2>
-          <div class="rsvp-row" role="group" aria-label="Deine Antwort">
+          <h2 class="member-subtitle">{{ 'member.eventDetail.rsvpHeading' | t }}</h2>
+          <div class="rsvp-row" role="group" [attr.aria-label]="'member.eventDetail.rsvpHeading' | t">
             <button
               type="button"
               class="rsvp-button rsvp-yes"
@@ -93,7 +95,7 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
               [attr.aria-pressed]="rsvp() === 'yes'"
               (click)="setRsvp('yes')"
             >
-              Zusagen
+              {{ 'member.rsvp.accept' | t }}
             </button>
             <button
               type="button"
@@ -102,7 +104,7 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
               [attr.aria-pressed]="rsvp() === 'maybe'"
               (click)="setRsvp('maybe')"
             >
-              Vielleicht
+              {{ 'member.rsvp.maybe' | t }}
             </button>
             <button
               type="button"
@@ -111,13 +113,13 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
               [attr.aria-pressed]="rsvp() === 'no'"
               (click)="setRsvp('no')"
             >
-              Absagen
+              {{ 'member.rsvp.decline' | t }}
             </button>
           </div>
 
-          <h2 class="member-subtitle">Anwesenheit ({{ view.participants.length }} Personen)</h2>
+          <h2 class="member-subtitle">{{ 'member.eventDetail.attendance' | t: { count: view.participants.length } }}</h2>
           @if (view.participants.length === 0) {
-            <p class="member-muted">Noch keine Teilnehmer.</p>
+            <p class="member-muted">{{ 'member.eventDetail.noParticipants' | t }}</p>
           } @else {
             <ul class="detail-participants">
               @for (participant of view.participants; track participant.userId) {
@@ -134,17 +136,17 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
           }
 
           <!-- Gemeinschaftsmomente & Rituale (Moments) Sektion -->
-          <h2 class="member-subtitle">Moments & Rituale</h2>
+          <h2 class="member-subtitle">{{ 'member.eventDetail.momentsHeading' | t }}</h2>
           <div class="moments-banner-card">
             <div class="moments-banner-head">
               <vereint-icon class="moments-banner-icon" name="moments" />
               <div>
-                <strong>Gemeinschaftsmomente</strong>
+                <strong>{{ 'member.eventDetail.momentsTitle' | t }}</strong>
                 <p>
                   @if (view.moments.length > 0) {
-                    {{ view.moments.length }} aktiver Moment läuft gerade!
+                    {{ 'member.eventDetail.momentsActive' | t: { count: view.moments.length } }}
                   } @else {
-                    Starte ein gemeinsames Anstoßen, Gebet oder Anfeuern für alle Teilnehmer.
+                    {{ 'member.eventDetail.momentsInvite' | t }}
                   }
                 </p>
               </div>
@@ -154,16 +156,16 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
               [routerLink]="['/events', view.event.id, 'moments']"
             >
               @if (view.moments.length > 0) {
-                Moments ansehen ({{ view.moments.length }} aktiv) →
+                {{ 'member.eventDetail.momentsView' | t: { count: view.moments.length } }}
               } @else {
-                Moment starten / Übersicht →
+                {{ 'member.eventDetail.momentsStart' | t }}
               }
             </a>
           </div>
 
           <!-- Vergangene Moments / Archiv -->
           @if (view.history.length > 0) {
-            <h3 class="member-subtitle history-title">Vergangene Moments & Rituale</h3>
+            <h3 class="member-subtitle history-title">{{ 'member.eventDetail.historyHeading' | t }}</h3>
             <ul class="detail-history-list">
               @for (item of view.history; track item.momentId) {
                 <li class="detail-history-item">
@@ -174,7 +176,7 @@ type RsvpAnswer = 'yes' | 'maybe' | 'no';
                   </div>
                   <p class="history-text">{{ item.summary }}</p>
                   <span class="history-meta">
-                    <vereint-icon name="users" /> {{ item.uniqueParticipants }} Teilnehmer · <vereint-icon name="chat" /> {{ item.totalResponses }} Beiträge
+                    <vereint-icon name="users" /> {{ 'member.eventDetail.historyParticipants' | t: { count: item.uniqueParticipants } }} · <vereint-icon name="chat" /> {{ 'member.eventDetail.historyResponses' | t: { count: item.totalResponses } }}
                   </span>
                 </li>
               }
@@ -437,9 +439,9 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   protected participantLabel(role: string): string {
     switch (role) {
       case 'coHost':
-        return 'Co-Gastgeber';
+        return translate('member.eventDetail.role.coHost');
       case 'participant':
-        return 'Teilnehmer';
+        return translate('member.eventDetail.role.participant');
       default:
         return role;
     }

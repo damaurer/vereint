@@ -14,6 +14,8 @@ export interface AuthorizationRequestOptions {
   redirectUri?: string;
   returnTo?: string;
   scope?: string;
+  /** Sprache der Keycloak-Anmeldeseiten (`ui_locales`), z. B. `de`. */
+  uiLocales?: string;
 }
 
 export interface AuthorizationRequestResult {
@@ -104,6 +106,7 @@ export function createAuthorizationRequest(options?: AuthorizationRequestOptions
     code_challenge_method: 'S256',
     nonce,
   });
+  if (options?.uiLocales) params.set('ui_locales', options.uiLocales);
 
   const authorizationUrl = `${authEndpoint}?${params.toString()}`;
 

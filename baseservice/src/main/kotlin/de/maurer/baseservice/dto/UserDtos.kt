@@ -23,20 +23,20 @@ data class UserProfileDto(
 )
 
 data class UpdateProfileRequest(
-    @field:Size(min = 1, max = 255, message = "displayName muss zwischen 1 und 255 Zeichen lang sein")
+    @field:Size(min = 1, max = 255, message = "displayName {validation.size.range}")
     val displayName: String? = null,
 
-    @field:Email(message = "email muss eine gültige E-Mail-Adresse sein")
-    @field:Size(max = 255, message = "email darf höchstens 255 Zeichen lang sein")
+    @field:Email(message = "email {validation.email}")
+    @field:Size(max = 255, message = "email {validation.size.max}")
     val email: String? = null
 )
 
 data class AdminUpdateUserRequest(
-    @field:Size(min = 1, max = 255, message = "displayName muss zwischen 1 und 255 Zeichen lang sein")
+    @field:Size(min = 1, max = 255, message = "displayName {validation.size.range}")
     val displayName: String? = null,
 
-    @field:Email(message = "email muss eine gültige E-Mail-Adresse sein")
-    @field:Size(max = 255, message = "email darf höchstens 255 Zeichen lang sein")
+    @field:Email(message = "email {validation.email}")
+    @field:Size(max = 255, message = "email {validation.size.max}")
     val email: String? = null,
 
     val disabled: Boolean? = null,
@@ -44,17 +44,17 @@ data class AdminUpdateUserRequest(
 
     @field:Pattern(
         regexp = BOARD_ROLE_PATTERN,
-        message = "boardRole muss chair, treasurer, secretary, assessor oder leer sein"
+        message = "boardRole {validation.boardRole.allowed}"
     )
     val boardRole: String? = null,
 
     @field:AllowedValues(
         values = ["member", "board", "admin", "tabletRecorder"],
-        message = "roles darf nur member, board, admin oder tabletRecorder enthalten"
+        message = "roles {validation.roles.allowed}"
     )
     val roles: Set<String>? = null,
 
-    @field:Size(max = 64, message = "permissions darf höchstens 64 Einträge enthalten")
+    @field:Size(max = 64, message = "permissions {validation.size.maxEntries}")
     val permissions: Set<String>? = null
 )
 
@@ -88,13 +88,13 @@ data class PagedResponse<T>(
 data class AssignRolesRequest(
     @field:AllowedValues(
         values = ["member", "board", "admin", "tabletRecorder"],
-        message = "roles darf nur member, board, admin oder tabletRecorder enthalten"
+        message = "roles {validation.roles.allowed}"
     )
     val roles: Set<String> = emptySet()
 )
 
 data class AssignPermissionsRequest(
-    @field:Size(max = 64, message = "permissions darf höchstens 64 Einträge enthalten")
+    @field:Size(max = 64, message = "permissions {validation.size.maxEntries}")
     val permissions: Set<String> = emptySet()
 )
 

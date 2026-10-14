@@ -10,6 +10,7 @@ import de.maurer.baseservice.dto.ImageAssetDto
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
@@ -59,15 +60,15 @@ class ImageService(
     ): ImageAssetDto {
         val caller = userService.getOrCreateUser(principal)
         val purpose = ImagePurpose.fromValue(purposeValue)
-            ?: throw InvalidRequestException("Ungültiger Bildzweck: '${purposeValue.orEmpty()}'", ErrorCode.INVALID_REQUEST)
+            ?: throw InvalidRequestException(Msg("error.image.invalidPurpose", purposeValue.orEmpty()), ErrorCode.INVALID_REQUEST)
 
         val normalizedType = normalizeContentType(contentType)
         if (data.isEmpty()) {
-            throw InvalidRequestException("Es wurden keine Bilddaten übertragen", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.image.noData"), ErrorCode.INVALID_REQUEST)
         }
         if (data.size > MAX_SIZE_BYTES) {
             throw InvalidRequestException(
-                "Das Bild überschreitet die maximale Größe von ${MAX_SIZE_BYTES / (1024 * 1024)} MB",
+                Msg("error.image.tooLarge", MAX_SIZE_BYTES / (1024 * 1024)),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -75,7 +76,7 @@ class ImageService(
         val dimensions = readDimensions(data)
         if (dimensions.width > MAX_DIMENSION || dimensions.height > MAX_DIMENSION) {
             throw InvalidRequestException(
-                "Bilddimensionen dürfen höchstens ${MAX_DIMENSION}x$MAX_DIMENSION Pixel betragen",
+                Msg("error.image.dimensionsTooLarge", MAX_DIMENSION, MAX_DIMENSION),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -120,7 +121,7 @@ class ImageService(
         val caller = userService.getOrCreateUser(principal)
         val image = requireImage(id)
         if (!canView(image, caller, principal)) {
-            throw AccessDeniedException("Keine Berechtigung zum Anzeigen dieses Bildes", ErrorCode.ACCESS_DENIED)
+            throw AccessDeniedException(Msg("error.image.viewDenied"), ErrorCode.ACCESS_DENIED)
         }
         return toDto(image)
     }
@@ -131,13 +132,13 @@ class ImageService(
         val caller = userService.getOrCreateUser(principal)
         val image = requireImage(id)
         if (image.status != ImageStatus.active) {
-            throw ResourceNotFoundException("Bild mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            throw ResourceNotFoundException(Msg("error.image.notFound", id), ErrorCode.NOT_FOUND)
         }
         if (!canView(image, caller, principal)) {
-            throw AccessDeniedException("Keine Berechtigung zum Anzeigen dieses Bildes", ErrorCode.ACCESS_DENIED)
+            throw AccessDeniedException(Msg("error.image.viewDenied"), ErrorCode.ACCESS_DENIED)
         }
         val stored = objectStorage.read(image.storageKey)
-            ?: throw ResourceNotFoundException("Bilddaten für ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ?: throw ResourceNotFoundException(Msg("error.image.dataNotFound", id), ErrorCode.NOT_FOUND)
         return ImageContent(dataEncryptor.decrypt(stored), image.contentType)
     }
 
@@ -145,7 +146,7 @@ class ImageService(
     fun listImages(purposeValue: String?, targetIdValue: String?, principal: UserPrincipal): List<ImageAssetDto> {
         val caller = userService.getOrCreateUser(principal)
         val purpose = ImagePurpose.fromValue(purposeValue)
-            ?: throw InvalidRequestException("Ungültiger Bildzweck: '${purposeValue.orEmpty()}'", ErrorCode.INVALID_REQUEST)
+            ?: throw InvalidRequestException(Msg("error.image.invalidPurpose", purposeValue.orEmpty()), ErrorCode.INVALID_REQUEST)
         val targetId = resolveTargetForRead(purpose, targetIdValue, caller)
 
         return imageAssetRepository.findByPurposeAndTargetIdAndStatus(purpose, targetId, ImageStatus.active)
@@ -158,7 +159,7 @@ class ImageService(
         val caller = userService.getOrCreateUser(principal)
         val image = requireImage(id)
         if (!canDelete(image, caller, principal)) {
-            throw AccessDeniedException("Keine Berechtigung zum Löschen dieses Bildes", ErrorCode.ACCESS_DENIED)
+            throw AccessDeniedException(Msg("error.image.deleteDenied"), ErrorCode.ACCESS_DENIED)
         }
         objectStorage.delete(image.storageKey)
         image.status = ImageStatus.deleted
@@ -167,7 +168,7 @@ class ImageService(
 
     private fun requireImage(id: UUID): ImageAssetEntity =
         imageAssetRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Bild mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.image.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     /**
@@ -184,7 +185,7 @@ class ImageService(
             ImagePurpose.profile, ImagePurpose.moment -> {
                 // Eigengebundene Bilder: das Ziel ist immer der Aufrufer selbst.
                 if (purpose == ImagePurpose.moment && !isMemberOrHigher(caller, principal)) {
-                    throw AccessDeniedException("Keine Berechtigung für Moment-Bilder", ErrorCode.ACCESS_DENIED)
+                    throw AccessDeniedException(Msg("error.image.momentDenied"), ErrorCode.ACCESS_DENIED)
                 }
                 caller.id
             }
@@ -192,12 +193,12 @@ class ImageService(
             ImagePurpose.event -> {
                 val eventId = requireTargetId(targetIdValue)
                 val event = eventRepository.findById(eventId).orElseThrow {
-                    ResourceNotFoundException("Event mit ID '$eventId' nicht gefunden", ErrorCode.NOT_FOUND)
+                    ResourceNotFoundException(Msg("error.event.notFound", eventId), ErrorCode.NOT_FOUND)
                 }
                 val allowed = isBoardOrAdmin(caller, principal) || event.owner?.id == caller.id
                 if (!allowed) {
                     throw AccessDeniedException(
-                        "Nur der Event-Owner sowie Vorstand und Administration dürfen Eventbilder verwalten",
+                        Msg("error.image.eventManageDenied"),
                         ErrorCode.ACCESS_DENIED
                     )
                 }
@@ -207,12 +208,12 @@ class ImageService(
             ImagePurpose.drink -> {
                 val drinkId = requireTargetId(targetIdValue)
                 val drink = drinkCatalogRepository.findById(drinkId).orElseThrow {
-                    ResourceNotFoundException("Getränk mit ID '$drinkId' nicht gefunden", ErrorCode.NOT_FOUND)
+                    ResourceNotFoundException(Msg("error.drink.notFound", drinkId), ErrorCode.NOT_FOUND)
                 }
                 val ownProposal = drink.status == DrinkStatus.proposed && drink.proposedBy?.id == caller.id
                 if (!isBoardOrAdmin(caller, principal) && !ownProposal) {
                     throw AccessDeniedException(
-                        "Freigegebene Getränkebilder dürfen nur Vorstand und Administration verwalten",
+                        Msg("error.image.approvedDrinkManageDenied"),
                         ErrorCode.ACCESS_DENIED
                     )
                 }
@@ -262,7 +263,7 @@ class ImageService(
 
     private fun requireTargetId(value: String?): UUID =
         parseTargetId(value) ?: throw InvalidRequestException(
-            "targetId ist für diesen Bildzweck erforderlich",
+            Msg("error.image.targetIdRequired"),
             ErrorCode.INVALID_REQUEST
         )
 
@@ -272,7 +273,7 @@ class ImageService(
         return try {
             UUID.fromString(trimmed)
         } catch (_: IllegalArgumentException) {
-            throw InvalidRequestException("Ungültige Kennung für 'targetId': '$trimmed' ist keine UUID", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.invalidUuid", "targetId", trimmed), ErrorCode.INVALID_REQUEST)
         }
     }
 
@@ -280,7 +281,7 @@ class ImageService(
         val normalized = contentType?.trim()?.lowercase()?.substringBefore(';')?.trim()
         if (normalized.isNullOrBlank() || normalized !in ALLOWED_CONTENT_TYPES) {
             throw InvalidRequestException(
-                "Nicht unterstützter Bildtyp; erlaubt sind ${ALLOWED_CONTENT_TYPES.joinToString(", ")}",
+                Msg("error.image.unsupportedType", ALLOWED_CONTENT_TYPES.joinToString(", ")),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -297,7 +298,7 @@ class ImageService(
         }
         if (image == null || image.width <= 0 || image.height <= 0) {
             throw InvalidRequestException(
-                "Die übertragenen Daten konnten nicht als Bild gelesen werden",
+                Msg("error.image.unreadable"),
                 ErrorCode.INVALID_REQUEST
             )
         }

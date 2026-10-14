@@ -6,6 +6,7 @@ import { entryTypeLabel, formatDateTime, formatMoney } from './member-format';
 import type { LedgerEntry, MemberBalance } from '../api/api.types';
 import { BalanceCardComponent, InfoPanelComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
 
 interface WalletView {
   balance: MemberBalance;
@@ -26,30 +27,30 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
  */
 @Component({
   selector: 'app-member-wallet',
-  imports: [StateComponent, BalanceCardComponent, InfoPanelComponent],
+  imports: [StateComponent, BalanceCardComponent, InfoPanelComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="wallet-title">
-        <span class="eyebrow">Guthaben & Transaktionen</span>
-        <h1 id="wallet-title">Bierkasse</h1>
+        <span class="eyebrow">{{ 'member.wallet.eyebrow' | t }}</span>
+        <h1 id="wallet-title">{{ 'member.wallet.title' | t }}</h1>
 
 
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Guthaben und Buchungen werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'member.wallet.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Guthaben nicht verfügbar"
+            [title]="'member.wallet.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
         } @else if (load.data(); as view) {
           <vereint-balance-card
-            label="Aktueller Stand"
+            [label]="'member.balance.current' | t"
             [amount]="formatMoney(view.balance.creditBalance, view.balance.currency)"
             [negative]="isNegative(view.balance.creditBalance)"
             [showTopup]="true"
@@ -57,23 +58,23 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
           />
           @if (topupRequested()) {
             <p class="member-hint" role="status">
-              Aufladungen erfolgen über den Kassenwart. Bitte sprich ihn direkt an.
+              {{ 'member.balance.topupHint' | t }}
             </p>
           }
 
-          <vereint-info-panel icon="treasury" title="Kassenwart">
-            Guthaben wird vom Kassenwart verwaltet. Änderungen bedürfen einer Freigabe.
+          <vereint-info-panel icon="treasury" [title]="'member.wallet.treasurerTitle' | t">
+            {{ 'member.wallet.treasurerHint' | t }}
           </vereint-info-panel>
 
-          <h2 class="member-subtitle">Historie</h2>
+          <h2 class="member-subtitle">{{ 'member.wallet.historyHeading' | t }}</h2>
           @if (view.entries.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Buchungen"
-              message="Für dein Konto liegen noch keine Buchungen vor."
+              [title]="'member.wallet.emptyTitle' | t"
+              [message]="'member.wallet.emptyMessage' | t"
             />
           } @else {
-            <div class="wallet-filter" role="group" aria-label="Historie filtern">
+            <div class="wallet-filter" role="group" [attr.aria-label]="'member.wallet.filter.label' | t">
               <button
                 type="button"
                 class="ui-chip"
@@ -81,7 +82,7 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
                 [attr.aria-pressed]="filter() === 'all'"
                 (click)="filter.set('all')"
               >
-                Alle
+                {{ 'member.wallet.filter.all' | t }}
               </button>
               <button
                 type="button"
@@ -90,7 +91,7 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
                 [attr.aria-pressed]="filter() === 'topup'"
                 (click)="filter.set('topup')"
               >
-                Aufladungen
+                {{ 'member.wallet.filter.topup' | t }}
               </button>
               <button
                 type="button"
@@ -99,7 +100,7 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
                 [attr.aria-pressed]="filter() === 'spend'"
                 (click)="filter.set('spend')"
               >
-                Ausgaben
+                {{ 'member.wallet.filter.spend' | t }}
               </button>
             </div>
 
@@ -116,7 +117,7 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
                   </span>
                 </li>
               } @empty {
-                <p class="member-muted">Keine Buchungen für diesen Filter.</p>
+                <p class="member-muted">{{ 'member.wallet.filter.empty' | t }}</p>
               }
             </ul>
           }

@@ -2,6 +2,7 @@ package de.maurer.baseservice.security
 
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.PermissionDeniedException
 import org.springframework.security.authentication.AnonymousAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
@@ -42,7 +43,7 @@ class AuthContext(
 
     fun getRequiredPrincipal(): UserPrincipal {
         return getCurrentPrincipal() ?: throw AccessDeniedException(
-            message = "Authentication is required",
+            msg = Msg("error.auth.required"),
             errorCode = ErrorCode.ACCESS_DENIED
         )
     }
@@ -72,7 +73,7 @@ class AuthContext(
         val principal = getRequiredPrincipal()
         if (!principal.hasRole(role)) {
             throw PermissionDeniedException(
-                message = "Required role '$role' is missing",
+                msg = Msg("error.auth.roleMissing", role),
                 errorCode = ErrorCode.PERMISSION_DENIED
             )
         }
@@ -82,7 +83,7 @@ class AuthContext(
         val principal = getRequiredPrincipal()
         if (!principal.hasPermission(permission)) {
             throw PermissionDeniedException(
-                message = "Required permission '$permission' is missing",
+                msg = Msg("error.auth.permissionMissing", permission),
                 errorCode = ErrorCode.PERMISSION_DENIED
             )
         }

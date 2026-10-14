@@ -43,19 +43,19 @@ data class PushSubscriptionDto(
  * immer dem angemeldeten Aufrufer.
  */
 data class RegisterPushSubscriptionRequest(
-    @field:NotBlank(message = "endpoint darf nicht leer sein")
-    @field:Size(max = 2048, message = "endpoint darf höchstens 2048 Zeichen lang sein")
+    @field:NotBlank(message = "endpoint {validation.notBlank}")
+    @field:Size(max = 2048, message = "endpoint {validation.size.max}")
     val endpoint: String? = null,
 
-    @field:NotBlank(message = "p256dh darf nicht leer sein")
-    @field:Size(max = 255, message = "p256dh darf höchstens 255 Zeichen lang sein")
+    @field:NotBlank(message = "p256dh {validation.notBlank}")
+    @field:Size(max = 255, message = "p256dh {validation.size.max}")
     val p256dh: String? = null,
 
-    @field:NotBlank(message = "auth darf nicht leer sein")
-    @field:Size(max = 255, message = "auth darf höchstens 255 Zeichen lang sein")
+    @field:NotBlank(message = "auth {validation.notBlank}")
+    @field:Size(max = 255, message = "auth {validation.size.max}")
     val auth: String? = null,
 
-    @field:Size(max = 512, message = "userAgent darf höchstens 512 Zeichen lang sein")
+    @field:Size(max = 512, message = "userAgent {validation.size.max}")
     val userAgent: String? = null
 )
 
@@ -65,18 +65,18 @@ data class RegisterPushSubscriptionRequest(
  * Web Push (VAPID) an alle Abonnements des Empfängers zu.
  */
 data class SendNotificationRequest(
-    @field:NotBlank(message = "userId darf nicht leer sein")
+    @field:NotBlank(message = "userId {validation.notBlank}")
     val userId: String? = null,
 
-    @field:NotBlank(message = "title darf nicht leer sein")
-    @field:Size(max = 255, message = "title darf höchstens 255 Zeichen lang sein")
+    @field:NotBlank(message = "title {validation.notBlank}")
+    @field:Size(max = 255, message = "title {validation.size.max}")
     val title: String? = null,
 
-    @field:NotBlank(message = "body darf nicht leer sein")
-    @field:Size(max = 4000, message = "body darf höchstens 4000 Zeichen lang sein")
+    @field:NotBlank(message = "body {validation.notBlank}")
+    @field:Size(max = 4000, message = "body {validation.size.max}")
     val body: String? = null,
 
-    @field:Size(max = 64, message = "type darf höchstens 64 Zeichen lang sein")
+    @field:Size(max = 64, message = "type {validation.size.max}")
     val type: String? = null
 )
 

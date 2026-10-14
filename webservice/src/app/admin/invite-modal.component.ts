@@ -5,21 +5,24 @@ import { EMAIL_PATTERN } from '../auth/auth.types';
 import { formatDateTime } from '../member/member-format';
 import { ModalComponent, StatusBadgeComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 /** Auswählbare Startrollen einer Einladung (Präsentation). */
 const START_ROLES = [
-  { value: 'member', label: 'Mitglied (Standard)' },
-  { value: 'host', label: 'Gastgeber' },
-  { value: 'treasurer', label: 'Kassenwart' },
-  { value: 'secretary', label: 'Schriftwart' },
-  { value: 'admin', label: 'Admin' },
+  { value: 'member', labelKey: 'admin.invite.roleMemberDefault' },
+  { value: 'host', labelKey: 'admin.roles.host' },
+  { value: 'treasurer', labelKey: 'admin.roles.treasurer' },
+  { value: 'secretary', labelKey: 'admin.roles.secretary' },
+  { value: 'admin', labelKey: 'admin.roles.admin' },
 ] as const;
 
 /** Offene Einladung in der Präsentationsliste. */
 interface OpenInvite {
   id: string;
   email: string;
-  role: string;
+  /** Übersetzungsschlüssel der Startrolle. */
+  roleKey: string;
   createdAt: string;
   status: 'pending' | 'expired';
 }
@@ -30,21 +33,21 @@ function demoInvites(): OpenInvite[] {
     {
       id: 'inv-1',
       email: 'flo.eber@web.de',
-      role: 'Mitglied',
+      roleKey: 'admin.roles.member',
       createdAt: '2026-11-24T14:22:00Z',
       status: 'pending',
     },
     {
       id: 'inv-2',
       email: 'braumeister-stefan@gmail.com',
-      role: 'Gastgeber',
+      roleKey: 'admin.roles.host',
       createdAt: '2026-11-20T09:15:00Z',
       status: 'pending',
     },
     {
       id: 'inv-3',
       email: 'josef.schreiner@gmx.at',
-      role: 'Mitglied',
+      roleKey: 'admin.roles.member',
       createdAt: '2026-11-01T11:30:00Z',
       status: 'expired',
     },
@@ -62,12 +65,12 @@ function demoInvites(): OpenInvite[] {
  */
 @Component({
   selector: 'app-admin-invite-modal',
-  imports: [StateComponent, IconComponent, FormsModule, ModalComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, FormsModule, ModalComponent, StatusBadgeComponent, TranslatePipe],
   template: `
-    <vereint-modal [open]="open" title="Mitglied einladen" (closed)="close()">
+    <vereint-modal [open]="open" [title]="'admin.invite.title' | t" (closed)="close()">
       <form class="invite-form" (ngSubmit)="send()">
         <label class="manage-field manage-field-grow">
-          <span>E-Mail-Adresse</span>
+          <span>{{ 'admin.invite.email' | t }}</span>
           <input
             name="inviteEmail"
             type="email"
@@ -78,21 +81,21 @@ function demoInvites(): OpenInvite[] {
         </label>
 
         <label class="manage-field manage-field-grow">
-          <span>Startrolle</span>
+          <span>{{ 'admin.invite.startRole' | t }}</span>
           <select name="inviteRole" [(ngModel)]="role">
             @for (option of startRoles; track option.value) {
-              <option [value]="option.value">{{ option.label }}</option>
+              <option [value]="option.value">{{ option.labelKey | t }}</option>
             }
           </select>
         </label>
 
         <label class="manage-field manage-field-grow">
-          <span>Persönliche Nachricht (optional)</span>
+          <span>{{ 'admin.invite.message' | t }}</span>
           <textarea
             name="inviteMessage"
             rows="3"
             [(ngModel)]="message"
-            placeholder="Servus! Komm auf einen Krug vorbei bei unserer Stammtisch-App."
+            [placeholder]="'admin.invite.messagePlaceholder' | t"
           ></textarea>
         </label>
 
@@ -105,19 +108,19 @@ function demoInvites(): OpenInvite[] {
 
         <div class="invite-actions">
           <button type="button" class="member-button member-button-ghost" (click)="close()">
-            Abbrechen
+            {{ 'common.cancel' | t }}
           </button>
-          <button type="submit" class="member-button"><vereint-icon name="send" /> Einladung senden</button>
+          <button type="submit" class="member-button"><vereint-icon name="send" /> {{ 'admin.invite.send' | t }}</button>
         </div>
       </form>
 
       <section class="invite-open" aria-labelledby="invite-open-title">
-        <h3 class="member-subtitle" id="invite-open-title">Offene Einladungen</h3>
+        <h3 class="member-subtitle" id="invite-open-title">{{ 'admin.invite.openTitle' | t }}</h3>
         @if (invites().length === 0) {
           <vereint-state
             kind="empty"
-            title="Keine offenen Einladungen"
-            message="Aktuell sind keine Einladungen ausstehend."
+            [title]="'admin.invite.emptyTitle' | t"
+            [message]="'admin.invite.emptyMessage' | t"
           />
         } @else {
           <ul class="member-list">
@@ -126,15 +129,15 @@ function demoInvites(): OpenInvite[] {
                 <span class="invite-meta">
                   <span class="member-list-title">{{ invite.email }}</span>
                   <span class="member-list-meta">
-                    {{ formatDateTime(invite.createdAt) }} · {{ invite.role }}
+                    {{ formatDateTime(invite.createdAt) }} · {{ invite.roleKey | t }}
                   </span>
                 </span>
                 <vereint-status-badge
-                  [label]="invite.status === 'expired' ? 'Abgelaufen' : 'Ausstehend'"
+                  [label]="(invite.status === 'expired' ? 'admin.invite.expired' : 'admin.invite.pending') | t"
                   [tone]="inviteTone(invite.status)"
                 />
                 <button type="button" class="member-button" (click)="renew(invite.id)">
-                  Erneuern
+                  {{ 'admin.invite.renew' | t }}
                 </button>
               </li>
             }
@@ -216,22 +219,22 @@ export class InviteModalComponent {
     const email = this.email.trim();
     if (!EMAIL_PATTERN.test(email)) {
       this.info.set(null);
-      this.error.set('Bitte eine gültige E-Mail-Adresse eingeben.');
+      this.error.set(translate('admin.invite.invalidEmail'));
       return;
     }
-    const roleLabel = START_ROLES.find((option) => option.value === this.role)?.label ?? this.role;
+    const roleKey = START_ROLES.find((option) => option.value === this.role)?.labelKey ?? this.role;
     this.invites.update((list) => [
       {
         id: `inv-${Date.now()}`,
         email,
-        role: roleLabel,
+        roleKey,
         createdAt: new Date().toISOString(),
         status: 'pending',
       },
       ...list,
     ]);
     this.error.set(null);
-    this.info.set('Einladung vorgemerkt.');
+    this.info.set(translate('admin.invite.queued'));
     this.email = '';
     this.message = '';
   }
@@ -245,7 +248,7 @@ export class InviteModalComponent {
           : invite,
       ),
     );
-    this.info.set('Einladung erneuert.');
+    this.info.set(translate('admin.invite.renewed'));
   }
 
   protected close(): void {
