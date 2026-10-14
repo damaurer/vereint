@@ -276,6 +276,7 @@ describe('cache rules', () => {
 
     expect(isPrivateDeliveryPath('/app')).toBe(true);
     expect(isPrivateDeliveryPath('/register/abc')).toBe(true);
+    expect(isPrivateDeliveryPath('/register')).toBe(true);
     expect(isPrivateDeliveryPath('/auth/error')).toBe(false);
     expect(isPrivateDeliveryPath('/auth/logged-out')).toBe(false);
   });

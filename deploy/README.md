@@ -140,6 +140,21 @@ aws ssm start-session --target <instance-id> \
   --parameters portNumber=8082,localPortNumber=8082
 ```
 
+### Client für Einladungslinks in einem bestehenden Realm
+
+Keycloak importiert `realm-export.json` nur, solange es den Realm noch nicht
+gibt. Wurde der Realm vor der Funktion „Mitglieder per Einladungslink“
+angelegt, den Client einmal von Hand ergänzen (siehe
+`docs/domains/member-invites.md`):
+
+1. `terraform apply` in `infra/aws` legt `/vereint/KEYCLOAK_REGISTRATION_CLIENT_SECRET` an.
+2. In der Admin-Konsole im Realm `vereint` einen Client `vereint-registration`
+   anlegen: *Client authentication* an, nur *Service accounts roles* aktiv,
+   Secret = Wert aus dem Parameter Store.
+3. Unter *Service account roles* → *Assign role* → *Client roles*
+   `realm-management` / `manage-users` zuweisen, sonst nichts.
+4. Neu ausrollen, damit der baseservice das Secret erhält.
+
 ## Nützliche Befehle (auf dem Server, als root in `/srv/vereint/app`)
 
 ```bash

@@ -328,6 +328,33 @@
       "oidcLoginFailed": "Signing in via Keycloak failed.",
       "browserOnly": "The sign-in service is not available on this device.",
       "generic": "Sign-in failed."
+    },
+    "register": {
+      "eyebrow": "Invitation",
+      "title": "Become a member",
+      "doneTitle": "Welcome to the club!",
+      "checking": "Checking invite link …",
+      "invalidTitle": "Registration not possible",
+      "toLogin": "Go to sign-in",
+      "intro": "You have been invited. Create your account, then you can sign in right away.",
+      "validUntil": "The link is valid until {date}.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "E-mail address",
+      "password": "Password (at least {min} characters)",
+      "passwordRepeat": "Repeat password",
+      "submit": "Create account",
+      "submitting": "Creating account …",
+      "done": "Your account for {email} has been created. Sign in now with your e-mail address and password.",
+      "loginNow": "Sign in now",
+      "errors": {
+        "noToken": "This link does not contain a valid invitation code. Please open the complete link from your invitation.",
+        "nameRequired": "Please enter your first and last name.",
+        "emailInvalid": "Please enter a valid e-mail address.",
+        "passwordTooShort": "The password must be at least {min} characters long.",
+        "passwordMismatch": "The two passwords do not match.",
+        "checkInput": "Please check your input. The password must be at least {min} characters long."
+      }
     }
   },
   "errorPages": {
@@ -1023,21 +1050,51 @@
     },
     "invite": {
       "title": "Invite member",
-      "email": "Email address",
-      "startRole": "Initial role",
-      "roleMemberDefault": "Member (default)",
-      "message": "Personal message (optional)",
-      "messagePlaceholder": "Hi there! Come and join us for a pint in our regulars’ table app.",
-      "send": "Send invitation",
-      "openTitle": "Open invitations",
-      "emptyTitle": "No open invitations",
-      "emptyMessage": "There are no pending invitations at the moment.",
-      "expired": "Expired",
-      "pending": "Pending",
-      "renew": "Renew",
-      "invalidEmail": "Please enter a valid email address.",
-      "queued": "Invitation queued.",
-      "renewed": "Invitation renewed."
+      "intro": "The invited person registers via the link and then becomes a regular member.",
+      "labelField": "For whom? (optional, only to recognise it later)",
+      "labelPlaceholder": "e.g. Anna Neumann",
+      "validity": "Valid for",
+      "validityDays": {
+        "one": "{count} day",
+        "other": "{count} days"
+      },
+      "maxUses": "Number of people",
+      "create": "Create link",
+      "createdTitle": "Invite link created",
+      "createdHint": "Send this link to the person, for example by messenger or e-mail. It is only shown now and is valid until {date}.",
+      "linkLabel": "Invite link",
+      "share": "Share",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "another": "Create another link",
+      "listTitle": "Invite links",
+      "loading": "Loading invitations",
+      "loadFailed": "Invitations not loaded",
+      "emptyTitle": "No invitations yet",
+      "emptyMessage": "Create a link above for the first person.",
+      "noLabel": "No label",
+      "usage": "{used} of {max} used · valid until {date}",
+      "registered": "Registered: {names}",
+      "revoke": "Revoke",
+      "status": {
+        "active": "Open",
+        "used": "Used",
+        "expired": "Expired",
+        "revoked": "Revoked"
+      },
+      "maxUsesInvalid": "The number of people must be between 1 and 50.",
+      "copyFailed": "Copying is not possible. Please select the link and copy it manually.",
+      "shareTitle": "Invitation to Vereint",
+      "shareText": "Register as a member here:",
+      "errors": {
+        "notFound": "This invite link is invalid. Please check that you opened the complete link.",
+        "expired": "This invite link has expired. Please ask the board for a new link.",
+        "revoked": "This invite link was revoked. Please ask the board for a new link.",
+        "usedUp": "This invite link has already been used. Please ask the board for a new link.",
+        "emailTaken": "An account with this e-mail address already exists. Sign in with it or reset your password.",
+        "passwordRejected": "The password does not meet the requirements. Please choose a longer password.",
+        "unavailable": "Registration is currently not possible. Please try again later."
+      }
     },
     "matrix": {
       "title": "Roles & permissions",
@@ -1098,7 +1155,9 @@
       "eventsEmptyTitle": "No events",
       "eventsEmptyMessage": "There are currently no events to moderate.",
       "moderate": "Moderate",
-      "auditHeading": "Recent actions ({count})"
+      "auditHeading": "Recent actions ({count})",
+      "inviteTitle": "Invite member",
+      "inviteDesc": "Create an invite link for registration"
     },
     "comms": {
       "eyebrow": "Secretary",

@@ -69,6 +69,8 @@ function isPublicOrGuestRequest(req: Request): boolean {
   const path = req.originalUrl.split('?')[0];
   const publicPaths = [
     '/api/v1/invites/accept',
+    '/api/v1/member-invites/preview',
+    '/api/v1/member-invites/register',
     '/api/v1/auth/access/guest',
     '/api/v1/health',
     '/api/v1/info',

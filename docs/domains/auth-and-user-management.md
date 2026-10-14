@@ -10,6 +10,7 @@ Die Benutzerverwaltung in **Vereint** verbindet das externe Identitätsmanagemen
 1. **Erstregistrierung / OIDC-Provisionierung**:
    - Wenn sich ein Benutzer erstmals über Keycloak anmeldet, wird anhand des OIDC-Subjekts (`keycloak_subject`) automatisch ein Vereinsbenutzerdatensatz angelegt (*Just-in-Time Provisioning*).
    - Standardmäßig erhält jedes neue Mitglied die Rolle `member` und wird als aktiv (`disabled = false`) geführt.
+   - Neue Personen kommen über einen Einladungslink von Vorstand oder Administration in den Verein und legen ihr Konto selbst an; siehe [Mitglieder per Einladungslink](member-invites.md).
 2. **Profilpflege**:
    - Mitglieder können ihren Anzeigenamen (`displayName`), ihre E-Mail-Adresse und Profilbild-Referenzen selbst verwalten.
 3. **Rollen- & Funktionszuweisung (Vorstand/Admin)**:

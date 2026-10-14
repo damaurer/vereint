@@ -17,6 +17,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'auth/error', renderMode: RenderMode.Server },
   { path: 'auth/logged-out', renderMode: RenderMode.Server },
   { path: 'invite/accept', renderMode: RenderMode.Server },
+  { path: 'register', renderMode: RenderMode.Server },
   { path: '403', renderMode: RenderMode.Server },
   { path: '404', renderMode: RenderMode.Server },
 

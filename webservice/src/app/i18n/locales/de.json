@@ -322,6 +322,33 @@
       "oidcLoginFailed": "Die Anmeldung über Keycloak ist fehlgeschlagen.",
       "browserOnly": "Der Anmeldedienst ist auf diesem Gerät nicht verfügbar.",
       "generic": "Die Anmeldung ist fehlgeschlagen."
+    },
+    "register": {
+      "eyebrow": "Einladung",
+      "title": "Mitglied werden",
+      "doneTitle": "Willkommen im Verein!",
+      "checking": "Einladungslink wird geprüft …",
+      "invalidTitle": "Registrierung nicht möglich",
+      "toLogin": "Zur Anmeldung",
+      "intro": "Du wurdest eingeladen. Lege dein Konto an, danach kannst du dich sofort anmelden.",
+      "validUntil": "Der Link gilt bis {date}.",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail-Adresse",
+      "password": "Passwort (mindestens {min} Zeichen)",
+      "passwordRepeat": "Passwort wiederholen",
+      "submit": "Konto anlegen",
+      "submitting": "Konto wird angelegt …",
+      "done": "Dein Konto für {email} ist angelegt. Melde dich jetzt mit deiner E-Mail-Adresse und deinem Passwort an.",
+      "loginNow": "Jetzt anmelden",
+      "errors": {
+        "noToken": "Dieser Link enthält keinen gültigen Einladungscode. Bitte öffne den vollständigen Link aus deiner Einladung.",
+        "nameRequired": "Bitte Vor- und Nachnamen angeben.",
+        "emailInvalid": "Bitte eine gültige E-Mail-Adresse eingeben.",
+        "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
+        "passwordMismatch": "Die beiden Passwörter stimmen nicht überein.",
+        "checkInput": "Bitte prüfe deine Eingaben. Das Passwort muss mindestens {min} Zeichen lang sein."
+      }
     }
   },
   "errorPages": {
@@ -990,21 +1017,51 @@
     },
     "invite": {
       "title": "Mitglied einladen",
-      "email": "E-Mail-Adresse",
-      "startRole": "Startrolle",
-      "roleMemberDefault": "Mitglied (Standard)",
-      "message": "Persönliche Nachricht (optional)",
-      "messagePlaceholder": "Servus! Komm auf einen Krug vorbei bei unserer Stammtisch-App.",
-      "send": "Einladung senden",
-      "openTitle": "Offene Einladungen",
-      "emptyTitle": "Keine offenen Einladungen",
-      "emptyMessage": "Aktuell sind keine Einladungen ausstehend.",
-      "expired": "Abgelaufen",
-      "pending": "Ausstehend",
-      "renew": "Erneuern",
-      "invalidEmail": "Bitte eine gültige E-Mail-Adresse eingeben.",
-      "queued": "Einladung vorgemerkt.",
-      "renewed": "Einladung erneuert."
+      "intro": "Die eingeladene Person registriert sich über den Link selbst und ist danach normales Mitglied.",
+      "labelField": "Für wen? (optional, nur zum Wiedererkennen)",
+      "labelPlaceholder": "z. B. Anna Neumann",
+      "validity": "Gültig für",
+      "validityDays": {
+        "one": "{count} Tag",
+        "other": "{count} Tage"
+      },
+      "maxUses": "Anzahl Personen",
+      "create": "Link erstellen",
+      "createdTitle": "Einladungslink erstellt",
+      "createdHint": "Schick diesen Link an die Person, zum Beispiel per Messenger oder E-Mail. Er wird nur jetzt angezeigt und gilt bis {date}.",
+      "linkLabel": "Einladungslink",
+      "share": "Teilen",
+      "copy": "Link kopieren",
+      "copied": "Kopiert",
+      "another": "Weiteren Link erstellen",
+      "listTitle": "Einladungslinks",
+      "loading": "Einladungen werden geladen",
+      "loadFailed": "Einladungen nicht geladen",
+      "emptyTitle": "Noch keine Einladungen",
+      "emptyMessage": "Erstelle oben einen Link für die erste Person.",
+      "noLabel": "Ohne Bezeichnung",
+      "usage": "{used} von {max} verwendet · gültig bis {date}",
+      "registered": "Registriert: {names}",
+      "revoke": "Zurückziehen",
+      "status": {
+        "active": "Offen",
+        "used": "Verwendet",
+        "expired": "Abgelaufen",
+        "revoked": "Zurückgezogen"
+      },
+      "maxUsesInvalid": "Die Anzahl Personen muss zwischen 1 und 50 liegen.",
+      "copyFailed": "Kopieren nicht möglich. Bitte den Link markieren und manuell kopieren.",
+      "shareTitle": "Einladung zu Vereint",
+      "shareText": "Hier kannst du dich als Mitglied registrieren:",
+      "errors": {
+        "notFound": "Dieser Einladungslink ist ungültig. Bitte prüfe, ob du den ganzen Link geöffnet hast.",
+        "expired": "Dieser Einladungslink ist abgelaufen. Bitte den Vorstand um einen neuen Link.",
+        "revoked": "Dieser Einladungslink wurde zurückgezogen. Bitte den Vorstand um einen neuen Link.",
+        "usedUp": "Dieser Einladungslink wurde schon verwendet. Bitte den Vorstand um einen neuen Link.",
+        "emailTaken": "Für diese E-Mail-Adresse gibt es schon ein Konto. Melde dich damit an oder setze dein Passwort zurück.",
+        "passwordRejected": "Das Passwort erfüllt die Vorgaben nicht. Bitte wähle ein längeres Passwort.",
+        "unavailable": "Die Registrierung ist gerade nicht möglich. Bitte versuche es später noch einmal."
+      }
     },
     "matrix": {
       "title": "Rollen & Berechtigungen",
@@ -1065,7 +1122,9 @@
       "eventsEmptyTitle": "Keine Events",
       "eventsEmptyMessage": "Aktuell sind keine Events zur Moderation sichtbar.",
       "moderate": "Moderieren",
-      "auditHeading": "Letzte Aktionen ({count})"
+      "auditHeading": "Letzte Aktionen ({count})",
+      "inviteTitle": "Mitglied einladen",
+      "inviteDesc": "Einladungslink zur Registrierung erstellen"
     },
     "comms": {
       "eyebrow": "Schriftwart",

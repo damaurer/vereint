@@ -7,6 +7,8 @@ locals {
     "KEYCLOAK_ADMIN_PASSWORD",
     "KEYCLOAK_CLIENT_SECRET",
     "KEYCLOAK_TABLET_CLIENT_SECRET",
+    # Service-Account, mit dem der baseservice Konten fuer Einladungslinks anlegt.
+    "KEYCLOAK_REGISTRATION_CLIENT_SECRET",
     "KEYCLOAK_DB_PASSWORD",
     "VEREINT_DB_PASSWORD",
     # Superuser der PostgreSQL-Instanz (nur fuer Backups und Verwaltung).
