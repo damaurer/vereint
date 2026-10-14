@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { AvatarBadgeComponent, StepperComponent } from '../ui';
+import { TranslatePipe } from '../i18n';
 
 /**
  * Strichlisten-Zeile des Tablet-/PWA-Terminals (TICKET-034).
@@ -13,7 +14,7 @@ import { AvatarBadgeComponent, StepperComponent } from '../ui';
 @Component({
   selector: 'app-strichliste-row',
   standalone: true,
-  imports: [AvatarBadgeComponent, StepperComponent],
+  imports: [AvatarBadgeComponent, StepperComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tally-row">
@@ -35,7 +36,7 @@ import { AvatarBadgeComponent, StepperComponent } from '../ui';
         [value]="count"
         [min]="0"
         [max]="max"
-        [ariaLabel]="'Striche für ' + name"
+        [ariaLabel]="'tablet.row.strokesFor' | t: { name: name }"
         (increased)="increment.emit()"
         (decreased)="decrement.emit()"
       />

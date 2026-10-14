@@ -17,6 +17,8 @@ import { AvatarBadgeComponent, InfoPanelComponent } from '../ui';
 import { ChatDataService } from './chat-data.service';
 import { DRINK_EMOJI, type ChatMessage, type ChatOverview } from './chat.model';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 /** Zusammengefasste Konversationszeile für die Seitenliste. */
 interface ConversationRow {
@@ -46,35 +48,43 @@ interface ConversationRow {
  */
 @Component({
   selector: 'app-chat',
-  imports: [StateComponent, IconComponent, FormsModule, RouterLink, AvatarBadgeComponent, InfoPanelComponent],
+  imports: [
+    StateComponent,
+    IconComponent,
+    FormsModule,
+    RouterLink,
+    AvatarBadgeComponent,
+    InfoPanelComponent,
+    TranslatePipe,
+  ],
   template: `
     <main class="page-shell">
       <section class="page-card chat-card" aria-labelledby="chat-title">
         <div class="chat-head">
           <div>
-            <span class="eyebrow">Stammtisch-Messenger</span>
-            <h1 id="chat-title">Chat</h1>
+            <span class="eyebrow">{{ 'chat.eyebrow' | t }}</span>
+            <h1 id="chat-title">{{ 'chat.title' | t }}</h1>
           </div>
-          <a class="member-back" routerLink="/direktnachrichten">Direktnachrichten →</a>
+          <a class="member-back" routerLink="/direktnachrichten">{{ 'chat.toDirectMessages' | t }}</a>
         </div>
 
         @if (isBusy()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Die Konversationen werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'chat.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Chat nicht verfügbar"
+            [title]="'chat.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
         } @else if (model(); as data) {
           <div class="chat-layout" [class.is-thread]="mobileView() === 'thread'">
-            <aside class="chat-aside" aria-label="Konversationen">
-              <button type="button" class="member-button chat-new">+ Neue Nachricht</button>
+            <aside class="chat-aside" [attr.aria-label]="'chat.list.ariaLabel' | t">
+              <button type="button" class="member-button chat-new">{{ 'chat.list.newMessage' | t }}</button>
               <ul class="chat-conversations">
                 @for (row of rows(); track row.id) {
                   <li>
@@ -88,7 +98,7 @@ interface ConversationRow {
                       <span class="chat-avatar-wrap">
                         <vereint-avatar-badge [name]="row.name" />
                         @if (row.online) {
-                          <span class="chat-online" aria-label="online"></span>
+                          <span class="chat-online" [attr.aria-label]="'chat.online' | t"></span>
                         }
                       </span>
                       <span class="chat-conversation-body">
@@ -99,7 +109,7 @@ interface ConversationRow {
                         <span class="chat-conversation-preview">{{ row.preview }}</span>
                       </span>
                       @if (row.unreadCount > 0) {
-                        <span class="chat-unread" [attr.aria-label]="row.unreadCount + ' ungelesen'">
+                        <span class="chat-unread" [attr.aria-label]="'chat.unread' | t: { count: row.unreadCount }">
                           {{ row.unreadCount }}
                         </span>
                       }
@@ -111,17 +121,19 @@ interface ConversationRow {
 
             <div class="chat-thread">
               <header class="chat-thread-head">
-                <button type="button" class="chat-back" (click)="backToList()">← Zurück</button>
+                <button type="button" class="chat-back" (click)="backToList()">{{ 'chat.thread.back' | t }}</button>
                 <div>
                   <strong>{{ selectedName() }}</strong>
                   @if (isGroupSelected()) {
-                    <span class="chat-thread-sub">{{ data.group.membersOnline }} Mitglieder online</span>
+                    <span class="chat-thread-sub">{{
+                      'chat.thread.membersOnline' | t: { count: data.group.membersOnline }
+                    }}</span>
                   }
                 </div>
               </header>
 
               @if (isGroupSelected() && data.group.pinned; as pinned) {
-                <vereint-info-panel [title]="'Info vom Schriftwart (' + pinned.authorName + ')'">
+                <vereint-info-panel [title]="'chat.thread.pinnedTitle' | t: { name: pinned.authorName }">
                   {{ pinned.text }}
                 </vereint-info-panel>
               }
@@ -130,8 +142,8 @@ interface ConversationRow {
                 @if (selectedMessages().length === 0) {
                   <vereint-state
                     kind="empty"
-                    title="Noch keine Nachrichten"
-                    message="Schreibe die erste Nachricht in diese Konversation."
+                    [title]="'chat.thread.emptyTitle' | t"
+                    [message]="'chat.thread.emptyMessage' | t"
                   />
                 } @else {
                   @for (message of selectedMessages(); track message.id) {
@@ -158,7 +170,7 @@ interface ConversationRow {
                           <button
                             type="button"
                             class="chat-reaction chat-reaction-add"
-                            aria-label="Reaktion hinzufügen"
+                            [attr.aria-label]="'chat.thread.addReaction' | t"
                             (click)="toggleReaction(message.id, '👍')"
                           >
                             +
@@ -178,7 +190,7 @@ interface ConversationRow {
                 <button
                   type="button"
                   class="chat-icon-button"
-                  aria-label="Anhang hinzufügen"
+                  [attr.aria-label]="'chat.composer.attach' | t"
                   (click)="attach()"
                 >
                   <vereint-icon name="attach" />
@@ -187,14 +199,14 @@ interface ConversationRow {
                   name="draft"
                   class="chat-input"
                   autocomplete="off"
-                  placeholder="Schreibe eine Nachricht…"
+                  [placeholder]="'chat.composer.placeholder' | t"
                   [(ngModel)]="draft"
                   [disabled]="sending()"
                 />
                 <button
                   type="button"
                   class="chat-icon-button"
-                  aria-label="Getränk einfügen"
+                  [attr.aria-label]="'chat.composer.addDrink' | t"
                   (click)="addDrink()"
                 >
                   {{ drinkEmoji }}
@@ -202,7 +214,7 @@ interface ConversationRow {
                 <button
                   type="submit"
                   class="chat-send"
-                  aria-label="Senden"
+                  [attr.aria-label]="'chat.composer.send' | t"
                   [disabled]="sending() || draft.trim().length === 0"
                 >
                   <vereint-icon name="send" />
@@ -513,7 +525,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       id: data.group.id,
       name: data.group.name,
       preview: data.group.messages.at(-1)?.text ?? '',
-      timeLabel: `${data.group.membersOnline} online`,
+      timeLabel: translate('chat.list.groupOnline', { count: data.group.membersOnline }),
       unreadCount: 0,
       online: true,
       isGroup: true,
@@ -598,7 +610,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       },
       error: () => {
         // Neutrale Meldung; die Nachricht bleibt zum erneuten Senden im Feld.
-        this.sendError.set('Nachricht konnte nicht gesendet werden. Bitte erneut versuchen.');
+        this.sendError.set(translate('chat.composer.sendFailed'));
         this.sending.set(false);
       },
     });
@@ -611,7 +623,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   /** Platzhalter für Anhänge; ohne Backend nur eine neutrale Rückmeldung. */
   protected attach(): void {
-    this.sendError.set('Anhänge sind derzeit nicht verfügbar.');
+    this.sendError.set(translate('chat.composer.attachUnavailable'));
   }
 
   /** Schaltet eine Emoji-Reaktion des aktuellen Nutzers um und passt den Zähler an. */

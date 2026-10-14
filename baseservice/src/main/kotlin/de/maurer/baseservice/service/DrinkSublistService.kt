@@ -9,6 +9,7 @@ import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.DrinkSublistItemRepository
@@ -66,13 +67,13 @@ class DrinkSublistService(
         val caller = userService.getOrCreateUser(principal)
         if (!canCreate(caller, principal)) {
             throw AccessDeniedException(
-                "Keine Berechtigung zum Anlegen von Sublists",
+                Msg("error.sublist.createDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
         val name = request.name?.trim().orEmpty()
         if (name.isBlank()) {
-            throw InvalidRequestException("name darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "name"), ErrorCode.INVALID_REQUEST)
         }
         val sublist = DrinkSublistEntity(
             name = name,
@@ -91,7 +92,7 @@ class DrinkSublistService(
         if (request.name != null) {
             val name = request.name.trim()
             if (name.isBlank()) {
-                throw InvalidRequestException("name darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.blank", "name"), ErrorCode.INVALID_REQUEST)
             }
             sublist.name = name
         }
@@ -116,24 +117,24 @@ class DrinkSublistService(
 
         val drinkId = parseId(request.drinkId, "drinkId")
         val drink = drinkCatalogRepository.findById(drinkId).orElseThrow {
-            ResourceNotFoundException("Getränk mit ID '$drinkId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.drink.notFound", drinkId), ErrorCode.NOT_FOUND)
         }
         // Nur freigegebene globale Stammdaten dürfen in eine Vorlage aufgenommen werden.
         if (drink.status != DrinkStatus.approved) {
             throw InvalidRequestException(
-                "Nur freigegebene Getränke können einer Sublist hinzugefügt werden",
+                Msg("error.sublist.drinkNotApproved"),
                 ErrorCode.INVALID_REQUEST
             )
         }
         if (drinkSublistItemRepository.findBySublistIdAndDrinkId(sublist.id, drink.id).isPresent) {
             throw InvalidRequestException(
-                "Das Getränk ist bereits in dieser Sublist enthalten",
+                Msg("error.sublist.drinkAlreadyAdded"),
                 ErrorCode.INVALID_REQUEST
             )
         }
         val price = request.defaultPrice
         if (price != null && price.signum() < 0) {
-            throw InvalidRequestException("defaultPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.negative", "defaultPrice"), ErrorCode.INVALID_REQUEST)
         }
         val item = DrinkSublistItemEntity(
             sublist = sublist,
@@ -150,11 +151,11 @@ class DrinkSublistService(
         requireManage(caller, principal, sublist)
 
         val item = drinkSublistItemRepository.findById(itemId).orElseThrow {
-            ResourceNotFoundException("Sublist-Eintrag mit ID '$itemId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.sublist.itemNotFound", itemId), ErrorCode.NOT_FOUND)
         }
         if (item.sublist?.id != sublist.id) {
             throw ResourceNotFoundException(
-                "Sublist-Eintrag mit ID '$itemId' ist dieser Sublist nicht zugeordnet",
+                Msg("error.sublist.itemNotInSublist", itemId),
                 ErrorCode.NOT_FOUND
             )
         }
@@ -163,14 +164,14 @@ class DrinkSublistService(
 
     private fun requireSublist(id: UUID): DrinkSublistEntity =
         drinkSublistRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Sublist mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.sublist.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     /** Verwalten und Einsehen darf ausschließlich der Ersteller sowie Vorstand/Admin. */
     private fun requireManage(caller: UserEntity, principal: UserPrincipal, sublist: DrinkSublistEntity) {
         if (!isBoardOrAdmin(caller, principal) && sublist.createdBy?.id != caller.id) {
             throw AccessDeniedException(
-                "Nur der Ersteller sowie Vorstand und Administration dürfen diese Sublist verwalten",
+                Msg("error.sublist.manageDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -190,13 +191,13 @@ class DrinkSublistService(
     private fun parseId(value: String?, field: String): UUID {
         val trimmed = value?.trim()
         if (trimmed.isNullOrEmpty()) {
-            throw InvalidRequestException("$field darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", field), ErrorCode.INVALID_REQUEST)
         }
         return try {
             UUID.fromString(trimmed)
         } catch (_: IllegalArgumentException) {
             throw InvalidRequestException(
-                "Ungültige Kennung für '$field': '$trimmed' ist keine UUID",
+                Msg("error.field.invalidUuid", field, trimmed),
                 ErrorCode.INVALID_REQUEST
             )
         }

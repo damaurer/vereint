@@ -17,6 +17,7 @@ import de.maurer.baseservice.error.EventNotActiveException
 import de.maurer.baseservice.error.InvitationExpiredException
 import de.maurer.baseservice.error.InvitationRevokedException
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.EventGuestRepository
 import de.maurer.baseservice.repository.EventInviteRepository
@@ -59,7 +60,7 @@ class InviteService(
 
         if (event.status == EventStatus.cancelled || event.status == EventStatus.archived) {
             throw EventNotActiveException(
-                "Für ein beendetes oder abgesagtes Event können keine Einladungen erstellt werden",
+                Msg("error.invite.eventClosed"),
                 ErrorCode.EVENT_NOT_ACTIVE
             )
         }
@@ -111,11 +112,11 @@ class InviteService(
         requireManage(caller, principal, event)
 
         val invite = eventInviteRepository.findById(inviteId).orElseThrow {
-            ResourceNotFoundException("Einladung mit ID '$inviteId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.invite.notFoundById", inviteId), ErrorCode.NOT_FOUND)
         }
         if (invite.event?.id != eventId) {
             throw ResourceNotFoundException(
-                "Einladung mit ID '$inviteId' gehört nicht zu diesem Event",
+                Msg("error.invite.notInEvent", inviteId),
                 ErrorCode.NOT_FOUND
             )
         }
@@ -133,17 +134,17 @@ class InviteService(
     fun acceptInvite(request: AcceptInviteRequest): AcceptInviteResponse {
         val rawToken = request.token?.trim()
         if (rawToken.isNullOrEmpty()) {
-            throw InvalidRequestException("token darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "token"), ErrorCode.INVALID_REQUEST)
         }
 
         val invite = eventInviteRepository.findByTokenHash(SecureTokens.sha256Hex(rawToken)).orElseThrow {
             // Neutrale Meldung ohne Tokenwert; ungültige Links liefern 404.
-            ResourceNotFoundException("Einladung nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.invite.notFound"), ErrorCode.NOT_FOUND)
         }
 
         if (invite.revoked) {
             throw InvitationRevokedException(
-                "Die Einladung wurde widerrufen",
+                Msg("error.invite.revoked"),
                 ErrorCode.INVITATION_REVOKED
             )
         }
@@ -151,7 +152,7 @@ class InviteService(
         val expiresAt = invite.expiresAt
         if (expiresAt != null && !expiresAt.isAfter(Instant.now())) {
             throw InvitationExpiredException(
-                "Die Einladung ist abgelaufen",
+                Msg("error.invite.expired"),
                 ErrorCode.INVITATION_EXPIRED
             )
         }
@@ -159,16 +160,16 @@ class InviteService(
         val maxUses = invite.maxUses
         if (maxUses != null && invite.usesCount >= maxUses) {
             throw InvitationExpiredException(
-                "Die Nutzungsgrenze der Einladung ist erreicht",
+                Msg("error.invite.maxUsesReached"),
                 ErrorCode.INVITATION_EXPIRED
             )
         }
 
         val event = invite.event
-            ?: throw ResourceNotFoundException("Zur Einladung gehört kein Event", ErrorCode.NOT_FOUND)
+            ?: throw ResourceNotFoundException(Msg("error.invite.noEvent"), ErrorCode.NOT_FOUND)
         if (event.status == EventStatus.cancelled || event.status == EventStatus.archived) {
             throw EventNotActiveException(
-                "Das Event ist nicht aktiv",
+                Msg("error.event.notActive"),
                 ErrorCode.EVENT_NOT_ACTIVE
             )
         }
@@ -202,7 +203,7 @@ class InviteService(
 
     private fun requireEvent(id: UUID): EventEntity =
         eventRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Event mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.event.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     /** Einladungen verwalten dürfen ausschließlich der Event-Owner sowie Vorstand/Admin. */
@@ -210,7 +211,7 @@ class InviteService(
         val allowed = isBoardOrAdmin(caller, principal) || event.owner?.id == caller.id
         if (!allowed) {
             throw AccessDeniedException(
-                "Nur der Event-Owner sowie Vorstand und Administration dürfen Einladungen dieses Events verwalten",
+                Msg("error.invite.manageDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -225,7 +226,7 @@ class InviteService(
     private fun normalizeRole(role: String?): String {
         val trimmed = role?.trim()?.ifBlank { null } ?: return DEFAULT_INVITE_ROLE
         if (trimmed != DEFAULT_INVITE_ROLE) {
-            throw InvalidRequestException("Ungültige Einladungsrolle: '$trimmed'", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.invite.invalidRole", trimmed), ErrorCode.INVALID_REQUEST)
         }
         return trimmed
     }

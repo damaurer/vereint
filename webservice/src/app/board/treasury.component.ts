@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin, type Observable } from 'rxjs';
@@ -24,6 +24,8 @@ import {
   type StatusTone,
 } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 interface MemberLedger {
   balance: MemberBalance;
@@ -51,18 +53,18 @@ interface MemberLedger {
     InfoPanelComponent,
     StatCardComponent,
     StatusBadgeComponent,
+    TranslatePipe,
   ],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="treasury-title">
-        <span class="eyebrow">Kassenwart</span>
-        <h1 id="treasury-title">Bierkasse verwalten</h1>
-        <p>Eventabrechnungen, Guthaben und Kassenbuchungen.</p>
-        <a class="member-back" routerLink="/board">← Zum Vorstand</a>
+        <span class="eyebrow">{{ 'board.treasury.eyebrow' | t }}</span>
+        <h1 id="treasury-title">{{ 'board.treasury.title' | t }}</h1>
+        <p>{{ 'board.treasury.intro' | t }}</p>
+        <a class="member-back" routerLink="/board">{{ 'board.backToBoard' | t }}</a>
 
-        <vereint-info-panel icon="treasury" title="Bierkasse">
-          Buchungen sind idempotent. Preis, Modus und Freigabe bestimmt
-          ausschließlich der Fachservice.
+        <vereint-info-panel icon="treasury" [title]="'board.treasury.infoTitle' | t">
+          {{ 'board.treasury.infoText' | t }}
         </vereint-info-panel>
 
         @if (actionError(); as err) {
@@ -73,25 +75,25 @@ interface MemberLedger {
         }
 
         @if (events.isLoading()) {
-          <vereint-state kind="loading" title="Wird geladen …" message="Events werden abgerufen." />
+          <vereint-state kind="loading" [title]="'common.loading' | t" [message]="'board.treasury.eventsLoading' | t" />
         } @else if (events.isError()) {
           <vereint-state
             kind="error"
-            title="Kasse nicht verfügbar"
+            [title]="'board.treasury.unavailable' | t"
             [message]="events.errorMessage()"
             (retry)="reload()"
           />
         } @else if (events.data(); as list) {
           <div class="treasury-stats">
-            <vereint-stat-card icon="events" label="Events mit Abrechnung" [value]="list.length" />
+            <vereint-stat-card icon="events" [label]="'board.treasury.statEvents' | t" [value]="list.length" />
           </div>
 
-          <h2 class="member-subtitle">Events ({{ list.length }})</h2>
+          <h2 class="member-subtitle">{{ 'board.treasury.eventsHeading' | t: { count: list.length } }}</h2>
           @if (list.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Events"
-              message="Es sind keine Events mit Abrechnung sichtbar."
+              [title]="'board.overview.eventsEmptyTitle' | t"
+              [message]="'board.treasury.eventsEmpty' | t"
             />
           } @else {
             <ul class="member-list">
@@ -108,7 +110,7 @@ interface MemberLedger {
                     [disabled]="busy()"
                     (click)="loadSummary(event.id)"
                   >
-                    Abrechnung
+                    {{ 'board.treasury.summaryButton' | t }}
                   </button>
                 </li>
               }
@@ -120,94 +122,94 @@ interface MemberLedger {
           }
           @if (summary(); as sum) {
             <div class="state-card" role="status">
-              <strong>Eventabrechnung</strong>
-              <span>Umsatz: {{ formatMoney(sum.revenueTotal, sum.currency) }}</span>
+              <strong>{{ 'board.treasury.summary.title' | t }}</strong>
+              <span>{{ 'board.treasury.summary.revenue' | t: { amount: formatMoney(sum.revenueTotal, sum.currency) } }}</span>
               @if (sum.costTotal) {
-                <span>Wareneinsatz: {{ formatMoney(sum.costTotal, sum.currency) }}</span>
+                <span>{{ 'board.treasury.summary.cost' | t: { amount: formatMoney(sum.costTotal, sum.currency) } }}</span>
               }
               @if (sum.profitTotal) {
-                <span>Reingewinn: {{ formatMoney(sum.profitTotal, sum.currency) }}</span>
+                <span>{{ 'board.treasury.summary.profit' | t: { amount: formatMoney(sum.profitTotal, sum.currency) } }}</span>
               }
-              <span>Kreditverzehr: {{ formatMoney(sum.creditConsumptionTotal, sum.currency) }}</span>
-              <span>Buchungen: {{ sum.entryCount }}</span>
+              <span>{{ 'board.treasury.summary.credit' | t: { amount: formatMoney(sum.creditConsumptionTotal, sum.currency) } }}</span>
+              <span>{{ 'board.treasury.summary.entries' | t: { count: sum.entryCount } }}</span>
             </div>
           }
         }
 
         <!-- Guthaben nachschlagen -->
-        <h2 class="member-subtitle">Guthaben nachschlagen</h2>
+        <h2 class="member-subtitle">{{ 'board.treasury.lookup.title' | t }}</h2>
         <form class="manage-form manage-inline" (ngSubmit)="lookupMember()">
           <label class="manage-field">
-            <span>Mitglieds-ID</span>
+            <span>{{ 'board.treasury.lookup.memberId' | t }}</span>
             <input name="lookupMemberId" [(ngModel)]="lookupMemberId" required />
           </label>
-          <button type="submit" class="member-button" [disabled]="busy()">Anzeigen</button>
+          <button type="submit" class="member-button" [disabled]="busy()">{{ 'board.treasury.lookup.show' | t }}</button>
         </form>
         @if (ledger.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Guthaben und Buchungen werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'board.treasury.lookup.loading' | t"
           />
         } @else if (ledger.isError()) {
           <p class="manage-action-error" role="alert">{{ ledger.errorMessage() }}</p>
         } @else if (ledger.data(); as view) {
           <vereint-balance-card
-            label="Guthaben"
+            [label]="'board.treasury.lookup.balance' | t"
             [amount]="formatMoney(view.balance.creditBalance, view.balance.currency)"
             [negative]="isNegative(view.balance.creditBalance)"
           />
-          <h3 class="member-subtitle">Buchungen ({{ view.entries.length }})</h3>
+          <h3 class="member-subtitle">{{ 'board.treasury.lookup.entriesHeading' | t: { count: view.entries.length } }}</h3>
           <vereint-data-table
-            [columns]="entryColumns"
+            [columns]="entryColumns()"
             [rows]="view.entries"
             [trackBy]="trackEntry"
-            emptyLabel="Keine Buchungen."
+            [emptyLabel]="'board.treasury.lookup.noEntries' | t"
           />
         }
 
         <!-- Buchungen -->
-        <h2 class="member-subtitle">Buchen</h2>
+        <h2 class="member-subtitle">{{ 'board.treasury.booking.title' | t }}</h2>
         <form class="manage-form manage-inline" (ngSubmit)="topup()">
           <label class="manage-field">
-            <span>Aufladen · Mitglieds-ID</span>
+            <span>{{ 'board.treasury.booking.topupMemberId' | t }}</span>
             <input name="topupMemberId" [(ngModel)]="topupForm.memberId" required />
           </label>
           <label class="manage-field">
-            <span>Betrag</span>
+            <span>{{ 'board.treasury.booking.amount' | t }}</span>
             <input name="topupAmount" [(ngModel)]="topupForm.amount" inputmode="decimal" required />
           </label>
           <label class="manage-field">
-            <span>Notiz</span>
+            <span>{{ 'board.treasury.booking.note' | t }}</span>
             <input name="topupNote" [(ngModel)]="topupForm.note" maxlength="255" />
           </label>
-          <button type="submit" class="member-button" [disabled]="busy()">Aufladen</button>
+          <button type="submit" class="member-button" [disabled]="busy()">{{ 'board.treasury.booking.topup' | t }}</button>
         </form>
         <form class="manage-form manage-inline" (ngSubmit)="payout()">
           <label class="manage-field">
-            <span>Auszahlen · Mitglieds-ID</span>
+            <span>{{ 'board.treasury.booking.payoutMemberId' | t }}</span>
             <input name="payoutMemberId" [(ngModel)]="payoutForm.memberId" required />
           </label>
           <label class="manage-field">
-            <span>Betrag</span>
+            <span>{{ 'board.treasury.booking.amount' | t }}</span>
             <input name="payoutAmount" [(ngModel)]="payoutForm.amount" inputmode="decimal" required />
           </label>
           <label class="manage-field">
-            <span>Notiz</span>
+            <span>{{ 'board.treasury.booking.note' | t }}</span>
             <input name="payoutNote" [(ngModel)]="payoutForm.note" maxlength="255" />
           </label>
-          <button type="submit" class="member-button" [disabled]="busy()">Auszahlen</button>
+          <button type="submit" class="member-button" [disabled]="busy()">{{ 'board.treasury.booking.payout' | t }}</button>
         </form>
         <form class="manage-form manage-inline" (ngSubmit)="correct()">
           <label class="manage-field">
-            <span>Korrektur · Ursprungsbuchung</span>
+            <span>{{ 'board.treasury.booking.correctionEntryId' | t }}</span>
             <input name="correctionEntryId" [(ngModel)]="correctionForm.originalEntryId" required />
           </label>
           <label class="manage-field">
-            <span>Grund</span>
+            <span>{{ 'board.treasury.booking.reason' | t }}</span>
             <input name="correctionReason" [(ngModel)]="correctionForm.reason" maxlength="255" />
           </label>
-          <button type="submit" class="member-button" [disabled]="busy()">Korrigieren</button>
+          <button type="submit" class="member-button" [disabled]="busy()">{{ 'board.treasury.booking.correct' | t }}</button>
         </form>
       </section>
     </main>
@@ -280,11 +282,23 @@ export class TreasuryComponent implements OnInit, OnDestroy {
   protected readonly eventStatusLabel = eventStatusLabel;
 
   /** Spalten der Mitglieder-Guthabenliste (geteilte `DataTable`). */
-  protected readonly entryColumns: DataTableColumn<LedgerEntry>[] = [
-    { key: 'type', header: 'Art', value: (entry) => entryTypeLabel(entry.entryType) },
-    { key: 'date', header: 'Datum', value: (entry) => formatDateTime(entry.createdAt) },
-    { key: 'amount', header: 'Betrag', value: (entry) => formatMoney(entry.amount, entry.currency) },
-  ];
+  protected readonly entryColumns = computed<DataTableColumn<LedgerEntry>[]>(() => [
+    {
+      key: 'type',
+      header: translate('board.treasury.columns.type'),
+      value: (entry) => entryTypeLabel(entry.entryType),
+    },
+    {
+      key: 'date',
+      header: translate('board.treasury.columns.date'),
+      value: (entry) => formatDateTime(entry.createdAt),
+    },
+    {
+      key: 'amount',
+      header: translate('board.treasury.columns.amount'),
+      value: (entry) => formatMoney(entry.amount, entry.currency),
+    },
+  ]);
 
   protected readonly trackEntry = (_index: number, entry: LedgerEntry): string => entry.id;
 
@@ -368,7 +382,7 @@ export class TreasuryComponent implements OnInit, OnDestroy {
         { memberId, amount, note: note || undefined },
         newIdempotencyKey(),
       ),
-      'Aufladung gebucht.',
+      translate('board.treasury.booking.topupDone'),
     );
     this.topupForm = { memberId: '', amount: '', note: '' };
   }
@@ -383,7 +397,7 @@ export class TreasuryComponent implements OnInit, OnDestroy {
         { memberId, amount, note: note || undefined },
         newIdempotencyKey(),
       ),
-      'Auszahlung gebucht.',
+      translate('board.treasury.booking.payoutDone'),
     );
     this.payoutForm = { memberId: '', amount: '', note: '' };
   }
@@ -397,7 +411,7 @@ export class TreasuryComponent implements OnInit, OnDestroy {
         { originalEntryId, reason: reason || undefined },
         newIdempotencyKey(),
       ),
-      'Korrektur gebucht.',
+      translate('board.treasury.booking.correctionDone'),
     );
     this.correctionForm = { originalEntryId: '', reason: '' };
   }

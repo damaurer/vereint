@@ -10,6 +10,7 @@ import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.DrinkSublistItemRepository
@@ -56,7 +57,7 @@ class EventDrinkService(
         val event = requireEvent(eventId)
         if (!canViewEvent(caller, principal, event)) {
             throw AccessDeniedException(
-                "Keine Berechtigung zum Anzeigen der Eventgetränke",
+                Msg("error.eventDrink.viewDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -75,18 +76,18 @@ class EventDrinkService(
 
         if (eventDrinkRepository.findByEventIdAndDrinkId(eventId, drink.id).isPresent) {
             throw InvalidRequestException(
-                "Das Getränk ist bereits in der Eventauswahl enthalten",
+                Msg("error.eventDrink.alreadyAdded"),
                 ErrorCode.INVALID_REQUEST
             )
         }
 
         val price = request.price ?: drink.defaultPrice
         if (price.signum() < 0) {
-            throw InvalidRequestException("price darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.negative", "price"), ErrorCode.INVALID_REQUEST)
         }
         val costPrice = request.costPrice
         if (costPrice != null && costPrice.signum() < 0) {
-            throw InvalidRequestException("costPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.negative", "costPrice"), ErrorCode.INVALID_REQUEST)
         }
         val eventDrink = EventDrinkEntity(
             event = event,
@@ -117,13 +118,13 @@ class EventDrinkService(
 
         if (request.price != null) {
             if (request.price.signum() < 0) {
-                throw InvalidRequestException("price darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.negative", "price"), ErrorCode.INVALID_REQUEST)
             }
             eventDrink.price = request.price
         }
         if (request.costPrice != null) {
             if (request.costPrice.signum() < 0) {
-                throw InvalidRequestException("costPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.negative", "costPrice"), ErrorCode.INVALID_REQUEST)
             }
             eventDrink.costPrice = request.costPrice
         }
@@ -185,16 +186,16 @@ class EventDrinkService(
 
     private fun requireEvent(id: UUID): EventEntity =
         eventRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Event mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.event.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     private fun requireEventDrink(eventId: UUID, eventDrinkId: UUID): EventDrinkEntity {
         val eventDrink = eventDrinkRepository.findById(eventDrinkId).orElseThrow {
-            ResourceNotFoundException("Eventgetränk mit ID '$eventDrinkId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.eventDrink.notFound", eventDrinkId), ErrorCode.NOT_FOUND)
         }
         if (eventDrink.event?.id != eventId) {
             throw ResourceNotFoundException(
-                "Eventgetränk mit ID '$eventDrinkId' ist diesem Event nicht zugeordnet",
+                Msg("error.eventDrink.notInEvent", eventDrinkId),
                 ErrorCode.NOT_FOUND
             )
         }
@@ -203,11 +204,11 @@ class EventDrinkService(
 
     private fun requireApprovedDrink(drinkId: UUID): DrinkCatalogEntity {
         val drink = drinkCatalogRepository.findById(drinkId).orElseThrow {
-            ResourceNotFoundException("Getränk mit ID '$drinkId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.drink.notFound", drinkId), ErrorCode.NOT_FOUND)
         }
         if (drink.status != DrinkStatus.approved || !drink.active) {
             throw InvalidRequestException(
-                "Nur freigegebene und aktive Getränke können der Eventauswahl hinzugefügt werden",
+                Msg("error.eventDrink.drinkNotApproved"),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -221,11 +222,11 @@ class EventDrinkService(
         sublistId: UUID
     ): DrinkSublistEntity {
         val sublist = drinkSublistRepository.findById(sublistId).orElseThrow {
-            ResourceNotFoundException("Sublist mit ID '$sublistId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.sublist.notFound", sublistId), ErrorCode.NOT_FOUND)
         }
         if (!isBoardOrAdmin(caller, principal) && sublist.createdBy?.id != caller.id) {
             throw AccessDeniedException(
-                "Nur der Ersteller sowie Vorstand und Administration dürfen diese Sublist zuweisen",
+                Msg("error.eventDrink.sublistAssignDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -236,7 +237,7 @@ class EventDrinkService(
     private fun requireManage(caller: UserEntity, principal: UserPrincipal, event: EventEntity) {
         if (!isBoardOrAdmin(caller, principal) && event.owner?.id != caller.id) {
             throw AccessDeniedException(
-                "Nur der Event-Owner sowie Vorstand und Administration dürfen die Eventgetränke verwalten",
+                Msg("error.eventDrink.manageDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -265,13 +266,13 @@ class EventDrinkService(
     private fun parseId(value: String?, field: String): UUID {
         val trimmed = value?.trim()
         if (trimmed.isNullOrEmpty()) {
-            throw InvalidRequestException("$field darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", field), ErrorCode.INVALID_REQUEST)
         }
         return try {
             UUID.fromString(trimmed)
         } catch (_: IllegalArgumentException) {
             throw InvalidRequestException(
-                "Ungültige Kennung für '$field': '$trimmed' ist keine UUID",
+                Msg("error.field.invalidUuid", field, trimmed),
                 ErrorCode.INVALID_REQUEST
             )
         }

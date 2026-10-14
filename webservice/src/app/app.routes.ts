@@ -2,31 +2,35 @@ import { Routes } from '@angular/router';
 import { AppShellComponent } from './shell/app-shell.component';
 import { authGuard, guestGuard, homeGuard, permissionGuard, roleGuard } from './auth/auth.guards';
 
+/**
+ * `data.title`, `data.description` und `data.access` sind Übersetzungsschlüssel
+ * (Namensraum `routes`); Shell und Platzhalterseite übersetzen sie beim Anzeigen.
+ */
 export const routes: Routes = [
   { path: '', pathMatch: 'full', canActivate: [homeGuard], children: [] },
   {
     path: 'auth/error',
-    data: { mode: 'error', title: 'Anmeldefehler', description: 'Fehler während der Anmeldung über Keycloak.', access: 'Öffentlich' },
+    data: { mode: 'error', title: 'routes.authError.title', description: 'routes.authError.description', access: 'routes.access.public' },
     loadComponent: () => import('./auth/auth-status.component').then((m) => m.AuthStatusComponent),
   },
   {
     path: 'auth/logged-out',
-    data: { mode: 'loggedOut', title: 'Abgemeldet', description: 'Erfolgreich abgemeldet.', access: 'Öffentlich' },
+    data: { mode: 'loggedOut', title: 'routes.loggedOut.title', description: 'routes.loggedOut.description', access: 'routes.access.public' },
     loadComponent: () => import('./auth/auth-status.component').then((m) => m.AuthStatusComponent),
   },
   {
     path: 'invite/accept',
-    data: { title: 'Einladung annehmen', description: 'Einladung annehmen oder Gastaktivierung.', access: 'Gültiger Einladungscode erforderlich' },
+    data: { title: 'routes.inviteAccept.title', description: 'routes.inviteAccept.description', access: 'routes.access.invite' },
     loadComponent: () => import('./guest/invite-accept.component').then((m) => m.InviteAcceptComponent),
   },
   {
     path: '403',
-    data: { title: 'Kein Zugriff', description: 'Für diese Seite fehlen die erforderlichen Rechte.', access: 'Zugriff verweigert' },
+    data: { title: 'routes.forbidden.title', description: 'routes.forbidden.description', access: 'routes.access.denied' },
     loadComponent: () => import('./errors/forbidden.component').then((m) => m.ForbiddenComponent),
   },
   {
     path: '404',
-    data: { title: 'Nicht gefunden', description: 'Die angeforderte Seite existiert nicht.', access: 'Öffentlich' },
+    data: { title: 'routes.notFound.title', description: 'routes.notFound.description', access: 'routes.access.public' },
     loadComponent: () => import('./errors/not-found.component').then((m) => m.NotFoundComponent),
   },
   {
@@ -39,89 +43,89 @@ export const routes: Routes = [
       {
         path: 'dashboard',
     canActivate: [authGuard],
-    data: { title: 'Start', description: 'Persönliche Übersicht und teilnehmende Events.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.dashboard.title', description: 'routes.dashboard.description', access: 'routes.access.protected' },
     loadComponent: () => import('./member/dashboard.component').then((m) => m.DashboardComponent),
   },
   {
     path: 'profile',
     canActivate: [authGuard],
-    data: { title: 'Profil', description: 'Persönliche Kontodaten und Provider.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.profile.title', description: 'routes.profile.description', access: 'routes.access.protected' },
     loadComponent: () => import('./member/profile.component').then((m) => m.ProfileComponent),
   },
   {
     path: 'wallet',
     canActivate: [authGuard],
-    data: { title: 'Guthaben', description: 'Persönliches Guthaben und Ledger.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.wallet.title', description: 'routes.wallet.description', access: 'routes.access.protected' },
     loadComponent: () => import('./member/wallet.component').then((m) => m.WalletComponent),
   },
   {
     path: 'purchases',
     canActivate: [authGuard],
-    data: { title: 'Käufe', description: 'Historische Käufe mit unveränderlichen Snapshots.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.purchases.title', description: 'routes.purchases.description', access: 'routes.access.protected' },
     loadComponent: () => import('./member/purchases.component').then((m) => m.PurchasesComponent),
   },
   {
     path: 'events',
     canActivate: [authGuard],
-    data: { title: 'Events', description: 'Eventübersicht und Eventdetails.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.events.title', description: 'routes.events.description', access: 'routes.access.protected' },
     loadComponent: () => import('./member/events.component').then((m) => m.EventsComponent),
   },
   {
     path: 'events/:eventId',
     canActivate: [authGuard],
-    data: { title: 'Event', description: 'Eventdetails, Getränkeliste und Chat.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.eventDetail.title', description: 'routes.eventDetail.description', access: 'routes.access.protected' },
     loadComponent: () => import('./member/event-detail.component').then((m) => m.EventDetailComponent),
   },
   {
     path: 'events/:eventId/manage',
     canActivate: [authGuard],
-    data: { title: 'Event verwalten', description: 'Stammdaten, Einladungen, Getränke und Chat des eigenen Events.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.eventManage.title', description: 'routes.eventManage.description', access: 'routes.access.protected' },
     loadComponent: () => import('./events/event-manage.component').then((m) => m.EventManageComponent),
   },
   {
     path: 'guest/:eventId',
     canActivate: [guestGuard],
-    data: { title: 'Gast-Event', description: 'Freigegebene Eventdetails und Event-Chat.', access: 'Gültiges Gast-Token erforderlich' },
+    data: { title: 'routes.guestEvent.title', description: 'routes.guestEvent.description', access: 'routes.access.guestToken' },
     loadComponent: () => import('./guest/guest-event.component').then((m) => m.GuestEventComponent),
   },
   {
     path: 'catalog',
     canActivate: [authGuard],
-    data: { title: 'Getränkekatalog', description: 'Globaler Katalog und Vorschläge.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.catalog.title', description: 'routes.catalog.description', access: 'routes.access.protected' },
     loadComponent: () => import('./catalog/catalog.component').then((m) => m.CatalogComponent),
   },
   {
     path: 'sublists',
     canActivate: [authGuard],
-    data: { title: 'Getränkelisten', description: 'Wiederverwendbare Getränkelisten.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.sublists.title', description: 'routes.sublists.description', access: 'routes.access.protected' },
     loadComponent: () => import('./sublists/sublists.component').then((m) => m.SublistsComponent),
   },
   {
     path: 'chat',
     canActivate: [authGuard],
-    data: { title: 'Chat', description: 'Mitglieds- und Event-Chats.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.chat.title', description: 'routes.chat.description', access: 'routes.access.protected' },
     loadComponent: () => import('./chat/chat.component').then((m) => m.ChatComponent),
   },
   {
     path: 'direktnachrichten',
     canActivate: [authGuard],
-    data: { title: 'Direktnachrichten', description: 'Persönliche Einzelgespräche.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.directMessages.title', description: 'routes.directMessages.description', access: 'routes.access.protected' },
     loadComponent: () =>
       import('./chat/direct-messages.component').then((m) => m.DirectMessagesComponent),
   },
   {
     path: 'notifications',
     canActivate: [authGuard],
-    data: { title: 'Mitteilungen', description: 'In-App- und Push-Benachrichtigungen.', access: 'Geschützter Bereich' },
+    data: { title: 'routes.notifications.title', description: 'routes.notifications.description', access: 'routes.access.protected' },
     loadComponent: () => import('./notifications/notifications.component').then((m) => m.NotificationsComponent),
   },
   {
     path: 'moments',
     canActivate: [authGuard],
     data: {
-      title: 'Moments',
-      description: 'Gemeinschaftsmomente & Rituale für aktive Events.',
-      access: 'Geschützter Bereich',
+      title: 'routes.moments.title',
+      description: 'routes.moments.description',
+      access: 'routes.access.protected',
     },
     loadComponent: () => import('./moments/moments.component').then((m) => m.MomentsComponent),
   },
@@ -129,9 +133,9 @@ export const routes: Routes = [
     path: 'events/:eventId/moments',
     canActivate: [authGuard],
     data: {
-      title: 'Event Moments',
-      description: 'Gemeinschaftsmomente & Rituale für dieses Event.',
-      access: 'Geschützter Bereich',
+      title: 'routes.eventMoments.title',
+      description: 'routes.eventMoments.description',
+      access: 'routes.access.protected',
     },
     loadComponent: () => import('./moments/moments.component').then((m) => m.MomentsComponent),
   },
@@ -139,9 +143,9 @@ export const routes: Routes = [
     path: 'board',
     canActivate: [authGuard, roleGuard],
     data: {
-      title: 'Vorstand',
-      description: 'Moderation, Finanzübersichten und vorbereitete Notifications.',
-      access: 'Vorstand oder Admin',
+      title: 'routes.board.title',
+      description: 'routes.board.description',
+      access: 'routes.access.boardOrAdmin',
       roles: ['board', 'admin'],
     },
     loadComponent: () => import('./board/board.component').then((m) => m.BoardComponent),
@@ -150,9 +154,9 @@ export const routes: Routes = [
     path: 'board/treasury',
     canActivate: [authGuard, roleGuard],
     data: {
-      title: 'Kasse & Finanzen',
-      description: 'Finanzübersichten und Buchungen.',
-      access: 'Vorstand oder Admin',
+      title: 'routes.treasury.title',
+      description: 'routes.treasury.description',
+      access: 'routes.access.boardOrAdmin',
       roles: ['board', 'admin'],
     },
     loadComponent: () => import('./board/treasury.component').then((m) => m.TreasuryComponent),
@@ -161,9 +165,9 @@ export const routes: Routes = [
     path: 'board/communications',
     canActivate: [authGuard, roleGuard],
     data: {
-      title: 'Kommunikation',
-      description: 'Mitteilungen und Ankündigungen.',
-      access: 'Vorstand oder Admin',
+      title: 'routes.communications.title',
+      description: 'routes.communications.description',
+      access: 'routes.access.boardOrAdmin',
       roles: ['board', 'admin'],
     },
     loadComponent: () =>
@@ -173,9 +177,9 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [authGuard, roleGuard],
     data: {
-      title: 'Administration',
-      description: 'Mitglieder, Rollen und Audit-Ansichten.',
-      access: 'Admin',
+      title: 'routes.admin.title',
+      description: 'routes.admin.description',
+      access: 'routes.access.admin',
       roles: ['admin'],
     },
     loadComponent: () => import('./admin/admin.component').then((m) => m.AdminComponent),
@@ -184,9 +188,9 @@ export const routes: Routes = [
     path: 'tablet',
     canActivate: [authGuard, permissionGuard],
     data: {
-      title: 'Thekenterminal',
-      description: 'Manuelle Getränkeerfassung für den Drink Recorder.',
-      access: 'drinkRecorder',
+      title: 'routes.tablet.title',
+      description: 'routes.tablet.description',
+      access: 'routes.access.drinkRecorder',
       permissions: ['purchase.tablet'],
     },
     loadComponent: () => import('./tablet/tablet.component').then((m) => m.TabletComponent),
@@ -195,9 +199,9 @@ export const routes: Routes = [
     path: 'statistik',
     canActivate: [authGuard, permissionGuard],
     data: {
-      title: 'Statistik',
-      description: 'Konsum, Anwesenheit, Ausgaben-Verlauf und Rankings der Eber-Analytik.',
-      access: 'Statistiken einsehen',
+      title: 'routes.statistics.title',
+      description: 'routes.statistics.description',
+      access: 'routes.access.statistics',
       permissions: ['statistics.view'],
     },
     loadComponent: () =>

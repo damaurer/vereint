@@ -2,6 +2,7 @@ package de.maurer.baseservice.support
 
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import java.util.UUID
 
 /**
@@ -17,7 +18,7 @@ object Identifiers {
 
     fun parseUuid(value: String?, field: String): UUID =
         parseUuidOrNull(value) ?: throw InvalidRequestException(
-            "Ungültige Kennung für '$field': '${value.orEmpty()}' ist keine UUID",
+            Msg("error.field.invalidUuid", field, value.orEmpty()),
             ErrorCode.INVALID_REQUEST
         )
 

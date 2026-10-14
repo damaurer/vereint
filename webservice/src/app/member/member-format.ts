@@ -1,4 +1,5 @@
 import type { EventStatus } from '../api/api.types';
+import { activeLocale, translate } from '../i18n/i18n.service';
 
 /**
  * Anzeigehelfer der Mitglieder-Ansichten (TICKET-024). Die Formatierung findet
@@ -10,7 +11,7 @@ export function formatMoney(amount: string, currency: string): string {
   const value = Number(amount);
   if (!Number.isFinite(value)) return `${amount} ${currency}`;
   try {
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency }).format(value);
+    return new Intl.NumberFormat(activeLocale(), { style: 'currency', currency }).format(value);
   } catch {
     return `${value.toFixed(2)} ${currency}`;
   }
@@ -20,40 +21,40 @@ export function formatMoney(amount: string, currency: string): string {
 export function formatDateTime(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  return new Intl.DateTimeFormat(activeLocale(), { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
-/** Deutscher Klartext der Ledger-Buchungsarten. */
+/** Klartext der Ledger-Buchungsarten in der aktiven Sprache. */
 export function entryTypeLabel(entryType: string): string {
   switch (entryType) {
     case 'purchase':
-      return 'Kauf';
+      return translate('member.entryType.purchase');
     case 'topup':
-      return 'Aufladung';
+      return translate('member.entryType.topup');
     case 'payout':
-      return 'Auszahlung';
+      return translate('member.entryType.payout');
     case 'correction':
-      return 'Korrektur';
+      return translate('member.entryType.correction');
     default:
       return entryType;
   }
 }
 
-/** Deutscher Klartext der Eventstatuswerte. */
+/** Klartext der Eventstatuswerte in der aktiven Sprache. */
 export function eventStatusLabel(status: EventStatus): string {
   switch (status) {
     case 'draft':
-      return 'Entwurf';
+      return translate('member.eventStatus.draft');
     case 'published':
-      return 'Veröffentlicht';
+      return translate('member.eventStatus.published');
     case 'active':
-      return 'Aktiv';
+      return translate('member.eventStatus.active');
     case 'cancelled':
-      return 'Abgesagt';
+      return translate('member.eventStatus.cancelled');
     case 'completed':
-      return 'Abgeschlossen';
+      return translate('member.eventStatus.completed');
     case 'archived':
-      return 'Archiviert';
+      return translate('member.eventStatus.archived');
     default:
       return status;
   }

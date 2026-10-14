@@ -15,29 +15,29 @@ import java.time.Instant
  * `true` sein, sonst werden Koordinaten verworfen.
  */
 data class StartMomentRequest(
-    @field:NotBlank(message = "title darf nicht leer sein")
-    @field:Size(max = 255, message = "title darf höchstens 255 Zeichen lang sein")
+    @field:NotBlank(message = "title {validation.notBlank}")
+    @field:Size(max = 255, message = "title {validation.size.max}")
     val title: String,
 
-    @field:NotBlank(message = "topicType darf nicht leer sein")
-    @field:Size(max = 64, message = "topicType darf höchstens 64 Zeichen lang sein")
+    @field:NotBlank(message = "topicType {validation.notBlank}")
+    @field:Size(max = 64, message = "topicType {validation.size.max}")
     val topicType: String,
 
-    @field:Size(max = 500, message = "message darf höchstens 500 Zeichen lang sein")
+    @field:Size(max = 500, message = "message {validation.size.max}")
     val message: String? = null,
 
     val consent: Boolean = false,
 
-    @field:DecimalMin(value = "-90.0", message = "latitude muss zwischen -90 und 90 liegen")
-    @field:DecimalMax(value = "90.0", message = "latitude muss zwischen -90 und 90 liegen")
+    @field:DecimalMin(value = "-90.0", message = "latitude {validation.latitude}")
+    @field:DecimalMax(value = "90.0", message = "latitude {validation.latitude}")
     val latitude: Double? = null,
 
-    @field:DecimalMin(value = "-180.0", message = "longitude muss zwischen -180 und 180 liegen")
-    @field:DecimalMax(value = "180.0", message = "longitude muss zwischen -180 und 180 liegen")
+    @field:DecimalMin(value = "-180.0", message = "longitude {validation.longitude}")
+    @field:DecimalMax(value = "180.0", message = "longitude {validation.longitude}")
     val longitude: Double? = null,
 
-    @field:Min(value = 1, message = "durationMinutes muss mindestens 1 betragen")
-    @field:Max(value = 1440, message = "durationMinutes darf höchstens 1440 betragen")
+    @field:Min(value = 1, message = "durationMinutes {validation.min.amount}")
+    @field:Max(value = 1440, message = "durationMinutes {validation.max.amount}")
     val durationMinutes: Int = 60
 )
 
@@ -46,21 +46,21 @@ data class StartMomentRequest(
  * Teilnehmer können mehrfach während der Laufzeit Status-Updates absenden.
  */
 data class SubmitMomentResponseRequest(
-    @field:NotBlank(message = "reaction darf nicht leer sein")
-    @field:Size(max = 64, message = "reaction darf höchstens 64 Zeichen lang sein")
+    @field:NotBlank(message = "reaction {validation.notBlank}")
+    @field:Size(max = 64, message = "reaction {validation.size.max}")
     val reaction: String,
 
-    @field:Size(max = 255, message = "statusText darf höchstens 255 Zeichen lang sein")
+    @field:Size(max = 255, message = "statusText {validation.size.max}")
     val statusText: String? = null,
 
     val consent: Boolean = false,
 
-    @field:DecimalMin(value = "-90.0", message = "latitude muss zwischen -90 und 90 liegen")
-    @field:DecimalMax(value = "90.0", message = "latitude muss zwischen -90 und 90 liegen")
+    @field:DecimalMin(value = "-90.0", message = "latitude {validation.latitude}")
+    @field:DecimalMax(value = "90.0", message = "latitude {validation.latitude}")
     val latitude: Double? = null,
 
-    @field:DecimalMin(value = "-180.0", message = "longitude muss zwischen -180 und 180 liegen")
-    @field:DecimalMax(value = "180.0", message = "longitude muss zwischen -180 und 180 liegen")
+    @field:DecimalMin(value = "-180.0", message = "longitude {validation.longitude}")
+    @field:DecimalMax(value = "180.0", message = "longitude {validation.longitude}")
     val longitude: Double? = null
 )
 

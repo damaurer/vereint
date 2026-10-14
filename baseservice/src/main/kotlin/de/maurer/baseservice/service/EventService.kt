@@ -8,6 +8,7 @@ import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
@@ -41,19 +42,19 @@ class EventService(
         val caller = userService.getOrCreateUser(principal)
         if (!canCreateEvents(caller, principal)) {
             throw AccessDeniedException(
-                "Keine Berechtigung zum Anlegen von Events",
+                Msg("error.event.createDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
 
         val title = request.title?.trim().orEmpty()
         if (title.isBlank()) {
-            throw InvalidRequestException("title darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "title"), ErrorCode.INVALID_REQUEST)
         }
         val startsAt = request.startsAt
-            ?: throw InvalidRequestException("startsAt ist erforderlich", ErrorCode.INVALID_REQUEST)
+            ?: throw InvalidRequestException(Msg("error.field.required", "startsAt"), ErrorCode.INVALID_REQUEST)
         if (request.endsAt != null && request.endsAt.isBefore(startsAt)) {
-            throw InvalidRequestException("endsAt darf nicht vor startsAt liegen", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.event.endsBeforeStart"), ErrorCode.INVALID_REQUEST)
         }
 
         val event = EventEntity(
@@ -93,7 +94,7 @@ class EventService(
         val event = requireEvent(id)
         if (!canViewEvent(caller, principal, event)) {
             throw AccessDeniedException(
-                "Keine Berechtigung zum Anzeigen dieses Events",
+                Msg("error.event.viewDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -108,7 +109,7 @@ class EventService(
         if (request.title != null) {
             val title = request.title.trim()
             if (title.isBlank()) {
-                throw InvalidRequestException("title darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.blank", "title"), ErrorCode.INVALID_REQUEST)
             }
             event.title = title
         }
@@ -126,11 +127,11 @@ class EventService(
         }
         val effectiveEnd = event.endsAt
         if (effectiveEnd != null && effectiveEnd.isBefore(event.startsAt)) {
-            throw InvalidRequestException("endsAt darf nicht vor startsAt liegen", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.event.endsBeforeStart"), ErrorCode.INVALID_REQUEST)
         }
         if (request.status != null) {
             event.status = EventStatus.fromValue(request.status)
-                ?: throw InvalidRequestException("Ungültiger Eventstatus: '${request.status}'", ErrorCode.INVALID_REQUEST)
+                ?: throw InvalidRequestException(Msg("error.event.invalidStatus", request.status), ErrorCode.INVALID_REQUEST)
         }
 
         val saved = eventRepository.save(event)
@@ -143,7 +144,7 @@ class EventService(
         val event = requireEvent(eventId)
         if (!canViewEvent(caller, principal, event)) {
             throw AccessDeniedException(
-                "Keine Berechtigung zum Anzeigen der Teilnehmer",
+                Msg("error.event.participants.viewDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -159,19 +160,19 @@ class EventService(
 
         val targetId = parseParticipantId(request.userId)
         val targetUser = userRepository.findById(targetId).orElseThrow {
-            ResourceNotFoundException("Benutzer mit ID '$targetId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.user.notFound", targetId), ErrorCode.NOT_FOUND)
         }
 
         if (event.owner?.id == targetUser.id) {
             throw InvalidRequestException(
-                "Der Event-Owner ist bereits Eigentümer und kein Teilnehmer",
+                Msg("error.event.participant.isOwner"),
                 ErrorCode.INVALID_REQUEST
             )
         }
 
         if (eventParticipantRepository.findByEventIdAndUserId(eventId, targetUser.id).isPresent) {
             throw InvalidRequestException(
-                "Benutzer ist bereits Teilnehmer dieses Events",
+                Msg("error.event.participant.alreadyAdded"),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -193,7 +194,7 @@ class EventService(
 
         val participant = eventParticipantRepository.findByEventIdAndUserId(eventId, userId).orElseThrow {
             ResourceNotFoundException(
-                "Teilnehmer mit ID '$userId' ist diesem Event nicht zugeordnet",
+                Msg("error.event.participant.notAssigned", userId),
                 ErrorCode.NOT_FOUND
             )
         }
@@ -202,14 +203,14 @@ class EventService(
 
     private fun requireEvent(id: UUID): EventEntity =
         eventRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Event mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.event.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     /** Owner-Rechte gelten ausschließlich für eigene Events; Vorstand/Admin moderieren fremde Events. */
     private fun requireManage(caller: UserEntity, principal: UserPrincipal, event: EventEntity) {
         if (!canManageEvent(caller, principal, event)) {
             throw AccessDeniedException(
-                "Nur der Event-Owner sowie Vorstand und Administration dürfen dieses Event verwalten",
+                Msg("error.event.manageDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -238,12 +239,12 @@ class EventService(
     private fun parseParticipantId(value: String?): UUID {
         val trimmed = value?.trim()
         if (trimmed.isNullOrEmpty()) {
-            throw InvalidRequestException("userId darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "userId"), ErrorCode.INVALID_REQUEST)
         }
         return try {
             UUID.fromString(trimmed)
         } catch (_: IllegalArgumentException) {
-            throw InvalidRequestException("Ungültige Kennung für 'userId': '$trimmed' ist keine UUID", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.invalidUuid", "userId", trimmed), ErrorCode.INVALID_REQUEST)
         }
     }
 

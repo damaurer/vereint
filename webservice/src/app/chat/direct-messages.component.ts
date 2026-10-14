@@ -15,6 +15,7 @@ import { AvatarBadgeComponent, StatusBadgeComponent } from '../ui';
 import { ChatDataService } from './chat-data.service';
 import type { ChatOverview, DirectConversation } from './chat.model';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
 
 /**
  * Direktnachrichten-Liste (TICKET-035).
@@ -30,51 +31,60 @@ import { StateComponent } from '../ui/state.component';
  */
 @Component({
   selector: 'app-direct-messages',
-  imports: [StateComponent, FormsModule, RouterLink, AvatarBadgeComponent, StatusBadgeComponent],
+  imports: [
+    StateComponent,
+    FormsModule,
+    RouterLink,
+    AvatarBadgeComponent,
+    StatusBadgeComponent,
+    TranslatePipe,
+  ],
   template: `
     <main class="page-shell">
       <section class="page-card chat-card" aria-labelledby="dm-title">
         <div class="dm-head">
           <div>
-            <span class="eyebrow">Direktnachrichten</span>
-            <h1 id="dm-title">Einzelgespräche</h1>
+            <span class="eyebrow">{{ 'chat.direct.eyebrow' | t }}</span>
+            <h1 id="dm-title">{{ 'chat.direct.title' | t }}</h1>
           </div>
-          <vereint-status-badge label="DMs" />
+          <vereint-status-badge [label]="'chat.direct.badge' | t" />
         </div>
-        <a class="member-back" routerLink="/chat">← Zum Gruppen-Chat</a>
+        <a class="member-back" routerLink="/chat">{{ 'chat.direct.toGroupChat' | t }}</a>
 
         @if (isBusy()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Die Konversationen werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'chat.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Direktnachrichten nicht verfügbar"
+            [title]="'chat.direct.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
         } @else if (model(); as data) {
           <label class="dm-search">
-            <span class="dm-search-label">Mitglieder durchsuchen</span>
+            <span class="dm-search-label">{{ 'chat.direct.searchLabel' | t }}</span>
             <input
               name="search"
               type="search"
               autocomplete="off"
-              placeholder="Mitglieder durchsuchen…"
+              [placeholder]="'chat.direct.searchPlaceholder' | t"
               [(ngModel)]="query"
               (ngModelChange)="term.set($event)"
             />
           </label>
 
-          <h2 class="member-subtitle">Konversationen ({{ filtered().length }})</h2>
+          <h2 class="member-subtitle">
+            {{ 'chat.direct.conversations' | t: { count: filtered().length } }}
+          </h2>
           @if (filtered().length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Konversationen"
-              message="Es gibt keine passenden Einzelgespräche."
+              [title]="'chat.direct.emptyTitle' | t"
+              [message]="'chat.direct.emptyMessage' | t"
             />
           } @else {
             <ul class="dm-list">
@@ -84,7 +94,7 @@ import { StateComponent } from '../ui/state.component';
                     <span class="dm-avatar-wrap">
                       <vereint-avatar-badge [name]="conversation.partnerName" />
                       @if (conversation.online) {
-                        <span class="dm-online" aria-label="online"></span>
+                        <span class="dm-online" [attr.aria-label]="'chat.online' | t"></span>
                       }
                     </span>
                     <span class="dm-body">
@@ -96,7 +106,7 @@ import { StateComponent } from '../ui/state.component';
                       @if (conversation.unreadCount > 0) {
                         <span
                           class="dm-unread"
-                          [attr.aria-label]="conversation.unreadCount + ' ungelesen'"
+                          [attr.aria-label]="'chat.unread' | t: { count: conversation.unreadCount }"
                         >
                           {{ conversation.unreadCount }}
                         </span>

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { TranslatePipe } from '../i18n';
 import { IconComponent } from './icon.component';
 import type { IconName } from './icons';
 
@@ -19,7 +20,7 @@ const DEFAULT_ICON: Record<Exclude<StateKind, 'loading'>, IconName> = {
 @Component({
   selector: 'vereint-state',
   standalone: true,
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
@@ -44,7 +45,7 @@ const DEFAULT_ICON: Record<Exclude<StateKind, 'loading'>, IconName> = {
         }
         @if (kind === 'error' && retry.observed) {
           <button type="button" class="member-button" (click)="retry.emit()">
-            {{ retryLabel }}
+            {{ retryLabel ?? ('common.retry' | t) }}
           </button>
         }
         <ng-content />
@@ -58,7 +59,8 @@ export class StateComponent {
   @Input() message: string | null = null;
   /** Eigenes Icon für Leer-/Fehlerzustände (Standard: Funken bzw. Warnung). */
   @Input() icon: IconName | null = null;
-  @Input() retryLabel = 'Erneut versuchen';
+  /** Ohne Angabe: „Erneut versuchen“ in der aktiven Sprache. */
+  @Input() retryLabel: string | null = null;
 
   /** Nur gebunden erscheint der Knopf „Erneut versuchen“. */
   @Output() retry = new EventEmitter<void>();

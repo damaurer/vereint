@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiClient, describeApiError } from '../api/api-client.service';
 import { StatusBadgeComponent } from '../ui';
+import { TranslatePipe } from '../i18n';
 
 interface AcceptInviteResponse {
   guestToken: string;
@@ -15,54 +16,54 @@ interface AcceptInviteResponse {
 
 @Component({
   selector: 'app-invite-accept',
-  imports: [FormsModule, RouterLink, StatusBadgeComponent],
+  imports: [FormsModule, RouterLink, StatusBadgeComponent, TranslatePipe],
   template: `
     <div class="invite-page-container">
       <div class="invite-card">
         <div class="invite-header">
-          <vereint-status-badge label="Einladung" tone="neutral" />
-          <h1 class="invite-title">Event-Einladung annehmen</h1>
+          <vereint-status-badge [label]="'guest.invite.badge' | t" tone="neutral" />
+          <h1 class="invite-title">{{ 'guest.invite.title' | t }}</h1>
         </div>
 
         @if (!token) {
           <div class="state-card state-error" role="alert">
-            <strong>Ungültiger Einladungslink</strong>
-            <p>Dieser Link enthält kein Einladungs-Token. Bitte nutzen Sie den vollständigen Link aus Ihrer Einladung.</p>
-            <a routerLink="/" class="btn btn-secondary">Zurück zur Startseite</a>
+            <strong>{{ 'guest.invite.invalidTitle' | t }}</strong>
+            <p>{{ 'guest.invite.invalidHint' | t }}</p>
+            <a routerLink="/" class="btn btn-secondary">{{ 'guest.invite.backHome' | t }}</a>
           </div>
         } @else if (loading()) {
           <div class="state-loading" role="status">
-            <p>Einladung wird geprüft und aktiviert …</p>
+            <p>{{ 'guest.invite.checking' | t }}</p>
           </div>
         } @else if (error()) {
           <div class="state-card state-error" role="alert">
-            <strong>Einladung konnte nicht eingelöst werden</strong>
+            <strong>{{ 'guest.invite.failed' | t }}</strong>
             <p>{{ error() }}</p>
             <div class="action-buttons">
-              <button type="button" class="btn btn-primary" (click)="accept()">Erneut versuchen</button>
-              <a routerLink="/" class="btn btn-secondary">Zur Startseite</a>
+              <button type="button" class="btn btn-primary" (click)="accept()">{{ 'common.retry' | t }}</button>
+              <a routerLink="/" class="btn btn-secondary">{{ 'guest.invite.home' | t }}</a>
             </div>
           </div>
         } @else {
           <form class="invite-form" (submit)="onSubmit($event)">
             <p class="invite-description">
-              Geben Sie optional Ihren Namen ein, um dem Event als Gast beizutreten.
+              {{ 'guest.invite.description' | t }}
             </p>
             <div class="form-group">
-              <label for="displayName" class="form-label">Ihr Name / Spitzname (optional)</label>
+              <label for="displayName" class="form-label">{{ 'guest.invite.nameLabel' | t }}</label>
               <input
                 id="displayName"
                 name="displayName"
                 type="text"
                 class="form-input"
                 [(ngModel)]="displayName"
-                placeholder="z. B. Max Mustermann"
+                [placeholder]="'guest.invite.namePlaceholder' | t"
                 maxlength="255"
               />
             </div>
             <div class="action-buttons">
               <button type="submit" class="btn btn-primary" [disabled]="submitting()">
-                {{ submitting() ? 'Beitreten …' : 'Event beitreten' }}
+                {{ (submitting() ? 'guest.invite.joining' : 'guest.invite.join') | t }}
               </button>
             </div>
           </form>

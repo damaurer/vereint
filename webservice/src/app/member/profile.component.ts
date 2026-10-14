@@ -9,6 +9,7 @@ import { IconComponent } from '../ui/icon.component';
 import { StateComponent } from '../ui/state.component';
 import { ThemeService, type ThemePreference } from '../shell/theme.service';
 import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
+import { I18nService, TranslatePipe } from '../i18n';
 
 /**
  * Persönliches Profil eines Mitglieds (TICKET-024, Redesign TICKET-033).
@@ -22,7 +23,7 @@ import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
  */
 @Component({
   selector: 'app-member-profile',
-  imports: [HeroGreetingComponent, RoleChipComponent, IconComponent, StateComponent, PwaSettingsComponent],
+  imports: [HeroGreetingComponent, RoleChipComponent, IconComponent, StateComponent, PwaSettingsComponent, TranslatePipe],
   templateUrl: './profile.component.html',
   styles: [
     `
@@ -73,7 +74,8 @@ import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
         background-color: var(--color-bg);
       }
 
-      .profile-theme-option {
+      .profile-theme-option,
+      .profile-language-option {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -88,7 +90,8 @@ import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
         cursor: pointer;
       }
 
-      .profile-theme-option[aria-checked='true'] {
+      .profile-theme-option[aria-checked='true'],
+      .profile-language-option[aria-checked='true'] {
         background-color: var(--color-surface);
         color: var(--color-brand);
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
@@ -105,6 +108,7 @@ import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
 export class ProfileComponent implements OnInit, OnDestroy {
   private readonly api = inject(MemberApiService);
   private readonly theme = inject(ThemeService);
+  private readonly i18n = inject(I18nService);
 
   protected readonly load = new AsyncState<MemberProfile>();
   protected readonly displayName = signal('');
@@ -115,14 +119,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
   protected readonly beerWithMe = signal(false);
   protected readonly formatDateTime = formatDateTime;
   protected readonly themePreference = this.theme.preference;
-  protected readonly themeOptions: readonly { value: ThemePreference; label: string }[] = [
-    { value: 'system', label: 'System' },
-    { value: 'light', label: 'Hell' },
-    { value: 'dark', label: 'Dunkel' },
+  protected readonly themeOptions: readonly { value: ThemePreference; labelKey: string }[] = [
+    { value: 'system', labelKey: 'profile.theme.system' },
+    { value: 'light', labelKey: 'profile.theme.light' },
+    { value: 'dark', labelKey: 'profile.theme.dark' },
   ];
+  protected readonly languages = this.i18n.languages;
+  protected readonly language = this.i18n.language;
 
   protected setTheme(preference: ThemePreference): void {
     this.theme.set(preference);
+  }
+
+  protected setLanguage(code: string): void {
+    void this.i18n.use(code);
   }
 
   ngOnInit(): void {
