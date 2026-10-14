@@ -6,6 +6,8 @@ export const publicPaths = new Set([
   '/auth/error',
   '/auth/logged-out',
   '/invite/accept',
+  // Registrierung per Einladungslink; das Token steht im URL-Fragment.
+  '/register',
   '/403',
   '/404',
 ]);

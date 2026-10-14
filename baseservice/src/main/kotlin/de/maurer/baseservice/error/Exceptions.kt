@@ -136,6 +136,54 @@ class InvitationRevokedException : ApiException {
     ) : super(errorCode, message, HttpStatus.GONE)
 }
 
+class InvitationUsedUpException : ApiException {
+    constructor(
+        msg: Msg = Msg("error.default.invitationUsedUp"),
+        errorCode: String = ErrorCode.INVITATION_USED_UP
+    ) : super(errorCode, msg, HttpStatus.GONE)
+
+    constructor(
+        message: String,
+        errorCode: String = ErrorCode.INVITATION_USED_UP
+    ) : super(errorCode, message, HttpStatus.GONE)
+}
+
+class EmailAlreadyRegisteredException : ApiException {
+    constructor(
+        msg: Msg = Msg("error.default.emailAlreadyRegistered"),
+        errorCode: String = ErrorCode.EMAIL_ALREADY_REGISTERED
+    ) : super(errorCode, msg, HttpStatus.CONFLICT)
+
+    constructor(
+        message: String,
+        errorCode: String = ErrorCode.EMAIL_ALREADY_REGISTERED
+    ) : super(errorCode, message, HttpStatus.CONFLICT)
+}
+
+class PasswordRejectedException : ApiException {
+    constructor(
+        msg: Msg = Msg("error.default.passwordRejected"),
+        errorCode: String = ErrorCode.PASSWORD_REJECTED
+    ) : super(errorCode, msg, HttpStatus.BAD_REQUEST)
+
+    constructor(
+        message: String,
+        errorCode: String = ErrorCode.PASSWORD_REJECTED
+    ) : super(errorCode, message, HttpStatus.BAD_REQUEST)
+}
+
+class RegistrationUnavailableException : ApiException {
+    constructor(
+        msg: Msg = Msg("error.default.registrationUnavailable"),
+        errorCode: String = ErrorCode.REGISTRATION_UNAVAILABLE
+    ) : super(errorCode, msg, HttpStatus.SERVICE_UNAVAILABLE)
+
+    constructor(
+        message: String,
+        errorCode: String = ErrorCode.REGISTRATION_UNAVAILABLE
+    ) : super(errorCode, message, HttpStatus.SERVICE_UNAVAILABLE)
+}
+
 class IdempotencyConflictException : ApiException {
     constructor(
         msg: Msg = Msg("error.default.idempotencyConflict"),

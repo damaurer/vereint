@@ -173,6 +173,27 @@ describe('Keycloak Realm Configuration', () => {
     expect(serviceAccount.realmRoles).toContain('tabletRecorder');
   });
 
+  it('configures vereint-registration as a service account limited to manage-users', () => {
+    for (const config of [realmConfig, devRealmConfig]) {
+      const client = config.clients.find((c: any) => c.clientId === 'vereint-registration');
+      expect(client).toBeDefined();
+      expect(client.serviceAccountsEnabled).toBe(true);
+      expect(client.standardFlowEnabled).toBe(false);
+      expect(client.implicitFlowEnabled).toBe(false);
+      expect(client.publicClient).toBe(false);
+      expect(client.redirectUris).toEqual([]);
+      expect(client.webOrigins).toEqual([]);
+      expect(isEnvPlaceholder(client.secret)).toBe(true);
+
+      const serviceAccount = config.users.find(
+        (u: any) => u.serviceAccountClientId === 'vereint-registration',
+      );
+      expect(serviceAccount).toBeDefined();
+      expect(serviceAccount.realmRoles ?? []).toEqual([]);
+      expect(serviceAccount.clientRoles).toEqual({ 'realm-management': ['manage-users'] });
+    }
+  });
+
   it('never contains a plaintext client secret', () => {
     for (const config of [realmConfig, devRealmConfig]) {
       for (const client of config.clients) {

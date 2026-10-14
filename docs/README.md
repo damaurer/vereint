@@ -109,6 +109,6 @@ docs/
 - **Für Vorstände & Vereinsverwalter**:
   1. Siehe [Kassenbuch & Finanzen](domains/ledger-and-finance.md) für das Buchungs- und Guthabensystem sowie Deckungsbeitragsanalysen.
   2. Siehe [Getränkekatalog](domains/drink-catalog-and-sublists.md) und [Speisenkatalog & Eventspeisen](domains/food-catalog-and-event-food.md) für die Sortimentspflege und Einkaufspreise.
-  3. Siehe [Benutzerverwaltung](domains/auth-and-user-management.md) und [Events & Einladungen](domains/events-and-invites.md).
+  3. Siehe [Benutzerverwaltung](domains/auth-and-user-management.md), [Mitglieder per Einladungslink](domains/member-invites.md) und [Events & Einladungen](domains/events-and-invites.md).
 - **Für Event-Betreiber & Thekenteams**:
   1. Siehe [Tablet Strichlisten-Recorder](domains/tablet-strichliste-recorder.md) für Kiosk-Abläufe, Speisen-/Getränkeauswahl und 1-Tap-Touch-Buchungen.

@@ -4,10 +4,12 @@ import de.maurer.baseservice.domain.*
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
+import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
+import jakarta.persistence.LockModeType
 import java.time.Instant
 import java.util.Optional
 import java.util.UUID
@@ -16,6 +18,7 @@ import java.util.UUID
 interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
     fun findByKeycloakSubject(keycloakSubject: String): Optional<UserEntity>
     fun findByEmail(email: String): Optional<UserEntity>
+    fun existsByEmailIgnoreCase(email: String): Boolean
     fun findByDisabled(disabled: Boolean): List<UserEntity>
 
     /**
@@ -358,4 +361,22 @@ interface ImageAssetRepository : JpaRepository<ImageAssetEntity, UUID> {
         @Param("purpose") purpose: ImagePurpose,
         @Param("targetId") targetId: UUID?
     ): Int
+}
+
+@Repository
+interface MemberInviteRepository : JpaRepository<MemberInviteEntity, UUID> {
+    fun findByTokenHash(tokenHash: String): Optional<MemberInviteEntity>
+
+    /** Sperrt die Zeile, damit parallele Registrierungen die Nutzungsgrenze nicht überschreiten. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from MemberInviteEntity i where i.tokenHash = :tokenHash")
+    fun findByTokenHashForUpdate(@Param("tokenHash") tokenHash: String): Optional<MemberInviteEntity>
+
+    fun findAllByOrderByCreatedAtDesc(): List<MemberInviteEntity>
+}
+
+@Repository
+interface MemberInviteRedemptionRepository : JpaRepository<MemberInviteRedemptionEntity, UUID> {
+    @EntityGraph(attributePaths = ["user"])
+    fun findByInviteIdIn(inviteIds: Collection<UUID>): List<MemberInviteRedemptionEntity>
 }
