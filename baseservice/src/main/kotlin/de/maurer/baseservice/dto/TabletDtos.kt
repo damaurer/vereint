@@ -8,7 +8,7 @@ import java.time.Instant
  * Erfassung eines manuellen Tablet-Kaufs (Getränk oder Speise).
  */
 data class TabletPurchaseRequest(
-    @field:NotBlank(message = "memberId darf nicht leer sein")
+    @field:NotBlank(message = "memberId {validation.notBlank}")
     val memberId: String? = null,
 
     val eventDrinkId: String? = null,
@@ -22,7 +22,7 @@ data class TabletRevenuePurchaseRequest(
     val eventDrinkId: String? = null,
     val eventFoodId: String? = null,
 
-    @field:NotEmpty(message = "memberIds darf nicht leer sein")
+    @field:NotEmpty(message = "memberIds {validation.notBlank}")
     val memberIds: List<String>? = null
 )
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import de.maurer.baseservice.error.ApiProblem
 import de.maurer.baseservice.error.ErrorCode
+import de.maurer.baseservice.error.ErrorMessageResolver
 import de.maurer.baseservice.web.RequestIdFilter
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -13,8 +14,13 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.web.access.AccessDeniedHandler
 import org.springframework.stereotype.Component
 
+/**
+ * Fehlerantwort aus der Security-Filterkette; der `detail`-Text folgt der Sprache der
+ * Anfrage (`Accept-Language`), interne Exception-Texte werden nicht ausgeliefert.
+ */
 @Component
 class RestAccessDeniedHandler(
+    private val messages: ErrorMessageResolver,
     private val objectMapper: ObjectMapper = jacksonObjectMapper().findAndRegisterModules()
 ) : AccessDeniedHandler {
 
@@ -27,7 +33,7 @@ class RestAccessDeniedHandler(
         val body = ApiProblem.asMap(
             status = HttpStatus.FORBIDDEN,
             code = ErrorCode.PERMISSION_DENIED,
-            message = accessDeniedException.message ?: "Access to the requested resource is forbidden",
+            message = messages.resolve("error.security.forbidden", request),
             instance = request.requestURI,
             traceId = traceId
         )

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import de.maurer.baseservice.error.ApiProblem
 import de.maurer.baseservice.error.ErrorCode
+import de.maurer.baseservice.error.ErrorMessageResolver
 import de.maurer.baseservice.web.RequestIdFilter
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -13,8 +14,13 @@ import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.stereotype.Component
 
+/**
+ * Fehlerantwort aus der Security-Filterkette; der `detail`-Text folgt der Sprache der
+ * Anfrage (`Accept-Language`), interne Exception-Texte werden nicht ausgeliefert.
+ */
 @Component
 class RestAuthenticationEntryPoint(
+    private val messages: ErrorMessageResolver,
     private val objectMapper: ObjectMapper = jacksonObjectMapper().findAndRegisterModules()
 ) : AuthenticationEntryPoint {
 
@@ -27,7 +33,7 @@ class RestAuthenticationEntryPoint(
         val body = ApiProblem.asMap(
             status = HttpStatus.UNAUTHORIZED,
             code = ErrorCode.ACCESS_DENIED,
-            message = authException.message ?: "Authentication is required to access this resource",
+            message = messages.resolve("error.security.authenticationRequired", request),
             instance = request.requestURI,
             traceId = traceId
         )

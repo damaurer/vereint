@@ -13,30 +13,30 @@ private const val EVENT_STATUS_PATTERN = "^(draft|published|active|cancelled|com
 private const val PARTICIPANT_ROLE_PATTERN = "^(participant|coHost)?$"
 
 data class CreateEventRequest(
-    @field:NotBlank(message = "title darf nicht leer sein")
-    @field:Size(max = 255, message = "title darf höchstens 255 Zeichen lang sein")
+    @field:NotBlank(message = "title {validation.notBlank}")
+    @field:Size(max = 255, message = "title {validation.size.max}")
     val title: String? = null,
 
-    @field:Size(max = 4000, message = "description darf höchstens 4000 Zeichen lang sein")
+    @field:Size(max = 4000, message = "description {validation.size.max}")
     val description: String? = null,
 
-    @field:Size(max = 255, message = "location darf höchstens 255 Zeichen lang sein")
+    @field:Size(max = 255, message = "location {validation.size.max}")
     val location: String? = null,
 
-    @field:NotNull(message = "startsAt ist erforderlich")
+    @field:NotNull(message = "startsAt {validation.required}")
     val startsAt: Instant? = null,
 
     val endsAt: Instant? = null
 )
 
 data class UpdateEventRequest(
-    @field:Size(min = 1, max = 255, message = "title muss zwischen 1 und 255 Zeichen lang sein")
+    @field:Size(min = 1, max = 255, message = "title {validation.size.range}")
     val title: String? = null,
 
-    @field:Size(max = 4000, message = "description darf höchstens 4000 Zeichen lang sein")
+    @field:Size(max = 4000, message = "description {validation.size.max}")
     val description: String? = null,
 
-    @field:Size(max = 255, message = "location darf höchstens 255 Zeichen lang sein")
+    @field:Size(max = 255, message = "location {validation.size.max}")
     val location: String? = null,
 
     val startsAt: Instant? = null,
@@ -45,7 +45,7 @@ data class UpdateEventRequest(
 
     @field:Pattern(
         regexp = EVENT_STATUS_PATTERN,
-        message = "status muss draft, published, active, cancelled, completed oder archived sein"
+        message = "status {validation.event.status.allowed}"
     )
     val status: String? = null
 )
@@ -76,12 +76,12 @@ data class EventSummaryDto(
 )
 
 data class AddParticipantRequest(
-    @field:NotBlank(message = "userId darf nicht leer sein")
+    @field:NotBlank(message = "userId {validation.notBlank}")
     val userId: String? = null,
 
     @field:Pattern(
         regexp = PARTICIPANT_ROLE_PATTERN,
-        message = "role muss participant, coHost oder leer sein"
+        message = "role {validation.participant.role.allowed}"
     )
     val role: String? = null
 )

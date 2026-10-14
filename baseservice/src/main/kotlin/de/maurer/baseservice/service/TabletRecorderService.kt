@@ -19,6 +19,7 @@ import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.EventNotActiveException
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.EventDrinkRepository
 import de.maurer.baseservice.repository.EventFoodRepository
@@ -135,13 +136,13 @@ class TabletRecorderService(
 
         if (hasDrink && hasFood) {
             throw InvalidRequestException(
-                "Es darf entweder nur eventDrinkId oder nur eventFoodId angegeben werden",
+                Msg("error.tablet.drinkOrFoodExclusive"),
                 ErrorCode.INVALID_REQUEST
             )
         }
         if (!hasDrink && !hasFood) {
             throw InvalidRequestException(
-                "Entweder eventDrinkId oder eventFoodId muss angegeben werden",
+                Msg("error.tablet.drinkOrFoodRequired"),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -151,7 +152,7 @@ class TabletRecorderService(
             val eventDrink = requireEventDrink(eventId, eventDrinkId)
             val drink = eventDrink.drink
                 ?: throw ResourceNotFoundException(
-                    "Eventgetränk mit ID '$eventDrinkId' ist keinem Getränk zugeordnet",
+                    Msg("error.eventDrink.noDrink", eventDrinkId),
                     ErrorCode.NOT_FOUND
                 )
 
@@ -168,7 +169,7 @@ class TabletRecorderService(
             val eventFood = requireEventFood(eventId, eventFoodId)
             val food = eventFood.food
                 ?: throw ResourceNotFoundException(
-                    "Eventspeise mit ID '$eventFoodId' ist keiner Speise zugeordnet",
+                    Msg("error.eventFood.noFood", eventFoodId),
                     ErrorCode.NOT_FOUND
                 )
 
@@ -237,20 +238,20 @@ class TabletRecorderService(
 
         if (hasDrink && hasFood) {
             throw InvalidRequestException(
-                "Es darf entweder nur eventDrinkId oder nur eventFoodId angegeben werden",
+                Msg("error.tablet.drinkOrFoodExclusive"),
                 ErrorCode.INVALID_REQUEST
             )
         }
         if (!hasDrink && !hasFood) {
             throw InvalidRequestException(
-                "Entweder eventDrinkId oder eventFoodId muss angegeben werden",
+                Msg("error.tablet.drinkOrFoodRequired"),
                 ErrorCode.INVALID_REQUEST
             )
         }
 
         val rawIds = request.memberIds.orEmpty()
         if (rawIds.isEmpty()) {
-            throw InvalidRequestException("memberIds darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "memberIds"), ErrorCode.INVALID_REQUEST)
         }
         val memberIds = rawIds.map { Identifiers.parseUuid(it, "memberIds") }.distinct()
 
@@ -259,7 +260,7 @@ class TabletRecorderService(
             val eventDrink = requireEventDrink(eventId, eventDrinkId)
             val drink = eventDrink.drink
                 ?: throw ResourceNotFoundException(
-                    "Eventgetränk mit ID '$eventDrinkId' ist keinem Getränk zugeordnet",
+                    Msg("error.eventDrink.noDrink", eventDrinkId),
                     ErrorCode.NOT_FOUND
                 )
 
@@ -281,7 +282,7 @@ class TabletRecorderService(
             val eventFood = requireEventFood(eventId, eventFoodId)
             val food = eventFood.food
                 ?: throw ResourceNotFoundException(
-                    "Eventspeise mit ID '$eventFoodId' ist keiner Speise zugeordnet",
+                    Msg("error.eventFood.noFood", eventFoodId),
                     ErrorCode.NOT_FOUND
                 )
 
@@ -309,7 +310,7 @@ class TabletRecorderService(
         val permissions = principal.permissions + RolePermissionMatrix.derivePermissions(roles, drinkRecorder)
         if (!permissions.contains(Permission.PURCHASE_TABLET)) {
             throw AccessDeniedException(
-                "Nur der Tablet-Recorder darf manuelle Käufe erfassen",
+                Msg("error.tablet.recorderOnly"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -320,14 +321,13 @@ class TabletRecorderService(
         val key = value?.trim()
         if (key.isNullOrBlank()) {
             throw InvalidRequestException(
-                "Header 'Idempotency-Key' ist für finanzielle Schreibvorgänge erforderlich",
+                Msg("error.idempotency.keyRequired"),
                 ErrorCode.IDEMPOTENCY_KEY_REQUIRED
             )
         }
         if (key.length > MAX_BATCH_IDEMPOTENCY_KEY_LENGTH) {
             throw InvalidRequestException(
-                "Idempotency-Key darf für Runden/Abendaktionen höchstens " +
-                    "$MAX_BATCH_IDEMPOTENCY_KEY_LENGTH Zeichen lang sein",
+                Msg("error.idempotency.batchKeyTooLong", MAX_BATCH_IDEMPOTENCY_KEY_LENGTH),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -336,11 +336,11 @@ class TabletRecorderService(
 
     private fun requireActiveEvent(eventId: UUID): EventEntity {
         val event = eventRepository.findById(eventId).orElseThrow {
-            ResourceNotFoundException("Event mit ID '$eventId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.event.notFound", eventId), ErrorCode.NOT_FOUND)
         }
         if (event.status != EventStatus.active) {
             throw EventNotActiveException(
-                "Für dieses Event können derzeit keine Tablet-Käufe erfasst werden",
+                Msg("error.tablet.eventNotActive"),
                 ErrorCode.EVENT_NOT_ACTIVE
             )
         }
@@ -350,13 +350,13 @@ class TabletRecorderService(
     /** Der Käufer muss ein aktives Mitglied des Events sein (Owner oder Teilnehmer). */
     private fun requireEventMember(event: EventEntity, memberId: UUID): UserEntity {
         val buyer = userRepository.findById(memberId).orElseThrow {
-            ResourceNotFoundException("Benutzer mit ID '$memberId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.user.notFound", memberId), ErrorCode.NOT_FOUND)
         }
         val isOwner = event.owner?.id == memberId
         val isParticipant = eventParticipantRepository.findByEventIdAndUserId(event.id, memberId).isPresent
         if (buyer.disabled || (!isOwner && !isParticipant)) {
             throw InvalidRequestException(
-                "Der angegebene Käufer ist kein Mitglied dieses Events",
+                Msg("error.tablet.buyerNotMember"),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -365,17 +365,17 @@ class TabletRecorderService(
 
     private fun requireEventDrink(eventId: UUID, eventDrinkId: UUID): EventDrinkEntity {
         val eventDrink = eventDrinkRepository.findById(eventDrinkId).orElseThrow {
-            ResourceNotFoundException("Eventgetränk mit ID '$eventDrinkId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.eventDrink.notFound", eventDrinkId), ErrorCode.NOT_FOUND)
         }
         if (eventDrink.event?.id != eventId) {
             throw ResourceNotFoundException(
-                "Eventgetränk mit ID '$eventDrinkId' ist diesem Event nicht zugeordnet",
+                Msg("error.eventDrink.notInEvent", eventDrinkId),
                 ErrorCode.NOT_FOUND
             )
         }
         if (!eventDrink.tabletEnabled) {
             throw InvalidRequestException(
-                "Für dieses Getränk ist die Tablet-Erfassung im Event deaktiviert",
+                Msg("error.tablet.drinkDisabled"),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -384,17 +384,17 @@ class TabletRecorderService(
 
     private fun requireEventFood(eventId: UUID, eventFoodId: UUID): EventFoodEntity {
         val eventFood = eventFoodRepository.findById(eventFoodId).orElseThrow {
-            ResourceNotFoundException("Eventspeise mit ID '$eventFoodId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.eventFood.notFound", eventFoodId), ErrorCode.NOT_FOUND)
         }
         if (eventFood.event?.id != eventId) {
             throw ResourceNotFoundException(
-                "Eventspeise mit ID '$eventFoodId' ist diesem Event nicht zugeordnet",
+                Msg("error.eventFood.notInEvent", eventFoodId),
                 ErrorCode.NOT_FOUND
             )
         }
         if (!eventFood.tabletEnabled) {
             throw InvalidRequestException(
-                "Für diese Speise ist die Tablet-Erfassung im Event deaktiviert",
+                Msg("error.tablet.foodDisabled"),
                 ErrorCode.INVALID_REQUEST
             )
         }

@@ -24,6 +24,7 @@ docs/
 │   ├── 03-security-and-authorization.md  # SecurityFilterChain, JWT, Matrix V2, AuthContext & CORS
 │   ├── 04-persistence-and-migrations.md  # Entities, Repositories, Optimistic Locking & Liquibase
 │   ├── 05-error-handling-and-observability.md # ApiException, ErrorCode, RFC 7807, Actuator & OpenAPI
+│   ├── i18n.md                           # Mehrsprachige Fehler- und Validierungstexte
 │   ├── 06-integrations.md                # Objektspeicher (S3/In-Memory), Web-Push (VAPID) & Chat
 │   └── 07-extending-the-service.md       # How-Tos, Testing (MockMvc/Testcontainers), Troubleshooting & PR-Checkliste
 │
