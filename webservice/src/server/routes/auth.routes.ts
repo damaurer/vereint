@@ -10,6 +10,7 @@ import { resolveSafeReturnTo } from '../auth/redirect';
 import { createCorrelationId, logSecurityEvent } from '../auth/security-log';
 import { createSessionFromTokens, destroySession } from '../auth/session.service';
 import { serverEnvironment } from '../config/environment';
+import { requestLanguage } from '../../app/i18n/language-cookie';
 
 export const authRoutes = Router();
 
@@ -41,6 +42,8 @@ async function handleLogin(req: Request, res: Response): Promise<void> {
     redirectUri,
     returnTo,
     scope: customScope,
+    // Keycloak zeigt Anmeldung/Registrierung in der Sprache der App.
+    uiLocales: requestLanguage(req.headers.cookie, req.headers['accept-language']),
   });
 
   setOidcStateCookie(res, stateString);

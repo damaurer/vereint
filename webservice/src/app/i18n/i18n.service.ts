@@ -9,10 +9,11 @@ import {
   findLanguage,
   negotiateLanguage,
 } from './languages';
+import { LANGUAGE_COOKIE, readCookie } from './language-cookie';
 import { type TranslationParams, translateWith } from './translate';
 
-/** Cookie mit der gewählten Sprache; lesen SSR, BFF (Keycloak-Login) und Browser. */
-export const LANGUAGE_COOKIE = 'vereint.lang';
+export { LANGUAGE_COOKIE, readCookie } from './language-cookie';
+
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 const FALLBACK: Dictionary = de as Dictionary;
@@ -108,18 +109,4 @@ export function translate(key: string, params?: TranslationParams): string {
 /** BCP-47-Locale der aktiven Sprache für `Intl`-Formate außerhalb von DI. */
 export function activeLocale(): string {
   return active?.locale() ?? 'de-DE';
-}
-
-export function readCookie(header: string, name: string): string | null {
-  for (const part of header.split(';')) {
-    const [rawName, ...rest] = part.trim().split('=');
-    if (rawName === name) {
-      try {
-        return decodeURIComponent(rest.join('='));
-      } catch {
-        return null;
-      }
-    }
-  }
-  return null;
 }

@@ -49,6 +49,7 @@ docs/
 │
 ├── frontend/                             # Client-Architektur & UI-Bibliothek
 │   ├── angular-ssr-and-pwa.md            # Angular 22 SSR, Express BFF & PWA-Caching
+│   ├── i18n.md                           # Mehrsprachigkeit: neue Sprache hinzufügen, Texte im Code
 │   └── ui-components-and-design-system.md # Optimus Design Tokens & UI-Komponentenbibliothek
 │
 ├── api/                                  # API-Referenz & Integrationsverträge
