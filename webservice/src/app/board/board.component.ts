@@ -14,6 +14,7 @@ import {
   type StatusTone,
 } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
 
 interface BoardView {
   events: EventSummary[];
@@ -36,58 +37,57 @@ interface BoardView {
  */
 @Component({
   selector: 'app-board',
-  imports: [StateComponent, IconComponent, RouterLink, InfoPanelComponent, StatCardComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, RouterLink, InfoPanelComponent, StatCardComponent, StatusBadgeComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="board-title">
-        <span class="eyebrow">Vorstand</span>
-        <h1 id="board-title">Eber-Führungsstab</h1>
-        <p>Moderation, Finanzübersichten und vorbereitete Mitteilungen.</p>
+        <span class="eyebrow">{{ 'board.overview.eyebrow' | t }}</span>
+        <h1 id="board-title">{{ 'board.overview.title' | t }}</h1>
+        <p>{{ 'board.overview.intro' | t }}</p>
 
-        <vereint-info-panel icon="board" title="Vorstandsbereich">
-          Verwalte hier die Bierkasse, versende wichtige Ankündigungen oder plane
-          die nächsten Stammtisch-Sitzungen.
+        <vereint-info-panel icon="board" [title]="'board.overview.infoTitle' | t">
+          {{ 'board.overview.infoText' | t }}
         </vereint-info-panel>
 
-        <h2 class="member-subtitle">Rollenspezifische Verwaltung</h2>
-        <nav class="board-panels" aria-label="Vorstandsbereiche">
+        <h2 class="member-subtitle">{{ 'board.overview.panelsTitle' | t }}</h2>
+        <nav class="board-panels" [attr.aria-label]="'board.overview.panelsNav' | t">
           <a class="board-panel" routerLink="/board/treasury">
             <vereint-icon class="board-panel-icon" name="treasury" />
-            <span class="board-panel-title">Kassenwart · Kasse &amp; Finanzen</span>
-            <span class="board-panel-desc">Bierkasse, Guthaben und Buchungen</span>
+            <span class="board-panel-title">{{ 'board.overview.treasuryTitle' | t }}</span>
+            <span class="board-panel-desc">{{ 'board.overview.treasuryDesc' | t }}</span>
           </a>
           <a class="board-panel" routerLink="/board/communications">
             <vereint-icon class="board-panel-icon" name="megaphone" />
-            <span class="board-panel-title">Schriftwart · Kommunikation</span>
-            <span class="board-panel-desc">Ankündigungen und Pinnwand</span>
+            <span class="board-panel-title">{{ 'board.overview.commsTitle' | t }}</span>
+            <span class="board-panel-desc">{{ 'board.overview.commsDesc' | t }}</span>
           </a>
         </nav>
 
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Events und Protokoll werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'board.overview.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Vorstandsbereich nicht verfügbar"
+            [title]="'board.overview.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
         } @else if (load.data(); as view) {
           <div class="board-stats">
-            <vereint-stat-card icon="events" label="Sichtbare Events" [value]="view.events.length" />
-            <vereint-stat-card icon="receipt" label="Letzte Aktionen" [value]="view.audit.length" />
+            <vereint-stat-card icon="events" [label]="'board.overview.statEvents' | t" [value]="view.events.length" />
+            <vereint-stat-card icon="receipt" [label]="'board.overview.statActions' | t" [value]="view.audit.length" />
           </div>
 
-          <h2 class="member-subtitle">Gastgeber · Events ({{ view.events.length }})</h2>
+          <h2 class="member-subtitle">{{ 'board.overview.eventsHeading' | t: { count: view.events.length } }}</h2>
           @if (view.events.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Events"
-              message="Aktuell sind keine Events zur Moderation sichtbar."
+              [title]="'board.overview.eventsEmptyTitle' | t"
+              [message]="'board.overview.eventsEmptyMessage' | t"
             />
           } @else {
             <ul class="member-list">
@@ -99,18 +99,18 @@ interface BoardView {
                     [tone]="eventTone(event.status)"
                   />
                   <span class="member-list-meta">{{ formatDateTime(event.startsAt) }}</span>
-                  <a class="member-button" [routerLink]="['/events', event.id, 'manage']">Moderieren</a>
+                  <a class="member-button" [routerLink]="['/events', event.id, 'manage']">{{ 'board.overview.moderate' | t }}</a>
                 </li>
               }
             </ul>
           }
 
-          <h2 class="member-subtitle">Letzte Aktionen ({{ view.audit.length }})</h2>
+          <h2 class="member-subtitle">{{ 'board.overview.auditHeading' | t: { count: view.audit.length } }}</h2>
           @if (view.audit.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Einträge"
-              message="Für die erlaubten Bereiche liegen keine Protokolleinträge vor."
+              [title]="'board.audit.emptyTitle' | t"
+              [message]="'board.audit.emptyMessage' | t"
             />
           } @else {
             <ul class="member-list">
@@ -123,7 +123,7 @@ interface BoardView {
                     <span class="member-chat-text">{{ entry.details }}</span>
                   }
                   <span class="member-list-meta">
-                    {{ entry.actorDisplayName ?? 'System' }} · {{ formatDateTime(entry.createdAt) }}
+                    {{ entry.actorDisplayName ?? ('board.audit.system' | t) }} · {{ formatDateTime(entry.createdAt) }}
                   </span>
                 </li>
               }

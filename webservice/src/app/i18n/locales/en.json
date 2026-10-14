@@ -865,5 +865,371 @@
       "member": "Member",
       "item": "Item"
     }
+  },
+  "admin": {
+    "eyebrow": "Administration",
+    "title": "Members & groups",
+    "intro": "Members, roles and invitations of the “Durstige Eber”.",
+    "infoPanel": "Roles and permissions are authorised on the server; this page only prepares the administration.",
+    "loadingMessage": "Loading users and audit log.",
+    "unavailable": "Administration unavailable",
+    "roles": {
+      "admin": "Admin",
+      "board": "Board",
+      "member": "Member",
+      "chair": "Chair",
+      "treasurer": "Treasurer",
+      "secretary": "Secretary",
+      "assessor": "Assessor",
+      "host": "Host"
+    },
+    "members": {
+      "search": "Search members",
+      "searchPlaceholder": "Search members …",
+      "roleFilter": "Filter by role",
+      "roleFilterAll": "Role: All",
+      "invite": "+ Invite member",
+      "heading": "Members ({count})",
+      "empty": "No members match the current search.",
+      "disabledMark": "(disabled)",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "edit": "Edit",
+      "range": "Showing {start}–{end} of {total} members",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "columns": {
+      "avatar": "Avatar",
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "balance": "Balance",
+      "status": "Status",
+      "joined": "Joined",
+      "actions": "Actions"
+    },
+    "user": {
+      "editTitle": "Edit {name}",
+      "id": "ID: {id}",
+      "roles": "Roles",
+      "saveRoles": "Save roles",
+      "boardRole": "Board sub-role",
+      "noBoardRole": "none",
+      "drinkRecorder": "Drink recorder",
+      "saveProfile": "Save profile",
+      "disabled": "Disabled",
+      "saveStatus": "Save status",
+      "rolesSaved": "Roles saved.",
+      "profileSaved": "Profile saved.",
+      "statusSaved": "Status saved."
+    },
+    "audit": {
+      "heading": "Audit log ({count})",
+      "emptyTitle": "No entries",
+      "emptyMessage": "There are no audit log entries.",
+      "system": "System"
+    },
+    "invite": {
+      "title": "Invite member",
+      "email": "Email address",
+      "startRole": "Initial role",
+      "roleMemberDefault": "Member (default)",
+      "message": "Personal message (optional)",
+      "messagePlaceholder": "Hi there! Come and join us for a pint in our regulars’ table app.",
+      "send": "Send invitation",
+      "openTitle": "Open invitations",
+      "emptyTitle": "No open invitations",
+      "emptyMessage": "There are no pending invitations at the moment.",
+      "expired": "Expired",
+      "pending": "Pending",
+      "renew": "Renew",
+      "invalidEmail": "Please enter a valid email address.",
+      "queued": "Invitation queued.",
+      "renewed": "Invitation renewed."
+    },
+    "matrix": {
+      "title": "Roles & permissions",
+      "saved": "Permissions saved.",
+      "permission": "Permission",
+      "hint": "System permissions are protected globally for Vereint.",
+      "discard": "Discard",
+      "save": "Save changes",
+      "permissions": {
+        "credit": "Manage balances (top up / book)",
+        "events": "Create / plan events & regulars’ tables",
+        "notify": "Send group notifications",
+        "attendance": "Start attendance poll",
+        "invite": "Invite new members",
+        "tally": "Edit every member’s tally sheet",
+        "stats": "View statistics and Eber analytics",
+        "moderate": "Delete / moderate chat posts",
+        "pin": "Pin info panels to the notice board"
+      }
+    }
+  },
+  "board": {
+    "backToBoard": "← Back to the board",
+    "auditTarget": {
+      "ledger": "Finance",
+      "notification": "Communication",
+      "user": "Users"
+    },
+    "boardRole": {
+      "chair": "Chair",
+      "treasurer": "Treasurer",
+      "secretary": "Secretary",
+      "assessor": "Assessor",
+      "board": "Board"
+    },
+    "audit": {
+      "emptyTitle": "No entries",
+      "emptyMessage": "There are no audit log entries for the permitted areas.",
+      "system": "System"
+    },
+    "overview": {
+      "eyebrow": "Board",
+      "title": "Eber leadership team",
+      "intro": "Moderation, financial overviews and prepared announcements.",
+      "infoTitle": "Board area",
+      "infoText": "Manage the beer kitty, send important announcements or plan the next regulars’ table meetings here.",
+      "panelsTitle": "Role-specific management",
+      "panelsNav": "Board areas",
+      "treasuryTitle": "Treasurer · Kitty & finances",
+      "treasuryDesc": "Beer kitty, balances and bookings",
+      "commsTitle": "Secretary · Communication",
+      "commsDesc": "Announcements and notice board",
+      "loadingMessage": "Loading events and audit log.",
+      "unavailable": "Board area unavailable",
+      "statEvents": "Visible events",
+      "statActions": "Recent actions",
+      "eventsHeading": "Host · Events ({count})",
+      "eventsEmptyTitle": "No events",
+      "eventsEmptyMessage": "There are currently no events to moderate.",
+      "moderate": "Moderate",
+      "auditHeading": "Recent actions ({count})"
+    },
+    "comms": {
+      "eyebrow": "Secretary",
+      "title": "Info panels & newsletters",
+      "intro": "Messages to members and sent notifications.",
+      "pinboardTitle": "Notice board (chat info panels)",
+      "infoTitle": "Info from the secretary",
+      "infoText": "Pinned info panels appear at the top of the chat. Write a new newsletter below to reach all members.",
+      "composeTitle": "Compose message",
+      "recipientId": "Recipient (member ID)",
+      "messageTitle": "Title",
+      "messageBody": "Text",
+      "send": "Send",
+      "loadingMessage": "Loading recipients and audit log.",
+      "unavailable": "Communication unavailable",
+      "recipientsHeading": "Recipients ({count})",
+      "noRecipients": "No members visible.",
+      "pickRecipient": "Set as recipient",
+      "sentHeading": "Newsletters / messages ({count})",
+      "sentEmpty": "No messages have been logged yet.",
+      "sent": "Sent",
+      "sentInfo": "Message sent."
+    },
+    "treasury": {
+      "eyebrow": "Treasurer",
+      "title": "Manage beer kitty",
+      "intro": "Event settlements, balances and kitty bookings.",
+      "infoTitle": "Beer kitty",
+      "infoText": "Bookings are idempotent. Price, mode and approval are determined solely by the back-end service.",
+      "eventsLoading": "Loading events.",
+      "unavailable": "Kitty unavailable",
+      "statEvents": "Events with settlement",
+      "eventsHeading": "Events ({count})",
+      "eventsEmpty": "No events with a settlement are visible.",
+      "summaryButton": "Settlement",
+      "summary": {
+        "title": "Event settlement",
+        "revenue": "Revenue: {amount}",
+        "cost": "Cost of goods: {amount}",
+        "profit": "Net profit: {amount}",
+        "credit": "Credit consumption: {amount}",
+        "entries": "Bookings: {count}"
+      },
+      "lookup": {
+        "title": "Look up balance",
+        "memberId": "Member ID",
+        "show": "Show",
+        "loading": "Loading balance and bookings.",
+        "balance": "Balance",
+        "entriesHeading": "Bookings ({count})",
+        "noEntries": "No bookings."
+      },
+      "columns": {
+        "type": "Type",
+        "date": "Date",
+        "amount": "Amount"
+      },
+      "booking": {
+        "title": "Book",
+        "topupMemberId": "Top up · Member ID",
+        "payoutMemberId": "Pay out · Member ID",
+        "correctionEntryId": "Correction · Original booking",
+        "amount": "Amount",
+        "note": "Note",
+        "reason": "Reason",
+        "topup": "Top up",
+        "payout": "Pay out",
+        "correct": "Correct",
+        "topupDone": "Top-up booked.",
+        "payoutDone": "Payout booked.",
+        "correctionDone": "Correction booked."
+      }
+    }
+  },
+  "events": {
+    "manage": {
+      "eyebrow": "Host",
+      "back": "← Back to event",
+      "loadingMessage": "Preparing event management.",
+      "unavailable": "Management unavailable",
+      "title": "Manage {title}",
+      "nextDate": "Next date",
+      "noRights": "No management rights",
+      "noRightsHint": "Only the host of this event (or the board) can manage it.",
+      "remove": "Remove",
+      "costPrice": "Cost: {amount}",
+      "priceOptional": "Price (optional)",
+      "costPriceOptional": "Cost price (optional)",
+      "fallback": "Fallback",
+      "currency": "Currency",
+      "details": {
+        "title": "Details",
+        "name": "Title",
+        "location": "Location",
+        "description": "Description",
+        "status": "Status",
+        "save": "Save details"
+      },
+      "participants": {
+        "heading": "Participants & attendance ({count})",
+        "empty": "No participants yet.",
+        "id": "Participant ID",
+        "role": "Role",
+        "roleParticipant": "Participant",
+        "roleCoHost": "Co-host",
+        "add": "Add"
+      },
+      "drinks": {
+        "heading": "Drinks ({count})",
+        "empty": "No drinks assigned yet.",
+        "id": "Drink ID",
+        "add": "Add drink",
+        "sublistId": "Sublist ID",
+        "assignSublist": "Assign sublist"
+      },
+      "food": {
+        "heading": "Food ({count})",
+        "empty": "No food assigned yet.",
+        "default": "(default)",
+        "id": "Food ID",
+        "add": "Add food"
+      },
+      "invites": {
+        "heading": "Invitations ({count})",
+        "createdTitle": "Invitation created",
+        "createdHint": "This link is shown only once:",
+        "empty": "No active invitations.",
+        "active": "active",
+        "inactive": "inactive",
+        "revoke": "Revoke",
+        "validMinutes": "Valid (minutes)",
+        "maxUses": "Max. uses",
+        "create": "Create guest invitation"
+      },
+      "chat": {
+        "heading": "Event chat ({count})",
+        "empty": "No messages yet.",
+        "message": "Message",
+        "send": "Send"
+      },
+      "info": {
+        "detailsSaved": "Details saved.",
+        "participantAdded": "Participant added.",
+        "participantRemoved": "Participant removed.",
+        "drinkAdded": "Drink added.",
+        "drinkRemoved": "Drink removed.",
+        "foodAdded": "Food added.",
+        "foodRemoved": "Food removed.",
+        "sublistAssigned": "Sublist assigned.",
+        "inviteCreated": "Invitation created.",
+        "inviteRevoked": "Invitation revoked.",
+        "messageSent": "Message sent."
+      }
+    }
+  },
+  "statistics": {
+    "ariaLabel": "Statistics and Eber analytics",
+    "eyebrow": "Statistics",
+    "title": "Eber analytics",
+    "ssr": {
+      "title": "Charts load in the browser",
+      "message": "Aggregated reports appear once the page has loaded in the browser."
+    },
+    "loadingMessage": "Loading reports.",
+    "unavailable": "Statistics unavailable",
+    "empty": {
+      "title": "No reports yet",
+      "message": "Key figures appear here as soon as purchases and attendance have been recorded."
+    },
+    "consumption": {
+      "ariaLabel": "Beer consumption this month",
+      "title": "Beer consumption this month (litres)"
+    },
+    "attendance": {
+      "title": "Attendance rate",
+      "ringLabel": "Attendance rate {percent} percent"
+    },
+    "spending": {
+      "title": "Spending trend",
+      "thisMonth": "Spending this month",
+      "trendHint": "{change}% vs. last month"
+    },
+    "topRounds": {
+      "title": "Top round buyers",
+      "rounds": {
+        "one": "{count} round",
+        "other": "{count} rounds"
+      }
+    },
+    "drinkRanking": {
+      "title": "Drinks ranking",
+      "share": "{percent}% popularity"
+    }
+  },
+  "guest": {
+    "event": {
+      "eyebrow": "Guest access",
+      "defaultTitle": "Event chat",
+      "intro": "As a guest you have access to the event chat.",
+      "noAccess": "No guest access",
+      "noAccessHint": "This link does not contain a valid guest token. Please open the invitation link again.",
+      "loadingMessage": "Loading the event chat.",
+      "unavailable": "Chat unavailable",
+      "empty": "No messages yet.",
+      "message": "Message",
+      "placeholder": "Write a message …",
+      "send": "Send"
+    },
+    "invite": {
+      "badge": "Invitation",
+      "title": "Accept event invitation",
+      "invalidTitle": "Invalid invitation link",
+      "invalidHint": "This link does not contain an invitation token. Please use the complete link from your invitation.",
+      "backHome": "Back to the home page",
+      "checking": "Checking and activating invitation …",
+      "failed": "The invitation could not be redeemed",
+      "home": "Go to home page",
+      "description": "Optionally enter your name to join the event as a guest.",
+      "nameLabel": "Your name / nickname (optional)",
+      "namePlaceholder": "e.g. Jane Smith",
+      "joining": "Joining …",
+      "join": "Join event"
+    }
   }
 }

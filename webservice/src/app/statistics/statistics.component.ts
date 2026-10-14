@@ -12,6 +12,8 @@ import { InfoPanelComponent, StatCardComponent } from '../ui';
 import { StatisticsDataService } from './statistics-data.service';
 import type { MemberConsumption, StatisticsView } from './statistics.types';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { activeLocale, translate } from '../i18n/i18n.service';
 
 /**
  * Statistik- und Eber-Analytik-Oberfläche (TICKET-036).
@@ -32,30 +34,30 @@ import { StateComponent } from '../ui/state.component';
   selector: 'app-statistics',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [StateComponent, StatCardComponent, InfoPanelComponent],
+  imports: [StateComponent, StatCardComponent, InfoPanelComponent, TranslatePipe],
   template: `
     <main class="page-shell">
-      <section class="page-card stats-card" aria-label="Statistiken und Eber-Analytik">
+      <section class="page-card stats-card" [attr.aria-label]="'statistics.ariaLabel' | t">
         <header class="stats-head">
-          <p class="stats-eyebrow">Statistiken</p>
-          <h1 class="stats-title">Eber-Analytik</h1>
+          <p class="stats-eyebrow">{{ 'statistics.eyebrow' | t }}</p>
+          <h1 class="stats-title">{{ 'statistics.title' | t }}</h1>
         </header>
 
         @if (!isBrowser) {
           <div class="state-card" role="status" aria-live="polite" data-testid="ssr-placeholder">
-            <strong>Diagramme werden im Browser geladen</strong>
-            <span>Aggregierte Auswertungen erscheinen erst nach dem Laden im Browser.</span>
+            <strong>{{ 'statistics.ssr.title' | t }}</strong>
+            <span>{{ 'statistics.ssr.message' | t }}</span>
           </div>
         } @else if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Die Auswertungen werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'statistics.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Statistiken nicht verfügbar"
+            [title]="'statistics.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -63,13 +65,13 @@ import { StateComponent } from '../ui/state.component';
           @if (isEmpty(view)) {
             <vereint-state
               kind="empty"
-              title="Noch keine Auswertungen"
-              message="Sobald Käufe und Anwesenheiten erfasst sind, erscheinen hier Kennzahlen."
+              [title]="'statistics.empty.title' | t"
+              [message]="'statistics.empty.message' | t"
             />
           } @else {
             <div class="stats-grid">
-              <article class="stats-panel stats-span" aria-label="Bierkonsum diesen Monat">
-                <h2 class="stats-panel-title">Bierkonsum diesen Monat (Liter)</h2>
+              <article class="stats-panel stats-span" [attr.aria-label]="'statistics.consumption.ariaLabel' | t">
+                <h2 class="stats-panel-title">{{ 'statistics.consumption.title' | t }}</h2>
                 <ul class="bar-list">
                   @for (row of view.consumption; track row.member) {
                     <li class="bar-row">
@@ -86,18 +88,18 @@ import { StateComponent } from '../ui/state.component';
                 </ul>
               </article>
 
-              <article class="stats-panel" aria-label="Anwesenheitsquote">
-                <h2 class="stats-panel-title">Anwesenheitsquote</h2>
+              <article class="stats-panel" [attr.aria-label]="'statistics.attendance.title' | t">
+                <h2 class="stats-panel-title">{{ 'statistics.attendance.title' | t }}</h2>
                 <div class="ring" [style.--ring-value]="view.attendancePercent" role="img"
-                     [attr.aria-label]="'Anwesenheitsquote ' + view.attendancePercent + ' Prozent'">
+                     [attr.aria-label]="'statistics.attendance.ringLabel' | t: { percent: view.attendancePercent }">
                   <span class="ring-label">{{ view.attendancePercent }}%</span>
                 </div>
               </article>
 
-              <article class="stats-panel" aria-label="Ausgaben-Verlauf">
-                <h2 class="stats-panel-title">Ausgaben-Verlauf</h2>
+              <article class="stats-panel" [attr.aria-label]="'statistics.spending.title' | t">
+                <h2 class="stats-panel-title">{{ 'statistics.spending.title' | t }}</h2>
                 <vereint-stat-card
-                  label="Ausgaben diesen Monat"
+                  [label]="'statistics.spending.thisMonth' | t"
                   [value]="formatMoney(view.spending.total, view.spending.currency)"
                   [hint]="trendHint(view.spending.changePercent)"
                 />
@@ -108,23 +110,23 @@ import { StateComponent } from '../ui/state.component';
                 </div>
               </article>
 
-              <vereint-info-panel class="stats-span" icon="crown" title="Top-Rundengeber">
+              <vereint-info-panel class="stats-span" icon="crown" [title]="'statistics.topRounds.title' | t">
                 <ol class="rank-list">
                   @for (giver of view.topRounds; track giver.member) {
                     <li class="rank-row">
                       <span class="rank-name">{{ giver.member }}</span>
-                      <span class="rank-value">{{ giver.rounds }} Runden</span>
+                      <span class="rank-value">{{ 'statistics.topRounds.rounds' | t: { count: giver.rounds } }}</span>
                     </li>
                   }
                 </ol>
               </vereint-info-panel>
 
-              <vereint-info-panel class="stats-span" icon="beer" title="Getränke-Ranking">
+              <vereint-info-panel class="stats-span" icon="beer" [title]="'statistics.drinkRanking.title' | t">
                 <ol class="rank-list">
                   @for (drink of view.drinkRanking; track drink.drink) {
                     <li class="rank-row">
                       <span class="rank-name">{{ drink.drink }}</span>
-                      <span class="rank-value">{{ drink.sharePercent }}% Beliebtheit</span>
+                      <span class="rank-value">{{ 'statistics.drinkRanking.share' | t: { percent: drink.sharePercent } }}</span>
                     </li>
                   }
                 </ol>
@@ -336,13 +338,13 @@ export class StatisticsComponent implements OnInit, OnDestroy {
   /** Hinweistext zur Veränderung gegenüber dem Vormonat. */
   protected trendHint(changePercent: number): string {
     const sign = changePercent >= 0 ? '+' : '';
-    return `${sign}${changePercent}% vs. Vormonat`;
+    return translate('statistics.spending.trendHint', { change: `${sign}${changePercent}` });
   }
 
   /** Formatiert einen dezimalen Betrag als lokalisierten Währungstext. */
   protected formatMoney(amount: string, currency: string): string {
     const value = Number(amount);
     if (!Number.isFinite(value)) return `${amount} ${currency}`;
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency }).format(value);
+    return new Intl.NumberFormat(activeLocale(), { style: 'currency', currency }).format(value);
   }
 }
