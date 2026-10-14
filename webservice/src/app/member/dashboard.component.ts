@@ -16,12 +16,14 @@ import {
   type StatusTone,
 } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 interface DashboardShortcut {
   route: string;
   icon: IconName;
-  title: string;
-  sub: string;
+  titleKey: string;
+  subKey: string;
 }
 
 interface DashboardView {
@@ -49,35 +51,36 @@ interface DashboardView {
     BalanceCardComponent,
     StatCardComponent,
     IconComponent,
+    TranslatePipe,
   ],
   template: `
     <main class="page-shell">
-      <section class="page-card member-card" aria-label="Persönliche Übersicht">
+      <section class="page-card member-card" [attr.aria-label]="'member.dashboard.ariaLabel' | t">
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Deine Übersicht wird abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'member.dashboard.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Übersicht nicht verfügbar"
+            [title]="'member.dashboard.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
         } @else if (load.data(); as view) {
           <vereint-hero-greeting
-            eyebrow="Servus"
+            [eyebrow]="'member.dashboard.eyebrow' | t"
             [name]="view.profile.displayName"
             [subtitle]="greeting()"
           />
 
           <div class="dash-top">
             <section class="dash-block" aria-labelledby="dash-balance">
-              <h2 id="dash-balance" class="dash-heading">Dein Guthaben</h2>
+              <h2 id="dash-balance" class="dash-heading">{{ 'member.dashboard.balanceHeading' | t }}</h2>
               <vereint-balance-card
-                label="Aktueller Stand"
+                [label]="'member.balance.current' | t"
                 [amount]="formatMoney(view.balance.creditBalance, view.balance.currency)"
                 [negative]="isNegative(view.balance.creditBalance)"
                 [showTopup]="true"
@@ -85,16 +88,16 @@ interface DashboardView {
               />
               @if (topupRequested()) {
                 <p class="member-hint" role="status">
-                  Aufladungen erfolgen über den Kassenwart. Bitte sprich ihn direkt an.
+                  {{ 'member.balance.topupHint' | t }}
                 </p>
               }
               <a class="dash-more" routerLink="/wallet">
-                Kontoauszug ansehen <vereint-icon name="chevron-right" />
+                {{ 'member.dashboard.statementLink' | t }} <vereint-icon name="chevron-right" />
               </a>
             </section>
 
             <section class="dash-block" aria-labelledby="dash-next">
-              <h2 id="dash-next" class="dash-heading">Nächster Termin</h2>
+              <h2 id="dash-next" class="dash-heading">{{ 'member.dashboard.nextEventHeading' | t }}</h2>
               @if (nextEvent(view.events); as event) {
                 <a class="dash-event-link" [routerLink]="['/events', event.id]">
                   <vereint-event-card
@@ -105,10 +108,10 @@ interface DashboardView {
                   />
                 </a>
                 @if (attending() !== null) {
-                  <div class="dash-rsvp" role="group" aria-label="Teilnahme am nächsten Termin">
+                  <div class="dash-rsvp" role="group" [attr.aria-label]="'member.dashboard.rsvpGroup' | t">
                     @if (attending()) {
                       <span class="dash-rsvp-state">
-                        <vereint-icon name="check" /> Du bist dabei
+                        <vereint-icon name="check" /> {{ 'member.dashboard.attending' | t }}
                       </span>
                       <button
                         type="button"
@@ -116,7 +119,7 @@ interface DashboardView {
                         [disabled]="rsvpBusy()"
                         (click)="setAttendance(event.id, view.profile.id, false)"
                       >
-                        Absagen
+                        {{ 'member.rsvp.decline' | t }}
                       </button>
                     } @else {
                       <button
@@ -125,7 +128,7 @@ interface DashboardView {
                         [disabled]="rsvpBusy()"
                         (click)="setAttendance(event.id, view.profile.id, true)"
                       >
-                        <vereint-icon name="check" /> Zusagen
+                        <vereint-icon name="check" /> {{ 'member.rsvp.accept' | t }}
                       </button>
                     }
                   </div>
@@ -134,29 +137,29 @@ interface DashboardView {
                   }
                 }
                 <a class="dash-more" routerLink="/events">
-                  Alle Events <vereint-icon name="chevron-right" />
+                  {{ 'member.dashboard.allEvents' | t }} <vereint-icon name="chevron-right" />
                 </a>
               } @else {
                 <div class="dash-empty">
                   <vereint-icon name="events" [size]="28" />
-                  <p class="member-muted">Aktuell keine Events.</p>
+                  <p class="member-muted">{{ 'member.dashboard.noEvents' | t }}</p>
                 </div>
               }
             </section>
           </div>
 
           <div class="dash-grid">
-            <vereint-stat-card icon="events" label="Deine Events" [value]="view.events.length" />
-            <vereint-stat-card icon="receipt" label="Buchungen" [value]="view.balance.entryCount" />
+            <vereint-stat-card icon="events" [label]="'member.dashboard.statEvents' | t" [value]="view.events.length" />
+            <vereint-stat-card icon="receipt" [label]="'member.dashboard.statEntries' | t" [value]="view.balance.entryCount" />
           </div>
 
-          <h2 class="dash-heading">Schnellzugriff</h2>
-          <nav class="dash-shortcuts" aria-label="Schnellzugriff">
+          <h2 class="dash-heading">{{ 'member.dashboard.shortcutsHeading' | t }}</h2>
+          <nav class="dash-shortcuts" [attr.aria-label]="'member.dashboard.shortcutsHeading' | t">
             @for (shortcut of shortcuts; track shortcut.route) {
               <a class="dash-shortcut-card" [routerLink]="shortcut.route">
                 <span class="dash-shortcut-icon"><vereint-icon [name]="shortcut.icon" /></span>
-                <span class="dash-shortcut-title">{{ shortcut.title }}</span>
-                <span class="dash-shortcut-sub">{{ shortcut.sub }}</span>
+                <span class="dash-shortcut-title">{{ shortcut.titleKey | t }}</span>
+                <span class="dash-shortcut-sub">{{ shortcut.subKey | t }}</span>
               </a>
             }
           </nav>
@@ -344,18 +347,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   /** Kacheln „Schnellzugriff“: die Ziele hinter „Mehr“, die man oft braucht. */
   protected readonly shortcuts: readonly DashboardShortcut[] = [
-    { route: '/moments', icon: 'moments', title: 'Moments', sub: 'Anstoßen & Rituale' },
-    { route: '/catalog', icon: 'catalog', title: 'Getränkekatalog', sub: 'Getränke & Speisen' },
-    { route: '/purchases', icon: 'receipt', title: 'Käufe', sub: 'Was du getrunken hast' },
-    { route: '/notifications', icon: 'bell', title: 'Mitteilungen', sub: 'Neuigkeiten vom Verein' },
+    {
+      route: '/moments',
+      icon: 'moments',
+      titleKey: 'member.dashboard.shortcuts.moments.title',
+      subKey: 'member.dashboard.shortcuts.moments.sub',
+    },
+    {
+      route: '/catalog',
+      icon: 'catalog',
+      titleKey: 'member.dashboard.shortcuts.catalog.title',
+      subKey: 'member.dashboard.shortcuts.catalog.sub',
+    },
+    {
+      route: '/purchases',
+      icon: 'receipt',
+      titleKey: 'member.dashboard.shortcuts.purchases.title',
+      subKey: 'member.dashboard.shortcuts.purchases.sub',
+    },
+    {
+      route: '/notifications',
+      icon: 'bell',
+      titleKey: 'member.dashboard.shortcuts.notifications.title',
+      subKey: 'member.dashboard.shortcuts.notifications.sub',
+    },
   ];
 
   /** Tageszeitabhängiger Untertitel der Begrüßung. */
   protected greeting(now: Date = new Date()): string {
     const hour = now.getHours();
-    if (hour < 11) return 'Guten Morgen, schön dass du da bist.';
-    if (hour < 17) return 'Schön, dass du wieder da bist.';
-    return 'Guten Abend. Wer ist heute am Stammtisch?';
+    if (hour < 11) return translate('member.dashboard.greeting.morning');
+    if (hour < 17) return translate('member.dashboard.greeting.day');
+    return translate('member.dashboard.greeting.evening');
   }
 
   ngOnInit(): void {

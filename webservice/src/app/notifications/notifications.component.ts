@@ -13,6 +13,8 @@ import { AsyncState } from '../member/async-state';
 import { formatDateTime } from '../member/member-format';
 import { StatusBadgeComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
+import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -37,20 +39,20 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
 
 @Component({
   selector: 'app-notifications',
-  imports: [StateComponent, IconComponent, StatusBadgeComponent],
+  imports: [StateComponent, IconComponent, StatusBadgeComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="notifications-title">
         <div class="notifications-header">
           <div>
-            <span class="eyebrow">Mitteilungen</span>
+            <span class="eyebrow">{{ 'notifications.eyebrow' | t }}</span>
             <div class="title-with-badge">
-              <h1 id="notifications-title">Benachrichtigungen</h1>
+              <h1 id="notifications-title">{{ 'notifications.title' | t }}</h1>
               @if (unreadCount() > 0) {
-                <vereint-status-badge [label]="unreadCount() + ' ungelesen'" tone="warning" />
+                <vereint-status-badge [label]="'notifications.unread' | t: { count: unreadCount() }" tone="warning" />
               }
             </div>
-            <p>Bleibe über Events, Vereinsankündigungen und Neuigkeiten auf dem Laufenden.</p>
+            <p>{{ 'notifications.intro' | t }}</p>
           </div>
 
           <div class="header-actions">
@@ -61,7 +63,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
                 [disabled]="busy()"
                 (click)="markAllAsRead()"
               >
-                Alle als gelesen markieren
+                {{ 'notifications.markAllRead' | t }}
               </button>
             }
           </div>
@@ -72,12 +74,12 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
           <div class="push-card-content">
             <vereint-icon class="push-icon" name="bell" />
             <div>
-              <h3 class="push-title">Web-Push-Benachrichtigungen</h3>
+              <h3 class="push-title">{{ 'notifications.push.title' | t }}</h3>
               <p class="push-desc">
                 @if (isPushSubscribed()) {
-                  Push-Benachrichtigungen sind für dieses Gerät aktiviert.
+                  {{ 'notifications.push.enabledHint' | t }}
                 } @else {
-                  Erhalte sofortige Benachrichtigungen zu Events, Thekendienst und Vereinsnews auch bei geschlossenem Browser.
+                  {{ 'notifications.push.disabledHint' | t }}
                 }
               </p>
             </div>
@@ -92,7 +94,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
                   [disabled]="busy()"
                   (click)="unsubscribePush(sub.id)"
                 >
-                  Push deaktivieren
+                  {{ 'notifications.push.disable' | t }}
                 </button>
               }
             } @else {
@@ -102,7 +104,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
                 [disabled]="busy() || !pushSupported()"
                 (click)="subscribePush()"
               >
-                {{ pushSupported() ? 'Push aktivieren' : 'Push nicht unterstützt' }}
+                {{ (pushSupported() ? 'notifications.push.enable' : 'notifications.push.unsupported') | t }}
               </button>
             }
           </div>
@@ -117,13 +119,13 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
-            title="Wird geladen …"
-            message="Benachrichtigungen werden abgerufen."
+            [title]="'common.loading' | t"
+            [message]="'notifications.loadingMessage' | t"
           />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
-            title="Benachrichtigungen nicht verfügbar"
+            [title]="'notifications.unavailable' | t"
             [message]="load.errorMessage()"
             (retry)="reload()"
           />
@@ -131,11 +133,11 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
           @if (notifications.length === 0) {
             <vereint-state
               kind="empty"
-              title="Keine Benachrichtigungen"
-              message="Du hast aktuell keine Benachrichtigungen."
+              [title]="'notifications.emptyTitle' | t"
+              [message]="'notifications.emptyMessage' | t"
             />
           } @else {
-            <ul class="notifications-list" aria-label="Benachrichtigungsliste">
+            <ul class="notifications-list" [attr.aria-label]="'notifications.listLabel' | t">
               @for (item of notifications; track item.id) {
                 <li class="notification-item" [class.unread]="!item.read">
                   <div class="notification-head">
@@ -160,7 +162,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
                         [disabled]="busy()"
                         (click)="markAsRead(item.id)"
                       >
-                        Als gelesen markieren
+                        {{ 'notifications.markRead' | t }}
                       </button>
                     </div>
                   }
@@ -431,7 +433,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         this.busy.set(false);
-        this.pushMessage.set('Berechtigung für Benachrichtigungen wurde nicht erteilt.');
+        this.pushMessage.set(translate('notifications.push.message.permissionDenied'));
         return;
       }
 
@@ -439,7 +441,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         next: async (vapid) => {
           if (!vapid.enabled || !vapid.publicKey) {
             this.busy.set(false);
-            this.pushMessage.set('Web-Push ist auf dem Server derzeit nicht aktiviert.');
+            this.pushMessage.set(translate('notifications.push.message.serverDisabled'));
             return;
           }
 
@@ -465,26 +467,26 @@ export class NotificationsComponent implements OnInit, OnDestroy {
                 this.busy.set(false);
                 this.isPushSubscribed.set(true);
                 this.currentSubscription.set(saved);
-                this.pushMessage.set('Web-Push-Benachrichtigungen erfolgreich aktiviert!');
+                this.pushMessage.set(translate('notifications.push.message.enabled'));
               },
               error: (err: unknown) => {
                 this.busy.set(false);
-                this.pushMessage.set((err as Error)?.message || 'Fehler beim Registrieren des Push-Abonnements.');
+                this.pushMessage.set((err as Error)?.message || translate('notifications.push.message.registerFailed'));
               },
             });
           } catch (err: unknown) {
             this.busy.set(false);
-            this.pushMessage.set((err as Error)?.message || 'PushManager-Registrierung fehlgeschlagen.');
+            this.pushMessage.set((err as Error)?.message || translate('notifications.push.message.pushManagerFailed'));
           }
         },
         error: (err: unknown) => {
           this.busy.set(false);
-          this.pushMessage.set((err as Error)?.message || 'VAPID-Schlüssel konnte nicht abgerufen werden.');
+          this.pushMessage.set((err as Error)?.message || translate('notifications.push.message.vapidFailed'));
         },
       });
     } catch (err: unknown) {
       this.busy.set(false);
-      this.pushMessage.set((err as Error)?.message || 'Fehler bei der Push-Aktivierung.');
+      this.pushMessage.set((err as Error)?.message || translate('notifications.push.message.enableFailed'));
     }
   }
 
@@ -508,11 +510,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         this.busy.set(false);
         this.isPushSubscribed.set(false);
         this.currentSubscription.set(null);
-        this.pushMessage.set('Push-Benachrichtigungen deaktiviert.');
+        this.pushMessage.set(translate('notifications.push.message.disabled'));
       },
       error: (err: unknown) => {
         this.busy.set(false);
-        this.pushMessage.set((err as Error)?.message || 'Fehler beim Abbestellen des Push-Abonnements.');
+        this.pushMessage.set((err as Error)?.message || translate('notifications.push.message.unsubscribeFailed'));
       },
     });
   }
@@ -520,15 +522,15 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   protected typeLabel(type: string): string {
     switch (type) {
       case 'event':
-        return 'Event';
+        return translate('notifications.type.event');
       case 'ledger':
-        return 'Kasse';
+        return translate('notifications.type.ledger');
       case 'announcement':
-        return 'Ankündigung';
+        return translate('notifications.type.announcement');
       case 'system':
-        return 'System';
+        return translate('notifications.type.system');
       default:
-        return type || 'Info';
+        return type || translate('notifications.type.info');
     }
   }
 

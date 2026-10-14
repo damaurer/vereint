@@ -32,6 +32,128 @@
       "cancelled": "Cancelled",
       "completed": "Completed",
       "archived": "Archived"
+    },
+    "rsvp": {
+      "accept": "Attend",
+      "maybe": "Maybe",
+      "decline": "Decline"
+    },
+    "balance": {
+      "current": "Current balance",
+      "topupHint": "Top-ups are handled by the treasurer. Please speak to them directly."
+    },
+    "dashboard": {
+      "ariaLabel": "Personal overview",
+      "loadingMessage": "Loading your overview.",
+      "unavailable": "Overview unavailable",
+      "eyebrow": "Hello",
+      "greeting": {
+        "morning": "Good morning, great to have you here.",
+        "day": "Good to have you back.",
+        "evening": "Good evening. Who's at the regulars' table tonight?"
+      },
+      "balanceHeading": "Your balance",
+      "statementLink": "View statement",
+      "nextEventHeading": "Next event",
+      "rsvpGroup": "Attendance at the next event",
+      "attending": "You're going",
+      "allEvents": "All events",
+      "noEvents": "No events at the moment.",
+      "statEvents": "Your events",
+      "statEntries": "Transactions",
+      "shortcutsHeading": "Quick access",
+      "shortcuts": {
+        "moments": {
+          "title": "Moments",
+          "sub": "Toasts & rituals"
+        },
+        "catalog": {
+          "title": "Drinks menu",
+          "sub": "Drinks & food"
+        },
+        "purchases": {
+          "title": "Purchases",
+          "sub": "What you've had"
+        },
+        "notifications": {
+          "title": "Notifications",
+          "sub": "News from the club"
+        }
+      }
+    },
+    "events": {
+      "eyebrow": "Member",
+      "title": "Events",
+      "intro": "Your events and attendances.",
+      "loadingMessage": "Loading events.",
+      "unavailable": "Events unavailable",
+      "emptyTitle": "No events",
+      "emptyMessage": "You are not attending any events at the moment."
+    },
+    "eventDetail": {
+      "eyebrow": "Event",
+      "back": "← Back to events",
+      "loadingMessage": "Loading event details.",
+      "unavailable": "Event unavailable",
+      "until": "until {date}",
+      "openRoute": "Open route",
+      "rsvpHeading": "Your response",
+      "attendance": {
+        "one": "Attendance ({count} person)",
+        "other": "Attendance ({count} people)"
+      },
+      "noParticipants": "No participants yet.",
+      "momentsHeading": "Moments & rituals",
+      "momentsTitle": "Community moments",
+      "momentsActive": {
+        "one": "{count} active moment in progress!",
+        "other": "{count} active moments in progress!"
+      },
+      "momentsInvite": "Start a shared toast, prayer or cheer for all participants.",
+      "momentsView": "View moments ({count} active) →",
+      "momentsStart": "Start a moment / overview →",
+      "historyHeading": "Past moments & rituals",
+      "historyParticipants": {
+        "one": "{count} participant",
+        "other": "{count} participants"
+      },
+      "historyResponses": {
+        "one": "{count} post",
+        "other": "{count} posts"
+      },
+      "role": {
+        "coHost": "Co-host",
+        "participant": "Participant"
+      }
+    },
+    "purchases": {
+      "eyebrow": "Receipts",
+      "title": "Purchases",
+      "intro": "Your purchases with permanent receipts.",
+      "loadingMessage": "Loading purchases.",
+      "unavailable": "Purchases unavailable",
+      "emptyTitle": "No purchases",
+      "emptyMessage": "You haven't bought any drinks yet.",
+      "barcode": "Barcode {code}",
+      "catalogVersion": "Catalogue v{version}"
+    },
+    "wallet": {
+      "eyebrow": "Balance & transactions",
+      "title": "Beer kitty",
+      "loadingMessage": "Loading balance and transactions.",
+      "unavailable": "Balance unavailable",
+      "treasurerTitle": "Treasurer",
+      "treasurerHint": "Balances are managed by the treasurer. Changes require approval.",
+      "historyHeading": "History",
+      "emptyTitle": "No transactions",
+      "emptyMessage": "There are no transactions on your account yet.",
+      "filter": {
+        "label": "Filter history",
+        "all": "All",
+        "topup": "Top-ups",
+        "spend": "Spending",
+        "empty": "No transactions for this filter."
+      }
     }
   },
   "profile": {
@@ -62,5 +184,44 @@
     "memberSince": "Member since",
     "recording": "Recording",
     "recordingActive": "Tally recording active"
+  },
+  "notifications": {
+    "eyebrow": "Messages",
+    "title": "Notifications",
+    "unread": "{count} unread",
+    "intro": "Stay up to date on events, club announcements and news.",
+    "markAllRead": "Mark all as read",
+    "markRead": "Mark as read",
+    "loadingMessage": "Loading notifications.",
+    "unavailable": "Notifications unavailable",
+    "emptyTitle": "No notifications",
+    "emptyMessage": "You have no notifications at the moment.",
+    "listLabel": "Notification list",
+    "push": {
+      "title": "Web push notifications",
+      "enabledHint": "Push notifications are enabled on this device.",
+      "disabledHint": "Get instant notifications about events, bar duty and club news, even when your browser is closed.",
+      "enable": "Enable push",
+      "disable": "Disable push",
+      "unsupported": "Push not supported",
+      "message": {
+        "permissionDenied": "Permission for notifications was not granted.",
+        "serverDisabled": "Web push is currently not enabled on the server.",
+        "enabled": "Web push notifications enabled successfully!",
+        "registerFailed": "Failed to register the push subscription.",
+        "pushManagerFailed": "PushManager registration failed.",
+        "vapidFailed": "Could not retrieve the VAPID key.",
+        "enableFailed": "Failed to enable push.",
+        "disabled": "Push notifications disabled.",
+        "unsubscribeFailed": "Failed to cancel the push subscription."
+      }
+    },
+    "type": {
+      "event": "Event",
+      "ledger": "Kitty",
+      "announcement": "Announcement",
+      "system": "System",
+      "info": "Info"
+    }
   }
 }
