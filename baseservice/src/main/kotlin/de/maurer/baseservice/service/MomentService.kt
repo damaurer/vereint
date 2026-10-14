@@ -51,11 +51,11 @@ class MomentService(
 
         val title = request.title.trim()
         if (title.isBlank()) {
-            throw InvalidRequestException("title darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "title"), ErrorCode.INVALID_REQUEST)
         }
         val topicType = request.topicType.trim()
         if (topicType.isBlank()) {
-            throw InvalidRequestException("topicType darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "topicType"), ErrorCode.INVALID_REQUEST)
         }
 
         validateCoordinatesAndConsent(request.latitude, request.longitude, request.consent)
@@ -119,19 +119,19 @@ class MomentService(
 
         val session = requireMomentSession(momentId)
         if (session.event?.id != event.id) {
-            throw ResourceNotFoundException("Moment mit ID '$momentId' gehört nicht zu Event '$eventId'", ErrorCode.NOT_FOUND)
+            throw ResourceNotFoundException(Msg("error.moment.wrongEvent", momentId, eventId), ErrorCode.NOT_FOUND)
         }
 
         if (!session.active || session.expiresAt.isBefore(Instant.now())) {
             if (session.active) {
                 completeMomentInternal(session)
             }
-            throw InvalidRequestException("Der Moment ist abgelaufen oder nicht mehr aktiv", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.moment.notActive"), ErrorCode.INVALID_REQUEST)
         }
 
         val reaction = request.reaction.trim()
         if (reaction.isBlank()) {
-            throw InvalidRequestException("reaction darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "reaction"), ErrorCode.INVALID_REQUEST)
         }
 
         validateCoordinatesAndConsent(request.latitude, request.longitude, request.consent)
@@ -184,7 +184,7 @@ class MomentService(
 
         val session = requireMomentSession(momentId)
         if (session.event?.id != event.id) {
-            throw ResourceNotFoundException("Moment mit ID '$momentId' gehört nicht zu Event '$eventId'", ErrorCode.NOT_FOUND)
+            throw ResourceNotFoundException(Msg("error.moment.wrongEvent", momentId, eventId), ErrorCode.NOT_FOUND)
         }
 
         if (session.active && session.expiresAt.isBefore(Instant.now())) {
@@ -213,7 +213,7 @@ class MomentService(
 
         val session = requireMomentSession(momentId)
         if (session.event?.id != event.id) {
-            throw ResourceNotFoundException("Moment mit ID '$momentId' gehört nicht zu Event '$eventId'", ErrorCode.NOT_FOUND)
+            throw ResourceNotFoundException(Msg("error.moment.wrongEvent", momentId, eventId), ErrorCode.NOT_FOUND)
         }
 
         val responses = momentResponseRepository.findByMomentIdOrderByCreatedAtAsc(session.id)
@@ -230,12 +230,12 @@ class MomentService(
 
         val session = requireMomentSession(momentId)
         if (session.event?.id != event.id) {
-            throw ResourceNotFoundException("Moment mit ID '$momentId' gehört nicht zu Event '$eventId'", ErrorCode.NOT_FOUND)
+            throw ResourceNotFoundException(Msg("error.moment.wrongEvent", momentId, eventId), ErrorCode.NOT_FOUND)
         }
 
         if (!canManageMoment(caller, principal, event, session)) {
             throw AccessDeniedException(
-                "Nur der Ersteller des Moments, der Event-Owner oder Vorstand/Admin dürfen diesen Moment abschließen",
+                Msg("error.moment.closeDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -338,38 +338,38 @@ class MomentService(
 
     private fun validateCoordinatesAndConsent(lat: Double?, lon: Double?, consent: Boolean) {
         if ((lat != null && lon == null) || (lat == null && lon != null)) {
-            throw InvalidRequestException("Breitengrad und Längengrad müssen gemeinsam angegeben werden", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.moment.coordinatesIncomplete"), ErrorCode.INVALID_REQUEST)
         }
         if (lat != null && (lat < -90.0 || lat > 90.0)) {
-            throw InvalidRequestException("latitude muss zwischen -90 und 90 liegen", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.moment.latitudeRange"), ErrorCode.INVALID_REQUEST)
         }
         if (lon != null && (lon < -180.0 || lon > 180.0)) {
-            throw InvalidRequestException("longitude muss zwischen -180 und 180 liegen", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.moment.longitudeRange"), ErrorCode.INVALID_REQUEST)
         }
         if ((lat != null || lon != null) && !consent) {
-            throw ConsentRequiredException("Standortfreigabe erfordert explizite Einwilligung (consent=true)", ErrorCode.CONSENT_REQUIRED)
+            throw ConsentRequiredException(Msg("error.moment.consentRequired"), ErrorCode.CONSENT_REQUIRED)
         }
     }
 
     private fun requireEvent(id: UUID): EventEntity =
         eventRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Event mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.event.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     private fun requireMomentSession(id: UUID): MomentSessionEntity =
         momentSessionRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Moment mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.moment.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     private fun requireEventOpen(event: EventEntity) {
         if (event.status == EventStatus.cancelled || event.status == EventStatus.archived) {
-            throw EventNotActiveException("Das Event ist nicht aktiv", ErrorCode.EVENT_NOT_ACTIVE)
+            throw EventNotActiveException(Msg("error.event.notActive"), ErrorCode.EVENT_NOT_ACTIVE)
         }
     }
 
     private fun requireMemberAccess(caller: UserEntity, principal: UserPrincipal, event: EventEntity) {
         if (!canViewEvent(caller, principal, event)) {
-            throw AccessDeniedException("Keine Berechtigung für dieses Event", ErrorCode.ACCESS_DENIED)
+            throw AccessDeniedException(Msg("error.event.accessDenied"), ErrorCode.ACCESS_DENIED)
         }
     }
 

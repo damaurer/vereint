@@ -8,6 +8,7 @@ import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.DrinkCatalogRepository
@@ -43,14 +44,14 @@ class DrinkCatalogService(
         val privileged = isBoardOrAdmin(caller, principal)
         val requested = status?.let {
             DrinkStatus.fromValue(it)
-                ?: throw InvalidRequestException("Ungültiger Statusfilter: '$it'", ErrorCode.INVALID_REQUEST)
+                ?: throw InvalidRequestException(Msg("error.drink.invalidStatusFilter", it), ErrorCode.INVALID_REQUEST)
         }
 
         val drinks = when {
             privileged && requested != null -> drinkCatalogRepository.findByStatusOrderByNameAsc(requested)
             privileged -> drinkCatalogRepository.findAllByOrderByNameAsc()
             requested != null && requested != DrinkStatus.approved -> throw AccessDeniedException(
-                "Nur Vorstand und Administration dürfen nicht freigegebene Getränke einsehen",
+                Msg("error.drink.unapprovedViewDenied"),
                 ErrorCode.ACCESS_DENIED
             )
             else -> drinkCatalogRepository.findByStatusOrderByNameAsc(DrinkStatus.approved)
@@ -65,7 +66,7 @@ class DrinkCatalogService(
         val drink = requireDrink(id)
         if (!canViewDrink(caller, principal, drink)) {
             throw AccessDeniedException(
-                "Keine Berechtigung zum Anzeigen dieses Getränks",
+                Msg("error.drink.viewDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -78,12 +79,12 @@ class DrinkCatalogService(
         val normalized = normalizeBarcode(barcode)
         val barcodeEntity = drinkBarcodeRepository.findByBarcode(normalized)
             .filter { it.active }
-            .orElseThrow { ResourceNotFoundException("Kein Getränk zu Barcode '$normalized' gefunden", ErrorCode.NOT_FOUND) }
+            .orElseThrow { ResourceNotFoundException(Msg("error.drink.barcodeNotFound", normalized), ErrorCode.NOT_FOUND) }
         val drink = barcodeEntity.drink
-            ?: throw ResourceNotFoundException("Kein Getränk zu Barcode '$normalized' gefunden", ErrorCode.NOT_FOUND)
+            ?: throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", normalized), ErrorCode.NOT_FOUND)
         // Nicht freigegebene Getränke werden Unbeteiligten nicht offengelegt.
         if (!canViewDrink(caller, principal, drink)) {
-            throw ResourceNotFoundException("Kein Getränk zu Barcode '$normalized' gefunden", ErrorCode.NOT_FOUND)
+            throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", normalized), ErrorCode.NOT_FOUND)
         }
         return toDrinkDto(drink)
     }
@@ -92,19 +93,19 @@ class DrinkCatalogService(
         val caller = userService.getOrCreateUser(principal)
         if (!canPropose(caller, principal)) {
             throw AccessDeniedException(
-                "Keine Berechtigung zum Vorschlagen globaler Getränke",
+                Msg("error.drink.proposeDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
 
         val name = normalizeName(request.name)
         if (name.isBlank()) {
-            throw InvalidRequestException("name darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "name"), ErrorCode.INVALID_REQUEST)
         }
         val price = request.defaultPrice
-            ?: throw InvalidRequestException("defaultPrice ist erforderlich", ErrorCode.INVALID_REQUEST)
+            ?: throw InvalidRequestException(Msg("error.field.required", "defaultPrice"), ErrorCode.INVALID_REQUEST)
         if (price.signum() < 0) {
-            throw InvalidRequestException("defaultPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.negative", "defaultPrice"), ErrorCode.INVALID_REQUEST)
         }
 
         val drink = DrinkCatalogEntity(
@@ -151,7 +152,7 @@ class DrinkCatalogService(
             // Aktiv-/Inaktiv-Schaltung freigegebener Stammdaten ist Vorstand/Admin vorbehalten.
             if (!privileged) {
                 throw AccessDeniedException(
-                    "Nur Vorstand und Administration dürfen den Aktivstatus ändern",
+                    Msg("error.drink.activeChangeDenied"),
                     ErrorCode.ACCESS_DENIED
                 )
             }
@@ -173,7 +174,7 @@ class DrinkCatalogService(
         if (request.name != null) {
             val name = normalizeName(request.name)
             if (name.isBlank()) {
-                throw InvalidRequestException("name darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.blank", "name"), ErrorCode.INVALID_REQUEST)
             }
             if (name != drink.name) changed = true
             drink.name = name
@@ -196,14 +197,14 @@ class DrinkCatalogService(
         var changed = false
         if (request.defaultPrice != null) {
             if (request.defaultPrice.signum() < 0) {
-                throw InvalidRequestException("defaultPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.negative", "defaultPrice"), ErrorCode.INVALID_REQUEST)
             }
             if (request.defaultPrice.compareTo(drink.defaultPrice) != 0) changed = true
             drink.defaultPrice = request.defaultPrice
         }
         if (request.costPrice != null) {
             if (request.costPrice.signum() < 0) {
-                throw InvalidRequestException("costPrice darf nicht negativ sein", ErrorCode.INVALID_REQUEST)
+                throw InvalidRequestException(Msg("error.field.negative", "costPrice"), ErrorCode.INVALID_REQUEST)
             }
             if (request.costPrice.compareTo(drink.costPrice) != 0) changed = true
             drink.costPrice = request.costPrice
@@ -255,11 +256,11 @@ class DrinkCatalogService(
         requireManage(caller, drink, isBoardOrAdmin(caller, principal))
 
         val barcode = drinkBarcodeRepository.findById(barcodeId).orElseThrow {
-            ResourceNotFoundException("Barcode mit ID '$barcodeId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.drink.barcodeIdNotFound", barcodeId), ErrorCode.NOT_FOUND)
         }
         if (barcode.drink?.id != drink.id) {
             throw ResourceNotFoundException(
-                "Barcode mit ID '$barcodeId' ist diesem Getränk nicht zugeordnet",
+                Msg("error.drink.barcodeNotAssigned", barcodeId),
                 ErrorCode.NOT_FOUND
             )
         }
@@ -268,13 +269,13 @@ class DrinkCatalogService(
 
     private fun requireDrink(id: UUID): DrinkCatalogEntity =
         drinkCatalogRepository.findById(id).orElseThrow {
-            ResourceNotFoundException("Getränk mit ID '$id' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.drink.notFound", id), ErrorCode.NOT_FOUND)
         }
 
     private fun requireBarcodeAvailable(barcode: String) {
         if (drinkBarcodeRepository.findByBarcode(barcode).isPresent) {
             throw InvalidRequestException(
-                "Barcode '$barcode' ist bereits einem Getränk zugeordnet",
+                Msg("error.drink.barcodeTaken", barcode),
                 ErrorCode.INVALID_REQUEST
             )
         }
@@ -292,7 +293,7 @@ class DrinkCatalogService(
         val ownProposal = drink.status == DrinkStatus.proposed && drink.proposedBy?.id == caller.id
         if (!privileged && !ownProposal) {
             throw AccessDeniedException(
-                "Freigegebene globale Stammdaten dürfen nur Vorstand und Administration ändern",
+                Msg("error.drink.approvedChangeDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -301,7 +302,7 @@ class DrinkCatalogService(
     private fun requireBoardOrAdmin(caller: UserEntity, principal: UserPrincipal) {
         if (!isBoardOrAdmin(caller, principal)) {
             throw AccessDeniedException(
-                "Nur Vorstand und Administration dürfen globale Getränke freigeben oder ablehnen",
+                Msg("error.drink.reviewDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -336,11 +337,11 @@ class DrinkCatalogService(
     private fun normalizeBarcode(value: String?): String {
         val normalized = value?.replace(WHITESPACE_REGEX, "").orEmpty()
         if (normalized.isBlank()) {
-            throw InvalidRequestException("barcode darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "barcode"), ErrorCode.INVALID_REQUEST)
         }
         if (normalized.length > MAX_BARCODE_LENGTH) {
             throw InvalidRequestException(
-                "barcode darf höchstens $MAX_BARCODE_LENGTH Zeichen lang sein",
+                Msg("error.field.tooLong", "barcode", MAX_BARCODE_LENGTH),
                 ErrorCode.INVALID_REQUEST
             )
         }

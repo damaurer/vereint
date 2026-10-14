@@ -12,6 +12,7 @@ import de.maurer.baseservice.dto.VapidPublicKeyDto
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.push.PushMessage
 import de.maurer.baseservice.push.PushSender
@@ -70,12 +71,12 @@ class NotificationService(
     fun markRead(notificationId: UUID, principal: UserPrincipal): NotificationDto {
         val caller = userService.getOrCreateUser(principal)
         val notification = notificationRepository.findById(notificationId).orElseThrow {
-            ResourceNotFoundException("Benachrichtigung mit ID '$notificationId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.notification.notFound", notificationId), ErrorCode.NOT_FOUND)
         }
         // deny by default: fremde Benachrichtigungen werden nicht offengelegt
         if (notification.user?.id != caller.id) {
             throw ResourceNotFoundException(
-                "Benachrichtigung mit ID '$notificationId' nicht gefunden",
+                Msg("error.notification.notFound", notificationId),
                 ErrorCode.NOT_FOUND
             )
         }
@@ -128,11 +129,11 @@ class NotificationService(
     fun deleteSubscription(subscriptionId: UUID, principal: UserPrincipal) {
         val caller = userService.getOrCreateUser(principal)
         val subscription = pushSubscriptionRepository.findById(subscriptionId).orElseThrow {
-            ResourceNotFoundException("Abonnement mit ID '$subscriptionId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.notification.subscriptionNotFound", subscriptionId), ErrorCode.NOT_FOUND)
         }
         if (subscription.user?.id != caller.id) {
             throw ResourceNotFoundException(
-                "Abonnement mit ID '$subscriptionId' nicht gefunden",
+                Msg("error.notification.subscriptionNotFound", subscriptionId),
                 ErrorCode.NOT_FOUND
             )
         }
@@ -151,7 +152,7 @@ class NotificationService(
 
         val targetId = Identifiers.parseUuid(request.userId, "userId")
         val target = userRepository.findById(targetId).orElseThrow {
-            ResourceNotFoundException("Benutzer mit ID '$targetId' nicht gefunden", ErrorCode.NOT_FOUND)
+            ResourceNotFoundException(Msg("error.user.notFound", targetId), ErrorCode.NOT_FOUND)
         }
         val title = require(request.title, "title")
         val body = require(request.body, "body")
@@ -232,7 +233,7 @@ class NotificationService(
     private fun requireBoardOrAdmin(caller: UserEntity, principal: UserPrincipal) {
         if (!isBoardOrAdmin(caller, principal)) {
             throw AccessDeniedException(
-                "Nur Vorstand und Administration dürfen Benachrichtigungen versenden",
+                Msg("error.notification.sendDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -247,7 +248,7 @@ class NotificationService(
     private fun require(value: String?, field: String): String {
         val text = value?.trim()
         if (text.isNullOrEmpty()) {
-            throw InvalidRequestException("$field darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", field), ErrorCode.INVALID_REQUEST)
         }
         return text
     }

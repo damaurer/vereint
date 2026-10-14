@@ -7,6 +7,7 @@ import de.maurer.baseservice.dto.PagedResponse
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.repository.AuditLogRepository
 import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.BoardRole
@@ -68,7 +69,7 @@ class AuditLogService(
         val visibleTargets = visibleTargetsFor(caller, principal)
         if (visibleTargets.isEmpty()) {
             throw AccessDeniedException(
-                "Keine Berechtigung zum Lesen der Audit-Logs",
+                Msg("error.audit.readDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
@@ -100,14 +101,14 @@ class AuditLogService(
         }
         val normalized = targetEntity.trim()
         if (normalized.isBlank()) {
-            throw InvalidRequestException("targetEntity darf nicht leer sein", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.field.blank", "targetEntity"), ErrorCode.INVALID_REQUEST)
         }
         if (!KNOWN_TARGETS.contains(normalized)) {
-            throw InvalidRequestException("Unbekannte Audit-Zielart: '$normalized'", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.audit.unknownTarget", normalized), ErrorCode.INVALID_REQUEST)
         }
         if (!visibleTargets.contains(normalized)) {
             throw AccessDeniedException(
-                "Keine Berechtigung für die Audit-Zielart '$normalized'",
+                Msg("error.audit.targetDenied", normalized),
                 ErrorCode.ACCESS_DENIED
             )
         }

@@ -3,6 +3,7 @@ package de.maurer.baseservice.controller
 import de.maurer.baseservice.dto.ImageAssetDto
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.security.AuthContext
 import de.maurer.baseservice.service.ImageService
 import de.maurer.baseservice.support.Identifiers
@@ -41,7 +42,7 @@ class ImageController(
         @RequestParam("targetId", required = false) targetId: String?
     ): ResponseEntity<ImageAssetDto> {
         if (file.isEmpty) {
-            throw InvalidRequestException("Es wurde keine Bilddatei übertragen", ErrorCode.INVALID_REQUEST)
+            throw InvalidRequestException(Msg("error.image.noFile"), ErrorCode.INVALID_REQUEST)
         }
         val principal = authContext.getRequiredPrincipal()
         val dto = imageService.uploadImage(
