@@ -1,17 +1,27 @@
 {
+  "id": "/",
   "name": "Vereint",
   "short_name": "Vereint",
   "description": "Strichliste, Events, Guthaben und Chat für deinen Verein.",
   "lang": "de",
+  "dir": "ltr",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#f8fafc",
   "theme_color": "#2563eb",
+  "categories": ["social", "lifestyle"],
   "icons": [
     { "src": "/vereint-app-icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
     { "src": "/icons/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any" },
     { "src": "/icons/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
     { "src": "/icons/icon-maskable-512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Events", "url": "/events", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Chat", "url": "/chat", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Guthaben", "url": "/wallet", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Mitteilungen", "url": "/notifications", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
   ]
 }

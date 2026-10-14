@@ -1,12 +1,8 @@
-import { isPlatformBrowser } from '@angular/common';
-import { Component, OnDestroy, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
-import { IconComponent } from '../ui/icon.component';
-import { forkJoin } from 'rxjs';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
 import {
   NotificationsApiService,
   type NotificationItem,
-  type PushSubscriptionItem,
-  type RegisterPushSubscriptionRequest,
 } from './notifications-api.service';
 import { UnreadBadgeStore } from './unread-badge.store';
 import { AsyncState } from '../member/async-state';
@@ -14,30 +10,9 @@ import { formatDateTime } from '../member/member-format';
 import { StatusBadgeComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
-  if (!buffer) return '';
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return window.btoa(binary);
-}
-
 @Component({
   selector: 'app-notifications',
-  imports: [StateComponent, IconComponent, StatusBadgeComponent],
+  imports: [StateComponent, StatusBadgeComponent, PwaSettingsComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="notifications-title">
@@ -67,52 +42,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
           </div>
         </div>
 
-        <!-- Web Push Card -->
-        <div class="push-card">
-          <div class="push-card-content">
-            <vereint-icon class="push-icon" name="bell" />
-            <div>
-              <h3 class="push-title">Web-Push-Benachrichtigungen</h3>
-              <p class="push-desc">
-                @if (isPushSubscribed()) {
-                  Push-Benachrichtigungen sind für dieses Gerät aktiviert.
-                } @else {
-                  Erhalte sofortige Benachrichtigungen zu Events, Thekendienst und Vereinsnews auch bei geschlossenem Browser.
-                }
-              </p>
-            </div>
-          </div>
-
-          <div class="push-actions">
-            @if (isPushSubscribed()) {
-              @if (currentSubscription(); as sub) {
-                <button
-                  type="button"
-                  class="btn-danger-sm"
-                  [disabled]="busy()"
-                  (click)="unsubscribePush(sub.id)"
-                >
-                  Push deaktivieren
-                </button>
-              }
-            } @else {
-              <button
-                type="button"
-                class="member-button"
-                [disabled]="busy() || !pushSupported()"
-                (click)="subscribePush()"
-              >
-                {{ pushSupported() ? 'Push aktivieren' : 'Push nicht unterstützt' }}
-              </button>
-            }
-          </div>
-        </div>
-
-        @if (pushMessage()) {
-          <div class="state-card state-info" role="status">
-            <span>{{ pushMessage() }}</span>
-          </div>
-        }
+        <vereint-pwa-settings [showInstall]="false" />
 
         @if (load.isLoading()) {
           <vereint-state
@@ -193,38 +123,6 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
       .header-actions {
         display: flex;
         gap: 0.5rem;
-      }
-      .push-card {
-        background: var(--color-surface-subtle, #f8fafc);
-        border: 1px solid var(--color-border, #e2e8f0);
-        border-radius: var(--radius-md, 0.75rem);
-        padding: 1.25rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-bottom: 1.5rem;
-      }
-      .push-card-content {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-      .push-icon {
-        font-size: 1.75rem;
-      }
-      .push-title {
-        margin: 0 0 0.25rem 0;
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--color-text, #0f172a);
-      }
-      .push-desc {
-        margin: 0;
-        font-size: 0.85rem;
-        color: var(--color-text-muted, #64748b);
-        max-width: 32rem;
       }
       .notifications-list {
         list-style: none;
@@ -317,57 +215,25 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
         border-radius: var(--radius-sm, 0.375rem);
         cursor: pointer;
       }
-      .btn-danger-sm {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-        font-weight: 600;
-        background-color: #fee2e2;
-        color: #b91c1c;
-        border: none;
-        border-radius: var(--radius-sm, 0.375rem);
-        cursor: pointer;
-      }
-      .state-info {
-        background-color: #eff6ff;
-        border: 1px solid #bfdbfe;
-        color: #1e40af;
-        padding: 0.75rem 1rem;
-        border-radius: var(--radius-md, 0.5rem);
-        margin-bottom: 1.5rem;
-      }
     `,
   ],
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
   private readonly notificationsApi = inject(NotificationsApiService);
-  private readonly platformId = inject(PLATFORM_ID);
 
   protected readonly load = new AsyncState<NotificationItem[]>();
   /** Geteilt mit dem Glocken-Badge in der Shell. */
   protected readonly unreadCount = inject(UnreadBadgeStore).count;
   protected readonly busy = signal(false);
 
-  // Push state
-  protected readonly pushSupported = signal(false);
-  protected readonly isPushSubscribed = signal(false);
-  protected readonly currentSubscription = signal<PushSubscriptionItem | null>(null);
-  protected readonly pushMessage = signal<string | null>(null);
-
   protected readonly formatDateTime = formatDateTime;
 
   ngOnInit(): void {
-    this.checkPushSupport();
     this.reload();
   }
 
   ngOnDestroy(): void {
     this.load.destroy();
-  }
-
-  private checkPushSupport(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
-    this.pushSupported.set(supported);
   }
 
   protected reload(): void {
@@ -378,20 +244,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.notificationsApi.unreadCount().subscribe({
       next: (res) => this.unreadCount.set(res.unread),
     });
-
-    if (isPlatformBrowser(this.platformId)) {
-      this.notificationsApi.listSubscriptions().subscribe({
-        next: (subs) => {
-          if (subs.length > 0) {
-            this.isPushSubscribed.set(true);
-            this.currentSubscription.set(subs[0]);
-          } else {
-            this.isPushSubscribed.set(false);
-            this.currentSubscription.set(null);
-          }
-        },
-      });
-    }
   }
 
   protected markAsRead(id: string): void {
@@ -422,101 +274,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     });
   }
 
-  protected async subscribePush(): Promise<void> {
-    if (!isPlatformBrowser(this.platformId)) return;
-    this.busy.set(true);
-    this.pushMessage.set(null);
-
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        this.busy.set(false);
-        this.pushMessage.set('Berechtigung für Benachrichtigungen wurde nicht erteilt.');
-        return;
-      }
-
-      this.notificationsApi.vapidPublicKey().subscribe({
-        next: async (vapid) => {
-          if (!vapid.enabled || !vapid.publicKey) {
-            this.busy.set(false);
-            this.pushMessage.set('Web-Push ist auf dem Server derzeit nicht aktiviert.');
-            return;
-          }
-
-          try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(vapid.publicKey) as BufferSource,
-            });
-
-            const p256dhBuffer = subscription.getKey('p256dh');
-            const authBuffer = subscription.getKey('auth');
-
-            const payload: RegisterPushSubscriptionRequest = {
-              endpoint: subscription.endpoint,
-              p256dh: arrayBufferToBase64(p256dhBuffer),
-              auth: arrayBufferToBase64(authBuffer),
-              userAgent: navigator.userAgent,
-            };
-
-            this.notificationsApi.registerSubscription(payload).subscribe({
-              next: (saved) => {
-                this.busy.set(false);
-                this.isPushSubscribed.set(true);
-                this.currentSubscription.set(saved);
-                this.pushMessage.set('Web-Push-Benachrichtigungen erfolgreich aktiviert!');
-              },
-              error: (err: unknown) => {
-                this.busy.set(false);
-                this.pushMessage.set((err as Error)?.message || 'Fehler beim Registrieren des Push-Abonnements.');
-              },
-            });
-          } catch (err: unknown) {
-            this.busy.set(false);
-            this.pushMessage.set((err as Error)?.message || 'PushManager-Registrierung fehlgeschlagen.');
-          }
-        },
-        error: (err: unknown) => {
-          this.busy.set(false);
-          this.pushMessage.set((err as Error)?.message || 'VAPID-Schlüssel konnte nicht abgerufen werden.');
-        },
-      });
-    } catch (err: unknown) {
-      this.busy.set(false);
-      this.pushMessage.set((err as Error)?.message || 'Fehler bei der Push-Aktivierung.');
-    }
-  }
-
-  protected unsubscribePush(subscriptionId: string): void {
-    this.busy.set(true);
-    this.pushMessage.set(null);
-
-    this.notificationsApi.deleteSubscription(subscriptionId).subscribe({
-      next: async () => {
-        if (isPlatformBrowser(this.platformId) && 'serviceWorker' in navigator) {
-          try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.getSubscription();
-            if (subscription) {
-              await subscription.unsubscribe();
-            }
-          } catch {
-            // Ignore client-side unsubscribe error
-          }
-        }
-        this.busy.set(false);
-        this.isPushSubscribed.set(false);
-        this.currentSubscription.set(null);
-        this.pushMessage.set('Push-Benachrichtigungen deaktiviert.');
-      },
-      error: (err: unknown) => {
-        this.busy.set(false);
-        this.pushMessage.set((err as Error)?.message || 'Fehler beim Abbestellen des Push-Abonnements.');
-      },
-    });
-  }
-
   protected typeLabel(type: string): string {
     switch (type) {
       case 'event':
@@ -527,6 +284,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         return 'Ankündigung';
       case 'system':
         return 'System';
+      case 'moment':
+        return 'Moment';
       default:
         return type || 'Info';
     }
@@ -539,6 +298,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       case 'ledger':
         return 'warning';
       case 'announcement':
+      case 'moment':
         return 'success';
       case 'system':
         return 'neutral';

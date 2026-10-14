@@ -8,6 +8,7 @@ import { HeroGreetingComponent, RoleChipComponent } from '../ui';
 import { IconComponent } from '../ui/icon.component';
 import { StateComponent } from '../ui/state.component';
 import { ThemeService, type ThemePreference } from '../shell/theme.service';
+import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
 
 /**
  * Persönliches Profil eines Mitglieds (TICKET-024, Redesign TICKET-033).
@@ -21,7 +22,7 @@ import { ThemeService, type ThemePreference } from '../shell/theme.service';
  */
 @Component({
   selector: 'app-member-profile',
-  imports: [HeroGreetingComponent, RoleChipComponent, IconComponent, StateComponent],
+  imports: [HeroGreetingComponent, RoleChipComponent, IconComponent, StateComponent, PwaSettingsComponent],
   templateUrl: './profile.component.html',
   styles: [
     `
