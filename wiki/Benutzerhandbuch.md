@@ -10,8 +10,8 @@ Bildschirmfotos, getrennt nach Rolle:
 - Thekenterminal
 - Gast
 
-Es entsteht in [Pull Request #14](https://github.com/damaurer/vereint/pull/14)
-unter `docs/handbuch/`. Die Bildschirmfotos erzeugt ein Playwright-Skript
+Es liegt in [Pull Request #14](https://github.com/damaurer/vereint/pull/14)
+unter `docs/handbuch/` (fertig, wartet auf Review). Die Bildschirmfotos erzeugt ein Playwright-Skript
 (`scripts/handbook`), damit sie bei Änderungen der Oberfläche neu aufgenommen
 werden können.
 
