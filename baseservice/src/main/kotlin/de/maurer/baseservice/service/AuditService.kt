@@ -1,6 +1,7 @@
 package de.maurer.baseservice.service
 
 import de.maurer.baseservice.domain.AuditLogEntity
+import de.maurer.baseservice.domain.KioskSettingsEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.repository.AuditLogRepository
 import org.slf4j.LoggerFactory
@@ -112,6 +113,25 @@ class AuditService(
         log.info("audit action={} actor={} target={} {}", action, actor?.id, momentId, details)
     }
 
+    /** Protokolliert Änderungen am Kiosk-Modus des Thekenterminals (PIN gesetzt, Sperre). */
+    fun recordKioskAction(
+        actor: UserEntity?,
+        action: String,
+        details: String?
+    ) {
+        auditLogRepository.save(
+            AuditLogEntity(
+                id = UUID.randomUUID(),
+                actor = actor,
+                action = action,
+                targetEntity = TARGET_KIOSK,
+                targetId = KioskSettingsEntity.DEFAULT_ID,
+                details = details
+            )
+        )
+        log.info("audit action={} actor={} target={} {}", action, actor?.id, TARGET_KIOSK, details)
+    }
+
     private fun render(value: Any?): String = when (value) {
         null -> "-"
         is Collection<*> -> value.map { it.toString() }.sorted().joinToString(",")
@@ -123,6 +143,9 @@ class AuditService(
         const val TARGET_LEDGER = "Ledger"
         const val TARGET_NOTIFICATION = "Notification"
         const val TARGET_MOMENT = "Moment"
+        const val TARGET_KIOSK = "Kiosk"
+        const val ACTION_KIOSK_PIN_CHANGED = "KIOSK_PIN_CHANGED"
+        const val ACTION_KIOSK_PIN_LOCKED = "KIOSK_PIN_LOCKED"
         const val ACTION_NOTIFICATION_SENT = "NOTIFICATION_SENT"
         const val ACTION_MOMENT_STARTED = "MOMENT_STARTED"
         const val ACTION_MOMENT_COMPLETED = "MOMENT_COMPLETED"

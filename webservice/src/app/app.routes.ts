@@ -1,13 +1,14 @@
 import { Routes } from '@angular/router';
 import { AppShellComponent } from './shell/app-shell.component';
 import { authGuard, guestGuard, homeGuard, permissionGuard, roleGuard } from './auth/auth.guards';
+import { kioskGuard } from './kiosk/kiosk.guard';
 
 /**
  * `data.title`, `data.description` und `data.access` sind Übersetzungsschlüssel
  * (Namensraum `routes`); Shell und Platzhalterseite übersetzen sie beim Anzeigen.
  */
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', canActivate: [homeGuard], children: [] },
+  { path: '', pathMatch: 'full', canActivate: [kioskGuard, homeGuard], children: [] },
   {
     path: 'auth/error',
     data: { mode: 'error', title: 'routes.authError.title', description: 'routes.authError.description', access: 'routes.access.public' },
@@ -20,11 +21,13 @@ export const routes: Routes = [
   },
   {
     path: 'invite/accept',
+    canActivate: [kioskGuard],
     data: { title: 'routes.inviteAccept.title', description: 'routes.inviteAccept.description', access: 'routes.access.invite' },
     loadComponent: () => import('./guest/invite-accept.component').then((m) => m.InviteAcceptComponent),
   },
   {
     path: 'register',
+    canActivate: [kioskGuard],
     data: { title: 'Registrieren', description: 'Mit einem Einladungslink als Mitglied registrieren.', access: 'Gültiger Einladungslink erforderlich' },
     loadComponent: () => import('./auth/register.component').then((m) => m.RegisterComponent),
   },
@@ -41,8 +44,10 @@ export const routes: Routes = [
   {
     // Layout-Route: genau eine AppShell umschließt alle geschützten Routen
     // (TICKET-032). Die Kindrouten behalten ihre Guards und `route.data`.
+    // Im Kiosk-Modus führt jede Kindroute außer `/tablet` zurück aufs Terminal.
     path: '',
     component: AppShellComponent,
+    canActivateChild: [kioskGuard],
     children: [
       { path: 'app', redirectTo: 'dashboard', pathMatch: 'full' },
       {

@@ -939,9 +939,11 @@
       "confirm": "Confirm selection"
     },
     "terminal": {
-      "backToPortal": "← Back to the club portal",
-      "standaloneMode": "Standalone terminal mode",
-      "leaveMode": "Leave terminal mode"
+      "kioskActive": "Kiosk mode active",
+      "startKiosk": "Start kiosk mode",
+      "leaveKiosk": "Leave kiosk mode",
+      "startHint": "In kiosk mode this device stays on the bar terminal, even after closing and reopening. Leaving requires the kiosk PIN.",
+      "noPin": "No kiosk PIN has been set yet. The board or an administrator sets it under Board → Kiosk PIN."
     },
     "header": {
       "eyebrow": "Drink Recorder",
@@ -1122,7 +1124,8 @@
     "auditTarget": {
       "ledger": "Finance",
       "notification": "Communication",
-      "user": "Users"
+      "user": "Users",
+      "kiosk": "Bar terminal"
     },
     "auditAction": {
       "NOTIFICATION_SENT": "Notification sent",
@@ -1136,7 +1139,9 @@
       "LEDGER_CORRECTION": "Correction",
       "LEDGER_PURCHASE": "Purchase",
       "MOMENT_STARTED": "Moment started",
-      "MOMENT_COMPLETED": "Moment ended"
+      "MOMENT_COMPLETED": "Moment ended",
+      "KIOSK_PIN_CHANGED": "Kiosk PIN set",
+      "KIOSK_PIN_LOCKED": "Kiosk PIN locked after failed attempts"
     },
     "auditDetail": {
       "amount": "Amount",
@@ -1187,7 +1192,9 @@
       "moderate": "Moderate",
       "auditHeading": "Recent actions ({count})",
       "inviteTitle": "Invite member",
-      "inviteDesc": "Create an invite link for registration"
+      "inviteDesc": "Create an invite link for registration",
+      "kioskPinTitle": "Kiosk PIN",
+      "kioskPinDesc": "Set the PIN for leaving kiosk mode on the bar terminal"
     },
     "comms": {
       "eyebrow": "Secretary",
@@ -1314,6 +1321,19 @@
         "noEntry": "No bookings yet",
         "id": "ID {id}"
       }
+    },
+    "kioskPin": {
+      "title": "Kiosk PIN",
+      "intro": "This PIN lets you leave kiosk mode on the bar terminal. It applies to all terminals and is not shown again after saving.",
+      "notSet": "No PIN set yet. Kiosk mode cannot be started without a PIN.",
+      "set": "PIN set on {date}.",
+      "setBy": "PIN set by {name} on {date}.",
+      "newPin": "New PIN ({min} to {max} digits)",
+      "repeatPin": "Repeat PIN",
+      "save": "Save PIN",
+      "saved": "The new PIN applies to all terminals right away.",
+      "format": "The PIN must consist of {min} to {max} digits.",
+      "mismatch": "The two entries do not match."
     }
   },
   "events": {
@@ -1622,6 +1642,18 @@
       "lookup": "The drink could not be looked up.",
       "pay": "Payment failed.",
       "undo": "Undo failed."
+    }
+  },
+  "kiosk": {
+    "lock": {
+      "badge": "Kiosk",
+      "open": "Unlock kiosk",
+      "title": "Leave kiosk mode",
+      "intro": "Enter the kiosk PIN to leave the bar terminal.",
+      "pinLabel": "PIN",
+      "submit": "Unlock",
+      "wrong": "Wrong PIN. {count} attempts left before the lock.",
+      "locked": "Too many wrong attempts. You can try again from {time}."
     }
   }
 }

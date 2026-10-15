@@ -6,6 +6,8 @@ import { ApiError } from '../api/api-client.service';
 import type { EventDrink } from '../events/event-manage.types';
 import type { LedgerEntry, TabletEvent, TabletMember } from '../api/api.types';
 import { TabletApiService } from './tablet-api.service';
+import { KioskApiService } from '../kiosk/kiosk-api.service';
+import { KioskModeService } from '../kiosk/kiosk-mode.service';
 import { TabletComponent } from './tablet.component';
 
 const events: TabletEvent[] = [
@@ -75,11 +77,16 @@ describe('TabletComponent', () => {
     recordEvening: ReturnType<typeof vi.fn>;
     undoPurchase: ReturnType<typeof vi.fn>;
   };
+  let kioskApi: { status: ReturnType<typeof vi.fn> };
 
   const create = async () => {
     TestBed.configureTestingModule({
       imports: [TabletComponent],
-      providers: [provideRouter([]), { provide: TabletApiService, useValue: api }],
+      providers: [
+        provideRouter([]),
+        { provide: TabletApiService, useValue: api },
+        { provide: KioskApiService, useValue: kioskApi },
+      ],
     });
     const fixture = TestBed.createComponent(TabletComponent);
     fixture.detectChanges();
@@ -92,6 +99,10 @@ describe('TabletComponent', () => {
     (fixture.nativeElement as HTMLElement).textContent ?? '';
 
   beforeEach(() => {
+    localStorage.clear();
+    kioskApi = {
+      status: vi.fn(() => of({ pinConfigured: true, pinUpdatedAt: null, pinUpdatedByName: null })),
+    };
     api = {
       listEvents: vi.fn(() => of(events)),
       listMembers: vi.fn(() => of(members)),
@@ -264,22 +275,45 @@ describe('TabletComponent', () => {
     expect(api.recordRound).not.toHaveBeenCalled();
   });
 
-  it('toggles standalone mode and shows or hides the portal action', async () => {
+  it('starts kiosk mode only when a PIN is set and keeps it on the device', async () => {
     const fixture = await create();
     const cmp = fixture.componentInstance as unknown as TabletInternals;
     expect(cmp.standalone()).toBe(false);
-    expect(html(fixture)).not.toContain('Zurück zum Stammtisch-Portal');
+    expect(html(fixture)).toContain('Kiosk-Modus starten');
 
+    cmp.toggleStandalone();
+    fixture.detectChanges();
+    expect(kioskApi.status).toHaveBeenCalledTimes(1);
+    expect(cmp.standalone()).toBe(true);
+    expect(html(fixture)).toContain('Kiosk-Modus aktiv');
+    expect(html(fixture)).not.toContain('Stammtisch-Portal');
+    expect(localStorage.getItem('vereint.kiosk')).not.toBeNull();
+
+    // Verlassen fragt nur die PIN ab, der Modus bleibt bis zur Bestätigung aktiv.
     cmp.toggleStandalone();
     fixture.detectChanges();
     expect(cmp.standalone()).toBe(true);
-    expect(html(fixture)).toContain('Zurück zum Stammtisch-Portal');
-    expect(html(fixture)).toContain('Standalone Terminal Modus');
+    expect(TestBed.inject(KioskModeService).unlockOpen()).toBe(true);
+  });
 
+  it('refuses to start kiosk mode without a PIN', async () => {
+    kioskApi.status.mockReturnValue(of({ pinConfigured: false, pinUpdatedAt: null, pinUpdatedByName: null }));
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as TabletInternals;
     cmp.toggleStandalone();
     fixture.detectChanges();
     expect(cmp.standalone()).toBe(false);
-    expect(html(fixture)).not.toContain('Zurück zum Stammtisch-Portal');
+    expect(cmp.actionError()).toContain('Kiosk-PIN');
+    expect(localStorage.getItem('vereint.kiosk')).toBeNull();
+  });
+
+  it('reopens the remembered event when the device is in kiosk mode', async () => {
+    localStorage.setItem('vereint.kiosk', JSON.stringify({ active: true, eventId: 'e-1' }));
+    const fixture = await create();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(api.listMembers).toHaveBeenCalledWith('e-1');
+    expect((fixture.componentInstance as unknown as TabletInternals).standalone()).toBe(true);
   });
 
   it('preserves the selected event and tallies across an orientation/mode toggle', async () => {

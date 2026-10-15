@@ -1,18 +1,27 @@
-import { Component, Injector, OnInit, signal } from '@angular/core';
+import { Component, Injector, OnInit, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { KioskLockComponent } from './kiosk/kiosk-lock.component';
+import { KioskModeService } from './kiosk/kiosk-mode.service';
 import { InstallPromptService } from './pwa/install-prompt.service';
 import { PwaService } from './pwa/pwa.service';
 import { ServiceWorkerCleanupService } from './service-worker-cleanup.service';
 import { ThemeService } from './shell/theme.service';
 
 @Component({
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, KioskLockComponent],
   selector: 'app-root',
   styleUrl: './app.css',
-  template: '<router-outlet />',
+  // Das Kiosk-Schloss wird erst geladen, wenn der Modus auf dem Gerät aktiv ist.
+  template: `
+    <router-outlet />
+    @defer (when kiosk.active()) {
+      <app-kiosk-lock />
+    }
+  `,
 })
 export class App implements OnInit {
   protected readonly title = signal('vereint');
+  protected readonly kiosk = inject(KioskModeService);
 
   constructor(
     private readonly serviceWorkerCleanup: ServiceWorkerCleanupService,

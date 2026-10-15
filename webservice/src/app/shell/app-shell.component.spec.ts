@@ -8,6 +8,7 @@ import { AuthService } from '../auth/auth.service';
 import { AuthSessionUser } from '../auth/auth.types';
 import { ChatApiService } from '../chat/chat-api.service';
 import { NotificationsApiService } from '../notifications/notifications-api.service';
+import { KioskModeService } from '../kiosk/kiosk-mode.service';
 import { AppShellComponent } from './app-shell.component';
 import { BreakpointService } from './breakpoint.service';
 import { Viewport } from './breakpoint.service';
@@ -64,6 +65,7 @@ describe('AppShellComponent', () => {
   const el = (fixture: { nativeElement: unknown }) => fixture.nativeElement as HTMLElement;
 
   beforeEach(() => {
+    localStorage.clear();
     session = member(['member']);
     unread = 0;
     chatUnread = 0;
@@ -78,6 +80,23 @@ describe('AppShellComponent', () => {
     expect(root.querySelector('.shell-topbar')).toBeTruthy();
     expect(root.querySelector('router-outlet')).toBeTruthy();
     expect(root.querySelector('.shell-bottom-bar')).toBeFalsy();
+  });
+
+  it('hides navigation, notifications and logout in kiosk mode', async () => {
+    for (const size of ['web', 'tablet', 'mobile'] as const) {
+      TestBed.resetTestingModule();
+      localStorage.setItem('vereint.kiosk', JSON.stringify({ active: true, eventId: null }));
+      viewport.set(size);
+      const fixture = await create();
+      const root = el(fixture);
+      expect(TestBed.inject(KioskModeService).active()).toBe(true);
+      expect(root.querySelector('.shell[data-kiosk]'), size).toBeTruthy();
+      for (const selector of ['.shell-sidebar', '.shell-rail', '.shell-bottom-bar', '.shell-topbar-actions', '.shell-topbar-brand']) {
+        expect(root.querySelector(selector), `${size} ${selector}`).toBeFalsy();
+      }
+      expect(root.textContent).not.toContain('Abmelden');
+      expect(root.querySelector('router-outlet')).toBeTruthy();
+    }
   });
 
   it('renders the bottom tab bar on mobile', async () => {

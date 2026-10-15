@@ -129,7 +129,12 @@ class AuditLogService(
     private fun visibleTargetsFor(caller: UserEntity, principal: UserPrincipal): Set<String> {
         val roles = rolesOf(caller, principal)
         if (roles.contains(UserRole.ADMIN)) {
-            return setOf(AuditService.TARGET_USER, AuditService.TARGET_LEDGER, AuditService.TARGET_NOTIFICATION)
+            return setOf(
+                AuditService.TARGET_USER,
+                AuditService.TARGET_LEDGER,
+                AuditService.TARGET_NOTIFICATION,
+                AuditService.TARGET_KIOSK
+            )
         }
         if (!roles.contains(UserRole.BOARD)) {
             return emptySet()
@@ -137,7 +142,11 @@ class AuditLogService(
         return when (boardRoleOf(caller, principal)) {
             BoardRole.TREASURER -> setOf(AuditService.TARGET_LEDGER)
             BoardRole.SECRETARY -> setOf(AuditService.TARGET_NOTIFICATION)
-            BoardRole.CHAIR, null -> setOf(AuditService.TARGET_LEDGER, AuditService.TARGET_NOTIFICATION)
+            BoardRole.CHAIR, null -> setOf(
+                AuditService.TARGET_LEDGER,
+                AuditService.TARGET_NOTIFICATION,
+                AuditService.TARGET_KIOSK
+            )
             else -> emptySet()
         }
     }

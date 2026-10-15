@@ -1,12 +1,13 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { IconComponent } from '../ui/icon.component';
-import { RouterLink } from '@angular/router';
 import { forkJoin, type Observable } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
 import { eventStatusLabel, formatMoney } from '../member/member-format';
 import { newIdempotencyKey } from '../api/idempotency';
 import { TabletApiService } from './tablet-api.service';
+import { KioskApiService } from '../kiosk/kiosk-api.service';
+import { KioskModeService } from '../kiosk/kiosk-mode.service';
 import { StrichlisteRowComponent } from './strichliste-row.component';
 import { DrinkOverlayComponent } from './drink-overlay.component';
 import { RevenueSheetComponent, type RevenueKind } from './revenue-sheet.component';
@@ -40,7 +41,6 @@ interface EventContext {
   imports: [
     StateComponent,
     IconComponent,
-    RouterLink,
     StatusBadgeComponent,
     StrichlisteRowComponent,
     DrinkOverlayComponent,
@@ -52,9 +52,8 @@ interface EventContext {
       <section class="page-card member-card" aria-labelledby="tablet-title">
         @if (standalone()) {
           <div class="terminal-bar">
-            <a class="terminal-portal" routerLink="/dashboard">{{ 'tablet.terminal.backToPortal' | t }}</a>
             <span class="terminal-flag">
-              <span class="terminal-dot" aria-hidden="true"></span> {{ 'tablet.terminal.standaloneMode' | t }}
+              <span class="terminal-dot" aria-hidden="true"></span> {{ 'tablet.terminal.kioskActive' | t }}
             </span>
           </div>
         } @else {
@@ -68,10 +67,15 @@ interface EventContext {
           type="button"
           class="member-button ghost terminal-toggle"
           [attr.aria-pressed]="standalone()"
+          [disabled]="kioskBusy()"
           (click)="toggleStandalone()"
         >
-          {{ (standalone() ? 'tablet.terminal.leaveMode' : 'tablet.terminal.standaloneMode') | t }}
+          <vereint-icon name="lock" />
+          {{ (standalone() ? 'tablet.terminal.leaveKiosk' : 'tablet.terminal.startKiosk') | t }}
         </button>
+        @if (!standalone()) {
+          <p class="member-hint">{{ 'tablet.terminal.startHint' | t }}</p>
+        }
 
         @if (actionError(); as err) {
           <p class="manage-action-error" role="alert">{{ err }}</p>
@@ -329,14 +333,6 @@ interface EventContext {
         gap: 0.75rem;
         margin-bottom: 0.75rem;
       }
-      .terminal-portal {
-        display: inline-flex;
-        align-items: center;
-        min-height: 44px;
-        font-weight: 600;
-        text-decoration: none;
-        color: inherit;
-      }
       .terminal-flag {
         display: inline-flex;
         align-items: center;
@@ -392,6 +388,8 @@ interface EventContext {
 })
 export class TabletComponent implements OnInit, OnDestroy {
   private readonly api = inject(TabletApiService);
+  private readonly kioskApi = inject(KioskApiService);
+  private readonly kiosk = inject(KioskModeService);
 
   protected readonly events = new AsyncState<TabletEvent[]>();
   protected readonly context = new AsyncState<EventContext>();
@@ -402,7 +400,9 @@ export class TabletComponent implements OnInit, OnDestroy {
   protected readonly actionInfo = signal<string | null>(null);
 
   protected readonly activeDrinkId = signal<string | null>(null);
-  protected readonly standalone = signal(false);
+  /** Kiosk-Modus dieses Geräts; bleibt über Neuladen und Neustart erhalten. */
+  protected readonly standalone = this.kiosk.active;
+  protected readonly kioskBusy = signal(false);
   protected readonly drinkOverlayOpen = signal(false);
   protected readonly revenueSheetOpen = signal(false);
   protected readonly tallies = signal<Record<string, number>>({});
@@ -436,11 +436,18 @@ export class TabletComponent implements OnInit, OnDestroy {
   }
 
   protected reload(): void {
-    this.events.run(this.api.listEvents());
+    this.events.run(this.api.listEvents(), (list) => {
+      // Im Kiosk-Modus nach dem Neuöffnen beim zuletzt gewählten Event weitermachen.
+      const remembered = this.kiosk.active() ? this.kiosk.eventId() : null;
+      if (remembered && !this.selectedEventId() && list.some((event) => event.id === remembered)) {
+        this.selectEvent(remembered);
+      }
+    });
   }
 
   protected selectEvent(eventId: string): void {
     this.selectedEventId.set(eventId);
+    this.kiosk.rememberEvent(eventId);
     this.purchaseForm = { memberId: '', eventDrinkId: '', eventFoodId: '' };
     this.revenueForm = { eventDrinkId: '', eventFoodId: '', kind: 'round' };
     this.revenueSelection = {};
@@ -460,12 +467,32 @@ export class TabletComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Schaltet den Standalone-Terminal-Modus um (reine Client-UI). Der Modus
-   * reduziert die Chrome und blendet „Zurück zum Stammtisch-Portal“ ein; der
-   * gewählte Event- und Strichlisten-Zustand bleibt dabei unverändert erhalten.
+   * Startet den Kiosk-Modus oder fragt zum Verlassen die PIN ab. Starten geht
+   * nur, wenn Vorstand oder Administration eine PIN festgelegt haben, sonst
+   * ließe sich der Modus nicht mehr beenden. Event- und Strichlisten-Zustand
+   * bleiben beim Umschalten erhalten.
    */
   protected toggleStandalone(): void {
-    this.standalone.update((value) => !value);
+    if (this.kiosk.active()) {
+      this.kiosk.requestUnlock();
+      return;
+    }
+    this.kioskBusy.set(true);
+    this.actionError.set(null);
+    this.kioskApi.status().subscribe({
+      next: (status) => {
+        this.kioskBusy.set(false);
+        if (!status.pinConfigured) {
+          this.actionError.set(translate('tablet.terminal.noPin'));
+          return;
+        }
+        this.kiosk.activate(this.selectedEventId());
+      },
+      error: (error: unknown) => {
+        this.kioskBusy.set(false);
+        this.actionError.set(describeApiError(error));
+      },
+    });
   }
 
   /**

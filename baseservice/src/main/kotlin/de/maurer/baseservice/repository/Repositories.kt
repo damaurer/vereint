@@ -385,3 +385,11 @@ interface MemberInviteRedemptionRepository : JpaRepository<MemberInviteRedemptio
     @EntityGraph(attributePaths = ["user"])
     fun findByInviteIdIn(inviteIds: Collection<UUID>): List<MemberInviteRedemptionEntity>
 }
+
+@Repository
+interface KioskSettingsRepository : JpaRepository<KioskSettingsEntity, String> {
+    /** Sperrt die Zeile, damit parallele PIN-Versuche den Fehlerzähler nicht überholen. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select k from KioskSettingsEntity k where k.id = :id")
+    fun findByIdForUpdate(@Param("id") id: String): Optional<KioskSettingsEntity>
+}

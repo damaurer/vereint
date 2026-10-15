@@ -906,9 +906,11 @@
       "confirm": "Auswahl bestätigen"
     },
     "terminal": {
-      "backToPortal": "← Zurück zum Stammtisch-Portal",
-      "standaloneMode": "Standalone Terminal Modus",
-      "leaveMode": "Terminal-Modus verlassen"
+      "kioskActive": "Kiosk-Modus aktiv",
+      "startKiosk": "Kiosk-Modus starten",
+      "leaveKiosk": "Kiosk-Modus verlassen",
+      "startHint": "Im Kiosk-Modus bleibt dieses Gerät auf dem Thekenterminal, auch nach Schließen und Neuöffnen. Verlassen geht nur mit der Kiosk-PIN.",
+      "noPin": "Es ist noch keine Kiosk-PIN festgelegt. Vorstand oder Administration legen sie unter Vorstand → Kiosk-PIN fest."
     },
     "header": {
       "eyebrow": "Drink Recorder",
@@ -1089,7 +1091,8 @@
     "auditTarget": {
       "ledger": "Finanzen",
       "notification": "Kommunikation",
-      "user": "Benutzer"
+      "user": "Benutzer",
+      "kiosk": "Thekenterminal"
     },
     "auditAction": {
       "NOTIFICATION_SENT": "Mitteilung gesendet",
@@ -1103,7 +1106,9 @@
       "LEDGER_CORRECTION": "Korrektur",
       "LEDGER_PURCHASE": "Kauf",
       "MOMENT_STARTED": "Moment gestartet",
-      "MOMENT_COMPLETED": "Moment beendet"
+      "MOMENT_COMPLETED": "Moment beendet",
+      "KIOSK_PIN_CHANGED": "Kiosk-PIN festgelegt",
+      "KIOSK_PIN_LOCKED": "Kiosk-PIN nach Fehlversuchen gesperrt"
     },
     "auditDetail": {
       "amount": "Betrag",
@@ -1154,7 +1159,9 @@
       "moderate": "Moderieren",
       "auditHeading": "Letzte Aktionen ({count})",
       "inviteTitle": "Mitglied einladen",
-      "inviteDesc": "Einladungslink zur Registrierung erstellen"
+      "inviteDesc": "Einladungslink zur Registrierung erstellen",
+      "kioskPinTitle": "Kiosk-PIN",
+      "kioskPinDesc": "PIN zum Verlassen des Kiosk-Modus am Thekenterminal festlegen"
     },
     "comms": {
       "eyebrow": "Schriftwart",
@@ -1281,6 +1288,19 @@
         "noEntry": "Noch keine Buchung",
         "id": "ID {id}"
       }
+    },
+    "kioskPin": {
+      "title": "Kiosk-PIN",
+      "intro": "Mit dieser PIN lässt sich der Kiosk-Modus am Thekenterminal verlassen. Sie gilt für alle Terminals und wird nach dem Speichern nicht mehr angezeigt.",
+      "notSet": "Noch keine PIN festgelegt. Ohne PIN lässt sich der Kiosk-Modus nicht starten.",
+      "set": "PIN festgelegt am {date}.",
+      "setBy": "PIN festgelegt von {name} am {date}.",
+      "newPin": "Neue PIN ({min} bis {max} Ziffern)",
+      "repeatPin": "PIN wiederholen",
+      "save": "PIN speichern",
+      "saved": "Die neue PIN gilt ab sofort auf allen Terminals.",
+      "format": "Die PIN muss aus {min} bis {max} Ziffern bestehen.",
+      "mismatch": "Die beiden Eingaben stimmen nicht überein."
     }
   },
   "events": {
@@ -1589,6 +1609,18 @@
       "lookup": "Das Getränk konnte nicht gesucht werden.",
       "pay": "Bezahlen hat nicht geklappt.",
       "undo": "Zurücknehmen hat nicht geklappt."
+    }
+  },
+  "kiosk": {
+    "lock": {
+      "badge": "Kiosk",
+      "open": "Kiosk entsperren",
+      "title": "Kiosk-Modus verlassen",
+      "intro": "Gib die Kiosk-PIN ein, um das Thekenterminal zu verlassen.",
+      "pinLabel": "PIN",
+      "submit": "Entsperren",
+      "wrong": "Die PIN ist falsch. Noch {count} Versuche bis zur Sperre.",
+      "locked": "Zu viele falsche Eingaben. Die nächste Eingabe ist ab {time} möglich."
     }
   }
 }

@@ -20,6 +20,13 @@ Der Tablet Strichlisten-Recorder in **Vereint** ist für den hochfrequenten Thek
 - **Abendabschluss & Bareinnahmen (`evening`)**:
   - Erfassung von pauschalen Einnahmen oder Abrechnungen am Ende eines Festabends (`source = evening, accountingMode = revenueOnly`).
 
+- **Gesperrter Kiosk-Modus mit PIN**:
+  - Am Terminal startet „Kiosk-Modus starten“ den Modus, sobald Vorstand oder Administration unter *Vorstand → Kiosk-PIN* eine PIN (4–8 Ziffern) festgelegt haben. Die PIN gilt für alle Terminals; der Server speichert nur ihren BCrypt-Hash (`kiosk_settings`).
+  - Der Zustand liegt im `localStorage` des Geräts (`vereint.kiosk`). Neuladen, Schließen und Neuöffnen von Tab, App oder Browser landen wieder im Terminal, beim zuletzt gewählten Event.
+  - Solange er aktiv ist, leitet `kioskGuard` jede andere Seite auf `/tablet` um; Navigation, Mitteilungen und Abmelden sind ausgeblendet.
+  - Verlassen geht nur über das Schloss oben rechts oder „Kiosk-Modus verlassen“ und eine vom Server bestätigte PIN (`POST /api/v1/kiosk/unlock`). Nach 5 falschen Eingaben ist die Prüfung für alle Terminals gesperrt (1, 5, 15, danach 60 Minuten); PIN-Änderungen und Sperren stehen im Audit-Protokoll.
+  - Das Schließen des Browsers oder ein App-Wechsel lässt sich aus einer Web-App nicht verhindern. Dafür das Gerät festsetzen: Android „Bildschirm fixieren“ (App-Pinning), iOS/iPadOS „Geführter Zugriff“.
+
 ### 2. Fehlertoleranz & Entlastung des Personals
 - **Idempotenz-Schutz**: Bei unruhigem Netz oder versehentlichem Mehrfachtippen verhindert der `Idempotency-Key`-Header doppelte Abbuchungen.
 - **Visuelle Buchungsbestätigung**: Diskrete Animationen und Ton-/Farbfeedback bestätigen jede Buchung in Millisekunden.

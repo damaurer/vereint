@@ -60,6 +60,14 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | `POST` | `/api/v1/tablet/events/{eventId}/rounds` | Runden-Buchung für Gruppe (`TabletRevenuePurchaseRequest` + opt. `Idempotency-Key`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/evening` | Abendabrechnung (`TabletRevenuePurchaseRequest` + opt. `Idempotency-Key`) | `purchase.tablet` |
 
+**Kiosk-PIN (`KioskController`)**
+
+| Methode | Pfad | Beschreibung | Berechtigung / Rolle |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/kiosk/pin` | Ob eine Kiosk-PIN gesetzt ist (`KioskStatusDto`, nie die PIN selbst) | `purchase.tablet`, `board`, `admin` |
+| `PUT` | `/api/v1/kiosk/pin` | Kiosk-PIN setzen oder ändern (`{ "pin": "4–8 Ziffern" }`), gespeichert nur als BCrypt-Hash | `board`, `admin` |
+| `POST` | `/api/v1/kiosk/unlock` | PIN prüfen (`KioskUnlockResultDto`); nach 5 Fehlversuchen gesperrt (1, 5, 15, dann 60 Min.) | `purchase.tablet`, `board`, `admin` |
+
 ### 5. Getränkekatalog & Sublisten (`DrinkCatalogController`, `DrinkSublistController`, `EventDrinkController`)
 | Methode | Pfad | Beschreibung | Berechtigung / Rolle |
 | :--- | :--- | :--- | :--- |
