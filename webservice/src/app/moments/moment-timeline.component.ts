@@ -1,10 +1,9 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { IconComponent } from '../ui/icon.component';
-import type { MomentResponseDto } from '../api/api.types';
+import type { MomentMediaDto, MomentResponseDto } from '../api/api.types';
 import { formatDateTime } from '../member/member-format';
 import { AvatarBadgeComponent } from '../ui';
 import { TranslatePipe } from '../i18n';
-import { translate } from '../i18n/i18n.service';
 
 /**
  * Visualisiert den chronologischen Feed aller Status- und Reaktionsbeiträge
@@ -38,14 +37,57 @@ import { translate } from '../i18n/i18n.service';
               <div class="timeline-body">
                 <div class="timeline-item-head">
                   <span class="timeline-user">{{ response.userName }}</span>
-                  <span class="timeline-reaction-badge" [attr.aria-label]="response.reaction">
-                    {{ reactionLabel(response.reaction) }}
-                  </span>
+                  @if (response.reaction) {
+                    <span class="timeline-reaction-badge">
+                      {{ reactionLabel(response) }}
+                    </span>
+                  }
                   <time class="timeline-time">{{ formatTime(response.createdAt) }}</time>
                 </div>
 
                 @if (response.statusText) {
                   <p class="timeline-text">{{ response.statusText }}</p>
+                }
+
+                @if (response.media?.length) {
+                  <div class="timeline-media" [class.single]="response.media.length === 1">
+                    @for (media of response.media; track media.id) {
+                      <figure class="media-tile">
+                        @if (media.kind === 'video') {
+                          <video
+                            class="media-video"
+                            [src]="videoSrc(media)"
+                            controls
+                            playsinline
+                            preload="metadata"
+                            [attr.aria-label]="'moments.media.videoBy' | t: { name: response.userName }"
+                          ></video>
+                        } @else {
+                          <a [href]="media.url" target="_blank" rel="noopener" class="media-image-link">
+                            <img
+                              class="media-image"
+                              [src]="media.url"
+                              loading="lazy"
+                              [attr.width]="media.width"
+                              [attr.height]="media.height"
+                              [alt]="'moments.media.photoBy' | t: { name: response.userName }"
+                            />
+                          </a>
+                        }
+                        @if (media.canDelete) {
+                          <button
+                            type="button"
+                            class="media-remove"
+                            [attr.aria-label]="'moments.media.remove' | t"
+                            [title]="'moments.media.remove' | t"
+                            (click)="removeMedia.emit(media)"
+                          >
+                            <vereint-icon name="close" />
+                          </button>
+                        }
+                      </figure>
+                    }
+                  </div>
                 }
 
                 @if (response.latitude !== null && response.longitude !== null) {
@@ -190,11 +232,61 @@ import { translate } from '../i18n/i18n.service';
       .location-coords {
         font-family: monospace;
       }
+      .timeline-media {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.4rem;
+        margin-top: 0.25rem;
+      }
+      .timeline-media.single {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 26rem;
+      }
+      .media-tile {
+        position: relative;
+        margin: 0;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+      }
+      .media-image-link {
+        display: block;
+      }
+      .media-image,
+      .media-video {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-height: 22rem;
+        object-fit: cover;
+        background-color: #000;
+      }
+      .media-video {
+        object-fit: contain;
+      }
+      .media-remove {
+        position: absolute;
+        top: 0.35rem;
+        right: 0.35rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        border: none;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        cursor: pointer;
+      }
     `,
   ],
 })
 export class MomentTimelineComponent {
   readonly responses = input<MomentResponseDto[]>([]);
+  /** Ein Bild/Video soll entfernt werden (Eigentümer, Event-Owner, Vorstand/Admin). */
+  readonly removeMedia = output<MomentMediaDto>();
 
   /** Sortiert Statusbeiträge chronologisch (neueste oben). */
   protected sortedResponses(): MomentResponseDto[] {
@@ -217,26 +309,13 @@ export class MomentTimelineComponent {
     return { lat: this.formatCoord(response.latitude), lng: this.formatCoord(response.longitude) };
   }
 
-  protected reactionLabel(reaction: string): string {
-    const r = reaction.toUpperCase();
-    switch (r) {
-      case 'TOAST':
-      case 'CHEERS':
-        return `🍻 ${translate('moments.reactions.toast')}`;
-      case 'PRAYER':
-        return `🙏 ${translate('moments.reactions.prayer')}`;
-      case 'CHEER':
-        return `📣 ${translate('moments.reactions.cheering')}`;
-      case 'THUMBS_UP':
-        return `👍 ${translate('moments.reactions.thumbsUp')}`;
-      case 'CELEBRATE':
-        return `🎉 ${translate('moments.reactions.celebrate')}`;
-      case 'HEART':
-        return `❤️ ${translate('moments.reactions.heart')}`;
-      case 'CHECKIN':
-        return `📍 ${translate('moments.reactions.checkin')}`;
-      default:
-        return reaction;
-    }
+  protected reactionLabel(response: MomentResponseDto): string {
+    const name = response.reactionName ?? response.reaction ?? '';
+    return response.reactionEmoji ? `${response.reactionEmoji} ${name}` : name;
+  }
+
+  /** Mit `#t=0.1` zeigen auch iOS-Browser das erste Bild als Vorschau. */
+  protected videoSrc(media: MomentMediaDto): string {
+    return `${media.url}#t=0.1`;
   }
 }

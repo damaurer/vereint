@@ -63,6 +63,11 @@ interface BoardView {
             <span class="board-panel-title">{{ 'board.overview.commsTitle' | t }}</span>
             <span class="board-panel-desc">{{ 'board.overview.commsDesc' | t }}</span>
           </a>
+          <a class="board-panel" routerLink="/board/moments">
+            <vereint-icon class="board-panel-icon" name="moments" />
+            <span class="board-panel-title">{{ 'board.overview.momentConfigTitle' | t }}</span>
+            <span class="board-panel-desc">{{ 'board.overview.momentConfigDesc' | t }}</span>
+          </a>
           <button type="button" class="board-panel" (click)="inviteOpen.set(true)">
             <vereint-icon class="board-panel-icon" name="users" />
             <span class="board-panel-title">{{ 'board.overview.inviteTitle' | t }}</span>

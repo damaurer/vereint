@@ -1,6 +1,8 @@
 package de.maurer.baseservice.storage
 
 import org.slf4j.LoggerFactory
+import java.io.InputStream
+import java.net.HttpURLConnection
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -40,6 +42,48 @@ class S3ObjectStorage(
         val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
         if (response.statusCode() !in 200..299) {
             throw ObjectStorageException("Ablegen von '$key' fehlgeschlagen (HTTP ${response.statusCode()})")
+        }
+    }
+
+    override fun storeStream(key: String, data: InputStream, length: Long, contentType: String) {
+        val url = presign("PUT", key, properties.urlTtl())
+        // Bewusst HttpURLConnection: Der Upload wird im aufrufenden Thread
+        // gelesen (der Request-Körper des Mitglieds), Lesefehler kommen
+        // unverändert beim Aufrufer an, und S3 bekommt die feste Content-Length.
+        val connection = url.toURL().openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "PUT"
+            connection.doOutput = true
+            connection.setFixedLengthStreamingMode(length)
+            connection.setRequestProperty("Content-Type", contentType)
+            connection.connectTimeout = STREAM_CONNECT_TIMEOUT_MS
+            connection.readTimeout = STREAM_READ_TIMEOUT_MS
+            connection.outputStream.use { out -> data.transferTo(out) }
+            val status = connection.responseCode
+            if (status !in 200..299) {
+                throw ObjectStorageException("Ablegen von '$key' fehlgeschlagen (HTTP $status)")
+            }
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    override fun readRange(key: String, start: Long, endInclusive: Long): InputStream? {
+        val url = presign("GET", key, properties.urlTtl())
+        val request = HttpRequest.newBuilder(url).header("Range", "bytes=$start-$endInclusive").GET().build()
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream())
+        return when (response.statusCode()) {
+            206 -> response.body()
+            // Ohne Range-Unterstützung liefert der Speicher das ganze Objekt.
+            200 -> response.body().also { it.skipNBytes(start) }
+            404 -> {
+                response.body().close()
+                null
+            }
+            else -> {
+                response.body().close()
+                throw ObjectStorageException("Lesen von '$key' fehlgeschlagen (HTTP ${response.statusCode()})")
+            }
         }
     }
 
@@ -167,6 +211,8 @@ class S3ObjectStorage(
         private const val SIGNED_HEADERS = "host"
         private const val UNSIGNED_PAYLOAD = "UNSIGNED-PAYLOAD"
         private const val HMAC_SHA256 = "HmacSHA256"
+        private const val STREAM_CONNECT_TIMEOUT_MS = 10_000
+        private const val STREAM_READ_TIMEOUT_MS = 120_000
         private val AMZ_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
         private val DATE_STAMP: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     }

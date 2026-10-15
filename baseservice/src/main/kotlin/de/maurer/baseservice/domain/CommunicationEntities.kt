@@ -293,8 +293,9 @@ class MomentResponseEntity(
     @JoinColumn(name = "user_id", nullable = false)
     var user: UserEntity? = null,
 
-    @Column(name = "reaction", length = 64, nullable = false)
-    var reaction: String = "",
+    /** Code einer Moment-Reaktion; leer bei reinen Text-/Bild-/Videobeiträgen. */
+    @Column(name = "reaction", length = 64)
+    var reaction: String? = null,
 
     @Column(name = "status_text", length = 255)
     var statusText: String? = null,

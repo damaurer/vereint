@@ -197,6 +197,18 @@ export const routes: Routes = [
       import('./board/communications.component').then((m) => m.CommunicationsComponent),
   },
   {
+    path: 'board/moments',
+    canActivate: [authGuard, roleGuard],
+    data: {
+      title: 'routes.boardMoments.title',
+      description: 'routes.boardMoments.description',
+      access: 'routes.access.boardOrAdmin',
+      roles: ['board', 'admin'],
+    },
+    loadComponent: () =>
+      import('./board/moment-config.component').then((m) => m.MomentConfigComponent),
+  },
+  {
     path: 'admin',
     canActivate: [authGuard, roleGuard],
     data: {

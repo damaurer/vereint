@@ -93,4 +93,38 @@ class DataEncryptorTest {
         assertTrue(column.startsWith(DataEncryptor.TEXT_PREFIX))
         assertEquals("Hallo", converter.convertToEntityAttribute(column))
     }
+
+    @Test
+    fun `stream format round-trips any range and detects tampering`() {
+        val plain = ByteArray(200_000) { (it * 7 % 256).toByte() }
+        val sealed = encryptor.encryptStream(plain.inputStream(), plain.size.toLong()).readAllBytes()
+        assertEquals(encryptor.encryptedStreamLength(plain.size.toLong()), sealed.size.toLong())
+
+        val chunk = DataEncryptor.STREAM_CHUNK_SIZE.toLong()
+        val header = sealed.copyOfRange(0, DataEncryptor.STREAM_HEADER_LENGTH)
+        fun range(first: Long, last: Long): ByteArray {
+            val from = encryptor.streamChunkOffset(first).toInt()
+            return encryptor.decryptStreamChunks(header, sealed.copyOfRange(from, sealed.size).inputStream(), plain.size.toLong(), first, last)
+                .readAllBytes()
+        }
+        assertArrayEquals(plain, range(0, 3))
+        assertArrayEquals(plain.copyOfRange(chunk.toInt(), 3 * chunk.toInt()), range(1, 2))
+        assertArrayEquals(plain.copyOfRange(3 * chunk.toInt(), plain.size), range(3, 3))
+
+        val tampered = sealed.copyOf().also { it[DataEncryptor.STREAM_HEADER_LENGTH + 10] = (it[DataEncryptor.STREAM_HEADER_LENGTH + 10] + 1).toByte() }
+        assertThrows(DecryptionException::class.java) {
+            encryptor.decryptStreamChunks(header, tampered.copyOfRange(DataEncryptor.STREAM_HEADER_LENGTH, tampered.size).inputStream(), plain.size.toLong(), 0, 0)
+                .readAllBytes()
+        }
+    }
+
+    @Test
+    fun `stream encryption rejects a source shorter or longer than announced`() {
+        assertThrows(java.io.IOException::class.java) {
+            encryptor.encryptStream(ByteArray(10).inputStream(), 20).readAllBytes()
+        }
+        assertThrows(java.io.IOException::class.java) {
+            encryptor.encryptStream(ByteArray(30).inputStream(), 20).readAllBytes()
+        }
+    }
 }

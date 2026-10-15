@@ -44,6 +44,7 @@ const PRIVATE_CLIENT_PATHS: readonly string[] = [
   'board',
   'board/treasury',
   'board/communications',
+  'board/moments',
   'admin',
   'tablet',
   'statistik',
