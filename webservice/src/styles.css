@@ -905,7 +905,9 @@ a:focus-visible {
 
 .shell-more-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  /* Breit genug für das längste Wort („Direktnachrichten“), damit nichts mitten im Wort
+     umbricht; auf sehr schmalen Handys bleiben es trotzdem zwei Spalten. */
+  grid-template-columns: repeat(auto-fill, minmax(min(9rem, calc(50% - var(--space-1) / 2)), 1fr));
   gap: var(--space-1);
 }
 
@@ -923,8 +925,8 @@ a:focus-visible {
   font-size: 0.8rem;
   font-weight: 600;
   text-align: center;
-  overflow-wrap: anywhere;
-  hyphens: auto;
+  overflow-wrap: break-word;
+  hyphens: manual;
 }
 
 .shell-more-link:hover,
