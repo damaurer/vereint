@@ -1,0 +1,53 @@
+name: Wiki
+
+# Uebertraegt die Seiten aus `wiki/` ins GitHub-Wiki des Repositories. Das Wiki
+# wird nur hier gepflegt; direkte Aenderungen im Wiki ueberschreibt der naechste
+# Lauf. Voraussetzung: Wiki unter Settings → Features eingeschaltet und einmal
+# eine erste Seite angelegt, sonst existiert das Wiki-Repository noch nicht.
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'wiki/**'
+      - '.github/workflows/wiki.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Wiki aktualisieren
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Wiki-Repository holen
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! git clone --depth 1 \
+              "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-repo; then
+            echo "::error::Wiki nicht gefunden. Unter Settings → Features das Wiki einschalten und einmal eine erste Seite anlegen, dann diesen Workflow erneut starten."
+            exit 1
+          fi
+
+      - name: Seiten uebertragen
+        run: |
+          rsync -a --delete --exclude '.git' wiki/ wiki-repo/
+          cd wiki-repo
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki ist bereits aktuell."
+            exit 0
+          fi
+          git commit -m "Wiki aus ${GITHUB_SHA::7} aktualisiert"
+          git push

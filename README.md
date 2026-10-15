@@ -97,6 +97,8 @@ graph TD
 
 ## 📚 Vollständige Dokumentations-Suite
 
+Einstieg und Betriebsüberblick: das **[Projekt-Wiki](https://github.com/damaurer/vereint/wiki)** (gepflegt unter [`wiki/`](wiki/)).
+
 Die Dokumentation ist lückenlos nach Fachbereichen und technischen Schichten unter `docs/` gegliedert:
 
 ### 🏛️ [Architektur & Sicherheit](docs/architecture/)
