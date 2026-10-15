@@ -222,7 +222,12 @@
     "statusDisabled": "Disabled",
     "memberSince": "Member since",
     "recording": "Recording",
-    "recordingActive": "Tally recording active"
+    "recordingActive": "Tally recording active",
+    "security": {
+      "title": "Security",
+      "hint": "Protect your account with an authenticator app (e.g. Google Authenticator). Login then asks for your password and a 6-digit code. Optional, but recommended for board members and admins.",
+      "setupTwoFactor": "Set up two-factor sign-in"
+    }
   },
   "notifications": {
     "eyebrow": "Messages",

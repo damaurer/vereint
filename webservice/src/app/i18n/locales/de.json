@@ -216,7 +216,12 @@
     "statusDisabled": "Deaktiviert",
     "memberSince": "Mitglied seit",
     "recording": "Erfassung",
-    "recordingActive": "Strichlisten-Erfassung aktiv"
+    "recordingActive": "Strichlisten-Erfassung aktiv",
+    "security": {
+      "title": "Sicherheit",
+      "hint": "Schütze dein Konto zusätzlich mit einer Authenticator-App (z. B. Google Authenticator). Danach fragt der Login nach Passwort und einem 6-stelligen Code. Freiwillig, aber empfohlen für Vorstand und Admin.",
+      "setupTwoFactor": "Zwei-Faktor-Anmeldung einrichten"
+    }
   },
   "notifications": {
     "eyebrow": "Mitteilungen",
