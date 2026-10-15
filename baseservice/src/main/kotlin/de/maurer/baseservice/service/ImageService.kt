@@ -20,6 +20,7 @@ import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.storage.ObjectStorage
+import de.maurer.baseservice.support.ImageMetadata
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayInputStream
@@ -74,6 +75,12 @@ class ImageService(
         }
 
         val dimensions = readDimensions(data)
+        // GPS-Standort, Gerätedaten usw. verlassen nie den Server.
+        val cleaned = try {
+            ImageMetadata.strip(data)
+        } catch (_: IllegalArgumentException) {
+            throw InvalidRequestException(Msg("error.image.unreadable"), ErrorCode.INVALID_REQUEST)
+        }
         if (dimensions.width > MAX_DIMENSION || dimensions.height > MAX_DIMENSION) {
             throw InvalidRequestException(
                 Msg("error.image.dimensionsTooLarge", MAX_DIMENSION, MAX_DIMENSION),
@@ -97,7 +104,7 @@ class ImageService(
         // Verschlüsselte Objekte sind für S3 opake Binärdaten; der eigentliche
         // Bildtyp steht in den Metadaten.
         val storedType = if (dataEncryptor.enabled) ENCRYPTED_CONTENT_TYPE else normalizedType
-        objectStorage.store(storageKey, dataEncryptor.encrypt(data), storedType)
+        objectStorage.store(storageKey, dataEncryptor.encrypt(cleaned), storedType)
 
         val entity = ImageAssetEntity(
             storageKey = storageKey,
@@ -105,7 +112,7 @@ class ImageService(
             purpose = purpose,
             targetId = targetId,
             contentType = normalizedType,
-            sizeBytes = data.size.toLong(),
+            sizeBytes = cleaned.size.toLong(),
             width = dimensions.width,
             height = dimensions.height,
             imageVersion = nextVersion,

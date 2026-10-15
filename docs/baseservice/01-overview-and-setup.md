@@ -106,7 +106,7 @@ cd baseservice
 Der Server lauscht standardmäßig auf Port **`8081`**.
 
 ### 3. Swagger-UI & OpenAPI
-Nach dem Start stehen folgende Endpunkte für die interaktive API-Erkundung zur Verfügung:
+Die API-Beschreibung ist aus Sicherheitsgründen standardmäßig abgeschaltet (in Produktion bleibt sie aus). Lokal mit `API_DOCS_ENABLED=true ./gradlew bootRun` starten; dann stehen folgende Endpunkte für die interaktive API-Erkundung zur Verfügung:
 - **Swagger UI**: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
 - **OpenAPI JSON**: [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs)
 

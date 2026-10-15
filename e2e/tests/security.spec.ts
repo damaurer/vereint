@@ -14,6 +14,8 @@ test.describe('Auslieferung und Sicherheit', () => {
     expect(headers['x-content-type-options']).toBe('nosniff');
     expect(headers['x-frame-options']).toBe('DENY');
     expect(headers['cache-control']).toContain('no-store');
+    expect(headers['permissions-policy']).toContain('camera=(self)');
+    expect(headers['permissions-policy']).toContain('geolocation=()');
 
     const csp = headers['content-security-policy'];
     const nonce = /'nonce-([^']+)'/.exec(csp)?.[1];
@@ -53,6 +55,31 @@ test.describe('Auslieferung und Sicherheit', () => {
     expect((await request.get('/kc/admin/')).status()).toBe(404);
     expect((await request.get('/kc/realms/master/.well-known/openid-configuration')).status()).toBe(404);
     expect((await request.get('/kc/realms/vereint/.well-known/openid-configuration')).status()).toBe(200);
+    expect((await request.post('/kc/realms/vereint/clients-registrations/openid-connect', { data: {} })).status()).toBe(404);
+  });
+
+  test('Schreibende Anfragen von fremden Seiten werden abgewiesen', async ({ as }) => {
+    const { context } = await as('member');
+
+    const crossSite = await context.request.post('/api/v1/e2e-not-found', {
+      headers: { 'sec-fetch-site': 'cross-site', origin: 'https://evil.example' },
+      data: {},
+    });
+    expect(crossSite.status()).toBe(403);
+    expect(await crossSite.json()).toMatchObject({ code: 'cross_site_request' });
+
+    // Dieselbe Anfrage von der eigenen Seite erreicht den Fachservice (404).
+    const sameOrigin = await context.request.post('/api/v1/e2e-not-found', {
+      headers: { 'sec-fetch-site': 'same-origin' },
+      data: {},
+    });
+    expect(sameOrigin.status()).toBe(404);
+  });
+
+  test('API-Pfade koennen nicht aus /api/v1 ausbrechen', async ({ as }) => {
+    const { context } = await as('admin');
+    const traversal = await context.request.get('/api/v1/users%2f..%2f..%2fv3%2fapi-docs');
+    expect(traversal.status()).toBe(400);
   });
 
   test('API ohne Session antwortet mit 401, Health ist oeffentlich', async ({ request }) => {

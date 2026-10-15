@@ -78,6 +78,22 @@ function isPublicOrGuestRequest(req: Request): boolean {
   return publicPaths.includes(path);
 }
 
+/**
+ * Liefert die Ziel-URL im Fachservice oder `null`, wenn der Pfad aus
+ * `/api/v1` ausbrechen könnte (`..`, kodierte Schrägstriche oder Punkte,
+ * Backslashes). `fetch` normalisiert solche Pfade sonst zu beliebigen
+ * Endpunkten des Fachservice, etwa `/actuator` oder `/v3/api-docs`.
+ */
+export function resolveTargetUrl(originalUrl: string): string | null {
+  const [rawPath] = originalUrl.split('?');
+  if (/%2e|%2f|%5c|\\/i.test(rawPath)) return null;
+  if (rawPath.split('/').some((segment) => segment === '.' || segment === '..')) return null;
+  const base = new URL(serverEnvironment.springApiBaseUrl);
+  const target = new URL(originalUrl, base);
+  if (target.origin !== base.origin || !target.pathname.startsWith('/api/v1/')) return null;
+  return target.toString();
+}
+
 function forwardHeaders(req: Request, traceId: string, accessToken?: string): Headers {
   const headers = new Headers();
   for (const [name, value] of Object.entries(req.headers)) {
@@ -134,7 +150,11 @@ export const apiProxy: RequestHandler = (req, res, next) => {
     return;
   }
 
-  const targetUrl = `${serverEnvironment.springApiBaseUrl}${req.originalUrl}`;
+  const targetUrl = resolveTargetUrl(req.originalUrl);
+  if (!targetUrl) {
+    sendProblem(res, 400, 'invalid_request', 'Ungültiger API-Pfad.', instance, traceId);
+    return;
+  }
   const headers = forwardHeaders(req, traceId, accessToken);
   const { body, contentType } = serializeBody(req);
   if (body !== undefined && contentType && !headers.has('content-type')) {

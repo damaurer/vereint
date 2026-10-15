@@ -41,8 +41,56 @@ Rollback exakt genauso wieder.
   verloren: Geräte melden sich beim nächsten App-Start mit dem neuen Schlüssel an.
 - **Secrets** stehen nur im SSM Parameter Store. `bin/fetch-env.sh` schreibt sie
   bei jedem Deployment in `.env` (nur für root lesbar).
-- Container laufen ohne Root (eigene Images), mit `no-new-privileges` und
-  Speicherlimits, damit ein Dienst nicht den ganzen Server lahmlegt.
+- Container laufen ohne Root (eigene Images), mit `no-new-privileges`, ohne
+  Linux-Capabilities (nur Caddy und PostgreSQL bekommen die wenigen, die sie
+  brauchen), mit Prozess- und Speicherlimits. baseservice und webservice haben
+  ein schreibgeschütztes Dateisystem; nur `/tmp` liegt im Arbeitsspeicher.
+- **Fremde Seiten können nichts auslösen:** Der webservice lehnt schreibende
+  Anfragen ab, die nicht von der eigenen Seite kommen (`Sec-Fetch-Site` bzw.
+  `Origin`). Das schützt auch vor anderen Subdomains derselben Domain.
+- **Raten wird gebremst:** Einladungs- und Gast-Token-Endpunkte erlauben
+  30 Versuche je IP in 15 Minuten, der Login-Start 120 je IP in 5 Minuten, die
+  übrige API 600 Anfragen je Sitzung und Minute. Passwörter schützt zusätzlich
+  Keycloak (5 Fehlversuche, dann wachsende Sperre).
+- **API nur unter `/api/v1`:** Der webservice reicht keine Pfade mit `..` oder
+  kodierten Schrägstrichen weiter; die API-Beschreibung (Swagger) ist in
+  Produktion abgeschaltet.
+- **Fotos ohne Standort:** Der baseservice entfernt EXIF/XMP-Metadaten (GPS,
+  Gerät, Aufnahmezeit) aus hochgeladenen JPEG- und PNG-Bildern, bevor er sie
+  verschlüsselt speichert. Nur die Ausrichtung bleibt erhalten.
+- **Keycloak:** Passwörter mit 10 bis 128 Zeichen, nicht gleich Benutzername
+  oder E-Mail, nicht eines der letzten drei. Login- und Admin-Ereignisse werden
+  90 Tage gespeichert (Admin-Konsole, Realm `vereint`, *Events*) und zusätzlich
+  in `docker compose logs keycloak` protokolliert.
+- **Caddy:** Anfragen über 8 MB werden abgewiesen; `Permissions-Policy`
+  schaltet Mikrofon, Standort, Zahlungen usw. ab (Kamera nur für den
+  Barcode-Scan).
+- **Lieferkette:** GitHub Actions sind auf Commit-SHAs gepinnt, Images auf
+  Digests; Dependabot hält beides aktuell.
+
+### Einmalige Einstellungen in GitHub (von Hand)
+
+Die AWS-Rolle für Deployments vertraut jedem Job im Environment `production`.
+Damit nur `main` ausrollen kann, unter *Settings → Environments → production*:
+
+1. *Deployment branches and tags*: **Selected branches and tags**, Regel `main`.
+2. Optional *Required reviewers*: sich selbst eintragen, dann wartet jedes
+   Deployment auf eine Freigabe per Klick.
+
+Unter *Settings → Branches* (bzw. *Rules → Rulesets*) für `main`, `qs` und
+`develop`: Pull Request vor dem Merge verlangen, die CI-Checks als *required*
+markieren und Force-Push sowie Löschen verbieten.
+
+### Realm-Einstellungen in einem bestehenden Keycloak
+
+Keycloak liest `realm-export.json` nur beim allerersten Start. Wurde der Realm
+schon importiert, die Härtung einmal von Hand nachziehen (Admin-Konsole per
+Tunnel, Realm `vereint`):
+
+- *Authentication → Policies → Password policy*: Minimum length 10, Maximum
+  length 128, Not username, Not email, Password history 3.
+- *Realm settings → Events*: User events und Admin events einschalten,
+  Ablauf 90 Tage.
 
 ## Backups
 
