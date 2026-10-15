@@ -370,6 +370,7 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
       }
       .chat-field {
         flex: 1 1 auto;
+        min-width: 0;
         display: flex;
       }
       .chat-field input {
@@ -382,6 +383,7 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
         font: inherit;
       }
       .chat-send {
+        flex: none;
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;

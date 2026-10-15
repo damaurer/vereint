@@ -13,20 +13,31 @@ import {
   type CreateFoodRequest,
 } from './catalog-api.service';
 import { AsyncState } from '../member/async-state';
-import {
-  ModalComponent,
-  StatusBadgeComponent,
-  type StatusTone,
-} from '../ui';
+import { BarcodeScannerComponent } from '../scan/barcode-scanner.component';
+import { ModalComponent, StatusBadgeComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
+import { ApiError, describeApiError } from '../api/api-client.service';
+
+/** Wie im Backend: Leerzeichen entfernen, damit „4029 7640“ und „40297640“ derselbe Code sind. */
+function normalizeBarcode(value: string): string {
+  return value.replace(/\s+/g, '');
+}
 
 type CatalogTab = 'drinks' | 'food';
 
 @Component({
   selector: 'app-catalog',
-  imports: [StateComponent, IconComponent, FormsModule, ModalComponent, StatusBadgeComponent, TranslatePipe],
+  imports: [
+    StateComponent,
+    IconComponent,
+    FormsModule,
+    ModalComponent,
+    StatusBadgeComponent,
+    TranslatePipe,
+    BarcodeScannerComponent,
+  ],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="catalog-title">
@@ -38,8 +49,16 @@ type CatalogTab = 'drinks' | 'food';
           </div>
           <div class="catalog-header-actions">
             @if (activeTab() === 'drinks') {
-              <button type="button" class="member-button" (click)="openProposeModal()">
-                {{ 'catalog.actions.proposeDrink' | t }}
+              <button type="button" class="btn-secondary-sm" (click)="openLookup()">
+                <vereint-icon name="camera" /> {{ 'catalog.lookup.open' | t }}
+              </button>
+              <button type="button" class="member-button" (click)="openCreateDrink()">
+                {{
+                  (isBoardOrAdmin()
+                    ? 'catalog.actions.createDrink'
+                    : 'catalog.actions.proposeDrink'
+                  ) | t
+                }}
               </button>
             } @else if (isBoardOrAdmin()) {
               <button type="button" class="member-button" (click)="openCreateFoodModal()">
@@ -79,7 +98,11 @@ type CatalogTab = 'drinks' | 'food';
           />
 
           @if (activeTab() === 'drinks' && isBoardOrAdmin()) {
-            <select class="filter-input select-input" [(ngModel)]="statusFilter" (change)="reload()">
+            <select
+              class="filter-input select-input"
+              [(ngModel)]="statusFilter"
+              (change)="reload()"
+            >
               <option value="">{{ 'catalog.filter.allStatuses' | t }}</option>
               <option value="approved">{{ 'catalog.filter.approvedOnly' | t }}</option>
               <option value="proposed">{{ 'catalog.filter.proposedOnly' | t }}</option>
@@ -90,6 +113,9 @@ type CatalogTab = 'drinks' | 'food';
 
         @if (proposeInfo(); as info) {
           <p class="manage-action-info" role="status">{{ info }}</p>
+        }
+        @if (actionError(); as err) {
+          <p class="form-error page-error" role="alert">{{ err }}</p>
         }
 
         @if (load.isLoading()) {
@@ -121,26 +147,53 @@ type CatalogTab = 'drinks' | 'food';
                     <div class="catalog-card-header">
                       <div>
                         <h3 class="catalog-card-title">{{ drink.name }}</h3>
-                        <span class="catalog-card-category">{{ drink.category || ('catalog.card.generalCategory' | t) }}</span>
+                        <span class="catalog-card-category">{{
+                          drink.category || ('catalog.card.generalCategory' | t)
+                        }}</span>
                       </div>
-                      <vereint-status-badge
-                        [label]="drinkStatusLabel(drink.status)"
-                        [tone]="drinkStatusTone(drink.status)"
-                      />
+                      @if (drink.status === 'approved' && !drink.active) {
+                        <vereint-status-badge
+                          [label]="'catalog.card.inactive' | t"
+                          tone="neutral"
+                        />
+                      } @else {
+                        <vereint-status-badge
+                          [label]="drinkStatusLabel(drink.status)"
+                          [tone]="drinkStatusTone(drink.status)"
+                        />
+                      }
                     </div>
 
                     <div class="catalog-card-price">
-                      <span class="price-val">{{ formatPrice(drink.defaultPrice, drink.currency) }}</span>
+                      <span class="price-val">{{
+                        formatPrice(drink.defaultPrice, drink.currency)
+                      }}</span>
+                      @if (isBoardOrAdmin() && drink.costPrice) {
+                        <span class="price-margin">{{
+                          'catalog.card.margin'
+                            | t: { amount: formatPrice(margin(drink), drink.currency) }
+                        }}</span>
+                      }
                     </div>
 
                     <div class="catalog-card-actions">
-                      <button
-                        type="button"
-                        class="btn-secondary-sm"
-                        (click)="openDrinkDetail(drink.id)"
-                      >
-                        {{ 'catalog.card.detailsAndBarcodes' | t }}
-                      </button>
+                      @if (isBoardOrAdmin()) {
+                        <button
+                          type="button"
+                          class="btn-secondary-sm"
+                          (click)="openEditDrink(drink.id)"
+                        >
+                          {{ 'catalog.card.edit' | t }}
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="btn-secondary-sm"
+                          (click)="openDrinkDetail(drink.id)"
+                        >
+                          {{ 'catalog.card.detailsAndBarcodes' | t }}
+                        </button>
+                      }
 
                       @if (isBoardOrAdmin() && drink.status === 'proposed') {
                         <button
@@ -150,11 +203,7 @@ type CatalogTab = 'drinks' | 'food';
                         >
                           {{ 'catalog.card.approve' | t }}
                         </button>
-                        <button
-                          type="button"
-                          class="btn-danger-sm"
-                          (click)="rejectDrink(drink.id)"
-                        >
+                        <button type="button" class="btn-danger-sm" (click)="rejectDrink(drink.id)">
                           {{ 'catalog.card.reject' | t }}
                         </button>
                       }
@@ -180,16 +229,22 @@ type CatalogTab = 'drinks' | 'food';
                     <div class="catalog-card-header">
                       <div>
                         <h3 class="catalog-card-title">{{ food.name }}</h3>
-                        <span class="catalog-card-category">{{ food.category || ('catalog.card.generalCategory' | t) }}</span>
+                        <span class="catalog-card-category">{{
+                          food.category || ('catalog.card.generalCategory' | t)
+                        }}</span>
                       </div>
                       <vereint-status-badge
-                        [label]="(food.active ? 'catalog.card.active' : 'catalog.card.inactive') | t"
+                        [label]="
+                          (food.active ? 'catalog.card.active' : 'catalog.card.inactive') | t
+                        "
                         [tone]="food.active ? 'success' : 'neutral'"
                       />
                     </div>
 
                     <div class="catalog-card-price">
-                      <span class="price-val">{{ formatPrice(food.defaultPrice, food.currency) }}</span>
+                      <span class="price-val">{{
+                        formatPrice(food.defaultPrice, food.currency)
+                      }}</span>
                     </div>
 
                     @if (isBoardOrAdmin()) {
@@ -211,65 +266,220 @@ type CatalogTab = 'drinks' | 'food';
         }
       </section>
 
-      <!-- Propose Drink Modal -->
+      <!-- Getränk anlegen / vorschlagen / bearbeiten -->
       <vereint-modal
-        [open]="showProposeModal()"
-        [title]="'catalog.propose.title' | t"
-        (closed)="closeProposeModal()"
+        [open]="drinkFormMode() !== null"
+        [title]="drinkFormTitle() | t"
+        (closed)="closeDrinkForm()"
       >
-        <form (submit)="submitDrinkProposal($event)" class="modal-form">
+        <form (submit)="submitDrinkForm($event)" class="modal-form">
+          @if (formInfo(); as info) {
+            <p class="form-info" role="status">{{ info }}</p>
+          }
+
           <label class="form-field">
             <span>{{ 'catalog.propose.name' | t }}</span>
-            <input [(ngModel)]="newDrinkName" name="name" required [placeholder]="'catalog.propose.namePlaceholder' | t" />
+            <input
+              [(ngModel)]="drinkName"
+              name="name"
+              required
+              autocomplete="off"
+              [placeholder]="'catalog.propose.namePlaceholder' | t"
+            />
           </label>
+          @if (similarDrink(); as similar) {
+            <p class="form-hint" role="status">
+              {{ 'catalog.form.similarName' | t: { name: similar.name } }}
+            </p>
+          }
 
           <label class="form-field">
             <span>{{ 'catalog.form.category' | t }}</span>
-            <input [(ngModel)]="newDrinkCategory" name="category" [placeholder]="'catalog.propose.categoryPlaceholder' | t" />
-          </label>
-
-          <label class="form-field">
-            <span>{{ 'catalog.form.defaultPrice' | t }}</span>
             <input
-              type="number"
-              step="0.10"
-              min="0"
-              [(ngModel)]="newDrinkPrice"
-              name="price"
-              required
-              [placeholder]="'catalog.propose.pricePlaceholder' | t"
+              [(ngModel)]="drinkCategory"
+              name="category"
+              list="drink-categories"
+              autocomplete="off"
+              [placeholder]="'catalog.propose.categoryPlaceholder' | t"
             />
           </label>
+          <datalist id="drink-categories">
+            @for (category of drinkCategories(); track category) {
+              <option [value]="category"></option>
+            }
+          </datalist>
+
+          <div class="form-row">
+            <label class="form-field">
+              <span>{{ 'catalog.form.defaultPrice' | t }}</span>
+              <input
+                type="number"
+                inputmode="decimal"
+                step="0.01"
+                min="0"
+                [(ngModel)]="drinkPrice"
+                name="price"
+                required
+                [placeholder]="'catalog.propose.pricePlaceholder' | t"
+              />
+            </label>
+            @if (isBoardOrAdmin()) {
+              <label class="form-field">
+                <span>{{ 'catalog.form.costPrice' | t }}</span>
+                <input
+                  type="number"
+                  inputmode="decimal"
+                  step="0.01"
+                  min="0"
+                  [(ngModel)]="drinkCostPrice"
+                  name="costPrice"
+                  [placeholder]="'catalog.form.costPricePlaceholder' | t"
+                />
+              </label>
+            }
+          </div>
+          @if (isBoardOrAdmin() && drinkPrice !== null && drinkCostPrice !== null) {
+            <p class="form-hint">
+              {{
+                'catalog.form.marginHint' | t: { amount: formatPrice(drinkPrice - drinkCostPrice) }
+              }}
+            </p>
+          }
 
           <label class="form-field">
             <span>{{ 'catalog.form.description' | t }}</span>
             <textarea
-              [(ngModel)]="newDrinkDescription"
+              [(ngModel)]="drinkDescription"
               name="description"
-              rows="3"
+              rows="2"
               [placeholder]="'catalog.propose.descriptionPlaceholder' | t"
             ></textarea>
           </label>
 
-          <label class="form-field">
-            <span>{{ 'catalog.propose.barcode' | t }}</span>
-            <input [(ngModel)]="newDrinkBarcode" name="barcode" [placeholder]="'catalog.propose.barcodePlaceholder' | t" />
-          </label>
+          <fieldset class="barcode-fieldset">
+            <legend>{{ 'catalog.form.barcodes' | t }}</legend>
+            @if (formBarcodes().length === 0) {
+              <p class="text-muted">{{ 'catalog.detail.noBarcodes' | t }}</p>
+            } @else {
+              <ul class="barcode-list">
+                @for (bc of formBarcodes(); track bc.barcode) {
+                  <li class="barcode-item">
+                    <code>{{ bc.barcode }}</code>
+                    <button
+                      type="button"
+                      class="btn-icon-danger"
+                      [attr.aria-label]="'catalog.detail.removeBarcode' | t"
+                      [title]="'catalog.detail.removeBarcode' | t"
+                      (click)="removeFormBarcode(bc)"
+                    >
+                      <vereint-icon name="close" />
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+
+            @if (scanningBarcode()) {
+              <div class="barcode-scan">
+                <vereint-barcode-scanner (detected)="onFormBarcodeScanned($event)" />
+                <button type="button" class="btn-secondary-sm" (click)="scanningBarcode.set(false)">
+                  {{ 'catalog.detail.scanCancel' | t }}
+                </button>
+              </div>
+            }
+            <div class="barcode-add-form">
+              <input
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                [(ngModel)]="barcodeInput"
+                name="newBarcode"
+                [attr.aria-label]="'catalog.detail.newBarcodePlaceholder' | t"
+                [placeholder]="'catalog.detail.newBarcodePlaceholder' | t"
+                (keydown.enter)="$event.preventDefault(); addFormBarcode()"
+              />
+              <button
+                type="button"
+                class="btn-secondary-sm"
+                [disabled]="barcodeBusy()"
+                (click)="addFormBarcode()"
+              >
+                {{ 'catalog.detail.addBarcode' | t }}
+              </button>
+              @if (!scanningBarcode()) {
+                <button
+                  type="button"
+                  class="btn-secondary-sm"
+                  [attr.aria-label]="'catalog.detail.scanBarcode' | t"
+                  [title]="'catalog.detail.scanBarcode' | t"
+                  (click)="scanningBarcode.set(true)"
+                >
+                  <vereint-icon name="camera" />
+                </button>
+              }
+            </div>
+            @if (barcodeHint(); as hint) {
+              <p class="form-error" role="alert">{{ hint }}</p>
+            }
+          </fieldset>
+
+          @if (drinkFormMode() === 'edit' && isBoardOrAdmin()) {
+            <label class="form-field checkbox-field">
+              <input type="checkbox" [(ngModel)]="drinkActive" name="active" />
+              <span>{{ 'catalog.form.activeLabel' | t }}</span>
+            </label>
+          }
 
           @if (formError()) {
             <p class="form-error" role="alert">{{ formError() }}</p>
           }
 
           <div class="modal-actions">
-            <button type="button" class="btn-secondary-sm" (click)="closeProposeModal()">{{ 'common.cancel' | t }}</button>
+            <button type="button" class="btn-secondary-sm" (click)="closeDrinkForm()">
+              {{ 'common.cancel' | t }}
+            </button>
             <button type="submit" class="member-button" [disabled]="submitting()">
-              {{ (submitting() ? 'common.saving' : 'catalog.propose.submit') | t }}
+              {{ (submitting() ? 'common.saving' : drinkSubmitLabel()) | t }}
             </button>
           </div>
         </form>
       </vereint-modal>
 
-      <!-- Drink Detail & Barcode Modal -->
+      <!-- Strichcode scannen: bekanntes Getränk öffnen, neues anlegen -->
+      <vereint-modal
+        [open]="showLookup()"
+        [title]="'catalog.lookup.title' | t"
+        (closed)="closeLookup()"
+      >
+        <div class="drink-detail-modal">
+          <p class="text-muted">{{ 'catalog.lookup.intro' | t }}</p>
+          @if (showLookup()) {
+            <vereint-barcode-scanner (detected)="lookupBarcode($event)" />
+          }
+          <form
+            class="barcode-add-form"
+            (submit)="$event.preventDefault(); lookupBarcode(lookupInput)"
+          >
+            <input
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              [(ngModel)]="lookupInput"
+              name="lookupBarcode"
+              [attr.aria-label]="'catalog.lookup.manual' | t"
+              [placeholder]="'catalog.lookup.manual' | t"
+            />
+            <button type="submit" class="member-button-sm" [disabled]="barcodeBusy()">
+              {{ 'catalog.lookup.search' | t }}
+            </button>
+          </form>
+          @if (barcodeHint(); as hint) {
+            <p class="form-error" role="alert">{{ hint }}</p>
+          }
+        </div>
+      </vereint-modal>
+
+      <!-- Getränkedetails (nur lesen) -->
       <vereint-modal
         [open]="showDrinkDetailModal()"
         [title]="selectedDrink()?.name ?? ('catalog.detail.fallbackTitle' | t)"
@@ -278,9 +488,12 @@ type CatalogTab = 'drinks' | 'food';
         @if (selectedDrink(); as drink) {
           <div class="drink-detail-modal">
             <p class="drink-detail-meta">
-              <strong>{{ 'catalog.detail.category' | t }}</strong> {{ drink.category || ('catalog.card.generalCategory' | t) }} |
-              <strong>{{ 'catalog.detail.status' | t }}</strong> {{ drinkStatusLabel(drink.status) }} |
-              <strong>{{ 'catalog.detail.defaultPrice' | t }}</strong> {{ formatPrice(drink.defaultPrice, drink.currency) }}
+              <strong>{{ 'catalog.detail.category' | t }}</strong>
+              {{ drink.category || ('catalog.card.generalCategory' | t) }} |
+              <strong>{{ 'catalog.detail.status' | t }}</strong>
+              {{ drinkStatusLabel(drink.status) }} |
+              <strong>{{ 'catalog.detail.defaultPrice' | t }}</strong>
+              {{ formatPrice(drink.defaultPrice, drink.currency) }}
             </p>
             @if (drink.description) {
               <p class="drink-detail-desc">{{ drink.description }}</p>
@@ -294,34 +507,9 @@ type CatalogTab = 'drinks' | 'food';
                 @for (bc of drink.barcodes; track bc.id) {
                   <li class="barcode-item">
                     <code>{{ bc.barcode }}</code>
-                    @if (isBoardOrAdmin()) {
-                      <button
-                        type="button"
-                        class="btn-icon-danger"
-                        [title]="'catalog.detail.removeBarcode' | t"
-                        (click)="removeBarcode(drink.id, bc.id)"
-                      >
-                        <vereint-icon name="close" />
-                      </button>
-                    }
                   </li>
                 }
               </ul>
-            }
-
-            @if (isBoardOrAdmin()) {
-              <form class="barcode-add-form" (submit)="addBarcode($event, drink.id)">
-                <input
-                  type="text"
-                  [(ngModel)]="newBarcodeValue"
-                  name="newBarcode"
-                  [placeholder]="'catalog.detail.newBarcodePlaceholder' | t"
-                  required
-                />
-                <button type="submit" class="member-button-sm" [disabled]="submitting()">
-                  {{ 'catalog.detail.addBarcode' | t }}
-                </button>
-              </form>
             }
           </div>
         }
@@ -336,12 +524,21 @@ type CatalogTab = 'drinks' | 'food';
         <form (submit)="submitFoodForm($event)" class="modal-form">
           <label class="form-field">
             <span>{{ 'catalog.food.name' | t }}</span>
-            <input [(ngModel)]="foodFormName" name="foodName" required [placeholder]="'catalog.food.namePlaceholder' | t" />
+            <input
+              [(ngModel)]="foodFormName"
+              name="foodName"
+              required
+              [placeholder]="'catalog.food.namePlaceholder' | t"
+            />
           </label>
 
           <label class="form-field">
             <span>{{ 'catalog.form.category' | t }}</span>
-            <input [(ngModel)]="foodFormCategory" name="foodCategory" [placeholder]="'catalog.food.categoryPlaceholder' | t" />
+            <input
+              [(ngModel)]="foodFormCategory"
+              name="foodCategory"
+              [placeholder]="'catalog.food.categoryPlaceholder' | t"
+            />
           </label>
 
           <label class="form-field">
@@ -391,7 +588,9 @@ type CatalogTab = 'drinks' | 'food';
           }
 
           <div class="modal-actions">
-            <button type="button" class="btn-secondary-sm" (click)="closeFoodModal()">{{ 'common.cancel' | t }}</button>
+            <button type="button" class="btn-secondary-sm" (click)="closeFoodModal()">
+              {{ 'common.cancel' | t }}
+            </button>
             <button type="submit" class="member-button" [disabled]="submitting()">
               {{ (submitting() ? 'common.saving' : 'common.save') | t }}
             </button>
@@ -501,7 +700,9 @@ type CatalogTab = 'drinks' | 'food';
         flex-wrap: wrap;
         margin-top: auto;
       }
-      .btn-primary-sm, .btn-secondary-sm, .btn-danger-sm {
+      .btn-primary-sm,
+      .btn-secondary-sm,
+      .btn-danger-sm {
         padding: 0.4rem 0.8rem;
         font-size: 0.8rem;
         font-weight: 600;
@@ -542,7 +743,8 @@ type CatalogTab = 'drinks' | 'food';
         font-size: 0.9rem;
         font-weight: 600;
       }
-      .form-field input, .form-field textarea {
+      .form-field input,
+      .form-field textarea {
         padding: 0.6rem;
         border: 1px solid var(--color-border, #cbd5e1);
         border-radius: var(--radius-md, 0.5rem);
@@ -606,10 +808,17 @@ type CatalogTab = 'drinks' | 'food';
         padding: 0.4rem 0.6rem;
         border-radius: var(--radius-sm, 0.375rem);
       }
+      .barcode-scan {
+        display: grid;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+      .barcode-scan-start {
+        margin-top: 0.5rem;
+      }
       .barcode-add-form {
         display: flex;
         gap: 0.5rem;
-        margin-top: 0.5rem;
       }
       .barcode-add-form input {
         flex: 1 1 auto;
@@ -617,6 +826,44 @@ type CatalogTab = 'drinks' | 'food';
         border: 1px solid var(--color-border, #cbd5e1);
         border-radius: var(--radius-sm, 0.375rem);
         font: inherit;
+      }
+      .page-error {
+        margin: 0 0 1rem;
+      }
+      .price-margin {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-text-muted, #64748b);
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+        gap: 1rem;
+      }
+      .form-hint,
+      .form-info {
+        font-size: 0.85rem;
+        margin: -0.5rem 0 0;
+        color: var(--color-text-muted, #64748b);
+      }
+      .form-info {
+        margin: 0;
+        color: #15803d;
+        font-weight: 600;
+      }
+      .barcode-fieldset {
+        border: 1px solid var(--color-border, #e2e8f0);
+        border-radius: var(--radius-md, 0.5rem);
+        padding: 0.75rem;
+        margin: 0;
+        display: grid;
+        gap: 0.5rem;
+      }
+      .barcode-fieldset legend {
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 0 0.25rem;
       }
       .member-button-sm {
         padding: 0.4rem 0.8rem;
@@ -638,7 +885,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   protected readonly activeTab = signal<CatalogTab>('drinks');
   protected readonly isBoardOrAdmin = signal(false);
 
-  protected searchQuery = '';
+  protected readonly searchQuery = signal('');
   protected statusFilter = '';
 
   protected readonly load = new AsyncState<{
@@ -647,24 +894,39 @@ export class CatalogComponent implements OnInit, OnDestroy {
   }>();
 
   // Modals state
-  protected readonly showProposeModal = signal(false);
   protected readonly showDrinkDetailModal = signal(false);
   protected readonly showFoodModal = signal(false);
   protected readonly submitting = signal(false);
   protected readonly formError = signal<string | null>(null);
   /** Rückmeldung nach einem Vorschlag: Mitglieder sehen nur freigegebene Getränke. */
   protected readonly proposeInfo = signal<string | null>(null);
+  /** Fehler aus Freigeben/Ablehnen, die sonst nirgends sichtbar würden. */
+  protected readonly actionError = signal<string | null>(null);
 
-  // Propose Drink Form
-  protected newDrinkName = '';
-  protected newDrinkCategory = '';
-  protected newDrinkPrice: number | null = null;
-  protected newDrinkDescription = '';
-  protected newDrinkBarcode = '';
+  // Getränkeformular: anlegen (Vorstand/Admin), vorschlagen (Mitglied) oder bearbeiten
+  protected readonly drinkFormMode = signal<'create' | 'edit' | null>(null);
+  protected readonly editingDrink = signal<DrinkDto | null>(null);
+  protected readonly formInfo = signal<string | null>(null);
+  protected drinkName = '';
+  protected drinkCategory = '';
+  protected drinkPrice: number | null = null;
+  protected drinkCostPrice: number | null = null;
+  protected drinkDescription = '';
+  protected drinkActive = true;
+  /** Beim Anlegen gesammelte Codes; beim Bearbeiten die gespeicherten des Getränks. */
+  private readonly pendingBarcodes = signal<string[]>([]);
+  protected barcodeInput = '';
+  protected readonly barcodeHint = signal<string | null>(null);
+  protected readonly barcodeBusy = signal(false);
+  /** Kamera zum Erfassen eines Strichcodes ist eingeblendet. */
+  protected readonly scanningBarcode = signal(false);
 
-  // Selected Drink for Detail/Barcode
+  // Strichcode scannen, um ein Getränk zu finden oder anzulegen
+  protected readonly showLookup = signal(false);
+  protected lookupInput = '';
+
+  // Selected Drink for Detail
   protected readonly selectedDrink = signal<DrinkDto | null>(null);
-  protected newBarcodeValue = '';
 
   // Food Form
   protected editingFoodId = signal<string | null>(null);
@@ -675,16 +937,41 @@ export class CatalogComponent implements OnInit, OnDestroy {
   protected foodFormDescription = '';
   protected foodFormActive = true;
 
+  protected readonly formBarcodes = computed<{ id?: string; barcode: string }[]>(() => {
+    const editing = this.editingDrink();
+    if (editing) return editing.barcodes;
+    return this.pendingBarcodes().map((barcode) => ({ barcode }));
+  });
+
+  /** Vorhandene Kategorien als Vorschläge, damit „Bier“ und „bier“ nicht doppelt entstehen. */
+  protected readonly drinkCategories = computed(() => {
+    const seen = new Map<string, string>();
+    for (const drink of this.load.data()?.drinks ?? []) {
+      const category = drink.category?.trim();
+      if (category && !seen.has(category.toLowerCase())) seen.set(category.toLowerCase(), category);
+    }
+    return [...seen.values()].sort((a, b) => a.localeCompare(b));
+  });
+
+  protected readonly drinkFormTitle = computed(() => {
+    if (this.drinkFormMode() === 'edit') return 'catalog.edit.title';
+    return this.isBoardOrAdmin() ? 'catalog.create.title' : 'catalog.propose.title';
+  });
+
+  protected readonly drinkSubmitLabel = computed(() => {
+    if (this.drinkFormMode() === 'edit') return 'common.save';
+    return this.isBoardOrAdmin() ? 'catalog.create.submit' : 'catalog.propose.submit';
+  });
+
   protected readonly filteredDrinks = computed(() => {
     const data = this.load.data();
     if (!data) return [];
     let list = data.drinks;
-    const q = this.searchQuery.trim().toLowerCase();
+    const q = this.searchQuery().trim().toLowerCase();
     if (q) {
       list = list.filter(
         (d) =>
-          d.name.toLowerCase().includes(q) ||
-          (d.category && d.category.toLowerCase().includes(q)),
+          d.name.toLowerCase().includes(q) || (d.category && d.category.toLowerCase().includes(q)),
       );
     }
     return list;
@@ -694,12 +981,11 @@ export class CatalogComponent implements OnInit, OnDestroy {
     const data = this.load.data();
     if (!data) return [];
     let list = data.foods;
-    const q = this.searchQuery.trim().toLowerCase();
+    const q = this.searchQuery().trim().toLowerCase();
     if (q) {
       list = list.filter(
         (f) =>
-          f.name.toLowerCase().includes(q) ||
-          (f.category && f.category.toLowerCase().includes(q)),
+          f.name.toLowerCase().includes(q) || (f.category && f.category.toLowerCase().includes(q)),
       );
     }
     return list;
@@ -764,45 +1050,204 @@ export class CatalogComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Propose Drink
-  protected openProposeModal(): void {
-    this.newDrinkName = '';
-    this.newDrinkCategory = '';
-    this.newDrinkPrice = null;
-    this.newDrinkDescription = '';
-    this.newDrinkBarcode = '';
+  /** Getränk mit gleichem Namen, um Doppelerfassungen vor dem Speichern zu zeigen. */
+  protected similarDrink(): DrinkSummaryDto | null {
+    const name = this.drinkName.trim().replace(/\s+/g, ' ').toLowerCase();
+    if (!name) return null;
+    const editingId = this.editingDrink()?.id;
+    return (
+      this.load.data()?.drinks.find((d) => d.id !== editingId && d.name.toLowerCase() === name) ??
+      null
+    );
+  }
+
+  protected margin(drink: DrinkSummaryDto): number {
+    return (Number(drink.defaultPrice) || 0) - (Number(drink.costPrice) || 0);
+  }
+
+  // Getränk anlegen / vorschlagen
+  protected openCreateDrink(barcode?: string): void {
+    this.resetDrinkForm();
+    if (barcode) {
+      this.pendingBarcodes.set([barcode]);
+      this.formInfo.set(translate('catalog.lookup.newBarcode', { barcode }));
+    }
+    this.drinkFormMode.set('create');
+  }
+
+  protected openEditDrink(id: string): void {
+    this.actionError.set(null);
+    this.catalogApi.getDrink(id).subscribe({
+      next: (drink) => {
+        this.resetDrinkForm();
+        this.editingDrink.set(drink);
+        this.drinkName = drink.name;
+        this.drinkCategory = drink.category ?? '';
+        this.drinkPrice = Number(drink.defaultPrice);
+        this.drinkCostPrice = drink.costPrice ? Number(drink.costPrice) : null;
+        this.drinkDescription = drink.description ?? '';
+        this.drinkActive = drink.active;
+        this.drinkFormMode.set('edit');
+      },
+      error: (err: unknown) => this.actionError.set(describeApiError(err)),
+    });
+  }
+
+  private resetDrinkForm(): void {
+    this.editingDrink.set(null);
+    this.drinkName = '';
+    this.drinkCategory = '';
+    this.drinkPrice = null;
+    this.drinkCostPrice = null;
+    this.drinkDescription = '';
+    this.drinkActive = true;
+    this.pendingBarcodes.set([]);
+    this.barcodeInput = '';
+    this.barcodeHint.set(null);
+    this.scanningBarcode.set(false);
+    this.formInfo.set(null);
     this.formError.set(null);
-    this.showProposeModal.set(true);
   }
 
-  protected closeProposeModal(): void {
-    this.showProposeModal.set(false);
+  protected closeDrinkForm(): void {
+    this.scanningBarcode.set(false);
+    this.drinkFormMode.set(null);
+    this.editingDrink.set(null);
   }
 
-  protected submitDrinkProposal(event: Event): void {
+  protected onFormBarcodeScanned(code: string): void {
+    this.scanningBarcode.set(false);
+    this.barcodeInput = code;
+    this.addFormBarcode();
+  }
+
+  /**
+   * Prüft einen Strichcode, bevor er dem Getränk zugeordnet wird: Ein Code, der
+   * schon zu einem anderen Getränk gehört, wird mit dessen Namen abgewiesen.
+   * Beim Bearbeiten wird er sofort gespeichert, beim Anlegen mit dem Getränk.
+   */
+  protected addFormBarcode(): void {
+    const barcode = normalizeBarcode(this.barcodeInput);
+    if (!barcode) return;
+    this.barcodeHint.set(null);
+    if (this.formBarcodes().some((bc) => bc.barcode === barcode)) {
+      this.barcodeInput = '';
+      return;
+    }
+
+    this.barcodeBusy.set(true);
+    this.catalogApi.getDrinkByBarcode(barcode).subscribe({
+      next: (owner) => {
+        this.barcodeBusy.set(false);
+        this.barcodeHint.set(translate('catalog.form.barcodeTaken', { barcode, name: owner.name }));
+      },
+      error: (err: unknown) => {
+        if (!(err instanceof ApiError) || err.status !== 404) {
+          this.barcodeBusy.set(false);
+          this.barcodeHint.set(describeApiError(err));
+          return;
+        }
+        const editing = this.editingDrink();
+        if (!editing) {
+          this.barcodeBusy.set(false);
+          this.pendingBarcodes.update((list) => [...list, barcode]);
+          this.barcodeInput = '';
+          return;
+        }
+        this.catalogApi.addBarcode(editing.id, { barcode }).subscribe({
+          next: (saved) => {
+            this.barcodeBusy.set(false);
+            this.barcodeInput = '';
+            this.editingDrink.set({ ...editing, barcodes: [...editing.barcodes, saved] });
+          },
+          error: (addErr: unknown) => {
+            this.barcodeBusy.set(false);
+            this.barcodeHint.set(
+              (addErr as Error)?.message || translate('catalog.errors.addBarcode'),
+            );
+          },
+        });
+      },
+    });
+  }
+
+  protected removeFormBarcode(bc: { id?: string; barcode: string }): void {
+    const editing = this.editingDrink();
+    if (!editing || !bc.id) {
+      this.pendingBarcodes.update((list) => list.filter((code) => code !== bc.barcode));
+      return;
+    }
+    const barcodeId = bc.id;
+    this.catalogApi.removeBarcode(editing.id, barcodeId).subscribe({
+      next: () =>
+        this.editingDrink.set({
+          ...editing,
+          barcodes: editing.barcodes.filter((b) => b.id !== barcodeId),
+        }),
+      error: (err: unknown) => this.barcodeHint.set(describeApiError(err)),
+    });
+  }
+
+  protected submitDrinkForm(event: Event): void {
     event.preventDefault();
-    if (!this.newDrinkName.trim() || this.newDrinkPrice === null) {
+    if (!this.drinkName.trim() || this.drinkPrice === null) {
       this.formError.set(translate('catalog.form.requiredFields'));
+      return;
+    }
+    // Ein eingetippter, aber nicht hinzugefügter Strichcode soll nicht verloren gehen.
+    if (normalizeBarcode(this.barcodeInput)) {
+      this.formError.set(translate('catalog.form.barcodeNotAdded'));
       return;
     }
 
     this.submitting.set(true);
     this.formError.set(null);
-
-    const payload: ProposeDrinkRequest = {
-      name: this.newDrinkName.trim(),
-      category: this.newDrinkCategory.trim() || null,
-      defaultPrice: this.newDrinkPrice,
-      description: this.newDrinkDescription.trim() || null,
-      currency: 'EUR',
-      barcodes: this.newDrinkBarcode.trim() ? [this.newDrinkBarcode.trim()] : [],
+    const editing = this.editingDrink();
+    const fields = {
+      name: this.drinkName.trim(),
+      category: this.drinkCategory.trim() || null,
+      defaultPrice: this.drinkPrice,
+      description: this.drinkDescription.trim() || null,
+      ...(this.isBoardOrAdmin() ? { costPrice: this.drinkCostPrice ?? 0 } : {}),
     };
 
+    if (editing) {
+      this.catalogApi
+        .updateDrink(editing.id, {
+          ...fields,
+          // Leere Felder senden, damit gelöschte Kategorien/Beschreibungen auch entfernt werden.
+          category: fields.category ?? '',
+          description: fields.description ?? '',
+          ...(this.isBoardOrAdmin() ? { active: this.drinkActive } : {}),
+        })
+        .subscribe({
+          next: () => {
+            this.submitting.set(false);
+            this.closeDrinkForm();
+            this.reload();
+          },
+          error: (err: unknown) => {
+            this.submitting.set(false);
+            this.formError.set((err as Error)?.message || translate('catalog.errors.saveDrink'));
+          },
+        });
+      return;
+    }
+
+    const payload: ProposeDrinkRequest = {
+      ...fields,
+      currency: 'EUR',
+      barcodes: this.pendingBarcodes(),
+    };
     this.catalogApi.proposeDrink(payload).subscribe({
-      next: () => {
+      next: (created) => {
         this.submitting.set(false);
-        this.closeProposeModal();
-        this.proposeInfo.set(translate('catalog.proposeInfo', { name: payload.name }));
+        this.closeDrinkForm();
+        this.proposeInfo.set(
+          translate(created?.status === 'approved' ? 'catalog.createInfo' : 'catalog.proposeInfo', {
+            name: payload.name,
+          }),
+        );
         this.reload();
       },
       error: (err: unknown) => {
@@ -812,58 +1257,76 @@ export class CatalogComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Strichcode scannen
+  protected openLookup(): void {
+    this.lookupInput = '';
+    this.barcodeHint.set(null);
+    this.showLookup.set(true);
+  }
+
+  protected closeLookup(): void {
+    this.showLookup.set(false);
+  }
+
+  /** Bekannter Code öffnet das Getränk, unbekannter das Formular mit vorausgefülltem Code. */
+  protected lookupBarcode(raw: string): void {
+    const barcode = normalizeBarcode(raw);
+    if (!barcode) return;
+    this.barcodeHint.set(null);
+    this.barcodeBusy.set(true);
+    this.catalogApi.getDrinkByBarcode(barcode).subscribe({
+      next: (drink) => {
+        this.barcodeBusy.set(false);
+        this.closeLookup();
+        if (this.isBoardOrAdmin()) this.openEditDrink(drink.id);
+        else this.showDrinkDetail(drink);
+      },
+      error: (err: unknown) => {
+        this.barcodeBusy.set(false);
+        if (err instanceof ApiError && err.status === 404) {
+          this.closeLookup();
+          this.openCreateDrink(barcode);
+        } else {
+          this.barcodeHint.set(describeApiError(err));
+        }
+      },
+    });
+  }
+
   // Approve / Reject
   protected approveDrink(id: string): void {
+    this.actionError.set(null);
     this.catalogApi.approveDrink(id).subscribe({
       next: () => this.reload(),
+      error: (err: unknown) => this.actionError.set(describeApiError(err)),
     });
   }
 
   protected rejectDrink(id: string): void {
+    this.actionError.set(null);
     this.catalogApi.rejectDrink(id).subscribe({
       next: () => this.reload(),
+      error: (err: unknown) => this.actionError.set(describeApiError(err)),
     });
   }
 
-  // Drink Detail & Barcode
+  // Drink Detail (lesend)
   protected openDrinkDetail(id: string): void {
+    this.actionError.set(null);
     this.catalogApi.getDrink(id).subscribe({
-      next: (drink) => {
-        this.selectedDrink.set(drink);
-        this.newBarcodeValue = '';
-        this.showDrinkDetailModal.set(true);
-      },
+      next: (drink) => this.showDrinkDetail(drink),
+      error: (err: unknown) => this.actionError.set(describeApiError(err)),
     });
+  }
+
+  private showDrinkDetail(drink: DrinkDto): void {
+    this.selectedDrink.set(drink);
+    this.showDrinkDetailModal.set(true);
   }
 
   protected closeDrinkDetailModal(): void {
     this.showDrinkDetailModal.set(false);
     this.selectedDrink.set(null);
-  }
-
-  protected addBarcode(event: Event, drinkId: string): void {
-    event.preventDefault();
-    const barcode = this.newBarcodeValue.trim();
-    if (!barcode) return;
-
-    this.submitting.set(true);
-    this.catalogApi.addBarcode(drinkId, { barcode }).subscribe({
-      next: () => {
-        this.submitting.set(false);
-        this.newBarcodeValue = '';
-        this.openDrinkDetail(drinkId);
-      },
-      error: (err: unknown) => {
-        this.submitting.set(false);
-        this.formError.set((err as Error)?.message || translate('catalog.errors.addBarcode'));
-      },
-    });
-  }
-
-  protected removeBarcode(drinkId: string, barcodeId: string): void {
-    this.catalogApi.removeBarcode(drinkId, barcodeId).subscribe({
-      next: () => this.openDrinkDetail(drinkId),
-    });
   }
 
   // Food Management

@@ -69,6 +69,10 @@
       "statEntries": "Buchungen",
       "shortcutsHeading": "Schnellzugriff",
       "shortcuts": {
+        "scan": {
+          "title": "Getränk bezahlen",
+          "sub": "Strichcode scannen"
+        },
         "moments": {
           "title": "Moments",
           "sub": "Anstoßen & Rituale"
@@ -181,7 +185,8 @@
         "topup": "Aufladungen",
         "spend": "Ausgaben",
         "empty": "Keine Buchungen für diesen Filter."
-      }
+      },
+      "reversal": "Storno: {name}"
     }
   },
   "profile": {
@@ -275,7 +280,8 @@
       "treasury": "Kasse & Finanzen",
       "communications": "Kommunikation",
       "admin": "Administration",
-      "tablet": "Thekenterminal"
+      "tablet": "Thekenterminal",
+      "scan": "Bezahlen"
     },
     "sections": {
       "club": "Verein",
@@ -317,6 +323,33 @@
       "oidcLoginFailed": "Die Anmeldung über Keycloak ist fehlgeschlagen.",
       "browserOnly": "Der Anmeldedienst ist auf diesem Gerät nicht verfügbar.",
       "generic": "Die Anmeldung ist fehlgeschlagen."
+    },
+    "register": {
+      "eyebrow": "Einladung",
+      "title": "Mitglied werden",
+      "doneTitle": "Willkommen im Verein!",
+      "checking": "Einladungslink wird geprüft …",
+      "invalidTitle": "Registrierung nicht möglich",
+      "toLogin": "Zur Anmeldung",
+      "intro": "Du wurdest eingeladen. Lege dein Konto an, danach kannst du dich sofort anmelden.",
+      "validUntil": "Der Link gilt bis {date}.",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail-Adresse",
+      "password": "Passwort (mindestens {min} Zeichen)",
+      "passwordRepeat": "Passwort wiederholen",
+      "submit": "Konto anlegen",
+      "submitting": "Konto wird angelegt …",
+      "done": "Dein Konto für {email} ist angelegt. Melde dich jetzt mit deiner E-Mail-Adresse und deinem Passwort an.",
+      "loginNow": "Jetzt anmelden",
+      "errors": {
+        "noToken": "Dieser Link enthält keinen gültigen Einladungscode. Bitte öffne den vollständigen Link aus deiner Einladung.",
+        "nameRequired": "Bitte Vor- und Nachnamen angeben.",
+        "emailInvalid": "Bitte eine gültige E-Mail-Adresse eingeben.",
+        "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
+        "passwordMismatch": "Die beiden Passwörter stimmen nicht überein.",
+        "checkInput": "Bitte prüfe deine Eingaben. Das Passwort muss mindestens {min} Zeichen lang sein."
+      }
     }
   },
   "errorPages": {
@@ -456,6 +489,10 @@
     "eventCreate": {
       "title": "Event anlegen",
       "description": "Neues Event planen und Mitglieder einladen."
+    },
+    "scan": {
+      "title": "Getränk bezahlen",
+      "description": "Strichcode scannen und mit Guthaben bezahlen."
     }
   },
   "chat": {
@@ -673,7 +710,8 @@
     },
     "actions": {
       "proposeDrink": "+ Getränk vorschlagen",
-      "createFood": "+ Neue Speise anlegen"
+      "createFood": "+ Neue Speise anlegen",
+      "createDrink": "+ Getränk anlegen"
     },
     "tabs": {
       "label": "Katalogbereiche",
@@ -702,7 +740,8 @@
       "detailsAndBarcodes": "Details & Barcodes",
       "approve": "Freigeben",
       "reject": "Ablehnen",
-      "edit": "Bearbeiten"
+      "edit": "Bearbeiten",
+      "margin": "Marge {amount}"
     },
     "drinkStatus": {
       "approved": "Freigegeben",
@@ -716,15 +755,21 @@
       "categoryPlaceholder": "z. B. Helles, Weizen, Alkoholfrei",
       "pricePlaceholder": "z. B. 2.50",
       "descriptionPlaceholder": "Besonderheiten, Brauerei, etc.",
-      "barcode": "Barcode (optional)",
-      "barcodePlaceholder": "z. B. 4012345678901",
       "submit": "Vorschlag einreichen"
     },
     "form": {
       "category": "Kategorie",
       "defaultPrice": "Standardpreis (€) *",
       "description": "Beschreibung",
-      "requiredFields": "Bitte füllen Sie alle Pflichtfelder aus."
+      "requiredFields": "Bitte füllen Sie alle Pflichtfelder aus.",
+      "costPrice": "Einkaufspreis (€)",
+      "costPricePlaceholder": "z. B. 1.10",
+      "marginHint": "Marge pro Verkauf: {amount}",
+      "barcodes": "Barcodes",
+      "similarName": "Es gibt schon ein Getränk namens „{name}“. Bitte prüfe, ob es dasselbe ist.",
+      "barcodeTaken": "Der Barcode {barcode} gehört schon zu „{name}“.",
+      "barcodeNotAdded": "Der eingegebene Barcode ist noch nicht hinzugefügt. Bitte auf „+ Barcode hinzufügen“ tippen oder das Feld leeren.",
+      "activeLabel": "Im Sortiment (abwählen, um das Getränk aus dem Verkauf zu nehmen)"
     },
     "detail": {
       "fallbackTitle": "Getränkedetails",
@@ -735,7 +780,9 @@
       "noBarcodes": "Keine Barcodes hinterlegt.",
       "removeBarcode": "Barcode entfernen",
       "newBarcodePlaceholder": "Neuen Barcode erfassen …",
-      "addBarcode": "+ Barcode hinzufügen"
+      "addBarcode": "+ Barcode hinzufügen",
+      "scanBarcode": "Mit Kamera scannen",
+      "scanCancel": "Scannen beenden"
     },
     "food": {
       "editTitle": "Speise bearbeiten",
@@ -753,9 +800,26 @@
       "propose": "Fehler beim Einreichen des Vorschlags.",
       "addBarcode": "Fehler beim Hinzufügen des Barcodes.",
       "saveFood": "Fehler beim Speichern der Speise.",
-      "createFood": "Fehler beim Anlegen der Speise."
+      "createFood": "Fehler beim Anlegen der Speise.",
+      "saveDrink": "Fehler beim Speichern des Getränks."
     },
-    "proposeInfo": "„{name}“ wurde vorgeschlagen. Nach der Freigabe durch den Vorstand erscheint es im Katalog."
+    "proposeInfo": "„{name}“ wurde vorgeschlagen. Nach der Freigabe durch den Vorstand erscheint es im Katalog.",
+    "create": {
+      "title": "Getränk anlegen",
+      "submit": "Getränk anlegen"
+    },
+    "edit": {
+      "title": "Getränk bearbeiten"
+    },
+    "lookup": {
+      "open": "Barcode scannen",
+      "title": "Getränk per Barcode finden",
+      "intro": "Halte den Barcode der Flasche vor die Kamera. Ist das Getränk bekannt, öffnet es sich; sonst kannst du es gleich anlegen.",
+      "manual": "Barcode eingeben …",
+      "search": "Suchen",
+      "newBarcode": "Der Barcode {barcode} ist noch keinem Getränk zugeordnet. Er wird mit dem neuen Getränk gespeichert."
+    },
+    "createInfo": "„{name}“ wurde angelegt und ist sofort im Katalog."
   },
   "sublists": {
     "header": {
@@ -954,21 +1018,51 @@
     },
     "invite": {
       "title": "Mitglied einladen",
-      "email": "E-Mail-Adresse",
-      "startRole": "Startrolle",
-      "roleMemberDefault": "Mitglied (Standard)",
-      "message": "Persönliche Nachricht (optional)",
-      "messagePlaceholder": "Servus! Komm auf einen Krug vorbei bei unserer Stammtisch-App.",
-      "send": "Einladung senden",
-      "openTitle": "Offene Einladungen",
-      "emptyTitle": "Keine offenen Einladungen",
-      "emptyMessage": "Aktuell sind keine Einladungen ausstehend.",
-      "expired": "Abgelaufen",
-      "pending": "Ausstehend",
-      "renew": "Erneuern",
-      "invalidEmail": "Bitte eine gültige E-Mail-Adresse eingeben.",
-      "queued": "Einladung vorgemerkt.",
-      "renewed": "Einladung erneuert."
+      "intro": "Die eingeladene Person registriert sich über den Link selbst und ist danach normales Mitglied.",
+      "labelField": "Für wen? (optional, nur zum Wiedererkennen)",
+      "labelPlaceholder": "z. B. Anna Neumann",
+      "validity": "Gültig für",
+      "validityDays": {
+        "one": "{count} Tag",
+        "other": "{count} Tage"
+      },
+      "maxUses": "Anzahl Personen",
+      "create": "Link erstellen",
+      "createdTitle": "Einladungslink erstellt",
+      "createdHint": "Schick diesen Link an die Person, zum Beispiel per Messenger oder E-Mail. Er wird nur jetzt angezeigt und gilt bis {date}.",
+      "linkLabel": "Einladungslink",
+      "share": "Teilen",
+      "copy": "Link kopieren",
+      "copied": "Kopiert",
+      "another": "Weiteren Link erstellen",
+      "listTitle": "Einladungslinks",
+      "loading": "Einladungen werden geladen",
+      "loadFailed": "Einladungen nicht geladen",
+      "emptyTitle": "Noch keine Einladungen",
+      "emptyMessage": "Erstelle oben einen Link für die erste Person.",
+      "noLabel": "Ohne Bezeichnung",
+      "usage": "{used} von {max} verwendet · gültig bis {date}",
+      "registered": "Registriert: {names}",
+      "revoke": "Zurückziehen",
+      "status": {
+        "active": "Offen",
+        "used": "Verwendet",
+        "expired": "Abgelaufen",
+        "revoked": "Zurückgezogen"
+      },
+      "maxUsesInvalid": "Die Anzahl Personen muss zwischen 1 und 50 liegen.",
+      "copyFailed": "Kopieren nicht möglich. Bitte den Link markieren und manuell kopieren.",
+      "shareTitle": "Einladung zu Vereint",
+      "shareText": "Hier kannst du dich als Mitglied registrieren:",
+      "errors": {
+        "notFound": "Dieser Einladungslink ist ungültig. Bitte prüfe, ob du den ganzen Link geöffnet hast.",
+        "expired": "Dieser Einladungslink ist abgelaufen. Bitte den Vorstand um einen neuen Link.",
+        "revoked": "Dieser Einladungslink wurde zurückgezogen. Bitte den Vorstand um einen neuen Link.",
+        "usedUp": "Dieser Einladungslink wurde schon verwendet. Bitte den Vorstand um einen neuen Link.",
+        "emailTaken": "Für diese E-Mail-Adresse gibt es schon ein Konto. Melde dich damit an oder setze dein Passwort zurück.",
+        "passwordRejected": "Das Passwort erfüllt die Vorgaben nicht. Bitte wähle ein längeres Passwort.",
+        "unavailable": "Die Registrierung ist gerade nicht möglich. Bitte versuche es später noch einmal."
+      }
     },
     "matrix": {
       "title": "Rollen & Berechtigungen",
@@ -997,6 +1091,35 @@
       "notification": "Kommunikation",
       "user": "Benutzer"
     },
+    "auditAction": {
+      "NOTIFICATION_SENT": "Mitteilung gesendet",
+      "USER_ROLES_CHANGED": "Rollen geändert",
+      "USER_PERMISSIONS_CHANGED": "Berechtigungen geändert",
+      "USER_STATUS_CHANGED": "Status geändert",
+      "USER_PROFILE_ADMIN_UPDATED": "Profil bearbeitet",
+      "USER_REGISTERED_BY_INVITE": "Per Einladung registriert",
+      "LEDGER_TOPUP": "Aufladung",
+      "LEDGER_PAYOUT": "Auszahlung",
+      "LEDGER_CORRECTION": "Korrektur",
+      "LEDGER_PURCHASE": "Kauf",
+      "MOMENT_STARTED": "Moment gestartet",
+      "MOMENT_COMPLETED": "Moment beendet"
+    },
+    "auditDetail": {
+      "amount": "Betrag",
+      "note": "Notiz",
+      "old": "Vorher",
+      "new": "Nachher",
+      "roles": "Rollen",
+      "displayName": "Name",
+      "disabled": "Gesperrt",
+      "boardRole": "Vorstandsrolle",
+      "title": "Titel",
+      "topic": "Thema",
+      "durationMinutes": "Dauer (Min.)"
+    },
+    "auditRecipient": "an {name}",
+    "auditMember": "Betrifft {name}",
     "boardRole": {
       "chair": "Vorsitz",
       "treasurer": "Kassenwart",
@@ -1029,7 +1152,9 @@
       "eventsEmptyTitle": "Keine Events",
       "eventsEmptyMessage": "Aktuell sind keine Events zur Moderation sichtbar.",
       "moderate": "Moderieren",
-      "auditHeading": "Letzte Aktionen ({count})"
+      "auditHeading": "Letzte Aktionen ({count})",
+      "inviteTitle": "Mitglied einladen",
+      "inviteDesc": "Einladungslink zur Registrierung erstellen"
     },
     "comms": {
       "eyebrow": "Schriftwart",
@@ -1415,6 +1540,55 @@
         "disabled": "Mitteilungen sind auf diesem Gerät aus.",
         "disableFailed": "Mitteilungen konnten nicht deaktiviert werden. Bitte später erneut versuchen."
       }
+    }
+  },
+  "scan": {
+    "eyebrow": "Mit Guthaben bezahlen",
+    "title": "Getränk scannen",
+    "intro": "Halte den Strichcode der Flasche in den Rahmen. Bevor etwas abgebucht wird, siehst du Getränk und Preis.",
+    "camera": {
+      "label": "Kamerabild zum Scannen",
+      "starting": "Kamera wird gestartet …",
+      "denied": "Die App darf die Kamera nicht benutzen. Erlaube den Kamerazugriff in den Browser-Einstellungen oder tippe die Nummer unten ein.",
+      "unavailable": "Hier ist keine Kamera verfügbar. Tippe die Nummer unter dem Strichcode unten ein."
+    },
+    "manual": {
+      "label": "Oder Nummer unter dem Strichcode eintippen",
+      "placeholder": "z. B. 4006381333931",
+      "submit": "Suchen"
+    },
+    "loading": "Getränk wird gesucht …",
+    "notFound": {
+      "title": "Das hat nicht geklappt"
+    },
+    "retry": "Nochmal scannen",
+    "confirm": {
+      "chooseEvent": "Bei welchem Event?",
+      "event": "Event",
+      "price": "Preis",
+      "balanceNow": "Guthaben jetzt",
+      "balanceAfter": "Guthaben danach",
+      "negative": "Dein Guthaben geht damit ins Minus. Bitte lade es beim Vorstand wieder auf.",
+      "pay": "{price} bezahlen",
+      "cancel": "Abbrechen"
+    },
+    "paying": "Wird bezahlt …",
+    "done": {
+      "title": "Bezahlt",
+      "message": "{drink} für {price} wurde von deinem Guthaben abgebucht.",
+      "undoHint": "Vertan? Du kannst den Kauf 10 Minuten lang zurücknehmen.",
+      "undo": "Rückgängig",
+      "next": "Nächstes Getränk scannen",
+      "toWallet": "Zum Guthaben"
+    },
+    "undone": {
+      "title": "Kauf zurückgenommen",
+      "message": "{price} sind wieder auf deinem Guthaben."
+    },
+    "errors": {
+      "lookup": "Das Getränk konnte nicht gesucht werden.",
+      "pay": "Bezahlen hat nicht geklappt.",
+      "undo": "Zurücknehmen hat nicht geklappt."
     }
   }
 }

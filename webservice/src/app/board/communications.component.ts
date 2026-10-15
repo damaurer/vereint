@@ -5,7 +5,7 @@ import { map } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
 import { formatDateTime } from '../member/member-format';
-import { auditTargetLabel, boardRoleLabel } from './board-format';
+import { auditActionLabel, boardRoleLabel } from './board-format';
 import { BoardApiService } from './board-api.service';
 import type {
   AuditLogEntry,
@@ -223,12 +223,10 @@ type RecipientMode = 'all' | 'selected';
             <ul class="member-list">
               @for (entry of entries; track entry.id) {
                 <li class="member-list-item">
-                  <span class="member-list-title">
-                    {{ auditTargetLabel(entry.targetEntity) }} · {{ entry.action }}
-                  </span>
+                  <span class="member-list-title">{{ entry.targetTitle ?? auditActionLabel(entry.action) }}</span>
                   <vereint-status-badge [label]="'board.comms.sent' | t" [tone]="'success'" />
-                  @if (entry.details) {
-                    <span class="member-chat-text">{{ entry.details }}</span>
+                  @if (entry.targetName) {
+                    <span class="member-list-sub">{{ 'board.auditRecipient' | t: { name: entry.targetName } }}</span>
                   }
                   <span class="member-list-meta">{{ formatDateTime(entry.createdAt) }}</span>
                 </li>
@@ -391,7 +389,7 @@ export class CommunicationsComponent implements OnInit, OnDestroy {
   protected form = { title: '', body: '' };
 
   protected readonly formatDateTime = formatDateTime;
-  protected readonly auditTargetLabel = auditTargetLabel;
+  protected readonly auditActionLabel = auditActionLabel;
   protected readonly boardRoleLabel = boardRoleLabel;
 
   /** Verzeichnis nach Name sortiert und nach Suchbegriff gefiltert. */

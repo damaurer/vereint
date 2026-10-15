@@ -17,6 +17,7 @@ export const KNOWN_APP_PREFIXES: readonly string[] = [
   '/profile',
   '/wallet',
   '/purchases',
+  '/scan',
   '/events',
   '/guest',
   '/catalog',

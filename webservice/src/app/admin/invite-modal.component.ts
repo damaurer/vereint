@@ -1,122 +1,122 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
-import { IconComponent } from '../ui/icon.component';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { EMAIL_PATTERN } from '../auth/auth.types';
+import { describeApiError } from '../api/api-client.service';
+import {
+  MemberInvitesApiService,
+  type MemberInvite,
+  type MemberInviteStatus,
+} from '../invites/member-invites-api.service';
 import { formatDateTime } from '../member/member-format';
 import { ModalComponent, StatusBadgeComponent, type StatusTone } from '../ui';
+import { IconComponent } from '../ui/icon.component';
 import { StateComponent } from '../ui/state.component';
-import { TranslatePipe } from '../i18n';
-import { translate } from '../i18n/i18n.service';
+import { TranslatePipe, translate } from '../i18n';
 
-/** Auswählbare Startrollen einer Einladung (Präsentation). */
-const START_ROLES = [
-  { value: 'member', labelKey: 'admin.invite.roleMemberDefault' },
-  { value: 'host', labelKey: 'admin.roles.host' },
-  { value: 'treasurer', labelKey: 'admin.roles.treasurer' },
-  { value: 'secretary', labelKey: 'admin.roles.secretary' },
-  { value: 'admin', labelKey: 'admin.roles.admin' },
-] as const;
+/** Auswählbare Gültigkeitsdauer eines Links in Tagen. */
+const VALIDITY_DAYS = [1, 7, 30] as const;
 
-/** Offene Einladung in der Präsentationsliste. */
-interface OpenInvite {
-  id: string;
-  email: string;
-  /** Übersetzungsschlüssel der Startrolle. */
-  roleKey: string;
-  createdAt: string;
-  status: 'pending' | 'expired';
-}
-
-/** Beispielhafte offene Einladungen gemäß Mockup `web-einladung-modal`. */
-function demoInvites(): OpenInvite[] {
-  return [
-    {
-      id: 'inv-1',
-      email: 'flo.eber@web.de',
-      roleKey: 'admin.roles.member',
-      createdAt: '2026-11-24T14:22:00Z',
-      status: 'pending',
-    },
-    {
-      id: 'inv-2',
-      email: 'braumeister-stefan@gmail.com',
-      roleKey: 'admin.roles.host',
-      createdAt: '2026-11-20T09:15:00Z',
-      status: 'pending',
-    },
-    {
-      id: 'inv-3',
-      email: 'josef.schreiner@gmx.at',
-      roleKey: 'admin.roles.member',
-      createdAt: '2026-11-01T11:30:00Z',
-      status: 'expired',
-    },
-  ];
-}
+const STATUS_TONES: Record<MemberInviteStatus, StatusTone> = {
+  active: 'warning',
+  used: 'success',
+  expired: 'neutral',
+  revoked: 'danger',
+};
 
 /**
- * Einladungs-Modal der Administration (TICKET-038).
+ * „Mitglied einladen“ für Vorstand und Administration.
  *
- * Reine Präsentation innerhalb des geteilten `vereint-modal`: E-Mail (mit
- * clientseitiger Validierung), Startrolle, optionale Nachricht sowie eine Liste
- * offener Einladungen mit „Erneuern“. Es existiert kein serverseitiger
- * Einladungs-Endpunkt; das Senden hält den Zustand ausschließlich clientseitig.
- * Die verbindliche Autorisierung verbleibt im Fachservice (`deny by default`).
+ * Erzeugt einen Einladungslink, mit dem sich eine Person selbst als Mitglied
+ * registriert. Der Link wird genau einmal angezeigt (der Fachservice speichert
+ * nur den Hash) und lässt sich kopieren oder über das Teilen-Menü des Geräts
+ * verschicken. Darunter stehen die bisherigen Links mit Status und der
+ * Möglichkeit, offene Links zurückzuziehen. Neue Konten erhalten immer nur die
+ * Rolle „Mitglied“; weitere Rollen vergibt die Administration danach.
  */
 @Component({
   selector: 'app-admin-invite-modal',
   imports: [StateComponent, IconComponent, FormsModule, ModalComponent, StatusBadgeComponent, TranslatePipe],
   template: `
     <vereint-modal [open]="open" [title]="'admin.invite.title' | t" (closed)="close()">
-      <form class="invite-form" (ngSubmit)="send()">
-        <label class="manage-field manage-field-grow">
-          <span>{{ 'admin.invite.email' | t }}</span>
+      @if (created(); as link) {
+        <section class="invite-created" aria-labelledby="invite-created-title">
+          <h3 class="member-subtitle" id="invite-created-title">{{ 'admin.invite.createdTitle' | t }}</h3>
+          <p class="member-hint">
+            {{ 'admin.invite.createdHint' | t: { date: formatDateTime(link.expiresAt) } }}
+          </p>
           <input
-            name="inviteEmail"
-            type="email"
-            [(ngModel)]="email"
-            placeholder="name@example.org"
-            (ngModelChange)="onEmailChange()"
+            class="invite-link"
+            name="inviteLink"
+            readonly
+            [value]="link.url"
+            [attr.aria-label]="'admin.invite.linkLabel' | t"
+            (focus)="selectAll($event)"
           />
-        </label>
-
-        <label class="manage-field manage-field-grow">
-          <span>{{ 'admin.invite.startRole' | t }}</span>
-          <select name="inviteRole" [(ngModel)]="role">
-            @for (option of startRoles; track option.value) {
-              <option [value]="option.value">{{ option.labelKey | t }}</option>
+          <div class="invite-actions">
+            @if (canShare) {
+              <button type="button" class="member-button member-button-ghost" (click)="share(link.url)">
+                <vereint-icon name="send" /> {{ 'admin.invite.share' | t }}
+              </button>
             }
-          </select>
-        </label>
-
-        <label class="manage-field manage-field-grow">
-          <span>{{ 'admin.invite.message' | t }}</span>
-          <textarea
-            name="inviteMessage"
-            rows="3"
-            [(ngModel)]="message"
-            [placeholder]="'admin.invite.messagePlaceholder' | t"
-          ></textarea>
-        </label>
-
-        @if (error()) {
-          <p class="manage-action-error" role="alert">{{ error() }}</p>
-        }
-        @if (info()) {
-          <p class="manage-action-info" role="status">{{ info() }}</p>
-        }
-
-        <div class="invite-actions">
-          <button type="button" class="member-button member-button-ghost" (click)="close()">
-            {{ 'common.cancel' | t }}
+            <button type="button" class="member-button" (click)="copy(link.url)">
+              {{ (copied() ? 'admin.invite.copied' : 'admin.invite.copy') | t }}
+            </button>
+          </div>
+          <button type="button" class="invite-text-button" (click)="created.set(null)">
+            {{ 'admin.invite.another' | t }}
           </button>
-          <button type="submit" class="member-button"><vereint-icon name="send" /> {{ 'admin.invite.send' | t }}</button>
-        </div>
-      </form>
+        </section>
+      } @else {
+        <form class="invite-form" (ngSubmit)="create()">
+          <p class="member-hint">
+            {{ 'admin.invite.intro' | t }}
+          </p>
+          <label class="manage-field manage-field-grow">
+            <span>{{ 'admin.invite.labelField' | t }}</span>
+            <input
+              name="inviteLabel"
+              maxlength="120"
+              [(ngModel)]="label"
+              [placeholder]="'admin.invite.labelPlaceholder' | t"
+            />
+          </label>
+
+          <div class="invite-row-fields">
+            <label class="manage-field">
+              <span>{{ 'admin.invite.validity' | t }}</span>
+              <select name="inviteValidity" [(ngModel)]="validityDays">
+                @for (days of validityOptions; track days) {
+                  <option [ngValue]="days">{{ 'admin.invite.validityDays' | t: { count: days } }}</option>
+                }
+              </select>
+            </label>
+            <label class="manage-field">
+              <span>{{ 'admin.invite.maxUses' | t }}</span>
+              <input name="inviteMaxUses" type="number" min="1" max="50" [(ngModel)]="maxUses" />
+            </label>
+          </div>
+
+          @if (error()) {
+            <p class="manage-action-error" role="alert">{{ error() }}</p>
+          }
+
+          <div class="invite-actions">
+            <button type="button" class="member-button member-button-ghost" (click)="close()">
+              {{ 'common.cancel' | t }}
+            </button>
+            <button type="submit" class="member-button" [disabled]="busy()">
+              <vereint-icon name="send" /> {{ 'admin.invite.create' | t }}
+            </button>
+          </div>
+        </form>
+      }
 
       <section class="invite-open" aria-labelledby="invite-open-title">
-        <h3 class="member-subtitle" id="invite-open-title">{{ 'admin.invite.openTitle' | t }}</h3>
-        @if (invites().length === 0) {
+        <h3 class="member-subtitle" id="invite-open-title">{{ 'admin.invite.listTitle' | t }}</h3>
+        @if (loading()) {
+          <vereint-state kind="loading" [title]="'admin.invite.loading' | t" />
+        } @else if (listError()) {
+          <vereint-state kind="error" [title]="'admin.invite.loadFailed' | t" [message]="listError()!" />
+        } @else if (invites().length === 0) {
           <vereint-state
             kind="empty"
             [title]="'admin.invite.emptyTitle' | t"
@@ -127,18 +127,30 @@ function demoInvites(): OpenInvite[] {
             @for (invite of invites(); track invite.id) {
               <li class="member-list-item invite-row">
                 <span class="invite-meta">
-                  <span class="member-list-title">{{ invite.email }}</span>
+                  <span class="member-list-title">{{ invite.label || ('admin.invite.noLabel' | t) }}</span>
                   <span class="member-list-meta">
-                    {{ formatDateTime(invite.createdAt) }} · {{ invite.roleKey | t }}
+                    {{
+                      'admin.invite.usage'
+                        | t: { used: invite.usesCount, max: invite.maxUses, date: formatDateTime(invite.expiresAt) }
+                    }}
                   </span>
+                  @if (invite.registeredMembers.length > 0) {
+                    <span class="member-list-meta">{{
+                      'admin.invite.registered' | t: { names: invite.registeredMembers.join(', ') }
+                    }}</span>
+                  }
                 </span>
-                <vereint-status-badge
-                  [label]="(invite.status === 'expired' ? 'admin.invite.expired' : 'admin.invite.pending') | t"
-                  [tone]="inviteTone(invite.status)"
-                />
-                <button type="button" class="member-button" (click)="renew(invite.id)">
-                  {{ 'admin.invite.renew' | t }}
-                </button>
+                <vereint-status-badge [label]="'admin.invite.status.' + invite.status | t" [tone]="statusTone(invite.status)" />
+                @if (invite.status === 'active') {
+                  <button
+                    type="button"
+                    class="member-button member-button-ghost"
+                    [disabled]="busy()"
+                    (click)="revoke(invite)"
+                  >
+                    {{ 'admin.invite.revoke' | t }}
+                  </button>
+                }
               </li>
             }
           </ul>
@@ -148,9 +160,15 @@ function demoInvites(): OpenInvite[] {
   `,
   styles: [
     `
-      .invite-form {
+      .invite-form,
+      .invite-created {
         display: flex;
         flex-direction: column;
+        gap: 0.75rem;
+      }
+      .invite-row-fields {
+        display: flex;
+        flex-wrap: wrap;
         gap: 0.75rem;
       }
       .manage-field {
@@ -160,19 +178,38 @@ function demoInvites(): OpenInvite[] {
       }
       .manage-field input,
       .manage-field select,
-      .manage-field textarea {
+      .invite-link {
         padding: 0.5rem;
-        border: 1px solid #cbd5e1;
+        border: 1px solid var(--color-border, #cbd5e1);
         border-radius: 0.5rem;
         font: inherit;
+        background: var(--color-surface, #ffffff);
+        color: inherit;
+      }
+      .invite-link {
+        width: 100%;
+        box-sizing: border-box;
+        font-family: var(--opt-font-mono, monospace);
+        font-size: 0.85rem;
       }
       .invite-actions {
         display: flex;
+        flex-wrap: wrap;
         justify-content: flex-end;
         gap: 0.5rem;
       }
+      .invite-text-button {
+        align-self: flex-start;
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--color-brand);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
       .invite-open {
-        margin-top: 1rem;
+        margin-top: 1.25rem;
       }
       .invite-row {
         display: flex;
@@ -184,76 +221,136 @@ function demoInvites(): OpenInvite[] {
       .invite-meta {
         display: flex;
         flex-direction: column;
+        min-width: 0;
       }
     `,
   ],
 })
-export class InviteModalComponent {
+export class InviteModalComponent implements OnChanges {
+  private readonly api = inject(MemberInvitesApiService);
+
   @Input() open = false;
   @Output() closed = new EventEmitter<void>();
 
-  protected readonly startRoles = START_ROLES;
-  protected readonly invites = signal<OpenInvite[]>(demoInvites());
-  protected readonly error = signal<string | null>(null);
-  protected readonly info = signal<string | null>(null);
-
-  protected email = '';
-  protected role: string = START_ROLES[0].value;
-  protected message = '';
-
+  protected readonly validityOptions = VALIDITY_DAYS;
   protected readonly formatDateTime = formatDateTime;
+  protected readonly canShare =
+    typeof globalThis.navigator !== 'undefined' && typeof globalThis.navigator.share === 'function';
 
-  protected inviteTone(status: OpenInvite['status']): StatusTone {
-    return status === 'expired' ? 'danger' : 'warning';
+  protected readonly invites = signal<MemberInvite[]>([]);
+  protected readonly loading = signal(false);
+  protected readonly listError = signal<string | null>(null);
+  protected readonly error = signal<string | null>(null);
+  protected readonly busy = signal(false);
+  protected readonly created = signal<{ url: string; expiresAt: string } | null>(null);
+  protected readonly copied = signal(false);
+
+  protected label = '';
+  protected validityDays = 7;
+  protected maxUses = 1;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['open'] && this.open) {
+      this.load();
+    }
   }
 
-  protected onEmailChange(): void {
-    this.error.set(null);
+  protected load(): void {
+    this.loading.set(true);
+    this.listError.set(null);
+    this.api.list().subscribe({
+      next: (invites) => {
+        this.invites.set(invites);
+        this.loading.set(false);
+      },
+      error: (err: unknown) => {
+        this.listError.set(describeApiError(err));
+        this.loading.set(false);
+      },
+    });
   }
 
-  /**
-   * Validiert die E-Mail clientseitig und stellt die Einladung nur lokal dar
-   * (kein Server-Endpunkt). Eingaben bleiben bei Fehlern erhalten.
-   */
-  protected send(): void {
-    const email = this.email.trim();
-    if (!EMAIL_PATTERN.test(email)) {
-      this.info.set(null);
-      this.error.set(translate('admin.invite.invalidEmail'));
+  protected create(): void {
+    if (this.busy()) return;
+    const maxUses = Math.trunc(Number(this.maxUses));
+    if (!Number.isFinite(maxUses) || maxUses < 1 || maxUses > 50) {
+      this.error.set(translate('admin.invite.maxUsesInvalid'));
       return;
     }
-    const roleKey = START_ROLES.find((option) => option.value === this.role)?.labelKey ?? this.role;
-    this.invites.update((list) => [
-      {
-        id: `inv-${Date.now()}`,
-        email,
-        roleKey,
-        createdAt: new Date().toISOString(),
-        status: 'pending',
-      },
-      ...list,
-    ]);
     this.error.set(null);
-    this.info.set(translate('admin.invite.queued'));
-    this.email = '';
-    this.message = '';
+    this.busy.set(true);
+    const label = this.label.trim();
+    this.api
+      .create({ label: label || undefined, expiresInDays: this.validityDays, maxUses })
+      .subscribe({
+        next: (result) => {
+          this.busy.set(false);
+          this.copied.set(false);
+          this.created.set({ url: this.absoluteUrl(result.registerPath), expiresAt: result.invite.expiresAt });
+          this.invites.update((list) => [result.invite, ...list]);
+          this.label = '';
+          this.maxUses = 1;
+        },
+        error: (err: unknown) => {
+          this.busy.set(false);
+          this.error.set(describeApiError(err));
+        },
+      });
   }
 
-  /** Setzt eine offene Einladung wieder auf „Ausstehend“ (nur Anzeige). */
-  protected renew(id: string): void {
-    this.invites.update((list) =>
-      list.map((invite) =>
-        invite.id === id
-          ? { ...invite, status: 'pending', createdAt: new Date().toISOString() }
-          : invite,
-      ),
-    );
-    this.info.set(translate('admin.invite.renewed'));
+  protected revoke(invite: MemberInvite): void {
+    if (this.busy()) return;
+    this.busy.set(true);
+    this.api.revoke(invite.id).subscribe({
+      next: (updated) => {
+        this.busy.set(false);
+        this.invites.update((list) => list.map((item) => (item.id === updated.id ? updated : item)));
+      },
+      error: (err: unknown) => {
+        this.busy.set(false);
+        this.listError.set(describeApiError(err));
+      },
+    });
+  }
+
+  protected async copy(url: string): Promise<void> {
+    try {
+      await globalThis.navigator.clipboard.writeText(url);
+      this.copied.set(true);
+    } catch {
+      this.error.set(translate('admin.invite.copyFailed'));
+    }
+  }
+
+  protected async share(url: string): Promise<void> {
+    try {
+      await globalThis.navigator.share({
+        title: translate('admin.invite.shareTitle'),
+        text: translate('admin.invite.shareText'),
+        url,
+      });
+    } catch {
+      // Abgebrochenes Teilen ist kein Fehler.
+    }
+  }
+
+  protected selectAll(event: Event): void {
+    (event.target as HTMLInputElement).select();
+  }
+
+  protected statusTone(status: MemberInviteStatus): StatusTone {
+    return STATUS_TONES[status] ?? 'neutral';
   }
 
   protected close(): void {
     this.error.set(null);
-    this.info.set(null);
+    this.created.set(null);
+    this.copied.set(false);
     this.closed.emit();
+  }
+
+  private absoluteUrl(path: string): string {
+    const origin = globalThis.location?.origin ?? '';
+    return `${origin}${path}`;
   }
 }

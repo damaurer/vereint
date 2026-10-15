@@ -200,6 +200,25 @@ export interface LedgerEntry {
   snapshot: PurchaseSnapshot | null;
 }
 
+/** Ein laufendes Event, an dem das gescannte Getränk gekauft werden kann. */
+export interface PurchaseOption {
+  eventId: string;
+  eventTitle: string;
+  unitPrice: string;
+  currency: string;
+}
+
+/** Vorschau eines Barcodekaufs (`POST /api/v1/ledger/purchases/preview`); bucht nichts. */
+export interface PurchasePreview {
+  barcode: string;
+  drinkId: string;
+  drinkName: string;
+  imageReference: string | null;
+  options: PurchaseOption[];
+  creditBalance: string;
+  balanceCurrency: string;
+}
+
 /**
  * Verträge der Verwaltungs- und Tablet-Kontexte (TICKET-026): Vorstand/Kasse,
  * Kommunikation, Administration/Audit sowie der Drink-Recorder. Sämtliche
@@ -270,6 +289,10 @@ export interface AuditLogEntry {
   actorDisplayName: string | null;
   details: string | null;
   createdAt: string;
+  /** Betroffene Person (Mitglied, Empfänger), vom Server aufgelöst. */
+  targetName?: string | null;
+  /** Betreff, z. B. Titel einer Mitteilung. */
+  targetTitle?: string | null;
 }
 
 /** Kompaktes aktives Event für die Tablet-Auswahl (`GET /api/v1/tablet/events`). */

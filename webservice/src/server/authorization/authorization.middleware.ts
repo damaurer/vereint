@@ -114,14 +114,15 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
     return;
   }
 
-  // 3. Registrierung über Einladungscode
+  // 3. Alte Form `/register/<code>`: Das Token gehört ins Fragment, damit es
+  //    weder in Zugriffslogs noch im Referer landet (`/register` ist öffentlich).
   if (pathIs(pathname, '/register')) {
     const inviteCode = pathname.split('/')[2] ?? '';
     if (!(await validateInvite(inviteCode))) {
       res.redirect('/404');
       return;
     }
-    res.redirect('/api/auth/login');
+    res.redirect(`/register#${inviteCode}`);
     return;
   }
 

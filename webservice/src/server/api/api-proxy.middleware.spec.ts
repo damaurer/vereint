@@ -244,4 +244,28 @@ describe('api-proxy.middleware', () => {
     expect(captured?.url).toBe(`${serverEnvironment.springApiBaseUrl}/api/v1/invites/accept`);
     expect(captured?.body).toEqual({ token: 'raw-token' });
   });
+
+  it('forwards member invite preview and registration without a session, but nothing else below it', async () => {
+    injectedSession = undefined;
+    const urls: string[] = [];
+    globalThis.fetch = vi.fn(async (url: string | URL | Request) => {
+      urls.push(String(url));
+      return new Response('{}', { status: 201, headers: { 'Content-Type': 'application/json' } });
+    }) as unknown as typeof fetch;
+
+    for (const path of ['/api/v1/member-invites/preview', '/api/v1/member-invites/register']) {
+      const response = await originalFetch(`${baseUrl}${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: 'raw-token' }),
+      });
+      expect(response.status).toBe(201);
+    }
+    const list = await originalFetch(`${baseUrl}/api/v1/member-invites`);
+    expect(list.status).toBe(401);
+    expect(urls).toEqual([
+      `${serverEnvironment.springApiBaseUrl}/api/v1/member-invites/preview`,
+      `${serverEnvironment.springApiBaseUrl}/api/v1/member-invites/register`,
+    ]);
+  });
 });

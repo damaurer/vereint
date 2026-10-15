@@ -17,6 +17,7 @@ import type {
   MomentResponseDto,
   MomentSessionDto,
   MomentSummaryDto,
+  PurchasePreview,
   RsvpStatus,
   StartMomentRequest,
   SubmitMomentResponseRequest,
@@ -76,22 +77,32 @@ export class MemberApiService {
 
   /** Konversation des Event-Chats (`GET /api/v1/events/{id}/chat`). */
   getEventConversation(eventId: string): Observable<Pick<ConversationSummary, 'id'>> {
-    return this.api.get<Pick<ConversationSummary, 'id'>>(`/events/${encodeURIComponent(eventId)}/chat`);
+    return this.api.get<Pick<ConversationSummary, 'id'>>(
+      `/events/${encodeURIComponent(eventId)}/chat`,
+    );
   }
 
   /** Nachrichten einer Konversation (`GET /api/v1/conversations/{id}/messages`). */
   listConversationMessages(conversationId: string): Observable<ChatMessageDto[]> {
-    return this.api.get<ChatMessageDto[]>(`/conversations/${encodeURIComponent(conversationId)}/messages`);
+    return this.api.get<ChatMessageDto[]>(
+      `/conversations/${encodeURIComponent(conversationId)}/messages`,
+    );
   }
 
   /** Sendet eine Nachricht (`POST /api/v1/conversations/{id}/messages`). */
   sendConversationMessage(conversationId: string, message: string): Observable<ChatMessageDto> {
-    return this.api.post<ChatMessageDto>(`/conversations/${encodeURIComponent(conversationId)}/messages`, { message });
+    return this.api.post<ChatMessageDto>(
+      `/conversations/${encodeURIComponent(conversationId)}/messages`,
+      { message },
+    );
   }
 
   /** Setzt den Lesestand auf jetzt (`POST /api/v1/conversations/{id}/read`). */
   markConversationRead(conversationId: string): Observable<ConversationSummary> {
-    return this.api.post<ConversationSummary>(`/conversations/${encodeURIComponent(conversationId)}/read`, {});
+    return this.api.post<ConversationSummary>(
+      `/conversations/${encodeURIComponent(conversationId)}/read`,
+      {},
+    );
   }
 
   /** Eigenes Guthaben (`GET /api/v1/ledger/members/{memberId}/balance`). */
@@ -102,6 +113,36 @@ export class MemberApiService {
   /** Eigener Kontoauszug (`GET /api/v1/ledger/members/{memberId}/entries`). */
   listEntries(memberId: string): Observable<LedgerEntry[]> {
     return this.api.get<LedgerEntry[]>(`/ledger/members/${encodeURIComponent(memberId)}/entries`);
+  }
+
+  /** Getränk, Preis und Guthaben zu einem gescannten Strichcode (`POST /api/v1/ledger/purchases/preview`). */
+  previewPurchase(barcode: string, eventId?: string): Observable<PurchasePreview> {
+    return this.api.post<PurchasePreview>(
+      '/ledger/purchases/preview',
+      eventId ? { barcode, eventId } : { barcode },
+    );
+  }
+
+  /** Bezahlt ein gescanntes Getränk mit Guthaben (`POST /api/v1/ledger/purchases`). */
+  purchaseByBarcode(
+    eventId: string,
+    barcode: string,
+    idempotencyKey: string,
+  ): Observable<LedgerEntry> {
+    return this.api.post<LedgerEntry>(
+      '/ledger/purchases',
+      { eventId, barcode },
+      { 'Idempotency-Key': idempotencyKey },
+    );
+  }
+
+  /** Nimmt einen eben bezahlten eigenen Kauf zurück (`POST /api/v1/ledger/purchases/{id}/undo`). */
+  undoPurchase(entryId: string, idempotencyKey: string): Observable<LedgerEntry> {
+    return this.api.post<LedgerEntry>(
+      `/ledger/purchases/${encodeURIComponent(entryId)}/undo`,
+      {},
+      { 'Idempotency-Key': idempotencyKey },
+    );
   }
 
   /** Aktive Moments eines Events (`GET /api/v1/events/{eventId}/moments`). */
@@ -118,7 +159,10 @@ export class MemberApiService {
 
   /** Startet einen neuen Gemeinschaftsmoment (`POST /api/v1/events/{eventId}/moments`). */
   startMoment(eventId: string, payload: StartMomentRequest): Observable<MomentSessionDto> {
-    return this.api.post<MomentSessionDto>(`/events/${encodeURIComponent(eventId)}/moments`, payload);
+    return this.api.post<MomentSessionDto>(
+      `/events/${encodeURIComponent(eventId)}/moments`,
+      payload,
+    );
   }
 
   /** Reicht einen Statusbeitrag/eine Reaktion zu einem Moment ein (`POST /api/v1/events/{eventId}/moments/{momentId}/responses`). */
@@ -150,7 +194,9 @@ export class MemberApiService {
 
   /** Archivierte/abgeschlossene Moments eines Events (`GET /api/v1/events/{eventId}/moments/history`). */
   listMomentHistory(eventId: string): Observable<MomentSummaryDto[]> {
-    return this.api.get<MomentSummaryDto[]>(`/events/${encodeURIComponent(eventId)}/moments/history`);
+    return this.api.get<MomentSummaryDto[]>(
+      `/events/${encodeURIComponent(eventId)}/moments/history`,
+    );
   }
 }
 

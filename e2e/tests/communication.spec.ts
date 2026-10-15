@@ -67,4 +67,30 @@ test.describe('Getraenkekatalog', () => {
     await expect(approved).toBeVisible();
     await expect(approved.getByRole('button', { name: 'Freigeben' })).toHaveCount(0);
   });
+
+  test('Vorstand legt ein Getraenk mit Barcode direkt an und aendert den Preis', async ({ as }) => {
+    const board = await as('board');
+    const name = unique('Spezi');
+    const barcode = `9${Date.now()}`.slice(0, 13);
+
+    await board.page.goto('/catalog');
+    await board.page.getByRole('button', { name: '+ Getränk anlegen' }).click();
+    await board.page.getByLabel('Name des Getränks *').fill(name);
+    await board.page.getByLabel('Standardpreis (€) *').fill('2.00');
+    await board.page.getByLabel('Einkaufspreis (€)').fill('0.90');
+    await board.page.getByLabel('Neuen Barcode erfassen …').fill(barcode);
+    await board.page.getByRole('button', { name: '+ Barcode hinzufügen' }).click();
+    await expect(board.page.locator('code').filter({ hasText: barcode })).toBeVisible();
+    await board.page.getByRole('button', { name: 'Getränk anlegen', exact: true }).click();
+
+    // Ohne zweiten Freigabeschritt sofort freigegeben.
+    const card = board.page.locator('article').filter({ hasText: name });
+    await expect(card.getByText('Freigegeben')).toBeVisible();
+    await expect(card.getByText('Marge 1.10 EUR')).toBeVisible();
+
+    await card.getByRole('button', { name: 'Bearbeiten' }).click();
+    await board.page.getByLabel('Standardpreis (€) *').fill('2.20');
+    await board.page.getByRole('button', { name: 'Speichern' }).click();
+    await expect(card.getByText('2.20 EUR')).toBeVisible();
+  });
 });

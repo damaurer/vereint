@@ -52,6 +52,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
 export const SECONDARY_NAV: readonly NavItem[] = [
   { id: 'moments', labelKey: 'nav.items.moments', icon: 'moments', route: '/moments' },
   { id: 'direct', labelKey: 'nav.items.direct', icon: 'direct-message', route: '/direktnachrichten' },
+  { id: 'scan', labelKey: 'nav.items.scan', icon: 'camera', route: '/scan' },
   { id: 'purchases', labelKey: 'nav.items.purchases', icon: 'receipt', route: '/purchases' },
   { id: 'notifications', labelKey: 'nav.items.notifications', icon: 'bell', route: '/notifications' },
   { id: 'catalog', labelKey: 'nav.items.catalog', icon: 'catalog', route: '/catalog' },
@@ -117,7 +118,7 @@ export interface NavSection {
 
 const SECTION_LAYOUT: readonly { id: NavSection['id']; labelKey: string; ids: readonly string[] }[] = [
   { id: 'club', labelKey: 'nav.sections.club', ids: ['home', 'events', 'moments', 'chat', 'direct'] },
-  { id: 'account', labelKey: 'nav.sections.account', ids: ['wallet', 'purchases', 'notifications', 'profil'] },
+  { id: 'account', labelKey: 'nav.sections.account', ids: ['wallet', 'scan', 'purchases', 'notifications', 'profil'] },
   { id: 'bar', labelKey: 'nav.sections.bar', ids: ['catalog', 'sublists', 'statistik'] },
   {
     id: 'admin',

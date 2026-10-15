@@ -187,6 +187,9 @@ describe('EventManageComponent', () => {
     const drinkOptions = Array.from(root.querySelectorAll('select[name="drinkId"] option')).map((o) => o.textContent?.trim());
     expect(drinkOptions.some((o) => o?.startsWith('Helles'))).toBe(true);
     expect(drinkOptions.some((o) => o?.startsWith('Apfelschorle'))).toBe(false);
+    const drinkRow = root.querySelector('.manage-row')?.textContent ?? '';
+    expect(drinkRow).toContain('Apfelschorle');
+    expect(drinkRow).not.toContain('d-2');
     expect(root.querySelector('select[name="foodId"]')?.textContent).toContain('Brezn');
     expect(root.querySelector('select[name="sublistId"]')?.textContent).toContain('Sommerkarte');
 

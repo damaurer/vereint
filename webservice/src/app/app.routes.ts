@@ -24,6 +24,11 @@ export const routes: Routes = [
     loadComponent: () => import('./guest/invite-accept.component').then((m) => m.InviteAcceptComponent),
   },
   {
+    path: 'register',
+    data: { title: 'Registrieren', description: 'Mit einem Einladungslink als Mitglied registrieren.', access: 'Gültiger Einladungslink erforderlich' },
+    loadComponent: () => import('./auth/register.component').then((m) => m.RegisterComponent),
+  },
+  {
     path: '403',
     data: { title: 'routes.forbidden.title', description: 'routes.forbidden.description', access: 'routes.access.denied' },
     loadComponent: () => import('./errors/forbidden.component').then((m) => m.ForbiddenComponent),
@@ -63,6 +68,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     data: { title: 'routes.purchases.title', description: 'routes.purchases.description', access: 'routes.access.protected' },
     loadComponent: () => import('./member/purchases.component').then((m) => m.PurchasesComponent),
+  },
+  {
+    path: 'scan',
+    canActivate: [authGuard],
+    data: { title: 'routes.scan.title', description: 'routes.scan.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./scan/scan.component').then((m) => m.ScanComponent),
   },
   {
     path: 'events',
