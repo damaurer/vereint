@@ -253,7 +253,7 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
               @for (item of view.history; track item.momentId) {
                 <li class="detail-history-item">
                   <div class="history-item-head">
-                    <span class="history-chip">{{ item.topicType }}</span>
+                    <span class="history-chip">{{ item.topicEmoji ? item.topicEmoji + ' ' : '' }}{{ item.topicName }}</span>
                     <strong>{{ item.title }}</strong>
                     <time class="history-date">{{ formatDateTime(item.completedAt) }}</time>
                   </div>

@@ -493,6 +493,10 @@
     "scan": {
       "title": "Getränk bezahlen",
       "description": "Strichcode scannen und mit Guthaben bezahlen."
+    },
+    "boardMoments": {
+      "title": "Moment-Typen & Reaktionen",
+      "description": "Typen und Reaktionen für Moments festlegen."
     }
   },
   "chat": {
@@ -600,12 +604,15 @@
       "timelineTab": "Timeline ({count})",
       "mapTab": "Weltkarte ({count})",
       "quickLabel": "Schnell reagieren:",
-      "custom": "+ Status & Text"
+      "custom": "+ Status & Text",
+      "shareMedia": "Foto/Video teilen",
+      "ended": "Dieser Moment ist beendet."
     },
     "history": {
       "title": "Archivierte Moments & Rituale",
       "participants": "{count} Teilnehmer",
-      "contributions": "{count} Beiträge"
+      "contributions": "{count} Beiträge",
+      "view": "Ansehen"
     },
     "start": {
       "title": "Neuen Moment initiieren",
@@ -626,11 +633,12 @@
       "submit": "Moment jetzt starten",
       "submitting": "Wird gestartet …",
       "error": "Fehler beim Starten des Moments.",
-      "failed": "Moment konnte nicht gestartet werden."
+      "failed": "Moment konnte nicht gestartet werden.",
+      "noTypes": "Der Vorstand hat noch keinen Moment-Typ freigegeben."
     },
     "respond": {
       "title": "Status & Reaktion teilen",
-      "reactionLabel": "Reaktion auswählen *",
+      "reactionLabel": "Reaktion (optional)",
       "statusLabel": "Persönlicher Status (optional)",
       "statusPlaceholder": "z. B. Schöne Grüße aus Hamburg! 🍺",
       "consent": "Aktuellen Standort für diesen Beitrag auf der Weltkarte teilen",
@@ -700,7 +708,29 @@
       "empty": "Noch keine Statusbeiträge geteilt. Sei der Erste und teile deine Reaktion!",
       "locationShared": "Standort geteilt ({lat}, {lng})"
     },
-    "quote": "„{text}“"
+    "quote": "„{text}“",
+    "manageLink": "Typen & Reaktionen verwalten",
+    "media": {
+      "label": "Fotos & Videos (optional)",
+      "add": "Foto oder Video hinzufügen",
+      "hint": "Bis zu {count} Dateien. Videos höchstens {seconds} Sekunden und {mb} MB.",
+      "remove": "Entfernen",
+      "removeConfirm": "Dieses Bild bzw. Video wirklich entfernen?",
+      "photoBy": "Foto von {name}",
+      "videoBy": "Video von {name}",
+      "errors": {
+        "videoType": "Dieses Videoformat wird nicht unterstützt. Bitte MP4 oder MOV verwenden.",
+        "videoTooLarge": "Das Video ist größer als {max} MB. Bitte kürzer aufnehmen oder in geringerer Auflösung (z. B. 720p).",
+        "videoTooLong": "Das Video ist länger als {max} Sekunden. Bitte vorher kürzen.",
+        "imageType": "Dieses Bild kann nicht gelesen werden. Bitte JPEG, PNG oder GIF verwenden.",
+        "imageTooLarge": "Das Bild ist größer als {max} MB.",
+        "unsupported": "Nur Fotos und Videos können geteilt werden.",
+        "tooMany": "Höchstens {count} Dateien pro Beitrag.",
+        "tooLargeServer": "Die Datei ist zu groß.",
+        "uploadFailed": "Hochladen fehlgeschlagen. Bitte erneut versuchen.",
+        "aborted": "Hochladen abgebrochen."
+      }
+    }
   },
   "catalog": {
     "header": {
@@ -1108,7 +1138,10 @@
       "MOMENT_COMPLETED": "Moment beendet",
       "KIOSK_PIN_LOCKED": "Kiosk-PIN nach Fehlversuchen gesperrt",
       "KIOSK_STARTED": "Kiosk-Modus gestartet",
-      "KIOSK_ENDED_REMOTELY": "Kiosk-Gerät aus der Ferne entsperrt"
+      "KIOSK_ENDED_REMOTELY": "Kiosk-Gerät aus der Ferne entsperrt",
+      "MOMENT_TYPE_SAVED": "Moment-Typ gespeichert",
+      "MOMENT_REACTION_SAVED": "Moment-Reaktion gespeichert",
+      "MOMENT_MEDIA_REMOVED": "Moment-Bild/Video entfernt"
     },
     "auditDetail": {
       "amount": "Betrag",
@@ -1161,7 +1194,9 @@
       "inviteTitle": "Mitglied einladen",
       "inviteDesc": "Einladungslink zur Registrierung erstellen",
       "kioskDevicesTitle": "Kiosk-Geräte",
-      "kioskDevicesDesc": "Laufende Thekenterminals sehen und aus der Ferne entsperren"
+      "kioskDevicesDesc": "Laufende Thekenterminals sehen und aus der Ferne entsperren",
+      "momentConfigTitle": "Moments · Typen & Reaktionen",
+      "momentConfigDesc": "Festlegen, welche Moments und Reaktionen es gibt"
     },
     "comms": {
       "eyebrow": "Schriftwart",
@@ -1298,6 +1333,32 @@
       "lockedUntil": "PIN-Eingabe gesperrt bis {date}",
       "unlock": "Entsperren",
       "unlocked": "{label} ist entsperrt."
+    },
+    "momentConfig": {
+      "back": "← Zum Vorstandsbereich",
+      "title": "Moments: Typen & Reaktionen",
+      "intro": "Hier legt ihr fest, welche Arten von Moments Mitglieder starten können und mit welchen Reaktionen sie antworten. Ausgemusterte Einträge verschwinden für neue Moments, alte Moments behalten sie.",
+      "unavailable": "Moment-Einstellungen nicht verfügbar",
+      "typesTitle": "Moment-Typen",
+      "reactionsTitle": "Reaktionen",
+      "newType": "Neuer Typ",
+      "editType": "Typ bearbeiten",
+      "newReaction": "Neue Reaktion",
+      "editReaction": "Reaktion bearbeiten",
+      "edit": "Bearbeiten",
+      "retired": "ausgemustert",
+      "emoji": "Emoji",
+      "name": "Name",
+      "description": "Beschreibung (optional)",
+      "allowedReactions": "Erlaubte Reaktionen",
+      "allReactions": "Alle aktiven Reaktionen erlauben",
+      "allReactionsShort": "Alle Reaktionen",
+      "someReactions": "Reaktionen: {list}",
+      "activeType": "Mitglieder können diesen Typ starten",
+      "activeReaction": "Mitglieder können diese Reaktion verwenden",
+      "retireTypeHint": "Ausgemustert: Neue Moments dieses Typs sind nicht mehr möglich, bestehende bleiben erhalten.",
+      "retireReactionHint": "Ausgemustert: Die Reaktion ist nicht mehr wählbar, bisherige Beiträge behalten sie.",
+      "saveFailed": "Speichern fehlgeschlagen."
     }
   },
   "events": {

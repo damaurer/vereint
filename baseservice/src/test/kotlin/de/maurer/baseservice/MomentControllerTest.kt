@@ -5,6 +5,7 @@ import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.service.MomentService
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
@@ -347,5 +348,16 @@ class MomentControllerTest {
                 .content(objectMapper.writeValueAsString(badRequest))
         )
             .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `parseRange understands single byte ranges and rejects unsatisfiable ones`() {
+        assertEquals(0L to 99L, de.maurer.baseservice.controller.MomentController.parseRange("bytes=0-99", 1000))
+        assertEquals(500L to 999L, de.maurer.baseservice.controller.MomentController.parseRange("bytes=500-", 1000))
+        assertEquals(900L to 999L, de.maurer.baseservice.controller.MomentController.parseRange("bytes=-100", 1000))
+        assertEquals(990L to 999L, de.maurer.baseservice.controller.MomentController.parseRange("bytes=990-5000", 1000))
+        assertEquals(null, de.maurer.baseservice.controller.MomentController.parseRange(null, 1000))
+        assertEquals(null, de.maurer.baseservice.controller.MomentController.parseRange("bytes=0-1,5-6", 1000))
+        assertEquals(-1L to -1L, de.maurer.baseservice.controller.MomentController.parseRange("bytes=1000-", 1000))
     }
 }

@@ -9,6 +9,8 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.AuditService
 import de.maurer.baseservice.service.ChatService
+import de.maurer.baseservice.service.MomentConfigService
+import de.maurer.baseservice.service.MomentLabels
 import de.maurer.baseservice.service.MomentService
 import de.maurer.baseservice.service.NotificationService
 import de.maurer.baseservice.service.UserService
@@ -58,6 +60,12 @@ class MomentServiceTest {
     @Mock
     private lateinit var auditService: AuditService
 
+    @Mock
+    private lateinit var momentConfigService: MomentConfigService
+
+    @Mock
+    private lateinit var momentMediaRepository: MomentMediaRepository
+
     private lateinit var momentService: MomentService
 
     private val eventId: UUID = UUID.randomUUID()
@@ -93,7 +101,15 @@ class MomentServiceTest {
             userService = userService,
             chatService = chatService,
             notificationService = notificationService,
-            auditService = auditService
+            auditService = auditService,
+            momentConfigService = momentConfigService,
+            momentMediaRepository = momentMediaRepository
+        )
+        `when`(momentConfigService.labels()).thenReturn(
+            MomentLabels(
+                types = mapOf("toast" to ("Gemeinsames Anstoßen" to "🍻"), "prayer" to ("Gebet & Fürbitte" to "🙏")),
+                reactions = mapOf("CHEERS" to ("Prost" to "🍻"))
+            )
         )
 
         `when`(userService.getOrCreateUser(ownerPrincipal)).thenReturn(ownerUser)
@@ -454,5 +470,131 @@ class MomentServiceTest {
 
         assertEquals(listOf(momentId.toString()), history.map { it.momentId })
         assertEquals(expiresAt, history.single().completedAt)
+    }
+
+    private fun activeSession(caller: UserEntity, topicType: String = "toast") = MomentSessionEntity(
+        id = momentId,
+        event = event(),
+        creator = caller,
+        title = "Anstoßen",
+        topicType = topicType,
+        active = true,
+        expiresAt = Instant.now().plusSeconds(3600)
+    )
+
+    private fun participantCanAccess(session: MomentSessionEntity) {
+        val ev = session.event!!
+        `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(ev))
+        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, participantId))
+            .thenReturn(Optional.of(EventParticipantEntity(event = ev, user = participantUser)))
+        `when`(momentSessionRepository.findById(momentId)).thenReturn(Optional.of(session))
+    }
+
+    @Test
+    fun `startMoment rejects a retired or unknown moment type`() {
+        val ev = event()
+        `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(ev))
+        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, participantId))
+            .thenReturn(Optional.of(EventParticipantEntity(event = ev, user = participantUser)))
+        `when`(momentConfigService.requireActiveType("retired"))
+            .thenThrow(InvalidRequestException(Msg("error.momentType.notAvailable"), ErrorCode.INVALID_REQUEST))
+
+        assertThrows(InvalidRequestException::class.java) {
+            momentService.startMoment(eventId, StartMomentRequest(title = "Alt", topicType = "retired"), participantPrincipal)
+        }
+        verify(momentSessionRepository, never()).save(any(MomentSessionEntity::class.java))
+    }
+
+    @Test
+    fun `startMoment returns the type name and emoji the board defined`() {
+        val ev = event()
+        `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(ev))
+        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, participantId))
+            .thenReturn(Optional.of(EventParticipantEntity(event = ev, user = participantUser)))
+        val result = momentService.startMoment(eventId, StartMomentRequest(title = "Prost", topicType = "toast"), participantPrincipal)
+
+        verify(momentConfigService).requireActiveType("toast")
+        assertEquals("Gemeinsames Anstoßen", result.topicName)
+        assertEquals("🍻", result.topicEmoji)
+    }
+
+    @Test
+    fun `submitResponse checks that the reaction is allowed for the moment type`() {
+        participantCanAccess(activeSession(participantUser, topicType = "prayer"))
+        `when`(momentConfigService.requireAllowedReaction("prayer", "CHEERS"))
+            .thenThrow(InvalidRequestException(Msg("error.momentReaction.notAllowedForType"), ErrorCode.INVALID_REQUEST))
+
+        assertThrows(InvalidRequestException::class.java) {
+            momentService.submitResponse(eventId, momentId, SubmitMomentResponseRequest(reaction = "CHEERS"), participantPrincipal)
+        }
+        verify(momentResponseRepository, never()).save(any(MomentResponseEntity::class.java))
+    }
+
+    @Test
+    fun `submitResponse rejects a contribution without reaction, text or media`() {
+        participantCanAccess(activeSession(participantUser))
+
+        val ex = assertThrows(InvalidRequestException::class.java) {
+            momentService.submitResponse(eventId, momentId, SubmitMomentResponseRequest(statusText = "  "), participantPrincipal)
+        }
+        assertEquals("error.moment.emptyResponse", ex.messageKey)
+    }
+
+    @Test
+    fun `submitResponse attaches own unused uploads and returns them with the response`() {
+        val session = activeSession(participantUser)
+        participantCanAccess(session)
+        val media = MomentMediaEntity(
+            moment = session,
+            owner = participantUser,
+            kind = MomentMediaKind.video,
+            contentType = "video/mp4",
+            sizeBytes = 1234,
+            storageKey = "moment/x.bin",
+            durationMs = 12_000
+        )
+        `when`(momentMediaRepository.findAllById(listOf(media.id))).thenReturn(listOf(media))
+
+        val result = momentService.submitResponse(
+            eventId,
+            momentId,
+            SubmitMomentResponseRequest(mediaIds = listOf(media.id.toString())),
+            participantPrincipal
+        )
+
+        assertNull(result.reaction)
+        assertEquals(1, result.media.size)
+        assertEquals("video", result.media[0].kind)
+        assertEquals(12.0, result.media[0].durationSeconds)
+        assertEquals("/api/v1/events/$eventId/moments/$momentId/media/${media.id}/content", result.media[0].url)
+        assertTrue(result.media[0].canDelete)
+        assertNotNull(media.response)
+        verify(momentMediaRepository).save(media)
+    }
+
+    @Test
+    fun `submitResponse refuses media uploaded by someone else`() {
+        val session = activeSession(participantUser)
+        participantCanAccess(session)
+        val foreign = MomentMediaEntity(
+            moment = session,
+            owner = otherUser,
+            kind = MomentMediaKind.image,
+            contentType = "image/jpeg",
+            sizeBytes = 10,
+            storageKey = "moment/y.bin"
+        )
+        `when`(momentMediaRepository.findAllById(listOf(foreign.id))).thenReturn(listOf(foreign))
+
+        val ex = assertThrows(InvalidRequestException::class.java) {
+            momentService.submitResponse(
+                eventId,
+                momentId,
+                SubmitMomentResponseRequest(reaction = "CHEERS", mediaIds = listOf(foreign.id.toString())),
+                participantPrincipal
+            )
+        }
+        assertEquals("error.momentMedia.notUsable", ex.messageKey)
+        assertNull(foreign.response)
     }
 }

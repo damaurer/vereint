@@ -15,7 +15,8 @@ test.describe('Auslieferung und Sicherheit', () => {
     expect(headers['x-frame-options']).toBe('DENY');
     expect(headers['cache-control']).toContain('no-store');
     expect(headers['permissions-policy']).toContain('camera=(self)');
-    expect(headers['permissions-policy']).toContain('geolocation=()');
+    // Standort nur für die eigene Seite: Moments bieten optional den Standort an.
+    expect(headers['permissions-policy']).toContain('geolocation=(self)');
 
     const csp = headers['content-security-policy'];
     const nonce = /'nonce-([^']+)'/.exec(csp)?.[1];

@@ -1,5 +1,8 @@
 package de.maurer.baseservice.storage
 
+import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.io.InputStream
 import java.net.URI
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -27,6 +30,19 @@ class InMemoryObjectStorage(
     }
 
     override fun read(key: String): ByteArray? = objects[key]?.data?.copyOf()
+
+    override fun storeStream(key: String, data: InputStream, length: Long, contentType: String) {
+        val bytes = data.readNBytes(Math.toIntExact(length))
+        if (bytes.size.toLong() != length) throw IOException("Datenstrom ist kürzer als angekündigt")
+        objects[key] = Stored(bytes, contentType)
+    }
+
+    override fun readRange(key: String, start: Long, endInclusive: Long): InputStream? {
+        val data = objects[key]?.data ?: return null
+        val from = start.coerceIn(0, data.size.toLong()).toInt()
+        val to = (endInclusive + 1).coerceIn(from.toLong(), data.size.toLong()).toInt()
+        return ByteArrayInputStream(data, from, to - from)
+    }
 
     override fun delete(key: String) {
         objects.remove(key)

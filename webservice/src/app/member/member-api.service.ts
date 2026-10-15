@@ -12,13 +12,18 @@ import type {
   LedgerEntry,
   MemberBalance,
   MemberProfile,
+  MomentConfigDto,
   MomentDetailDto,
   MomentMapGeoJsonDto,
+  MomentReactionDto,
   MomentResponseDto,
   MomentSessionDto,
   MomentSummaryDto,
+  MomentTypeDto,
   PurchasePreview,
   RsvpStatus,
+  SaveMomentReactionRequest,
+  SaveMomentTypeRequest,
   StartMomentRequest,
   SubmitMomentResponseRequest,
   UpdateProfilePayload,
@@ -197,6 +202,32 @@ export class MemberApiService {
     return this.api.get<MomentSummaryDto[]>(
       `/events/${encodeURIComponent(eventId)}/moments/history`,
     );
+  }
+
+  /** Entfernt ein Bild oder Video (`DELETE …/moments/{momentId}/media/{mediaId}`). */
+  deleteMomentMedia(eventId: string, momentId: string, mediaId: string): Observable<null> {
+    return this.api.delete<null>(
+      `/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}/media/${encodeURIComponent(mediaId)}`,
+    );
+  }
+
+  /** Moment-Typen, Reaktionen und Upload-Grenzen (`GET /api/v1/moment-config`). */
+  getMomentConfig(): Observable<MomentConfigDto> {
+    return this.api.get<MomentConfigDto>('/moment-config');
+  }
+
+  /** Legt einen Moment-Typ an oder ändert ihn (nur Vorstand/Admin). */
+  saveMomentType(id: string | null, payload: SaveMomentTypeRequest): Observable<MomentTypeDto> {
+    return id
+      ? this.api.put<MomentTypeDto>(`/moment-config/types/${encodeURIComponent(id)}`, payload)
+      : this.api.post<MomentTypeDto>('/moment-config/types', payload);
+  }
+
+  /** Legt eine Reaktion an oder ändert sie (nur Vorstand/Admin). */
+  saveMomentReaction(id: string | null, payload: SaveMomentReactionRequest): Observable<MomentReactionDto> {
+    return id
+      ? this.api.put<MomentReactionDto>(`/moment-config/reactions/${encodeURIComponent(id)}`, payload)
+      : this.api.post<MomentReactionDto>('/moment-config/reactions', payload);
   }
 }
 

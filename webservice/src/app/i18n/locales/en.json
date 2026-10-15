@@ -499,6 +499,10 @@
     "scan": {
       "title": "Pay for a drink",
       "description": "Scan a barcode and pay with your credit."
+    },
+    "boardMoments": {
+      "title": "Moment types & reactions",
+      "description": "Define types and reactions for moments."
     }
   },
   "chat": {
@@ -618,7 +622,9 @@
       "timelineTab": "Timeline ({count})",
       "mapTab": "World map ({count})",
       "quickLabel": "Quick reaction:",
-      "custom": "+ Status & text"
+      "custom": "+ Status & text",
+      "shareMedia": "Share photo/video",
+      "ended": "This moment has ended."
     },
     "history": {
       "title": "Archived moments & rituals",
@@ -629,7 +635,8 @@
       "contributions": {
         "one": "{count} post",
         "other": "{count} posts"
-      }
+      },
+      "view": "View"
     },
     "start": {
       "title": "Initiate new moment",
@@ -650,11 +657,12 @@
       "submit": "Start moment now",
       "submitting": "Starting …",
       "error": "Error starting the moment.",
-      "failed": "The moment could not be started."
+      "failed": "The moment could not be started.",
+      "noTypes": "The board has not enabled any moment type yet."
     },
     "respond": {
       "title": "Share status & reaction",
-      "reactionLabel": "Choose reaction *",
+      "reactionLabel": "Reaction (optional)",
       "statusLabel": "Personal status (optional)",
       "statusPlaceholder": "e.g. Greetings from Hamburg! 🍺",
       "consent": "Share my current location for this post on the world map",
@@ -733,7 +741,29 @@
       "empty": "No status posts shared yet. Be the first to share your reaction!",
       "locationShared": "Location shared ({lat}, {lng})"
     },
-    "quote": "“{text}”"
+    "quote": "“{text}”",
+    "manageLink": "Manage types & reactions",
+    "media": {
+      "label": "Photos & videos (optional)",
+      "add": "Add photo or video",
+      "hint": "Up to {count} files. Videos at most {seconds} seconds and {mb} MB.",
+      "remove": "Remove",
+      "removeConfirm": "Really remove this photo or video?",
+      "photoBy": "Photo by {name}",
+      "videoBy": "Video by {name}",
+      "errors": {
+        "videoType": "This video format is not supported. Please use MP4 or MOV.",
+        "videoTooLarge": "The video is larger than {max} MB. Please record a shorter clip or use a lower resolution (e.g. 720p).",
+        "videoTooLong": "The video is longer than {max} seconds. Please trim it first.",
+        "imageType": "This image cannot be read. Please use JPEG, PNG or GIF.",
+        "imageTooLarge": "The image is larger than {max} MB.",
+        "unsupported": "Only photos and videos can be shared.",
+        "tooMany": "At most {count} files per contribution.",
+        "tooLargeServer": "The file is too large.",
+        "uploadFailed": "Upload failed. Please try again.",
+        "aborted": "Upload cancelled."
+      }
+    }
   },
   "catalog": {
     "header": {
@@ -1141,7 +1171,10 @@
       "MOMENT_COMPLETED": "Moment ended",
       "KIOSK_PIN_LOCKED": "Kiosk PIN locked after failed attempts",
       "KIOSK_STARTED": "Kiosk mode started",
-      "KIOSK_ENDED_REMOTELY": "Kiosk device unlocked remotely"
+      "KIOSK_ENDED_REMOTELY": "Kiosk device unlocked remotely",
+      "MOMENT_TYPE_SAVED": "Moment type saved",
+      "MOMENT_REACTION_SAVED": "Moment reaction saved",
+      "MOMENT_MEDIA_REMOVED": "Moment photo/video removed"
     },
     "auditDetail": {
       "amount": "Amount",
@@ -1194,7 +1227,9 @@
       "inviteTitle": "Invite member",
       "inviteDesc": "Create an invite link for registration",
       "kioskDevicesTitle": "Kiosk devices",
-      "kioskDevicesDesc": "See running bar terminals and unlock them remotely"
+      "kioskDevicesDesc": "See running bar terminals and unlock them remotely",
+      "momentConfigTitle": "Moments · types & reactions",
+      "momentConfigDesc": "Decide which moments and reactions exist"
     },
     "comms": {
       "eyebrow": "Secretary",
@@ -1331,6 +1366,32 @@
       "lockedUntil": "PIN entry locked until {date}",
       "unlock": "Unlock",
       "unlocked": "{label} is unlocked."
+    },
+    "momentConfig": {
+      "back": "← Back to board",
+      "title": "Moments: types & reactions",
+      "intro": "Decide which kinds of moments members can start and which reactions they can respond with. Retired entries disappear for new moments; existing moments keep them.",
+      "unavailable": "Moment settings unavailable",
+      "typesTitle": "Moment types",
+      "reactionsTitle": "Reactions",
+      "newType": "New type",
+      "editType": "Edit type",
+      "newReaction": "New reaction",
+      "editReaction": "Edit reaction",
+      "edit": "Edit",
+      "retired": "retired",
+      "emoji": "Emoji",
+      "name": "Name",
+      "description": "Description (optional)",
+      "allowedReactions": "Allowed reactions",
+      "allReactions": "Allow all active reactions",
+      "allReactionsShort": "All reactions",
+      "someReactions": "Reactions: {list}",
+      "activeType": "Members can start this type",
+      "activeReaction": "Members can use this reaction",
+      "retireTypeHint": "Retired: no new moments of this type, existing ones stay.",
+      "retireReactionHint": "Retired: the reaction can no longer be chosen, earlier contributions keep it.",
+      "saveFailed": "Saving failed."
     }
   },
   "events": {

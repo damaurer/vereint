@@ -43,6 +43,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'board', renderMode: RenderMode.Client },
   { path: 'board/treasury', renderMode: RenderMode.Client },
   { path: 'board/communications', renderMode: RenderMode.Client },
+  { path: 'board/moments', renderMode: RenderMode.Client },
   { path: 'admin', renderMode: RenderMode.Client },
   { path: 'tablet', renderMode: RenderMode.Client },
   { path: 'statistik', renderMode: RenderMode.Client },
