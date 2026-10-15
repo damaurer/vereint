@@ -131,6 +131,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
     { value: 'light', labelKey: 'profile.theme.light' },
     { value: 'dark', labelKey: 'profile.theme.dark' },
   ];
+  /**
+   * Zwei-Faktor-Anmeldung ist freiwillig: Mitglieder richten sie in der
+   * Keycloak-Kontoverwaltung ein (gleiche Herkunft unter `/kc`). Danach fragt
+   * der Standard-Login den Code automatisch ab.
+   */
+  protected readonly twoFactorUrl = '/kc/realms/vereint/account/account-security/signing-in';
   protected readonly languages = this.i18n.languages;
   protected readonly language = this.i18n.language;
 

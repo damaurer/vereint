@@ -62,6 +62,10 @@ Rollback exakt genauso wieder.
   oder E-Mail, nicht eines der letzten drei. Login- und Admin-Ereignisse werden
   90 Tage gespeichert (Admin-Konsole, Realm `vereint`, *Events*) und zusätzlich
   in `docker compose logs keycloak` protokolliert.
+- **Zwei-Faktor-Anmeldung freiwillig:** Im Profil führt „Zwei-Faktor-Anmeldung
+  einrichten" zur Keycloak-Kontoverwaltung (`/kc/realms/vereint/account`). Wer
+  dort eine Authenticator-App hinterlegt, wird beim Login nach dem Code gefragt
+  (Standard-Browser-Flow von Keycloak). Pflicht ist sie für niemanden.
 - **Caddy:** Anfragen über 8 MB werden abgewiesen; `Permissions-Policy`
   schaltet Mikrofon, Standort, Zahlungen usw. ab (Kamera nur für den
   Barcode-Scan).

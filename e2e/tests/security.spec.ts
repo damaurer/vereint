@@ -102,4 +102,12 @@ test.describe('Auslieferung und Sicherheit', () => {
     expect(session!.secure).toBe(true);
     expect(['Lax', 'Strict']).toContain(session!.sameSite);
   });
+
+  test('Mitglied erreicht die freiwillige Zwei-Faktor-Einrichtung aus dem Profil', async ({ as }) => {
+    const { page } = await as('member');
+    await page.goto('/profile');
+    await page.getByRole('link', { name: /Zwei-Faktor|two-factor/i }).click();
+    await expect(page).toHaveURL(/\/kc\/realms\/vereint\/account/);
+    await expect(page.getByText(/Authenticator/i).first()).toBeVisible({ timeout: 15_000 });
+  });
 });
