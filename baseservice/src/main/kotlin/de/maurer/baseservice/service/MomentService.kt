@@ -260,7 +260,8 @@ class MomentService(
             }
         }
 
-        return sessions.map { toSummaryDto(it) }
+        // Nur abgeschlossene Momente gehören in die Historie; laufende zeigt die Event-Seite separat.
+        return sessions.filterNot { it.active }.map { toSummaryDto(it) }
     }
 
     private fun completeMomentInternal(session: MomentSessionEntity): MomentSummaryDto {
@@ -436,7 +437,8 @@ class MomentService(
             totalResponses = responses.size,
             uniqueParticipants = uniqueCount,
             summary = session.summary,
-            completedAt = session.completedAt
+            // Ältere Datensätze ohne Abschlusszeit fallen auf das Ablaufdatum zurück.
+            completedAt = session.completedAt ?: session.expiresAt
         )
     }
 

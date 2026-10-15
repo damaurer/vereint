@@ -9,6 +9,9 @@ import java.time.Instant
  * (z. B. E-Mail) werden nicht offengelegt. Der lesende Zugriff ist Vorstand und
  * Administration vorbehalten und je Vorstands-Unterrolle auf die erlaubten
  * Bereiche (`Ledger`, `Notification`, `User`) begrenzt.
+ *
+ * `targetName` nennt die betroffene Person (Mitglied, Empfänger) und
+ * `targetTitle` ggf. den Betreff, damit Ansichten ohne rohe IDs auskommen.
  */
 data class AuditLogDto(
     val id: String,
@@ -18,5 +21,7 @@ data class AuditLogDto(
     val actorId: String?,
     val actorDisplayName: String?,
     val details: String?,
-    val createdAt: Instant
+    val createdAt: Instant,
+    val targetName: String? = null,
+    val targetTitle: String? = null
 )

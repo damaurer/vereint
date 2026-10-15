@@ -18,7 +18,9 @@ export function formatMoney(amount: string, currency: string): string {
 }
 
 /** Formatiert einen ISO-Zeitstempel als Datum und Uhrzeit. */
-export function formatDateTime(iso: string): string {
+export function formatDateTime(iso: string | null | undefined): string {
+  // Ohne Zeitstempel kein Datum; `new Date(null)` wäre sonst der 01.01.1970.
+  if (!iso) return '';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
   return new Intl.DateTimeFormat(activeLocale(), { dateStyle: 'medium', timeStyle: 'short' }).format(date);

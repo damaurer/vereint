@@ -432,4 +432,27 @@ class MomentServiceTest {
         }
         assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
     }
+
+    @Test
+    fun `listMomentHistory lists only finished moments and always carries a completion time`() {
+        val ev = event()
+        val expiresAt = Instant.now().minusSeconds(7200)
+        val running = MomentSessionEntity(
+            id = UUID.randomUUID(), event = ev, creator = ownerUser, title = "Läuft noch", topicType = "toast",
+            active = true, expiresAt = Instant.now().plusSeconds(3600)
+        )
+        val legacy = MomentSessionEntity(
+            id = momentId, event = ev, creator = ownerUser, title = "Alt", topicType = "toast",
+            active = false, expiresAt = expiresAt, completedAt = null, summary = "fertig"
+        )
+
+        `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(ev))
+        `when`(momentSessionRepository.findByEventIdOrderByCreatedAtDesc(eventId)).thenReturn(listOf(running, legacy))
+        `when`(momentResponseRepository.findByMomentId(any(UUID::class.java) ?: momentId)).thenReturn(emptyList())
+
+        val history = momentService.listMomentHistory(eventId, ownerPrincipal)
+
+        assertEquals(listOf(momentId.toString()), history.map { it.momentId })
+        assertEquals(expiresAt, history.single().completedAt)
+    }
 }

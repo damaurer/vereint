@@ -185,7 +185,8 @@
         "topup": "Aufladungen",
         "spend": "Ausgaben",
         "empty": "Keine Buchungen für diesen Filter."
-      }
+      },
+      "reversal": "Storno: {name}"
     }
   },
   "profile": {
@@ -1090,6 +1091,35 @@
       "notification": "Kommunikation",
       "user": "Benutzer"
     },
+    "auditAction": {
+      "NOTIFICATION_SENT": "Mitteilung gesendet",
+      "USER_ROLES_CHANGED": "Rollen geändert",
+      "USER_PERMISSIONS_CHANGED": "Berechtigungen geändert",
+      "USER_STATUS_CHANGED": "Status geändert",
+      "USER_PROFILE_ADMIN_UPDATED": "Profil bearbeitet",
+      "USER_REGISTERED_BY_INVITE": "Per Einladung registriert",
+      "LEDGER_TOPUP": "Aufladung",
+      "LEDGER_PAYOUT": "Auszahlung",
+      "LEDGER_CORRECTION": "Korrektur",
+      "LEDGER_PURCHASE": "Kauf",
+      "MOMENT_STARTED": "Moment gestartet",
+      "MOMENT_COMPLETED": "Moment beendet"
+    },
+    "auditDetail": {
+      "amount": "Betrag",
+      "note": "Notiz",
+      "old": "Vorher",
+      "new": "Nachher",
+      "roles": "Rollen",
+      "displayName": "Name",
+      "disabled": "Gesperrt",
+      "boardRole": "Vorstandsrolle",
+      "title": "Titel",
+      "topic": "Thema",
+      "durationMinutes": "Dauer (Min.)"
+    },
+    "auditRecipient": "an {name}",
+    "auditMember": "Betrifft {name}",
     "boardRole": {
       "chair": "Vorsitz",
       "treasurer": "Kassenwart",

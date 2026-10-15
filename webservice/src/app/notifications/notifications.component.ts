@@ -154,11 +154,15 @@ import { translate } from '../i18n/i18n.service';
       }
       .title-with-badge {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.25rem 0.75rem;
+        min-width: 0;
       }
       .title-with-badge h1 {
         margin: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
       }
       .header-actions {
         display: flex;

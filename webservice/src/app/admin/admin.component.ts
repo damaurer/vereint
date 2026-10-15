@@ -4,7 +4,7 @@ import { forkJoin, map } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
 import { formatDateTime } from '../member/member-format';
-import { auditTargetLabel } from '../board/board-format';
+import { auditActionLabel, auditDetails, auditTargetLabel } from '../board/board-format';
 import { AdminApiService } from './admin-api.service';
 import { RolesMatrixComponent } from './roles-matrix.component';
 import { InviteModalComponent } from './invite-modal.component';
@@ -296,10 +296,16 @@ function formatDate(iso: string): string {
               @for (entry of view.audit; track entry.id) {
                 <li class="member-list-item">
                   <span class="member-list-title">
-                    {{ auditTargetLabel(entry.targetEntity) }} · {{ entry.action }}
+                    {{ auditTargetLabel(entry.targetEntity) }} · {{ auditActionLabel(entry.action) }}
                   </span>
-                  @if (entry.details) {
-                    <span class="member-chat-text">{{ entry.details }}</span>
+                  @if (entry.targetName) {
+                    <span class="member-list-sub">
+                      {{ 'board.auditMember' | t: { name: entry.targetName } }}
+                      @if (entry.targetTitle) { · „{{ entry.targetTitle }}“ }
+                    </span>
+                  }
+                  @if (auditDetails(entry.details); as details) {
+                    <span class="member-chat-text">{{ details }}</span>
                   }
                   <span class="member-list-meta">
                     {{ entry.actorDisplayName ?? ('admin.audit.system' | t) }} · {{ formatDateTime(entry.createdAt) }}
@@ -506,6 +512,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   protected readonly formatDateTime = formatDateTime;
   protected readonly formatDate = formatDate;
   protected readonly auditTargetLabel = auditTargetLabel;
+  protected readonly auditActionLabel = auditActionLabel;
+  protected readonly auditDetails = auditDetails;
   protected readonly memberRoleLabel = memberRoleLabel;
 
   protected statusTone(user: UserSummary): StatusTone {
