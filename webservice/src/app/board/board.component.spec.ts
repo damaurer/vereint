@@ -24,12 +24,13 @@ const audit: PagedResponse<AuditLogEntry> = {
   content: [
     {
       id: 'a-1',
-      action: 'notification.send',
-      targetEntity: 'Notification',
-      targetId: 'n-1',
+      action: 'USER_ROLES_CHANGED',
+      targetEntity: 'User',
+      targetId: '3f2b1c4d-1111-4222-8333-944455556666',
+      targetName: 'Erika Muster',
       actorId: 'act-1',
       actorDisplayName: 'Kasse',
-      details: 'Mitteilung versendet',
+      details: 'target=3f2b1c4d-1111-4222-8333-944455556666; roles=member',
       createdAt: '2026-06-01T19:00:00Z',
     },
   ],
@@ -72,7 +73,14 @@ describe('BoardComponent', () => {
     const fixture = await create();
     expect(html(fixture)).toContain('Sommerfest');
     expect(html(fixture)).toContain('Kommunikation');
-    expect(html(fixture)).toContain('notification.send');
+    expect(html(fixture)).toContain('Rollen geändert');
+  });
+
+  it('shows names instead of raw IDs in recent actions', async () => {
+    const fixture = await create();
+    expect(html(fixture)).toContain('Betrifft Erika Muster');
+    expect(html(fixture)).not.toContain('3f2b1c4d');
+    expect(html(fixture)).not.toContain('USER_ROLES_CHANGED');
   });
 
   it('shows an empty state when there are no events', async () => {

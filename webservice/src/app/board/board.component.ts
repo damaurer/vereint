@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { eventStatusLabel, formatDateTime } from '../member/member-format';
-import { auditTargetLabel } from './board-format';
+import { auditActionLabel, auditDetails, auditTargetLabel } from './board-format';
 import { BoardApiService } from './board-api.service';
 import type { AuditLogEntry, EventStatus, EventSummary } from '../api/api.types';
 import {
@@ -124,10 +124,16 @@ interface BoardView {
               @for (entry of view.audit; track entry.id) {
                 <li class="member-list-item">
                   <span class="member-list-title">
-                    {{ auditTargetLabel(entry.targetEntity) }} · {{ entry.action }}
+                    {{ auditTargetLabel(entry.targetEntity) }} · {{ auditActionLabel(entry.action) }}
                   </span>
-                  @if (entry.details) {
-                    <span class="member-chat-text">{{ entry.details }}</span>
+                  @if (entry.targetName) {
+                    <span class="member-list-sub">
+                      {{ 'board.auditMember' | t: { name: entry.targetName } }}
+                      @if (entry.targetTitle) { · „{{ entry.targetTitle }}“ }
+                    </span>
+                  }
+                  @if (auditDetails(entry.details); as details) {
+                    <span class="member-chat-text">{{ details }}</span>
                   }
                   <span class="member-list-meta">
                     {{ entry.actorDisplayName ?? ('board.audit.system' | t) }} · {{ formatDateTime(entry.createdAt) }}
@@ -204,6 +210,8 @@ export class BoardComponent implements OnInit, OnDestroy {
   protected readonly eventStatusLabel = eventStatusLabel;
   protected readonly formatDateTime = formatDateTime;
   protected readonly auditTargetLabel = auditTargetLabel;
+  protected readonly auditActionLabel = auditActionLabel;
+  protected readonly auditDetails = auditDetails;
 
   /** Ordnet den Eventstatus einer Badge-Farbe der geteilten Primitive zu. */
   protected eventTone(status: EventStatus): StatusTone {
