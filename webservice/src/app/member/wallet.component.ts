@@ -4,7 +4,8 @@ import { forkJoin, switchMap } from 'rxjs';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
 import { entryTypeLabel, formatDateTime, formatMoney } from './member-format';
-import type { LedgerEntry, MemberBalance } from '../api/api.types';
+import { translate } from '../i18n/i18n.service';
+import type { LedgerEntry, MemberBalance, PurchaseSnapshot } from '../api/api.types';
 import { BalanceCardComponent, InfoPanelComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
@@ -103,8 +104,11 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
             <ul class="member-list">
               @for (entry of visibleEntries(view.entries); track entry.id) {
                 <li class="member-list-item">
-                  <span class="member-list-title">{{ entryTypeLabel(entry.entryType) }}</span>
-                  <span class="member-list-meta">{{ formatDateTime(entry.createdAt) }}</span>
+                  <span class="member-list-title">{{ entryTitle(entry, view.entries) }}</span>
+                  <span class="member-list-meta">
+                    @if (hasItemTitle(entry, view.entries)) { {{ entryTypeLabel(entry.entryType) }} · }
+                    {{ formatDateTime(entry.createdAt) }}
+                  </span>
                   <span
                     class="member-amount"
                     [class.member-amount-negative]="isNegative(entry.amount)"
@@ -173,6 +177,28 @@ export class WalletComponent implements OnInit, OnDestroy {
     return newestFirst;
   }
 
+  /**
+   * Überschrift einer Buchung: bei Käufen der Artikel aus dem Beleg, bei einer
+   * Rücknahme der Artikel des stornierten Kaufs, sonst die Buchungsart.
+   */
+  protected entryTitle(entry: LedgerEntry, entries: LedgerEntry[]): string {
+    const own = itemName(entry.snapshot);
+    if (own) return own;
+    const reversed = itemName(this.reversedEntry(entry, entries)?.snapshot ?? null);
+    if (reversed) return translate('member.wallet.reversal', { name: reversed });
+    return entryTypeLabel(entry.entryType);
+  }
+
+  /** Ob die Überschrift einen Artikel nennt (dann steht die Buchungsart darunter). */
+  protected hasItemTitle(entry: LedgerEntry, entries: LedgerEntry[]): boolean {
+    return entryTypeLabel(entry.entryType) !== this.entryTitle(entry, entries);
+  }
+
+  private reversedEntry(entry: LedgerEntry, entries: LedgerEntry[]): LedgerEntry | undefined {
+    if (!entry.reversesEntryId) return undefined;
+    return entries.find((candidate) => candidate.id === entry.reversesEntryId);
+  }
+
   /** Negatives Guthaben/Buchung (dezimale Zeichenkette) für rote Darstellung. */
   protected isNegative(amount: string): boolean {
     return Number(amount) < 0;
@@ -200,4 +226,9 @@ export class WalletComponent implements OnInit, OnDestroy {
       ),
     );
   }
+}
+
+/** Name des gekauften Artikels aus dem Beleg; Speisen tragen ihn in `foodName`. */
+function itemName(snapshot: PurchaseSnapshot | null): string | null {
+  return snapshot?.drinkName ?? snapshot?.foodName ?? null;
 }

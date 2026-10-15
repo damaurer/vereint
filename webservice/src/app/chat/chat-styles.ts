@@ -21,7 +21,8 @@ export const CHAT_LAYOUT_STYLES = `
   }
   .chat-layout {
     display: grid;
-    grid-template-columns: 1fr;
+    /* minmax(0, …): lange Vorschauen dürfen die Spalte nicht über den Bildschirm drücken. */
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
     min-height: 0;
   }
@@ -44,6 +45,7 @@ export const CHAT_LAYOUT_STYLES = `
     margin: 0;
     padding: 0;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-2);
   }
   .chat-conversation {
@@ -150,7 +152,7 @@ export const CHAT_LAYOUT_STYLES = `
   /* Tablet/Web: zweispaltig, Liste und Verlauf gleichzeitig. */
   @media (min-width: 641px) {
     .chat-layout {
-      grid-template-columns: minmax(14rem, 22rem) 1fr;
+      grid-template-columns: minmax(14rem, 22rem) minmax(0, 1fr);
     }
     .chat-layout .chat-aside,
     .chat-layout .chat-main {

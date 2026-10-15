@@ -289,6 +289,10 @@ export interface AuditLogEntry {
   actorDisplayName: string | null;
   details: string | null;
   createdAt: string;
+  /** Betroffene Person (Mitglied, Empfänger), vom Server aufgelöst. */
+  targetName?: string | null;
+  /** Betreff, z. B. Titel einer Mitteilung. */
+  targetTitle?: string | null;
 }
 
 /** Kompaktes aktives Event für die Tablet-Auswahl (`GET /api/v1/tablet/events`). */

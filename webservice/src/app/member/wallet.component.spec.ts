@@ -151,6 +151,35 @@ describe('WalletComponent', () => {
     expect(navigate).toHaveBeenCalledWith('/board/treasury');
   });
 
+  it('names the purchased item and the item of a reversed purchase', async () => {
+    const purchase: LedgerEntry = {
+      ...entries[1],
+      snapshot: {
+        itemType: 'DRINK',
+        drinkName: 'Helles',
+        imageReference: null,
+        barcode: null,
+        unitPrice: '7.50',
+        currency: 'EUR',
+        catalogVersion: 1,
+      },
+    };
+    const reversal: LedgerEntry = {
+      ...entries[1],
+      id: 'l-3',
+      entryType: 'correction',
+      amount: '7.50',
+      reversesEntryId: 'l-2',
+      createdAt: '2026-01-02T10:05:00Z',
+    };
+    api.listEntries.mockReturnValue(of([entries[0], purchase, reversal]));
+    const fixture = await create();
+    const titles = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.member-list-title'),
+    ).map((el) => el.textContent?.trim());
+    expect(titles).toEqual(['Storno: Helles', 'Helles', 'Aufladung']);
+  });
+
   it('shows an empty state when there are no entries', async () => {
     api.listEntries.mockReturnValue(of([]));
     const fixture = await create();

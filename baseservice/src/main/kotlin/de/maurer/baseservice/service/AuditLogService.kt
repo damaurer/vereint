@@ -9,6 +9,9 @@ import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.repository.AuditLogRepository
+import de.maurer.baseservice.repository.LedgerEntryRepository
+import de.maurer.baseservice.repository.NotificationRepository
+import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.BoardRole
 import de.maurer.baseservice.security.UserPrincipal
@@ -48,7 +51,10 @@ import java.util.UUID
 class AuditLogService(
     private val auditLogRepository: AuditLogRepository,
     private val userService: UserService,
-    private val userRoleRepository: UserRoleRepository
+    private val userRoleRepository: UserRoleRepository,
+    private val userRepository: UserRepository,
+    private val ledgerEntryRepository: LedgerEntryRepository,
+    private val notificationRepository: NotificationRepository
 ) {
 
     /**
@@ -86,7 +92,7 @@ class AuditLogService(
         )
 
         return PagedResponse(
-            content = page.content.map { toDto(it) },
+            content = toDtos(page.content),
             page = page.number,
             size = page.size,
             totalElements = page.totalElements,
@@ -181,6 +187,40 @@ class AuditLogService(
     private fun rolesOf(caller: UserEntity, principal: UserPrincipal): Set<String> {
         val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
         return principal.roles + dbRoles
+    }
+
+    /**
+     * Löst die Ziele einer Seite gesammelt zu Namen auf (Mitglied, Empfänger,
+     * Betreff), damit Vorstand und Administration keine rohen IDs lesen müssen.
+     */
+    private fun toDtos(entries: List<AuditLogEntity>): List<AuditLogDto> {
+        fun idsOf(target: String) = entries
+            .filter { it.targetEntity == target }
+            .mapNotNull { entry -> entry.targetId?.let { runCatching { UUID.fromString(it) }.getOrNull() } }
+            .toSet()
+
+        val userIds = idsOf(AuditService.TARGET_USER)
+        val ledgerIds = idsOf(AuditService.TARGET_LEDGER)
+        val notificationIds = idsOf(AuditService.TARGET_NOTIFICATION)
+
+        val userNames = if (userIds.isEmpty()) emptyMap() else
+            userRepository.findAllById(userIds).associate { it.id.toString() to it.displayName }
+        val ledgerMembers = if (ledgerIds.isEmpty()) emptyMap() else
+            ledgerEntryRepository.findByIdIn(ledgerIds).associate { it.id.toString() to it.member?.displayName }
+        val notifications = if (notificationIds.isEmpty()) emptyMap() else
+            notificationRepository.findAllById(notificationIds).associateBy { it.id.toString() }
+
+        return entries.map { entry ->
+            val dto = toDto(entry)
+            when (entry.targetEntity) {
+                AuditService.TARGET_USER -> dto.copy(targetName = userNames[entry.targetId])
+                AuditService.TARGET_LEDGER -> dto.copy(targetName = ledgerMembers[entry.targetId])
+                AuditService.TARGET_NOTIFICATION -> notifications[entry.targetId]
+                    ?.let { dto.copy(targetName = it.user?.displayName, targetTitle = it.title) }
+                    ?: dto
+                else -> dto
+            }
+        }
     }
 
     private fun toDto(entry: AuditLogEntity): AuditLogDto = AuditLogDto(
