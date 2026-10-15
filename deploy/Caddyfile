@@ -29,7 +29,8 @@
 		respond 404
 	}
 	# Dynamische Client-Registrierung wird nicht genutzt.
-	handle /kc/realms/*/clients-registrations* {
+	@clientRegistration path_regexp ^/kc/realms/[^/]+/clients-registrations(/|$)
+	handle @clientRegistration {
 		respond 404
 	}
 
