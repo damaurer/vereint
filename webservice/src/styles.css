@@ -456,6 +456,11 @@ a:focus-visible {
   grid-template-columns: auto 1fr;
 }
 
+/* Kiosk-Modus: ohne Seitenleiste/Rail füllt der Hauptbereich die Breite. */
+.shell[data-kiosk] {
+  display: block;
+}
+
 .shell-main {
   display: flex;
   flex-direction: column;

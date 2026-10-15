@@ -34,6 +34,7 @@ import { translate } from '../i18n/i18n.service';
 import { BreakpointService } from './breakpoint.service';
 import { BottomSheetComponent } from '../ui/bottom-sheet.component';
 import { IconComponent } from '../ui/icon.component';
+import { KioskModeService } from '../kiosk/kiosk-mode.service';
 import { buildNavSections, buildPrimaryNav, NavItem, NavSection, PRIMARY_NAV } from './nav-model';
 
 const PRIMARY_IDS = new Set(PRIMARY_NAV.map((item) => item.id));
@@ -128,6 +129,9 @@ export class AppShellComponent implements OnInit, OnDestroy {
   /** Aktueller Viewport (Signal des Breakpoint-Service). */
   readonly viewport;
 
+  /** Kiosk-Modus auf diesem Gerät: ohne Navigation, Mitteilungen und Abmelden. */
+  readonly kiosk;
+
   /** Reduzierte Shell im Gast-Kontext (keine rollenspezifische Navigation). */
   readonly isGuest = computed(() => {
     const url = this.urlSignal();
@@ -220,6 +224,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     private readonly injector: Injector,
   ) {
     this.viewport = this.breakpoints.viewport;
+    this.kiosk = this.injector.get(KioskModeService).active;
     this.unread = this.injector.get(UnreadBadgeStore).count;
     this.chatUnread = this.injector.get(ChatUnreadStore).count;
   }
@@ -321,6 +326,8 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.closeMenus();
+    // Im Kiosk-Modus gibt es kein Abmelden; erst die PIN beendet den Modus.
+    if (this.kiosk()) return;
     void this.injector.get(AuthNavigationService).logout();
   }
 }

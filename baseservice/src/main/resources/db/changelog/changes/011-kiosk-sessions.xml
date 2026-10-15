@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 140. Kiosk-Sitzungen am Thekenterminal. Das Gerät vergibt beim Start
+         eine eigene PIN; gespeichert wird nur ihr BCrypt-Hash. Fehlversuche und
+         Sperre gelten je Sitzung. Vorstand und Administration können eine
+         Sitzung jederzeit aus der Ferne beenden (`ended_at`, `end_reason`). -->
+    <changeSet id="140-create-kiosk-sessions" author="claude">
+        <createTable tableName="kiosk_sessions">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="label" type="VARCHAR(60)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pin_hash" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="started_by" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_kiosk_sessions_starter" references="users(id)"/>
+            </column>
+            <column name="started_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="failed_attempts" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lockout_count" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="locked_until" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="ended_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="ended_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_kiosk_sessions_ender" references="users(id)"/>
+            </column>
+            <column name="end_reason" type="VARCHAR(16)"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>
+            ALTER TABLE kiosk_sessions
+            ADD CONSTRAINT ck_kiosk_sessions_state
+            CHECK (failed_attempts >= 0 AND lockout_count >= 0
+                   AND (end_reason IS NULL OR end_reason IN ('pin', 'remote')))
+        </sql>
+        <createIndex tableName="kiosk_sessions" indexName="ix_kiosk_sessions_ended_at">
+            <column name="ended_at"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="kiosk_sessions"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

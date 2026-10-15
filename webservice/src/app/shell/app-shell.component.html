@@ -12,10 +12,12 @@
     </div>
   </div>
 } @else {
-  <div class="shell" [attr.data-viewport]="viewport()">
+  <div class="shell" [attr.data-viewport]="viewport()" [attr.data-kiosk]="kiosk() ? '' : null">
     <a class="shell-skip-link" href="#shell-main-content">{{ 'shell.skipLink' | t }}</a>
 
-    @if (viewport() === 'web') {
+    @if (kiosk()) {
+      <!-- Kiosk-Modus: keine Navigation, nur das Thekenterminal. -->
+    } @else if (viewport() === 'web') {
       <aside class="shell-sidebar">
         <a
           class="shell-brand shell-brand-row"
@@ -90,7 +92,7 @@
 
     <div class="shell-main">
       <header class="shell-topbar">
-        @if (viewport() === 'mobile') {
+        @if (viewport() === 'mobile' && !kiosk()) {
           <a
             class="shell-topbar-brand"
             routerLink="/dashboard"
@@ -106,65 +108,67 @@
           </a>
         }
         <p class="shell-page-title">{{ pageTitle() }}</p>
-        <div class="shell-topbar-actions">
-          <a
-            class="shell-icon-button"
-            routerLink="/notifications"
-            routerLinkActive="is-active"
-            [attr.aria-label]="bellLabel()"
-            [attr.title]="bellLabel()"
-          >
-            <vereint-icon name="bell" />
-            @if (unreadBadge(); as badge) {
-              <span class="shell-badge" aria-hidden="true">{{ badge }}</span>
-            }
-          </a>
-          @if (viewport() !== 'mobile') {
-            <div class="shell-profile-menu">
-              <button
-                type="button"
-                class="shell-profile"
-                aria-haspopup="menu"
-                [attr.aria-expanded]="profileOpen()"
-                (click)="toggleProfile($event)"
-              >
-                <span class="shell-profile-avatar" aria-hidden="true">{{ initials() }}</span>
-                <span class="shell-profile-name">{{ displayName() ?? ('shell.account' | t) }}</span>
-                <vereint-icon name="chevron-down" />
-              </button>
-              @if (profileOpen()) {
-                <div class="shell-menu" role="menu" (click)="$event.stopPropagation()">
-                  <a
-                    class="shell-menu-item"
-                    role="menuitem"
-                    routerLink="/profile"
-                    (click)="closeMenus()"
-                  >
-                    <vereint-icon name="user" /> {{ 'shell.profile' | t }}
-                  </a>
-                  <a
-                    class="shell-menu-item"
-                    role="menuitem"
-                    routerLink="/wallet"
-                    (click)="closeMenus()"
-                  >
-                    <vereint-icon name="wallet" /> {{ 'shell.wallet' | t }}
-                  </a>
-                  <button type="button" class="shell-menu-item" role="menuitem" (click)="logout()">
-                    <vereint-icon name="logout" /> {{ 'shell.logout' | t }}
-                  </button>
-                </div>
+        @if (!kiosk()) {
+          <div class="shell-topbar-actions">
+            <a
+              class="shell-icon-button"
+              routerLink="/notifications"
+              routerLinkActive="is-active"
+              [attr.aria-label]="bellLabel()"
+              [attr.title]="bellLabel()"
+            >
+              <vereint-icon name="bell" />
+              @if (unreadBadge(); as badge) {
+                <span class="shell-badge" aria-hidden="true">{{ badge }}</span>
               }
-            </div>
-          }
-        </div>
+            </a>
+            @if (viewport() !== 'mobile') {
+              <div class="shell-profile-menu">
+                <button
+                  type="button"
+                  class="shell-profile"
+                  aria-haspopup="menu"
+                  [attr.aria-expanded]="profileOpen()"
+                  (click)="toggleProfile($event)"
+                >
+                  <span class="shell-profile-avatar" aria-hidden="true">{{ initials() }}</span>
+                  <span class="shell-profile-name">{{ displayName() ?? ('shell.account' | t) }}</span>
+                  <vereint-icon name="chevron-down" />
+                </button>
+                @if (profileOpen()) {
+                  <div class="shell-menu" role="menu" (click)="$event.stopPropagation()">
+                    <a
+                      class="shell-menu-item"
+                      role="menuitem"
+                      routerLink="/profile"
+                      (click)="closeMenus()"
+                    >
+                      <vereint-icon name="user" /> {{ 'shell.profile' | t }}
+                    </a>
+                    <a
+                      class="shell-menu-item"
+                      role="menuitem"
+                      routerLink="/wallet"
+                      (click)="closeMenus()"
+                    >
+                      <vereint-icon name="wallet" /> {{ 'shell.wallet' | t }}
+                    </a>
+                    <button type="button" class="shell-menu-item" role="menuitem" (click)="logout()">
+                      <vereint-icon name="logout" /> {{ 'shell.logout' | t }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
       </header>
 
       <div class="shell-content" id="shell-main-content" tabindex="-1">
         <router-outlet />
       </div>
 
-      @if (viewport() === 'mobile') {
+      @if (viewport() === 'mobile' && !kiosk()) {
         <nav class="shell-bottom-bar" [attr.aria-label]="'shell.mainNav' | t">
           @for (item of primaryNav(); track trackNav($index, item)) {
             <a
@@ -197,7 +201,7 @@
       }
     </div>
 
-    <vereint-bottom-sheet [open]="moreOpen()" [title]="'shell.more' | t" (closed)="closeMenus()">
+    <vereint-bottom-sheet [open]="moreOpen() && !kiosk()" [title]="'shell.more' | t" (closed)="closeMenus()">
       <div class="shell-more">
         @for (section of moreSections(); track section.id) {
           <nav class="shell-more-section" [attr.aria-label]="section.labelKey | t">
