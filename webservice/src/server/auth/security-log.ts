@@ -36,12 +36,12 @@ export function createCorrelationId(): string {
   return randomUUID();
 }
 
+/**
+ * Client-IP über `req.ip`: Express wertet `X-Forwarded-For` nur aus, wenn die
+ * Anfrage vom vertrauenswürdigen Proxy (Caddy) kommt (`trust proxy`).
+ */
 export function resolveRemoteAddress(req?: Request): string {
   if (!req) return 'unknown';
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length) {
-    return forwarded.split(',')[0].trim();
-  }
   return req.ip ?? req.socket?.remoteAddress ?? 'unknown';
 }
 

@@ -3,11 +3,21 @@
 {$PUBLIC_DOMAIN} {
 	encode zstd gzip
 
+	# Groesster legitimer Request ist ein Bild-Upload (6 MB, siehe baseservice).
+	request_body {
+		max_size 8MB
+	}
+
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
+		# Browser-Funktionen, die die App nicht braucht, sind abgeschaltet.
+		# Die Kamera bleibt fuer den Barcode-Scan auf der eigenen Seite erlaubt.
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(), usb=(), display-capture=(), browsing-topics=()"
+		Cross-Origin-Opener-Policy "same-origin"
 		-Server
+		-X-Powered-By
 	}
 
 	# Keycloak-Verwaltung (Admin-Konsole und Master-Realm) ist von aussen
@@ -16,6 +26,10 @@
 		respond 404
 	}
 	handle /kc/realms/master* {
+		respond 404
+	}
+	# Dynamische Client-Registrierung wird nicht genutzt.
+	handle /kc/realms/*/clients-registrations* {
 		respond 404
 	}
 

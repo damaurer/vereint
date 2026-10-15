@@ -16,6 +16,11 @@ x-defaults: &defaults
   init: true
   security_opt:
     - no-new-privileges:true
+  # Keine Linux-Capabilities, ausser ein Dienst braucht sie nachweislich
+  # (cap_add am Dienst). Begrenzte Prozesszahl gegen Fork-Bomben.
+  cap_drop:
+    - ALL
+  pids_limit: 512
   logging:
     driver: local
 
@@ -23,6 +28,9 @@ services:
   caddy:
     <<: *defaults
     image: caddy:2.11.7-alpine
+    # Caddy laeuft als root im Container und bindet die Ports 80/443.
+    cap_add:
+      - NET_BIND_SERVICE
     ports:
       - "80:80"
       - "443:443"
@@ -46,6 +54,14 @@ services:
   postgres:
     <<: *defaults
     image: postgres:17.11-alpine
+    # Der Entrypoint uebergibt das Datenverzeichnis an den Benutzer postgres
+    # und wechselt dann zu ihm; dafuer braucht er genau diese Rechte.
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD fehlt}
@@ -108,6 +124,10 @@ services:
   baseservice:
     <<: *defaults
     image: ${BASESERVICE_IMAGE:?BASESERVICE_IMAGE fehlt}
+    # Unveraenderliches Dateisystem; nur /tmp (Tomcat, Uploads) ist beschreibbar.
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
     environment:
       VEREINT_DB_URL: jdbc:postgresql://postgres:5432/vereint
       VEREINT_DB_USERNAME: vereint
@@ -147,6 +167,9 @@ services:
   webservice:
     <<: *defaults
     image: ${WEBSERVICE_IMAGE:?WEBSERVICE_IMAGE fehlt}
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
     environment:
       NODE_ENV: production
       PORT: "8080"

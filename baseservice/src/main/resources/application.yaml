@@ -116,7 +116,11 @@ management:
       enabled: false
 
 springdoc:
+  # Die API-Beschreibung verrät jeden Endpunkt samt Parametern. Standardmäßig
+  # aus; lokal mit API_DOCS_ENABLED=true einschalten.
   api-docs:
+    enabled: ${API_DOCS_ENABLED:false}
     path: /v3/api-docs
   swagger-ui:
+    enabled: ${API_DOCS_ENABLED:false}
     path: /swagger-ui.html

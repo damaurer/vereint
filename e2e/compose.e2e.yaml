@@ -13,6 +13,11 @@ services:
   caddy:
     environment:
       PUBLIC_DOMAIN: vereint.test:8443
+    # Der Schluessel der Test-CA gehoert dem Benutzer, der stack.sh startet
+    # (Modus 600); Caddy liest ihn als root nur mit DAC_OVERRIDE.
+    cap_add: !override
+      - NET_BIND_SERVICE
+      - DAC_OVERRIDE
     ports: !override
       - "127.0.0.1:8443:8443"
     volumes: !override
