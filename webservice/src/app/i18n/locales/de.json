@@ -710,7 +710,8 @@
     },
     "actions": {
       "proposeDrink": "+ Getränk vorschlagen",
-      "createFood": "+ Neue Speise anlegen"
+      "createFood": "+ Neue Speise anlegen",
+      "createDrink": "+ Getränk anlegen"
     },
     "tabs": {
       "label": "Katalogbereiche",
@@ -739,7 +740,8 @@
       "detailsAndBarcodes": "Details & Barcodes",
       "approve": "Freigeben",
       "reject": "Ablehnen",
-      "edit": "Bearbeiten"
+      "edit": "Bearbeiten",
+      "margin": "Marge {amount}"
     },
     "drinkStatus": {
       "approved": "Freigegeben",
@@ -753,15 +755,21 @@
       "categoryPlaceholder": "z. B. Helles, Weizen, Alkoholfrei",
       "pricePlaceholder": "z. B. 2.50",
       "descriptionPlaceholder": "Besonderheiten, Brauerei, etc.",
-      "barcode": "Barcode (optional)",
-      "barcodePlaceholder": "z. B. 4012345678901",
       "submit": "Vorschlag einreichen"
     },
     "form": {
       "category": "Kategorie",
       "defaultPrice": "Standardpreis (€) *",
       "description": "Beschreibung",
-      "requiredFields": "Bitte füllen Sie alle Pflichtfelder aus."
+      "requiredFields": "Bitte füllen Sie alle Pflichtfelder aus.",
+      "costPrice": "Einkaufspreis (€)",
+      "costPricePlaceholder": "z. B. 1.10",
+      "marginHint": "Marge pro Verkauf: {amount}",
+      "barcodes": "Barcodes",
+      "similarName": "Es gibt schon ein Getränk namens „{name}“. Bitte prüfe, ob es dasselbe ist.",
+      "barcodeTaken": "Der Barcode {barcode} gehört schon zu „{name}“.",
+      "barcodeNotAdded": "Der eingegebene Barcode ist noch nicht hinzugefügt. Bitte auf „+ Barcode hinzufügen“ tippen oder das Feld leeren.",
+      "activeLabel": "Im Sortiment (abwählen, um das Getränk aus dem Verkauf zu nehmen)"
     },
     "detail": {
       "fallbackTitle": "Getränkedetails",
@@ -792,9 +800,26 @@
       "propose": "Fehler beim Einreichen des Vorschlags.",
       "addBarcode": "Fehler beim Hinzufügen des Barcodes.",
       "saveFood": "Fehler beim Speichern der Speise.",
-      "createFood": "Fehler beim Anlegen der Speise."
+      "createFood": "Fehler beim Anlegen der Speise.",
+      "saveDrink": "Fehler beim Speichern des Getränks."
     },
-    "proposeInfo": "„{name}“ wurde vorgeschlagen. Nach der Freigabe durch den Vorstand erscheint es im Katalog."
+    "proposeInfo": "„{name}“ wurde vorgeschlagen. Nach der Freigabe durch den Vorstand erscheint es im Katalog.",
+    "create": {
+      "title": "Getränk anlegen",
+      "submit": "Getränk anlegen"
+    },
+    "edit": {
+      "title": "Getränk bearbeiten"
+    },
+    "lookup": {
+      "open": "Barcode scannen",
+      "title": "Getränk per Barcode finden",
+      "intro": "Halte den Barcode der Flasche vor die Kamera. Ist das Getränk bekannt, öffnet es sich; sonst kannst du es gleich anlegen.",
+      "manual": "Barcode eingeben …",
+      "search": "Suchen",
+      "newBarcode": "Der Barcode {barcode} ist noch keinem Getränk zugeordnet. Er wird mit dem neuen Getränk gespeichert."
+    },
+    "createInfo": "„{name}“ wurde angelegt und ist sofort im Katalog."
   },
   "sublists": {
     "header": {

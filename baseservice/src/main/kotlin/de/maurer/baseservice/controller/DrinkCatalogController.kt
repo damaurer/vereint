@@ -50,7 +50,7 @@ class DrinkCatalogController(
     }
 
     @PostMapping
-    @Operation(summary = "Getränk vorschlagen", description = "Schlägt ein neues globales Getränk vor (Mitglied, Vorstand, Admin)")
+    @Operation(summary = "Getränk vorschlagen", description = "Mitglieder schlagen ein Getränk zur Freigabe vor; Vorstand/Admin legen es direkt freigegeben an")
     fun proposeDrink(@Valid @RequestBody request: ProposeDrinkRequest): ResponseEntity<DrinkDto> {
         val principal = authContext.getRequiredPrincipal()
         val drink = drinkCatalogService.proposeDrink(request, principal)

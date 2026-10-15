@@ -108,6 +108,12 @@ class DrinkCatalogService(
             throw InvalidRequestException(Msg("error.field.negative", "defaultPrice"), ErrorCode.INVALID_REQUEST)
         }
 
+        // Barcodes vor dem Speichern prüfen, damit ein belegter Code kein halb angelegtes Getränk hinterlässt.
+        val barcodes = request.barcodes.orEmpty().map { normalizeBarcode(it) }.distinct()
+        barcodes.forEach { requireBarcodeAvailable(it) }
+
+        // Vorstand und Administration geben ihre eigenen Einträge nicht noch einmal frei.
+        val privileged = isBoardOrAdmin(caller, principal)
         val drink = DrinkCatalogEntity(
             name = name,
             description = request.description?.trim()?.ifBlank { null },
@@ -117,15 +123,14 @@ class DrinkCatalogService(
             currency = normalizeCurrency(request.currency),
             imageReference = request.imageReference?.trim()?.ifBlank { null },
             catalogVersion = 1,
-            active = false,
-            status = DrinkStatus.proposed,
-            proposedBy = caller
+            active = privileged,
+            status = if (privileged) DrinkStatus.approved else DrinkStatus.proposed,
+            proposedBy = caller,
+            approvedBy = if (privileged) caller else null
         )
         val saved = drinkCatalogRepository.save(drink)
 
-        request.barcodes?.forEach { raw ->
-            val normalized = normalizeBarcode(raw)
-            requireBarcodeAvailable(normalized)
+        barcodes.forEach { normalized ->
             drinkBarcodeRepository.save(DrinkBarcodeEntity(drink = saved, barcode = normalized, active = true))
         }
 
