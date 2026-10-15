@@ -85,7 +85,7 @@ describe('AppShellComponent', () => {
   it('hides navigation, notifications and logout in kiosk mode', async () => {
     for (const size of ['web', 'tablet', 'mobile'] as const) {
       TestBed.resetTestingModule();
-      localStorage.setItem('vereint.kiosk', JSON.stringify({ active: true, eventId: null }));
+      localStorage.setItem('vereint.kiosk', JSON.stringify({ active: true, sessionId: 's-1', eventId: null }));
       viewport.set(size);
       const fixture = await create();
       const root = el(fixture);

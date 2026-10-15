@@ -942,8 +942,7 @@
       "kioskActive": "Kiosk mode active",
       "startKiosk": "Start kiosk mode",
       "leaveKiosk": "Leave kiosk mode",
-      "startHint": "In kiosk mode this device stays on the bar terminal, even after closing and reopening. Leaving requires the kiosk PIN.",
-      "noPin": "No kiosk PIN has been set yet. The board or an administrator sets it under Board → Kiosk PIN."
+      "startHint": "In kiosk mode this device stays on the bar terminal, even after closing and reopening. You set a PIN when starting; only that PIN leaves the mode here. The board and administrators can unlock the device remotely at any time."
     },
     "header": {
       "eyebrow": "Drink Recorder",
@@ -1140,8 +1139,9 @@
       "LEDGER_PURCHASE": "Purchase",
       "MOMENT_STARTED": "Moment started",
       "MOMENT_COMPLETED": "Moment ended",
-      "KIOSK_PIN_CHANGED": "Kiosk PIN set",
-      "KIOSK_PIN_LOCKED": "Kiosk PIN locked after failed attempts"
+      "KIOSK_PIN_LOCKED": "Kiosk PIN locked after failed attempts",
+      "KIOSK_STARTED": "Kiosk mode started",
+      "KIOSK_ENDED_REMOTELY": "Kiosk device unlocked remotely"
     },
     "auditDetail": {
       "amount": "Amount",
@@ -1193,8 +1193,8 @@
       "auditHeading": "Recent actions ({count})",
       "inviteTitle": "Invite member",
       "inviteDesc": "Create an invite link for registration",
-      "kioskPinTitle": "Kiosk PIN",
-      "kioskPinDesc": "Set the PIN for leaving kiosk mode on the bar terminal"
+      "kioskDevicesTitle": "Kiosk devices",
+      "kioskDevicesDesc": "See running bar terminals and unlock them remotely"
     },
     "comms": {
       "eyebrow": "Secretary",
@@ -1322,18 +1322,15 @@
         "id": "ID {id}"
       }
     },
-    "kioskPin": {
-      "title": "Kiosk PIN",
-      "intro": "This PIN lets you leave kiosk mode on the bar terminal. It applies to all terminals and is not shown again after saving.",
-      "notSet": "No PIN set yet. Kiosk mode cannot be started without a PIN.",
-      "set": "PIN set on {date}.",
-      "setBy": "PIN set by {name} on {date}.",
-      "newPin": "New PIN ({min} to {max} digits)",
-      "repeatPin": "Repeat PIN",
-      "save": "Save PIN",
-      "saved": "The new PIN applies to all terminals right away.",
-      "format": "The PIN must consist of {min} to {max} digits.",
-      "mismatch": "The two entries do not match."
+    "kioskDevices": {
+      "title": "Kiosk devices",
+      "intro": "Kiosk mode is currently running on these devices. “Unlock” ends it without the PIN; the device leaves kiosk mode within a few seconds.",
+      "emptyTitle": "No device in kiosk mode",
+      "emptyMessage": "As soon as a bar terminal starts kiosk mode, it shows up here.",
+      "since": "Started by {name} on {date}",
+      "lockedUntil": "PIN entry locked until {date}",
+      "unlock": "Unlock",
+      "unlocked": "{label} is unlocked."
     }
   },
   "events": {
@@ -1654,6 +1651,18 @@
       "submit": "Unlock",
       "wrong": "Wrong PIN. {count} attempts left before the lock.",
       "locked": "Too many wrong attempts. You can try again from {time}."
+    },
+    "start": {
+      "title": "Start kiosk mode",
+      "intro": "Set a PIN for this device. Only this PIN lets you leave kiosk mode here.",
+      "label": "Device name (optional)",
+      "labelPlaceholder": "e.g. Bar left",
+      "pin": "PIN ({min} to {max} digits)",
+      "repeat": "Repeat PIN",
+      "remoteHint": "Forgot the PIN? The board or an administrator can unlock the device under Board → Kiosk devices.",
+      "submit": "Start",
+      "format": "The PIN must consist of {min} to {max} digits.",
+      "mismatch": "The two entries do not match."
     }
   }
 }

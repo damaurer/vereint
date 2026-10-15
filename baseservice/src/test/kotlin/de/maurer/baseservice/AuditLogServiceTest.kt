@@ -9,6 +9,7 @@ import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.domain.LedgerEntryEntity
 import de.maurer.baseservice.domain.NotificationEntity
 import de.maurer.baseservice.repository.AuditLogRepository
+import de.maurer.baseservice.repository.KioskSessionRepository
 import de.maurer.baseservice.repository.LedgerEntryRepository
 import de.maurer.baseservice.repository.NotificationRepository
 import de.maurer.baseservice.repository.UserRepository
@@ -57,6 +58,9 @@ class AuditLogServiceTest {
     @Mock
     private lateinit var notificationRepository: NotificationRepository
 
+    @Mock
+    private lateinit var kioskSessionRepository: KioskSessionRepository
+
     private lateinit var service: AuditLogService
 
     private val callerId: UUID = UUID.randomUUID()
@@ -65,7 +69,7 @@ class AuditLogServiceTest {
     fun setup() {
         service = AuditLogService(
             auditLogRepository, userService, userRoleRepository,
-            userRepository, ledgerEntryRepository, notificationRepository
+            userRepository, ledgerEntryRepository, notificationRepository, kioskSessionRepository
         )
     }
 

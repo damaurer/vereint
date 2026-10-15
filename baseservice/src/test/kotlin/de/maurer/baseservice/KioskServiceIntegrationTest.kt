@@ -1,19 +1,18 @@
 package de.maurer.baseservice
 
-import de.maurer.baseservice.domain.KioskSettingsEntity
+import de.maurer.baseservice.domain.KioskSessionEntity
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
-import de.maurer.baseservice.error.KioskPinNotConfiguredException
+import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.AuditLogRepository
-import de.maurer.baseservice.repository.KioskSettingsRepository
+import de.maurer.baseservice.repository.KioskSessionRepository
 import de.maurer.baseservice.security.RolePermissionMatrix
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.AuditService
 import de.maurer.baseservice.service.KioskService
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,12 +21,12 @@ import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
-/** Kiosk-PIN gegen die echten Migrationen (H2-Profil `test`). */
+/** Kiosk-Sitzungen gegen die echten Migrationen (H2-Profil `test`). */
 @SpringBootTest
 @ActiveProfiles("test")
 class KioskServiceIntegrationTest @Autowired constructor(
     private val kioskService: KioskService,
-    private val kioskSettingsRepository: KioskSettingsRepository,
+    private val kioskSessionRepository: KioskSessionRepository,
     private val auditLogRepository: AuditLogRepository
 ) {
 
@@ -46,115 +45,124 @@ class KioskServiceIntegrationTest @Autowired constructor(
         roles = setOf(UserRole.MEMBER)
     )
 
-    @BeforeEach
-    fun reset() {
-        kioskSettingsRepository.deleteAll()
-    }
+    private fun start(pin: String = "2468", label: String? = "Theke links") =
+        UUID.fromString(kioskService.start(pin, label, terminal).id)
 
     @Test
-    fun `without a pin the status says so and unlocking is refused`() {
-        assertFalse(kioskService.status(terminal).pinConfigured)
-        assertThrows(KioskPinNotConfiguredException::class.java) { kioskService.unlock("1234", terminal) }
-    }
+    fun `the device sets its own pin which is stored only as a hash`() {
+        val dto = kioskService.start("482913", "  Theke links  ", terminal)
 
-    @Test
-    fun `board sets a pin that is stored only as a hash and audited`() {
-        val status = kioskService.setPin("482913", board)
-
-        assertTrue(status.pinConfigured)
-        assertEquals("Vorstand Kiosk", status.pinUpdatedByName)
-        val stored = kioskSettingsRepository.findById(KioskSettingsEntity.DEFAULT_ID).orElseThrow()
-        assertNotNull(stored.pinHash)
-        assertFalse(stored.pinHash!!.contains("482913"))
-        assertTrue(stored.pinHash!!.startsWith("$2"))
+        assertTrue(dto.active)
+        assertEquals("Theke links", dto.label)
+        assertEquals("Theke", dto.startedByName)
+        val stored = kioskSessionRepository.findById(UUID.fromString(dto.id)).orElseThrow()
+        assertFalse(stored.pinHash.contains("482913"))
+        assertTrue(stored.pinHash.startsWith("$2"))
         assertTrue(
             auditLogRepository.findAll().any {
-                it.action == AuditService.ACTION_KIOSK_PIN_CHANGED && it.targetEntity == AuditService.TARGET_KIOSK
+                it.action == AuditService.ACTION_KIOSK_STARTED && it.targetId == dto.id
             }
         )
-        // Das Terminal sieht nur, dass eine PIN gesetzt ist, nicht wer sie gesetzt hat.
-        val terminalView = kioskService.status(terminal)
-        assertTrue(terminalView.pinConfigured)
-        assertNull(terminalView.pinUpdatedByName)
     }
 
     @Test
-    fun `only board and admin may set the pin`() {
-        val ex = assertThrows(AccessDeniedException::class.java) { kioskService.setPin("1234", terminal) }
-        assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
-        assertThrows(AccessDeniedException::class.java) { kioskService.setPin("1234", member) }
-    }
-
-    @Test
-    fun `plain members cannot use kiosk endpoints`() {
-        kioskService.setPin("1234", board)
-        assertThrows(AccessDeniedException::class.java) { kioskService.status(member) }
-        assertThrows(AccessDeniedException::class.java) { kioskService.unlock("1234", member) }
+    fun `without a label the session is named after the account`() {
+        assertEquals("Theke", kioskService.start("1234", "  ", terminal).label)
     }
 
     @Test
     fun `pin must be four to eight digits`() {
         for (invalid in listOf("123", "123456789", "12a4", "", "12 34")) {
-            val ex = assertThrows(InvalidRequestException::class.java) { kioskService.setPin(invalid, board) }
+            val ex = assertThrows(InvalidRequestException::class.java) { kioskService.start(invalid, null, terminal) }
             assertEquals(ErrorCode.KIOSK_PIN_INVALID_FORMAT, ex.errorCode)
         }
-        assertTrue(kioskService.setPin(" 12345678 ", board).pinConfigured)
+        assertTrue(kioskService.start(" 12345678 ", null, terminal).active)
     }
 
     @Test
-    fun `correct pin unlocks and wrong pin counts down`() {
-        kioskService.setPin("2468", board)
+    fun `plain members cannot use kiosk endpoints`() {
+        val id = start()
+        assertThrows(AccessDeniedException::class.java) { kioskService.start("1234", null, member) }
+        assertThrows(AccessDeniedException::class.java) { kioskService.state(id, member) }
+        assertThrows(AccessDeniedException::class.java) { kioskService.unlock(id, "2468", member) }
+    }
 
-        val wrong = kioskService.unlock("1111", terminal)
+    @Test
+    fun `correct pin ends the session and wrong pin counts down`() {
+        val id = start()
+
+        val wrong = kioskService.unlock(id, "1111", terminal)
         assertFalse(wrong.unlocked)
         assertEquals(KioskService.MAX_FAILED_ATTEMPTS - 1, wrong.remainingAttempts)
+        assertTrue(kioskService.state(id, terminal).active)
 
-        val right = kioskService.unlock("2468", terminal)
-        assertTrue(right.unlocked)
-        assertEquals(0, kioskSettingsRepository.findById(KioskSettingsEntity.DEFAULT_ID).orElseThrow().failedAttempts)
+        assertTrue(kioskService.unlock(id, "2468", terminal).unlocked)
+        val state = kioskService.state(id, terminal)
+        assertFalse(state.active)
+        assertEquals(KioskSessionEntity.END_REASON_PIN, state.endReason)
     }
 
     @Test
-    fun `too many wrong pins lock the check even for the correct pin`() {
-        kioskService.setPin("2468", board)
+    fun `each device has its own pin`() {
+        val first = start("1111")
+        val second = start("2222")
+        assertFalse(kioskService.unlock(first, "2222", terminal).unlocked)
+        assertTrue(kioskService.unlock(second, "2222", terminal).unlocked)
+        assertTrue(kioskService.state(first, terminal).active)
+    }
 
-        repeat(KioskService.MAX_FAILED_ATTEMPTS - 1) { kioskService.unlock("0000", terminal) }
-        val locked = kioskService.unlock("0000", terminal)
+    @Test
+    fun `too many wrong pins lock the check and each lock lasts longer`() {
+        val id = start()
+
+        repeat(KioskService.MAX_FAILED_ATTEMPTS - 1) { kioskService.unlock(id, "0000", terminal) }
+        val locked = kioskService.unlock(id, "0000", terminal)
         assertFalse(locked.unlocked)
-        assertEquals(0, locked.remainingAttempts)
         assertNotNull(locked.lockedUntil)
-        val minutes = Duration.between(Instant.now(), locked.lockedUntil).toSeconds()
-        assertTrue(minutes in 50..60)
-
-        val stillLocked = kioskService.unlock("2468", terminal)
-        assertFalse(stillLocked.unlocked)
+        assertTrue(Duration.between(Instant.now(), locked.lockedUntil).toSeconds() in 50..60)
+        assertFalse(kioskService.unlock(id, "2468", terminal).unlocked)
         assertTrue(auditLogRepository.findAll().any { it.action == AuditService.ACTION_KIOSK_PIN_LOCKED })
+
+        expireLock(id)
+        repeat(KioskService.MAX_FAILED_ATTEMPTS - 1) { kioskService.unlock(id, "0000", terminal) }
+        val second = kioskService.unlock(id, "0000", terminal)
+        assertTrue(Duration.between(Instant.now(), second.lockedUntil).toSeconds() in 290..300)
     }
 
     @Test
-    fun `each further lockout lasts longer and a new pin clears the lock`() {
-        kioskService.setPin("2468", board)
-        repeat(KioskService.MAX_FAILED_ATTEMPTS) { kioskService.unlock("0000", terminal) }
-        expireLock()
+    fun `board sees running devices and can end one remotely without the pin`() {
+        val id = start()
+        repeat(KioskService.MAX_FAILED_ATTEMPTS) { kioskService.unlock(id, "0000", terminal) }
 
-        repeat(KioskService.MAX_FAILED_ATTEMPTS - 1) { kioskService.unlock("0000", terminal) }
-        val second = kioskService.unlock("0000", terminal)
-        val seconds = Duration.between(Instant.now(), second.lockedUntil).toSeconds()
-        assertTrue(seconds in 290..300)
+        assertTrue(kioskService.listActive(board).any { it.id == id.toString() && it.label == "Theke links" })
 
-        kioskService.setPin("97531", board)
-        assertTrue(kioskService.unlock("97531", terminal).unlocked)
+        val ended = kioskService.endRemotely(id, board)
+        assertFalse(ended.active)
+        assertEquals(KioskSessionEntity.END_REASON_REMOTE, ended.endReason)
+        assertFalse(kioskService.listActive(board).any { it.id == id.toString() })
+        assertTrue(auditLogRepository.findAll().any { it.action == AuditService.ACTION_KIOSK_ENDED_REMOTELY })
+
+        // Das Gerät sieht das Ende und darf den Modus verlassen.
+        assertFalse(kioskService.state(id, terminal).active)
+        assertTrue(kioskService.unlock(id, "9999", terminal).unlocked)
     }
 
     @Test
-    fun `board can unlock a kiosk device as well`() {
-        kioskService.setPin("2468", board)
-        assertTrue(kioskService.unlock("2468", board).unlocked)
+    fun `only board and admin may list or end sessions remotely`() {
+        val id = start()
+        assertThrows(AccessDeniedException::class.java) { kioskService.listActive(terminal) }
+        assertThrows(AccessDeniedException::class.java) { kioskService.endRemotely(id, terminal) }
+        assertTrue(kioskService.state(id, terminal).active)
     }
 
-    private fun expireLock() {
-        val settings = kioskSettingsRepository.findById(KioskSettingsEntity.DEFAULT_ID).orElseThrow()
-        settings.lockedUntil = Instant.now().minusSeconds(1)
-        kioskSettingsRepository.save(settings)
+    @Test
+    fun `unknown sessions are not found`() {
+        assertThrows(ResourceNotFoundException::class.java) { kioskService.state(UUID.randomUUID(), terminal) }
+    }
+
+    private fun expireLock(id: UUID) {
+        val session = kioskSessionRepository.findById(id).orElseThrow()
+        session.lockedUntil = Instant.now().minusSeconds(1)
+        kioskSessionRepository.save(session)
     }
 }

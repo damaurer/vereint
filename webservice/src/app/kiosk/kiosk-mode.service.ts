@@ -8,6 +8,8 @@ const STORAGE_KEY = 'vereint.kiosk';
 
 interface StoredKiosk {
   active: true;
+  /** Kiosk-Sitzung auf dem Server; dort liegen PIN-Hash und Fernentsperrung. */
+  sessionId: string;
   eventId: string | null;
 }
 
@@ -18,8 +20,8 @@ interface StoredKiosk {
  * des Tabs oder der App und einen Neustart des Browsers. Solange er aktiv ist,
  * leitet der [kioskGuard] jede Navigation auf `/tablet` um, und die Shell blendet
  * Navigation und Abmelden aus. Beenden lässt sich der Modus nur über
- * [deactivate], das die Oberfläche erst nach einer vom Server bestätigten PIN
- * aufruft.
+ * [deactivate], das die Oberfläche erst aufruft, wenn der Server die PIN
+ * bestätigt oder Vorstand bzw. Administration die Sitzung beendet haben.
  *
  * Ist kein Speicher verfügbar (privates Fenster mit Sperre), gilt der Modus nur
  * für die laufende Sitzung.
@@ -31,6 +33,9 @@ export class KioskModeService {
 
   /** Ist der Kiosk-Modus auf diesem Gerät aktiv? */
   readonly active = computed(() => this.state() !== null);
+
+  /** Kiosk-Sitzung dieses Geräts auf dem Server. */
+  readonly sessionId = computed(() => this.state()?.sessionId ?? null);
 
   /** Zuletzt im Kiosk-Modus gewähltes Event, damit das Terminal dort weitermacht. */
   readonly eventId = computed(() => this.state()?.eventId ?? null);
@@ -46,8 +51,8 @@ export class KioskModeService {
     this.unlockOpen.set(false);
   }
 
-  activate(eventId: string | null): void {
-    this.store({ active: true, eventId });
+  activate(sessionId: string, eventId: string | null): void {
+    this.store({ active: true, sessionId, eventId });
   }
 
   /** Merkt sich das gewählte Event, solange der Modus aktiv ist. */
@@ -85,9 +90,10 @@ export class KioskModeService {
       const raw = globalThis.localStorage?.getItem(STORAGE_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw) as Partial<StoredKiosk> | null;
-      // Ein beschädigter Eintrag hält das Gerät trotzdem gesperrt.
-      const eventId = typeof parsed?.eventId === 'string' ? parsed.eventId : null;
-      return { active: true, eventId };
+      // Ohne Sitzung gäbe es weder PIN noch Fernentsperrung; der Eintrag gilt nicht.
+      if (typeof parsed?.sessionId !== 'string' || !parsed.sessionId) return null;
+      const eventId = typeof parsed.eventId === 'string' ? parsed.eventId : null;
+      return { active: true, sessionId: parsed.sessionId, eventId };
     } catch {
       return null;
     }

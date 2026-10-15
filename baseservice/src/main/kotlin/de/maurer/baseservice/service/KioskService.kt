@@ -1,15 +1,15 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.domain.KioskSettingsEntity
+import de.maurer.baseservice.domain.KioskSessionEntity
 import de.maurer.baseservice.domain.UserEntity
-import de.maurer.baseservice.dto.KioskStatusDto
+import de.maurer.baseservice.dto.KioskSessionDto
 import de.maurer.baseservice.dto.KioskUnlockResultDto
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
-import de.maurer.baseservice.error.KioskPinNotConfiguredException
 import de.maurer.baseservice.error.Msg
-import de.maurer.baseservice.repository.KioskSettingsRepository
+import de.maurer.baseservice.error.ResourceNotFoundException
+import de.maurer.baseservice.repository.KioskSessionRepository
 import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.RolePermissionMatrix
@@ -22,23 +22,26 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
+import java.util.UUID
 
 /**
  * Kiosk-Modus des Thekenterminals.
  *
- * - Die PIN setzen oder ändern dürfen nur Vorstand und Administration. Sie gilt
- *   für alle Terminals und liegt nur als BCrypt-Hash in `kiosk_settings`.
- * - Prüfen dürfen das Terminal (`purchase.tablet`) sowie Vorstand und
- *   Administration. Nach [MAX_FAILED_ATTEMPTS] falschen Eingaben ist die Prüfung
- *   gesperrt, jede weitere Sperre dauert länger ([LOCKOUT_STEPS]). Eine richtige
- *   Eingabe oder eine neue PIN setzt Zähler und Sperre zurück.
+ * - Das Gerät startet eine Sitzung und vergibt dabei seine eigene PIN
+ *   (4 bis 8 Ziffern); gespeichert wird nur ihr BCrypt-Hash. Starten dürfen das
+ *   Terminal (`purchase.tablet`) sowie Vorstand und Administration.
+ * - Am Gerät endet die Sitzung nur mit der richtigen PIN. Nach
+ *   [MAX_FAILED_ATTEMPTS] falschen Eingaben ist die Prüfung gesperrt, jede
+ *   weitere Sperre dauert länger ([LOCKOUT_STEPS]).
+ * - Vorstand und Administration sehen die laufenden Sitzungen und können jede
+ *   jederzeit ohne PIN beenden; das Gerät erkennt das über [state].
  *
  * Falsche Eingaben werden als Ergebnis und nicht als Ausnahme gemeldet, damit
  * der erhöhte Fehlerzähler mit der Transaktion gespeichert wird.
  */
 @Service
 class KioskService(
-    private val kioskSettingsRepository: KioskSettingsRepository,
+    private val kioskSessionRepository: KioskSessionRepository,
     private val userRoleRepository: UserRoleRepository,
     private val userService: UserService,
     private val auditService: AuditService,
@@ -48,23 +51,9 @@ class KioskService(
     private val log = LoggerFactory.getLogger(KioskService::class.java)
     private val encoder = BCryptPasswordEncoder()
 
-    @Transactional(readOnly = true)
-    fun status(principal: UserPrincipal): KioskStatusDto {
-        val access = requireKioskAccess(principal)
-        val settings = kioskSettingsRepository.findById(KioskSettingsEntity.DEFAULT_ID).orElse(null)
-        return KioskStatusDto(
-            pinConfigured = settings?.pinConfigured == true,
-            pinUpdatedAt = settings?.pinUpdatedAt,
-            pinUpdatedByName = if (access.manager) settings?.pinUpdatedBy?.displayName else null
-        )
-    }
-
     @Transactional
-    fun setPin(rawPin: String?, principal: UserPrincipal): KioskStatusDto {
+    fun start(rawPin: String?, rawLabel: String?, principal: UserPrincipal): KioskSessionDto {
         val access = requireKioskAccess(principal)
-        if (!access.manager) {
-            throw AccessDeniedException(Msg("error.kiosk.manageDenied"), ErrorCode.ACCESS_DENIED)
-        }
         val pin = rawPin?.trim().orEmpty()
         if (!PIN_PATTERN.matches(pin)) {
             throw InvalidRequestException(
@@ -72,76 +61,117 @@ class KioskService(
                 ErrorCode.KIOSK_PIN_INVALID_FORMAT
             )
         }
-
-        val now = Instant.now(clock)
-        val settings = kioskSettingsRepository.findByIdForUpdate(KioskSettingsEntity.DEFAULT_ID)
-            .orElseGet { KioskSettingsEntity() }
-        val replaced = settings.pinConfigured
-        settings.pinHash = encoder.encode(pin)
-        settings.failedAttempts = 0
-        settings.lockoutCount = 0
-        settings.lockedUntil = null
-        settings.pinUpdatedAt = now
-        settings.pinUpdatedBy = access.user
-        kioskSettingsRepository.save(settings)
-
-        auditService.recordKioskAction(
-            access.user,
-            AuditService.ACTION_KIOSK_PIN_CHANGED,
-            null
+        val label = rawLabel?.trim()?.take(MAX_LABEL_LENGTH)?.ifBlank { null }
+            ?: access.user.displayName?.take(MAX_LABEL_LENGTH)?.ifBlank { null }
+            ?: DEFAULT_LABEL
+        val session = kioskSessionRepository.save(
+            KioskSessionEntity(
+                label = label,
+                pinHash = requireNotNull(encoder.encode(pin)),
+                startedBy = access.user,
+                startedAt = Instant.now(clock)
+            )
         )
-        log.info("kiosk pin set by={} replaced={}", access.user.id, replaced)
-        return KioskStatusDto(true, now, access.user.displayName)
+        auditService.recordKioskAction(access.user, AuditService.ACTION_KIOSK_STARTED, session.id, null)
+        log.info("kiosk session started id={} by={}", session.id, access.user.id)
+        return toDto(session)
+    }
+
+    /** Zustand einer Sitzung für das Gerät, das sie gestartet hat. */
+    @Transactional(readOnly = true)
+    fun state(id: UUID, principal: UserPrincipal): KioskSessionDto {
+        requireKioskAccess(principal)
+        return toDto(find(id))
     }
 
     @Transactional
-    fun unlock(rawPin: String?, principal: UserPrincipal): KioskUnlockResultDto {
+    fun unlock(id: UUID, rawPin: String?, principal: UserPrincipal): KioskUnlockResultDto {
         val access = requireKioskAccess(principal)
-        val settings = kioskSettingsRepository.findByIdForUpdate(KioskSettingsEntity.DEFAULT_ID).orElse(null)
-        if (settings == null || !settings.pinConfigured) throw KioskPinNotConfiguredException()
+        val session = kioskSessionRepository.findByIdForUpdate(id).orElseThrow { notFound(id) }
+        // Schon beendet (etwa aus der Ferne): das Gerät darf den Modus verlassen.
+        if (!session.active) return KioskUnlockResultDto(unlocked = true, remainingAttempts = null, lockedUntil = null)
 
         val now = Instant.now(clock)
-        if (settings.isLocked(now)) {
-            return KioskUnlockResultDto(unlocked = false, remainingAttempts = 0, lockedUntil = settings.lockedUntil)
+        if (session.isLocked(now)) {
+            return KioskUnlockResultDto(unlocked = false, remainingAttempts = 0, lockedUntil = session.lockedUntil)
         }
 
         val pin = rawPin?.trim().orEmpty()
-        val matches = pin.length <= MAX_PIN_LENGTH && encoder.matches(pin, settings.pinHash)
-        if (matches) {
-            settings.failedAttempts = 0
-            settings.lockoutCount = 0
-            settings.lockedUntil = null
-            kioskSettingsRepository.save(settings)
-            log.info("kiosk unlocked by={}", access.user.id)
+        if (pin.length <= MAX_PIN_LENGTH && encoder.matches(pin, session.pinHash)) {
+            session.endedAt = now
+            session.endedBy = access.user
+            session.endReason = KioskSessionEntity.END_REASON_PIN
+            session.lockedUntil = null
+            kioskSessionRepository.save(session)
+            log.info("kiosk session unlocked id={} by={}", session.id, access.user.id)
             return KioskUnlockResultDto(unlocked = true, remainingAttempts = null, lockedUntil = null)
         }
 
-        settings.failedAttempts += 1
-        if (settings.failedAttempts < MAX_FAILED_ATTEMPTS) {
-            kioskSettingsRepository.save(settings)
-            log.info("kiosk unlock failed by={} attempts={}", access.user.id, settings.failedAttempts)
+        session.failedAttempts += 1
+        if (session.failedAttempts < MAX_FAILED_ATTEMPTS) {
+            kioskSessionRepository.save(session)
+            log.info("kiosk unlock failed id={} attempts={}", session.id, session.failedAttempts)
             return KioskUnlockResultDto(
                 unlocked = false,
-                remainingAttempts = MAX_FAILED_ATTEMPTS - settings.failedAttempts,
+                remainingAttempts = MAX_FAILED_ATTEMPTS - session.failedAttempts,
                 lockedUntil = null
             )
         }
 
-        val step = LOCKOUT_STEPS[settings.lockoutCount.coerceAtMost(LOCKOUT_STEPS.size - 1)]
-        settings.failedAttempts = 0
-        settings.lockoutCount += 1
-        settings.lockedUntil = now.plus(step)
-        kioskSettingsRepository.save(settings)
+        val step = LOCKOUT_STEPS[session.lockoutCount.coerceAtMost(LOCKOUT_STEPS.size - 1)]
+        session.failedAttempts = 0
+        session.lockoutCount += 1
+        session.lockedUntil = now.plus(step)
+        kioskSessionRepository.save(session)
         auditService.recordKioskAction(
             access.user,
             AuditService.ACTION_KIOSK_PIN_LOCKED,
+            session.id,
             "durationMinutes=${step.toMinutes()}"
         )
-        log.warn("kiosk pin locked by={} until={}", access.user.id, settings.lockedUntil)
-        return KioskUnlockResultDto(unlocked = false, remainingAttempts = 0, lockedUntil = settings.lockedUntil)
+        log.warn("kiosk pin locked id={} until={}", session.id, session.lockedUntil)
+        return KioskUnlockResultDto(unlocked = false, remainingAttempts = 0, lockedUntil = session.lockedUntil)
+    }
+
+    /** Laufende Sitzungen für die Geräteübersicht (nur Vorstand und Administration). */
+    @Transactional(readOnly = true)
+    fun listActive(principal: UserPrincipal): List<KioskSessionDto> {
+        requireManager(principal)
+        return kioskSessionRepository.findByEndedAtIsNullOrderByStartedAtAsc().map { toDto(it) }
+    }
+
+    /** Beendet eine Sitzung aus der Ferne, ohne PIN (nur Vorstand und Administration). */
+    @Transactional
+    fun endRemotely(id: UUID, principal: UserPrincipal): KioskSessionDto {
+        val caller = requireManager(principal)
+        val session = kioskSessionRepository.findByIdForUpdate(id).orElseThrow { notFound(id) }
+        if (session.active) {
+            session.endedAt = Instant.now(clock)
+            session.endedBy = caller
+            session.endReason = KioskSessionEntity.END_REASON_REMOTE
+            session.lockedUntil = null
+            kioskSessionRepository.save(session)
+            auditService.recordKioskAction(caller, AuditService.ACTION_KIOSK_ENDED_REMOTELY, session.id, null)
+            log.info("kiosk session ended remotely id={} by={}", session.id, caller.id)
+        }
+        return toDto(session)
     }
 
     private data class KioskAccess(val user: UserEntity, val manager: Boolean)
+
+    private fun find(id: UUID): KioskSessionEntity =
+        kioskSessionRepository.findById(id).orElseThrow { notFound(id) }
+
+    private fun notFound(id: UUID) =
+        ResourceNotFoundException(Msg("error.kiosk.notFound", id), ErrorCode.NOT_FOUND)
+
+    private fun requireManager(principal: UserPrincipal): UserEntity {
+        val access = requireKioskAccess(principal)
+        if (!access.manager) {
+            throw AccessDeniedException(Msg("error.kiosk.manageDenied"), ErrorCode.ACCESS_DENIED)
+        }
+        return access.user
+    }
 
     /** Terminal (`purchase.tablet`), Vorstand oder Administration; sonst `403`. */
     private fun requireKioskAccess(principal: UserPrincipal): KioskAccess {
@@ -157,10 +187,22 @@ class KioskService(
         return KioskAccess(user, manager)
     }
 
+    private fun toDto(session: KioskSessionEntity) = KioskSessionDto(
+        id = session.id.toString(),
+        label = session.label,
+        startedByName = session.startedBy?.displayName,
+        startedAt = session.startedAt,
+        active = session.active,
+        endReason = session.endReason,
+        lockedUntil = session.lockedUntil
+    )
+
     companion object {
         const val MIN_PIN_LENGTH = 4
         const val MAX_PIN_LENGTH = 8
         const val MAX_FAILED_ATTEMPTS = 5
+        const val MAX_LABEL_LENGTH = 60
+        const val DEFAULT_LABEL = "Thekenterminal"
         private val PIN_PATTERN = Regex("^[0-9]{$MIN_PIN_LENGTH,$MAX_PIN_LENGTH}$")
 
         /** Dauer der 1., 2., 3. und jeder weiteren Sperre. */

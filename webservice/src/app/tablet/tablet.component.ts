@@ -6,7 +6,8 @@ import { describeApiError } from '../api/api-client.service';
 import { eventStatusLabel, formatMoney } from '../member/member-format';
 import { newIdempotencyKey } from '../api/idempotency';
 import { TabletApiService } from './tablet-api.service';
-import { KioskApiService } from '../kiosk/kiosk-api.service';
+import type { KioskSession } from '../kiosk/kiosk-api.service';
+import { KioskStartDialogComponent } from '../kiosk/kiosk-start-dialog.component';
 import { KioskModeService } from '../kiosk/kiosk-mode.service';
 import { StrichlisteRowComponent } from './strichliste-row.component';
 import { DrinkOverlayComponent } from './drink-overlay.component';
@@ -45,6 +46,7 @@ interface EventContext {
     StrichlisteRowComponent,
     DrinkOverlayComponent,
     RevenueSheetComponent,
+    KioskStartDialogComponent,
     TranslatePipe,
   ],
   template: `
@@ -67,7 +69,6 @@ interface EventContext {
           type="button"
           class="member-button ghost terminal-toggle"
           [attr.aria-pressed]="standalone()"
-          [disabled]="kioskBusy()"
           (click)="toggleStandalone()"
         >
           <vereint-icon name="lock" />
@@ -76,6 +77,11 @@ interface EventContext {
         @if (!standalone()) {
           <p class="member-hint">{{ 'tablet.terminal.startHint' | t }}</p>
         }
+        <app-kiosk-start-dialog
+          [open]="kioskStartOpen()"
+          (started)="onKioskStarted($event)"
+          (closed)="kioskStartOpen.set(false)"
+        />
 
         @if (actionError(); as err) {
           <p class="manage-action-error" role="alert">{{ err }}</p>
@@ -388,7 +394,6 @@ interface EventContext {
 })
 export class TabletComponent implements OnInit, OnDestroy {
   private readonly api = inject(TabletApiService);
-  private readonly kioskApi = inject(KioskApiService);
   private readonly kiosk = inject(KioskModeService);
 
   protected readonly events = new AsyncState<TabletEvent[]>();
@@ -402,7 +407,7 @@ export class TabletComponent implements OnInit, OnDestroy {
   protected readonly activeDrinkId = signal<string | null>(null);
   /** Kiosk-Modus dieses Geräts; bleibt über Neuladen und Neustart erhalten. */
   protected readonly standalone = this.kiosk.active;
-  protected readonly kioskBusy = signal(false);
+  protected readonly kioskStartOpen = signal(false);
   protected readonly drinkOverlayOpen = signal(false);
   protected readonly revenueSheetOpen = signal(false);
   protected readonly tallies = signal<Record<string, number>>({});
@@ -467,32 +472,22 @@ export class TabletComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Startet den Kiosk-Modus oder fragt zum Verlassen die PIN ab. Starten geht
-   * nur, wenn Vorstand oder Administration eine PIN festgelegt haben, sonst
-   * ließe sich der Modus nicht mehr beenden. Event- und Strichlisten-Zustand
-   * bleiben beim Umschalten erhalten.
+   * Öffnet den Start-Dialog, in dem das Gerät seine PIN vergibt, oder fragt zum
+   * Verlassen die PIN ab. Event- und Strichlisten-Zustand bleiben beim
+   * Umschalten erhalten.
    */
   protected toggleStandalone(): void {
     if (this.kiosk.active()) {
       this.kiosk.requestUnlock();
       return;
     }
-    this.kioskBusy.set(true);
     this.actionError.set(null);
-    this.kioskApi.status().subscribe({
-      next: (status) => {
-        this.kioskBusy.set(false);
-        if (!status.pinConfigured) {
-          this.actionError.set(translate('tablet.terminal.noPin'));
-          return;
-        }
-        this.kiosk.activate(this.selectedEventId());
-      },
-      error: (error: unknown) => {
-        this.kioskBusy.set(false);
-        this.actionError.set(describeApiError(error));
-      },
-    });
+    this.kioskStartOpen.set(true);
+  }
+
+  protected onKioskStarted(session: KioskSession): void {
+    this.kioskStartOpen.set(false);
+    this.kiosk.activate(session.id, this.selectedEventId());
   }
 
   /**

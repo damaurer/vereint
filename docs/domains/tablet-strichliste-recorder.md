@@ -21,10 +21,12 @@ Der Tablet Strichlisten-Recorder in **Vereint** ist für den hochfrequenten Thek
   - Erfassung von pauschalen Einnahmen oder Abrechnungen am Ende eines Festabends (`source = evening, accountingMode = revenueOnly`).
 
 - **Gesperrter Kiosk-Modus mit PIN**:
-  - Am Terminal startet „Kiosk-Modus starten“ den Modus, sobald Vorstand oder Administration unter *Vorstand → Kiosk-PIN* eine PIN (4–8 Ziffern) festgelegt haben. Die PIN gilt für alle Terminals; der Server speichert nur ihren BCrypt-Hash (`kiosk_settings`).
-  - Der Zustand liegt im `localStorage` des Geräts (`vereint.kiosk`). Neuladen, Schließen und Neuöffnen von Tab, App oder Browser landen wieder im Terminal, beim zuletzt gewählten Event.
+  - Am Terminal startet „Kiosk-Modus starten“ den Modus. Dabei vergibt das Gerät seine eigene PIN (4–8 Ziffern) und optional einen Gerätenamen. Der Server legt eine Kiosk-Sitzung an (`kiosk_sessions`) und speichert nur den BCrypt-Hash der PIN.
+  - Der Zustand liegt im `localStorage` des Geräts (`vereint.kiosk`, mit der Sitzungs-ID). Neuladen, Schließen und Neuöffnen von Tab, App oder Browser landen wieder im Terminal, beim zuletzt gewählten Event.
   - Solange er aktiv ist, leitet `kioskGuard` jede andere Seite auf `/tablet` um; Navigation, Mitteilungen und Abmelden sind ausgeblendet.
-  - Verlassen geht nur über das Schloss oben rechts oder „Kiosk-Modus verlassen“ und eine vom Server bestätigte PIN (`POST /api/v1/kiosk/unlock`). Nach 5 falschen Eingaben ist die Prüfung für alle Terminals gesperrt (1, 5, 15, danach 60 Minuten); PIN-Änderungen und Sperren stehen im Audit-Protokoll.
+  - Verlassen am Gerät geht nur über das Schloss oben rechts oder „Kiosk-Modus verlassen“ und die vom Server bestätigte PIN. Nach 5 falschen Eingaben ist die Prüfung für diese Sitzung gesperrt (1, 5, 15, danach 60 Minuten).
+  - Vorstand und Administration sehen unter *Vorstand → Kiosk-Geräte* alle laufenden Geräte und entsperren jedes jederzeit ohne PIN. Das Gerät gleicht alle 15 Sekunden und beim Zurückkehren in den Vordergrund ab und verlässt den Modus; Netzfehler lassen ihn bestehen.
+  - Start, Fernentsperrung und PIN-Sperren stehen im Audit-Protokoll.
   - Das Schließen des Browsers oder ein App-Wechsel lässt sich aus einer Web-App nicht verhindern. Dafür das Gerät festsetzen: Android „Bildschirm fixieren“ (App-Pinning), iOS/iPadOS „Geführter Zugriff“.
 
 ### 2. Fehlertoleranz & Entlastung des Personals

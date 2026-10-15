@@ -258,8 +258,3 @@ class ConcurrentModificationException : ApiException {
     ) : super(errorCode, message, HttpStatus.CONFLICT)
 }
 
-/** Für das Thekenterminal ist noch keine Kiosk-PIN festgelegt. */
-class KioskPinNotConfiguredException(
-    msg: Msg = Msg("error.kiosk.pinNotConfigured"),
-    errorCode: String = ErrorCode.KIOSK_PIN_NOT_CONFIGURED
-) : ApiException(errorCode, msg, HttpStatus.CONFLICT)

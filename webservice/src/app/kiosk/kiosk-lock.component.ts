@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  PLATFORM_ID,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ApiError, describeApiError } from '../api/api-client.service';
 import { TranslatePipe, translate } from '../i18n';
 import { formatDateTime } from '../member/member-format';
@@ -7,10 +18,16 @@ import { IconComponent } from '../ui/icon.component';
 import { KIOSK_PIN_MAX_LENGTH, KioskApiService, type KioskUnlockResult } from './kiosk-api.service';
 import { KioskModeService } from './kiosk-mode.service';
 
+/** Wie oft das Gerät nachsieht, ob die Sitzung aus der Ferne beendet wurde. */
+export const KIOSK_REMOTE_CHECK_MS = 15_000;
+
 /**
  * Schloss des Kiosk-Modus: ein kleiner Knopf oben rechts auf jeder Seite und
  * der PIN-Dialog zum Verlassen. Der Modus endet nur, wenn der Fachservice die
- * PIN bestätigt; falsche Eingaben zählt und sperrt der Server.
+ * PIN dieses Geräts bestätigt (falsche Eingaben zählt und sperrt der Server)
+ * oder wenn Vorstand bzw. Administration die Sitzung aus der Ferne beendet
+ * haben. Das prüft das Gerät regelmäßig und beim Zurückkehren in den
+ * Vordergrund; Netzfehler lassen den Modus unverändert.
  */
 @Component({
   selector: 'app-kiosk-lock',
@@ -125,6 +142,22 @@ export class KioskLockComponent {
   protected readonly pin = signal('');
 
   constructor() {
+    if (isPlatformBrowser(inject(PLATFORM_ID))) {
+      const check = () => this.checkRemoteEnd();
+      const onVisible = () => {
+        if (document.visibilityState === 'visible') check();
+      };
+      const timer = setInterval(check, KIOSK_REMOTE_CHECK_MS);
+      document.addEventListener('visibilitychange', onVisible);
+      globalThis.addEventListener?.('online', check);
+      inject(DestroyRef).onDestroy(() => {
+        clearInterval(timer);
+        document.removeEventListener('visibilitychange', onVisible);
+        globalThis.removeEventListener?.('online', check);
+      });
+      queueMicrotask(check);
+    }
+
     // Beim Öffnen leeren und das Feld fokussieren, damit die Tastatur erscheint.
     effect(() => {
       if (!this.kiosk.unlockOpen()) return;
@@ -146,10 +179,11 @@ export class KioskLockComponent {
 
   protected submit(): void {
     const pin = this.pin().trim();
-    if (!pin || this.busy()) return;
+    const sessionId = this.kiosk.sessionId();
+    if (!pin || !sessionId || this.busy()) return;
     this.busy.set(true);
     this.error.set(null);
-    this.api.unlock(pin).subscribe({
+    this.api.unlock(sessionId, pin).subscribe({
       next: (result) => {
         this.busy.set(false);
         this.pin.set('');
@@ -162,9 +196,28 @@ export class KioskLockComponent {
       error: (err: unknown) => {
         this.busy.set(false);
         this.pin.set('');
-        this.error.set(
-          err instanceof ApiError && err.code === 'kiosk_pin_not_configured' ? err.detail : describeApiError(err),
-        );
+        // Die Sitzung gibt es nicht mehr: nichts mehr, das das Gerät sperren könnte.
+        if (err instanceof ApiError && err.status === 404) {
+          this.kiosk.deactivate();
+          return;
+        }
+        this.error.set(describeApiError(err));
+      },
+    });
+  }
+
+  /** Beendet den Modus, wenn der Server die Sitzung nicht mehr als aktiv führt. */
+  private checkRemoteEnd(): void {
+    const sessionId = this.kiosk.sessionId();
+    if (!sessionId) return;
+    this.api.state(sessionId).subscribe({
+      next: (session) => {
+        if (!session.active && this.kiosk.sessionId() === sessionId) this.kiosk.deactivate();
+      },
+      error: (err: unknown) => {
+        if (err instanceof ApiError && err.status === 404 && this.kiosk.sessionId() === sessionId) {
+          this.kiosk.deactivate();
+        }
       },
     });
   }

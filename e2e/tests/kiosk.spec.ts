@@ -1,27 +1,28 @@
 import { test, expect } from '../support/fixtures';
+import { unique } from '../support/data';
+import type { Page } from '@playwright/test';
+
+const randomPin = () => String(Math.floor(100000 + Math.random() * 900000));
+
+async function startKiosk(page: Page, label: string, pin: string) {
+  await page.goto('/tablet');
+  await page.getByRole('button', { name: 'Kiosk-Modus starten' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Kiosk-Modus starten' });
+  await dialog.getByLabel('Gerätename (optional)').fill(label);
+  await dialog.getByLabel(/^PIN \(/).fill(pin);
+  await dialog.getByLabel('PIN wiederholen').fill(pin);
+  await dialog.getByRole('button', { name: 'Starten', exact: true }).click();
+  await expect(page.getByText('Kiosk-Modus aktiv')).toBeVisible();
+}
 
 test.describe('Kiosk-Modus am Thekenterminal', () => {
-  test('Vorstand setzt die PIN, das Terminal bleibt gesperrt bis zur richtigen PIN', async ({ as }) => {
-    const pin = String(Math.floor(100000 + Math.random() * 900000));
-
-    await test.step('Vorstand legt die Kiosk-PIN fest', async () => {
-      const { page } = await as('board');
-      await page.goto('/board');
-      await page.getByRole('button', { name: /Kiosk-PIN/ }).click();
-      const dialog = page.getByRole('dialog', { name: 'Kiosk-PIN' });
-      await dialog.getByLabel(/Neue PIN/).fill(pin);
-      await dialog.getByLabel('PIN wiederholen').fill(pin);
-      await dialog.getByRole('button', { name: 'PIN speichern' }).click();
-      await expect(dialog.getByText('Die neue PIN gilt ab sofort auf allen Terminals.')).toBeVisible();
-    });
-
+  test('Terminal vergibt beim Start eine PIN und bleibt gesperrt bis zur richtigen PIN', async ({ as }) => {
+    const pin = randomPin();
     const terminal = await as('terminal');
     let page = terminal.page;
 
-    await test.step('Terminal startet den Kiosk-Modus', async () => {
-      await page.goto('/tablet');
-      await page.getByRole('button', { name: 'Kiosk-Modus starten' }).click();
-      await expect(page.getByText('Kiosk-Modus aktiv')).toBeVisible();
+    await test.step('Terminal startet den Kiosk-Modus mit eigener PIN', async () => {
+      await startKiosk(page, unique('Theke'), pin);
       // Keine Navigation und kein Abmelden mehr sichtbar.
       await expect(page.getByRole('link', { name: 'Start', exact: true })).toHaveCount(0);
       await expect(page.getByRole('button', { name: /Abmelden/ })).toHaveCount(0);
@@ -56,9 +57,27 @@ test.describe('Kiosk-Modus am Thekenterminal', () => {
       await dialog.getByLabel('PIN').fill(pin);
       await dialog.getByRole('button', { name: 'Entsperren' }).click();
       await expect(page.getByText('Kiosk-Modus aktiv')).toHaveCount(0);
-      await expect(page.getByRole('button', { name: 'Kiosk-Modus starten' })).toBeVisible();
       await page.goto('/dashboard');
       await expect(page).toHaveURL(/\/dashboard$/);
     });
+  });
+
+  test('Vorstand entsperrt ein Terminal aus der Ferne ohne PIN', async ({ as }) => {
+    const label = unique('Theke fern');
+    const terminal = await as('terminal');
+    await startKiosk(terminal.page, label, randomPin());
+
+    const { page } = await as('board');
+    await page.goto('/board');
+    await page.getByRole('button', { name: /Kiosk-Geräte/ }).click();
+    const dialog = page.getByRole('dialog', { name: 'Kiosk-Geräte' });
+    const row = dialog.getByRole('listitem').filter({ hasText: label });
+    await row.getByRole('button', { name: 'Entsperren' }).click();
+    await expect(dialog.getByText(`${label} ist entsperrt.`)).toBeVisible();
+
+    // Das Terminal gleicht regelmäßig ab und verlässt den Modus von selbst.
+    await expect(terminal.page.getByText('Kiosk-Modus aktiv')).toHaveCount(0, { timeout: 30_000 });
+    await terminal.page.goto('/dashboard');
+    await expect(terminal.page).toHaveURL(/\/dashboard$/);
   });
 });

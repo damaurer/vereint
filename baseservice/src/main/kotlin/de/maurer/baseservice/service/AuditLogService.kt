@@ -9,6 +9,7 @@ import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.repository.AuditLogRepository
+import de.maurer.baseservice.repository.KioskSessionRepository
 import de.maurer.baseservice.repository.LedgerEntryRepository
 import de.maurer.baseservice.repository.NotificationRepository
 import de.maurer.baseservice.repository.UserRepository
@@ -54,7 +55,8 @@ class AuditLogService(
     private val userRoleRepository: UserRoleRepository,
     private val userRepository: UserRepository,
     private val ledgerEntryRepository: LedgerEntryRepository,
-    private val notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository,
+    private val kioskSessionRepository: KioskSessionRepository
 ) {
 
     /**
@@ -211,6 +213,7 @@ class AuditLogService(
         val userIds = idsOf(AuditService.TARGET_USER)
         val ledgerIds = idsOf(AuditService.TARGET_LEDGER)
         val notificationIds = idsOf(AuditService.TARGET_NOTIFICATION)
+        val kioskIds = idsOf(AuditService.TARGET_KIOSK)
 
         val userNames = if (userIds.isEmpty()) emptyMap() else
             userRepository.findAllById(userIds).associate { it.id.toString() to it.displayName }
@@ -218,6 +221,8 @@ class AuditLogService(
             ledgerEntryRepository.findByIdIn(ledgerIds).associate { it.id.toString() to it.member?.displayName }
         val notifications = if (notificationIds.isEmpty()) emptyMap() else
             notificationRepository.findAllById(notificationIds).associateBy { it.id.toString() }
+        val kioskLabels = if (kioskIds.isEmpty()) emptyMap() else
+            kioskSessionRepository.findAllById(kioskIds).associate { it.id.toString() to it.label }
 
         return entries.map { entry ->
             val dto = toDto(entry)
@@ -227,6 +232,7 @@ class AuditLogService(
                 AuditService.TARGET_NOTIFICATION -> notifications[entry.targetId]
                     ?.let { dto.copy(targetName = it.user?.displayName, targetTitle = it.title) }
                     ?: dto
+                AuditService.TARGET_KIOSK -> dto.copy(targetName = kioskLabels[entry.targetId])
                 else -> dto
             }
         }

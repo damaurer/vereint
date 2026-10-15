@@ -909,8 +909,7 @@
       "kioskActive": "Kiosk-Modus aktiv",
       "startKiosk": "Kiosk-Modus starten",
       "leaveKiosk": "Kiosk-Modus verlassen",
-      "startHint": "Im Kiosk-Modus bleibt dieses Gerät auf dem Thekenterminal, auch nach Schließen und Neuöffnen. Verlassen geht nur mit der Kiosk-PIN.",
-      "noPin": "Es ist noch keine Kiosk-PIN festgelegt. Vorstand oder Administration legen sie unter Vorstand → Kiosk-PIN fest."
+      "startHint": "Im Kiosk-Modus bleibt dieses Gerät auf dem Thekenterminal, auch nach Schließen und Neuöffnen. Beim Start vergibst du eine PIN; nur mit ihr lässt sich der Modus hier wieder verlassen. Vorstand und Administration können das Gerät jederzeit aus der Ferne entsperren."
     },
     "header": {
       "eyebrow": "Drink Recorder",
@@ -1107,8 +1106,9 @@
       "LEDGER_PURCHASE": "Kauf",
       "MOMENT_STARTED": "Moment gestartet",
       "MOMENT_COMPLETED": "Moment beendet",
-      "KIOSK_PIN_CHANGED": "Kiosk-PIN festgelegt",
-      "KIOSK_PIN_LOCKED": "Kiosk-PIN nach Fehlversuchen gesperrt"
+      "KIOSK_PIN_LOCKED": "Kiosk-PIN nach Fehlversuchen gesperrt",
+      "KIOSK_STARTED": "Kiosk-Modus gestartet",
+      "KIOSK_ENDED_REMOTELY": "Kiosk-Gerät aus der Ferne entsperrt"
     },
     "auditDetail": {
       "amount": "Betrag",
@@ -1160,8 +1160,8 @@
       "auditHeading": "Letzte Aktionen ({count})",
       "inviteTitle": "Mitglied einladen",
       "inviteDesc": "Einladungslink zur Registrierung erstellen",
-      "kioskPinTitle": "Kiosk-PIN",
-      "kioskPinDesc": "PIN zum Verlassen des Kiosk-Modus am Thekenterminal festlegen"
+      "kioskDevicesTitle": "Kiosk-Geräte",
+      "kioskDevicesDesc": "Laufende Thekenterminals sehen und aus der Ferne entsperren"
     },
     "comms": {
       "eyebrow": "Schriftwart",
@@ -1289,18 +1289,15 @@
         "id": "ID {id}"
       }
     },
-    "kioskPin": {
-      "title": "Kiosk-PIN",
-      "intro": "Mit dieser PIN lässt sich der Kiosk-Modus am Thekenterminal verlassen. Sie gilt für alle Terminals und wird nach dem Speichern nicht mehr angezeigt.",
-      "notSet": "Noch keine PIN festgelegt. Ohne PIN lässt sich der Kiosk-Modus nicht starten.",
-      "set": "PIN festgelegt am {date}.",
-      "setBy": "PIN festgelegt von {name} am {date}.",
-      "newPin": "Neue PIN ({min} bis {max} Ziffern)",
-      "repeatPin": "PIN wiederholen",
-      "save": "PIN speichern",
-      "saved": "Die neue PIN gilt ab sofort auf allen Terminals.",
-      "format": "Die PIN muss aus {min} bis {max} Ziffern bestehen.",
-      "mismatch": "Die beiden Eingaben stimmen nicht überein."
+    "kioskDevices": {
+      "title": "Kiosk-Geräte",
+      "intro": "Auf diesen Geräten läuft gerade der Kiosk-Modus. „Entsperren“ beendet ihn ohne PIN; das Gerät verlässt den Modus innerhalb weniger Sekunden.",
+      "emptyTitle": "Kein Gerät im Kiosk-Modus",
+      "emptyMessage": "Sobald ein Thekenterminal den Kiosk-Modus startet, erscheint es hier.",
+      "since": "Gestartet von {name} am {date}",
+      "lockedUntil": "PIN-Eingabe gesperrt bis {date}",
+      "unlock": "Entsperren",
+      "unlocked": "{label} ist entsperrt."
     }
   },
   "events": {
@@ -1621,6 +1618,18 @@
       "submit": "Entsperren",
       "wrong": "Die PIN ist falsch. Noch {count} Versuche bis zur Sperre.",
       "locked": "Zu viele falsche Eingaben. Die nächste Eingabe ist ab {time} möglich."
+    },
+    "start": {
+      "title": "Kiosk-Modus starten",
+      "intro": "Vergib eine PIN für dieses Gerät. Nur mit ihr lässt sich der Kiosk-Modus hier wieder verlassen.",
+      "label": "Gerätename (optional)",
+      "labelPlaceholder": "z. B. Theke links",
+      "pin": "PIN ({min} bis {max} Ziffern)",
+      "repeat": "PIN wiederholen",
+      "remoteHint": "PIN vergessen? Vorstand oder Administration entsperren das Gerät unter Vorstand → Kiosk-Geräte.",
+      "submit": "Starten",
+      "format": "Die PIN muss aus {min} bis {max} Ziffern bestehen.",
+      "mismatch": "Die beiden Eingaben stimmen nicht überein."
     }
   }
 }
