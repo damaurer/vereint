@@ -171,6 +171,33 @@ const SHOTS = [
     },
   },
   { id: 'm-katalog', who: 'member', device: PHONE, run: async (page) => open(page, '/catalog') },
+  {
+    id: 'm-bezahlen',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/scan');
+      await page.getByRole('textbox').first().fill('4001234500011');
+    },
+  },
+  {
+    id: 'm-bezahlen-bestaetigen',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await page.getByRole('button', { name: 'Suchen' }).click();
+      await settle(page);
+    },
+  },
+  {
+    id: 'm-bezahlen-fertig',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await page.getByRole('button', { name: /bezahlen$/ }).click();
+      await settle(page);
+    },
+  },
 
   // Vorstand
   { id: 'v-uebersicht', who: 'board', device: PHONE, run: async (page) => open(page, '/board') },
@@ -254,6 +281,16 @@ const SHOTS = [
       await page.waitForTimeout(300);
     },
   },
+  {
+    id: 'v-getraenk-bearbeiten',
+    who: 'board',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/catalog');
+      await page.locator('article, li, .card').filter({ hasText: 'Helles 0,5 l' }).getByRole('button', { name: 'Bearbeiten' }).first().click();
+      await settle(page);
+    },
+  },
   { id: 'v-getraenkelisten', who: 'board', device: PHONE, run: async (page) => open(page, '/sublists') },
   { id: 'v-kommunikation', who: 'board', device: PHONE, run: async (page) => open(page, '/board/communications') },
   {
@@ -277,6 +314,20 @@ const SHOTS = [
       await page.getByRole('row', { name: /Jonas Keller/ }).getByRole('button', { name: 'Bearbeiten' }).click();
       await settle(page);
       await scrollToHeading(page, 'Jonas Keller bearbeiten', 90);
+    },
+  },
+
+  {
+    id: 'a-einladen',
+    who: 'admin',
+    device: DESKTOP,
+    run: async (page, data) => {
+      await open(page, '/admin');
+      await page.getByRole('button', { name: /Mitglied einladen/ }).first().click();
+      await page.getByPlaceholder('z. B. Anna Neumann').fill('Anna Neumann');
+      await page.getByRole('button', { name: 'Link erstellen' }).click();
+      await settle(page);
+      data.registerLink = await page.getByRole('textbox', { name: 'Einladungslink' }).inputValue().catch(() => null);
     },
   },
 
@@ -325,6 +376,16 @@ const SHOTS = [
   },
 
   // Gast
+  {
+    // Registrierung über den Einladungslink aus `a-einladen`.
+    id: 'g-registrieren',
+    who: null,
+    device: PHONE,
+    run: async (page, data) => {
+      await page.goto(data.registerLink);
+      await settle(page);
+    },
+  },
   {
     // Der Einladungslink wird beim Öffnen sofort eingelöst.
     id: 'g-event',

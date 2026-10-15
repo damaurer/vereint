@@ -2,6 +2,21 @@
 
 Dieser Teil gilt für alle, die ein Vereinskonto haben. Gäste ohne Konto lesen den [Leitfaden Gast](06-gast.md).
 
+## Mit einem Einladungslink registrieren
+
+<img src="bilder/g-registrieren.png" alt="Registrierung über den Einladungslink" width="300" align="right">
+
+Neu im Verein? Dann bekommst du vom Vorstand einen **Einladungslink**.
+
+1. Den Link öffnen. Vereint prüft ihn und zeigt, bis wann er gilt.
+2. **Vorname**, **Nachname** und **E-Mail-Adresse** eintragen.
+3. Ein **Passwort** mit mindestens 10 Zeichen wählen und wiederholen.
+4. **Konto anlegen** tippen, danach **Jetzt anmelden** und mit E-Mail-Adresse und Passwort anmelden.
+
+Funktioniert der Link nicht, ist er abgelaufen, schon verwendet oder zurückgezogen. Bitte den Vorstand um einen neuen. Gibt es für deine E-Mail-Adresse schon ein Konto, melde dich damit an oder setze dein Passwort zurück.
+
+<br clear="right">
+
 ## Anmelden
 
 <img src="bilder/login.png" alt="Anmeldeseite" width="300" align="right">
@@ -14,7 +29,6 @@ Weitere Möglichkeiten auf dieser Seite:
 
 - **Angemeldet bleiben**: Du musst dich auf diesem Gerät nicht jedes Mal neu anmelden. Nur auf deinem eigenen Gerät anhaken.
 - **Passwort vergessen?** führt dich durch das Zurücksetzen deines Passworts per E-Mail.
-- **Registrieren** legt ein neues Konto an, falls dein Verein das erlaubt.
 - Oben kannst du die Sprache der Anmeldeseite wählen.
 
 Nach der Anmeldung landest du auf der Startseite.
@@ -30,7 +44,7 @@ Die Startseite zeigt auf einen Blick:
 - dein **Guthaben** mit dem Link zum Kontoauszug,
 - deinen **nächsten Termin** mit Zu- oder Absage,
 - wie viele **Events** und **Buchungen** du hast,
-- einen **Schnellzugriff** auf Moments, Getränkekatalog, Käufe und Mitteilungen.
+- einen **Schnellzugriff** auf Getränk bezahlen, Moments, Getränkekatalog, Käufe und Mitteilungen.
 
 Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, wie viele davon noch ungelesen sind. Auch am Reiter **Chat** zeigt eine rote Zahl ungelesene Nachrichten.
 
@@ -43,7 +57,7 @@ Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, w
 **Am Handy** steht unten eine Leiste mit den vier wichtigsten Bereichen: **Start**, **Events**, **Chat** und **Guthaben**. Alles andere findest du unter **Mehr**, sortiert nach:
 
 - **Verein**: Moments, Direktnachrichten
-- **Mein Konto**: Käufe, Mitteilungen, Profil
+- **Mein Konto**: Bezahlen, Käufe, Mitteilungen, Profil
 - **Theke**: Getränkekatalog, Getränkelisten, Statistik
 - **Verwaltung**: nur für Vorstand, Administration und Theke
 

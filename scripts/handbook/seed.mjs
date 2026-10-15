@@ -59,6 +59,9 @@ export async function seedKeycloakUsers() {
     return text ? JSON.parse(text) : null;
   };
 
+  // Wie im Produktionsrealm: keine offene Registrierung, nur per Einladungslink.
+  await call('PUT', '', { registrationAllowed: false });
+
   for (const person of Object.values(PEOPLE)) {
     let [user] = await call('GET', `/users?exact=true&username=${person.username}`);
     if (!user && person.create) {

@@ -15,6 +15,8 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr → Verwaltung**, am Re
 | Titel, Ort oder Status eines Events ändern | **Vorstand** → Event → **Moderieren** |
 | einen Gast einladen | Event moderieren → **Einladungen** → **Gasteinladung erzeugen** |
 | ein vorgeschlagenes Getränk freigeben | **Getränkekatalog** → Vorschlag → **Freigeben** |
+| ein Getränk anlegen oder den Preis ändern | **Getränkekatalog** → **Getränk anlegen** oder **Bearbeiten** |
+| ein neues Mitglied einladen | **Vorstand** → **Mitglied einladen** (siehe [Leitfaden Administration](04-administration.md#neue-mitglieder-einladen)) |
 | allen eine Nachricht schicken | **Kommunikation** → Meldung verfassen → **Alle Mitglieder** |
 | einen Hinweis oben im Vereinschat anheften | **Kommunikation** → Infotafel → **Anpinnen** |
 
@@ -24,7 +26,7 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr → Verwaltung**, am Re
 
 **Vorstand** ist dein Einstieg:
 
-- **Rollenspezifische Verwaltung** führt zu **Kasse & Finanzen** und **Kommunikation**.
+- **Rollenspezifische Verwaltung** führt zu **Kasse & Finanzen**, **Kommunikation** und **Mitglied einladen**.
 - Die Kennzahlen zeigen, wie viele Events du siehst und wie viele Aktionen zuletzt protokolliert wurden.
 - Unter **Gastgeber · Events** stehen alle Events mit **Moderieren**.
 - **Letzte Aktionen** ist das Protokoll: wer wann was gebucht, geändert oder versendet hat.
@@ -121,13 +123,29 @@ Die Liste zeigt jede Einladung mit Stand und Nutzungen, z. B. „aktiv · 0 / 5�
 
 ## Getränkekatalog und Getränkelisten
 
-<img src="bilder/v-katalog-freigabe.png" alt="Getränkevorschlag freigeben" width="300" align="right">
+<img src="bilder/v-katalog-freigabe.png" alt="Getränkekatalog für den Vorstand" width="300" align="right">
 
-Mitglieder können neue Getränke vorschlagen. Vorschläge stehen im **Getränkekatalog** mit dem Kennzeichen **Vorgeschlagen**.
+Im **Getränkekatalog** pflegst du alle Getränke des Vereins. Bei jedem Getränk steht neben dem Preis die **Marge**, also was der Verein pro Verkauf verdient. Mit **Alle Status** filterst du zum Beispiel nur Vorschläge.
+
+**Vorschläge** von Mitgliedern stehen mit dem Kennzeichen **Vorgeschlagen** in der Liste:
 
 - **Freigeben**: Das Getränk wird Teil des Katalogs.
 - **Ablehnen**: Der Vorschlag wird verworfen.
-- **Details & Barcodes**: zeigt Preis, Kategorie und die hinterlegten Barcodes eines Getränks.
+
+**Getränk anlegen**: Getränke, die der Vorstand anlegt, sind sofort freigegeben. Am schnellsten geht es mit **Barcode scannen**: Ist der Strichcode neu, öffnet sich das Formular mit dem Strichcode schon ausgefüllt. Kennt Vereint ihn, öffnet sich das vorhandene Getränk.
+
+<br clear="right">
+
+<img src="bilder/v-getraenk-bearbeiten.png" alt="Getränk bearbeiten" width="300" align="right">
+
+**Bearbeiten** öffnet dasselbe Formular wie beim Anlegen:
+
+- **Name**, **Kategorie** und **Standardpreis** (Pflicht beim Preis),
+- **Einkaufspreis**: Darunter rechnet Vereint die Marge pro Verkauf aus.
+- **Barcodes**: einen oder mehrere Strichcodes per Kamera oder Eingabe hinzufügen. Erst mit Strichcode können Mitglieder das Getränk selbst bezahlen.
+- **Im Sortiment**: Abwählen nimmt ein Getränk aus dem Verkauf, ohne es zu löschen. Alte Käufe behalten so ihren Namen und Preis.
+
+Vereint warnt, wenn ein Name oder Strichcode schon vergeben ist. **Speichern** übernimmt die Änderung.
 
 <br clear="right">
 

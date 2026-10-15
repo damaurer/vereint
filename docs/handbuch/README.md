@@ -6,10 +6,10 @@ Dieses Handbuch erklärt Vereint aus Sicht der Menschen, die die App im Vereinsa
 
 | Ich bin … | Was ich mit Vereint mache | Leitfaden |
 | :--- | :--- | :--- |
-| **Alle** | Anmelden, sich zurechtfinden, Profil, Sprache, App installieren, Push | [Erste Schritte](01-erste-schritte.md) |
-| **Mitglied** | Einladungen beantworten, Events planen, chatten, Guthaben und Käufe prüfen, Moments, Statistik | [Leitfaden Mitglied](02-mitglied.md) |
-| **Vorstand** (z. B. Kassenwart, Schriftwart) | Guthaben buchen, Events vorbereiten, Getränke freigeben, Rundbriefe und Infotafel | [Leitfaden Vorstand](03-vorstand.md) |
-| **Administrator** | Mitglieder verwalten, Rollen vergeben, Konten sperren | [Leitfaden Administration](04-administration.md) |
+| **Alle** | Registrieren, anmelden, sich zurechtfinden, Profil, Sprache, App installieren, Push | [Erste Schritte](01-erste-schritte.md) |
+| **Mitglied** | Einladungen beantworten, Events planen, chatten, Getränke per Strichcode bezahlen, Guthaben und Käufe prüfen, Moments, Statistik | [Leitfaden Mitglied](02-mitglied.md) |
+| **Vorstand** (z. B. Kassenwart, Schriftwart) | Guthaben buchen, Events vorbereiten, Getränkekatalog pflegen, Rundbriefe und Infotafel, Mitglieder einladen | [Leitfaden Vorstand](03-vorstand.md) |
+| **Administrator** | Mitglieder einladen und verwalten, Rollen vergeben, Konten sperren | [Leitfaden Administration](04-administration.md) |
 | **Thekendienst** (Tablet an der Theke) | Striche erfassen, korrigieren, Runden ausgeben | [Leitfaden Thekenterminal](05-thekenterminal.md) |
 | **Gast** ohne Vereinskonto | Über einen Einladungslink am Event-Chat teilnehmen | [Leitfaden Gast](06-gast.md) |
 
@@ -27,7 +27,7 @@ Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mit
 
 ## Gut zu wissen: noch nicht fertige Bereiche
 
-- In der **Administration** sind „Mitglied einladen“ und die Tabelle „Rollen & Berechtigungen“ noch eine Vorschau. Die Einladung neuer Mitglieder per Link ist in Arbeit; bis dahin werden Mitglieder im Anmeldesystem angelegt.
+- In der **Administration** ist die Tabelle „Rollen & Berechtigungen“ noch eine Vorschau.
 - Push-Nachrichten kommen erst an, wenn der Betreiber Push auf dem Server eingerichtet hat.
 
 ## Bilder neu erzeugen

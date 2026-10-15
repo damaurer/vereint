@@ -12,10 +12,11 @@ Für alle Vereinsmitglieder. Anmeldung, Navigation und Profil stehen in den [Ers
 | jemandem persönlich schreiben | **Mehr → Direktnachrichten** → **Neue Nachricht** |
 | sehen, wer am meisten Striche hat | **Mehr → Statistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
+| ein Getränk selbst bezahlen | **Mehr → Bezahlen** (oder **Getränk bezahlen** auf der Startseite) → Strichcode scannen |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
 | beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments ansehen** |
-| ein neues Getränk vorschlagen | **Mehr → Getränkekatalog** → **Getränk vorschlagen** |
+| ein neues Getränk vorschlagen | **Mehr → Getränkekatalog** → **Getränk vorschlagen** oder **Barcode scannen** |
 
 ## Einladungen und Zusagen
 
@@ -120,11 +121,42 @@ Ein Guthaben kann auch ins Minus gehen. Dann bitte zeitnah beim Kassenwart ausgl
 
 <br clear="right">
 
+## Getränk selbst bezahlen
+
+Steht keine Theke bereit, etwa am Kühlschrank im Vereinsheim, bezahlst du ein Getränk selbst mit deinem Guthaben. Das geht während eines laufenden Events, zu dem du gehörst.
+
+<img src="bilder/m-bezahlen.png" alt="Getränk scannen" width="300" align="right">
+
+1. **Mehr → Bezahlen** oder auf der Startseite **Getränk bezahlen** öffnen.
+2. Den **Strichcode** der Flasche in den Rahmen halten. Beim ersten Mal fragt das Handy, ob Vereint die Kamera benutzen darf.
+3. Klappt das Scannen nicht, die Nummer unter dem Strichcode eintippen und **Suchen** tippen.
+
+<br clear="right">
+
+<img src="bilder/m-bezahlen-bestaetigen.png" alt="Kauf bestätigen" width="300" align="right">
+
+4. Vereint zeigt Getränk, Event, Preis und dein Guthaben vorher und nachher. Laufen mehrere Events, wählst du unter **Bei welchem Event?** das richtige.
+5. Erst mit **… bezahlen** wird abgebucht. **Abbrechen** bucht nichts.
+
+Reicht dein Guthaben nicht, warnt Vereint dich vorher. Du kannst trotzdem bezahlen; gleiche das Minus dann bald beim Kassenwart aus.
+
+<br clear="right">
+
+<img src="bilder/m-bezahlen-fertig.png" alt="Bezahlt" width="300" align="right">
+
+6. **Bezahlt**: Der Betrag ist von deinem Guthaben abgebucht und steht unter **Käufe**.
+
+Vertippt oder das falsche Getränk erwischt? Mit **Rückgängig** nimmst du den Kauf innerhalb von **10 Minuten** selbst zurück. Danach hilft der Kassenwart. **Nächstes Getränk scannen** startet gleich den nächsten Kauf.
+
+Wird ein Strichcode nicht erkannt, ist das Getränk noch nicht im Katalog oder hat noch keinen Strichcode. Sag dem Vorstand Bescheid.
+
+<br clear="right">
+
 ## Käufe
 
 <img src="bilder/m-kaeufe.png" alt="Käufe" width="300" align="right">
 
-Unter **Mehr → Käufe** steht jeder Strich einzeln mit Artikel, Preis, Datum und Uhrzeit. So kannst du nach einem Abend nachprüfen, was für dich gebucht wurde.
+Unter **Mehr → Käufe** steht jeder Kauf einzeln, ob von der Theke oder selbst bezahlt, mit Artikel, Preis, Datum und Uhrzeit. So kannst du nach einem Abend nachprüfen, was für dich gebucht wurde.
 
 Ein Kauf ist ein unveränderlicher Beleg: Der Preis bleibt so, wie er an diesem Abend galt, auch wenn sich der Preis im Katalog später ändert. Das Kennzeichen „Katalog v1“ zeigt die Preisliste, aus der der Preis stammt.
 
@@ -170,9 +202,11 @@ Ist ein Moment vorbei, landet er unter **Archivierte Moments & Rituale**.
 
 <img src="bilder/m-katalog.png" alt="Getränkekatalog" width="300" align="right">
 
-Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen des Vereins mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, oben kannst du suchen.
+Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen des Vereins mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, das Suchfeld findet Getränke nach Name oder Kategorie. **Details & Barcodes** zeigt Preis, Beschreibung und die hinterlegten Strichcodes.
 
-Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, Kategorie und Preis vor. Der Vorstand prüft den Vorschlag und gibt ihn frei. Bis dahin steht er als „Vorgeschlagen“ in der Liste.
+**Barcode scannen**: Scanne eine Flasche, um zu sehen, ob sie schon im Katalog ist. Kennt Vereint den Strichcode, öffnet sich das Getränk. Sonst öffnet sich gleich der Vorschlag mit dem Strichcode.
+
+Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, Kategorie, Preis und Strichcode vor. Vereint warnt dich, wenn es schon ein Getränk mit diesem Namen oder Strichcode gibt. Der Vorstand prüft den Vorschlag und gibt ihn frei; bis dahin steht er als „Vorgeschlagen“ in der Liste.
 
 <br clear="right">
 

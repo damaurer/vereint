@@ -12,7 +12,23 @@ Unter **Verwaltung → Administration** stehen alle Mitglieder mit E-Mail, Rolle
 - **Aktiv** heißt: Das Mitglied kann sich anmelden und die App nutzen.
 - **Bearbeiten** öffnet die Einstellungen eines Mitglieds.
 
-Neue Mitglieder werden derzeit im Anmeldesystem (Keycloak) angelegt. Nach ihrer ersten Anmeldung erscheinen sie in dieser Liste. „Mitglied einladen“ ist noch eine Vorschau und verschickt keine Einladung; die Einladung per Link ist in Arbeit.
+Neue Mitglieder lädst du per Link ein (siehe unten). Nach ihrer Registrierung erscheinen sie in dieser Liste.
+
+## Neue Mitglieder einladen
+
+<img src="bilder/a-einladen.png" alt="Einladungslink erstellen" width="720">
+
+Neue Mitglieder registrieren sich selbst über einen Einladungslink. Links erstellen Administration und Vorstand, entweder hier mit **Mitglied einladen** oder unter **Vorstand** → **Mitglied einladen**.
+
+1. **Für wen?**: optional ein Name, damit du den Link später wiedererkennst.
+2. **Gültig für**: wie lange der Link gilt, z. B. 7 Tage.
+3. **Anzahl Personen**: wie viele sich mit diesem Link registrieren dürfen, meist 1.
+4. **Link erstellen** tippen.
+5. **Link kopieren** (am Handy **Teilen**) und an die Person schicken, etwa per Messenger oder E-Mail. **Der Link wird nur dieses eine Mal angezeigt.**
+
+Unter **Einladungslinks** siehst du jeden Link mit Stand (**Offen**, **Verwendet**, **Abgelaufen**, **Zurückgezogen**), wie oft er schon genutzt wurde und wer sich damit registriert hat. **Zurückziehen** macht einen Link sofort ungültig.
+
+Wer sich über den Link registriert, ist danach normales Mitglied mit der Rolle `member`. Weitere Rollen vergibst du anschließend unter **Bearbeiten**. Wie die Registrierung für die eingeladene Person aussieht, steht in den [Ersten Schritten](01-erste-schritte.md#mit-einem-einladungslink-registrieren).
 
 ## Ein Mitglied bearbeiten
 
@@ -39,7 +55,7 @@ Die Tabelle **Rollen & Berechtigungen** darunter ist eine Vorschau. Änderungen 
 
 ## Thekentablet einrichten
 
-1. Im Anmeldesystem ein eigenes Konto für die Theke anlegen, z. B. „Theke Vereinsheim“, mit der Rolle `tabletRecorder`.
+1. Ein eigenes Konto für die Theke anlegen, z. B. „Theke Vereinsheim“: per Einladungslink registrieren und danach unter **Bearbeiten** die Rolle `tabletRecorder` geben.
 2. Am Tablet mit diesem Konto anmelden und **Angemeldet bleiben** anhaken.
 3. **Verwaltung → Thekenterminal** öffnen. Der Rest steht im [Leitfaden Thekenterminal](05-thekenterminal.md).
 
