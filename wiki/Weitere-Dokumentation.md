@@ -5,6 +5,7 @@ wird zusammen mit dem Code geändert.
 
 | Bereich | Einstieg |
 | :--- | :--- |
+| Benutzerhandbuch je Rolle | [docs/handbuch/](https://github.com/damaurer/vereint/blob/develop/docs/handbuch/README.md) |
 | Übersicht aller Dokumente und Glossar | [docs/README.md](https://github.com/damaurer/vereint/blob/develop/docs/README.md) |
 | Architektur, Sicherheit, Datenmodell | [docs/architecture/](https://github.com/damaurer/vereint/tree/develop/docs/architecture) |
 | Fachbereiche (Events, Guthaben, Katalog, Theke, Chat, Moments, Statistik, Einladungen) | [docs/domains/](https://github.com/damaurer/vereint/tree/develop/docs/domains) |

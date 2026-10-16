@@ -10,7 +10,7 @@ unabhängige Sicherungen.
 | `pg_dump` beider Datenbanken (`vereint`, `keycloak`), probeweise wiederhergestellt, verschlüsselt, nach S3 | täglich 01:30 UTC | 30 Tage |
 | Dasselbe direkt vor jedem Deployment | bei jedem Deployment | 30 Tage |
 | Snapshot des gesamten Datenvolumes | täglich 02:30 UTC | 7 Tage |
-| Bilder | liegen in S3, verschlüsselt | – |
+| Bilder, Fotos und Videos aus Moments | liegen in S3, verschlüsselt | – |
 
 Ablauf des nächtlichen Backups (`bin/backup.sh`, systemd-Timer):
 
@@ -44,7 +44,7 @@ Schutz der Backups selbst:
 und stoppt den betroffenen Dienst währenddessen.
 
 > Ohne `BACKUP_ENCRYPTION_KEY` lässt sich kein S3-Backup lesen, ohne
-> `DATA_ENCRYPTION_KEY` bleiben Nachrichten und Bilder auch nach einem Restore
+> `DATA_ENCRYPTION_KEY` bleiben Nachrichten, Bilder und Videos auch nach einem Restore
 > unlesbar. Beide offline sichern, siehe
 > [Sicherheit und Verschlüsselung](Sicherheit-und-Verschluesselung#schlüssel-die-offline-gesichert-sein-müssen).
 

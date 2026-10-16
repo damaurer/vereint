@@ -11,6 +11,7 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
 - Auf dem Handy eine Leiste unten mit *Start*, *Events*, *Chat*, *Guthaben* und
   *Mehr*; auf größeren Bildschirmen eine Seitennavigation.
 - Hell, Dunkel oder Systemeinstellung im Profil; Sprache Deutsch oder Englisch.
+- Freiwillige Zwei-Faktor-Anmeldung mit einer Authenticator-App, im Profil unter *Sicherheit*.
 
 ## Events und Zusagen
 
@@ -26,7 +27,7 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
 
 ## Chat und Mitteilungen
 
-- Vereinschat, Direktnachrichten zwischen Mitgliedern und Event-Chats.
+- Vereinschat, Direktnachrichten zwischen Mitgliedern und Event-Chats, mit Zähler für ungelesene Nachrichten am Chat-Eintrag.
 - Mitteilungen (Glocke oben) und Rundbriefe des Vorstands, auf Wunsch als
   Web-Push aufs Handy (siehe [PWA und Push](PWA-und-Push)).
 - Nachrichten und Mitteilungen werden verschlüsselt gespeichert (siehe
@@ -69,6 +70,11 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
 
 - Ein Tablet an der Theke mit eigenem Konto (Rolle *Terminal*): Mitglied wählen,
   Getränk antippen, fertig.
+- **Kiosk-Modus**: Beim Start vergibt das Gerät eine eigene PIN (4 bis 8 Ziffern).
+  Danach bleibt es auf der Strichliste, auch nach Neuladen oder Neustart der App,
+  und lässt sich nur mit dieser PIN verlassen. Nach 5 Fehlversuchen ist die
+  Eingabe zeitweise gesperrt. Vorstand und Administration entsperren jedes Gerät
+  unter *Vorstand → Kiosk-Geräte* auch ohne PIN.
 - Striche des Terminals lassen sich 10 Minuten lang rückgängig machen.
 - Abendabschluss mit Bareinnahmen.
 - Details: [docs/domains/tablet-strichliste-recorder.md](https://github.com/damaurer/vereint/blob/develop/docs/domains/tablet-strichliste-recorder.md)
@@ -76,7 +82,12 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
 ## Moments
 
 - Spontane gemeinsame Momente (z. B. Anstoßen) mit Rückmeldungen der
-  Mitglieder, Bildern und einem verknüpften Chat.
+  Mitglieder, freiwilligem Standort auf einer Karte und einem verknüpften Chat.
+- Bis zu vier Fotos oder Videos je Beitrag. Videos höchstens 60 Sekunden und
+  100 MB (MP4/MOV). Standort- und Gerätedaten werden entfernt, alles wird
+  verschlüsselt gespeichert.
+- Welche Moment-Typen und Reaktionen es gibt, legt der Vorstand unter
+  *Vorstand → Moments · Typen & Reaktionen* fest.
 - Details: [docs/domains/moments-and-rituals.md](https://github.com/damaurer/vereint/blob/develop/docs/domains/moments-and-rituals.md)
 
 ## Statistiken
@@ -97,6 +108,10 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
 
 ## Verwaltung
 
-- Vorstand: Events, Kasse, Kommunikation (Rundbriefe, Infotafel), Einladungen.
+- Vorstand: Events, Kasse, Kommunikation (Rundbriefe, Infotafel), Einladungen,
+  Moment-Typen und Reaktionen, Kiosk-Geräte. Die Übersicht zeigt unter
+  *Letzte Aktionen* das Protokoll mit Namen.
 - Administration: Mitglieder, Rollen, Konten deaktivieren, Audit-Protokoll.
-- In Formularen wird mit Namen gearbeitet, nicht mit rohen IDs.
+- In Formularen und Protokollen wird mit Namen gearbeitet, nicht mit rohen IDs.
+- Passwort vergessen: Vereint verschickt keine E-Mails. Die Administration setzt
+  in der Keycloak-Verwaltung ein vorläufiges Passwort.

@@ -23,8 +23,13 @@ anderen Feature-Branch aufsetzt, bekommt CI erst, wenn er auf `develop` zeigt.
 | `E2E-Tests` | Playwright gegen den kompletten Stack ([E2E-Tests](E2E-Tests)) |
 | `Infrastruktur` | `terraform fmt` und `terraform validate` bei Änderungen in `infra/` |
 
-Dependabot hält Abhängigkeiten und GitHub Actions aktuell
+GitHub Actions sind auf Commit-SHAs gepinnt, Images auf Digests. Dependabot hält
+beides und die Abhängigkeiten aktuell
 ([.github/dependabot.yml](https://github.com/damaurer/vereint/blob/develop/.github/dependabot.yml)).
+
+Für `main`, `qs` und `develop` sollte in GitHub ein Branch-Schutz gelten: Pull
+Request vor dem Merge, die CI-Checks als Pflicht, kein Force-Push und kein
+Löschen (siehe [Go-Live-Checkliste](Go-Live-Checkliste)).
 
 ## Images
 

@@ -15,7 +15,7 @@ cp .env.example .env
 # 2. PostgreSQL (2x), Keycloak und MinIO starten
 docker compose up -d
 
-# 3. Fachservice (Port 8081, Swagger UI unter /swagger-ui.html)
+# 3. Fachservice (Port 8081; Swagger UI unter /swagger-ui.html nur mit API_DOCS_ENABLED=true)
 cd baseservice
 ./gradlew bootRun
 

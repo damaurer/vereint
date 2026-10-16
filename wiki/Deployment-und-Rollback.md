@@ -55,7 +55,10 @@ das Backup von direkt vor dem Deployment (siehe
 Voraussetzungen aus der [Go-Live-Checkliste](Go-Live-Checkliste). Gibt es auf
 `main` noch keine Images, unter *Actions* die Workflows `baseservice CI/CD`,
 `webservice CI/CD` und `keycloak CI/CD` je einmal mit *Run workflow* auf `main`
-starten; danach rollt das Deployment von selbst aus.
+starten; danach rollt das Deployment von selbst aus. Der Produktions-Realm hat
+keine Benutzer: Den ersten Administrator legt man danach von Hand an
+(Anleitung in `deploy/README.md`, kommt mit
+[Pull Request #27](https://github.com/damaurer/vereint/pull/27)).
 
 ## Keycloak-Verwaltung
 

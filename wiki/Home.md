@@ -2,8 +2,8 @@
 
 **Vereint** ist die App für unseren Verein: Events mit Zu- und Absagen, Vereinschat
 und Direktnachrichten, Guthaben statt Bargeld, Bezahlen per Barcode-Scan, die
-digitale Strichliste am Thekenterminal, Moments, Statistiken und Einladungen per
-Link. Sie läuft als installierbare Web-App (PWA) auf Handy, Tablet und Rechner.
+digitale Strichliste am Thekenterminal im Kiosk-Modus, Moments mit Fotos und
+Videos, Statistiken und Einladungen per Link. Sie läuft als installierbare Web-App (PWA) auf Handy, Tablet und Rechner.
 
 Dieses Wiki ist der Einstieg. Es fasst zusammen, wie die App aufgebaut ist, wie
 sie betrieben, ausgerollt und gesichert wird, und verlinkt für Details auf die
@@ -41,7 +41,7 @@ Dokumentation im Repository.
 2. Jeder Merge nach `main` rollt automatisch auf einen einzelnen AWS-Server in
    Frankfurt aus, mit Datenbank-Backup vorher, Health Check danach und
    automatischem Rollback bei Fehlern.
-3. Chat-Nachrichten, Benachrichtigungen und Bilder werden in der App mit
+3. Chat-Nachrichten, Benachrichtigungen, Bilder und Videos werden in der App mit
    AES-256-GCM verschlüsselt, bevor sie in der Datenbank oder in S3 landen.
 4. Backups laufen jede Nacht, werden vor dem Hochladen probeweise
    wiederhergestellt und verschlüsselt abgelegt.
