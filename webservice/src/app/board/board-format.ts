@@ -15,6 +15,8 @@ export function auditTargetLabel(targetEntity: string): string {
       return translate('board.auditTarget.notification');
     case 'User':
       return translate('board.auditTarget.user');
+    case 'Kiosk':
+      return translate('board.auditTarget.kiosk');
     default:
       return targetEntity;
   }

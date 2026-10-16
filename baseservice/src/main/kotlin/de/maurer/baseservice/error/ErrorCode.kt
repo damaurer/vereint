@@ -28,5 +28,8 @@ object ErrorCode {
     const val SELF_PRIVILEGE_CHANGE_DENIED = "self_privilege_change_denied"
     const val LAST_ADMIN_PROTECTED = "last_admin_protected"
     const val NOT_FOUND = "not_found"
+    const val KIOSK_PIN_INVALID_FORMAT = "kiosk_pin_invalid_format"
+    const val MEDIA_TOO_LARGE = "media_too_large"
+    const val VIDEO_TOO_LONG = "video_too_long"
     const val INTERNAL_ERROR = "internal_error"
 }

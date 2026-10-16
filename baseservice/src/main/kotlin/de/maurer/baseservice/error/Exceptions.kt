@@ -257,3 +257,4 @@ class ConcurrentModificationException : ApiException {
         errorCode: String = ErrorCode.CONCURRENT_MODIFICATION
     ) : super(errorCode, message, HttpStatus.CONFLICT)
 }
+

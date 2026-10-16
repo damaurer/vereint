@@ -60,6 +60,16 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | `POST` | `/api/v1/tablet/events/{eventId}/rounds` | Runden-Buchung für Gruppe (`TabletRevenuePurchaseRequest` + opt. `Idempotency-Key`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/evening` | Abendabrechnung (`TabletRevenuePurchaseRequest` + opt. `Idempotency-Key`) | `purchase.tablet` |
 
+**Kiosk-Modus (`KioskController`)**
+
+| Methode | Pfad | Beschreibung | Berechtigung / Rolle |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/kiosk/sessions` | Kiosk-Modus auf einem Gerät starten (`{ "pin": "4–8 Ziffern", "label": "Gerätename" }`); die PIN wird nur als BCrypt-Hash gespeichert | `purchase.tablet`, `board`, `admin` |
+| `GET` | `/api/v1/kiosk/sessions/{sessionId}` | Zustand der Sitzung (`KioskSessionDto`), damit das Gerät eine Fernentsperrung bemerkt | `purchase.tablet`, `board`, `admin` |
+| `POST` | `/api/v1/kiosk/sessions/{sessionId}/unlock` | Mit der PIN des Geräts verlassen (`KioskUnlockResultDto`); nach 5 Fehlversuchen gesperrt (1, 5, 15, dann 60 Min.) | `purchase.tablet`, `board`, `admin` |
+| `GET` | `/api/v1/kiosk/sessions` | Laufende Kiosk-Geräte | `board`, `admin` |
+| `POST` | `/api/v1/kiosk/sessions/{sessionId}/end` | Gerät aus der Ferne entsperren, ohne PIN | `board`, `admin` |
+
 ### 5. Getränkekatalog & Sublisten (`DrinkCatalogController`, `DrinkSublistController`, `EventDrinkController`)
 | Methode | Pfad | Beschreibung | Berechtigung / Rolle |
 | :--- | :--- | :--- | :--- |

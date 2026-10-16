@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { InviteModalComponent } from '../admin/invite-modal.component';
+import { KioskDevicesModalComponent } from './kiosk-devices-modal.component';
 import { IconComponent } from '../ui/icon.component';
 import { RouterLink } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { eventStatusLabel, formatDateTime } from '../member/member-format';
-import { auditTargetLabel } from './board-format';
+import { auditActionLabel, auditDetails, auditTargetLabel } from './board-format';
 import { BoardApiService } from './board-api.service';
 import type { AuditLogEntry, EventStatus, EventSummary } from '../api/api.types';
 import {
@@ -38,7 +39,7 @@ interface BoardView {
  */
 @Component({
   selector: 'app-board',
-  imports: [StateComponent, IconComponent, RouterLink, InfoPanelComponent, StatCardComponent, StatusBadgeComponent, TranslatePipe, InviteModalComponent],
+  imports: [StateComponent, IconComponent, RouterLink, InfoPanelComponent, StatCardComponent, StatusBadgeComponent, TranslatePipe, InviteModalComponent, KioskDevicesModalComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="board-title">
@@ -62,13 +63,24 @@ interface BoardView {
             <span class="board-panel-title">{{ 'board.overview.commsTitle' | t }}</span>
             <span class="board-panel-desc">{{ 'board.overview.commsDesc' | t }}</span>
           </a>
+          <a class="board-panel" routerLink="/board/moments">
+            <vereint-icon class="board-panel-icon" name="moments" />
+            <span class="board-panel-title">{{ 'board.overview.momentConfigTitle' | t }}</span>
+            <span class="board-panel-desc">{{ 'board.overview.momentConfigDesc' | t }}</span>
+          </a>
           <button type="button" class="board-panel" (click)="inviteOpen.set(true)">
             <vereint-icon class="board-panel-icon" name="users" />
             <span class="board-panel-title">{{ 'board.overview.inviteTitle' | t }}</span>
             <span class="board-panel-desc">{{ 'board.overview.inviteDesc' | t }}</span>
           </button>
+          <button type="button" class="board-panel" (click)="kioskDevicesOpen.set(true)">
+            <vereint-icon class="board-panel-icon" name="lock" />
+            <span class="board-panel-title">{{ 'board.overview.kioskDevicesTitle' | t }}</span>
+            <span class="board-panel-desc">{{ 'board.overview.kioskDevicesDesc' | t }}</span>
+          </button>
         </nav>
         <app-admin-invite-modal [open]="inviteOpen()" (closed)="inviteOpen.set(false)" />
+        <app-board-kiosk-devices-modal [open]="kioskDevicesOpen()" (closed)="kioskDevicesOpen.set(false)" />
 
         @if (load.isLoading()) {
           <vereint-state
@@ -124,10 +136,16 @@ interface BoardView {
               @for (entry of view.audit; track entry.id) {
                 <li class="member-list-item">
                   <span class="member-list-title">
-                    {{ auditTargetLabel(entry.targetEntity) }} · {{ entry.action }}
+                    {{ auditTargetLabel(entry.targetEntity) }} · {{ auditActionLabel(entry.action) }}
                   </span>
-                  @if (entry.details) {
-                    <span class="member-chat-text">{{ entry.details }}</span>
+                  @if (entry.targetName) {
+                    <span class="member-list-sub">
+                      {{ 'board.auditMember' | t: { name: entry.targetName } }}
+                      @if (entry.targetTitle) { · „{{ entry.targetTitle }}“ }
+                    </span>
+                  }
+                  @if (auditDetails(entry.details); as details) {
+                    <span class="member-chat-text">{{ details }}</span>
                   }
                   <span class="member-list-meta">
                     {{ entry.actorDisplayName ?? ('board.audit.system' | t) }} · {{ formatDateTime(entry.createdAt) }}
@@ -201,9 +219,12 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   protected readonly load = new AsyncState<BoardView>();
   protected readonly inviteOpen = signal(false);
+  protected readonly kioskDevicesOpen = signal(false);
   protected readonly eventStatusLabel = eventStatusLabel;
   protected readonly formatDateTime = formatDateTime;
   protected readonly auditTargetLabel = auditTargetLabel;
+  protected readonly auditActionLabel = auditActionLabel;
+  protected readonly auditDetails = auditDetails;
 
   /** Ordnet den Eventstatus einer Badge-Farbe der geteilten Primitive zu. */
   protected eventTone(status: EventStatus): StatusTone {

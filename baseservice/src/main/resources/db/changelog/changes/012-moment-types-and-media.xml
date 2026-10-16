@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 150. Moment-Typen und Reaktionen pflegt der Vorstand. Der `code` steht in
+         moment_sessions.topic_type bzw. moment_responses.reaction und ändert sich
+         nie; Name und Emoji schon. Ausgemusterte Einträge (`active = false`)
+         bleiben für bestehende Moments erhalten. Ein Typ erlaubt entweder alle
+         aktiven Reaktionen (`all_reactions`) oder die in moment_type_reactions. -->
+    <changeSet id="150-create-moment-types-and-reactions" author="claude">
+        <createTable tableName="moment_reactions">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_moment_reactions_code"/>
+            </column>
+            <column name="name" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="emoji" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sort_order" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="moment_types">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(64)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_moment_types_code"/>
+            </column>
+            <column name="name" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="emoji" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="sort_order" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="all_reactions" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createTable tableName="moment_type_reactions">
+            <column name="type_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_moment_type_reactions_type" references="moment_types(id)" deleteCascade="true"/>
+            </column>
+            <column name="reaction_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_moment_type_reactions_reaction" references="moment_reactions(id)" deleteCascade="true"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="moment_type_reactions" columnNames="type_id, reaction_id" constraintName="pk_moment_type_reactions"/>
+        <rollback>
+            <dropTable tableName="moment_type_reactions"/>
+            <dropTable tableName="moment_types"/>
+            <dropTable tableName="moment_reactions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 151. Startbestand: die bisher fest eingebauten Typen und Reaktionen. -->
+    <changeSet id="151-seed-moment-types-and-reactions" author="claude">
+        <insert tableName="moment_types">
+            <column name="id" value="00000000-0000-4000-8000-000000000101"/>
+            <column name="code" value="toast"/>
+            <column name="name" value="Gemeinsames Anstoßen"/>
+            <column name="emoji" value="🍻"/>
+            <column name="description" value="Für Stammtische &amp; Feste"/>
+            <column name="sort_order" valueNumeric="10"/>
+        </insert>
+        <insert tableName="moment_types">
+            <column name="id" value="00000000-0000-4000-8000-000000000102"/>
+            <column name="code" value="prayer"/>
+            <column name="name" value="Gebet &amp; Fürbitte"/>
+            <column name="emoji" value="🙏"/>
+            <column name="description" value="Für Kirchen- &amp; Glaubensgemeinschaften"/>
+            <column name="sort_order" valueNumeric="20"/>
+        </insert>
+        <insert tableName="moment_types">
+            <column name="id" value="00000000-0000-4000-8000-000000000103"/>
+            <column name="code" value="cheer"/>
+            <column name="name" value="Jubeln &amp; Anfeuern"/>
+            <column name="emoji" value="📣"/>
+            <column name="description" value="Für Sport- &amp; Fan-Clubs"/>
+            <column name="sort_order" valueNumeric="30"/>
+        </insert>
+        <insert tableName="moment_types">
+            <column name="id" value="00000000-0000-4000-8000-000000000104"/>
+            <column name="code" value="checkin"/>
+            <column name="name" value="Spontaner Check-in"/>
+            <column name="emoji" value="📍"/>
+            <column name="description" value="Präsenz &amp; Standort teilen"/>
+            <column name="sort_order" valueNumeric="40"/>
+        </insert>
+        <insert tableName="moment_types">
+            <column name="id" value="00000000-0000-4000-8000-000000000105"/>
+            <column name="code" value="other"/>
+            <column name="name" value="Sonstiger Impuls"/>
+            <column name="emoji" value="✨"/>
+            <column name="description" value="Freie Gemeinschaftsaktion"/>
+            <column name="sort_order" valueNumeric="50"/>
+        </insert>
+        <insert tableName="moment_reactions">
+            <column name="id" value="00000000-0000-4000-8000-000000000201"/>
+            <column name="code" value="TOAST"/>
+            <column name="name" value="Anstoßen"/>
+            <column name="emoji" value="🍻"/>
+            <column name="sort_order" valueNumeric="10"/>
+        </insert>
+        <insert tableName="moment_reactions">
+            <column name="id" value="00000000-0000-4000-8000-000000000202"/>
+            <column name="code" value="PRAYER"/>
+            <column name="name" value="Gebet"/>
+            <column name="emoji" value="🙏"/>
+            <column name="sort_order" valueNumeric="20"/>
+        </insert>
+        <insert tableName="moment_reactions">
+            <column name="id" value="00000000-0000-4000-8000-000000000203"/>
+            <column name="code" value="CHEER"/>
+            <column name="name" value="Jubel"/>
+            <column name="emoji" value="📣"/>
+            <column name="sort_order" valueNumeric="30"/>
+        </insert>
+        <insert tableName="moment_reactions">
+            <column name="id" value="00000000-0000-4000-8000-000000000204"/>
+            <column name="code" value="THUMBS_UP"/>
+            <column name="name" value="Daumen hoch"/>
+            <column name="emoji" value="👍"/>
+            <column name="sort_order" valueNumeric="40"/>
+        </insert>
+        <insert tableName="moment_reactions">
+            <column name="id" value="00000000-0000-4000-8000-000000000205"/>
+            <column name="code" value="CELEBRATE"/>
+            <column name="name" value="Feiern"/>
+            <column name="emoji" value="🎉"/>
+            <column name="sort_order" valueNumeric="50"/>
+        </insert>
+        <insert tableName="moment_reactions">
+            <column name="id" value="00000000-0000-4000-8000-000000000206"/>
+            <column name="code" value="HEART"/>
+            <column name="name" value="Herz"/>
+            <column name="emoji" value="❤️"/>
+            <column name="sort_order" valueNumeric="60"/>
+        </insert>
+        <rollback>
+            <delete tableName="moment_types"/>
+            <delete tableName="moment_reactions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 152. Ein Beitrag darf auch nur Text, Bilder oder Videos enthalten. -->
+    <changeSet id="152-moment-response-reaction-optional" author="claude">
+        <dropNotNullConstraint tableName="moment_responses" columnName="reaction" columnDataType="VARCHAR(64)"/>
+        <rollback>
+            <addNotNullConstraint tableName="moment_responses" columnName="reaction" columnDataType="VARCHAR(64)" defaultNullValue=""/>
+        </rollback>
+    </changeSet>
+
+    <!-- 153. Bilder und kurze Videos in Moments. Die Dateien liegen verschlüsselt
+         im Objektspeicher; hier stehen nur Metadaten. `response_id` ist leer,
+         solange der Upload noch zu keinem abgesendeten Beitrag gehört. -->
+    <changeSet id="153-create-moment-media" author="claude">
+        <createTable tableName="moment_media">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="moment_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_moment_media_moment" references="moment_sessions(id)" deleteCascade="true"/>
+            </column>
+            <column name="response_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_moment_media_response" references="moment_responses(id)" deleteCascade="true"/>
+            </column>
+            <column name="owner_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_moment_media_owner" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="kind" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_type" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="size_bytes" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="storage_key" type="VARCHAR(512)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_moment_media_storage_key"/>
+            </column>
+            <column name="encrypted" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="width" type="INTEGER"/>
+            <column name="height" type="INTEGER"/>
+            <column name="duration_ms" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>
+            ALTER TABLE moment_media
+            ADD CONSTRAINT ck_moment_media_kind
+            CHECK (kind IN ('image', 'video') AND size_bytes > 0)
+        </sql>
+        <createIndex tableName="moment_media" indexName="ix_moment_media_response">
+            <column name="response_id"/>
+        </createIndex>
+        <createIndex tableName="moment_media" indexName="ix_moment_media_moment_owner">
+            <column name="moment_id"/>
+            <column name="owner_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="moment_media"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

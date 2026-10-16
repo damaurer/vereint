@@ -222,7 +222,12 @@
     "statusDisabled": "Disabled",
     "memberSince": "Member since",
     "recording": "Recording",
-    "recordingActive": "Tally recording active"
+    "recordingActive": "Tally recording active",
+    "security": {
+      "title": "Security",
+      "hint": "Protect your account with an authenticator app (e.g. Google Authenticator). Login then asks for your password and a 6-digit code. Optional, but recommended for board members and admins.",
+      "setupTwoFactor": "Set up two-factor sign-in"
+    }
   },
   "notifications": {
     "eyebrow": "Messages",
@@ -499,6 +504,10 @@
     "scan": {
       "title": "Pay for a drink",
       "description": "Scan a barcode and pay with your credit."
+    },
+    "boardMoments": {
+      "title": "Moment types & reactions",
+      "description": "Define types and reactions for moments."
     }
   },
   "chat": {
@@ -618,7 +627,9 @@
       "timelineTab": "Timeline ({count})",
       "mapTab": "World map ({count})",
       "quickLabel": "Quick reaction:",
-      "custom": "+ Status & text"
+      "custom": "+ Status & text",
+      "shareMedia": "Share photo/video",
+      "ended": "This moment has ended."
     },
     "history": {
       "title": "Archived moments & rituals",
@@ -629,7 +640,8 @@
       "contributions": {
         "one": "{count} post",
         "other": "{count} posts"
-      }
+      },
+      "view": "View"
     },
     "start": {
       "title": "Initiate new moment",
@@ -650,11 +662,12 @@
       "submit": "Start moment now",
       "submitting": "Starting …",
       "error": "Error starting the moment.",
-      "failed": "The moment could not be started."
+      "failed": "The moment could not be started.",
+      "noTypes": "The board has not enabled any moment type yet."
     },
     "respond": {
       "title": "Share status & reaction",
-      "reactionLabel": "Choose reaction *",
+      "reactionLabel": "Reaction (optional)",
       "statusLabel": "Personal status (optional)",
       "statusPlaceholder": "e.g. Greetings from Hamburg! 🍺",
       "consent": "Share my current location for this post on the world map",
@@ -733,7 +746,29 @@
       "empty": "No status posts shared yet. Be the first to share your reaction!",
       "locationShared": "Location shared ({lat}, {lng})"
     },
-    "quote": "“{text}”"
+    "quote": "“{text}”",
+    "manageLink": "Manage types & reactions",
+    "media": {
+      "label": "Photos & videos (optional)",
+      "add": "Add photo or video",
+      "hint": "Up to {count} files. Videos at most {seconds} seconds and {mb} MB.",
+      "remove": "Remove",
+      "removeConfirm": "Really remove this photo or video?",
+      "photoBy": "Photo by {name}",
+      "videoBy": "Video by {name}",
+      "errors": {
+        "videoType": "This video format is not supported. Please use MP4 or MOV.",
+        "videoTooLarge": "The video is larger than {max} MB. Please record a shorter clip or use a lower resolution (e.g. 720p).",
+        "videoTooLong": "The video is longer than {max} seconds. Please trim it first.",
+        "imageType": "This image cannot be read. Please use JPEG, PNG or GIF.",
+        "imageTooLarge": "The image is larger than {max} MB.",
+        "unsupported": "Only photos and videos can be shared.",
+        "tooMany": "At most {count} files per contribution.",
+        "tooLargeServer": "The file is too large.",
+        "uploadFailed": "Upload failed. Please try again.",
+        "aborted": "Upload cancelled."
+      }
+    }
   },
   "catalog": {
     "header": {
@@ -939,9 +974,10 @@
       "confirm": "Confirm selection"
     },
     "terminal": {
-      "backToPortal": "← Back to the club portal",
-      "standaloneMode": "Standalone terminal mode",
-      "leaveMode": "Leave terminal mode"
+      "kioskActive": "Kiosk mode active",
+      "startKiosk": "Start kiosk mode",
+      "leaveKiosk": "Leave kiosk mode",
+      "startHint": "In kiosk mode this device stays on the bar terminal, even after closing and reopening. You set a PIN when starting; only that PIN leaves the mode here. The board and administrators can unlock the device remotely at any time."
     },
     "header": {
       "eyebrow": "Drink Recorder",
@@ -1122,7 +1158,8 @@
     "auditTarget": {
       "ledger": "Finance",
       "notification": "Communication",
-      "user": "Users"
+      "user": "Users",
+      "kiosk": "Bar terminal"
     },
     "auditAction": {
       "NOTIFICATION_SENT": "Notification sent",
@@ -1136,7 +1173,13 @@
       "LEDGER_CORRECTION": "Correction",
       "LEDGER_PURCHASE": "Purchase",
       "MOMENT_STARTED": "Moment started",
-      "MOMENT_COMPLETED": "Moment ended"
+      "MOMENT_COMPLETED": "Moment ended",
+      "KIOSK_PIN_LOCKED": "Kiosk PIN locked after failed attempts",
+      "KIOSK_STARTED": "Kiosk mode started",
+      "KIOSK_ENDED_REMOTELY": "Kiosk device unlocked remotely",
+      "MOMENT_TYPE_SAVED": "Moment type saved",
+      "MOMENT_REACTION_SAVED": "Moment reaction saved",
+      "MOMENT_MEDIA_REMOVED": "Moment photo/video removed"
     },
     "auditDetail": {
       "amount": "Amount",
@@ -1187,7 +1230,11 @@
       "moderate": "Moderate",
       "auditHeading": "Recent actions ({count})",
       "inviteTitle": "Invite member",
-      "inviteDesc": "Create an invite link for registration"
+      "inviteDesc": "Create an invite link for registration",
+      "kioskDevicesTitle": "Kiosk devices",
+      "kioskDevicesDesc": "See running bar terminals and unlock them remotely",
+      "momentConfigTitle": "Moments · types & reactions",
+      "momentConfigDesc": "Decide which moments and reactions exist"
     },
     "comms": {
       "eyebrow": "Secretary",
@@ -1314,6 +1361,42 @@
         "noEntry": "No bookings yet",
         "id": "ID {id}"
       }
+    },
+    "kioskDevices": {
+      "title": "Kiosk devices",
+      "intro": "Kiosk mode is currently running on these devices. “Unlock” ends it without the PIN; the device leaves kiosk mode within a few seconds.",
+      "emptyTitle": "No device in kiosk mode",
+      "emptyMessage": "As soon as a bar terminal starts kiosk mode, it shows up here.",
+      "since": "Started by {name} on {date}",
+      "lockedUntil": "PIN entry locked until {date}",
+      "unlock": "Unlock",
+      "unlocked": "{label} is unlocked."
+    },
+    "momentConfig": {
+      "back": "← Back to board",
+      "title": "Moments: types & reactions",
+      "intro": "Decide which kinds of moments members can start and which reactions they can respond with. Retired entries disappear for new moments; existing moments keep them.",
+      "unavailable": "Moment settings unavailable",
+      "typesTitle": "Moment types",
+      "reactionsTitle": "Reactions",
+      "newType": "New type",
+      "editType": "Edit type",
+      "newReaction": "New reaction",
+      "editReaction": "Edit reaction",
+      "edit": "Edit",
+      "retired": "retired",
+      "emoji": "Emoji",
+      "name": "Name",
+      "description": "Description (optional)",
+      "allowedReactions": "Allowed reactions",
+      "allReactions": "Allow all active reactions",
+      "allReactionsShort": "All reactions",
+      "someReactions": "Reactions: {list}",
+      "activeType": "Members can start this type",
+      "activeReaction": "Members can use this reaction",
+      "retireTypeHint": "Retired: no new moments of this type, existing ones stay.",
+      "retireReactionHint": "Retired: the reaction can no longer be chosen, earlier contributions keep it.",
+      "saveFailed": "Saving failed."
     }
   },
   "events": {
@@ -1622,6 +1705,30 @@
       "lookup": "The drink could not be looked up.",
       "pay": "Payment failed.",
       "undo": "Undo failed."
+    }
+  },
+  "kiosk": {
+    "lock": {
+      "badge": "Kiosk",
+      "open": "Unlock kiosk",
+      "title": "Leave kiosk mode",
+      "intro": "Enter the kiosk PIN to leave the bar terminal.",
+      "pinLabel": "PIN",
+      "submit": "Unlock",
+      "wrong": "Wrong PIN. {count} attempts left before the lock.",
+      "locked": "Too many wrong attempts. You can try again from {time}."
+    },
+    "start": {
+      "title": "Start kiosk mode",
+      "intro": "Set a PIN for this device. Only this PIN lets you leave kiosk mode here.",
+      "label": "Device name (optional)",
+      "labelPlaceholder": "e.g. Bar left",
+      "pin": "PIN ({min} to {max} digits)",
+      "repeat": "Repeat PIN",
+      "remoteHint": "Forgot the PIN? The board or an administrator can unlock the device under Board → Kiosk devices.",
+      "submit": "Start",
+      "format": "The PIN must consist of {min} to {max} digits.",
+      "mismatch": "The two entries do not match."
     }
   }
 }

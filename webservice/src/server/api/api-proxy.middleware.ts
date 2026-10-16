@@ -1,5 +1,7 @@
 import type { Request, RequestHandler, Response } from 'express';
 import { randomUUID } from 'node:crypto';
+import http from 'node:http';
+import https from 'node:https';
 import { serverEnvironment } from '../config/environment';
 
 /**
@@ -78,6 +80,22 @@ function isPublicOrGuestRequest(req: Request): boolean {
   return publicPaths.includes(path);
 }
 
+/**
+ * Liefert die Ziel-URL im Fachservice oder `null`, wenn der Pfad aus
+ * `/api/v1` ausbrechen könnte (`..`, kodierte Schrägstriche oder Punkte,
+ * Backslashes). `fetch` normalisiert solche Pfade sonst zu beliebigen
+ * Endpunkten des Fachservice, etwa `/actuator` oder `/v3/api-docs`.
+ */
+export function resolveTargetUrl(originalUrl: string): string | null {
+  const [rawPath] = originalUrl.split('?');
+  if (/%2e|%2f|%5c|\\/i.test(rawPath)) return null;
+  if (rawPath.split('/').some((segment) => segment === '.' || segment === '..')) return null;
+  const base = new URL(serverEnvironment.springApiBaseUrl);
+  const target = new URL(originalUrl, base);
+  if (target.origin !== base.origin || !target.pathname.startsWith('/api/v1/')) return null;
+  return target.toString();
+}
+
 function forwardHeaders(req: Request, traceId: string, accessToken?: string): Headers {
   const headers = new Headers();
   for (const [name, value] of Object.entries(req.headers)) {
@@ -134,7 +152,11 @@ export const apiProxy: RequestHandler = (req, res, next) => {
     return;
   }
 
-  const targetUrl = `${serverEnvironment.springApiBaseUrl}${req.originalUrl}`;
+  const targetUrl = resolveTargetUrl(req.originalUrl);
+  if (!targetUrl) {
+    sendProblem(res, 400, 'invalid_request', 'Ungültiger API-Pfad.', instance, traceId);
+    return;
+  }
   const headers = forwardHeaders(req, traceId, accessToken);
   const { body, contentType } = serializeBody(req);
   if (body !== undefined && contentType && !headers.has('content-type')) {
@@ -183,4 +205,118 @@ export const apiProxy: RequestHandler = (req, res, next) => {
         traceId,
       );
     });
+};
+
+/**
+ * Bilder und Videos in Moments: Upload (`POST …/media`) und Abruf
+ * (`GET …/media/{id}/content`). Diese Wege laufen nicht über `apiProxy`, weil
+ * Videos weder im Speicher des Webservice gepuffert noch nach 8 Sekunden
+ * abgebrochen werden dürfen.
+ */
+export const MOMENT_MEDIA_PATH = /^\/api\/v1\/events\/[^/]+\/moments\/[^/]+\/media(?:\/[^/]+\/content)?$/;
+
+/** Ohne Datenfluss in diesem Zeitraum wird ein Upload oder Abruf abgebrochen. */
+export const MEDIA_STREAM_IDLE_TIMEOUT_MS = 60_000;
+
+/** Antwort-Header des Fachservice, die beim Streamen nicht weitergereicht werden. */
+const STRIPPED_STREAM_RESPONSE_HEADERS = new Set(['transfer-encoding', 'connection', 'keep-alive']);
+
+const MEDIA_UPLOAD_TYPE = /^(image|video)\/[\w.+-]+$/i;
+
+/**
+ * Streaming-Variante des Proxys für Moment-Dateien: Der Request-Körper fließt
+ * ungepuffert mit seiner `Content-Length` zum Fachservice, die Antwort samt
+ * `Range`-Headern (`206`, `Content-Range`) ungepuffert zurück. Größen- und
+ * Dauergrenzen prüft Spring; Caddy begrenzt die Körpergröße davor.
+ */
+export const mediaStreamProxy: RequestHandler = (req, res, next) => {
+  const path = req.originalUrl.split('?')[0];
+  const isContent = path.endsWith('/content');
+  const isUpload = req.method === 'POST' && !isContent;
+  const isDownload = (req.method === 'GET' || req.method === 'HEAD') && isContent;
+  if (!MOMENT_MEDIA_PATH.test(path) || !(isUpload || isDownload)) {
+    next();
+    return;
+  }
+
+  const traceId = requestId(req);
+  const instance = req.originalUrl;
+  const accessToken = req.sessionData?.tokens.accessToken;
+  if (!accessToken) {
+    sendProblem(
+      res,
+      401,
+      'oidc_session_expired',
+      'Für den Zugriff auf die fachliche API ist eine gültige Sitzung erforderlich.',
+      instance,
+      traceId,
+    );
+    return;
+  }
+  const targetUrl = resolveTargetUrl(req.originalUrl);
+  if (!targetUrl) {
+    sendProblem(res, 400, 'invalid_request', 'Ungültiger API-Pfad.', instance, traceId);
+    return;
+  }
+
+  const headers: Record<string, string> = {};
+  forwardHeaders(req, traceId, accessToken).forEach((value, key) => {
+    headers[key] = value;
+  });
+  if (isUpload) {
+    const length = req.header('content-length');
+    const type = (req.header('content-type') ?? '').split(';')[0].trim();
+    if (!length || !/^\d+$/.test(length)) {
+      sendProblem(res, 411, 'invalid_request', 'Die Dateigröße (Content-Length) fehlt.', instance, traceId);
+      return;
+    }
+    if (!MEDIA_UPLOAD_TYPE.test(type)) {
+      sendProblem(res, 415, 'invalid_request', 'Nur Bilder und Videos können hochgeladen werden.', instance, traceId);
+      return;
+    }
+    headers['content-length'] = length;
+  }
+
+  const target = new URL(targetUrl);
+  const client = target.protocol === 'https:' ? https : http;
+  const upstreamRequest = client.request(target, { method: req.method, headers }, (upstream) => {
+    res.status(upstream.statusCode ?? 502);
+    for (const [key, value] of Object.entries(upstream.headers)) {
+      if (value === undefined || STRIPPED_STREAM_RESPONSE_HEADERS.has(key.toLowerCase())) continue;
+      res.setHeader(key, value);
+    }
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('Vary', 'Cookie');
+    if (!res.getHeader('x-request-id')) res.setHeader('x-request-id', traceId);
+    upstream.on('error', (error) => res.destroy(error));
+    upstream.pipe(res);
+  });
+
+  upstreamRequest.setTimeout(MEDIA_STREAM_IDLE_TIMEOUT_MS, () => {
+    upstreamRequest.destroy(new Error('Zeitüberschreitung beim Fachservice'));
+  });
+  upstreamRequest.on('error', () => {
+    if (!res.headersSent) {
+      sendProblem(
+        res,
+        503,
+        'service_unavailable',
+        'Der Fachservice ist derzeit nicht erreichbar.',
+        instance,
+        traceId,
+      );
+    } else {
+      res.destroy();
+    }
+  });
+  // Bricht der Browser ab (Seite verlassen, Video gestoppt), endet auch der Aufruf beim Fachservice.
+  res.on('close', () => {
+    if (!res.writableFinished) upstreamRequest.destroy();
+  });
+
+  if (isUpload) {
+    req.pipe(upstreamRequest);
+  } else {
+    upstreamRequest.end();
+  }
 };

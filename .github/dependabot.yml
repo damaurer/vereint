@@ -28,6 +28,8 @@ updates:
     schedule:
       interval: weekly
 
+  # Actions sind auf Commit-SHAs gepinnt (Kommentar = Tag); Dependabot
+  # aktualisiert SHA und Kommentar gemeinsam.
   - package-ecosystem: github-actions
     directory: /
     schedule:

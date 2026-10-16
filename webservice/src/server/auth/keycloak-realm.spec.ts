@@ -70,6 +70,24 @@ describe('Keycloak Realm Configuration', () => {
     }
   });
 
+  it('requires passwords of 10 to 128 characters, like the invite registration', () => {
+    for (const config of [realmConfig, devRealmConfig]) {
+      expect(config.passwordPolicy).toContain('length(10)');
+      expect(config.passwordPolicy).toContain('maxLength(128)');
+      expect(config.passwordPolicy).toContain('notUsername');
+      expect(config.passwordPolicy).toContain('notEmail');
+    }
+  });
+
+  it('records login and admin events for later investigation', () => {
+    for (const config of [realmConfig, devRealmConfig]) {
+      expect(config.eventsEnabled).toBe(true);
+      expect(config.enabledEventTypes).toEqual(expect.arrayContaining(['LOGIN', 'LOGIN_ERROR', 'UPDATE_PASSWORD']));
+      expect(config.eventsExpiration).toBeGreaterThanOrEqual(30 * 24 * 3600);
+      expect(config.adminEventsEnabled).toBe(true);
+    }
+  });
+
   it('defines all required realm roles according to the specifications', () => {
     const roles: string[] = realmConfig.roles.realm.map((r: any) => r.name);
 

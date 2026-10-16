@@ -112,6 +112,41 @@ class AuditService(
         log.info("audit action={} actor={} target={} {}", action, actor?.id, momentId, details)
     }
 
+    /** Protokolliert Änderungen an Moment-Typen und -Reaktionen durch den Vorstand. */
+    fun recordMomentConfigChange(actor: UserEntity?, action: String, targetId: UUID, details: String) {
+        auditLogRepository.save(
+            AuditLogEntity(
+                id = UUID.randomUUID(),
+                actor = actor,
+                action = action,
+                targetEntity = TARGET_MOMENT_CONFIG,
+                targetId = targetId.toString(),
+                details = details
+            )
+        )
+        log.info("audit action={} actor={} target={} {}", action, actor?.id, targetId, details)
+    }
+
+    /** Protokolliert Kiosk-Sitzungen am Thekenterminal (Start, Fernentsperrung, PIN-Sperre). */
+    fun recordKioskAction(
+        actor: UserEntity?,
+        action: String,
+        kioskSessionId: UUID,
+        details: String?
+    ) {
+        auditLogRepository.save(
+            AuditLogEntity(
+                id = UUID.randomUUID(),
+                actor = actor,
+                action = action,
+                targetEntity = TARGET_KIOSK,
+                targetId = kioskSessionId.toString(),
+                details = details
+            )
+        )
+        log.info("audit action={} actor={} target={} {}", action, actor?.id, kioskSessionId, details)
+    }
+
     private fun render(value: Any?): String = when (value) {
         null -> "-"
         is Collection<*> -> value.map { it.toString() }.sorted().joinToString(",")
@@ -123,6 +158,14 @@ class AuditService(
         const val TARGET_LEDGER = "Ledger"
         const val TARGET_NOTIFICATION = "Notification"
         const val TARGET_MOMENT = "Moment"
+        const val TARGET_KIOSK = "Kiosk"
+        const val TARGET_MOMENT_CONFIG = "MomentConfig"
+        const val ACTION_MOMENT_TYPE_SAVED = "MOMENT_TYPE_SAVED"
+        const val ACTION_MOMENT_REACTION_SAVED = "MOMENT_REACTION_SAVED"
+        const val ACTION_MOMENT_MEDIA_REMOVED = "MOMENT_MEDIA_REMOVED"
+        const val ACTION_KIOSK_STARTED = "KIOSK_STARTED"
+        const val ACTION_KIOSK_ENDED_REMOTELY = "KIOSK_ENDED_REMOTELY"
+        const val ACTION_KIOSK_PIN_LOCKED = "KIOSK_PIN_LOCKED"
         const val ACTION_NOTIFICATION_SENT = "NOTIFICATION_SENT"
         const val ACTION_MOMENT_STARTED = "MOMENT_STARTED"
         const val ACTION_MOMENT_COMPLETED = "MOMENT_COMPLETED"

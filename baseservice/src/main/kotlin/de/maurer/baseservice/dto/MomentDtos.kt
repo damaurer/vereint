@@ -46,9 +46,9 @@ data class StartMomentRequest(
  * Teilnehmer können mehrfach während der Laufzeit Status-Updates absenden.
  */
 data class SubmitMomentResponseRequest(
-    @field:NotBlank(message = "reaction {validation.notBlank}")
+    /** Code einer Reaktion; optional, wenn Text oder Bilder/Videos mitkommen. */
     @field:Size(max = 64, message = "reaction {validation.size.max}")
-    val reaction: String,
+    val reaction: String? = null,
 
     @field:Size(max = 255, message = "statusText {validation.size.max}")
     val statusText: String? = null,
@@ -61,7 +61,11 @@ data class SubmitMomentResponseRequest(
 
     @field:DecimalMin(value = "-180.0", message = "longitude {validation.longitude}")
     @field:DecimalMax(value = "180.0", message = "longitude {validation.longitude}")
-    val longitude: Double? = null
+    val longitude: Double? = null,
+
+    /** Zuvor hochgeladene Bilder/Videos, die zu diesem Beitrag gehören. */
+    @field:Size(max = 4, message = "mediaIds {validation.size.maxEntries}")
+    val mediaIds: List<String> = emptyList()
 )
 
 /**
@@ -79,6 +83,8 @@ data class MomentSessionDto(
     val latitude: Double?,
     val longitude: Double?,
     val active: Boolean,
+    val topicName: String = topicType,
+    val topicEmoji: String? = null,
     val responsesCount: Int = 0,
     val expiresAt: Instant,
     val createdAt: Instant,
@@ -93,11 +99,30 @@ data class MomentResponseDto(
     val momentId: String,
     val userId: String,
     val userName: String,
-    val reaction: String,
+    val reaction: String?,
     val statusText: String?,
     val latitude: Double?,
     val longitude: Double?,
-    val createdAt: Instant
+    val createdAt: Instant,
+    val reactionName: String? = reaction,
+    val reactionEmoji: String? = null,
+    val media: List<MomentMediaDto> = emptyList()
+)
+
+/**
+ * Bild oder Video eines Beitrags. [url] zeigt auf den berechtigungsgeprüften
+ * Content-Endpunkt; Videos unterstützen dort HTTP-Range.
+ */
+data class MomentMediaDto(
+    val id: String,
+    val kind: String,
+    val contentType: String,
+    val sizeBytes: Long,
+    val width: Int?,
+    val height: Int?,
+    val durationSeconds: Double?,
+    val url: String,
+    val canDelete: Boolean
 )
 
 /**
@@ -143,8 +168,83 @@ data class MomentSummaryDto(
     val momentId: String,
     val title: String,
     val topicType: String,
+    val topicName: String = topicType,
+    val topicEmoji: String? = null,
     val totalResponses: Int,
     val uniqueParticipants: Int,
     val summary: String?,
     val completedAt: Instant?
+)
+
+/** Vom Vorstand gepflegter Moment-Typ. */
+data class MomentTypeDto(
+    val id: String,
+    val code: String,
+    val name: String,
+    val emoji: String,
+    val description: String?,
+    val active: Boolean,
+    val allReactions: Boolean,
+    /** Explizit ausgewählte Reaktionen (nur relevant bei `allReactions = false`). */
+    val reactionIds: List<String>,
+    /** Codes der Reaktionen, die in Moments dieses Typs gerade wählbar sind. */
+    val allowedReactionCodes: List<String>
+)
+
+/** Vom Vorstand gepflegte Reaktion. */
+data class MomentReactionDto(
+    val id: String,
+    val code: String,
+    val name: String,
+    val emoji: String,
+    val active: Boolean
+)
+
+/** Grenzen für Bilder und Videos, damit die App schon vor dem Upload prüfen kann. */
+data class MomentMediaLimitsDto(
+    val maxImageBytes: Long,
+    val maxVideoBytes: Long,
+    val maxVideoSeconds: Int,
+    val maxMediaPerResponse: Int,
+    val imageTypes: List<String>,
+    val videoTypes: List<String>
+)
+
+/** Typen, Reaktionen (auch ausgemusterte, für alte Moments) und Upload-Grenzen. */
+data class MomentConfigDto(
+    val types: List<MomentTypeDto>,
+    val reactions: List<MomentReactionDto>,
+    val mediaLimits: MomentMediaLimitsDto
+)
+
+data class SaveMomentTypeRequest(
+    @field:NotBlank(message = "name {validation.notBlank}")
+    @field:Size(max = 64, message = "name {validation.size.max}")
+    val name: String,
+
+    @field:NotBlank(message = "emoji {validation.notBlank}")
+    @field:Size(max = 16, message = "emoji {validation.size.max}")
+    val emoji: String,
+
+    @field:Size(max = 255, message = "description {validation.size.max}")
+    val description: String? = null,
+
+    val active: Boolean = true,
+
+    val allReactions: Boolean = true,
+
+    @field:Size(max = 100, message = "reactionIds {validation.size.maxEntries}")
+    val reactionIds: List<String> = emptyList()
+)
+
+data class SaveMomentReactionRequest(
+    @field:NotBlank(message = "name {validation.notBlank}")
+    @field:Size(max = 64, message = "name {validation.size.max}")
+    val name: String,
+
+    @field:NotBlank(message = "emoji {validation.notBlank}")
+    @field:Size(max = 16, message = "emoji {validation.size.max}")
+    val emoji: String,
+
+    val active: Boolean = true
 )

@@ -385,3 +385,39 @@ interface MemberInviteRedemptionRepository : JpaRepository<MemberInviteRedemptio
     @EntityGraph(attributePaths = ["user"])
     fun findByInviteIdIn(inviteIds: Collection<UUID>): List<MemberInviteRedemptionEntity>
 }
+
+@Repository
+interface KioskSessionRepository : JpaRepository<KioskSessionEntity, UUID> {
+    /** Sperrt die Zeile, damit parallele PIN-Versuche den Fehlerzähler nicht überholen. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select k from KioskSessionEntity k where k.id = :id")
+    fun findByIdForUpdate(@Param("id") id: UUID): Optional<KioskSessionEntity>
+
+    @EntityGraph(attributePaths = ["startedBy"])
+    fun findByEndedAtIsNullOrderByStartedAtAsc(): List<KioskSessionEntity>
+}
+
+@Repository
+interface MomentTypeRepository : JpaRepository<MomentTypeEntity, UUID> {
+    fun findByCode(code: String): Optional<MomentTypeEntity>
+    fun findAllByOrderBySortOrderAscNameAsc(): List<MomentTypeEntity>
+
+    @Query("select coalesce(max(t.sortOrder), 0) from MomentTypeEntity t")
+    fun findMaxSortOrder(): Int
+}
+
+@Repository
+interface MomentReactionRepository : JpaRepository<MomentReactionEntity, UUID> {
+    fun findByCode(code: String): Optional<MomentReactionEntity>
+    fun findAllByOrderBySortOrderAscNameAsc(): List<MomentReactionEntity>
+
+    @Query("select coalesce(max(r.sortOrder), 0) from MomentReactionEntity r")
+    fun findMaxSortOrder(): Int
+}
+
+@Repository
+interface MomentMediaRepository : JpaRepository<MomentMediaEntity, UUID> {
+    fun findByResponseIdIn(responseIds: Collection<UUID>): List<MomentMediaEntity>
+    fun countByMomentIdAndOwnerId(momentId: UUID, ownerId: UUID): Long
+    fun findByResponseIsNullAndCreatedAtBefore(cutoff: Instant): List<MomentMediaEntity>
+}

@@ -459,11 +459,14 @@ export interface StartMomentRequest {
 }
 
 export interface SubmitMomentResponseRequest {
-  reaction: string;
+  /** Code einer Reaktion; optional, wenn Text oder Bilder/Videos mitkommen. */
+  reaction?: string;
   statusText?: string;
   consent: boolean;
   latitude?: number;
   longitude?: number;
+  /** Zuvor hochgeladene Bilder/Videos (`uploadMomentMedia`). */
+  mediaIds?: string[];
 }
 
 export interface MomentSessionDto {
@@ -478,6 +481,8 @@ export interface MomentSessionDto {
   latitude: number | null;
   longitude: number | null;
   active: boolean;
+  topicName: string;
+  topicEmoji: string | null;
   responsesCount: number;
   expiresAt: string;
   createdAt: string;
@@ -489,11 +494,79 @@ export interface MomentResponseDto {
   momentId: string;
   userId: string;
   userName: string;
-  reaction: string;
+  reaction: string | null;
+  reactionName: string | null;
+  reactionEmoji: string | null;
   statusText: string | null;
   latitude: number | null;
   longitude: number | null;
   createdAt: string;
+  media: MomentMediaDto[];
+}
+
+export interface MomentMediaDto {
+  id: string;
+  kind: 'image' | 'video';
+  contentType: string;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+  durationSeconds: number | null;
+  /** Berechtigungsgeprüfter Content-Endpunkt (Videos mit HTTP-Range). */
+  url: string;
+  canDelete: boolean;
+}
+
+/** Vom Vorstand gepflegter Moment-Typ (`/api/v1/moment-config`). */
+export interface MomentTypeDto {
+  id: string;
+  code: string;
+  name: string;
+  emoji: string;
+  description: string | null;
+  active: boolean;
+  allReactions: boolean;
+  reactionIds: string[];
+  /** Codes der Reaktionen, die in Moments dieses Typs gerade wählbar sind. */
+  allowedReactionCodes: string[];
+}
+
+export interface MomentReactionDto {
+  id: string;
+  code: string;
+  name: string;
+  emoji: string;
+  active: boolean;
+}
+
+export interface MomentMediaLimitsDto {
+  maxImageBytes: number;
+  maxVideoBytes: number;
+  maxVideoSeconds: number;
+  maxMediaPerResponse: number;
+  imageTypes: string[];
+  videoTypes: string[];
+}
+
+export interface MomentConfigDto {
+  types: MomentTypeDto[];
+  reactions: MomentReactionDto[];
+  mediaLimits: MomentMediaLimitsDto;
+}
+
+export interface SaveMomentTypeRequest {
+  name: string;
+  emoji: string;
+  description?: string;
+  active: boolean;
+  allReactions: boolean;
+  reactionIds: string[];
+}
+
+export interface SaveMomentReactionRequest {
+  name: string;
+  emoji: string;
+  active: boolean;
 }
 
 export interface GeoJsonGeometryDto {
@@ -522,6 +595,8 @@ export interface MomentSummaryDto {
   momentId: string;
   title: string;
   topicType: string;
+  topicName: string;
+  topicEmoji: string | null;
   totalResponses: number;
   uniqueParticipants: number;
   summary: string;

@@ -14,12 +14,19 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ApiError } from '../api/api-client.service';
 import type {
   EventSummary,
+  MomentConfigDto,
   MomentDetailDto,
+  MomentMediaDto,
+  MomentReactionDto,
   MomentSessionDto,
   MomentSummaryDto,
+  MomentTypeDto,
   StartMomentRequest,
   SubmitMomentResponseRequest,
 } from '../api/api.types';
+import { AuthService } from '../auth/auth.service';
+import { I18nService } from '../i18n/i18n.service';
+import { MediaPrepareError, MomentMediaUploader, PreparedMedia } from './moment-media';
 import { AsyncState } from '../member/async-state';
 import { MemberApiService } from '../member/member-api.service';
 import { formatDateTime } from '../member/member-format';
@@ -30,20 +37,11 @@ import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
 
-export interface TopicOption {
-  value: string;
-  /** i18n-Schlüssel der Bezeichnung. */
-  labelKey: string;
-  emoji: string;
-  /** i18n-Schlüssel der Beschreibung. */
-  descriptionKey: string;
-}
-
-export interface QuickReaction {
-  value: string;
-  /** i18n-Schlüssel der Bezeichnung. */
-  labelKey: string;
-  emoji: string;
+/** Ausgewählte Datei im Beitragsdialog samt Upload-Fortschritt. */
+interface PendingMedia {
+  media: PreparedMedia;
+  /** 0–1 während des Uploads, `null` vorher. */
+  progress: number | null;
 }
 
 /**
@@ -75,6 +73,9 @@ export interface QuickReaction {
             <h1 id="moments-title">Moments</h1>
           </div>
           <div class="header-actions">
+            @if (canManage()) {
+              <a class="member-back" routerLink="/board/moments">{{ 'moments.manageLink' | t }}</a>
+            }
             @if (eventId()) {
               <a class="member-back" [routerLink]="['/events', eventId()]">{{ 'moments.backToEvent' | t }}</a>
             } @else {
@@ -188,8 +189,8 @@ export interface QuickReaction {
                   (click)="selectSession(session.id)"
                 >
                   <div class="session-card-header">
-                    <span class="topic-chip" [attr.data-topic]="session.topicType">
-                      {{ getTopicLabel(session.topicType) }}
+                    <span class="topic-chip">
+                      {{ topicLabel(session) }}
                     </span>
                     <span class="session-time-remaining">
                       {{ formatRemainingTime(session.expiresAt) }}
@@ -281,29 +282,40 @@ export interface QuickReaction {
               <div class="quick-reaction-bar">
                 <span class="quick-label">{{ 'moments.detail.quickLabel' | t }}</span>
                 <div class="quick-buttons">
-                  @for (q of quickReactions; track q.value) {
+                  @if (detail.session.active) {
+                    @for (q of reactionsFor(detail.session.topicType); track q.code) {
+                      <button
+                        type="button"
+                        class="quick-btn"
+                        (click)="submitQuickReaction(detail.session.id, q.code)"
+                        [title]="q.name"
+                      >
+                        {{ q.emoji }} {{ q.name }}
+                      </button>
+                    }
                     <button
                       type="button"
-                      class="quick-btn"
-                      (click)="submitQuickReaction(detail.session.id, q.value)"
-                      [title]="q.labelKey | t"
+                      class="quick-btn btn-custom"
+                      (click)="openRespondModal(detail.session.id)"
                     >
-                      {{ q.emoji }} {{ q.labelKey | t }}
+                      {{ 'moments.detail.custom' | t }}
                     </button>
+                    <button
+                      type="button"
+                      class="quick-btn btn-custom"
+                      (click)="openRespondModal(detail.session.id, true)"
+                    >
+                      <vereint-icon name="camera" /> {{ 'moments.detail.shareMedia' | t }}
+                    </button>
+                  } @else {
+                    <span class="quick-label">{{ 'moments.detail.ended' | t }}</span>
                   }
-                  <button
-                    type="button"
-                    class="quick-btn btn-custom"
-                    (click)="openRespondModal(detail.session.id)"
-                  >
-                    {{ 'moments.detail.custom' | t }}
-                  </button>
                 </div>
               </div>
 
               <!-- Ansichten: Timeline oder Map -->
               @if (activeTab() === 'timeline') {
-                <app-moment-timeline [responses]="detail.responses" />
+                <app-moment-timeline [responses]="detail.responses" (removeMedia)="removeMedia(detail.session.id, $event)" />
               } @else {
                 <app-moment-map
                   [mapData]="detail.mapGeoJson"
@@ -321,8 +333,8 @@ export interface QuickReaction {
                 @for (item of history(); track item.momentId) {
                   <li class="history-item">
                     <div class="history-item-top">
-                      <span class="topic-chip" [attr.data-topic]="item.topicType">
-                        {{ getTopicLabel(item.topicType) }}
+                      <span class="topic-chip">
+                        {{ topicLabel(item) }}
                       </span>
                       <strong class="history-item-title">{{ item.title }}</strong>
                       <time class="history-time">{{ formatTime(item.completedAt) }}</time>
@@ -337,6 +349,9 @@ export interface QuickReaction {
                         <vereint-icon name="chat" />
                         {{ 'moments.history.contributions' | t: { count: item.totalResponses } }}
                       </span>
+                      <button type="button" class="member-button btn-sm btn-subtle" (click)="selectSession(item.momentId)">
+                        {{ 'moments.history.view' | t }}
+                      </button>
                     </div>
                   </li>
                 }
@@ -350,7 +365,7 @@ export interface QuickReaction {
       <vereint-modal
         [open]="startModalOpen()"
         [title]="'moments.start.title' | t"
-        (close)="closeStartModal()"
+        (closed)="closeStartModal()"
       >
         <form class="member-form" (ngSubmit)="submitStartMoment()">
           <div class="form-group">
@@ -370,23 +385,27 @@ export interface QuickReaction {
           <div class="form-group">
             <label class="form-label">{{ 'moments.start.topicLabel' | t }}</label>
             <div class="topic-grid">
-              @for (opt of topicOptions; track opt.value) {
+              @for (opt of activeTypes(); track opt.code) {
                 <label
                   class="topic-option"
-                  [class.is-selected]="newTopicType === opt.value"
+                  [class.is-selected]="newTopicType === opt.code"
                 >
                   <input
                     type="radio"
                     name="topicType"
-                    [value]="opt.value"
+                    [value]="opt.code"
                     [(ngModel)]="newTopicType"
                   />
                   <span class="topic-option-emoji">{{ opt.emoji }}</span>
                   <span class="topic-option-info">
-                    <strong>{{ opt.labelKey | t }}</strong>
-                    <small>{{ opt.descriptionKey | t }}</small>
+                    <strong>{{ opt.name }}</strong>
+                    @if (opt.description) {
+                      <small>{{ opt.description }}</small>
+                    }
                   </span>
                 </label>
+              } @empty {
+                <p class="form-hint">{{ 'moments.start.noTypes' | t }}</p>
               }
             </div>
           </div>
@@ -450,7 +469,7 @@ export interface QuickReaction {
             <button
               type="submit"
               class="member-button btn-primary"
-              [disabled]="submittingForm() || !newTitle.trim()"
+              [disabled]="submittingForm() || !newTitle.trim() || !newTopicType"
             >
               {{ (submittingForm() ? 'moments.start.submitting' : 'moments.start.submit') | t }}
             </button>
@@ -462,24 +481,77 @@ export interface QuickReaction {
       <vereint-modal
         [open]="respondModalOpen()"
         [title]="'moments.respond.title' | t"
-        (close)="closeRespondModal()"
+        (closed)="closeRespondModal()"
       >
         <form class="member-form" (ngSubmit)="submitResponseForm()">
           <div class="form-group">
             <label class="form-label">{{ 'moments.respond.reactionLabel' | t }}</label>
             <div class="reaction-picker-grid">
-              @for (q of quickReactions; track q.value) {
+              @for (q of respondReactions(); track q.code) {
                 <button
                   type="button"
                   class="reaction-choice-btn"
-                  [class.is-selected]="respondReaction === q.value"
-                  (click)="respondReaction = q.value"
+                  [class.is-selected]="respondReaction === q.code"
+                  [attr.aria-pressed]="respondReaction === q.code"
+                  (click)="toggleRespondReaction(q.code)"
                 >
                   <span class="reaction-emoji">{{ q.emoji }}</span>
-                  <span class="reaction-name">{{ q.labelKey | t }}</span>
+                  <span class="reaction-name">{{ q.name }}</span>
                 </button>
               }
             </div>
+          </div>
+
+          <div class="form-group">
+            <span class="form-label">{{ 'moments.media.label' | t }}</span>
+            @if (pendingMedia().length > 0) {
+              <ul class="pending-media">
+                @for (item of pendingMedia(); track item.media.previewUrl; let i = $index) {
+                  <li class="pending-media-item">
+                    @if (item.media.kind === 'video') {
+                      <video [src]="item.media.previewUrl" muted playsinline preload="metadata"></video>
+                    } @else {
+                      <img [src]="item.media.previewUrl" [alt]="item.media.name" />
+                    }
+                    @if (item.progress !== null) {
+                      <span class="pending-progress" role="progressbar" [attr.aria-valuenow]="progressPercent(item)" aria-valuemin="0" aria-valuemax="100">
+                        <span [style.width.%]="progressPercent(item)"></span>
+                      </span>
+                    } @else {
+                      <button
+                        type="button"
+                        class="pending-remove"
+                        [attr.aria-label]="'moments.media.remove' | t"
+                        (click)="removePendingMedia(i)"
+                      >
+                        <vereint-icon name="close" />
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+            @if (mediaLimits(); as limits) {
+              @if (pendingMedia().length < limits.maxMediaPerResponse) {
+                <label class="member-button btn-sm btn-subtle media-pick">
+                  <vereint-icon name="camera" /> {{ 'moments.media.add' | t }}
+                  <input
+                    type="file"
+                    class="visually-hidden"
+                    accept="image/*,video/mp4,video/quicktime"
+                    multiple
+                    [disabled]="submittingResponse()"
+                    (change)="onMediaSelected($event)"
+                  />
+                </label>
+              }
+              <small class="form-hint">
+                {{ 'moments.media.hint' | t: { count: limits.maxMediaPerResponse, seconds: limits.maxVideoSeconds, mb: maxVideoMb() } }}
+              </small>
+            }
+            @if (mediaError()) {
+              <p class="form-error-msg" role="alert">{{ mediaError() }}</p>
+            }
           </div>
 
           <div class="form-group">
@@ -525,7 +597,7 @@ export interface QuickReaction {
             <button
               type="submit"
               class="member-button btn-primary"
-              [disabled]="submittingResponse() || !respondReaction"
+              [disabled]="submittingResponse() || !canSubmitResponse()"
             >
               {{ (submittingResponse() ? 'moments.respond.submitting' : 'moments.respond.submit') | t }}
             </button>
@@ -1010,23 +1082,22 @@ export class MomentsComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly auth = inject(AuthService);
+  private readonly i18n = inject(I18nService);
+  private readonly uploader = inject(MomentMediaUploader);
 
-  protected readonly topicOptions: TopicOption[] = [
-    topic('toast', '🍻'),
-    topic('prayer', '🙏'),
-    topic('cheer', '📣'),
-    topic('checkin', '📍'),
-    topic('other', '✨'),
-  ];
+  /** Vom Vorstand gepflegte Typen und Reaktionen samt Upload-Grenzen. */
+  protected readonly config = signal<MomentConfigDto | null>(null);
+  /** Vorstand/Admin sehen den Link zur Verwaltung der Typen und Reaktionen. */
+  protected readonly canManage = signal(false);
 
-  protected readonly quickReactions: QuickReaction[] = [
-    { value: 'TOAST', labelKey: 'moments.reactions.toast', emoji: '🍻' },
-    { value: 'PRAYER', labelKey: 'moments.reactions.prayer', emoji: '🙏' },
-    { value: 'CHEER', labelKey: 'moments.reactions.cheer', emoji: '📣' },
-    { value: 'THUMBS_UP', labelKey: 'moments.reactions.thumbsUp', emoji: '👍' },
-    { value: 'CELEBRATE', labelKey: 'moments.reactions.celebrate', emoji: '🎉' },
-    { value: 'HEART', labelKey: 'moments.reactions.heart', emoji: '❤️' },
-  ];
+  protected readonly activeTypes = computed<MomentTypeDto[]>(
+    () => this.config()?.types.filter((type) => type.active) ?? [],
+  );
+  protected readonly mediaLimits = computed(() => this.config()?.mediaLimits ?? null);
+  protected readonly maxVideoMb = computed(() =>
+    Math.round((this.mediaLimits()?.maxVideoBytes ?? 0) / (1024 * 1024)),
+  );
 
   // Async States
   protected readonly loadEventsState = new AsyncState<EventSummary[]>();
@@ -1052,7 +1123,7 @@ export class MomentsComponent implements OnInit, OnDestroy {
   protected readonly submittingForm = signal(false);
   protected readonly formError = signal<string | null>(null);
   protected newTitle = '';
-  protected newTopicType = 'toast';
+  protected newTopicType = '';
   protected newMessage = '';
   protected newDurationMinutes = 60;
   protected newConsent = false;
@@ -1064,8 +1135,11 @@ export class MomentsComponent implements OnInit, OnDestroy {
   protected readonly respondingSessionId = signal<string | null>(null);
   protected readonly submittingResponse = signal(false);
   protected readonly respondError = signal<string | null>(null);
-  protected respondReaction = 'TOAST';
+  protected respondReaction: string | null = null;
   protected respondStatusText = '';
+  protected readonly pendingMedia = signal<PendingMedia[]>([]);
+  protected readonly mediaError = signal<string | null>(null);
+  private activeUpload: { abort: () => void } | null = null;
   protected respondConsent = false;
   protected respondLatitude: number | null = null;
   protected respondLongitude: number | null = null;
@@ -1093,6 +1167,17 @@ export class MomentsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
+    this.api.getMomentConfig().subscribe({
+      next: (config) => {
+        this.config.set(config);
+        if (!this.newTopicType) this.newTopicType = this.activeTypes()[0]?.code ?? '';
+      },
+    });
+    void this.auth.getSession().then((session) => {
+      const roles = session?.roles ?? [];
+      this.canManage.set(roles.includes('board') || roles.includes('admin'));
+    });
+
     // Route Parameter prüfen (z.B. /events/:eventId/moments)
     const paramEventId = this.route.snapshot.paramMap.get('eventId');
     if (paramEventId) {
@@ -1111,6 +1196,8 @@ export class MomentsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.activeUpload?.abort();
+    this.clearPendingMedia();
     this.loadEventsState.destroy();
     this.loadSessionsState.destroy();
     this.loadDetailState.destroy();
@@ -1190,7 +1277,7 @@ export class MomentsComponent implements OnInit, OnDestroy {
   // --- Start Moment Modal & Geolocation ---
   protected openStartModal(): void {
     this.newTitle = '';
-    this.newTopicType = 'toast';
+    this.newTopicType = this.activeTypes()[0]?.code ?? '';
     this.newMessage = '';
     this.newDurationMinutes = 60;
     this.newConsent = false;
@@ -1270,20 +1357,119 @@ export class MomentsComponent implements OnInit, OnDestroy {
   }
 
   // --- Respond Modal & Quick Reactions ---
-  protected openRespondModal(sessionId: string): void {
+  protected openRespondModal(sessionId: string, pickMedia = false): void {
     this.respondingSessionId.set(sessionId);
-    this.respondReaction = 'TOAST';
+    this.respondReaction = null;
     this.respondStatusText = '';
     this.respondConsent = false;
     this.respondLatitude = null;
     this.respondLongitude = null;
     this.respondGeoStatus.set(null);
     this.respondError.set(null);
+    this.mediaError.set(null);
+    this.clearPendingMedia();
     this.respondModalOpen.set(true);
+    if (pickMedia && isPlatformBrowser(this.platformId)) {
+      // Dateiauswahl direkt öffnen, sobald der Dialog gerendert ist.
+      setTimeout(() => {
+        document.querySelector<HTMLInputElement>('.media-pick input[type=file]')?.click();
+      });
+    }
   }
 
   protected closeRespondModal(): void {
+    if (this.submittingResponse()) {
+      this.activeUpload?.abort();
+    }
+    this.clearPendingMedia();
     this.respondModalOpen.set(false);
+  }
+
+  /** Reaktionen, die in Moments dieses Typs erlaubt sind (unbekannter Typ: alle aktiven). */
+  protected reactionsFor(topicType: string): MomentReactionDto[] {
+    const config = this.config();
+    if (!config) return [];
+    const type = config.types.find((t) => t.code === topicType);
+    const active = config.reactions.filter((r) => r.active);
+    if (!type) return active;
+    return active.filter((r) => type.allowedReactionCodes.includes(r.code));
+  }
+
+  protected respondReactions(): MomentReactionDto[] {
+    const sessionId = this.respondingSessionId();
+    const session =
+      this.activeSessions().find((s) => s.id === sessionId) ??
+      (this.selectedDetail()?.session.id === sessionId ? this.selectedDetail()?.session : undefined);
+    return session ? this.reactionsFor(session.topicType) : [];
+  }
+
+  /** Eine Reaktion ist optional; ein zweiter Tipp nimmt sie wieder weg. */
+  protected toggleRespondReaction(code: string): void {
+    this.respondReaction = this.respondReaction === code ? null : code;
+  }
+
+  protected canSubmitResponse(): boolean {
+    return Boolean(this.respondReaction || this.respondStatusText.trim() || this.pendingMedia().length > 0);
+  }
+
+  protected async onMediaSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    const limits = this.mediaLimits();
+    if (!limits || files.length === 0) return;
+    this.mediaError.set(null);
+
+    for (const file of files) {
+      if (this.pendingMedia().length >= limits.maxMediaPerResponse) {
+        this.mediaError.set(translate('moments.media.errors.tooMany', { count: limits.maxMediaPerResponse }));
+        break;
+      }
+      try {
+        const media = await this.uploader.prepare(file, limits);
+        this.pendingMedia.update((list) => [...list, { media, progress: null }]);
+      } catch (error) {
+        this.mediaError.set(
+          error instanceof MediaPrepareError ? error.message : translate('moments.media.errors.unsupported'),
+        );
+      }
+    }
+  }
+
+  protected removePendingMedia(index: number): void {
+    const item = this.pendingMedia()[index];
+    if (item) URL.revokeObjectURL(item.media.previewUrl);
+    this.pendingMedia.update((list) => list.filter((_, i) => i !== index));
+  }
+
+  protected progressPercent(item: PendingMedia): number {
+    return Math.round((item.progress ?? 0) * 100);
+  }
+
+  private clearPendingMedia(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.pendingMedia().forEach((item) => URL.revokeObjectURL(item.media.previewUrl));
+    }
+    this.pendingMedia.set([]);
+  }
+
+  /** Lädt die gewählten Dateien nacheinander hoch und liefert ihre Kennungen. */
+  private async uploadPendingMedia(eventId: string, sessionId: string): Promise<string[]> {
+    const ids: string[] = [];
+    const items = this.pendingMedia();
+    for (let index = 0; index < items.length; index++) {
+      const setProgress = (fraction: number) =>
+        this.pendingMedia.update((list) => list.map((entry, i) => (i === index ? { ...entry, progress: fraction } : entry)));
+      setProgress(0);
+      const upload = this.uploader.upload(eventId, sessionId, items[index].media, this.i18n.language(), setProgress);
+      this.activeUpload = upload;
+      try {
+        ids.push((await upload.result).id);
+      } finally {
+        this.activeUpload = null;
+      }
+    }
+    return ids;
   }
 
   protected onRespondConsentToggle(event: Event): void {
@@ -1315,20 +1501,31 @@ export class MomentsComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected submitResponseForm(): void {
+  protected async submitResponseForm(): Promise<void> {
     const eId = this.eventId();
     const sId = this.respondingSessionId();
-    if (!eId || !sId || !this.respondReaction) return;
+    if (!eId || !sId || !this.canSubmitResponse()) return;
 
     this.submittingResponse.set(true);
     this.respondError.set(null);
 
+    let mediaIds: string[];
+    try {
+      mediaIds = await this.uploadPendingMedia(eId, sId);
+    } catch (err: unknown) {
+      this.submittingResponse.set(false);
+      this.pendingMedia.update((list) => list.map((entry) => ({ ...entry, progress: null })));
+      this.respondError.set(err instanceof ApiError ? err.message : translate('moments.media.errors.uploadFailed'));
+      return;
+    }
+
     const payload: SubmitMomentResponseRequest = {
-      reaction: this.respondReaction,
+      reaction: this.respondReaction ?? undefined,
       statusText: this.respondStatusText.trim() || undefined,
       consent: this.respondConsent,
       latitude: this.respondLatitude ?? undefined,
       longitude: this.respondLongitude ?? undefined,
+      mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
     };
 
     this.api.submitMomentResponse(eId, sId, payload).subscribe({
@@ -1339,12 +1536,25 @@ export class MomentsComponent implements OnInit, OnDestroy {
       },
       error: (err: unknown) => {
         this.submittingResponse.set(false);
+        // Hochgeladene Dateien bleiben serverseitig liegen und werden aufgeräumt;
+        // beim erneuten Absenden werden sie neu hochgeladen.
+        this.pendingMedia.update((list) => list.map((entry) => ({ ...entry, progress: null })));
         if (err instanceof ApiError) {
           this.respondError.set(err.message || translate('moments.respond.error'));
         } else {
           this.respondError.set(translate('moments.respond.failed'));
         }
       },
+    });
+  }
+
+  /** Entfernt ein Bild/Video aus einem Beitrag (nach Rückfrage). */
+  protected removeMedia(sessionId: string, media: MomentMediaDto): void {
+    const eId = this.eventId();
+    if (!eId || !isPlatformBrowser(this.platformId)) return;
+    if (!window.confirm(translate('moments.media.removeConfirm'))) return;
+    this.api.deleteMomentMedia(eId, sessionId, media.id).subscribe({
+      next: () => this.selectSession(sessionId),
     });
   }
 
@@ -1376,9 +1586,9 @@ export class MomentsComponent implements OnInit, OnDestroy {
   }
 
   // --- Formatters & Helpers ---
-  protected getTopicLabel(topic: string): string {
-    const found = this.topicOptions.find((t) => t.value === topic);
-    return found ? `${found.emoji} ${translate(found.labelKey)}` : topic;
+  /** Typ-Anzeige mit Emoji; Name und Emoji legt der Vorstand fest. */
+  protected topicLabel(item: { topicName: string; topicEmoji: string | null }): string {
+    return item.topicEmoji ? `${item.topicEmoji} ${item.topicName}` : item.topicName;
   }
 
   protected formatTime(iso: string): string {
@@ -1397,14 +1607,4 @@ export class MomentsComponent implements OnInit, OnDestroy {
     const hours = Math.floor(minutes / 60);
     return translate('moments.remaining.hours', { count: hours });
   }
-}
-
-/** Themenoption; Bezeichnung und Beschreibung liegen unter `moments.topics.<value>`. */
-function topic(value: string, emoji: string): TopicOption {
-  return {
-    value,
-    labelKey: `moments.topics.${value}.label`,
-    emoji,
-    descriptionKey: `moments.topics.${value}.description`,
-  };
 }

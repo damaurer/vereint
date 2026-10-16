@@ -5,12 +5,81 @@ import { describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
 import type {
   EventSummary,
+  MomentConfigDto,
   MomentDetailDto,
   MomentSessionDto,
   MomentSummaryDto,
 } from '../api/api.types';
+import { AuthService } from '../auth/auth.service';
 import { MemberApiService } from '../member/member-api.service';
+import { MomentMediaUploader } from './moment-media';
 import { MomentsComponent } from './moments.component';
+
+const uploader = {
+  prepare: vi.fn(async (file: File) => ({
+    kind: file.type.startsWith('video/') ? 'video' : 'image',
+    blob: file,
+    contentType: file.type,
+    previewUrl: `blob:${file.name}`,
+    name: file.name,
+  })),
+  upload: vi.fn((_e: string, _m: string, media: { name: string }, _lang: string, onProgress: (f: number) => void) => {
+    onProgress(1);
+    return { result: Promise.resolve({ id: `media-${media.name}` }), abort: () => undefined };
+  }),
+};
+
+const mockConfig: MomentConfigDto = {
+  types: [
+    {
+      id: 't-1',
+      code: 'toast',
+      name: 'Gemeinsames Anstoßen',
+      emoji: '🍻',
+      description: 'Für Stammtische & Feste',
+      active: true,
+      allReactions: false,
+      reactionIds: ['r-toast', 'r-heart'],
+      allowedReactionCodes: ['TOAST', 'HEART'],
+    },
+    {
+      id: 't-2',
+      code: 'prayer',
+      name: 'Gebet & Fürbitte',
+      emoji: '🙏',
+      description: null,
+      active: true,
+      allReactions: true,
+      reactionIds: [],
+      allowedReactionCodes: ['TOAST', 'PRAYER', 'HEART'],
+    },
+    {
+      id: 't-3',
+      code: 'retired',
+      name: 'Alter Typ',
+      emoji: '🗃️',
+      description: null,
+      active: false,
+      allReactions: true,
+      reactionIds: [],
+      allowedReactionCodes: ['TOAST', 'PRAYER', 'HEART'],
+    },
+  ],
+  reactions: [
+    { id: 'r-toast', code: 'TOAST', name: 'Anstoßen', emoji: '🍻', active: true },
+    { id: 'r-prayer', code: 'PRAYER', name: 'Gebet', emoji: '🙏', active: true },
+    { id: 'r-heart', code: 'HEART', name: 'Herz', emoji: '❤️', active: true },
+    { id: 'r-old', code: 'OLD', name: 'Alt', emoji: '🦖', active: false },
+  ],
+  mediaLimits: {
+    maxImageBytes: 10 * 1024 * 1024,
+    maxVideoBytes: 100 * 1024 * 1024,
+    maxVideoSeconds: 60,
+    maxMediaPerResponse: 4,
+    imageTypes: ['image/jpeg', 'image/png', 'image/gif'],
+    videoTypes: ['video/mp4', 'video/quicktime'],
+  },
+};
 
 const mockEvents: EventSummary[] = [
   {
@@ -36,6 +105,8 @@ const mockSession: MomentSessionDto = {
   latitude: 48.137,
   longitude: 11.575,
   active: true,
+  topicName: 'Gemeinsames Anstoßen',
+  topicEmoji: '🍻',
   responsesCount: 2,
   expiresAt: '2026-09-16T20:00:00Z',
   createdAt: '2026-09-16T18:30:00Z',
@@ -51,10 +122,13 @@ const mockDetail: MomentDetailDto = {
       userId: 'u-1',
       userName: 'Max Mustermann',
       reaction: 'TOAST',
+      reactionName: 'Anstoßen',
+      reactionEmoji: '🍻',
       statusText: 'Prost!',
       latitude: 48.137,
       longitude: 11.575,
       createdAt: '2026-09-16T18:30:00Z',
+      media: [],
     },
   ],
   mapGeoJson: {
@@ -74,6 +148,8 @@ const mockHistory: MomentSummaryDto[] = [
     momentId: 'm-archived',
     title: 'Früheres Gebet',
     topicType: 'prayer',
+    topicName: 'Gebet & Fürbitte',
+    topicEmoji: '🙏',
     totalResponses: 4,
     uniqueParticipants: 3,
     summary: '3 Teilnehmer haben 4 Beiträge geteilt.',
@@ -90,7 +166,10 @@ describe('MomentsComponent', () => {
     submitMomentResponse: ReturnType<typeof vi.fn>;
     completeMoment: ReturnType<typeof vi.fn>;
     listMomentHistory: ReturnType<typeof vi.fn>;
+    getMomentConfig: ReturnType<typeof vi.fn>;
+    deleteMomentMedia: ReturnType<typeof vi.fn>;
   };
+  let roles: string[];
 
   const createComponent = async (paramEventId: string | null = null, queryMomentId: string | null = null) => {
     TestBed.configureTestingModule({
@@ -98,6 +177,8 @@ describe('MomentsComponent', () => {
       providers: [
         provideRouter([]),
         { provide: MemberApiService, useValue: api },
+        { provide: AuthService, useValue: { getSession: () => Promise.resolve({ roles }) } },
+        { provide: MomentMediaUploader, useValue: uploader },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -132,10 +213,13 @@ describe('MomentsComponent', () => {
           userId: 'u-2',
           userName: 'Lisa',
           reaction: 'CHEERS',
+          reactionName: 'Prost',
+          reactionEmoji: '🍻',
           statusText: 'Cheers!',
           latitude: null,
           longitude: null,
           createdAt: '2026-09-16T18:45:00Z',
+          media: [],
         }),
       ),
       completeMoment: vi.fn(() =>
@@ -143,6 +227,8 @@ describe('MomentsComponent', () => {
           momentId: 'm-1',
           title: 'Stammtisch Anstoßen',
           topicType: 'toast',
+          topicName: 'Gemeinsames Anstoßen',
+          topicEmoji: '🍻',
           totalResponses: 2,
           uniqueParticipants: 1,
           summary: '1 Teilnehmer hat 2 Beiträge geteilt.',
@@ -150,7 +236,10 @@ describe('MomentsComponent', () => {
         }),
       ),
       listMomentHistory: vi.fn(() => of(mockHistory)),
+      getMomentConfig: vi.fn(() => of(mockConfig)),
+      deleteMomentMedia: vi.fn(() => of(null)),
     };
+    roles = ['member'];
   });
 
   it('loads events and active moments', async () => {
@@ -221,14 +310,82 @@ describe('MomentsComponent', () => {
     comp.respondStatusText = 'Segenswünsche aus Hamburg';
     comp.respondConsent = false;
 
-    comp.submitResponseForm();
+    await comp.submitResponseForm();
     expect(api.submitMomentResponse).toHaveBeenCalledWith('e-1', 'm-1', {
       reaction: 'PRAYER',
       statusText: 'Segenswünsche aus Hamburg',
       consent: false,
       latitude: undefined,
       longitude: undefined,
+      mediaIds: undefined,
     });
+  });
+
+  it('offers only the active types and the reactions the board allowed for the type', async () => {
+    const fixture = await createComponent('e-1');
+    const comp = fixture.componentInstance as any;
+
+    expect(comp.activeTypes().map((t: { code: string }) => t.code)).toEqual(['toast', 'prayer']);
+    // Typ „toast“ erlaubt nur Anstoßen und Herz.
+    const quick = Array.from(fixture.nativeElement.querySelectorAll('.quick-btn') as NodeListOf<HTMLElement>).map(
+      (button) => button.textContent?.trim(),
+    );
+    expect(quick).toContain('🍻 Anstoßen');
+    expect(quick).toContain('❤️ Herz');
+    expect(quick).not.toContain('🙏 Gebet');
+
+    comp.openStartModal();
+    fixture.detectChanges();
+    const text = html(fixture);
+    expect(text).toContain('Gebet & Fürbitte');
+    expect(text).not.toContain('Alter Typ');
+    expect(comp.newTopicType).toBe('toast');
+  });
+
+  it('shows the management link only to board and admin', async () => {
+    const member = await createComponent('e-1');
+    expect(member.nativeElement.querySelector('a[href="/board/moments"]')).toBeNull();
+    TestBed.resetTestingModule();
+
+    roles = ['member', 'board'];
+    const board = await createComponent('e-1');
+    expect(board.nativeElement.querySelector('a[href="/board/moments"]')).not.toBeNull();
+  });
+
+  it('uploads chosen photos and videos and sends them with the contribution', async () => {
+    const fixture = await createComponent('e-1');
+    const comp = fixture.componentInstance as any;
+
+    comp.openRespondModal('m-1');
+    const input = document.createElement('input');
+    Object.defineProperty(input, 'files', {
+      value: [
+        new File(['a'], 'foto.jpg', { type: 'image/jpeg' }),
+        new File(['b'], 'clip.mp4', { type: 'video/mp4' }),
+      ],
+    });
+    await comp.onMediaSelected({ target: input } as unknown as Event);
+    expect(comp.pendingMedia().length).toBe(2);
+    expect(comp.canSubmitResponse()).toBe(true);
+
+    await comp.submitResponseForm();
+    expect(api.submitMomentResponse).toHaveBeenCalledWith('e-1', 'm-1', {
+      reaction: undefined,
+      statusText: undefined,
+      consent: false,
+      latitude: undefined,
+      longitude: undefined,
+      mediaIds: ['media-foto.jpg', 'media-clip.mp4'],
+    });
+  });
+
+  it('removes a photo or video after confirmation and reloads the moment', async () => {
+    const fixture = await createComponent('e-1');
+    const comp = fixture.componentInstance as any;
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    comp.removeMedia('m-1', { id: 'media-1' });
+    expect(api.deleteMomentMedia).toHaveBeenCalledWith('e-1', 'm-1', 'media-1');
   });
 
   it('allows completing and archiving an active moment', async () => {

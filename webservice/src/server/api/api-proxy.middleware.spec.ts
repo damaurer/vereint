@@ -3,7 +3,8 @@ import type { Server } from 'node:http';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionData } from '../auth/auth.types';
 import { applyTestEnvironmentOverrides, serverEnvironment } from '../config/environment';
-import { API_PROXY_MAX_UPLOAD, apiProxy } from './api-proxy.middleware';
+import { request as httpRequest } from 'node:http';
+import { API_PROXY_MAX_UPLOAD, apiProxy, resolveTargetUrl } from './api-proxy.middleware';
 
 describe('api-proxy.middleware', () => {
   let app: express.Express;
@@ -267,5 +268,44 @@ describe('api-proxy.middleware', () => {
       `${serverEnvironment.springApiBaseUrl}/api/v1/member-invites/preview`,
       `${serverEnvironment.springApiBaseUrl}/api/v1/member-invites/register`,
     ]);
+  });
+
+  describe('path confinement', () => {
+    it('keeps regular API paths and their query unchanged', () => {
+      expect(resolveTargetUrl('/api/v1/events/abc/chat?limit=20')).toBe(
+        `${serverEnvironment.springApiBaseUrl}/api/v1/events/abc/chat?limit=20`,
+      );
+    });
+
+    it.each([
+      '/api/v1/../../actuator/env',
+      '/api/v1/./../v3/api-docs',
+      '/api/v1/%2e%2e/%2e%2e/v3/api-docs',
+      '/api/v1/%2E%2E/actuator',
+      '/api/v1/users%2f..%2f..%2factuator',
+      '/api/v1/..%5c..%5cactuator',
+      '/api/v1/users\\..\\..\\actuator',
+    ])('rejects %s', (path) => {
+      expect(resolveTargetUrl(path)).toBeNull();
+    });
+
+    it('answers 400 and never calls upstream for a traversal attempt', async () => {
+      const upstream = vi.fn();
+      globalThis.fetch = upstream as unknown as typeof fetch;
+
+      // Roher Pfad über node:http, weil `fetch` `..` schon im Client auflöst.
+      const status = await new Promise<number>((resolve, reject) => {
+        const { hostname, port } = new URL(baseUrl);
+        const req = httpRequest({ hostname, port, path: '/api/v1/%2e%2e/%2e%2e/v3/api-docs' }, (res) => {
+          res.resume();
+          resolve(res.statusCode ?? 0);
+        });
+        req.on('error', reject);
+        req.end();
+      });
+
+      expect(status).toBe(400);
+      expect(upstream).not.toHaveBeenCalled();
+    });
   });
 });

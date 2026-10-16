@@ -21,7 +21,8 @@ import { sanitizeTransferState } from './server/authorization/transfer-state';
 import { assertServerEnvironment, serverEnvironment, ssrAllowedHosts } from './server/config/environment';
 import { authRoutes } from './server/routes/auth.routes';
 import { inviteRoutes } from './server/invites/invite.routes';
-import { API_PROXY_MAX_UPLOAD, apiProxy } from './server/api/api-proxy.middleware';
+import { API_PROXY_MAX_UPLOAD, apiProxy, mediaStreamProxy } from './server/api/api-proxy.middleware';
+import { apiRateLimits, crossSiteRequestGuard, loginRateLimit } from './server/security/request-guards';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 const app = express();
@@ -29,15 +30,24 @@ const angularApp = new AngularNodeAppEngine({
   allowedHosts: ssrAllowedHosts(serverEnvironment.publicBaseUrl, process.env['NG_ALLOWED_HOSTS']),
 });
 
+// Caddy steht im privaten Container-Netz davor; nur von dort wird
+// `X-Forwarded-For` übernommen. Direkte Clients können ihre IP nicht fälschen.
+app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+app.disable('x-powered-by');
+
 // Kompression vor allen statischen Routen; `no-store`-Antworten bleiben
 // unverändert komprimierbar, weil `Vary: Accept-Encoding` gesetzt wird.
 app.use(compression());
 app.use(attachCspNonce);
 app.use(securityHeaders);
 app.use(applyDeliveryHeaders);
+app.use(crossSiteRequestGuard);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(attachIdentity);
+app.use('/api', apiRateLimits);
+app.use('/api/auth/login', loginRateLimit);
+app.use('/oauth2/authorization', loginRateLimit);
 
 /**
  * Beim Logout wird die kurz gecachte Zugriffsentscheidung verworfen, damit eine
@@ -54,6 +64,8 @@ app.use('/login/oauth2/code', authRoutes);
 app.use('/api/invites', inviteRoutes);
 // Auslieferungs-Proxy: hängt das Session-Token an und leitet die fachliche API
 // an Spring weiter. Keine Fachlogik; `deny by default` ohne gültige Session.
+// Bilder und Videos in Moments strömen ungepuffert durch (eigener Weg, siehe mediaStreamProxy).
+app.use('/api/v1', mediaStreamProxy);
 app.use('/api/v1', express.raw({ type: 'multipart/form-data', limit: API_PROXY_MAX_UPLOAD }), apiProxy);
 app.use(authorizePages);
 // `cacheControl: false`: Die Cache-Regeln stammen ausschließlich aus

@@ -216,7 +216,12 @@
     "statusDisabled": "Deaktiviert",
     "memberSince": "Mitglied seit",
     "recording": "Erfassung",
-    "recordingActive": "Strichlisten-Erfassung aktiv"
+    "recordingActive": "Strichlisten-Erfassung aktiv",
+    "security": {
+      "title": "Sicherheit",
+      "hint": "Schütze dein Konto zusätzlich mit einer Authenticator-App (z. B. Google Authenticator). Danach fragt der Login nach Passwort und einem 6-stelligen Code. Freiwillig, aber empfohlen für Vorstand und Admin.",
+      "setupTwoFactor": "Zwei-Faktor-Anmeldung einrichten"
+    }
   },
   "notifications": {
     "eyebrow": "Mitteilungen",
@@ -493,6 +498,10 @@
     "scan": {
       "title": "Getränk bezahlen",
       "description": "Strichcode scannen und mit Guthaben bezahlen."
+    },
+    "boardMoments": {
+      "title": "Moment-Typen & Reaktionen",
+      "description": "Typen und Reaktionen für Moments festlegen."
     }
   },
   "chat": {
@@ -600,12 +609,15 @@
       "timelineTab": "Timeline ({count})",
       "mapTab": "Weltkarte ({count})",
       "quickLabel": "Schnell reagieren:",
-      "custom": "+ Status & Text"
+      "custom": "+ Status & Text",
+      "shareMedia": "Foto/Video teilen",
+      "ended": "Dieser Moment ist beendet."
     },
     "history": {
       "title": "Archivierte Moments & Rituale",
       "participants": "{count} Teilnehmer",
-      "contributions": "{count} Beiträge"
+      "contributions": "{count} Beiträge",
+      "view": "Ansehen"
     },
     "start": {
       "title": "Neuen Moment initiieren",
@@ -626,11 +638,12 @@
       "submit": "Moment jetzt starten",
       "submitting": "Wird gestartet …",
       "error": "Fehler beim Starten des Moments.",
-      "failed": "Moment konnte nicht gestartet werden."
+      "failed": "Moment konnte nicht gestartet werden.",
+      "noTypes": "Der Vorstand hat noch keinen Moment-Typ freigegeben."
     },
     "respond": {
       "title": "Status & Reaktion teilen",
-      "reactionLabel": "Reaktion auswählen *",
+      "reactionLabel": "Reaktion (optional)",
       "statusLabel": "Persönlicher Status (optional)",
       "statusPlaceholder": "z. B. Schöne Grüße aus Hamburg! 🍺",
       "consent": "Aktuellen Standort für diesen Beitrag auf der Weltkarte teilen",
@@ -700,7 +713,29 @@
       "empty": "Noch keine Statusbeiträge geteilt. Sei der Erste und teile deine Reaktion!",
       "locationShared": "Standort geteilt ({lat}, {lng})"
     },
-    "quote": "„{text}“"
+    "quote": "„{text}“",
+    "manageLink": "Typen & Reaktionen verwalten",
+    "media": {
+      "label": "Fotos & Videos (optional)",
+      "add": "Foto oder Video hinzufügen",
+      "hint": "Bis zu {count} Dateien. Videos höchstens {seconds} Sekunden und {mb} MB.",
+      "remove": "Entfernen",
+      "removeConfirm": "Dieses Bild bzw. Video wirklich entfernen?",
+      "photoBy": "Foto von {name}",
+      "videoBy": "Video von {name}",
+      "errors": {
+        "videoType": "Dieses Videoformat wird nicht unterstützt. Bitte MP4 oder MOV verwenden.",
+        "videoTooLarge": "Das Video ist größer als {max} MB. Bitte kürzer aufnehmen oder in geringerer Auflösung (z. B. 720p).",
+        "videoTooLong": "Das Video ist länger als {max} Sekunden. Bitte vorher kürzen.",
+        "imageType": "Dieses Bild kann nicht gelesen werden. Bitte JPEG, PNG oder GIF verwenden.",
+        "imageTooLarge": "Das Bild ist größer als {max} MB.",
+        "unsupported": "Nur Fotos und Videos können geteilt werden.",
+        "tooMany": "Höchstens {count} Dateien pro Beitrag.",
+        "tooLargeServer": "Die Datei ist zu groß.",
+        "uploadFailed": "Hochladen fehlgeschlagen. Bitte erneut versuchen.",
+        "aborted": "Hochladen abgebrochen."
+      }
+    }
   },
   "catalog": {
     "header": {
@@ -906,9 +941,10 @@
       "confirm": "Auswahl bestätigen"
     },
     "terminal": {
-      "backToPortal": "← Zurück zum Stammtisch-Portal",
-      "standaloneMode": "Standalone Terminal Modus",
-      "leaveMode": "Terminal-Modus verlassen"
+      "kioskActive": "Kiosk-Modus aktiv",
+      "startKiosk": "Kiosk-Modus starten",
+      "leaveKiosk": "Kiosk-Modus verlassen",
+      "startHint": "Im Kiosk-Modus bleibt dieses Gerät auf dem Thekenterminal, auch nach Schließen und Neuöffnen. Beim Start vergibst du eine PIN; nur mit ihr lässt sich der Modus hier wieder verlassen. Vorstand und Administration können das Gerät jederzeit aus der Ferne entsperren."
     },
     "header": {
       "eyebrow": "Drink Recorder",
@@ -1089,7 +1125,8 @@
     "auditTarget": {
       "ledger": "Finanzen",
       "notification": "Kommunikation",
-      "user": "Benutzer"
+      "user": "Benutzer",
+      "kiosk": "Thekenterminal"
     },
     "auditAction": {
       "NOTIFICATION_SENT": "Mitteilung gesendet",
@@ -1103,7 +1140,13 @@
       "LEDGER_CORRECTION": "Korrektur",
       "LEDGER_PURCHASE": "Kauf",
       "MOMENT_STARTED": "Moment gestartet",
-      "MOMENT_COMPLETED": "Moment beendet"
+      "MOMENT_COMPLETED": "Moment beendet",
+      "KIOSK_PIN_LOCKED": "Kiosk-PIN nach Fehlversuchen gesperrt",
+      "KIOSK_STARTED": "Kiosk-Modus gestartet",
+      "KIOSK_ENDED_REMOTELY": "Kiosk-Gerät aus der Ferne entsperrt",
+      "MOMENT_TYPE_SAVED": "Moment-Typ gespeichert",
+      "MOMENT_REACTION_SAVED": "Moment-Reaktion gespeichert",
+      "MOMENT_MEDIA_REMOVED": "Moment-Bild/Video entfernt"
     },
     "auditDetail": {
       "amount": "Betrag",
@@ -1154,7 +1197,11 @@
       "moderate": "Moderieren",
       "auditHeading": "Letzte Aktionen ({count})",
       "inviteTitle": "Mitglied einladen",
-      "inviteDesc": "Einladungslink zur Registrierung erstellen"
+      "inviteDesc": "Einladungslink zur Registrierung erstellen",
+      "kioskDevicesTitle": "Kiosk-Geräte",
+      "kioskDevicesDesc": "Laufende Thekenterminals sehen und aus der Ferne entsperren",
+      "momentConfigTitle": "Moments · Typen & Reaktionen",
+      "momentConfigDesc": "Festlegen, welche Moments und Reaktionen es gibt"
     },
     "comms": {
       "eyebrow": "Schriftwart",
@@ -1281,6 +1328,42 @@
         "noEntry": "Noch keine Buchung",
         "id": "ID {id}"
       }
+    },
+    "kioskDevices": {
+      "title": "Kiosk-Geräte",
+      "intro": "Auf diesen Geräten läuft gerade der Kiosk-Modus. „Entsperren“ beendet ihn ohne PIN; das Gerät verlässt den Modus innerhalb weniger Sekunden.",
+      "emptyTitle": "Kein Gerät im Kiosk-Modus",
+      "emptyMessage": "Sobald ein Thekenterminal den Kiosk-Modus startet, erscheint es hier.",
+      "since": "Gestartet von {name} am {date}",
+      "lockedUntil": "PIN-Eingabe gesperrt bis {date}",
+      "unlock": "Entsperren",
+      "unlocked": "{label} ist entsperrt."
+    },
+    "momentConfig": {
+      "back": "← Zum Vorstandsbereich",
+      "title": "Moments: Typen & Reaktionen",
+      "intro": "Hier legt ihr fest, welche Arten von Moments Mitglieder starten können und mit welchen Reaktionen sie antworten. Ausgemusterte Einträge verschwinden für neue Moments, alte Moments behalten sie.",
+      "unavailable": "Moment-Einstellungen nicht verfügbar",
+      "typesTitle": "Moment-Typen",
+      "reactionsTitle": "Reaktionen",
+      "newType": "Neuer Typ",
+      "editType": "Typ bearbeiten",
+      "newReaction": "Neue Reaktion",
+      "editReaction": "Reaktion bearbeiten",
+      "edit": "Bearbeiten",
+      "retired": "ausgemustert",
+      "emoji": "Emoji",
+      "name": "Name",
+      "description": "Beschreibung (optional)",
+      "allowedReactions": "Erlaubte Reaktionen",
+      "allReactions": "Alle aktiven Reaktionen erlauben",
+      "allReactionsShort": "Alle Reaktionen",
+      "someReactions": "Reaktionen: {list}",
+      "activeType": "Mitglieder können diesen Typ starten",
+      "activeReaction": "Mitglieder können diese Reaktion verwenden",
+      "retireTypeHint": "Ausgemustert: Neue Moments dieses Typs sind nicht mehr möglich, bestehende bleiben erhalten.",
+      "retireReactionHint": "Ausgemustert: Die Reaktion ist nicht mehr wählbar, bisherige Beiträge behalten sie.",
+      "saveFailed": "Speichern fehlgeschlagen."
     }
   },
   "events": {
@@ -1589,6 +1672,30 @@
       "lookup": "Das Getränk konnte nicht gesucht werden.",
       "pay": "Bezahlen hat nicht geklappt.",
       "undo": "Zurücknehmen hat nicht geklappt."
+    }
+  },
+  "kiosk": {
+    "lock": {
+      "badge": "Kiosk",
+      "open": "Kiosk entsperren",
+      "title": "Kiosk-Modus verlassen",
+      "intro": "Gib die Kiosk-PIN ein, um das Thekenterminal zu verlassen.",
+      "pinLabel": "PIN",
+      "submit": "Entsperren",
+      "wrong": "Die PIN ist falsch. Noch {count} Versuche bis zur Sperre.",
+      "locked": "Zu viele falsche Eingaben. Die nächste Eingabe ist ab {time} möglich."
+    },
+    "start": {
+      "title": "Kiosk-Modus starten",
+      "intro": "Vergib eine PIN für dieses Gerät. Nur mit ihr lässt sich der Kiosk-Modus hier wieder verlassen.",
+      "label": "Gerätename (optional)",
+      "labelPlaceholder": "z. B. Theke links",
+      "pin": "PIN ({min} bis {max} Ziffern)",
+      "repeat": "PIN wiederholen",
+      "remoteHint": "PIN vergessen? Vorstand oder Administration entsperren das Gerät unter Vorstand → Kiosk-Geräte.",
+      "submit": "Starten",
+      "format": "Die PIN muss aus {min} bis {max} Ziffern bestehen.",
+      "mismatch": "Die beiden Eingaben stimmen nicht überein."
     }
   }
 }
