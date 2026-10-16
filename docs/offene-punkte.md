@@ -6,7 +6,6 @@ austragen.
 | Punkt | Stand |
 | :--- | :--- |
 | Go-Live | In AWS ist noch nichts angelegt, auf `main` wurde noch nie ausgerollt. Schritte in der [Go-Live-Checkliste](betrieb/go-live-checkliste.md). |
-| [Pull Request #27](https://github.com/damaurer/vereint/pull/27) | CI grün, wartet auf den Merge. Behebt den Rollback beim allerersten Deployment, beschreibt den ersten Administrator, schaltet „Passwort vergessen“ ab. |
 | Prüfen nach dem Deployment | Barcode-Kamera, Web Push, Zwei-Faktor-Anmeldung und Video-Upload lassen sich erst unter echtem HTTPS am Handy prüfen. |
 | Regel für Barcode-Käufe | Scannen nur bei laufenden Events, an denen das Mitglied teilnimmt. Diese Regel war ein gewählter Standard und ist noch nicht ausdrücklich bestätigt. |
 | Keycloak-Login-Theme | Die vier FTL-Vorlagen basieren noch auf Keycloak 26.1.4 und laufen unter 26.8.1. Beim nächsten Theme-Umbau mit den 26.8.1-Originalen abgleichen ([keycloak/README.md](../keycloak/README.md#produktion)). |

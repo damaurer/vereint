@@ -57,8 +57,10 @@ Voraussetzungen aus der [Go-Live-Checkliste](go-live-checkliste.md). Gibt es auf
 `webservice CI/CD` und `keycloak CI/CD` je einmal mit *Run workflow* auf `main`
 starten; danach rollt das Deployment von selbst aus. Der Produktions-Realm hat
 keine Benutzer: Den ersten Administrator legt man danach von Hand an
-(Anleitung in `deploy/README.md`, kommt mit
-[Pull Request #27](https://github.com/damaurer/vereint/pull/27)).
+([deploy/README.md, Ersten Administrator anlegen](../../deploy/README.md#ersten-administrator-anlegen)).
+Schlägt schon das allererste Deployment fehl, gibt es keinen vorherigen Stand.
+Der Workflow wird dann rot mit genau diesem Hinweis, statt einen Rollback zu
+melden, den es nicht gab.
 
 ## Keycloak-Verwaltung
 
