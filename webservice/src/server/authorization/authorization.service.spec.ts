@@ -179,13 +179,14 @@ describe('Authorization & Access Resolver Service', () => {
       expect(foreign.outcome).toBe('denied');
     });
 
-    it('allows board and admin to manage every event', async () => {
+    it('allows everyone with event.manage in the Stammtisch to manage every event', async () => {
       vi.stubGlobal(
         'fetch',
         vi.fn().mockResolvedValue(
           okResponse(
             decision({
               roles: ['admin'],
+              permissions: ['event.manage'],
               ownedEvents: [],
               allowedAppContexts: ['memberPwa', 'event', 'eventOwner', 'admin'],
             }),

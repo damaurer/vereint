@@ -77,4 +77,12 @@ describe('AuthStatusComponent', () => {
 
     expect(authServiceStub.startLogin).toHaveBeenCalled();
   });
+
+  it('offers opening an own group to visitors without an invitation', () => {
+    setup({ mode: 'loggedOut' });
+
+    const link = (fixture.nativeElement as HTMLElement).querySelector('.open-own a') as HTMLAnchorElement;
+    expect(link.textContent).toContain('Eigene Gruppe eröffnen');
+    expect(link.getAttribute('href')).toBe('/gruppe-eroeffnen');
+  });
 });

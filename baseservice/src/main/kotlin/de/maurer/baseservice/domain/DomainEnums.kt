@@ -75,26 +75,6 @@ enum class UserRole {
     }
 }
 
-/**
- * Wertebereich der Spalte `user_roles.role`.
- *
- * Er umfasst die Vertragsrollen aus [UserRole] und zusätzlich die technische
- * Tablet-Rolle `tabletRecorder`; die Datenbank erzwingt genau diese Menge über
- * `ck_user_roles_role`. [UserRole] bleibt unverändert der fachliche Datenvertrag
- * aus `AGENTS.md`.
- */
-enum class AssignedRole {
-    member,
-    board,
-    admin,
-    tabletRecorder;
-
-    companion object {
-        fun fromValue(value: String?): AssignedRole? = entries.firstOrNull { it.name == value }
-        fun values(): Set<String> = entries.map { it.name }.toSet()
-    }
-}
-
 enum class BoardRole {
     chair,
     treasurer,

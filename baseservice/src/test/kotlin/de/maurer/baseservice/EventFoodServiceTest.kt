@@ -17,6 +17,7 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.EventFoodService
 import de.maurer.baseservice.service.UserService
+import de.maurer.baseservice.support.StammtischTestSupport
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -76,7 +77,7 @@ class EventFoodServiceTest {
             eventRepository,
             eventParticipantRepository,
             foodCatalogRepository,
-            userRoleRepository,
+            StammtischTestSupport.access(userRoleRepository),
             userService
         )
     }

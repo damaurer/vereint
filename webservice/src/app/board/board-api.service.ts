@@ -114,12 +114,12 @@ export class BoardApiService {
     return this.api.post<BroadcastResult>('/notifications/broadcast', payload);
   }
 
-  /** Vereinschat inkl. angepinnter Infotafel (`GET /conversations/club`). */
+  /** Gruppenchat inkl. angepinnter Infotafel (`GET /conversations/club`). */
   getClubConversation(): Observable<ConversationSummary> {
     return this.api.get<ConversationSummary>('/conversations/club');
   }
 
-  /** Infotafel des Vereinschats setzen oder mit `null` entfernen (`PUT /conversations/club/pin`). */
+  /** Infotafel des Gruppenchats setzen oder mit `null` entfernen (`PUT /conversations/club/pin`). */
   pinClubNotice(text: string | null): Observable<ConversationSummary> {
     return this.api.put<ConversationSummary>('/conversations/club/pin', { text });
   }

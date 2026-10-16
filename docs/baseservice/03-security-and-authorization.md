@@ -100,6 +100,12 @@ class AuthContext(private val claimExtractor: JwtClaimExtractor) {
 
 ## 📊 Rollen- & Berechtigungsmatrix (`RolePermissionMatrix.kt`)
 
+> **Mehrere Stammtische:** Rollen und Rechte gelten je Stammtisch. Die Matrix unten
+> beschreibt nur die Startwerte der vier Systemrollen, die jeder neue Stammtisch
+> erhält (`StammtischSeeder`); jeder Stammtisch kann sie anpassen und eigene Rollen
+> anlegen. Keycloak-Realmrollen zählen nicht mehr, außer `admin` (Plattform-Admin).
+> Details: [Mehrere Stammtische](../domains/stammtische.md).
+
 Die Zuordnung von Benutzerrollen zu fachlichen Berechtigungen ist zentral in `RolePermissionMatrix.kt` definiert (**Matrix-Version 2**):
 
 | Permission | Beschreibung | `member` | `board` | `admin` | `tabletRecorder` |

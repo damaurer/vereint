@@ -132,5 +132,15 @@ describe('request-guards', () => {
       // Andere API-Pfade bleiben davon unberührt.
       expect((await fetch(`${baseUrl}/api/v1/events`)).status).toBe(200);
     });
+
+    it('limits the open signup per client like the invite registration', async () => {
+      const statuses: number[] = [];
+      for (let attempt = 0; attempt < 31; attempt++) {
+        const response = await fetch(`${baseUrl}/api/v1/signup`, { method: 'POST' });
+        statuses.push(response.status);
+      }
+      expect(statuses.slice(0, 30).every((status) => status === 200)).toBe(true);
+      expect(statuses[30]).toBe(429);
+    });
   });
 });

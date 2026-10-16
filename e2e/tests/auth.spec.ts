@@ -8,6 +8,14 @@ test.describe('Anmeldung', () => {
     // Login-Theme `vereint` ist aktiv und deutsch.
     await expect(page.locator('#kc-login')).toBeVisible();
     await expect(page.getByText('Benutzername oder E-Mail')).toBeVisible();
+    // Wer noch keine Gruppe hat, kann direkt eine eigene eroeffnen.
+    await expect(page.getByRole('link', { name: 'Eigene Gruppe eröffnen' })).toHaveAttribute('href', '/gruppe-eroeffnen');
+  });
+
+  test('die fruehere Adresse /eroeffnen fuehrt zur Seite "Gruppe eröffnen"', async ({ page }) => {
+    await page.goto('/eroeffnen');
+    await expect(page).toHaveURL(/\/gruppe-eroeffnen$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Gruppe eröffnen' })).toBeVisible();
   });
 
   test('falsches Passwort wird abgewiesen', async ({ page, credentials }) => {

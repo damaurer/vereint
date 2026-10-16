@@ -37,6 +37,10 @@ class DrinkCatalogEntity(
     @Column(name = "image_reference", length = 512)
     var imageReference: String? = null,
 
+    /** Herkunft aus der gemeinsamen Getränkedatenbank, falls übernommen oder dorthin geteilt. */
+    @Column(name = "library_drink_id")
+    var libraryDrinkId: UUID? = null,
+
     @Column(name = "catalog_version", nullable = false)
     var catalogVersion: Int = 1,
 
@@ -71,7 +75,7 @@ class DrinkCatalogEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "drink_barcodes")
@@ -85,7 +89,7 @@ class DrinkBarcodeEntity(
     @JoinColumn(name = "drink_id", nullable = false)
     var drink: DrinkCatalogEntity? = null,
 
-    @Column(name = "barcode", length = 128, nullable = false, unique = true)
+    @Column(name = "barcode", length = 128, nullable = false)
     var barcode: String = "",
 
     @Column(name = "active", nullable = false)
@@ -98,7 +102,7 @@ class DrinkBarcodeEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "drink_sublists")
@@ -129,7 +133,7 @@ class DrinkSublistEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 @Entity
 @Table(
@@ -155,7 +159,7 @@ class DrinkSublistItemEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 @Entity
 @Table(
@@ -208,4 +212,4 @@ class EventDrinkEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()

@@ -36,7 +36,7 @@ const mockConfig: MomentConfigDto = {
       code: 'toast',
       name: 'Gemeinsames Anstoßen',
       emoji: '🍻',
-      description: 'Für Stammtische & Feste',
+      description: 'Für Treffen & Feste',
       active: true,
       allReactions: false,
       reactionIds: ['r-toast', 'r-heart'],

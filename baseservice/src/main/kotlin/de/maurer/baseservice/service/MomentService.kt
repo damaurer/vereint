@@ -4,9 +4,10 @@ import de.maurer.baseservice.domain.*
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.*
 import de.maurer.baseservice.repository.*
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.support.Identifiers
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
@@ -34,7 +35,7 @@ class MomentService(
     private val momentResponseRepository: MomentResponseRepository,
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService,
     private val chatService: ChatService,
     private val notificationService: NotificationService,
@@ -461,11 +462,8 @@ class MomentService(
     private fun canModerateMedia(caller: UserEntity, principal: UserPrincipal, event: EventEntity): Boolean =
         isBoardOrAdmin(caller, principal) || event.owner?.id == caller.id
 
-    private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        val roles = principal.roles + dbRoles
-        return roles.any { it == UserRole.BOARD || it == UserRole.ADMIN }
-    }
+    private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
+        access.has(principal, caller, Permission.EVENT_MANAGE)
 
     private fun toSessionDto(session: MomentSessionEntity, responsesCount: Int, labels: MomentLabels): MomentSessionDto {
         return MomentSessionDto(

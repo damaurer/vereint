@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { IconComponent } from '../ui/icon.component';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import {
@@ -33,6 +34,7 @@ type CatalogTab = 'drinks' | 'food';
     StateComponent,
     IconComponent,
     FormsModule,
+    RouterLink,
     ModalComponent,
     StatusBadgeComponent,
     TranslatePipe,
@@ -49,6 +51,9 @@ type CatalogTab = 'drinks' | 'food';
           </div>
           <div class="catalog-header-actions">
             @if (activeTab() === 'drinks') {
+              <a class="btn-secondary-sm catalog-library-link" routerLink="/catalog/library">
+                <vereint-icon name="search" /> {{ 'catalog.library.open' | t }}
+              </a>
               <button type="button" class="btn-secondary-sm" (click)="openLookup()">
                 <vereint-icon name="camera" /> {{ 'catalog.lookup.open' | t }}
               </button>
@@ -430,6 +435,16 @@ type CatalogTab = 'drinks' | 'food';
             </label>
           }
 
+          @if (editingDrink(); as editing) {
+            @if (editing.libraryDrinkId) {
+              <p class="text-muted">{{ 'catalog.library.shared' | t }}</p>
+            } @else if (canApprove() && editing.status === 'approved') {
+              <button type="button" class="btn-secondary-sm" [disabled]="sharing()" (click)="shareToLibrary(editing)">
+                {{ 'catalog.library.share' | t }}
+              </button>
+            }
+          }
+
           @if (formError()) {
             <p class="form-error" role="alert">{{ formError() }}</p>
           }
@@ -611,7 +626,14 @@ type CatalogTab = 'drinks' | 'food';
       }
       .catalog-header-actions {
         display: flex;
+        flex-wrap: wrap;
         gap: 0.5rem;
+      }
+      .catalog-library-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        text-decoration: none;
       }
       .catalog-tabs {
         display: flex;
@@ -884,6 +906,9 @@ export class CatalogComponent implements OnInit, OnDestroy {
 
   protected readonly activeTab = signal<CatalogTab>('drinks');
   protected readonly isBoardOrAdmin = signal(false);
+  /** Freigabe-Recht im Stammtisch; erlaubt das Teilen in die Getränkedatenbank. */
+  protected readonly canApprove = signal(false);
+  protected readonly sharing = signal(false);
 
   protected readonly searchQuery = signal('');
   protected statusFilter = '';
@@ -1004,6 +1029,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
     const session = await this.auth.getSession();
     const roles = session?.roles ?? [];
     this.isBoardOrAdmin.set(roles.includes('board') || roles.includes('admin'));
+    this.canApprove.set(session?.permissions?.includes('catalog.approve') ?? false);
   }
 
   protected setTab(tab: CatalogTab): void {
@@ -1253,6 +1279,26 @@ export class CatalogComponent implements OnInit, OnDestroy {
       error: (err: unknown) => {
         this.submitting.set(false);
         this.formError.set((err as Error)?.message || translate('catalog.errors.propose'));
+      },
+    });
+  }
+
+  /** Freigegebenes Getränk in die stammtischübergreifende Getränkedatenbank teilen (ohne Preis). */
+  protected shareToLibrary(drink: DrinkDto): void {
+    this.sharing.set(true);
+    this.formError.set(null);
+    this.catalogApi.shareToLibrary(drink.id).subscribe({
+      next: (entry) => {
+        this.sharing.set(false);
+        if (this.editingDrink()?.id === drink.id) {
+          this.editingDrink.set({ ...drink, libraryDrinkId: entry.id });
+        }
+        this.formInfo.set(translate('catalog.library.sharedInfo', { name: drink.name }));
+        this.reload();
+      },
+      error: (err: unknown) => {
+        this.sharing.set(false);
+        this.formError.set((err instanceof ApiError && err.detail) || describeApiError(err));
       },
     });
   }

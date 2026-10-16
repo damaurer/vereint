@@ -59,10 +59,11 @@ describe('CatalogComponent', () => {
     updateDrink: ReturnType<typeof vi.fn>;
     addBarcode: ReturnType<typeof vi.fn>;
     removeBarcode: ReturnType<typeof vi.fn>;
+    shareToLibrary: ReturnType<typeof vi.fn>;
   };
   let auth: { getSession: ReturnType<typeof vi.fn> };
 
-  const create = async (roles: string[] = ['member']) => {
+  const create = async (roles: string[] = ['member'], permissions: string[] = []) => {
     auth = {
       getSession: vi.fn(async () => ({
         uid: 'u-1',
@@ -71,7 +72,7 @@ describe('CatalogComponent', () => {
         provider: 'keycloak',
         roles,
         boardRole: undefined,
-        permissions: [],
+        permissions,
       })),
     };
 
@@ -105,6 +106,7 @@ describe('CatalogComponent', () => {
       updateDrink: vi.fn(() => of({})),
       addBarcode: vi.fn(() => of({ id: 'b-9', barcode: '999', active: true })),
       removeBarcode: vi.fn(() => of(undefined)),
+      shareToLibrary: vi.fn(() => of({ id: 'l-1' })),
     };
   });
 
@@ -234,5 +236,29 @@ describe('CatalogComponent', () => {
     const payload = catalogApi.proposeDrink.mock.calls[0][0];
     expect(payload).not.toHaveProperty('costPrice');
     expect(cmp.proposeInfo()).toContain('vorgeschlagen');
+  });
+
+  it('links to the drinks database and lets approvers share an approved drink', async () => {
+    const approved = {
+      ...mockDrinks[0],
+      description: null,
+      barcodes: [],
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      libraryDrinkId: null,
+    };
+    catalogApi.getDrink.mockReturnValue(of(approved));
+    const fixture = await create(['board'], ['catalog.approve']);
+    expect(fixture.nativeElement.querySelector('a[href="/catalog/library"]')).toBeTruthy();
+
+    fixture.componentInstance['openEditDrink']('d-1');
+    fixture.detectChanges();
+    const share = [...fixture.nativeElement.querySelectorAll('button')].find((b: HTMLButtonElement) =>
+      b.textContent?.includes('In die Getränkedatenbank teilen'),
+    ) as HTMLButtonElement;
+    expect(share).toBeTruthy();
+    share.click();
+    expect(catalogApi.shareToLibrary).toHaveBeenCalledWith('d-1');
+    expect(catalogApi.listDrinks).toHaveBeenCalledTimes(2);
   });
 });

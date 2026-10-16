@@ -18,9 +18,9 @@ import de.maurer.baseservice.repository.DrinkSublistRepository
 import de.maurer.baseservice.repository.EventDrinkRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
-import de.maurer.baseservice.repository.UserRoleRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -47,7 +47,7 @@ class EventDrinkService(
     private val drinkCatalogRepository: DrinkCatalogRepository,
     private val drinkSublistRepository: DrinkSublistRepository,
     private val drinkSublistItemRepository: DrinkSublistItemRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService
 ) {
 
@@ -250,12 +250,8 @@ class EventDrinkService(
     }
 
     private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.BOARD || it == UserRole.ADMIN }
+        access.has(principal, caller, Permission.EVENT_MANAGE)
 
-    private fun rolesOf(caller: UserEntity, principal: UserPrincipal): Set<String> {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        return principal.roles + dbRoles
-    }
 
     private fun normalizeCurrency(value: String?): String? {
         val trimmed = value?.trim()

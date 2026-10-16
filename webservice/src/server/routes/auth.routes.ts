@@ -10,8 +10,14 @@ import { resolveSafeReturnTo } from '../auth/redirect';
 import { createCorrelationId, logSecurityEvent } from '../auth/security-log';
 import { createSessionFromTokens, destroySession } from '../auth/session.service';
 import { serverEnvironment } from '../config/environment';
-import { resolveAccessDecision } from '../authorization/authorization.service';
+import { invalidateAccessDecision, resolveAccessDecision } from '../authorization/authorization.service';
 import { requestLanguage } from '../../app/i18n/language-cookie';
+import {
+  clearStammtischCookie,
+  isStammtischId,
+  readStammtischCookie,
+  setStammtischCookie,
+} from '../stammtisch/stammtisch-cookie';
 
 export const authRoutes = Router();
 
@@ -167,8 +173,8 @@ authRoutes.get('/keycloak', (req, res, next) => {
  * Gibt die aktuelle Session-Identität zurück.
  *
  * Rohe Token-Claims verlassen den Server nicht: geliefert werden ausschließlich
- * `subject`, `displayName`, `roles`, `boardRole` und `permissions`
- * (`docs/authentifizierung.md`).
+ * `subject`, `displayName`, `roles`, `boardRole`, `permissions` sowie der
+ * gewählte Stammtisch und die Mitgliedschaften (`docs/authentifizierung.md`).
  *
  * Die Permissions stammen aus der Rollen-Matrix des Fachservices
  * (`/api/v1/auth/access`, kurz gecacht). Keycloak stellt keinen
@@ -181,27 +187,100 @@ async function respondWithIdentity(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  const permissions = new Set(req.identity.permissions ?? []);
+  const selected = readStammtischCookie(req);
   const resolved = await resolveAccessDecision({
     identity: req.identity,
     accessToken: req.sessionData?.tokens.accessToken,
     sessionId: req.sessionData?.sessionId,
+    stammtischId: selected,
   });
-  if (resolved.outcome === 'resolved' && resolved.decision) {
-    for (const permission of resolved.decision.permissions) permissions.add(permission);
+  const decision = resolved.outcome === 'resolved' ? resolved.decision : undefined;
+
+  // Ein Cookie für einen Stammtisch ohne Mitgliedschaft wird verworfen.
+  if (selected && (resolved.stammtischRejected || (decision && decision.stammtischId !== selected))) {
+    clearStammtischCookie(res);
   }
+
+  // Rollen und Rechte gelten je Stammtisch; die Realmrollen des Tokens zählen
+  // nur, solange der Fachservice nicht erreichbar ist (Navigation, kein Zugriff).
+  const permissions = new Set(req.identity.permissions ?? []);
+  for (const permission of decision?.permissions ?? []) permissions.add(permission);
 
   res.status(200).json({
     authenticated: true,
     identity: {
       subject: req.identity.uid,
       displayName: req.identity.displayName ?? null,
-      roles: req.identity.roles,
-      boardRole: req.identity.boardRole ?? null,
+      roles: decision ? decision.roles : req.identity.roles,
+      boardRole: (decision ? decision.boardRole : req.identity.boardRole) ?? null,
       permissions: [...permissions],
+      stammtisch: decision?.stammtischId
+        ? {
+            id: decision.stammtischId,
+            name: decision.stammtischName ?? '',
+            // Das Bild der gewählten Gruppe steht an ihrer Mitgliedschaft.
+            imageVersion:
+              decision.memberships?.find((membership) => membership.id === decision.stammtischId)?.imageVersion ?? null,
+          }
+        : null,
+      memberships: decision?.memberships ?? [],
+      platformAdmin: decision?.platformAdmin === true,
+      appContexts: decision?.allowedAppContexts ?? [],
     },
   });
 }
+
+/**
+ * Wählt den Stammtisch der Session. Die Mitgliedschaft prüft der Fachservice;
+ * ohne sie bleibt die Auswahl unverändert (`403`).
+ */
+async function selectStammtisch(req: Request, res: Response): Promise<void> {
+  if (!req.identity) {
+    res.status(401).json({ code: 'oidc_session_expired' });
+    return;
+  }
+
+  const requested = (req.body as { stammtischId?: unknown } | undefined)?.stammtischId;
+  if (requested === null) {
+    clearStammtischCookie(res);
+    res.status(204).end();
+    return;
+  }
+  if (!isStammtischId(requested)) {
+    res.status(400).json({ code: 'invalid_request' });
+    return;
+  }
+
+  const stammtischId = requested.toLowerCase();
+  // Die Auswahl folgt oft auf eine neue Mitgliedschaft (Stammtisch eröffnet,
+  // Einladung angenommen): gecachte Entscheidungen kennen sie noch nicht.
+  invalidateAccessDecision(req.sessionData?.sessionId);
+  const resolved = await resolveAccessDecision({
+    identity: req.identity,
+    accessToken: req.sessionData?.tokens.accessToken,
+    sessionId: req.sessionData?.sessionId,
+    stammtischId,
+  });
+  if (resolved.outcome === 'unavailable') {
+    res.status(503).json({ code: 'service_unavailable' });
+    return;
+  }
+  if (resolved.stammtischRejected || resolved.decision?.stammtischId !== stammtischId) {
+    logSecurityEvent(
+      { event: 'stammtisch_select', outcome: 'denied', errorClass: 'not_a_member', subject: req.identity.uid },
+      req,
+    );
+    res.status(403).json({ code: 'stammtisch_access_denied' });
+    return;
+  }
+
+  setStammtischCookie(res, stammtischId);
+  res.status(204).end();
+}
+
+authRoutes.post('/stammtisch', (req, res, next) => {
+  selectStammtisch(req, res).catch(next);
+});
 
 authRoutes.get('/me', (req, res, next) => {
   respondWithIdentity(req, res).catch(next);

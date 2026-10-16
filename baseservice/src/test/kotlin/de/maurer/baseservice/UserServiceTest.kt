@@ -1,22 +1,25 @@
 package de.maurer.baseservice
 
-import de.maurer.baseservice.domain.AssignedRole
+import de.maurer.baseservice.domain.StammtischMemberEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.domain.UserPermissionEntity
 import de.maurer.baseservice.domain.UserPermissionId
 import de.maurer.baseservice.domain.UserRoleEntity
 import de.maurer.baseservice.domain.UserRoleId
-import de.maurer.baseservice.domain.BoardRole as DomainBoardRole
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.*
+import de.maurer.baseservice.repository.StammtischMemberRepository
 import de.maurer.baseservice.repository.UserPermissionRepository
 import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.*
 import de.maurer.baseservice.service.AuditService
-import de.maurer.baseservice.service.UserPermissionCache
+import de.maurer.baseservice.service.MembershipService
 import de.maurer.baseservice.service.UserProvisioningService
 import de.maurer.baseservice.service.UserService
+import de.maurer.baseservice.support.StammtischTestSupport
+import de.maurer.baseservice.tenancy.StammtischManagers
+import de.maurer.baseservice.tenancy.StammtischMembers
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -54,7 +57,17 @@ class UserServiceTest {
     @Mock
     private lateinit var auditService: AuditService
 
-    private lateinit var permissionCache: UserPermissionCache
+    @Mock
+    private lateinit var memberRepository: StammtischMemberRepository
+
+    @Mock
+    private lateinit var membershipService: MembershipService
+
+    @Mock
+    private lateinit var members: StammtischMembers
+
+    @Mock
+    private lateinit var managers: StammtischManagers
 
     private lateinit var userService: UserService
 
@@ -64,13 +77,16 @@ class UserServiceTest {
 
     @BeforeEach
     fun setup() {
-        permissionCache = UserPermissionCache()
         userService = UserService(
             userRepository,
             userRoleRepository,
             userPermissionRepository,
+            memberRepository,
             userProvisioningService,
-            permissionCache,
+            membershipService,
+            StammtischTestSupport.access(userRoleRepository, userPermissionRepository),
+            members,
+            managers,
             auditService
         )
     }
@@ -94,7 +110,7 @@ class UserServiceTest {
     private fun anyNullableValue(): Any? = any()
 
     @Test
-    fun `getOrCreateUser auto-provisions non-existing user with default member role`() {
+    fun `getOrCreateUser auto-provisions a non-existing account`() {
         val principal = UserPrincipal(
             subject = "sub-alice",
             displayName = "Alice Wonderland",
@@ -173,7 +189,7 @@ class UserServiceTest {
     }
 
     @Test
-    fun `getProfile returns resolved profile with roles and permissions from the matrix`() {
+    fun `getProfile returns roles and permissions of the current Stammtisch`() {
         val memberOneId = UUID.randomUUID()
         val user = UserEntity(
             id = memberOneId,
@@ -187,15 +203,19 @@ class UserServiceTest {
 
         `when`(userRepository.findByKeycloakSubject("sub-member-1")).thenReturn(Optional.of(user))
         `when`(userRoleRepository.findByIdUserId(memberOneId)).thenReturn(
-            listOf(UserRoleEntity(UserRoleId(memberOneId, AssignedRole.member), user))
+            listOf(UserRoleEntity(UserRoleId(memberOneId, UserRole.MEMBER), user))
         )
         `when`(userPermissionRepository.findByIdUserId(memberOneId)).thenReturn(
             listOf(UserPermissionEntity(UserPermissionId(memberOneId, "custom.special"), user))
         )
 
+        `when`(memberRepository.findByUserId(memberOneId))
+            .thenReturn(Optional.of(StammtischMemberEntity(user = user)))
+
         val profile = userService.getProfile(principal)
 
         assertEquals(memberOneId.toString(), profile.id)
+        assertFalse(profile.disabled)
         assertTrue(profile.roles.contains(UserRole.MEMBER))
         assertTrue(profile.permissions.contains("custom.special"))
         assertTrue(profile.permissions.contains(Permission.PROFILE_READ_SELF))
@@ -204,32 +224,6 @@ class UserServiceTest {
             RolePermissionMatrix.permissionsForRole(UserRole.MEMBER) + "custom.special",
             profile.permissions
         )
-    }
-
-    @Test
-    fun `permission derivation is cached per user and invalidated on role change`() {
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val targetUser = UserEntity(id = targetId, keycloakSubject = "sub-target")
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findById(targetId)).thenReturn(Optional.of(targetUser))
-        `when`(userRepository.save(anyUserEntity())).thenAnswer { it.arguments[0] }
-        `when`(userRepository.countActiveUsersWithRole(AssignedRole.admin)).thenReturn(3L)
-        `when`(userRoleRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-        `when`(userPermissionRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-
-        userService.getUserById(targetId, adminPrincipal)
-        userService.getUserById(targetId, adminPrincipal)
-
-        // Zweiter Aufruf wird aus dem Cache bedient
-        verify(userRoleRepository, times(1)).findByIdUserId(targetId)
-
-        userService.assignRoles(targetId, setOf(UserRole.BOARD), adminPrincipal)
-        userService.getUserById(targetId, adminPrincipal)
-
-        // Nach der Rollenänderung wird neu gelesen
-        verify(userRoleRepository, atLeast(2)).findByIdUserId(targetId)
     }
 
     @Test
@@ -266,289 +260,4 @@ class UserServiceTest {
         assertEquals(ErrorCode.INVALID_REQUEST, ex.errorCode)
     }
 
-    @Test
-    fun `listUsers returns a paginated result for admins`() {
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val targetUser = UserEntity(
-            id = targetId,
-            keycloakSubject = "sub-target",
-            displayName = "Target",
-            email = "target@test.com"
-        )
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-        val pageable = PageRequest.of(0, 10)
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findAll(anySpecification(), anyPageable()))
-            .thenReturn(PageImpl(listOf(targetUser), PageRequest.of(0, 10), 1))
-        `when`(userRoleRepository.findByIdUserId(targetId)).thenReturn(
-            listOf(UserRoleEntity(UserRoleId(targetId, AssignedRole.member), targetUser))
-        )
-        `when`(userPermissionRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-
-        val page = userService.listUsers(
-            role = null,
-            disabled = null,
-            search = "target",
-            pageable = pageable,
-            principal = adminPrincipal
-        )
-
-        assertEquals(1, page.content.size)
-        assertEquals(targetId.toString(), page.content[0].id)
-        assertEquals(0, page.page)
-        assertEquals(1L, page.totalElements)
-    }
-
-    @Test
-    fun `listUsers caps the page size at the configured maximum`() {
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findAll(anySpecification(), anyPageable())).thenAnswer { invocation ->
-            val requested = invocation.arguments[1] as Pageable
-            assertEquals(UserService.MAX_PAGE_SIZE, requested.pageSize)
-            PageImpl(emptyList<UserEntity>(), requested, 0)
-        }
-
-        val page = userService.listUsers(
-            role = null,
-            disabled = null,
-            search = null,
-            pageable = PageRequest.of(0, 5000),
-            principal = adminPrincipal
-        )
-
-        assertEquals(UserService.MAX_PAGE_SIZE, page.size)
-    }
-
-    @Test
-    fun `listUsers denies access for regular member`() {
-        val memberId = UUID.randomUUID()
-        val memberUser = UserEntity(id = memberId, keycloakSubject = "sub-member")
-        val memberPrincipal = UserPrincipal(subject = "sub-member", roles = setOf(UserRole.MEMBER))
-
-        `when`(userRepository.findByKeycloakSubject("sub-member")).thenReturn(Optional.of(memberUser))
-        `when`(userRoleRepository.findByIdUserId(memberId)).thenReturn(
-            listOf(UserRoleEntity(UserRoleId(memberId, AssignedRole.member), memberUser))
-        )
-
-        val ex = assertThrows(AccessDeniedException::class.java) {
-            userService.listUsers(null, null, null, Pageable.unpaged(), memberPrincipal)
-        }
-        assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
-    }
-
-    @Test
-    fun `getUserById allows self and admin but rejects other users`() {
-        val callerId = UUID.randomUUID()
-        val targetUser = UserEntity(id = targetId, keycloakSubject = "sub-target", displayName = "Target")
-        val callerUser = UserEntity(id = callerId, keycloakSubject = "sub-caller")
-        val callerPrincipal = UserPrincipal(subject = "sub-caller", roles = setOf(UserRole.MEMBER))
-
-        `when`(userRepository.findById(targetId)).thenReturn(Optional.of(targetUser))
-        `when`(userRepository.findByKeycloakSubject("sub-caller")).thenReturn(Optional.of(callerUser))
-        `when`(userRoleRepository.findByIdUserId(callerId)).thenReturn(emptyList())
-        `when`(userPermissionRepository.findByIdUserId(callerId)).thenReturn(emptyList())
-
-        assertThrows(AccessDeniedException::class.java) {
-            userService.getUserById(targetId, callerPrincipal)
-        }
-
-        val adminPrincipal = UserPrincipal(subject = "sub-caller", roles = setOf(UserRole.ADMIN))
-        `when`(userRoleRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-        `when`(userPermissionRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-
-        val profile = userService.getUserById(targetId, adminPrincipal)
-        assertEquals(targetId.toString(), profile.id)
-    }
-
-    @Test
-    fun `getUserById denies non-admin access to a disabled account`() {
-        val boardId = UUID.randomUUID()
-        val targetUser = UserEntity(
-            id = targetId,
-            keycloakSubject = "sub-target",
-            displayName = "Target",
-            disabled = true
-        )
-        val boardUser = UserEntity(id = boardId, keycloakSubject = "sub-board")
-        val boardPrincipal = UserPrincipal(subject = "sub-board", roles = setOf(UserRole.BOARD))
-
-        `when`(userRepository.findById(targetId)).thenReturn(Optional.of(targetUser))
-        `when`(userRepository.findByKeycloakSubject("sub-board")).thenReturn(Optional.of(boardUser))
-        `when`(userRoleRepository.findByIdUserId(boardId)).thenReturn(
-            listOf(UserRoleEntity(UserRoleId(boardId, AssignedRole.board), boardUser))
-        )
-        `when`(userPermissionRepository.findByIdUserId(boardId)).thenReturn(emptyList())
-
-        val ex = assertThrows(AccessDeniedException::class.java) {
-            userService.getUserById(targetId, boardPrincipal)
-        }
-        assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
-    }
-
-    @Test
-    fun `adminUpdateUser modifies roles, permissions, boardRole, and disabled flag`() {
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val targetUser = UserEntity(id = targetId, keycloakSubject = "sub-target", displayName = "Target")
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findById(targetId)).thenReturn(Optional.of(targetUser))
-        `when`(userRepository.save(anyUserEntity())).thenAnswer { it.arguments[0] }
-        `when`(userRoleRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-        `when`(userPermissionRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-
-        userService.adminUpdateUser(
-            id = targetId,
-            request = AdminUpdateUserRequest(
-                displayName = "Updated Admin Target",
-                boardRole = BoardRole.TREASURER,
-                disabled = true,
-                drinkRecorder = true,
-                roles = setOf(UserRole.BOARD),
-                permissions = setOf(Permission.LEDGER_READ)
-            ),
-            principal = adminPrincipal
-        )
-
-        assertEquals("Updated Admin Target", targetUser.displayName)
-        assertEquals(DomainBoardRole.treasurer, targetUser.boardRole)
-        assertTrue(targetUser.disabled)
-        assertTrue(targetUser.drinkRecorder)
-
-        verify(userRoleRepository).deleteByIdUserId(targetId)
-        verify(userPermissionRepository).deleteByIdUserId(targetId)
-        verify(auditService).recordUserChange(
-            anyNullableUser(),
-            eqValue(AuditService.ACTION_ROLES_CHANGED),
-            eqUuid(targetId),
-            anyNullableValue(),
-            anyNullableValue()
-        )
-    }
-
-    @Test
-    fun `assignRoles validates and sets roles`() {
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val targetUser = UserEntity(id = targetId, keycloakSubject = "sub-target")
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findById(targetId)).thenReturn(Optional.of(targetUser))
-        `when`(userRepository.save(anyUserEntity())).thenAnswer { it.arguments[0] }
-        `when`(userRoleRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-        `when`(userPermissionRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-
-        userService.assignRoles(targetId, setOf(UserRole.BOARD, UserRole.MEMBER), adminPrincipal)
-
-        verify(userRoleRepository).deleteByIdUserId(targetId)
-        verify(userRoleRepository, times(2)).save(any(UserRoleEntity::class.java) ?: UserRoleEntity())
-    }
-
-    @Test
-    fun `assignRoles rejects invalid role`() {
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val targetUser = UserEntity(id = targetId, keycloakSubject = "sub-target")
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findById(targetId)).thenReturn(Optional.of(targetUser))
-
-        val ex = assertThrows(InvalidRequestException::class.java) {
-            userService.assignRoles(targetId, setOf("super_mega_admin"), adminPrincipal)
-        }
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.errorCode)
-    }
-
-    @Test
-    fun `assignRoles rejects self assignment of admin role`() {
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findById(adminId)).thenReturn(Optional.of(adminUser))
-
-        val ex = assertThrows(SelfPrivilegeChangeDeniedException::class.java) {
-            userService.assignRoles(adminId, setOf(UserRole.ADMIN), adminPrincipal)
-        }
-        assertEquals(ErrorCode.SELF_PRIVILEGE_CHANGE_DENIED, ex.errorCode)
-        verify(userRoleRepository, never()).deleteByIdUserId(anyUuid())
-    }
-
-    @Test
-    fun `assignPermissions rejects self assignment`() {
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findById(adminId)).thenReturn(Optional.of(adminUser))
-
-        assertThrows(SelfPrivilegeChangeDeniedException::class.java) {
-            userService.assignPermissions(adminId, setOf(Permission.LEDGER_CORRECT), adminPrincipal)
-        }
-    }
-
-    @Test
-    fun `setUserStatus rejects self deactivation`() {
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findById(adminId)).thenReturn(Optional.of(adminUser))
-
-        val ex = assertThrows(SelfPrivilegeChangeDeniedException::class.java) {
-            userService.setUserStatus(adminId, true, adminPrincipal)
-        }
-        assertEquals(ErrorCode.SELF_PRIVILEGE_CHANGE_DENIED, ex.errorCode)
-    }
-
-    @Test
-    fun `setUserStatus keeps at least one active admin account`() {
-        val lastAdminId = UUID.randomUUID()
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val lastAdmin = UserEntity(id = lastAdminId, keycloakSubject = "sub-last-admin")
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findById(lastAdminId)).thenReturn(Optional.of(lastAdmin))
-        `when`(userRoleRepository.findByIdUserId(lastAdminId)).thenReturn(
-            listOf(UserRoleEntity(UserRoleId(lastAdminId, AssignedRole.admin), lastAdmin))
-        )
-        `when`(userPermissionRepository.findByIdUserId(lastAdminId)).thenReturn(emptyList())
-        `when`(userRepository.countActiveUsersWithRole(AssignedRole.admin)).thenReturn(1L)
-
-        val ex = assertThrows(LastAdminProtectedException::class.java) {
-            userService.setUserStatus(lastAdminId, true, adminPrincipal)
-        }
-        assertEquals(ErrorCode.LAST_ADMIN_PROTECTED, ex.errorCode)
-        assertFalse(lastAdmin.disabled)
-    }
-
-    @Test
-    fun `setUserStatus sets disabled flag and writes an audit entry`() {
-        val adminUser = UserEntity(id = adminId, keycloakSubject = "sub-admin")
-        val targetUser = UserEntity(id = targetId, keycloakSubject = "sub-target", disabled = false)
-        val adminPrincipal = UserPrincipal(subject = "sub-admin", roles = setOf(UserRole.ADMIN))
-
-        `when`(userRepository.findByKeycloakSubject("sub-admin")).thenReturn(Optional.of(adminUser))
-        `when`(userRepository.findById(targetId)).thenReturn(Optional.of(targetUser))
-        `when`(userRepository.save(anyUserEntity())).thenAnswer { it.arguments[0] }
-        `when`(userRoleRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-        `when`(userPermissionRepository.findByIdUserId(targetId)).thenReturn(emptyList())
-
-        userService.setUserStatus(targetId, true, adminPrincipal)
-
-        assertTrue(targetUser.disabled)
-        verify(userRepository).save(targetUser)
-        verify(auditService).recordUserChange(
-            anyNullableUser(),
-            eqValue(AuditService.ACTION_STATUS_CHANGED),
-            eqUuid(targetId),
-            anyNullableValue(),
-            anyNullableValue()
-        )
-    }
 }

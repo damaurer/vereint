@@ -3,6 +3,7 @@ package de.maurer.baseservice.controller
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.security.AuthContext
 import de.maurer.baseservice.service.DrinkCatalogService
+import de.maurer.baseservice.service.DrinkLibraryService
 import de.maurer.baseservice.support.Identifiers
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*
 @Tag(name = "Getränkekatalog", description = "Globaler Getränkekatalog, Barcodes, Vorschläge und Freigaben")
 class DrinkCatalogController(
     private val drinkCatalogService: DrinkCatalogService,
+    private val drinkLibraryService: DrinkLibraryService,
     private val authContext: AuthContext
 ) {
 
@@ -101,5 +103,16 @@ class DrinkCatalogController(
         val principal = authContext.getRequiredPrincipal()
         drinkCatalogService.removeBarcode(drinkId(id), barcodeId(barcode), principal)
         return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/{id}/share-to-library")
+    @Operation(
+        summary = "In die gemeinsame Getränkedatenbank teilen",
+        description = "Trägt Name, Sorte, Beschreibung und Barcodes eines freigegebenen Getränks ein; "
+            + "Preise und Bilder bleiben im Stammtisch. Erfordert catalog.approve"
+    )
+    fun shareToLibrary(@PathVariable id: String): ResponseEntity<DrinkLibraryEntryDto> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(drinkLibraryService.shareFromCatalog(drinkId(id), principal))
     }
 }

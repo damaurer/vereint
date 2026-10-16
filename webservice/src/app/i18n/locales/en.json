@@ -15,7 +15,17 @@
       "permissionDenied": "You do not have permission for this action.",
       "notFound": "The requested item was not found.",
       "invalid": "The input is invalid. Please check it and try again.",
-      "generic": "The action could not be completed. Please try again later."
+      "generic": "The action could not be completed. Please try again later.",
+      "stammtischRequired": "Please choose a group first.",
+      "stammtischDenied": "You are not (or no longer) a member of this group.",
+      "stammtischReadOnly": "This group is read-only because a payment is overdue. Everything works again once it is paid.",
+      "planLimitMembers": "The current plan does not allow more members. A larger plan makes room.",
+      "planLimitStorage": "The storage of the current plan is used up.",
+      "planLimitVideos": "Videos are not included in the current plan.",
+      "planLimitKiosk": "The current plan allows only one active bar terminal.",
+      "billingUnavailable": "Online payment is not set up yet. Please try again later.",
+      "billingNoCustomer": "There is no payment account yet. Please book a plan first.",
+      "stammtischLimit": "You have already opened three groups of your own. That is the maximum per person."
     }
   },
   "member": {
@@ -56,7 +66,7 @@
       "greeting": {
         "morning": "Good morning, great to have you here.",
         "day": "Good to have you back.",
-        "evening": "Good evening. Who's at the regulars' table tonight?"
+        "evening": "Good evening. Who's joining tonight?"
       },
       "balanceHeading": "Your balance",
       "statementLink": "View statement",
@@ -87,7 +97,7 @@
         },
         "notifications": {
           "title": "Notifications",
-          "sub": "News from the club"
+          "sub": "News from the group"
         }
       },
       "declined": "You declined",
@@ -233,7 +243,7 @@
     "eyebrow": "Messages",
     "title": "Notifications",
     "unread": "{count} unread",
-    "intro": "Stay up to date on events, club announcements and news.",
+    "intro": "Stay up to date on events, group announcements and news.",
     "markAllRead": "Mark all as read",
     "markRead": "Mark as read",
     "loadingMessage": "Loading notifications.",
@@ -271,7 +281,10 @@
     "logout": "Sign out",
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} unread",
-    "chatUnread": "{label}, {count} unread"
+    "chatUnread": "{label}, {count} unread",
+    "switchStammtisch": "Switch group (current: {name})",
+    "readOnly": "This group is read-only because a payment is overdue.",
+    "readOnlyLink": "Go to plan"
   },
   "nav": {
     "items": {
@@ -292,10 +305,11 @@
       "communications": "Communications",
       "admin": "Administration",
       "tablet": "Bar terminal",
-      "scan": "Pay"
+      "scan": "Pay",
+      "stammtisch": "Group settings"
     },
     "sections": {
-      "club": "Club",
+      "club": "Group",
       "account": "My account",
       "bar": "Bar",
       "admin": "Management"
@@ -321,12 +335,13 @@
   "auth": {
     "status": {
       "eyebrow": "Public",
-      "brandClaim": "Your club. Vereint.",
+      "brandClaim": "Your group. Vereint.",
       "brandSub": "Members, events, treasury and bar in one place – secure and on every device.",
       "loginFailed": "Sign-in failed",
       "loggedOutTitle": "Signed out",
       "loggedOutMessage": "You have been signed out successfully.",
-      "retryLogin": "Sign in again"
+      "retryLogin": "Sign in again",
+      "openOwn": "Open your own group"
     },
     "errors": {
       "invalidState": "The sign-in has expired. Please start again.",
@@ -338,7 +353,7 @@
     "register": {
       "eyebrow": "Invitation",
       "title": "Become a member",
-      "doneTitle": "Welcome to the club!",
+      "doneTitle": "Welcome to the group!",
       "checking": "Checking invite link …",
       "invalidTitle": "Registration not possible",
       "toLogin": "Go to sign-in",
@@ -360,7 +375,11 @@
         "passwordTooShort": "The password must be at least {min} characters long.",
         "passwordMismatch": "The two passwords do not match.",
         "checkInput": "Please check your input. The password must be at least {min} characters long."
-      }
+      },
+      "joinTitle": "Join group",
+      "joinIntro": "You are already signed in. Use this invitation link to join the group with your existing account.",
+      "join": "Join this group",
+      "joining": "Joining …"
     }
   },
   "errorPages": {
@@ -391,7 +410,8 @@
       "boardOrAdmin": "Board or admin",
       "admin": "Admin",
       "drinkRecorder": "Drink recorder",
-      "statistics": "View statistics"
+      "statistics": "View statistics",
+      "platform": "Platform admin"
     },
     "authError": {
       "title": "Sign-in error",
@@ -508,10 +528,30 @@
     "boardMoments": {
       "title": "Moment types & reactions",
       "description": "Define types and reactions for moments."
+    },
+    "stammtische": {
+      "title": "Choose group",
+      "description": "Open one of your groups."
+    },
+    "platform": {
+      "title": "Platform",
+      "description": "Manage the groups of this installation."
+    },
+    "stammtisch": {
+      "title": "Group",
+      "description": "Name, picture, roles and membership of the group."
+    },
+    "drinkLibrary": {
+      "title": "Drinks database",
+      "description": "Add drinks from the shared database."
+    },
+    "stammtischOpen": {
+      "title": "Open a group",
+      "description": "Create and run your own group."
     }
   },
   "chat": {
-    "eyebrow": "Club chat",
+    "eyebrow": "Group chat",
     "title": "Chat",
     "toDirectMessages": "Direct messages →",
     "loadingMessage": "Loading conversations.",
@@ -526,7 +566,7 @@
       "ariaLabel": "Conversations",
       "newMessage": "+ New message",
       "groupOnline": "{count} online",
-      "clubChat": "Club chat",
+      "clubChat": "Group chat",
       "eventChats": "Event chats",
       "noEventChats": "You have no event chats right now. They appear once you are invited to an event.",
       "noMessages": "No messages yet"
@@ -563,7 +603,7 @@
       "eyebrow": "Direct messages",
       "title": "One-to-one chats",
       "badge": "DMs",
-      "toGroupChat": "← To the club chat",
+      "toGroupChat": "← To the group chat",
       "unavailable": "Direct messages unavailable",
       "searchLabel": "Search members",
       "searchPlaceholder": "Search members…",
@@ -649,7 +689,7 @@
       "titlePlaceholder": "e.g. Joint toast, evening prayer, cheering wave",
       "topicLabel": "Topic / ritual type *",
       "messageLabel": "Message / prompt (optional)",
-      "messagePlaceholder": "e.g. Here’s to our club! Who’s raising a glass from afar?",
+      "messagePlaceholder": "e.g. Here’s to our group! Who’s raising a glass from afar?",
       "durationLabel": "Duration of the moment",
       "duration": {
         "m15": "15 minutes (short prompt)",
@@ -679,7 +719,7 @@
     "topics": {
       "toast": {
         "label": "Joint toast",
-        "description": "For regulars’ tables & festivities"
+        "description": "For get-togethers & festivities"
       },
       "prayer": {
         "label": "Prayer & intercession",
@@ -772,9 +812,9 @@
   },
   "catalog": {
     "header": {
-      "eyebrow": "Club catalogue",
+      "eyebrow": "Group catalogue",
       "title": "Drinks & food catalogue",
-      "intro": "Overview of all club drinks, barcodes and food offerings."
+      "intro": "Overview of all group drinks, barcodes and food offerings."
     },
     "actions": {
       "proposeDrink": "+ Propose drink",
@@ -887,7 +927,36 @@
       "search": "Search",
       "newBarcode": "Barcode {barcode} is not assigned to any drink yet. It will be saved with the new drink."
     },
-    "createInfo": "“{name}” was added and is in the catalog right away."
+    "createInfo": "“{name}” was added and is in the catalog right away.",
+    "library": {
+      "open": "From the drinks database",
+      "back": "Back to catalogue",
+      "title": "Drinks database",
+      "intro": "The drinks database is shared by all groups and holds no prices – each group sets its own price when adding a drink.",
+      "searchLabel": "Name or type",
+      "searchPlaceholder": "e.g. lager",
+      "barcodeLabel": "Barcode (EAN)",
+      "search": "Search",
+      "unavailable": "The drinks database is currently unavailable.",
+      "empty": "No matches",
+      "emptyHint": "Try a different name or barcode.",
+      "inCatalog": "Already in catalogue",
+      "adopt": "Add",
+      "adoptSubmit": "Add to catalogue",
+      "name": "Name",
+      "category": "Type",
+      "description": "Description",
+      "price": "Sales price (€)",
+      "costPrice": "Purchase price (€, optional)",
+      "priceHint": "The price only applies to your group.",
+      "priceRequired": "Please enter a name and a price of at least €0.",
+      "adopted": "“{name}” is now in your catalogue.",
+      "proposed": "“{name}” has been proposed for your catalogue.",
+      "toCatalog": "Go to catalogue",
+      "share": "Share to drinks database",
+      "shared": "This drink is linked to the drinks database.",
+      "sharedInfo": "“{name}” is now in the drinks database (without price)."
+    }
   },
   "sublists": {
     "header": {
@@ -921,7 +990,7 @@
       "editTitle": "Edit sublist",
       "createTitle": "Create new sublist",
       "name": "Sublist name *",
-      "namePlaceholder": "e.g. regular get-together",
+      "namePlaceholder": "e.g. standard selection",
       "description": "Description",
       "descriptionPlaceholder": "e.g. standard selection of beers and soft drinks for regular get-togethers",
       "nameRequired": "Please enter a name."
@@ -1142,7 +1211,7 @@
       "save": "Save changes",
       "permissions": {
         "credit": "Manage balances (top up / book)",
-        "events": "Create / plan events & regulars’ tables",
+        "events": "Create / plan events & get-togethers",
         "notify": "Send group notifications",
         "attendance": "Start attendance poll",
         "invite": "Invite new members",
@@ -1213,7 +1282,7 @@
       "title": "Eber leadership team",
       "intro": "Moderation, financial overviews and prepared announcements.",
       "infoTitle": "Board area",
-      "infoText": "Manage the beer kitty, send important announcements or plan the next regulars’ table meetings here.",
+      "infoText": "Manage the group kitty, send important announcements or plan the next get-togethers here.",
       "panelsTitle": "Role-specific management",
       "panelsNav": "Board areas",
       "treasuryTitle": "Treasurer · Kitty & finances",
@@ -1239,10 +1308,10 @@
     "comms": {
       "eyebrow": "Secretary",
       "title": "Info panels & newsletters",
-      "intro": "Club chat notice, newsletters to members and sent notifications.",
-      "pinboardTitle": "Club chat notice",
+      "intro": "Group chat notice, newsletters to members and sent notifications.",
+      "pinboardTitle": "Group chat notice",
       "infoTitle": "Info from the secretary",
-      "infoText": "The notice sits at the top of the club chat and is visible to all members.",
+      "infoText": "The notice sits at the top of the group chat and is visible to all members.",
       "composeTitle": "Compose message",
       "recipientId": "Recipient (member ID)",
       "messageTitle": "Title",
@@ -1549,7 +1618,7 @@
     "consumption": {
       "ariaLabel": "Leaderboard by tallies",
       "title": "Leaderboard",
-      "total": "Club tallies",
+      "total": "Group tallies",
       "mine": "Your tallies",
       "myRank": "Your rank",
       "rankValue": "Rank {rank}",
@@ -1729,6 +1798,201 @@
       "submit": "Start",
       "format": "The PIN must consist of {min} to {max} digits.",
       "mismatch": "The two entries do not match."
+    }
+  },
+  "stammtisch": {
+    "choice": {
+      "eyebrow": "Groups",
+      "title": "Choose a group",
+      "intro": "Choose which group you want to open. You can switch at any time.",
+      "current": "Current",
+      "open": "Open",
+      "opening": "Opening …",
+      "emptyTitle": "No group yet",
+      "emptyMessage": "You are not a member of any group yet. Ask the board for an invitation link.",
+      "platform": "Manage platform",
+      "selectFailed": "The group could not be opened. Please try again.",
+      "openOwn": "Open your own group"
+    },
+    "platform": {
+      "back": "Back to group selection",
+      "eyebrow": "Platform",
+      "title": "Manage groups",
+      "intro": "All groups of this installation. Archived groups can no longer be opened by their members.",
+      "createTitle": "Create a new group",
+      "name": "Name",
+      "adminEmail": "Admin e-mail (optional)",
+      "adminEmailHint": "An existing account with this e-mail becomes the group admin; without one, you become the admin.",
+      "create": "Create",
+      "created": "“{name}” has been created.",
+      "listTitle": "All groups",
+      "unavailable": "The groups could not be loaded.",
+      "empty": "No groups yet",
+      "archived": "Archived",
+      "members": {
+        "one": "{count} member",
+        "other": "{count} members"
+      },
+      "createdAt": "created {date}",
+      "rename": "Rename",
+      "archive": "Archive",
+      "unarchive": "Restore",
+      "archiveConfirm": "Archive “{name}”? Members will no longer be able to open it.",
+      "plan": "Plan",
+      "setPlan": "Plan of “{name}”",
+      "storage": "{size} used",
+      "readOnly": "Read-only",
+      "planChanged": "“{name}” is now on the {plan} plan."
+    },
+    "settings": {
+      "eyebrow": "Group",
+      "title": "Group",
+      "memberCount": {
+        "one": "{count} member",
+        "other": "{count} members"
+      },
+      "switch": "Switch group",
+      "unavailable": "The group could not be loaded.",
+      "nameTitle": "Name",
+      "name": "Group name",
+      "renamed": "The name has been saved.",
+      "leaveTitle": "Leave group",
+      "leaveHint": "If you leave “{name}”, you lose all permissions here. You can only rejoin with a new invitation link.",
+      "leave": "Leave group",
+      "leaveConfirm": "Really leave “{name}”?",
+      "lastManager": "You are the last person who can manage members and roles. Hand this role to someone else first.",
+      "imageTitle": "Picture",
+      "imageAlt": "Picture of the group {name}",
+      "imageHint": "PNG, JPEG or GIF. Large pictures are scaled down before uploading.",
+      "imageUpload": "Upload picture",
+      "imageChange": "Change picture",
+      "imageRemove": "Remove picture",
+      "imageRemoveConfirm": "Really remove the group picture?",
+      "imageUploading": "Uploading picture …",
+      "imageSaved": "The picture has been saved.",
+      "imageRemoved": "The picture has been removed.",
+      "imageType": "Please choose a PNG, JPEG or GIF picture.",
+      "imageTooLarge": "The picture is too large (at most {max} MB)."
+    },
+    "roles": {
+      "title": "Roles & permissions",
+      "readOnly": "View only – roles can be changed by people allowed to manage roles.",
+      "new": "New role",
+      "editTitle": "Edit role",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Delete the role “{name}”? People with this role lose its permissions.",
+      "system": "System",
+      "memberCount": {
+        "zero": "nobody",
+        "one": "{count} person",
+        "other": "{count} people"
+      },
+      "permissions": "Permissions",
+      "noPermissions": "No permissions",
+      "name": "Name",
+      "description": "Description (optional)"
+    },
+    "permissionGroups": {
+      "audit": "Audit log",
+      "balance": "Balance",
+      "billing": "Plan and payment",
+      "catalog": "Catalogue",
+      "chat": "Chat",
+      "event": "Events",
+      "kiosk": "Kiosk",
+      "ledger": "Ledger",
+      "members": "Members",
+      "moments": "Moments",
+      "notifications": "Notifications",
+      "profile": "Profile",
+      "purchase": "Purchases",
+      "roles": "Roles",
+      "stammtisch": "Group"
+    },
+    "billing": {
+      "title": "Plan",
+      "plans": {
+        "free": "Free",
+        "stammtisch": "Standard",
+        "verein": "Premium"
+      },
+      "status": {
+        "active": "Active",
+        "past_due": "Payment due",
+        "canceled": "Cancelled",
+        "comped": "Granted free of charge"
+      },
+      "renews": "Renews on {date}.",
+      "endsOn": "Runs until {date}.",
+      "comped": "This plan was granted free of charge.",
+      "pastDue": "The last payment failed. Please update the payment method by {date}, otherwise the group becomes read-only.",
+      "pastDueNoDate": "The last payment failed. Please update the payment method.",
+      "readOnly": "The payment is overdue: this group is read-only. Viewing works, changes and purchases do not. Everything works again as soon as it is paid.",
+      "usage": "Usage",
+      "members": "Members",
+      "membersOf": "{count} of {max}",
+      "membersUnlimited": "{count} (unlimited)",
+      "storage": "Storage",
+      "storageOf": "{used} of {limit}",
+      "videos": "Videos in Moments",
+      "kiosks": "Bar terminals",
+      "kiosksOne": "one ({count} active)",
+      "kiosksMany": "several ({count} active)",
+      "yes": "Yes",
+      "no": "No",
+      "choose": "Choose a plan",
+      "interval": "Billing interval",
+      "month": "Monthly",
+      "year": "Yearly",
+      "perMonth": "{price} / month",
+      "perYear": "{price} / year",
+      "intervalMissing": "Not available with this billing interval.",
+      "current": "Current plan",
+      "limitMembers": {
+        "one": "Up to {count} member",
+        "other": "Up to {count} members"
+      },
+      "limitMembersUnlimited": "Unlimited members",
+      "limitStorage": "{size} storage",
+      "limitVideos": "Videos in Moments",
+      "limitNoVideos": "No videos",
+      "limitKiosks": "Several bar terminals",
+      "limitOneKiosk": "One bar terminal",
+      "book": "Book",
+      "checkoutUnavailable": "Online payment is not set up yet.",
+      "portal": "Payment and invoices",
+      "portalHint": "Payment method, invoices, change or cancel the plan.",
+      "supporter": "Support Vereint",
+      "supporterHint": "Voluntary and personal: {price} a month helps to develop Vereint further.",
+      "supporterHintNoAmount": "Voluntary and personal: a monthly contribution helps to develop Vereint further.",
+      "export": "Export data",
+      "exportHint": "All data of this group as a JSON file.",
+      "success": "Thank you! The plan will be active in a few seconds.",
+      "thanks": "Thank you for your support!",
+      "canceled": "Payment cancelled, nothing was booked.",
+      "unavailable": "The plan could not be loaded."
+    },
+    "open": {
+      "eyebrow": "New group",
+      "title": "Open a group",
+      "doneTitle": "Your group is open!",
+      "checking": "Getting ready …",
+      "intro": "Create your group and your account in one step. You will be the group admin.",
+      "createIntro": "You are signed in. Give your new group a name – you will be its admin.",
+      "planInfo": "The group starts on the free plan with up to 10 members. You can book a larger plan at any time later. Members join via an invitation link.",
+      "name": "Group name",
+      "submit": "Open group",
+      "submitting": "Opening group …",
+      "done": "“{name}” is open and your account for {email} has been created. Sign in now to choose a plan and invite members.",
+      "haveAccount": "Already have an account?",
+      "loginFirst": "Sign in first, then open it",
+      "back": "Back to group selection",
+      "errors": {
+        "nameRequired": "Please give your group a name.",
+        "checkInput": "Please check your input. The group name may be at most {max} characters long, the password needs at least {min} characters.",
+        "selectFailed": "The group has been created but could not be opened. You will find it in the group selection."
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.domain.KioskSessionEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.KioskSessionDto
@@ -10,11 +11,9 @@ import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.KioskSessionRepository
-import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.Permission
-import de.maurer.baseservice.security.RolePermissionMatrix
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.slf4j.LoggerFactory
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
@@ -42,9 +41,10 @@ import java.util.UUID
 @Service
 class KioskService(
     private val kioskSessionRepository: KioskSessionRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService,
     private val auditService: AuditService,
+    private val planLimits: PlanLimits,
     private val clock: Clock = Clock.systemUTC()
 ) {
 
@@ -61,6 +61,8 @@ class KioskService(
                 ErrorCode.KIOSK_PIN_INVALID_FORMAT
             )
         }
+        // Mehrere Thekenterminals gleichzeitig nur im Tarif Premium (Code verein).
+        planLimits.requireKioskSlot()
         val label = rawLabel?.trim()?.take(MAX_LABEL_LENGTH)?.ifBlank { null }
             ?: access.user.displayName?.take(MAX_LABEL_LENGTH)?.ifBlank { null }
             ?: DEFAULT_LABEL
@@ -173,14 +175,11 @@ class KioskService(
         return access.user
     }
 
-    /** Terminal (`purchase.tablet`), Vorstand oder Administration; sonst `403`. */
+    /** Terminal (`purchase.tablet`) oder Kiosk-Verwaltung (`kiosk.manage`); sonst `403`. */
     private fun requireKioskAccess(principal: UserPrincipal): KioskAccess {
         val user = userService.getOrCreateUser(principal)
-        val dbRoles = userRoleRepository.findByIdUserId(user.id).map { it.id.role.name }.toSet()
-        val roles = principal.roles + dbRoles
-        val manager = roles.any { it == UserRole.BOARD || it == UserRole.ADMIN }
-        val drinkRecorder = principal.drinkRecorder || user.drinkRecorder
-        val permissions = principal.permissions + RolePermissionMatrix.derivePermissions(roles, drinkRecorder)
+        val permissions = access.permissionsOf(principal, user)
+        val manager = permissions.contains(Permission.KIOSK_MANAGE)
         if (!manager && !permissions.contains(Permission.PURCHASE_TABLET)) {
             throw AccessDeniedException(Msg("error.kiosk.accessDenied"), ErrorCode.ACCESS_DENIED)
         }

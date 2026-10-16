@@ -8,6 +8,8 @@ export const publicPaths = new Set([
   '/invite/accept',
   // Registrierung per Einladungslink; das Token steht im URL-Fragment.
   '/register',
+  // Eigene Gruppe eröffnen, mit oder ohne Konto.
+  '/gruppe-eroeffnen',
   '/403',
   '/404',
 ]);
@@ -15,3 +17,16 @@ export const publicPaths = new Set([
 export function pathIs(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
+
+/**
+ * Frühere sichtbare Adressen der Gruppen-Seiten und ihre neuen Ziele. Express
+ * leitet sie dauerhaft um und behält die Query (`?billing=…`, `?returnTo=…`).
+ */
+export const LEGACY_PAGE_REDIRECTS: ReadonlyMap<string, string> = new Map([
+  ['/stammtische', '/gruppen'],
+  ['/stammtisch', '/gruppe'],
+  ['/eroeffnen', '/gruppe-eroeffnen'],
+]);
+
+/** Auswahlseite der Gruppen (ohne gewählte Gruppe). */
+export const GROUP_CHOICE_PAGE = '/gruppen';

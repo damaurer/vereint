@@ -100,8 +100,9 @@ class PostgresMigrationIntegrationTest @Autowired constructor(
 
         assertThrows(DataIntegrityViolationException::class.java) {
             jdbcTemplate.update(
-                "insert into events (id, title, starts_at, status, owner_id) values (?, ?, ?, ?, ?)",
+                "insert into events (id, stammtisch_id, title, starts_at, status, owner_id) values (?, ?, ?, ?, ?, ?)",
                 UUID.randomUUID(),
+                UUID.fromString("00000000-0000-0000-0000-000000000001"),
                 "Falscher Status",
                 Timestamp.from(Instant.now()),
                 "activ",

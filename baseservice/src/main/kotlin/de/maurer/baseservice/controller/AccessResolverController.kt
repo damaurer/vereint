@@ -7,6 +7,8 @@ import de.maurer.baseservice.dto.RolePermissionMatrixDto
 import de.maurer.baseservice.security.AppContext
 import de.maurer.baseservice.security.AuthContext
 import de.maurer.baseservice.service.AccessResolverService
+import de.maurer.baseservice.support.Identifiers
+import de.maurer.baseservice.tenancy.TenantLookup
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
@@ -23,7 +25,8 @@ import java.util.concurrent.ConcurrentHashMap
 @Tag(name = "Access Resolver", description = "Zugriffs-, Rollen- und Kontextauflösung")
 class AccessResolverController(
     private val authContext: AuthContext,
-    private val accessResolverService: AccessResolverService
+    private val accessResolverService: AccessResolverService,
+    private val tenantLookup: TenantLookup
 ) {
 
     private val log = LoggerFactory.getLogger(AccessResolverController::class.java)
@@ -101,7 +104,10 @@ class AccessResolverController(
             )
         }
 
-        val response = accessResolverService.validateGuestAccess(request.eventId, request.guestToken)
+        val eventKey = Identifiers.parseUuidOrNull(eventId)
+        val response = tenantLookup.inStammtischOfEventOrNone(eventKey) {
+            accessResolverService.validateGuestAccess(request.eventId, request.guestToken)
+        }
 
         if (!response.allowed) {
             // Fehlgeschlagene Versuche werden ohne Tokenwert protokolliert.

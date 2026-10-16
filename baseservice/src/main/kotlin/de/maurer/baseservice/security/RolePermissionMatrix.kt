@@ -1,21 +1,22 @@
 package de.maurer.baseservice.security
 
 /**
- * Einzige versionierte Quelle der Rollen-zu-Permission-Zuordnung.
+ * Standardrollen eines Stammtischs und ihre Berechtigungen beim Anlegen.
  *
- * Bisher lag die Ableitung dreifach vor (Benutzerdienst, Access Resolver, Express).
- * Diese Matrix ist der verbindliche Stand; der Access Resolver
- * (`AccessResolverService`) und die Express-Variante werden als Folgearbeit auf
- * diese Quelle umgestellt (siehe TICKET-006 bzw. TICKET-009).
+ * Jeder Stammtisch erhält beim Anlegen diese vier Systemrollen. Danach gelten
+ * ausschließlich die Berechtigungen aus `stammtisch_roles`: die
+ * Rollenverwaltung des Stammtischs kann sie ändern und eigene Rollen anlegen
+ * (siehe `StammtischAccess`). Die Migration `013-stammtische.xml` legt
+ * dieselben Werte für den Standard-Stammtisch an.
  *
  * `VERSION` wird bei jeder inhaltlichen Änderung erhöht, damit Caches und die
  * TypeScript-Gegenstücke abgleichbar bleiben.
  */
 object RolePermissionMatrix {
 
-    const val VERSION = 2
+    const val VERSION = 4
 
-    /** Zusätzliche technische Rolle für die Tablet-Erfassung. */
+    /** Zusätzliche technische Rolle für die Tablet-Erfassung (Thekenterminal). */
     const val ROLE_TABLET_RECORDER = "tabletRecorder"
 
     private val MEMBER_PERMISSIONS = setOf(
@@ -24,53 +25,53 @@ object RolePermissionMatrix {
         Permission.PURCHASE_SELF,
         Permission.CHAT_MEMBER,
         Permission.CHAT_EVENT,
-        Permission.EVENT_CREATE
+        Permission.EVENT_CREATE,
+        Permission.CATALOG_PROPOSE
     )
 
-    private val BOARD_PERMISSIONS = setOf(
-        Permission.PROFILE_READ_SELF,
-        Permission.BALANCE_READ_SELF,
-        Permission.EVENT_CREATE,
+    private val BOARD_PERMISSIONS = MEMBER_PERMISSIONS + setOf(
         Permission.EVENT_MANAGE,
         Permission.EVENT_INVITES_MANAGE,
-        Permission.CATALOG_PROPOSE,
         Permission.CATALOG_APPROVE,
         Permission.LEDGER_READ,
         Permission.LEDGER_CORRECT,
-        Permission.PURCHASE_SELF,
-        Permission.CHAT_MEMBER,
-        Permission.CHAT_EVENT,
-        Permission.AUDIT_READ
+        Permission.AUDIT_READ,
+        Permission.MEMBERS_READ,
+        Permission.MEMBERS_INVITE,
+        Permission.MOMENTS_MANAGE,
+        Permission.KIOSK_MANAGE,
+        Permission.NOTIFICATIONS_BROADCAST,
+        Permission.CHAT_MODERATE
     )
 
-    private val ADMIN_PERMISSIONS = BOARD_PERMISSIONS + setOf(Permission.PURCHASE_TABLET)
+    private val ADMIN_PERMISSIONS = BOARD_PERMISSIONS + setOf(
+        Permission.PURCHASE_TABLET,
+        Permission.MEMBERS_MANAGE,
+        Permission.ROLES_MANAGE,
+        Permission.STAMMTISCH_MANAGE,
+        Permission.BILLING_MANAGE,
+        Permission.AUDIT_READ_ALL
+    )
 
     private val TABLET_RECORDER_PERMISSIONS = setOf(Permission.PURCHASE_TABLET)
 
-    /** Vollständige Matrix; Schlüssel sind Rollennamen gemäß Datenvertrag. */
-    val MATRIX: Map<String, Set<String>> = mapOf(
+    /** Systemrollen eines neuen Stammtischs; Schlüssel sind die Rollen-Codes. */
+    val MATRIX: Map<String, Set<String>> = linkedMapOf(
         UserRole.MEMBER to MEMBER_PERMISSIONS,
         UserRole.BOARD to BOARD_PERMISSIONS,
         UserRole.ADMIN to ADMIN_PERMISSIONS,
         ROLE_TABLET_RECORDER to TABLET_RECORDER_PERMISSIONS
     )
 
-    /** Alle zuweisbaren Rollennamen. */
-    val ASSIGNABLE_ROLES: Set<String> = UserRole.ALL + ROLE_TABLET_RECORDER
+    /** Codes der Systemrollen. */
+    val SYSTEM_ROLES: Set<String> = MATRIX.keys
 
     /** Alle bekannten Permission-Namen. */
-    val KNOWN_PERMISSIONS: Set<String> = MATRIX.values.flatten().toSet()
+    val KNOWN_PERMISSIONS: Set<String> = Permission.ALL
 
     fun permissionsForRole(role: String): Set<String> = MATRIX[role] ?: emptySet()
 
-    /**
-     * Leitet die effektiven Berechtigungen aus Rollen und dem `drinkRecorder`-Flag ab.
-     */
-    fun derivePermissions(roles: Set<String>, drinkRecorder: Boolean = false): Set<String> {
-        val permissions = roles.flatMapTo(mutableSetOf()) { permissionsForRole(it) }
-        if (drinkRecorder) {
-            permissions.addAll(TABLET_RECORDER_PERMISSIONS)
-        }
-        return permissions
-    }
+    /** Standardberechtigungen der angegebenen Systemrollen. */
+    fun derivePermissions(roles: Set<String>): Set<String> =
+        roles.flatMapTo(mutableSetOf()) { permissionsForRole(it) }
 }

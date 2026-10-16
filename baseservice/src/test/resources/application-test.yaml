@@ -23,6 +23,10 @@ spring:
           jwk-set-uri: http://localhost:8080/realms/vereint/protocol/openid-connect/certs
 
 vereint:
+  tenancy:
+    # H2 kennt weder set_config noch Row Level Security; die Trennung prüft
+    # hier allein Hibernate (@TenantId). PostgreSQL-Tests schalten sie ein.
+    row-level-security: false
   scheduling:
     # Einladungen/Erinnerungen rufen Tests direkt auf statt zeitgesteuert.
     enabled: false

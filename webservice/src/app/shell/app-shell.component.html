@@ -110,6 +110,28 @@
         <p class="shell-page-title">{{ pageTitle() }}</p>
         @if (!kiosk()) {
           <div class="shell-topbar-actions">
+            @if (stammtischName(); as name) {
+              @if (canSwitchStammtisch()) {
+                <a
+                  class="shell-stammtisch"
+                  routerLink="/gruppen"
+                  [attr.aria-label]="'shell.switchStammtisch' | t: { name }"
+                  [attr.title]="'shell.switchStammtisch' | t: { name }"
+                >
+                  @if (stammtischId(); as id) {
+                    <vereint-group-avatar [groupId]="id" [name]="name" [imageVersion]="stammtischImageVersion()" size="1.75rem" />
+                  }
+                  <span class="shell-stammtisch-name">{{ name }}</span>
+                </a>
+              } @else {
+                <span class="shell-stammtisch" [attr.title]="name">
+                  @if (stammtischId(); as id) {
+                    <vereint-group-avatar [groupId]="id" [name]="name" [imageVersion]="stammtischImageVersion()" size="1.75rem" />
+                  }
+                  <span class="shell-stammtisch-name">{{ name }}</span>
+                </span>
+              }
+            }
             <a
               class="shell-icon-button"
               routerLink="/notifications"
@@ -165,6 +187,14 @@
       </header>
 
       <div class="shell-content" id="shell-main-content" tabindex="-1">
+        @if (readOnly() && !isGuest()) {
+          <p class="shell-readonly" role="alert">
+            {{ 'shell.readOnly' | t }}
+            @if (!kiosk()) {
+              <a routerLink="/gruppe">{{ 'shell.readOnlyLink' | t }}</a>
+            }
+          </p>
+        }
         <router-outlet />
       </div>
 

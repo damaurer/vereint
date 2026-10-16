@@ -22,7 +22,7 @@ class MomentTypeEntity(
     @Column(name = "id", nullable = false)
     var id: UUID = UUID.randomUUID(),
 
-    @Column(name = "code", length = 64, nullable = false, unique = true, updatable = false)
+    @Column(name = "code", length = 64, nullable = false, updatable = false)
     var code: String = "",
 
     @Column(name = "name", length = 64, nullable = false)
@@ -63,7 +63,7 @@ class MomentTypeEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 /**
  * Reaktion, die Mitglieder in einem Moment abgeben können (z. B. 🍻 Anstoßen).
@@ -78,7 +78,7 @@ class MomentReactionEntity(
     @Column(name = "id", nullable = false)
     var id: UUID = UUID.randomUUID(),
 
-    @Column(name = "code", length = 64, nullable = false, unique = true, updatable = false)
+    @Column(name = "code", length = 64, nullable = false, updatable = false)
     var code: String = "",
 
     @Column(name = "name", length = 64, nullable = false)
@@ -104,7 +104,7 @@ class MomentReactionEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 /** Art einer Moment-Datei. */
 enum class MomentMediaKind { image, video }
@@ -171,4 +171,4 @@ class MomentMediaEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()

@@ -7,9 +7,12 @@ import de.maurer.baseservice.domain.RsvpStatus
 import de.maurer.baseservice.error.Messages
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.repository.EventParticipantRepository
+import de.maurer.baseservice.tenancy.StammtischJobs
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -33,13 +36,23 @@ import java.util.Locale
 @Service
 class EventInvitationService(
     private val eventParticipantRepository: EventParticipantRepository,
-    private val notificationService: NotificationService
+    private val notificationService: NotificationService,
+    private val stammtischJobs: StammtischJobs,
+    transactionManager: PlatformTransactionManager
 ) {
 
+    private val tx = TransactionTemplate(transactionManager)
+
+    /** Hintergrundlauf: jeder Stammtisch in seinem eigenen Kontext und seiner eigenen Transaktion. */
     @Scheduled(
         fixedDelayString = "\${vereint.events.invitation-check-interval:PT1M}",
         initialDelayString = "\${vereint.events.invitation-check-initial-delay:PT30S}"
     )
+    fun dispatchDueEverywhere() {
+        stammtischJobs.forEachStammtisch("event-invitations") { tx.execute { dispatchDue() } }
+    }
+
+    /** Verschickt fällige Einladungen und Erinnerungen im aktuellen Stammtisch. */
     @Transactional
     fun dispatchDue(): Int {
         val now = Instant.now()

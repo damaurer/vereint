@@ -6,8 +6,8 @@ import { sql } from '../support/stack';
 /** Nachrichtenverlauf ohne die Vorschau in der Konversationsliste. */
 const thread = (page: Page) => page.locator('app-chat-thread');
 
-test.describe('Vereinschat und Direktnachrichten', () => {
-  test('Vorstand pinnt eine Infotafel, Mitglieder schreiben und reagieren im Vereinschat', async ({ as }) => {
+test.describe('Gruppenchat und Direktnachrichten', () => {
+  test('Vorstand pinnt eine Infotafel, Mitglieder schreiben und reagieren im Gruppenchat', async ({ as }) => {
     const board = await as('board');
     const member = await as('member');
     const member2 = await as('member2');
@@ -25,7 +25,7 @@ test.describe('Vereinschat und Direktnachrichten', () => {
     await test.step('Mitglied sieht die Infotafel und schreibt', async () => {
       const { page } = member;
       await page.goto('/chat');
-      await page.getByRole('button', { name: /^Vereinschat/ }).click();
+      await page.getByRole('button', { name: /^Gruppenchat/ }).click();
       await expect(page.getByText('Infotafel von Bert Vorstand')).toBeVisible();
       await expect(thread(page).getByText(notice)).toBeVisible();
       await page.getByPlaceholder('Schreibe eine Nachricht…').fill(text);
@@ -38,13 +38,13 @@ test.describe('Vereinschat und Direktnachrichten', () => {
       await page.goto('/dashboard');
       await expect(page.getByRole('link', { name: /^Chat, \d+ ungelesen$/ }).first()).toBeVisible();
       await page.goto('/chat');
-      await page.getByRole('button', { name: /^Vereinschat/ }).click();
+      await page.getByRole('button', { name: /^Gruppenchat/ }).click();
       const message = page.locator('article.chat-message').filter({ hasText: text });
       await expect(message).toBeVisible();
       await message.getByRole('button', { name: 'Reaktion hinzufügen' }).click();
       await message.getByRole('button', { name: 'Mit 👍 reagieren' }).click();
       await expect(message.getByRole('button', { name: 'Reaktion 👍, 1' })).toBeVisible();
-      // Nach dem Lesen zaehlt der Vereinschat nicht mehr als ungelesen.
+      // Nach dem Lesen zaehlt der Gruppenchat nicht mehr als ungelesen.
       await expect
         .poll(async () => (await member2.api.get<{ type: string; unreadCount: number }[]>('/conversations'))
           .find((c) => c.type === 'club')?.unreadCount)

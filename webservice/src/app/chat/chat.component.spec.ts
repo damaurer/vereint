@@ -67,7 +67,7 @@ describe('ChatComponent', () => {
   it('opens the club chat with its pinned notice and messages', async () => {
     const fixture = await create();
     const text = el(fixture).textContent ?? '';
-    expect(text).toContain('Vereinschat');
+    expect(text).toContain('Gruppenchat');
     expect(text).toContain('Wer kommt heute?');
     expect(text).toContain('Infotafel von Lisa');
     expect(api['messages']).toHaveBeenCalledWith('c-club');

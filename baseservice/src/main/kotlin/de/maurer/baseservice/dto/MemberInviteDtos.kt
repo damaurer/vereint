@@ -52,7 +52,16 @@ data class MemberInviteTokenRequest(
 )
 
 data class MemberInvitePreviewDto(
-    val expiresAt: Instant
+    val expiresAt: Instant,
+    /** Name des Stammtischs, zu dem der Link einlädt. */
+    val stammtischName: String = ""
+)
+
+/** Angemeldeter Beitritt mit einem Einladungslink. */
+data class JoinStammtischResponse(
+    val stammtischId: String,
+    val stammtischName: String,
+    val alreadyMember: Boolean
 )
 
 data class RegisterMemberRequest(
@@ -83,5 +92,6 @@ data class RegisterMemberRequest(
 
 data class RegisterMemberResponse(
     val email: String,
-    val displayName: String
+    val displayName: String,
+    val stammtischId: String? = null
 )

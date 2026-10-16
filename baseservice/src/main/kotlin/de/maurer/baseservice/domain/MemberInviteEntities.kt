@@ -53,7 +53,7 @@ class MemberInviteEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-) {
+) : StammtischScoped() {
     val revoked: Boolean get() = revokedAt != null
 
     fun isExpired(now: Instant): Boolean = !expiresAt.isAfter(now)
@@ -73,9 +73,9 @@ class MemberInviteRedemptionEntity(
     var invite: MemberInviteEntity? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JoinColumn(name = "user_id", nullable = false)
     var user: UserEntity? = null,
 
     @Column(name = "redeemed_at", nullable = false)
     var redeemedAt: Instant = Instant.now()
-)
+) : StammtischScoped()

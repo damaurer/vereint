@@ -1,11 +1,11 @@
 package de.maurer.baseservice
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import de.maurer.baseservice.controller.AccessResolverController
 import de.maurer.baseservice.dto.AccessCheckRequest
 import de.maurer.baseservice.dto.AccessCheckResponse
 import de.maurer.baseservice.dto.AccessDecisionDto
 import de.maurer.baseservice.dto.RolePermissionMatrixDto
-import de.maurer.baseservice.controller.AccessResolverController
 import de.maurer.baseservice.security.AppContext
 import de.maurer.baseservice.security.RolePermissionMatrix
 import de.maurer.baseservice.service.AccessResolverService
@@ -109,7 +109,7 @@ class AccessResolverControllerTest {
             RolePermissionMatrixDto(
                 version = RolePermissionMatrix.VERSION,
                 roles = RolePermissionMatrix.MATRIX,
-                assignableRoles = RolePermissionMatrix.ASSIGNABLE_ROLES,
+                assignableRoles = RolePermissionMatrix.SYSTEM_ROLES,
                 knownPermissions = RolePermissionMatrix.KNOWN_PERMISSIONS,
                 appContexts = AccessResolverService.ALL_APP_CONTEXTS
             )

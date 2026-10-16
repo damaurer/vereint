@@ -168,11 +168,13 @@ export function rateLimit(options: RateLimitOptions): RequestHandler {
 
 /**
  * Öffentliche Endpunkte, deren Geheimnis im Aufruf selbst steckt (Einladungs-
- * und Gast-Token). Hier ist Raten die naheliegende Angriffsart.
+ * und Gast-Token). Hier ist Raten die naheliegende Angriffsart. Die offene
+ * Registrierung (`/signup`) legt Konten an und erhält dieselbe Grenze.
  */
 export const PUBLIC_TOKEN_PATHS = [
   '/api/v1/member-invites/preview',
   '/api/v1/member-invites/register',
+  '/api/v1/signup',
   '/api/v1/invites/accept',
   '/api/v1/auth/access/guest',
   '/api/invites',

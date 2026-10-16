@@ -25,6 +25,7 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.EventDrinkService
 import de.maurer.baseservice.service.UserService
+import de.maurer.baseservice.support.StammtischTestSupport
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -85,7 +86,7 @@ class EventDrinkServiceTest {
             drinkCatalogRepository,
             drinkSublistRepository,
             drinkSublistItemRepository,
-            userRoleRepository,
+            StammtischTestSupport.access(userRoleRepository),
             userService
         )
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: ownerId)).thenReturn(emptyList())

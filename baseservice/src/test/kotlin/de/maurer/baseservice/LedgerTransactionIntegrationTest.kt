@@ -11,6 +11,7 @@ import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.LedgerService
+import de.maurer.baseservice.service.MembershipService
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,18 +40,24 @@ class LedgerTransactionIntegrationTest @Autowired constructor(
     private val ledgerEntryRepository: LedgerEntryRepository,
     private val idempotencyRecordRepository: IdempotencyRecordRepository,
     private val userRepository: UserRepository,
+    private val membershipService: MembershipService,
     transactionManager: PlatformTransactionManager
 ) {
 
     private val transactionTemplate = TransactionTemplate(transactionManager)
 
-    private fun newUser(prefix: String): UserEntity = userRepository.saveAndFlush(
-        UserEntity(
-            id = UUID.randomUUID(),
-            keycloakSubject = "kc-$prefix-${UUID.randomUUID()}",
-            displayName = "$prefix ${UUID.randomUUID()}"
+    /** Konto und Mitgliedschaft im Standard-Stammtisch des Tests. */
+    private fun newUser(prefix: String): UserEntity {
+        val user = userRepository.saveAndFlush(
+            UserEntity(
+                id = UUID.randomUUID(),
+                keycloakSubject = "kc-$prefix-${UUID.randomUUID()}",
+                displayName = "$prefix ${UUID.randomUUID()}"
+            )
         )
-    )
+        membershipService.addMember(user)
+        return user
+    }
 
     private fun adminPrincipal(subject: String) =
         UserPrincipal(subject = subject, displayName = "Ledger Admin", roles = setOf(UserRole.ADMIN))

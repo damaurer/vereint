@@ -27,7 +27,7 @@ export class ChatApiService {
     return this.api.get<MemberProfile>('/users/me');
   }
 
-  /** Alle sichtbaren Konversationen, Vereinschat zuerst (`GET /conversations`). */
+  /** Alle sichtbaren Konversationen, Gruppenchat zuerst (`GET /conversations`). */
   conversations(): Observable<ConversationSummary[]> {
     return this.api.get<ConversationSummary[]>('/conversations');
   }

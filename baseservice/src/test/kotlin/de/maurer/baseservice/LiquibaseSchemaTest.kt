@@ -2,6 +2,7 @@ package de.maurer.baseservice
 
 import de.maurer.baseservice.domain.*
 import de.maurer.baseservice.repository.*
+import de.maurer.baseservice.security.UserRole
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,12 +56,11 @@ class LiquibaseSchemaTest @Autowired constructor(
             id = userId,
             keycloakSubject = "kc-sub-12345",
             email = "user@example.com",
-            displayName = "Max Mustermann",
-            boardRole = BoardRole.treasurer
+            displayName = "Max Mustermann"
         )
         userRepository.save(user)
 
-        val role = UserRoleEntity(id = UserRoleId(userId = userId, role = AssignedRole.board), user = user)
+        val role = UserRoleEntity(id = UserRoleId(userId = userId, role = UserRole.BOARD), user = user)
         userRoleRepository.save(role)
 
         val permission = UserPermissionEntity(id = UserPermissionId(userId = userId, permission = "ledger.read"), user = user)
@@ -72,7 +72,7 @@ class LiquibaseSchemaTest @Autowired constructor(
 
         val foundRoles = userRoleRepository.findByIdUserId(userId)
         assertEquals(1, foundRoles.size)
-        assertEquals(AssignedRole.board, foundRoles[0].id.role)
+        assertEquals(UserRole.BOARD, foundRoles[0].id.role)
 
         // 2. Events and participants
         val eventId = UUID.randomUUID()
@@ -442,12 +442,21 @@ class LiquibaseSchemaTest @Autowired constructor(
 
     @Test
     fun `rejects an invalid board role through the check constraint`() {
+        val user = userRepository.saveAndFlush(
+            UserEntity(
+                id = UUID.randomUUID(),
+                keycloakSubject = "kc-board-${UUID.randomUUID()}",
+                displayName = "Falsche Vorstandsrolle"
+            )
+        )
+
+        // Die Vorstandsfunktion gehört seit Migration 013 zur Mitgliedschaft im Stammtisch.
         assertThrows(DataIntegrityViolationException::class.java) {
             jdbcTemplate.update(
-                "INSERT INTO users (id, keycloak_subject, display_name, board_role) VALUES (?, ?, ?, ?)",
+                "INSERT INTO stammtisch_members (id, stammtisch_id, user_id, active, board_role) VALUES (?, ?, ?, TRUE, ?)",
                 UUID.randomUUID(),
-                "kc-board-${UUID.randomUUID()}",
-                "Falsche Vorstandsrolle",
+                DEFAULT_STAMMTISCH,
+                user.id,
                 "kassenwart"
             )
         }
@@ -463,9 +472,11 @@ class LiquibaseSchemaTest @Autowired constructor(
             )
         )
 
+        // Rollen müssen im Stammtisch definiert sein (Fremdschlüssel auf stammtisch_roles).
         assertThrows(DataIntegrityViolationException::class.java) {
             jdbcTemplate.update(
-                "INSERT INTO user_roles (user_id, role) VALUES (?, ?)",
+                "INSERT INTO user_roles (stammtisch_id, user_id, role) VALUES (?, ?, ?)",
+                DEFAULT_STAMMTISCH,
                 owner.id,
                 "vorstandsmitglied"
             )
@@ -528,5 +539,9 @@ class LiquibaseSchemaTest @Autowired constructor(
         assertEquals(1L, updated.version)
         assertEquals(createdAt, updated.createdAt)
         assertTrue(!updated.updatedAt.isBefore(createdAt))
+    }
+
+    companion object {
+        private val DEFAULT_STAMMTISCH: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
     }
 }

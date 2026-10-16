@@ -55,7 +55,7 @@ class FoodCatalogEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 /**
  * Event-spezifisches Speisenangebot mit Preiskonfiguration und Tablet-/Self-Service-Flags.
@@ -107,4 +107,4 @@ class EventFoodEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()

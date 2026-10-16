@@ -1,5 +1,5 @@
 /**
- * Gemeinsame Layout-Styles von Vereinschat (`/chat`) und Direktnachrichten
+ * Gemeinsame Layout-Styles von Gruppenchat (`/chat`) und Direktnachrichten
  * (`/direktnachrichten`): Konversationsliste links, Verlauf rechts; mobil
  * einspaltig (Liste ODER Verlauf).
  */

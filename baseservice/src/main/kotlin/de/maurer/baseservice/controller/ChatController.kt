@@ -6,6 +6,7 @@ import de.maurer.baseservice.dto.SendMessageRequest
 import de.maurer.baseservice.security.AuthContext
 import de.maurer.baseservice.service.ChatService
 import de.maurer.baseservice.support.Identifiers
+import de.maurer.baseservice.tenancy.TenantLookup
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -33,7 +34,8 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Chat", description = "Event-Chat und Chat-Mitgliedschaften")
 class ChatController(
     private val chatService: ChatService,
-    private val authContext: AuthContext
+    private val authContext: AuthContext,
+    private val tenantLookup: TenantLookup
 ) {
 
     private fun eventId(id: String) = Identifiers.parseUuid(id, "eventId")
@@ -107,7 +109,11 @@ class ChatController(
         @PathVariable("eventId") eventIdValue: String,
         @RequestHeader(name = "X-Guest-Token", required = false) guestToken: String?
     ): ResponseEntity<List<ChatMessageDto>> {
-        return ResponseEntity.ok(chatService.listGuestMessages(eventId(eventIdValue), guestToken))
+        val eventId = eventId(eventIdValue)
+        // Gäste haben keinen Stammtisch-Kontext; er ergibt sich aus dem Event.
+        return ResponseEntity.ok(
+            tenantLookup.inStammtischOfEventOrNone(eventId) { chatService.listGuestMessages(eventId, guestToken) }
+        )
     }
 
     @PostMapping("/guest/messages")
@@ -117,7 +123,10 @@ class ChatController(
         @RequestHeader(name = "X-Guest-Token", required = false) guestToken: String?,
         @Valid @RequestBody request: SendMessageRequest
     ): ResponseEntity<ChatMessageDto> {
-        val message = chatService.sendGuestMessage(eventId(eventIdValue), guestToken, request)
+        val eventId = eventId(eventIdValue)
+        val message = tenantLookup.inStammtischOfEventOrNone(eventId) {
+            chatService.sendGuestMessage(eventId, guestToken, request)
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(message)
     }
 }

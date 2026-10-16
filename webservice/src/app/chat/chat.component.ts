@@ -26,9 +26,9 @@ interface ChatPageData {
 }
 
 /**
- * Vereinschat (`/chat`).
+ * Gruppenchat (`/chat`).
  *
- * Zeigt den Vereinschat mit Infotafel (nur lesend; der Vorstand pflegt sie an
+ * Zeigt den Gruppenchat mit Infotafel (nur lesend; der Vorstand pflegt sie an
  * anderer Stelle), Nachrichten, Reaktionen und Composer. Daneben stehen die
  * Event-Chats des Mitglieds mit Ungelesen-Zähler; Direktnachrichten haben eine
  * eigene Seite. Web und Tablet zeigen Liste und Verlauf zweispaltig, mobil
@@ -156,7 +156,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   private listTimer: ReturnType<typeof setInterval> | null = null;
   private listSub?: Subscription;
 
-  /** Vereinschat zuerst, danach Event-Chats (Reihenfolge vom Server). */
+  /** Gruppenchat zuerst, danach Event-Chats (Reihenfolge vom Server). */
   protected readonly rows = computed<ConversationSummary[]>(() =>
     (this.data()?.conversations ?? []).filter(
       (conversation) => conversation.type === 'club' || conversation.type === 'event',
