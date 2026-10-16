@@ -18,16 +18,16 @@ graph TD
     subgraph BFFLayer ["2. Express SSR & BFF Layer (lokal Port 4200)"]
         SSR["Express 5 Server (Angular SSR Engine)"]
         AuthBFF["OIDC / PKCE & Session Cookie Manager"]
-        DeliveryMW["Authorization & TransferState Middleware"]
+        DeliveryMW["Authorization- & Delivery-Middleware"]
         ApiProxy["API Proxy Middleware (/api/*)"]
     end
 
     subgraph BackendLayer ["3. Spring Boot Core Service (baseservice - Port 8081)"]
-        SecFilter["Spring Security 6 Resource Server (JWT Validator)"]
-        AccessCtrl["AccessResolver & AuthContext"]
+        SecFilter["Spring Security Resource Server (JWT Validator)"]
+        AccessCtrl["StammtischContextFilter & StammtischAccess"]
         Controllers["REST Controllers (Tablet, Ledger, Events, Chat etc.)"]
         Services["Business Services & Idempotency Validator"]
-        DataLayer["Spring Data JPA & Hibernate 6"]
+        DataLayer["Spring Data JPA & Hibernate (@TenantId)"]
     end
 
     subgraph InfraLayer ["4. Infrastructure & Persistence"]
@@ -42,14 +42,14 @@ graph TD
     SW -->|Push Notification Events| Browser
 
     AuthBFF -->|"Token Exchange (PKCE)"| KC
-    DeliveryMW -->|Inject Initial Auth State| SSR
-    ApiProxy -->|Forward with Authorization: Bearer JWT| SecFilter
+    DeliveryMW -->|"Seitenfreigabe, Header, gefilterter Transfer-State"| SSR
+    ApiProxy -->|"Authorization: Bearer JWT, X-Stammtisch-Id"| SecFilter
 
     SecFilter --> AccessCtrl
     AccessCtrl --> Controllers
     Controllers --> Services
     Services --> DataLayer
-    DataLayer -->|SQL Transactions & Liquibase| PG
+    DataLayer -->|"SQL (Row Level Security) & Liquibase"| PG
     Services -->|"verschlüsselte Dateien (AES-256-GCM)"| S3
 ```
 
@@ -58,31 +58,34 @@ graph TD
 ## 🧩 Schichten & Komponenten im Detail
 
 ### 1. Client & PWA Layer (`webservice/src/app`)
-- **Framework**: Angular 22 (Standalone Components, Signals, Zoneless/Zone-kompatibel).
-- **App Shell Architecture**: Einheitliches Shell-Layout (`AppShellComponent`) mit adaptiver Navigation für Mobile (Bottom Navigation Bar), Tablet (Kiosk Overlay) und Desktop (Sidebar Navigation).
+- **Framework**: Angular 22 (Standalone Components, Signals, ohne zone.js).
+- **App Shell Architecture**: Einheitliches Shell-Layout (`AppShellComponent`) mit adaptiver Navigation für Mobile (Bottom Navigation Bar) und Desktop (Sidebar Navigation), Gruppenwechsel und Kiosk-Sperre.
 - **Progressive Web App (PWA)**: Service Worker für intelligentes Caching statischer Assets, Offline-Hinweise und Hintergrundempfang von Push-Benachrichtigungen via VAPID.
-- **Optimus Design System**: Eigenes UI-System mit CSS Custom Properties für Theme-Konsistenz (`--opt-color-primary`, `--opt-space-*`, `--opt-radius-*`).
+- **Design System**: Bibliothek `@openng/optimus-ui` mit Theme Aura, Tailwind CSS 4 und eigene CSS Custom Properties (`--opt-color-*`, `--opt-radius-*`).
 
 ### 2. Express SSR & BFF Layer (`webservice/src/server`)
 - **Runtime**: Node.js 22+, Express 5.
 - **Server-Side Rendering (SSR)**: Schneller First Contentful Paint (FCP) durch serverseitiges Vorrendern der HTML-Seiten mit Angular SSR Engine.
-- **State Hydration**: Übertragung des serverseitigen Authentifizierungs- und Gruppenkontexts (`TransferState`, `CLUB_CONFIG_KEY`, Auth-State) verhindert Layout-Shifts und Flackern beim Laden.
+- **Transfer-State-Filter**: Für private Seiten wird der Angular-Transfer-State vor der Auslieferung auf eine Positivliste reduziert (`transfer-state.ts`); Tokens, Guthaben und E-Mail-Adressen gelangen nicht ins HTML.
 - **Backend-for-Frontend (BFF) Pattern**:
   - Verwaltet OIDC PKCE Login/Logout-Abläufe und schützt Tokens vor XSS in verschlüsselten, HTTP-Only, SameSite Cookies.
-  - Proxy-Middleware (`api-proxy.middleware.ts`) leitet Client-Anfragen transparent an das Spring Boot Backend weiter und hängt das gültige Bearer-Access-Token an.
+  - Proxy-Middleware (`api-proxy.middleware.ts`) leitet `/api/v1/*` an das Spring Boot Backend weiter, hängt das gültige Bearer-Access-Token an und setzt aus dem Gruppen-Cookie den Header `X-Stammtisch-Id`.
 
 ### 3. Spring Boot Backend (`baseservice`)
 - **Framework**: Spring Boot 4.1+, Kotlin 2.3+, Java 25 JDK.
-- **Security**: Stateless OAuth2 Resource Server mit JWT-Validierung (`JwtAuthConverter`, `RolePermissionMatrix`).
+- **Security**: Stateless OAuth2 Resource Server mit JWT-Validierung (`JwtAuthConverter`), danach `StammtischContextFilter` für Gruppe, Rollen und Rechte.
+- **Mehrere Gruppen**: Jede fachliche Zeile gehört einer Gruppe (`stammtisch_id`). Hibernate `@TenantId` und PostgreSQL Row Level Security trennen die Daten, siehe [Gruppen](../domains/stammtische.md).
 - **Idempotenz**: Eindeutige Transaktionssicherheit über den HTTP-Header `Idempotency-Key` (UUIDv4) für kritische Kassen- und Thekenbuchungen.
 - **Domänenmodule**:
   - **Getränke- & Speisenkatalog**: Stammdatenverwaltung (`DrinkCatalogService`, `FoodCatalogService`) mit Standardpreisen und Einkaufspreisen (`costPrice`).
   - **Event-Angebote**: Granulare Zuordnung von Getränken (`EventDrinkService`) und Speisen (`EventFoodService`) zu Events mit individueller Preisgestaltung und Tablet-/Kiosk-Freigabe.
   - **Revisionssicheres Kassenbuch & Gewinnermittlung**: Transaktionsjournal (`LedgerService`) mit Beleg-Snapshots (`PurchaseSnapshot`), Einkaufspreiserfassung und Deckungsbeitragsberechnung (`profit = unit_price - cost_price`).
-  - **Tablet Strichlisten-Recorder**: Kiosk-API (`TabletRecorderService`) für Getränke und Speisen mit kombinierten Katalogen (`/items`), Runden- und Abendbuchungen.
+  - **Tablet Strichlisten-Recorder**: Thekenterminal-API (`TabletRecorderService`) für Getränke und Speisen mit kombinierten Katalogen (`/items`), Runden- und Abendbuchungen; Kiosk-Modus mit PIN (`KioskService`).
+  - **Tarife**: Pläne je Gruppe und Stripe-Abrechnung (`BillingService`, `StripeWebhookService`).
+  - **Gemeinsame Getränkedatenbank**: gruppenübergreifende Stammdaten ohne Preise (`DrinkLibraryService`).
 - **Storage & Push**:
   - Integrierter S3-Client (`S3ObjectStorage`) für Bilder sowie Fotos und Videos aus Moments. Alle Dateien werden vor dem Speichern mit `DATA_ENCRYPTION_KEY` verschlüsselt und nur über berechtigungsgeprüfte Endpunkte des baseservice ausgeliefert, nie über direkte S3-Links.
-  - VAPID Web Push Sender (`VapidPushSender`) mit RFC-8292-konformer Payload-Verschlüsselung.
+  - VAPID Web Push Sender (`VapidPushSender`, RFC 8292) ohne Nutzlast: Der Push weckt nur den Service Worker, die Inhalte lädt der Client berechtigt aus `notifications` nach.
 
 ### 4. Daten- & Infrastrukturschicht
 - **PostgreSQL 17**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.
@@ -104,12 +107,12 @@ sequenceDiagram
     participant DB as PostgreSQL 17
 
     User->>BFF: POST /api/v1/tablet/events/{id}/purchases (Cookie-Session)
-    Note over BFF: AuthMiddleware validiert Session-Cookie & holt Keycloak-JWT
+    Note over BFF: attachIdentity entschlüsselt die Session & erneuert bei Bedarf das Keycloak-JWT
     BFF->>Spring: POST /api/v1/tablet/events/{id}/purchases<br/>Header: Authorization: Bearer <JWT><br/>Header: Idempotency-Key: <UUID>
-    Note over Spring: JwtAuthConverter extrahiert Rollen & Berechtigungen ('purchase.tablet')
+    Note over Spring: StammtischContextFilter setzt Gruppe, Rollen & Berechtigungen ('purchase.tablet')
     Note over Spring: Idempotency-Check: Wurde UUID bereits verarbeitet?
-    Spring->>DB: INSERT INTO ledger_entries (member_id, amount_cents, ...)
-    Spring->>DB: INSERT INTO idempotency_records (scope, key, response_body)
+    Spring->>DB: INSERT INTO ledger_entries (stammtisch_id, member_id, amount, ...)
+    Spring->>DB: INSERT INTO idempotency_records (scope, idempotency_key, response_payload)
     DB-->>Spring: Transaction Committed
     Spring-->>BFF: 201 Created (LedgerEntryDto)
     BFF-->>User: 201 Created (JSON Payload)

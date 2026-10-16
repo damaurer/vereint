@@ -66,8 +66,8 @@ Produktion: ein ARM-Server bei AWS in Frankfurt, per Terraform angelegt
 ([infra/aws](infra/aws/README.md)), Docker Compose hinter Caddy
 ([deploy](deploy/README.md)). Chat-Nachrichten, Mitteilungen, Bilder und Videos
 verschlüsselt der baseservice mit AES-256-GCM, bevor sie gespeichert werden.
-Jeder Merge nach `main` rollt mit Backup, Health Check und automatischem
-Rollback aus.
+Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` rollt mit
+Backup, Health Check und automatischem Rollback aus.
 
 ---
 
@@ -90,8 +90,8 @@ Rollback aus.
 
 - Gearbeitet wird auf `develop`. Jeder Pull Request nach `develop`, `qs` oder `main`
   muss Tests, Sicherheitsscans und E2E-Tests bestehen.
-- Jeder Merge nach `main` rollt automatisch auf einen einzelnen AWS-Server in
-  Frankfurt aus: Datenbank-Backup vorher, Health Check danach, automatischer
+- Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` rollt
+  automatisch auf einen einzelnen AWS-Server in Frankfurt aus: Datenbank-Backup vorher, Health Check danach, automatischer
   Rollback bei Fehlern.
 - Chat-Nachrichten, Mitteilungen, Bilder und Videos werden in der App mit
   AES-256-GCM verschlüsselt, bevor sie in der Datenbank oder in S3 landen.

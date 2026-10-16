@@ -1,6 +1,6 @@
 # 🔐 Sicherheit, Authentifizierung & Autorisierung
 
-Dieses Kapitel beschreibt die Sicherheitsarchitektur des `baseservice`, einschließlich der `SecurityFilterChain`, der JWT-Token-Verarbeitung, der Rollen- und Permission-Matrix, des `AuthContext`, der automatischen Benutzerprovisionierung sowie der Absicherung von Gästen und CORS.
+Dieses Kapitel beschreibt die Sicherheitsarchitektur des `baseservice`, einschließlich der `SecurityFilterChain`, der JWT-Token-Verarbeitung, des Gruppenkontexts mit Rollen je Gruppe, des `AuthContext`, der automatischen Benutzerprovisionierung sowie der Absicherung von Gästen und CORS.
 
 ---
 
@@ -26,9 +26,11 @@ graph TD
   JwtVal -- Ungültiges / Fehlendes Token --> AuthEntryPoint[RestAuthenticationEntryPoint: 401]
   JwtVal -- Gültiges JWT --> Converter[JwtAuthConverter & ClaimExtractor]
   Converter --> BuildPrincipal[UserPrincipal & Authorities]
-  BuildPrincipal --> MethodSec{"Rollen- / Scope-Check"}
-  MethodSec -- Verweigert --> DeniedHandler[RestAccessDeniedHandler: 403]
-  MethodSec -- Erlaubt --> Controller
+  BuildPrincipal --> Tenant["StammtischContextFilter: Gruppe wählen, Rollen und Rechte der Gruppe setzen"]
+  Tenant -- "fremde Gruppe (403) / keine Gruppe (409)" --> Problem[ProblemDetail]
+  Tenant --> Controller
+  Controller --> ServiceCheck{"Rechteprüfung im Service (StammtischAccess)"}
+  ServiceCheck -- Verweigert --> Denied[ApiException: 403]
 ```
 
 ### 1. `permitAll()`-Positivliste
@@ -37,6 +39,8 @@ Folgende Pfade sind ohne Bearer-Token öffentlich erreichbar:
 - **Gast-Zugang & Einladungen**: `/api/v1/auth/access/guest`, `/api/v1/invites/accept`
 - **Registrierung per Einladungslink**: `/api/v1/member-invites/preview`, `/api/v1/member-invites/register` (das Token im Body ist das Geheimnis)
 - **Gast-Chat**: `/api/v1/events/*/chat/guest/**` (die Autorisierung erfolgt über den kryptografischen `X-Guest-Token`-Header)
+- **Gruppe eröffnen**: `/api/v1/signup` (Konto anlegen und erste Gruppe eröffnen)
+- **Stripe-Webhook**: `/api/v1/billing/stripe/webhook` (geschützt durch die Stripe-Signatur, `StripeWebhookService`)
 - **API-Dokumentation**: `/v3/api-docs/**`, `/swagger-ui/**`, `/swagger-ui.html` (nur erreichbar, wenn `API_DOCS_ENABLED=true`; in Produktion aus)
 
 Alle übrigen Actuator-Endpunkte (`/actuator/**`) erfordern zwingend die Rolle `ADMIN`. Alle Fach-Endpunkte (`/api/v1/**`) erfordern standardmäßig ein gültiges JWT.
@@ -73,12 +77,23 @@ sequenceDiagram
   Sec->>Context: setAuthentication(token)
 ```
 
+### Gruppenkontext (`StammtischContextFilter.kt`)
+Direkt nach `BearerTokenAuthenticationFilter` läuft der `StammtischContextFilter`:
+
+1. Er legt das lokale Konto bei Bedarf an und lädt die Mitgliedschaften (`StammtischMemberships`).
+2. Er wählt die Gruppe aus dem Header `X-Stammtisch-Id`; ohne Header gilt die einzige Gruppe der Person. Ist die Person dort kein aktives Mitglied: `403 stammtisch_access_denied`. Fachliche Endpunkte ohne gewählte Gruppe: `409 stammtisch_required`. Ohne Gruppe laufen nur Konto-, Gruppenwahl-, Plattform-, Getränkedatenbank-, Einladungs- und Push-Geräte-Endpunkte (`isStammtischFree`).
+3. Er ersetzt `roles`, `permissions` und `boardRole` im Principal durch die Werte der Gruppe. Die Realmrolle `admin` aus dem Token setzt nur `platformAdmin = true` (Autorität `ROLE_PLATFORM_ADMIN`).
+4. Er setzt den `TenantContext`, aus dem Hibernate (`@TenantId`) und `TenantAwareDataSource` (Row Level Security) die Gruppe lesen.
+5. Ist die Kulanzfrist nach einer offenen Zahlung abgelaufen, beantwortet er schreibende Anfragen mit `403 stammtisch_read_only` (außer Tarif, Export, Verlassen, Kiosk).
+
+Nur in Entwicklung und E2E (`TENANCY_BOOTSTRAP_REALM_ROLES=true`) treten Konten ohne Mitgliedschaft automatisch „Meine Gruppe“ mit ihren Realmrollen bei (`RealmRoleBootstrap`). Ein Plattform-Admin ohne Mitgliedschaft übernimmt eine noch herrenlose Gruppe (`PlatformService.claimUnclaimedStammtisch`).
+
 ### 1. `JwtClaimExtractor.kt`
 Zentrale Komponente zur Extraktion claims-basierter Informationen aus dem `org.springframework.security.oauth2.jwt.Jwt`:
 - `sub`: Eindeutige Keycloak-Benutzer-ID.
 - `roles`: Zusammenführung aus flachem `roles`-Claim, `realm_access.roles` und `resource_access.<client>.roles`.
 - `permissions`: Aus `permissions`-Array und leerzeichengetrenntem `scope`-Claim.
-- `board_role`, `drink_recorder`, `event_scopes`: Spezifische Fach-Claims.
+- `board_role`, `drink_recorder`, `event_scopes`: Fach-Claims aus dem Token. Sie werden vom `StammtischContextFilter` durch die Werte der Gruppe ersetzt (`eventScopes` wird geleert) und haben damit keine Wirkung mehr.
 
 ### 2. `UserPrincipal.kt` & `AuthContext.kt`
 Das `UserPrincipal` stellt die Identität des Aufrufers dar. Das Attribut `attributes` (rohe JWT-Claims) ist mit `@JsonIgnore` versehen, damit Token-Interna niemals über JSON-Endpunkte nach außen gelangen.
@@ -97,37 +112,22 @@ class AuthContext(private val claimExtractor: JwtClaimExtractor) {
 }
 ```
 
+Für Prüfungen gegen die Rollen der Gruppe nutzen die Services `StammtischAccess` (`has`, `hasAny`, `require`). Es zählt die Vereinigung aus den Rechten der Rollen der Person (`user_roles` → `stammtisch_roles.permissions`), individuell vergebenen Rechten (`user_permissions`) und den Rechten im Principal.
+
 ---
 
-## 📊 Rollen- & Berechtigungsmatrix (`RolePermissionMatrix.kt`)
+## 📊 Rollen je Gruppe & Startwerte (`RolePermissionMatrix.kt`)
 
-> **Mehrere Stammtische:** Rollen und Rechte gelten je Stammtisch. Die Matrix unten
-> beschreibt nur die Startwerte der vier Systemrollen, die jeder neue Stammtisch
-> erhält (`StammtischSeeder`); jeder Stammtisch kann sie anpassen und eigene Rollen
-> anlegen. Keycloak-Realmrollen zählen nicht mehr, außer `admin` (Plattform-Admin).
-> Details: [Mehrere Stammtische](../domains/stammtische.md).
+Rollen und Rechte gelten je Gruppe und stehen in `stammtisch_roles`. `RolePermissionMatrix` (**Version 4**) beschreibt nur die Startwerte der vier Systemrollen, die jede neue Gruppe beim Anlegen erhält (`PlatformService.createStammtisch` → `StammtischSeeder`; für die erste Gruppe legt sie Migration `013` an). Die Rollenverwaltung der Gruppe (`roles.manage`) kann sie ändern und eigene Rollen anlegen (`/api/v1/stammtisch/roles`); zugewiesen werden Rollen im Bearbeiten-Formular eines Mitglieds (`PUT /api/v1/users/{id}/roles`, ebenfalls `roles.manage`). Keycloak-Realmrollen zählen nicht, außer `admin` (Plattform-Admin). Details: [Gruppen](../domains/stammtische.md).
 
-Die Zuordnung von Benutzerrollen zu fachlichen Berechtigungen ist zentral in `RolePermissionMatrix.kt` definiert (**Matrix-Version 2**):
+Startwerte (vollständige Tabelle mit Beschreibungen: [Sicherheitskonzept](../architecture/security-and-auth.md#startwerte-der-systemrollen)):
 
-| Permission | Beschreibung | `member` | `board` | `admin` | `tabletRecorder` |
-| :--- | :--- | :---: | :---: | :---: | :---: |
-| `profile.read.self` | Eigenes Profil und Einstellungen einsehen | ✅ | ✅ | ✅ | ❌ |
-| `balance.read.self` | Eigenen Kontostand & Buchungen einsehen | ✅ | ✅ | ✅ | ❌ |
-| `purchase.self` | Eigene Getränke-/Speisenkäufe buchen | ✅ | ✅ | ✅ | ❌ |
-| `chat.member` | Im allgemeinen Gruppenchat lesen/schreiben | ✅ | ✅ | ✅ | ❌ |
-| `chat.event` | Im Event-Chat teilnehmen | ✅ | ✅ | ✅ | ❌ |
-| `event.create` | Neue Veranstaltungen erstellen | ✅ | ✅ | ✅ | ❌ |
-| `event.manage` | Veranstaltungen bearbeiten & absagen | ❌ | ✅ | ✅ | ❌ |
-| `event.invites.manage` | Gast-Einladungen erstellen und verwalten | ❌ | ✅ | ✅ | ❌ |
-| `catalog.propose` | Speisen/Getränke vorschlagen | ❌ | ✅ | ✅ | ❌ |
-| `catalog.approve` | Speisen/Getränke im Katalog freigeben | ❌ | ✅ | ✅ | ❌ |
-| `ledger.read` | Vollständiges Kassenbuch einsehen | ❌ | ✅ | ✅ | ❌ |
-| `ledger.correct` | Fehlbuchungen stornieren/korrigieren | ❌ | ✅ | ✅ | ❌ |
-| `audit.read` | Audit-Logs abrufen | ❌ | ✅ | ✅ | ❌ |
-| `purchase.tablet` | Tablet-Kiosk Strichlisten-Buchungen durchführen | ❌ | ❌ | ✅ | ✅ |
+- `member`: `profile.read.self`, `balance.read.self`, `purchase.self`, `chat.member`, `chat.event`, `event.create`, `catalog.propose`
+- `board`: wie `member`, dazu `event.manage`, `event.invites.manage`, `catalog.approve`, `ledger.read`, `ledger.correct`, `audit.read`, `members.read`, `members.invite`, `moments.manage`, `kiosk.manage`, `notifications.broadcast`, `chat.moderate`
+- `admin`: wie `board`, dazu `purchase.tablet`, `members.manage`, `roles.manage`, `stammtisch.manage`, `billing.manage`, `audit.read.all`
+- `tabletRecorder`: nur `purchase.tablet` (Thekenkonto)
 
-### Dynamische Ableitung mit `drinkRecorder`-Flag
-Wird einem Mitglied das Flag `drinkRecorder = true` verliehen (oder die Rolle `tabletRecorder`), erhält es zusätzlich die Berechtigung `purchase.tablet`, um am Theken-Tablet Strichlisten erfassen zu können, ohne vollen Administratorzugriff zu benötigen.
+Schutzregeln beim Ändern: Niemand ändert die eigenen Rollen oder Rechte (`self_privilege_change_denied`), und nach jeder Änderung an Rollen, Zuweisungen oder Mitgliedschaften muss mindestens ein aktives Mitglied `members.manage` oder `roles.manage` behalten (`StammtischManagers`, `last_role_manager_protected`).
 
 ---
 
@@ -158,8 +158,8 @@ Falls die Authentifizierung oder Autorisierung fehlschlägt, erzeugen dedizierte
 
 Externe Gäste erhalten keinen Keycloak-Account, sondern ein kryptografisches Einladungs-Token:
 - **Generierung**: `SecureTokens.generateToken(32)` erzeugt 32 Byte kryptografische Zufallsentropie (Base64-URL-encoded).
-- **Speicherung**: Der Rohwert wird **niemals** in der Datenbank gespeichert. Es wird ausschließlich der SHA-256-Hash (`SecureTokens.sha256Hex(token)`) in der Spalte `token_hash` abgelegt.
-- **Validierung**: Eingehende Gast-Anfragen werden gehasht und gegen `event_guests` abgeglichen (`AccessResolverService.resolveGuestAccess`).
+- **Speicherung**: Der Rohwert wird **niemals** in der Datenbank gespeichert. Es wird ausschließlich der SHA-256-Hash (`SecureTokens.sha256Hex(token)`) abgelegt (`event_invites.token_hash`, `event_guests.guest_token_hash`; ebenso `member_invites.token_hash` für Einladungslinks).
+- **Validierung**: Eingehende Gast-Anfragen werden gehasht und gegen `event_guests` abgeglichen (`AccessResolverService.validateGuestAccess`).
 
 ---
 

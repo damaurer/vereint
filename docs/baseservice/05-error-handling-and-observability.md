@@ -28,8 +28,8 @@ Alle Fehlerantworten des `baseservice` folgen dem standardisierten RFC-7807-Form
 ### ProblemDetail-Struktur im Detail
 - **`type`**: Eindeutige URI des Fehlertyps (`https://vereint.example/problems/<code/>`).
 - **`title`**: HTTP-Status-Kurzbeschreibung (z. B. `Bad Request`, `Forbidden`, `Conflict`).
-- **`status`**: Numerischer HTTP-Statuscode (`400`, `401`, `403`, `404`, `409`, `500`).
-- **`detail`**: Menschlich lesbare, lokalisierte oder technische Fehlerbeschreibung.
+- **`status`**: Numerischer HTTP-Statuscode (`400`, `401`, `403`, `404`, `409`, `410`, `413`, `500`, `503`).
+- **`detail`**: Menschlich lesbare Fehlerbeschreibung, übersetzt nach `Accept-Language` (siehe [i18n](i18n.md)).
 - **`instance`**: URI des fehlerhaften API-Endpunkts (`request.requestURI`).
 - **`code`**: Maschinenlesbarer Fehlercode aus `ErrorCode.kt`.
 - **`traceId`**: Eindeutige Request-Korrelations-ID (identisch mit dem HTTP-Response-Header `X-Request-Id`).
@@ -56,7 +56,7 @@ Die Klasse `ErrorCode.kt` definiert alle stabilen Fehlerkonstanten im System:
 | `role_not_assigned` | `403 Forbidden` | Die erforderliche Benutzerrolle fehlt. |
 | `profile_not_found` | `403 Forbidden` | Dem Token kann kein aktives Benutzerprofil zugeordnet werden. |
 | `self_privilege_change_denied` | `403 Forbidden` | Selbständerung der eigenen Rollen, Berechtigungen oder des Admin-Status verboten. |
-| `last_admin_protected`| `403 Forbidden` | Schutz vor Entzug der Adminrolle des letzten verbleibenden Administrators. |
+| `last_admin_protected`| `403 Forbidden` | Konstante vorhanden, derzeit ohne Auslöser; den letzten Verwaltungszugang einer Gruppe schützt `last_role_manager_protected`. |
 | `not_found` | `404 Not Found` | Gesuchte Ressource (ID, Entität oder URL-Pfad) existiert nicht. |
 | `invitation_expired`| `410 Gone` | Einladungs-Link oder Gast-Token ist zeitlich abgelaufen. |
 | `invitation_revoked`| `410 Gone` | Einladungs-Link oder Gast-Token wurde manuell widerrufen. |
@@ -67,6 +67,22 @@ Die Klasse `ErrorCode.kt` definiert alle stabilen Fehlerkonstanten im System:
 | `ledger_already_corrected` | `409 Conflict` | Buchungseintrag wurde bereits storniert/korrigiert. |
 | `self_service_disabled` | `403 Forbidden` | Self-Service für diesen Artikel oder diese Veranstaltung deaktiviert. |
 | `drink_not_in_event`| `400 Bad Request` | Getränk ist nicht im Sortiment der angegebenen Veranstaltung. |
+| `invitation_used_up` | `410 Gone` | Einladungslink ist ausgeschöpft. |
+| `email_already_registered` | `409 Conflict` | Für die E-Mail-Adresse gibt es schon ein Konto (Registrierung). |
+| `password_rejected` | `400 Bad Request` | Keycloak lehnt das Passwort ab (Passwortregeln). |
+| `registration_unavailable` | `503 Service Unavailable` | Kontoanlage über Keycloak ist nicht eingerichtet. |
+| `terms_not_accepted` | `400 Bad Request` | Der AGB wurde bei Registrierung oder Eröffnung nicht zugestimmt. |
+| `kiosk_pin_invalid_format` | `400 Bad Request` | Die Kiosk-PIN hat ein ungültiges Format. |
+| `media_too_large` | `413 Payload Too Large` | Foto oder Video in Moments ist zu groß. |
+| `video_too_long` | `400 Bad Request` | Video in Moments ist zu lang. |
+| `stammtisch_required` | `409 Conflict` | Fachlicher Endpunkt ohne gewählte Gruppe. |
+| `stammtisch_access_denied` | `403 Forbidden` | Die Person ist kein aktives Mitglied der angefragten Gruppe. |
+| `stammtisch_read_only` | `403 Forbidden` | Zahlung über die Kulanzfrist hinaus offen; die Gruppe ist nur lesbar. |
+| `stammtisch_limit` | `409 Conflict` | Höchstzahl selbst eröffneter Gruppen erreicht (`SIGNUP_MAX_OWNED`). |
+| `last_role_manager_protected` | `403 Forbidden` | Die Änderung nähme der Gruppe die letzte Person mit `members.manage` oder `roles.manage`. |
+| `plan_limit_members`, `plan_limit_storage`, `plan_limit_videos`, `plan_limit_kiosk` | `409 Conflict` | Grenze des Tarifs erreicht (Mitglieder, Speicher, Videos, mehrere Kiosks). |
+| `billing_unavailable` | `503 Service Unavailable` | Stripe ist nicht eingerichtet. |
+| `billing_no_customer` | `409 Conflict` | Kundenportal ohne bestehendes Stripe-Kundenkonto. |
 | `internal_error` | `500 Internal Server Error` | Unerwarteter Serverfehler oder ungefangene Exception. |
 
 ---
@@ -123,9 +139,9 @@ Spring Boot Actuator liefert standardisierte Schnittstellen für Health-Checks u
 
 - **Liveness Probe**: `GET /actuator/health/liveness` (öffentlich) – Prüft, ob der Webserver läuft.
 - **Readiness Probe**: `GET /actuator/health/readiness` (öffentlich) – Prüft, ob Datenbank und Liquibase bereit sind.
-- **Info-Endpunkt**: `GET /actuator/info` (öffentlich) – Liefert Git- und Build-Informationen (Version, Commit).
-- **Detail-Health**: `GET /actuator/health` – Liefert Details (`show-details: when-authorized`) ausschließlich für authentifizierte Benutzer mit der Rolle `ADMIN`.
-- **Geschützte Metriken**: Alle übrigen Endpunkte (`/actuator/**`) sind durch Spring Security gesperrt und erfordern Admin-Rechte.
+- **Info-Endpunkt**: `GET /actuator/info` (öffentlich) – Liefert Build-Informationen (`buildInfo()` in Gradle).
+- **Detail-Health**: `GET /actuator/health` – Liefert Details (`show-details: when-authorized`) ausschließlich mit der Autorität `ROLE_ADMIN`. Diese setzt der `StammtischContextFilter` aus der Rolle `admin` der gewählten Gruppe, nicht aus der Plattform-Administration.
+- **Weitere Endpunkte**: Freigegeben sind nur `health` und `info` (`management.endpoints.web.exposure.include`); alles andere unter `/actuator/**` ist zusätzlich durch Spring Security auf `ROLE_ADMIN` beschränkt.
 
 ---
 

@@ -2,7 +2,7 @@
 
 Für Vorstandsmitglieder, zum Beispiel Kassenwart und Schriftwart. Als Vorstand bist du auch Mitglied; alles aus dem [Leitfaden Mitglied](02-mitglied.md) gilt für dich ebenso. Gastgeber eines Events finden hier außerdem den Abschnitt [Ein Event vorbereiten](#ein-event-vorbereiten).
 
-Deine Vorstandsbereiche findest du am Handy unter **Mehr → Verwaltung**, am Rechner links unter **Verwaltung**: **Vorstand**, **Kasse & Finanzen** und **Kommunikation**.
+Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltung**, am Rechner links unter **Verwaltung**: **Vorstand**, **Kasse & Finanzen** und **Kommunikation**. Welche davon du siehst, hängt von den Rechten deiner Rollen in der Gruppe ab. Eine eigene Rolle mit nur `ledger.read` sieht zum Beispiel nur **Vorstand** und **Kasse & Finanzen**.
 
 ## Auf einen Blick
 
@@ -30,7 +30,7 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr → Verwaltung**, am Re
 
 **Vorstand** ist dein Einstieg:
 
-- **Rollenspezifische Verwaltung** führt zu **Kasse & Finanzen**, **Kommunikation**, **Moments · Typen & Reaktionen**, **Mitglied einladen** und **Kiosk-Geräte**.
+- **Rollenspezifische Verwaltung** führt zu **Kassenwart · Kasse & Finanzen**, **Schriftwart · Kommunikation**, **Moments · Typen & Reaktionen**, **Mitglied einladen** und **Kiosk-Geräte**.
 - Die Kennzahlen zeigen, wie viele Events du siehst und wie viele Aktionen zuletzt protokolliert wurden.
 - Unter **Gastgeber · Events** stehen alle Events mit **Moderieren**.
 - **Letzte Aktionen** ist das Protokoll: wer wann was gebucht, geändert oder versendet hat, mit den Namen der beteiligten Mitglieder, Events und Artikel.
@@ -113,7 +113,7 @@ Zum Hinzufügen unter **Getränk aus dem Katalog** ein Getränk wählen, optiona
 
 1. **Gültig (Minuten)** und **Max. Nutzungen** eintragen, z. B. 10080 Minuten (eine Woche) und 5 Nutzungen.
 2. **Gasteinladung erzeugen** tippen.
-3. Den angezeigten Link kopieren und an die Gäste schicken. **Der Link wird nur einmal angezeigt.**
+3. Den angezeigten Link kopieren und an die Gäste schicken. Er wird nur dieses eine Mal angezeigt („Dieser Link wird nur einmal angezeigt“).
 
 Die Liste zeigt jede Einladung mit Stand und Nutzungen, z. B. „aktiv · 0 / 5“. **Widerrufen** macht einen Link sofort ungültig. Was Gäste sehen, steht im [Leitfaden Gast](06-gast.md).
 
@@ -152,6 +152,8 @@ Im **Getränkekatalog** pflegst du alle Getränke der Gruppe. Bei jedem Getränk
 Vereint warnt, wenn ein Name oder Strichcode schon vergeben ist. **Speichern** übernimmt die Änderung.
 
 <br clear="right">
+
+<img src="bilder/v-getraenkedatenbank.png" alt="Getränkedatenbank" width="300" align="right">
 
 **Getränkedatenbank**: Alle Gruppen teilen sich eine gemeinsame Getränkedatenbank. Sie enthält Name, Sorte, Beschreibung und Strichcodes, aber keine Preise und keine Bilder.
 
@@ -202,6 +204,8 @@ Unter **Rundbriefe / Meldungen** steht, was zuletzt verschickt wurde.
 
 ## Kiosk-Geräte
 
+<img src="bilder/v-kiosk-geraete.png" alt="Kiosk-Geräte entsperren" width="300" align="right">
+
 Ein Thekenterminal im Kiosk-Modus lässt sich am Gerät nur mit seiner PIN verlassen (siehe [Leitfaden Thekenterminal](05-thekenterminal.md#kiosk-modus)). Ist die PIN vergessen oder nach zu vielen Fehlversuchen gesperrt:
 
 1. **Vorstand** → **Kiosk-Geräte** öffnen. Dort stehen alle Geräte, auf denen gerade der Kiosk-Modus läuft, mit Gerätename, wer ihn wann gestartet hat und ob die PIN-Eingabe gerade gesperrt ist.
@@ -210,6 +214,8 @@ Ein Thekenterminal im Kiosk-Modus lässt sich am Gerät nur mit seiner PIN verla
 Das Gerät verlässt den Kiosk-Modus innerhalb weniger Sekunden. Start, Fernentsperrung und PIN-Sperren stehen in **Letzte Aktionen**.
 
 ## Moments: Typen & Reaktionen
+
+<img src="bilder/v-moments-verwalten.png" alt="Moments-Typen und Reaktionen verwalten" width="300" align="right">
 
 Unter **Vorstand** → **Moments · Typen & Reaktionen** legt ihr fest, welche Arten von Moments Mitglieder starten können (z. B. Anstoßen, Jubeln) und mit welchen Reaktionen sie antworten.
 

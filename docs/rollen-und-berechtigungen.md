@@ -14,17 +14,20 @@ löschen lassen sie sich nicht.
 | :--- | :--- | :--- |
 | **Mitglied** | `member` | Events sehen und zusagen, Chat, eigenes Guthaben und Käufe, per Barcode bezahlen, Getränke vorschlagen, Moments, Statistiken |
 | **Vorstand** | `board` | Zusätzlich Events anlegen und verwalten, Guthaben aller Mitglieder buchen (Kasse), Katalog pflegen und freigeben, Einkaufspreise, Rundbriefe und Infotafel, Einladungslinks, Moment-Typen und Reaktionen, Kiosk-Geräte entsperren, fremde Bilder und Videos aus Moments entfernen |
-| **Admin** | `admin` | Alles vom Vorstand, dazu Mitglieder und Rollen verwalten, Konten deaktivieren, Audit-Protokoll, Gruppe umbenennen, Daten exportieren, Tarif und Zahlung |
-| **Theke** | `tabletRecorder` | Das Thekenterminal bedienen (Striche für Mitglieder buchen), Kiosk-Modus mit PIN starten |
+| **Admin** | `admin` | Alles vom Vorstand, dazu Mitglieder und Rollen verwalten, Konten deaktivieren, Audit-Protokoll aller Mitglieder, Gruppe umbenennen und Bild ändern, Daten exportieren, Tarif und Zahlung, das Thekenterminal bedienen |
+| **Theke** (in der Administration „Thekenterminal“) | `tabletRecorder` | Das Thekenterminal bedienen (Striche für Mitglieder buchen), Kiosk-Modus mit PIN starten |
 
-Zusätzlich gibt es Vorstandsfunktionen als Kennzeichnung: `chair` (Vorsitz),
-`treasurer` (Kasse), `secretary` (Schriftführung) und `assessor` (Beisitz).
+Zusätzlich gibt es Vorstandsfunktionen als Kennzeichnung ohne eigene Rechte:
+`chair` (Vorsitz), `treasurer` (Kasse), `secretary` (Schriftführung) und
+`assessor` (Beisitz). Sie werden unter *Administration → Bearbeiten →
+Vorstands-Unterrolle* gesetzt.
 
 ## Eigene Rollen
 
 Wer Rollen verwalten darf (`roles.manage`), legt unter *Gruppeneinstellungen →
 Rollen & Berechtigungen* eigene Rollen an und schneidet Rechte zu. Zugewiesen
-werden sie wie Systemrollen unter *Administration → Bearbeiten → Rollen*.
+werden sie wie Systemrollen unter *Administration → Bearbeiten → Rollen*; dort
+stehen sie auch im Rollenfilter und in der Spalte *Rolle* der Mitgliedertabelle.
 Eine Rolle „Kasse“ mit `ledger.read` sieht so die Kasse, aber nicht den
 Adminbereich. Rechte für die Verwaltung:
 
@@ -47,7 +50,9 @@ Adminbereich. Rechte für die Verwaltung:
 Die Keycloak-Realmrolle `admin` macht eine Person zum **Plattform-Admin** des
 Vereint-Teams: Gruppen anlegen, umbenennen, archivieren und Tarife von Hand
 vergeben (`/plattform`). Alle anderen Realmrollen (`board`, `member` …) haben
-keine Wirkung mehr; Rollen kommen nur aus der gewählten Gruppe.
+in Produktion keine Wirkung; Rollen kommen nur aus der gewählten Gruppe. Nur in
+der lokalen Entwicklung und in den E2E-Tests treten Konten ohne Gruppe mit
+ihren Realmrollen der Gruppe „Meine Gruppe“ bei.
 
 ## Wichtige Regeln
 

@@ -6,7 +6,7 @@
 | :--- | :--- |
 | `develop` | Standard-Branch, hier landen alle Pull Requests |
 | `qs` | Qualitätssicherung vor dem Release |
-| `main` | Produktion. **Jeder Merge nach `main` rollt automatisch aus** ([Deployment und Rollback](deployment-und-rollback.md)) |
+| `main` | Produktion. **Ein Merge nach `main` rollt automatisch aus**, sobald ein Image neu gebaut wurde oder sich `deploy/` geändert hat ([Deployment und Rollback](deployment-und-rollback.md)) |
 
 Feature-Branches gehen per Pull Request nach `develop`. Die Prüfungen laufen nur
 für Pull Requests in diese drei Branches; ein Pull Request, der auf einem
@@ -33,7 +33,11 @@ Löschen (siehe [Go-Live-Checkliste](go-live-checkliste.md)).
 
 ## Images
 
-Bei Pushes auf `develop`, `qs` und `main` werden die Images für `linux/amd64`
-und `linux/arm64` gebaut und nach `ghcr.io/damaurer/<dienst>` gepusht, getaggt
-mit dem Commit. Ausgerollt wird immer über den Digest, nie über einen
-veränderlichen Tag.
+Die drei Image-Workflows laufen nur, wenn sich ihr Ordner (`baseservice/`,
+`webservice/`, `keycloak/`) oder der Workflow selbst geändert hat; `Security`
+und `E2E-Tests` laufen immer. Gebaut und gescannt wird bei jedem Pull Request
+und Push. Nur nach einem Merge auf `qs` oder `main` werden die Images für
+`linux/amd64` und `linux/arm64` nach `ghcr.io/damaurer/<dienst>` gepusht,
+getaggt mit Commit-SHA und Branch-Namen. Mit *Run workflow* lassen sich die
+Image-Workflows auch von Hand starten. Ausgerollt wird immer über den Digest,
+nie über einen veränderlichen Tag.

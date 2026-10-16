@@ -6,25 +6,28 @@ Für Administratorinnen und Administratoren einer Gruppe. Du hast alle Rechte de
 
 <img src="bilder/a-mitglieder.png" alt="Mitgliederliste" width="720">
 
-Unter **Verwaltung → Administration** stehen alle Mitglieder mit E-Mail, Rolle, Status und Beitrittsdatum.
+Unter **Administration** (am Rechner links unter **Verwaltung**, am Handy unter **Mehr**) stehen alle Mitglieder der Gruppe mit E-Mail, Rolle, Status und Beitrittsdatum. Die Einleitung oben nennt die Gruppe, die gerade offen ist.
 
-- Das **Suchfeld** filtert nach Namen, **Rolle: Alle** nach einer Rolle.
+- Das **Suchfeld** filtert nach Namen, **Rolle: Alle** nach einer Rolle. Im Rollenfilter stehen auch die eigenen Rollen der Gruppe.
+- In der Spalte **Rolle** stehen die Hauptrolle (z. B. Admin, Vorstand, Kassenwart) und dahinter die eigenen Rollen der Person, etwa „Mitglied · Kasse“.
 - **Aktiv** heißt: Das Mitglied kann sich anmelden und die App nutzen.
 - **Bearbeiten** öffnet die Einstellungen eines Mitglieds.
 
 Neue Mitglieder lädst du per Link ein (siehe unten). Nach ihrer Registrierung oder ihrem Beitritt erscheinen sie in dieser Liste.
 
+Unter der Liste steht das **Audit-Protokoll**: wer wann Rollen, Status, Profile, Buchungen oder Mitteilungen geändert hat, mit Namen.
+
 ## Neue Mitglieder einladen
 
 <img src="bilder/a-einladen.png" alt="Einladungslink erstellen" width="720">
 
-Neue Mitglieder registrieren sich selbst über einen Einladungslink. Links erstellen Administration und Vorstand, entweder hier mit **Mitglied einladen** oder unter **Vorstand** → **Mitglied einladen**.
+Neue Mitglieder registrieren sich selbst über einen Einladungslink. Links erstellen Administration und Vorstand, entweder hier mit **+ Mitglied einladen** oder unter **Vorstand** → **Mitglied einladen**.
 
 1. **Für wen?**: optional ein Name, damit du den Link später wiedererkennst.
 2. **Gültig für**: wie lange der Link gilt, z. B. 7 Tage.
 3. **Anzahl Personen**: wie viele mit diesem Link beitreten dürfen, meist 1.
 4. **Link erstellen** tippen.
-5. **Link kopieren** (am Handy **Teilen**) und an die Person schicken, etwa per Messenger oder E-Mail. **Der Link wird nur dieses eine Mal angezeigt.**
+5. **Link kopieren** (am Handy **Teilen**) und an die Person schicken, etwa per Messenger oder E-Mail. Der Link wird nur dieses eine Mal angezeigt. Mit **Weiteren Link erstellen** geht es gleich weiter.
 
 Unter **Einladungslinks** siehst du jeden Link mit Stand (**Offen**, **Verwendet**, **Abgelaufen**, **Zurückgezogen**), wie oft er schon genutzt wurde und wer sich damit registriert hat. **Zurückziehen** macht einen Link sofort ungültig.
 
@@ -36,16 +39,16 @@ Wer sich über den Link registriert oder mit einem bestehenden Konto beitritt, i
 
 Nach **Bearbeiten** erscheint unter der Liste der Bereich „… bearbeiten“ mit der Mitglieds-ID. Jede Einstellung speicherst du mit ihrem eigenen Knopf.
 
-**Rollen**, dann **Rollen speichern**. Hier stehen die vier Systemrollen der Gruppe und alle eigenen Rollen, die in den [Gruppeneinstellungen](#rollen--berechtigungen) angelegt sind (Link **Rollen verwalten**). Die Systemrollen bedeuten:
+**Rollen**, dann **Rollen speichern**. Hier stehen die vier Systemrollen der Gruppe und alle eigenen Rollen, die in den [Gruppeneinstellungen](#rollen--berechtigungen) angelegt sind. Der Link **Rollen verwalten** darunter führt dorthin. Die Systemrollen bedeuten:
 
 | Rolle | Bedeutung |
 | :--- | :--- |
-| `member` | Mitglied: Termine, Guthaben, Käufe, Moments |
-| `board` | Vorstand: Kasse, Events moderieren, Getränke freigeben, Mitteilungen |
-| `admin` | Administration: alles, dazu Mitglieder verwalten und das Thekenterminal |
-| `tabletRecorder` | Thekenterminal: Striche für alle Mitglieder erfassen |
+| **Mitglied** (`member`) | Termine, Chat, Guthaben, Käufe, Moments, Getränke vorschlagen |
+| **Vorstand** (`board`) | Kasse, Events moderieren, Getränke freigeben, Rundbriefe, Mitglieder einladen, Kiosk-Geräte |
+| **Admin** (`admin`) | Alles vom Vorstand, dazu Mitglieder und Rollen verwalten, Gruppe, Tarif und das Thekenterminal |
+| **Thekenterminal** (`tabletRecorder`) | Striche für alle Mitglieder erfassen |
 
-**Vorstands-Unterrolle** (z. B. Kassenwart, Schriftwart) und **Drink Recorder**, dann **Profil speichern**. Drink Recorder schaltet das Thekenterminal für dieses Mitglied frei, etwa für den Thekendienst am eigenen Handy.
+**Vorstands-Unterrolle** und **Drink Recorder**, dann **Profil speichern**. Die Auswahl zeigt die Kürzel `chair` (Vorsitz), `treasurer` (Kassenwart), `secretary` (Schriftwart) und `assessor` (Beisitzer); sie sind eine Kennzeichnung und geben keine eigenen Rechte. Drink Recorder schaltet das Thekenterminal für dieses Mitglied frei, etwa für den Thekendienst am eigenen Handy. Das ist dasselbe wie die Rolle **Thekenterminal** unter **Rollen**.
 
 **Deaktiviert**, dann **Status speichern**: beendet die Mitgliedschaft in dieser Gruppe. Die Person sieht die Gruppe nicht mehr, ihre Rollen hier entfallen, ihre Buchungen bleiben erhalten. Ihr Konto und ihre anderen Gruppen bleiben unberührt. Zum Entsperren den Haken wieder entfernen. Die Person ist dann wieder Mitglied mit der Rolle `member`; weitere Rollen vergibst du neu.
 
@@ -58,6 +61,8 @@ Gut zu wissen:
 
 ## Gruppeneinstellungen
 
+<img src="bilder/a-gruppe.png" alt="Gruppeneinstellungen" width="720">
+
 Unter **Mehr → Gruppeneinstellungen** (am Rechner links unter **Mein Konto**) steht alles, was die Gruppe als Ganzes betrifft. Alle Mitglieder sehen diese Seite. Was du dort ändern darfst, hängt von deinen Rechten ab.
 
 **Name**: **Name der Gruppe** ändern und **Speichern** tippen. Den Namen sehen alle Mitglieder oben in der App.
@@ -67,6 +72,8 @@ Unter **Mehr → Gruppeneinstellungen** (am Rechner links unter **Mein Konto**) 
 Name und Bild ändern darf, wer das Recht `stammtisch.manage` hat. Beim Eröffnen einer Gruppe ist das die eröffnende Person.
 
 ## Rollen & Berechtigungen
+
+<img src="bilder/a-rollen.png" alt="Rollen und Berechtigungen" width="720">
 
 Jede Gruppe hat eigene Rollen. Beim Anlegen bekommt sie vier **Systemrollen**: Mitglied (`member`), Vorstand (`board`), Admin (`admin`) und Theke (`tabletRecorder`). Systemrollen tragen das Kennzeichen **System**.
 
@@ -83,6 +90,8 @@ Ein Beispiel: Eine eigene Rolle „Kasse“ mit `ledger.read` sieht die Kasse, a
 Zuweisen: Eigene Rollen gibst du einer Person unter **Administration** → **Bearbeiten** → **Rollen** (siehe oben). Sie erscheinen dort auch im Rollenfilter und in der Mitgliedertabelle.
 
 ## Tarif, Zahlung und Rechnungen
+
+<img src="bilder/a-tarif.png" alt="Tarif und Verbrauch" width="720">
 
 Jede Gruppe hat einen eigenen Tarif. Der Abschnitt **Tarif** in den Gruppeneinstellungen zeigt allen Mitgliedern den aktuellen Tarif und den **Verbrauch**: Mitglieder, Speicher, Videos in Moments und Thekenterminals.
 
@@ -111,9 +120,9 @@ Vereint speichert keine Zahlungsdaten; das erledigt Stripe. Steht dort „Online
 
 ## Thekentablet einrichten
 
-1. Ein eigenes Konto für die Theke anlegen, z. B. „Theke Vereinsheim“: per Einladungslink registrieren und danach unter **Bearbeiten** die Rolle `tabletRecorder` geben.
+1. Ein eigenes Konto für die Theke anlegen, z. B. „Theke Vereinsheim“: per Einladungslink registrieren und danach unter **Bearbeiten** die Rolle **Thekenterminal** (`tabletRecorder`) geben.
 2. Am Tablet mit diesem Konto anmelden und **Angemeldet bleiben** anhaken.
-3. **Verwaltung → Thekenterminal** öffnen und **Kiosk-Modus starten**, damit das Tablet auf der Strichliste bleibt. Der Rest steht im [Leitfaden Thekenterminal](05-thekenterminal.md).
+3. **Thekenterminal** öffnen (unter **Verwaltung**) und **Kiosk-Modus starten**, damit das Tablet auf der Strichliste bleibt. Der Rest steht im [Leitfaden Thekenterminal](05-thekenterminal.md).
 
 Ein eigenes Thekenkonto ist besser als ein persönliches: So erscheint auf dem Tablet kein privates Guthaben, und im Protokoll ist klar, welche Striche vom Tablet kamen.
 

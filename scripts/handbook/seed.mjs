@@ -21,10 +21,10 @@ export const PEOPLE = {
   member: { username: 'member', password: process.env.KEYCLOAK_SEED_MEMBER_PASSWORD, firstName: 'Lena', lastName: 'Hoffmann' },
   board: { username: 'board', password: process.env.KEYCLOAK_SEED_BOARD_PASSWORD, firstName: 'Thomas', lastName: 'Berger' },
   admin: { username: 'admin', password: process.env.KEYCLOAK_SEED_ADMIN_PASSWORD, firstName: 'Sabine', lastName: 'Wolf' },
-  jonas: { username: 'jonas', password: 'jonas-demo', firstName: 'Jonas', lastName: 'Keller', roles: ['member'], create: true },
-  mia: { username: 'mia', password: 'mia-demo', firstName: 'Mia', lastName: 'Schulz', roles: ['member'], create: true },
-  felix: { username: 'felix', password: 'felix-demo', firstName: 'Felix', lastName: 'Braun', roles: ['member'], create: true },
-  theke: { username: 'theke', password: 'theke-demo', firstName: 'Theke', lastName: 'Vereinsheim', roles: ['tabletRecorder'], create: true },
+  jonas: { username: 'jonas', password: 'jonas-demo-2026', firstName: 'Jonas', lastName: 'Keller', roles: ['member'], create: true },
+  mia: { username: 'mia', password: 'mia-demo-2026', firstName: 'Mia', lastName: 'Schulz', roles: ['member'], create: true },
+  felix: { username: 'felix', password: 'felix-demo-2026', firstName: 'Felix', lastName: 'Braun', roles: ['member'], create: true },
+  theke: { username: 'theke', password: 'theke-demo-2026', firstName: 'Theke', lastName: 'Vereinsheim', roles: ['tabletRecorder'], create: true },
 };
 
 async function keycloakAdminToken() {
@@ -158,6 +158,8 @@ export async function seedAppData(sessions) {
     const drink = await api.board.post('/drinks', { name, category, defaultPrice: price, costPrice: cost });
     if (drink.status !== 'approved') await api.board.post(`/drinks/${drink.id}/approve`);
     await api.board.post(`/drinks/${drink.id}/barcodes`, { barcode });
+    // In die gemeinsame Getränkedatenbank stellen, damit die Ansicht nicht leer ist.
+    await api.board.post(`/drinks/${drink.id}/share-to-library`);
     drinks.push(drink);
   }
   // Ein offener Vorschlag eines Mitglieds für die Freigabe-Ansicht.
@@ -287,7 +289,7 @@ export async function seedAppData(sessions) {
     await api[key].post(`/events/${event.id}/chat/messages`, { message });
   }
 
-  // Vereinschat und Direktnachrichten.
+  // Gruppenchat und Direktnachrichten.
   const clubChat = (await api.board.get('/conversations')).find((c) => c.type === 'club');
   const clubMessages = [
     ['board', 'Hallo zusammen, die Getränkeliste fürs Sommerfest ist abgerechnet. Danke an alle Helfer!'],

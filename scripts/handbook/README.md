@@ -2,8 +2,8 @@
 
 `capture.mjs` erzeugt alle Bilder in `docs/handbuch/bilder` neu. Es legt in einer
 frischen lokalen Umgebung Demo-Daten an (`seed.mjs`: Mitglieder, Getränke,
-Events mit Zusagen, Guthaben, Striche, Vereins-, Event- und Direktchats, Moments,
-Rundbrief und Infotafel, eine Gasteinladung) und
+Events mit Zusagen, Guthaben, Striche, Gruppen-, Event- und Direktchats, Moments,
+Rundbrief und Infotafel, eine Gasteinladung, Einträge in der Getränkedatenbank) und
 fotografiert jede Ansicht als die Person, die sie im Alltag nutzt: Handy
 (390 × 844), Thekentablet quer (1180 × 820) oder Rechner (1280 × 860).
 
@@ -42,3 +42,7 @@ Nur lokal verwenden: Das Skript ändert Benutzer im Keycloak-Entwicklungsrealm.
    ```
 
 Neue Bilder ergänzt man als Eintrag in `SHOTS` in `capture.mjs`.
+
+Die Kiosk-Bilder (`t-kiosk-start`, `t-kiosk-entsperren`, `v-kiosk-geraete`) stehen am Ende
+von `SHOTS`, weil das Demo-Terminal danach im Kiosk-Modus bleibt. Wer sie einzeln
+mit `--reuse` aufnimmt, setzt die Umgebung danach am besten neu auf.

@@ -10,10 +10,14 @@ Internet ──443──▶ Caddy ──┬─ /kc/*  ──▶ Keycloak
  (HTTPS, HTTP/3)          └─ /*     ──▶ webservice ──▶ baseservice ──▶ PostgreSQL, S3
 ```
 
-## Automatisch bei jedem Merge nach `main`
+## Automatisch nach einem Merge nach `main`
 
 Workflow `Deployment (Produktion)`
-([.github/workflows/deploy.yml](../../.github/workflows/deploy.yml)):
+([.github/workflows/deploy.yml](../../.github/workflows/deploy.yml)). Er startet,
+sobald einer der Workflows `baseservice CI/CD`, `webservice CI/CD` oder
+`keycloak CI/CD` auf `main` erfolgreich ein Image gepusht hat, oder wenn sich auf
+`main` etwas unter `deploy/` geändert hat. Ein Merge, der nur Dokumentation
+ändert, rollt nichts aus. Der Job läuft im GitHub-Environment `production`.
 
 1. Wartet, bis die Image-Builds auf `main` fertig sind, und bindet die Images an
    ihren Digest (`images.env`).
@@ -21,7 +25,8 @@ Workflow `Deployment (Produktion)`
    das Bundle im Backup-Bucket ab und startet auf dem Server über **Systems
    Manager** `bin/deploy.sh`. SSH ist nicht nötig.
 3. `deploy.sh` zieht die neuen Images und **sichert vorher beide Datenbanken**,
-   inklusive Probe-Wiederherstellung. Ohne Backup kein Deployment.
+   inklusive Probe-Wiederherstellung. Ohne Backup kein Deployment. Nur beim
+   allerersten Deployment entfällt das Backup, weil es noch keine Datenbank gibt.
 4. Aktiviert den neuen Stand und wartet, bis alle Container gesund sind.
 5. **Health Check von außen** über Caddy: `/api/v1/health`, der Login
    (`/kc/realms/vereint/...`) und die Startseite müssen antworten.

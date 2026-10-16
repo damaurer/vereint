@@ -20,28 +20,29 @@ sequenceDiagram
   participant SSR as Angular SSR Engine
 
   Browser->>Pipeline: HTTP Request
-  Note over Pipeline: 1. compression()<br/>2. attachCspNonce<br/>3. securityHeaders (Helmet)<br/>4. applyDeliveryHeaders<br/>5. express.json & urlencoded
-  Pipeline->>Auth: 6. attachIdentity (Session entschlüsseln & Refresh)
+  Note over Pipeline: 1. compression()<br/>2. attachCspNonce<br/>3. securityHeaders (Helmet)<br/>4. applyDeliveryHeaders<br/>5. crossSiteRequestGuard<br/>6. express.json & urlencoded
+  Pipeline->>Auth: 7. attachIdentity (Session entschlüsseln & Refresh)
+  Note over Pipeline: 8. Rate-Limits (/api, Login-Start)
   
   alt Pfad ist /api/auth/logout
-    Pipeline->>Pipeline: 7. invalidateAccessDecision(sessionId)
+    Pipeline->>Pipeline: 9. invalidateAccessDecision(sessionId)
   else Pfad ist /api/auth/* oder /oauth2/*
-    Pipeline->>Browser: 8. authRoutes (Login / Callback / Session / Logout)
+    Pipeline->>Browser: 10. authRoutes (Login / Callback / Gruppenwahl / Session / Logout)
   else Pfad ist /api/invites/*
-    Pipeline->>Browser: 9. inviteRoutes (Einladungsvorprüfung)
+    Pipeline->>Browser: 11. inviteRoutes (Einladungsvorprüfung)
   else Pfad ist /api/v1/*
-    Pipeline->>Proxy: 10. apiProxy (Bearer Token -> Spring Boot)
+    Pipeline->>Proxy: 12. mediaStreamProxy (Moment-Medien) bzw. apiProxy (Bearer Token, X-Stammtisch-Id -> Spring Boot)
     Proxy->>Browser: Upstream-Antwort / 401 / 503
   else Seitenanfrage (HTML / Assets)
-    Pipeline->>Authz: 11. authorizePages (Zugriffsprüfung gegen Spring)
+    Pipeline->>Authz: 13. authorizePages (Zugriffsprüfung gegen Spring)
     alt Zugriff verweigert / Login nötig
       Authz->>Browser: 302 Redirect / 403 / 503
     else Zugriff erlaubt
-      Authz->>Static: 12. express.static (browserDistFolder)
+      Authz->>Static: 14. express.static (browserDistFolder)
       alt Statische Datei existiert (.js, .css, .svg)
         Static->>Browser: 200 OK (Statische Datei mit Cache-Headern)
       else Keine statische Datei -> SPA / SSR Route
-        Static->>SSR: 13. angularApp.handle(req)
+        Static->>SSR: 15. angularApp.handle(req)
         alt Öffentlicher Kontext
           SSR->>Browser: 200 OK (Unverändertes HTML)
         else Privater Kontext
@@ -75,37 +76,41 @@ In `webservice/src/server.ts` ist die Pipeline wie folgt aufgebaut:
 - **Zweck**: Weist jeder Anfrage abhängig vom Pfad die exakten `Cache-Control`-, `Vary`- und `Strict-Transport-Security`-Header zu.
 - **Position**: Vor dem Body-Parsing und Routing, um Caching-Header zentral und konsistent festzulegen.
 
-### 5. `express.json()` & `express.urlencoded({ extended: true })`
+### 5. `crossSiteRequestGuard`
+- **Zweck**: Lehnt schreibende Anfragen ab, die nicht von der eigenen Seite stammen (`Sec-Fetch-Site`, ersatzweise `Origin`). Das schützt auch gegen andere Subdomains derselben Domain.
+- **Vorher**: `trust proxy` erlaubt `X-Forwarded-For` nur aus dem privaten Container-Netz (Caddy); `x-powered-by` ist abgeschaltet.
+
+### 6. `express.json()` & `express.urlencoded({ extended: true })`
 - **Zweck**: Parst JSON- und Form-Payloads in `req.body`.
 - **Position**: Vor `attachIdentity` und den API-Routen.
 
-### 6. `attachIdentity`
+### 7. `attachIdentity`
 - **Zweck**: Liest und entschlüsselt das Session-Cookie, führt bei Bedarf einen automatischen Token-Refresh durch und hängt die Benutzeridentität an `req.identity` bzw. `req.sessionData`.
 - **Position**: Vor allen Routen-Handlern und vor dem API-Proxy, damit diese synchron auf die authentifizierte Identität zugreifen können.
 
-### 7. Logout-Cache-Invalidierung (`/api/auth/logout`)
+### 8. Rate-Limits (`security/request-guards.ts`)
+- **`apiRateLimits`** unter `/api`: übrige API 600 je Sitzung und Minute; öffentliche Token-Pfade (`/api/v1/member-invites/preview`, `/api/v1/member-invites/register`, `/api/v1/signup`, `/api/v1/invites/accept`, `/api/v1/auth/access/guest`, `/api/invites`) zusätzlich 30 je IP in 15 Minuten; Gast-Chat 60 je IP und Minute.
+- **`loginRateLimit`** unter `/api/auth/login` und `/oauth2/authorization`: 120 je IP in 5 Minuten.
+- Die Zähler liegen im Speicher des Prozesses.
+
+### 9. Logout-Cache-Invalidierung (`/api/auth/logout`)
 - **Zweck**: Ruft `invalidateAccessDecision(req.sessionData?.sessionId)` auf, bevor der Logout verarbeitet wird. Verhindert, dass nachfolgende Sessions alte Berechtigungen erben.
 
-### 8. `authRoutes`
-- **Zweck**: Behandelt Login, OIDC-Callback, Session-Status und Logout. Gemountet unter `/api/auth`, `/oauth2/authorization` und `/login/oauth2/code`.
+### 10. `authRoutes`
+- **Zweck**: Behandelt Login, OIDC-Callback, Gruppenwahl (`POST /api/auth/stammtisch`), Session-Status und Logout. Gemountet unter `/api/auth`, `/oauth2/authorization` und `/login/oauth2/code`.
 
-### Schutz vor den Routen (`security/request-guards.ts`)
-- **`trust proxy`**: Nur Caddy im privaten Container-Netz darf `X-Forwarded-For` setzen; direkte Clients können ihre IP nicht fälschen. `x-powered-by` ist abgeschaltet.
-- **`crossSiteRequestGuard`**: Lehnt schreibende Anfragen ab, die nicht von der eigenen Seite stammen (`Sec-Fetch-Site`, ersatzweise `Origin`). Das schützt auch gegen andere Subdomains derselben Domain.
-- **Rate-Limits** (`rateLimit`, im Speicher des Prozesses): öffentliche Token-Pfade (Einladungen, Gast-Zugang) 30 je IP in 15 Minuten, Gast-Chat 60 je Minute, Login-Start (`/api/auth/login`, `/oauth2/authorization`) 120 je IP in 5 Minuten, übrige API 600 je Sitzung und Minute.
-- **API-Proxy**: reicht nur Pfade unter `/api/v1` weiter und verwirft `..` sowie kodierte Schrägstriche.
-
-### 9. `/api/invites` (`inviteRoutes`)
+### 11. `/api/invites` (`inviteRoutes`)
 - **Zweck**: Syntaktische Vorab-Validierung von Einladungstokens.
 
-### 10. `/api/v1` (`apiProxy`)
-- **Zweck**: Leitet fachliche API-Aufrufe an Spring Boot weiter und injiziert das Bearer-Token.
+### 12. `/api/v1` (`mediaStreamProxy`, `apiProxy`)
+- **Zweck**: `mediaStreamProxy` reicht Uploads und Abrufe von Fotos und Videos in Moments ungepuffert durch. Alle übrigen fachlichen Aufrufe leitet `apiProxy` an Spring Boot weiter (Multipart bis `API_PROXY_MAX_UPLOAD`, 6 MB), injiziert das Bearer-Token und den Header `X-Stammtisch-Id`.
+- **Pfad-Prüfung**: Nur Pfade unter `/api/v1`; `..` und kodierte Schrägstriche werden verworfen.
 
-### 11. `authorizePages`
+### 13. `authorizePages`
 - **Zweck**: Autorisierungsprüfung für Seitenaufrufe (SSR & HTML).
 - **Position**: **Vor** `express.static` und dem SSR-Handler! Ungeschützte statische HTML-Seiten oder SSR-Rendervorgänge dürfen für unautorisierte Nutzer gar nicht erst gestartet werden.
 
-### 12. `express.static`
+### 14. `express.static`
 - **Zweck**: Liefert statische Build-Artefakte (`main-*.js`, Styles, Bilder) aus dem `browser/`-Ordner aus.
 - **Konfiguration**:
   - `index: false`: Verhindert die automatische Auslieferung von `index.html` als statische Datei (damit Angular SSR greift).
@@ -113,7 +118,7 @@ In `webservice/src/server.ts` ist die Pipeline wie folgt aufgebaut:
   - `cacheControl: false`: Verhindert, dass Express Standard-Cache-Header setzt; die Cache-Regeln stammen ausschließlich aus `applyDeliveryHeaders`.
   - `etag: true`, `lastModified: true`: Ermöglicht Revalidierung bei nicht gehashten Assets.
 
-### 13. Angular SSR Handler (`angularApp.handle(req)`)
+### 15. Angular SSR Handler (`angularApp.handle(req)`)
 - **Zweck**: Führt das serverseitige Rendern der Angular-Anwendung aus.
 - **Leckschutz**: Bei privaten Pfaden (`isPrivateDeliveryPath`) wird der HTML-Body vor der Auslieferung durch `sanitizeTransferState` bereinigt.
 

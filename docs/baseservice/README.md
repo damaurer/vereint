@@ -1,6 +1,6 @@
 # ☕ Spring Boot Fachservice (baseservice)
 
-Herzlich willkommen in der technischen Dokumentation des **Vereint Fachservice (`baseservice`)**. Dieses Backend-Modul implementiert die fachliche Geschäftslogik, Datenpersistenz, Benutzerprovisionierung, das Kassenbuch (Ledger), Event- und Katalogverwaltung sowie Realtime-Kommunikation und Push-Benachrichtigungen für die Vereint-Plattform.
+Herzlich willkommen in der technischen Dokumentation des **Vereint Fachservice (`baseservice`)**. Dieses Backend-Modul implementiert die fachliche Geschäftslogik, Datenpersistenz, Benutzerprovisionierung, die Trennung mehrerer Gruppen, das Kassenbuch (Ledger), Event- und Katalogverwaltung, Chat, Push-Benachrichtigungen sowie Tarife und Abrechnung für die Vereint-Plattform.
 
 ---
 
@@ -20,17 +20,17 @@ graph TD
 
 1. **[01. Übersicht & Setup](01-overview-and-setup.md)**: Rolle des `baseservice`, Tech-Stack (Kotlin 2.3, Spring Boot 4.1, Java 25), Ordnerstruktur, Gradle-Tasks, Start per Docker Compose und vollständige Referenz aller Umgebungsvariablen.
 2. **[02. Architektur & Schichten](02-architecture-and-layers.md)**: Schichtenmodell (Filter → Security → Controller → Service → Repository → DB), Request-Lebenszyklus, Design-Konventionen am Referenzbeispiel Speisenkatalog und vollständige Paketkarte aller Controller und Services.
-3. **[03. Sicherheit & Autorisierung](03-security-and-authorization.md)**: `SecurityConfig`, Deny-by-Default, JWT-Verarbeitung (`JwtAuthConverter`, `JwtClaimExtractor`, `UserPrincipal`, `AuthContext`), Rollen- und Permission-Matrix (`RolePermissionMatrix` V2), `AccessResolverService`, Provisionierung und CORS-Absicherung.
-4. **[04. Persistenz & Migrationen](04-persistence-and-migrations.md)**: JPA-Entities, Repositories, Transaktionsregeln (`@Transactional`), Optimistic Locking (`@Version`), Liquibase-Changelogs (`001`–`007`), Konventionen und Rollback-Strategien.
+3. **[03. Sicherheit & Autorisierung](03-security-and-authorization.md)**: `SecurityConfig`, Deny-by-Default, JWT-Verarbeitung (`JwtAuthConverter`, `JwtClaimExtractor`, `UserPrincipal`, `AuthContext`), Gruppenkontext (`StammtischContextFilter`, `StammtischAccess`), Rollen je Gruppe, `AccessResolverService`, Provisionierung und CORS-Absicherung.
+4. **[04. Persistenz & Migrationen](04-persistence-and-migrations.md)**: JPA-Entities, Repositories, Transaktionsregeln (`@Transactional`), Optimistic Locking (`@Version`), Mandantentrennung (`@TenantId`, Row Level Security), Liquibase-Changelogs (`001`–`016`), Konventionen und Rollback-Strategien.
 5. **[05. Fehlerbehandlung & Observability](05-error-handling-and-observability.md)**: `ApiException`-Hierarchie, `ErrorCode`-Katalog, RFC-7807-Problem-Details (`ApiProblem`), `GlobalExceptionHandler`-Mapping, Request-Tracing (`X-Request-Id` / `traceId`), Actuator-Endpunkte und OpenAPI/Swagger.
-6. **[06. Integrationen](06-integrations.md)**: S3-kompatibler Objektspeicher (`ObjectStorage`, `S3ObjectStorage`, `InMemoryObjectStorage`), Web-Push-Versand (`PushSender`, `VapidPushSender`, `NoOpPushSender`), WebSocket-Chat und Feature-Toggles.
+6. **[06. Integrationen](06-integrations.md)**: S3-kompatibler Objektspeicher (`ObjectStorage`, `S3ObjectStorage`, `InMemoryObjectStorage`), Web-Push-Versand (`PushSender`, `VapidPushSender`, `NoOpPushSender`), Keycloak-Kontoanlage, Stripe und Feature-Toggles.
 7. **[07. Service erweitern & Rezepte](07-extending-the-service.md)**: Schritt-für-Schritt-Rezepte (neuer REST-Endpunkt, Entity mit Liquibase-Migration, Permission, ErrorCode, Config-Property), Testkonventionen (MockMvc, `@MockitoBean`, `jwt()`, Testcontainers), Debugging-Tabelle und PR-Checkliste.
 
 ---
 
 ## 🏛️ Gesamtarchitektur & Systemkontext
 
-Der `baseservice` fungiert als Resource Server im OAuth2/OIDC-Ökosystem und wird primär durch das Express-5-BFF (`webservice`) oder berechtigte Tablet-Kioske aufgerufen.
+Der `baseservice` fungiert als Resource Server im OAuth2/OIDC-Ökosystem und wird ausschließlich über das Express-5-BFF (`webservice`) aufgerufen; auch das Thekenterminal und Gäste laufen über dessen API-Proxy.
 
 ```mermaid
 graph LR
@@ -39,13 +39,13 @@ graph LR
     Tablet[Tablet-Kiosk / Recorder]
   end
 
-  subgraph BFF["Backend-for-Frontend (Express 5 - Port 4300)"]
+  subgraph BFF["Backend-for-Frontend (Express 5 - lokal Port 4200)"]
     Proxy["API-Proxy (/api/v1/*)"]
     AuthMW[Session & Token Management]
   end
 
   subgraph BaseService["Spring Boot baseservice (Port 8081)"]
-    Sec[SecurityFilterChain & JwtAuthConverter]
+    Sec[SecurityFilterChain, JwtAuthConverter & StammtischContextFilter]
     Rest[REST-Controller]
     Svc[Transactional Business Services]
     Repo[Spring Data JPA Repositories]
@@ -58,11 +58,12 @@ graph LR
     Postgres[("PostgreSQL DB (Port 5432)")]
     MinIO["S3 Storage (AWS S3, lokal MinIO)"]
     WebPush["Web Push Endpunkte (Browser)"]
+    Stripe["Stripe (optional)"]
   end
 
   Browser -->|HTTPS Session-Cookie| BFF
-  Tablet -->|Bearer JWT / Gast-Token| BaseService
-  Proxy -->|Bearer Access-Token| BaseService
+  Tablet -->|HTTPS Session-Cookie| BFF
+  Proxy -->|Bearer Access-Token & X-Stammtisch-Id| BaseService
   AuthMW <-->|OIDC Token Exchange| Keycloak
 
   Sec --> Rest
@@ -75,6 +76,7 @@ graph LR
   Repo -->|SQL / Liquibase| Postgres
   Storage -->|S3 REST API| MinIO
   Push -->|VAPID Push Protocol| WebPush
+  Svc -->|Checkout, Portal, Webhooks| Stripe
 ```
 
 ---
@@ -83,9 +85,11 @@ graph LR
 
 | Begriff | Definition im Vereint `baseservice` |
 | :--- | :--- |
-| **UserPrincipal** | Leichtgewichtige Repräsentation des authentifizierten Benutzers (`sub`, `roles`, `email`, `name`), erzeugt aus dem decodierten Keycloak-JWT. |
-| **AuthContext** | Request-gebundene Hilfskomponente (`AuthContext.kt`), um den aktuellen `UserPrincipal` oder das Gast-Token typsicher im Controller oder Service abzurufen. |
-| **RolePermissionMatrix** | Zentrale, versionierte Matrix (`RolePermissionMatrix.kt`, Version 2), die Rollen (`member`, `board`, `admin`, `tabletRecorder`) deterministisch auf feingranulare Berechtigungen (`Permission.*`) abbildet. |
+| **UserPrincipal** | Leichtgewichtige Repräsentation des authentifizierten Benutzers (`subject`, `roles`, `permissions`, `stammtischId`, `platformAdmin` u. a.), erzeugt aus dem Keycloak-JWT und vom `StammtischContextFilter` mit Rollen und Rechten der gewählten Gruppe befüllt. |
+| **Stammtisch** | Code-Name einer Gruppe (UI: „Gruppe“). Fast jede fachliche Zeile trägt `stammtisch_id`; `TenantContext` hält die Gruppe der laufenden Anfrage. |
+| **AuthContext** | Hilfskomponente (`AuthContext.kt`), um den aktuellen `UserPrincipal` im Controller oder Service abzurufen und Rollen bzw. Berechtigungen zu prüfen. |
+| **StammtischAccess** | Prüft Berechtigungen der Person in der aktuellen Gruppe (`stammtisch_roles`, `user_roles`, `user_permissions`). |
+| **RolePermissionMatrix** | Startwerte der vier Systemrollen (`member`, `board`, `admin`, `tabletRecorder`) für neue Gruppen (`RolePermissionMatrix.kt`, Version 4). Danach gelten die Rollen in `stammtisch_roles`. |
 | **ApiException** | Basisklasse aller fachlichen Laufzeitfehler (`Exceptions.kt`), die einen HTTP-Statuscode (`HttpStatus`) und einen maschinenlesbaren `ErrorCode` kapselt. |
 | **ErrorCode** | Standardisierte String-Konstante (`ErrorCode.kt`, z. B. `invalid_request`, `permission_denied`, `concurrent_modification`), die im Fehler-JSON ausgeliefert wird. |
 | **ApiProblem** | RFC-7807-konforme Fehlerantwort (`ProblemDetail`) mit den VEREINT-Erweiterungen `code`, `traceId`, `timestamp` und `details`. |
