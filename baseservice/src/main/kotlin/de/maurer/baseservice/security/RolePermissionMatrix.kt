@@ -14,7 +14,7 @@ package de.maurer.baseservice.security
  */
 object RolePermissionMatrix {
 
-    const val VERSION = 3
+    const val VERSION = 4
 
     /** Zusätzliche technische Rolle für die Tablet-Erfassung (Thekenterminal). */
     const val ROLE_TABLET_RECORDER = "tabletRecorder"
@@ -49,6 +49,7 @@ object RolePermissionMatrix {
         Permission.MEMBERS_MANAGE,
         Permission.ROLES_MANAGE,
         Permission.STAMMTISCH_MANAGE,
+        Permission.BILLING_MANAGE,
         Permission.AUDIT_READ_ALL
     )
 

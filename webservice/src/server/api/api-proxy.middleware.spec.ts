@@ -100,6 +100,24 @@ describe('api-proxy.middleware', () => {
     expect(response.headers.get('cache-control')).toBe('private, no-store');
   });
 
+  it('passes Content-Disposition through so the data export downloads as a file', async () => {
+    globalThis.fetch = vi.fn(async () =>
+      new Response('{"stammtisch":{}}', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Disposition': 'attachment; filename="vereint-export.json"',
+        },
+      }),
+    ) as unknown as typeof fetch;
+
+    const response = await originalFetch(`${baseUrl}/api/v1/stammtisch/export`);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-disposition')).toBe('attachment; filename="vereint-export.json"');
+    expect(await response.text()).toBe('{"stammtisch":{}}');
+  });
+
   it('never leaks a client-supplied Authorization header to the upstream', async () => {
     let capturedAuth: string | null = null;
     globalThis.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {

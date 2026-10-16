@@ -65,7 +65,8 @@ Neue Rechte für die Verwaltung je Stammtisch:
 | `members.invite` | Einladungslinks erstellen |
 | `members.manage` | Mitglieder deaktivieren, Vorstandsamt setzen |
 | `roles.manage` | Rollen anlegen, ändern, zuweisen |
-| `stammtisch.manage` | Stammtisch umbenennen |
+| `stammtisch.manage` | Stammtisch umbenennen, Daten exportieren |
+| `billing.manage` | Tarif buchen, Zahlung und Rechnungen (siehe `abrechnung.md`) |
 | `moments.manage` | Moment-Typen und Reaktionen verwalten |
 | `kiosk.manage` | Kiosk-Geräte entsperren |
 | `notifications.broadcast` | Rundschreiben senden |
@@ -140,6 +141,5 @@ Rollen und Vorstandsämter gehören danach zu ihm; Theke-Konten erhalten die Rol
   einem anderen Stammtisch, zeigt das Gerät die neueste ungelesene Mitteilung
   des gewählten Stammtischs oder den allgemeinen Hinweis „Du hast eine neue
   Mitteilung". Die Mitteilung selbst liegt korrekt im anderen Stammtisch.
-- **Abrechnung je Stammtisch** (Finanzierungsmodell) ist nicht gebaut.
 - Der Rollen-Cache im Fachservice ist pro Instanz; bei mehreren Instanzen
   greifen Rollenänderungen dort erst nach Ablauf (heute läuft eine Instanz).

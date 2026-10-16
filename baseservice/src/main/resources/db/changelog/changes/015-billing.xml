@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 180. Tarif je Stammtisch (Finanzierungsmodell). Die Tabelle gehört wie
+         `stammtische` keinem Stammtisch und hat deshalb keine Row-Level-Security;
+         nur der Fachservice liest und schreibt sie. Zahlungsdaten liegen
+         ausschließlich bei Stripe, hier stehen nur die Kennungen.
+         Ohne Zeile gilt der kostenlose Tarif. -->
+    <changeSet id="180-create-stammtisch-subscriptions" author="claude">
+        <createTable tableName="stammtisch_subscriptions">
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"
+                             foreignKeyName="fk_stammtisch_subscriptions_stammtisch"
+                             references="stammtische(id)"/>
+            </column>
+            <column name="plan" type="VARCHAR(16)" defaultValue="free">
+                <constraints nullable="false"/>
+            </column>
+            <column name="billing_interval" type="VARCHAR(8)"/>
+            <column name="status" type="VARCHAR(16)" defaultValue="none">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stripe_customer_id" type="VARCHAR(64)"/>
+            <column name="stripe_subscription_id" type="VARCHAR(64)">
+                <constraints unique="true" uniqueConstraintName="uk_stammtisch_subscriptions_stripe_sub"/>
+            </column>
+            <column name="current_period_end" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="grace_until" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- Der bestehende Stammtisch läuft ohne Zahlung mit allen Funktionen weiter. -->
+        <insert tableName="stammtisch_subscriptions">
+            <column name="stammtisch_id" value="00000000-0000-0000-0000-000000000001"/>
+            <column name="plan" value="verein"/>
+            <column name="status" value="comped"/>
+        </insert>
+
+        <!-- Bereits verarbeitete Stripe-Ereignisse: Stripe stellt Webhooks
+             mindestens einmal zu, jedes Ereignis wirkt aber nur einmal. -->
+        <createTable tableName="billing_events">
+            <column name="id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}"/>
+            <column name="received_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="billing_events"/>
+            <dropTable tableName="stammtisch_subscriptions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 181. Neues Recht billing.manage (Tarif buchen, Zahlungsportal) für die
+         Systemrolle Admin aller Stammtische. stammtisch_roles hat
+         Row-Level-Security, daher der Bypass für diese Transaktion. -->
+    <changeSet id="181-grant-billing-manage" author="claude">
+        <sql dbms="postgresql">SET LOCAL vereint.rls_bypass = 'on'</sql>
+        <update tableName="stammtisch_roles">
+            <column name="permissions" valueComputed="permissions || ',billing.manage'"/>
+            <where>code = 'admin' AND system_role = TRUE AND permissions NOT LIKE '%billing.manage%'</where>
+        </update>
+    </changeSet>
+
+</databaseChangeLog>

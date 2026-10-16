@@ -218,6 +218,10 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
     fun count(): Long
     fun findByIdempotencyKey(idempotencyKey: String): Optional<LedgerEntryEntity>
 
+    /** Alle Buchungen des Stammtischs für den Datenexport. */
+    @EntityGraph(attributePaths = ["event", "member", "drink", "food", "actor", "reversesEntry"])
+    fun findAllByOrderByCreatedAtAsc(): List<LedgerEntryEntity>
+
     @EntityGraph(attributePaths = ["event", "member", "drink", "actor"])
     fun findByMemberId(memberId: UUID): List<LedgerEntryEntity>
 
@@ -411,6 +415,10 @@ interface ImageAssetRepository : JpaRepository<ImageAssetEntity, UUID> {
 
     fun findByOwnerIdAndStatus(ownerId: UUID, status: ImageStatus): List<ImageAssetEntity>
 
+    /** Belegter Speicher der aktuellen Bilder des Stammtischs (Tarifgrenze). */
+    @Query("select coalesce(sum(i.sizeBytes), 0) from ImageAssetEntity i where i.status = :status")
+    fun sumSizeBytesByStatus(@Param("status") status: ImageStatus): Long
+
     /** Höchste bisher vergebene fachliche Bildversion eines Objekts (für die Fortschreibung). */
     @Query(
         """
@@ -451,6 +459,8 @@ interface KioskSessionRepository : JpaRepository<KioskSessionEntity, UUID> {
 
     @EntityGraph(attributePaths = ["startedBy"])
     fun findByEndedAtIsNullOrderByStartedAtAsc(): List<KioskSessionEntity>
+
+    fun countByEndedAtIsNull(): Long
 }
 
 @Repository
@@ -476,4 +486,17 @@ interface MomentMediaRepository : JpaRepository<MomentMediaEntity, UUID> {
     fun findByResponseIdIn(responseIds: Collection<UUID>): List<MomentMediaEntity>
     fun countByMomentIdAndOwnerId(momentId: UUID, ownerId: UUID): Long
     fun findByResponseIsNullAndCreatedAtBefore(cutoff: Instant): List<MomentMediaEntity>
+
+    /** Belegter Speicher aller Moment-Medien des Stammtischs (Tarifgrenze). */
+    @Query("select coalesce(sum(m.sizeBytes), 0) from MomentMediaEntity m")
+    fun sumSizeBytes(): Long
 }
+
+@Repository
+interface StammtischSubscriptionRepository : JpaRepository<StammtischSubscriptionEntity, UUID> {
+    fun findByStripeSubscriptionId(stripeSubscriptionId: String): Optional<StammtischSubscriptionEntity>
+    fun findFirstByStripeCustomerId(stripeCustomerId: String): Optional<StammtischSubscriptionEntity>
+}
+
+@Repository
+interface BillingEventRepository : JpaRepository<BillingEventEntity, String>

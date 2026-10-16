@@ -17,7 +17,14 @@
       "invalid": "Die Eingabe ist ungültig. Bitte prüfen und erneut versuchen.",
       "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen.",
       "stammtischRequired": "Bitte zuerst einen Stammtisch wählen.",
-      "stammtischDenied": "Du gehörst diesem Stammtisch nicht (mehr) an."
+      "stammtischDenied": "Du gehörst diesem Stammtisch nicht (mehr) an.",
+      "stammtischReadOnly": "Der Stammtisch ist nur noch lesbar, weil die Zahlung überfällig ist. Nach der Zahlung geht wieder alles.",
+      "planLimitMembers": "Der aktuelle Tarif erlaubt keine weiteren Mitglieder. Ein größerer Tarif schafft Platz.",
+      "planLimitStorage": "Der Speicherplatz des aktuellen Tarifs ist aufgebraucht.",
+      "planLimitVideos": "Videos sind im aktuellen Tarif nicht enthalten.",
+      "planLimitKiosk": "Der aktuelle Tarif erlaubt nur ein aktives Thekenterminal.",
+      "billingUnavailable": "Online-Zahlung ist noch nicht eingerichtet. Bitte später erneut versuchen.",
+      "billingNoCustomer": "Es gibt noch kein Zahlungskonto. Bitte zuerst einen Tarif buchen."
     }
   },
   "member": {
@@ -268,7 +275,9 @@
     "notifications": "Mitteilungen",
     "notificationsUnread": "Mitteilungen, {count} ungelesen",
     "chatUnread": "{label}, {count} ungelesen",
-    "switchStammtisch": "Stammtisch wechseln (aktuell: {name})"
+    "switchStammtisch": "Stammtisch wechseln (aktuell: {name})",
+    "readOnly": "Dieser Stammtisch ist nur noch lesbar, weil die Zahlung überfällig ist.",
+    "readOnlyLink": "Zum Tarif"
   },
   "nav": {
     "items": {
@@ -1788,7 +1797,12 @@
       "rename": "Umbenennen",
       "archive": "Archivieren",
       "unarchive": "Wiederherstellen",
-      "archiveConfirm": "„{name}“ archivieren? Mitglieder können ihn danach nicht mehr öffnen."
+      "archiveConfirm": "„{name}“ archivieren? Mitglieder können ihn danach nicht mehr öffnen.",
+      "plan": "Tarif",
+      "setPlan": "Tarif von „{name}“",
+      "storage": "{size} belegt",
+      "readOnly": "Nur lesbar",
+      "planChanged": "„{name}“ hat jetzt den Tarif {plan}."
     },
     "settings": {
       "eyebrow": "Stammtisch",
@@ -1830,6 +1844,7 @@
     "permissionGroups": {
       "audit": "Protokoll",
       "balance": "Guthaben",
+      "billing": "Tarif und Zahlung",
       "catalog": "Katalog",
       "chat": "Chat",
       "event": "Veranstaltungen",
@@ -1842,6 +1857,69 @@
       "purchase": "Einkäufe",
       "roles": "Rollen",
       "stammtisch": "Stammtisch"
+    },
+    "billing": {
+      "title": "Tarif",
+      "plans": {
+        "free": "Kostenlos",
+        "stammtisch": "Stammtisch",
+        "verein": "Verein"
+      },
+      "status": {
+        "active": "Aktiv",
+        "past_due": "Zahlung offen",
+        "canceled": "Gekündigt",
+        "comped": "Kostenlos vergeben"
+      },
+      "renews": "Verlängert sich am {date}.",
+      "endsOn": "Läuft bis {date}.",
+      "comped": "Dieser Tarif wurde kostenlos vergeben.",
+      "pastDue": "Die letzte Zahlung ist fehlgeschlagen. Bitte die Zahlungsart bis {date} aktualisieren, sonst ist der Stammtisch danach nur noch lesbar.",
+      "pastDueNoDate": "Die letzte Zahlung ist fehlgeschlagen. Bitte die Zahlungsart aktualisieren.",
+      "readOnly": "Die Zahlung ist überfällig: Der Stammtisch ist nur noch lesbar. Ansehen geht, Ändern und Buchen nicht. Nach der Zahlung geht sofort wieder alles.",
+      "usage": "Verbrauch",
+      "members": "Mitglieder",
+      "membersOf": "{count} von {max}",
+      "membersUnlimited": "{count} (unbegrenzt)",
+      "storage": "Speicher",
+      "storageOf": "{used} von {limit}",
+      "videos": "Videos in Moments",
+      "kiosks": "Thekenterminals",
+      "kiosksOne": "eines ({count} aktiv)",
+      "kiosksMany": "mehrere ({count} aktiv)",
+      "yes": "Ja",
+      "no": "Nein",
+      "choose": "Tarif wählen",
+      "interval": "Zahlweise",
+      "month": "Monatlich",
+      "year": "Jährlich",
+      "perMonth": "{price} / Monat",
+      "perYear": "{price} / Jahr",
+      "intervalMissing": "In dieser Zahlweise nicht buchbar.",
+      "current": "Aktueller Tarif",
+      "limitMembers": {
+        "one": "Bis zu {count} Mitglied",
+        "other": "Bis zu {count} Mitglieder"
+      },
+      "limitMembersUnlimited": "Unbegrenzt viele Mitglieder",
+      "limitStorage": "{size} Speicher",
+      "limitVideos": "Videos in Moments",
+      "limitNoVideos": "Keine Videos",
+      "limitKiosks": "Mehrere Thekenterminals",
+      "limitOneKiosk": "Ein Thekenterminal",
+      "book": "Buchen",
+      "checkoutUnavailable": "Online-Zahlung ist noch nicht eingerichtet.",
+      "portal": "Zahlung und Rechnungen",
+      "portalHint": "Zahlungsart, Rechnungen, Tarif wechseln oder kündigen.",
+      "supporter": "Vereint unterstützen",
+      "supporterHint": "Freiwillig und persönlich: {price} im Monat helfen, Vereint weiterzuentwickeln.",
+      "supporterHintNoAmount": "Freiwillig und persönlich: Ein monatlicher Beitrag hilft, Vereint weiterzuentwickeln.",
+      "export": "Daten exportieren",
+      "exportHint": "Alle Daten dieses Stammtischs als JSON-Datei.",
+      "success": "Danke! Der Tarif wird in wenigen Sekunden aktiv.",
+      "thanks": "Danke für deine Unterstützung!",
+      "canceled": "Zahlung abgebrochen, nichts wurde gebucht.",
+      "unavailable": "Der Tarif konnte nicht geladen werden."
     }
   }
 }

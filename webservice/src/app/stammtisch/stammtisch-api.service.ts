@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { ApiClient, ApiError, describeApiError } from '../api/api-client.service';
+import { API_BASE_PATH, ApiClient, ApiError, describeApiError } from '../api/api-client.service';
 
 /** Eigene Mitgliedschaft (`GET /stammtische`), auch ohne gewählten Stammtisch abrufbar. */
 export interface StammtischMembershipDto {
@@ -44,6 +44,54 @@ export interface SaveStammtischRoleRequest {
   sortOrder?: number;
 }
 
+export type BillingPlan = 'free' | 'stammtisch' | 'verein';
+export type BillingInterval = 'month' | 'year';
+export type BillingStatus = 'none' | 'active' | 'past_due' | 'canceled' | 'comped';
+
+/** Grenzen eines Tarifs; `maxMembers: null` = unbegrenzt. */
+export interface PlanLimitsDto {
+  maxMembers: number | null;
+  storageBytes: number;
+  videos: boolean;
+  multipleKiosks: boolean;
+}
+
+/** Ein buchbarer Tarif; Beträge in Cent, `null`, wenn die Zahlweise nicht angeboten wird. */
+export interface PlanOfferDto {
+  plan: BillingPlan;
+  limits: PlanLimitsDto;
+  monthCents: number | null;
+  yearCents: number | null;
+}
+
+/** Tarif, Grenzen und Verbrauch des gewählten Stammtischs (`GET /stammtisch/billing`). */
+export interface BillingOverviewDto {
+  plan: BillingPlan;
+  interval: BillingInterval | null;
+  status: BillingStatus;
+  /** Zahlung überfällig und Kulanzfrist abgelaufen: nur noch lesbar. */
+  readOnly: boolean;
+  graceUntil: string | null;
+  currentPeriodEnd: string | null;
+  limits: PlanLimitsDto;
+  usage: { members: number; storageBytes: number; activeKiosks: number };
+  /** Darf buchen und das Zahlungsportal öffnen (`billing.manage`). */
+  canManage: boolean;
+  checkoutAvailable: boolean;
+  supporterAvailable: boolean;
+  supporterAmountCents: number | null;
+  hasPaymentAccount: boolean;
+  plans: PlanOfferDto[];
+}
+
+/** Adresse der Stripe-Seite, zu der die App das ganze Fenster weiterleitet. */
+export interface BillingRedirectDto {
+  url: string;
+}
+
+/** Datenexport als JSON-Datei; der Browser lädt ihn direkt über den Proxy herunter. */
+export const STAMMTISCH_EXPORT_URL = `${API_BASE_PATH}/stammtisch/export`;
+
 /** Stammtisch aus Sicht der Plattform-Administration. */
 export interface PlatformStammtischDto {
   id: string;
@@ -51,6 +99,10 @@ export interface PlatformStammtischDto {
   archived: boolean;
   memberCount: number;
   createdAt: string;
+  plan: BillingPlan;
+  billingStatus: BillingStatus;
+  readOnly: boolean;
+  storageBytes: number;
 }
 
 export interface CreateStammtischRequest {
@@ -61,6 +113,8 @@ export interface CreateStammtischRequest {
 export interface UpdatePlatformStammtischRequest {
   name?: string;
   archived?: boolean;
+  /** Tarif ohne Zahlung vergeben (`comped`, bei `free` wieder `none`). */
+  plan?: BillingPlan;
 }
 
 /** Antwort von `POST /member-invites/join`. */
@@ -109,6 +163,22 @@ export class StammtischApiService {
 
   deleteRole(id: string): Observable<void> {
     return this.api.delete<void>(`/stammtisch/roles/${encodeURIComponent(id)}`);
+  }
+
+  billing(): Observable<BillingOverviewDto> {
+    return this.api.get<BillingOverviewDto>('/stammtisch/billing');
+  }
+
+  billingCheckout(plan: Exclude<BillingPlan, 'free'>, interval: BillingInterval): Observable<BillingRedirectDto> {
+    return this.api.post<BillingRedirectDto>('/stammtisch/billing/checkout', { plan, interval });
+  }
+
+  billingPortal(): Observable<BillingRedirectDto> {
+    return this.api.post<BillingRedirectDto>('/stammtisch/billing/portal', {});
+  }
+
+  billingSupporter(): Observable<BillingRedirectDto> {
+    return this.api.post<BillingRedirectDto>('/stammtisch/billing/supporter', {});
   }
 
   platformList(): Observable<PlatformStammtischDto[]> {

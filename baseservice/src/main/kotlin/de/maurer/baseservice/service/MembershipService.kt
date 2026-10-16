@@ -1,5 +1,6 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.domain.StammtischMemberEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.domain.UserRoleEntity
@@ -23,19 +24,21 @@ import org.springframework.transaction.annotation.Transactional
 class MembershipService(
     private val memberRepository: StammtischMemberRepository,
     private val roleRepository: StammtischRoleRepository,
-    private val userRoleRepository: UserRoleRepository
+    private val userRoleRepository: UserRoleRepository,
+    private val planLimits: PlanLimits
 ) {
 
     /**
      * Nimmt die Person in den aktuellen Stammtisch auf (oder reaktiviert eine
      * beendete Mitgliedschaft) und vergibt zusätzlich [roles]. Bestehende
      * Rollen bleiben erhalten. Liefert `true`, wenn die Person vorher kein
-     * aktives Mitglied war.
+     * aktives Mitglied war. Neue Mitglieder zählen gegen die Grenze des Tarifs.
      */
     fun addMember(user: UserEntity, roles: Set<String> = setOf(UserRole.MEMBER)): Boolean {
         TenantContext.requireStammtischId()
         val existing = memberRepository.findByUserId(user.id).orElse(null)
         val wasActive = existing?.active == true
+        if (!wasActive) planLimits.requireMemberSlot()
         val member = existing ?: StammtischMemberEntity(user = user)
         member.active = true
         memberRepository.save(member)

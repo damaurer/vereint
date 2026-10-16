@@ -4,12 +4,22 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe, translate } from '../i18n';
 import { formatDateTime } from '../member/member-format';
 import { StateComponent } from '../ui/state.component';
-import { StammtischApiService, apiErrorText, type PlatformStammtischDto } from './stammtisch-api.service';
+import { billingStatusLabel, formatBytes, planName } from './billing-format';
+import {
+  StammtischApiService,
+  apiErrorText,
+  type BillingPlan,
+  type PlatformStammtischDto,
+} from './stammtisch-api.service';
+
+/** Tarife, die die Plattform ohne Zahlung vergeben kann. */
+const PLANS: readonly BillingPlan[] = ['free', 'stammtisch', 'verein'];
 
 /**
  * Plattform-Administration (`/plattform`), außerhalb der App-Shell und nur für
- * Plattform-Admins: alle Stammtische mit Mitgliederzahl, neu anlegen,
- * umbenennen sowie archivieren bzw. wiederherstellen.
+ * Plattform-Admins: alle Stammtische mit Mitgliederzahl, Tarif und Speicher,
+ * neu anlegen, umbenennen, archivieren bzw. wiederherstellen und einen Tarif
+ * ohne Zahlung vergeben.
  */
 @Component({
   selector: 'app-platform',
@@ -85,13 +95,33 @@ import { StammtischApiService, apiErrorText, type PlatformStammtischDto } from '
                         @if (item.archived) {
                           <span class="st-badge">{{ 'stammtisch.platform.archived' | t }}</span>
                         }
+                        @if (item.readOnly) {
+                          <span class="st-badge st-badge-danger">{{ 'stammtisch.platform.readOnly' | t }}</span>
+                        }
                       </span>
                       <span class="member-list-meta">
                         {{ 'stammtisch.platform.members' | t: { count: item.memberCount } }} ·
                         {{ 'stammtisch.platform.createdAt' | t: { date: formatDateTime(item.createdAt) } }}
                       </span>
+                      <span class="member-list-meta">
+                        {{ 'stammtisch.platform.plan' | t }}: {{ planName(item.plan) }}
+                        @if (billingStatusLabel(item.billingStatus); as status) {
+                          ({{ status }})
+                        }
+                        · {{ 'stammtisch.platform.storage' | t: { size: formatBytes(item.storageBytes) } }}
+                      </span>
                     </span>
                     <span class="st-actions">
+                      <select
+                        class="st-select"
+                        [attr.aria-label]="'stammtisch.platform.setPlan' | t: { name: item.name }"
+                        [disabled]="busy()"
+                        (change)="setPlan(item, $any($event.target).value)"
+                      >
+                        @for (plan of plans; track plan) {
+                          <option [value]="plan" [selected]="plan === item.plan">{{ planName(plan) }}</option>
+                        }
+                      </select>
                       <button type="button" class="member-button member-button-ghost" (click)="startEdit(item)">
                         {{ 'stammtisch.platform.rename' | t }}
                       </button>
@@ -113,6 +143,10 @@ export class PlatformComponent implements OnInit {
   private readonly api = inject(StammtischApiService);
 
   protected readonly formatDateTime = formatDateTime;
+  protected readonly formatBytes = formatBytes;
+  protected readonly planName = planName;
+  protected readonly billingStatusLabel = billingStatusLabel;
+  protected readonly plans = PLANS;
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
   protected readonly items = signal<PlatformStammtischDto[]>([]);
@@ -185,6 +219,23 @@ export class PlatformComponent implements OnInit {
     this.api.platformUpdate(item.id, { archived: !item.archived }).subscribe({
       next: (saved) => this.applied(saved),
       error: (error: unknown) => this.fail(error),
+    });
+  }
+
+  /** Vergibt einen Tarif ohne Zahlung (`comped`; `free` setzt zurück). */
+  protected setPlan(item: PlatformStammtischDto, plan: string): void {
+    if (this.busy() || plan === item.plan || !PLANS.includes(plan as BillingPlan)) return;
+    this.start();
+    this.api.platformUpdate(item.id, { plan: plan as BillingPlan }).subscribe({
+      next: (saved) => {
+        this.applied(saved);
+        this.info.set(translate('stammtisch.platform.planChanged', { name: saved.name, plan: planName(saved.plan) }));
+      },
+      error: (error: unknown) => {
+        this.fail(error);
+        // Auswahl auf den gespeicherten Stand zurücksetzen.
+        this.reload();
+      },
     });
   }
 

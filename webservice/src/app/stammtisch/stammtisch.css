@@ -182,3 +182,90 @@ code {
 .st-link-button:hover {
   text-decoration: underline;
 }
+
+/* Tarif: Verbrauch, Tarifkarten und Zahlweise. */
+.st-usage {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.75rem 0 0;
+}
+
+.st-usage div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.25rem 0.75rem;
+}
+
+.st-usage dt {
+  color: var(--color-text-muted);
+}
+
+.st-usage dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.st-meter {
+  grid-column: 1 / -1;
+  height: 0.4rem;
+  border-radius: 999px;
+  background-color: var(--color-border);
+  overflow: hidden;
+}
+
+.st-meter span {
+  display: block;
+  height: 100%;
+  background-color: var(--color-brand);
+}
+
+.st-toggle {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.15rem;
+}
+
+.st-toggle button {
+  padding: 0.35rem 0.8rem;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.st-toggle .is-active {
+  background-color: var(--color-brand-soft);
+  color: var(--color-brand);
+}
+
+.st-plan {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+}
+
+.st-plan ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--color-text-muted);
+}
+
+.st-plan .member-button {
+  justify-self: start;
+}
+
+a.member-button {
+  text-decoration: none;
+}
+
+.st-badge-danger {
+  border-color: transparent;
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}

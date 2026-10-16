@@ -31,5 +31,6 @@
     <include file="db/changelog/changes/012-moment-types-and-media.xml"/>
     <include file="db/changelog/changes/013-stammtische.xml"/>
     <include file="db/changelog/changes/014-drink-library.xml"/>
+    <include file="db/changelog/changes/015-billing.xml"/>
 
 </databaseChangeLog>

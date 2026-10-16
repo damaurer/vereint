@@ -1,5 +1,6 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.domain.KioskSessionEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.KioskSessionDto
@@ -43,6 +44,7 @@ class KioskService(
     private val access: StammtischAccess,
     private val userService: UserService,
     private val auditService: AuditService,
+    private val planLimits: PlanLimits,
     private val clock: Clock = Clock.systemUTC()
 ) {
 
@@ -59,6 +61,8 @@ class KioskService(
                 ErrorCode.KIOSK_PIN_INVALID_FORMAT
             )
         }
+        // Mehrere Thekenterminals gleichzeitig nur im Tarif Verein.
+        planLimits.requireKioskSlot()
         val label = rawLabel?.trim()?.take(MAX_LABEL_LENGTH)?.ifBlank { null }
             ?: access.user.displayName?.take(MAX_LABEL_LENGTH)?.ifBlank { null }
             ?: DEFAULT_LABEL

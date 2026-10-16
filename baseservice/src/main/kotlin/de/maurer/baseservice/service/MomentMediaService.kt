@@ -1,5 +1,6 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.crypto.DataEncryptor
 import de.maurer.baseservice.domain.MomentMediaEntity
 import de.maurer.baseservice.domain.MomentMediaKind
@@ -52,6 +53,7 @@ class MomentMediaService(
     private val dataEncryptor: DataEncryptor,
     private val auditService: AuditService,
     private val stammtischJobs: StammtischJobs,
+    private val planLimits: PlanLimits,
     transactionManager: PlatformTransactionManager
 ) {
 
@@ -94,6 +96,8 @@ class MomentMediaService(
 
         val ownerId = tx.execute {
             val access = momentService.requireMomentAccess(eventId, momentId, principal, requireActive = true)
+            if (kind == MomentMediaKind.video) planLimits.requireVideos()
+            planLimits.requireStorage(contentLength)
             val count = momentMediaRepository.countByMomentIdAndOwnerId(momentId, access.caller.id)
             if (count >= MAX_MEDIA_PER_MEMBER_AND_MOMENT) {
                 throw InvalidRequestException(

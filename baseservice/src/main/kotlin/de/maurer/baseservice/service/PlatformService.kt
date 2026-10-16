@@ -1,6 +1,10 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.billing.BillingService
+import de.maurer.baseservice.billing.PlanLimits
+import de.maurer.baseservice.domain.BillingPlan
 import de.maurer.baseservice.domain.StammtischEntity
+import de.maurer.baseservice.domain.SubscriptionStatus
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.CreateStammtischRequest
 import de.maurer.baseservice.dto.PlatformStammtischDto
@@ -20,6 +24,7 @@ import de.maurer.baseservice.tenancy.TenantContext
 import de.maurer.baseservice.tenancy.TenantTransactions
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -38,7 +43,9 @@ class PlatformService(
     private val membershipService: MembershipService,
     private val seeder: StammtischSeeder,
     private val auditService: AuditService,
-    private val tenantTransactions: TenantTransactions
+    private val tenantTransactions: TenantTransactions,
+    private val billingService: BillingService,
+    private val planLimits: PlanLimits
 ) {
 
     fun list(principal: UserPrincipal): List<PlatformStammtischDto> {
@@ -86,6 +93,10 @@ class PlatformService(
             request.archived?.let { stammtisch.archived = it }
             stammtischRepository.saveAndFlush(stammtisch)
         }
+        request.plan?.trim()?.takeIf { it.isNotEmpty() }?.let { plan ->
+            val actor = TenantContext.runWithoutTenant { userService.getOrCreateUser(principal) }
+            billingService.setPlanManually(id, plan, actor)
+        }
         return toDto(updated)
     }
 
@@ -118,13 +129,21 @@ class PlatformService(
         }
     }
 
-    private fun toDto(stammtisch: StammtischEntity) = PlatformStammtischDto(
-        id = stammtisch.id.toString(),
-        name = stammtisch.name,
-        archived = stammtisch.archived,
-        memberCount = tenantTransactions.readInStammtisch(stammtisch.id) { memberRepository.countByActiveTrue() },
-        createdAt = stammtisch.createdAt
-    )
+    private fun toDto(stammtisch: StammtischEntity): PlatformStammtischDto {
+        val subscription = billingService.subscriptionOf(stammtisch.id)
+        val usage = tenantTransactions.readInStammtisch(stammtisch.id) { planLimits.usage() }
+        return PlatformStammtischDto(
+            id = stammtisch.id.toString(),
+            name = stammtisch.name,
+            archived = stammtisch.archived,
+            memberCount = usage.members,
+            createdAt = stammtisch.createdAt,
+            plan = (subscription?.plan ?: BillingPlan.free).name,
+            billingStatus = (subscription?.status ?: SubscriptionStatus.none).name,
+            readOnly = subscription?.isReadOnly(Instant.now()) == true,
+            storageBytes = usage.storageBytes
+        )
+    }
 
     private fun requireName(value: String?): String {
         val name = value?.trim().orEmpty()

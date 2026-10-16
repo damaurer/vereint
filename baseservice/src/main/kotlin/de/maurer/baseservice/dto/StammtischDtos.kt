@@ -63,7 +63,12 @@ data class PlatformStammtischDto(
     val name: String,
     val archived: Boolean,
     val memberCount: Long,
-    val createdAt: Instant
+    val createdAt: Instant,
+    /** Tarif und Zahlungsstand (`free`/`stammtisch`/`verein`, `none`/`active`/...). */
+    val plan: String = "free",
+    val billingStatus: String = "none",
+    val readOnly: Boolean = false,
+    val storageBytes: Long = 0
 )
 
 data class CreateStammtischRequest(
@@ -81,5 +86,7 @@ data class CreateStammtischRequest(
 data class UpdatePlatformStammtischRequest(
     @field:Size(max = 80, message = "name {validation.size.max}")
     val name: String? = null,
-    val archived: Boolean? = null
+    val archived: Boolean? = null,
+    /** Tarif von Hand setzen (ohne Zahlung, Status `comped`; `free` setzt zurück). */
+    val plan: String? = null
 )

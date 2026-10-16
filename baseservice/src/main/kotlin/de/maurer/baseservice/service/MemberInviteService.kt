@@ -1,5 +1,6 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.domain.MemberInviteEntity
 import de.maurer.baseservice.domain.MemberInviteRedemptionEntity
 import de.maurer.baseservice.domain.UserEntity
@@ -72,6 +73,7 @@ class MemberInviteService(
     private val userService: UserService,
     private val auditService: AuditService,
     private val identityProvisioner: IdentityProvisioner,
+    private val planLimits: PlanLimits,
     transactionManager: PlatformTransactionManager,
     private val clock: Clock = Clock.systemUTC()
 ) {
@@ -217,6 +219,8 @@ class MemberInviteService(
             return inStammtischOf(request.token) { stammtischId -> transactionTemplate.execute {
                 val invite = memberInviteRepository.findByTokenHashForUpdate(tokenHash).orElseThrow { notFound() }
                 requireUsable(invite)
+                // Vor dem Anlegen des Kontos: ein voller Stammtisch nimmt niemanden auf.
+                planLimits.requireMemberSlot()
 
                 if (userRepository.existsByEmailIgnoreCase(email)) {
                     throw EmailAlreadyRegisteredException()

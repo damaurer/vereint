@@ -233,3 +233,20 @@ Mit mehreren Stammtischen (siehe `docs/domains/stammtische.md`) gilt:
   als `vereint` verbindet (kein Superuser, Eigentümer der Tabellen), wie es
   `postgres/init-databases.sh` anlegt. Nicht auf `postgres` umstellen.
 - Bestehende Daten landen beim Update im Stammtisch „Mein Stammtisch".
+
+### Abrechnung (Stripe)
+
+Tarife je Stammtisch und die Einrichtung von Stripe beschreibt
+`docs/domains/abrechnung.md`. Ohne Stripe-Werte bleibt die Online-Zahlung aus,
+„Mein Stammtisch" läuft kostenlos mit allen Funktionen weiter. Zum Einschalten
+die Werte als SSM-Parameter anlegen und neu ausrollen, zum Beispiel:
+
+```bash
+aws ssm put-parameter --name /vereint/STRIPE_ENABLED --type String --value true
+aws ssm put-parameter --name /vereint/STRIPE_SECRET_KEY --type SecureString --value '<sk_live_...>'
+aws ssm put-parameter --name /vereint/STRIPE_WEBHOOK_SECRET --type SecureString --value '<whsec_...>'
+aws ssm put-parameter --name /vereint/STRIPE_PRICE_STAMMTISCH_MONTH --type String --value '<price_...>'
+```
+
+(entsprechend für die übrigen Preis-IDs). Der Webhook-Pfad
+`/api/v1/billing/stripe/webhook` geht in Caddy direkt an den Fachservice.

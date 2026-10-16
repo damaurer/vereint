@@ -94,6 +94,21 @@ vereint:
     realm: ${KEYCLOAK_REALM:vereint}
     client-id: ${KEYCLOAK_REGISTRATION_CLIENT_ID:vereint-registration}
     client-secret: ${KEYCLOAK_REGISTRATION_CLIENT_SECRET:}
+  billing:
+    # Tarife je Stammtisch über Stripe (Checkout, Kundenportal, Webhooks).
+    # Ohne STRIPE_ENABLED=true, Secret-Key und Webhook-Secret antworten Buchung
+    # und Portal mit 503; Tarife setzt dann die Plattform-Administration.
+    stripe-enabled: ${STRIPE_ENABLED:false}
+    stripe-secret-key: ${STRIPE_SECRET_KEY:}
+    stripe-webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    app-url: ${PUBLIC_BASE_URL:http://localhost:4200}
+    grace-days: ${BILLING_GRACE_DAYS:30}
+    prices:
+      stammtisch-month: ${STRIPE_PRICE_STAMMTISCH_MONTH:}
+      stammtisch-year: ${STRIPE_PRICE_STAMMTISCH_YEAR:}
+      verein-month: ${STRIPE_PRICE_VEREIN_MONTH:}
+      verein-year: ${STRIPE_PRICE_VEREIN_YEAR:}
+      supporter: ${STRIPE_PRICE_SUPPORTER:}
 
 management:
   endpoints:
