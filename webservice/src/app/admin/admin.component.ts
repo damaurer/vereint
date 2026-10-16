@@ -1,12 +1,13 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, map } from 'rxjs';
+import { catchError, forkJoin, map, of } from 'rxjs';
+import { RouterLink } from '@angular/router';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
 import { formatDateTime } from '../member/member-format';
 import { auditActionLabel, auditDetails, auditTargetLabel } from '../board/board-format';
 import { AdminApiService } from './admin-api.service';
-import { RolesMatrixComponent } from './roles-matrix.component';
+import { StammtischApiService, type StammtischRoleDto } from '../stammtisch/stammtisch-api.service';
 import { InviteModalComponent } from './invite-modal.component';
 import type { BoardRole, PagedResponse, UserSummary } from '../auth/auth.types';
 import type { AuditLogEntry, MemberProfile } from '../api/api.types';
@@ -28,21 +29,34 @@ interface AdminView {
   audit: AuditLogEntry[];
 }
 
-/** Zuweisbare Rollen inklusive der technischen Tablet-Rolle. */
-const ASSIGNABLE_ROLES = ['member', 'board', 'admin', 'tabletRecorder'] as const;
-type AssignableRole = (typeof ASSIGNABLE_ROLES)[number];
+/** Systemrollen jeder Gruppe inklusive der technischen Tablet-Rolle. */
+const SYSTEM_ROLES = ['member', 'board', 'admin', 'tabletRecorder'] as const;
+
+/** Übersetzungsschlüssel der Systemrollen; eigene Rollen zeigen ihren Namen. */
+const SYSTEM_ROLE_LABELS: Record<string, string> = {
+  member: 'admin.roles.member',
+  board: 'admin.roles.board',
+  admin: 'admin.roles.admin',
+  tabletRecorder: 'admin.roles.tabletRecorder',
+};
+
+/** Eine Rolle, die sich einem Mitglied zuweisen lässt. */
+interface AssignableRole {
+  code: string;
+  label: string;
+}
 
 /** Auswählbare Vorstands-Unterrollen (leer = keine). */
 const BOARD_ROLES = ['', 'chair', 'treasurer', 'secretary', 'assessor'] as const;
 
-/** Optionen des clientseitigen Rollenfilters der Mitgliedertabelle. */
+/** Feste Optionen des clientseitigen Rollenfilters; eigene Rollen kommen dazu. */
 const ROLE_FILTERS = [
   { value: 'all', labelKey: 'admin.members.roleFilterAll' },
   { value: 'admin', labelKey: 'admin.roles.admin' },
   { value: 'board', labelKey: 'admin.roles.board' },
   { value: 'member', labelKey: 'admin.roles.member' },
 ] as const;
-type RoleFilter = (typeof ROLE_FILTERS)[number]['value'];
+type RoleFilter = string;
 
 /** Seitengröße der clientseitigen Paginierung (siehe Mockup). */
 const PAGE_SIZE = 6;
@@ -73,14 +87,21 @@ function formatDate(iso: string): string {
   return new Intl.DateTimeFormat(activeLocale(), { dateStyle: 'medium' }).format(date);
 }
 
+/** Klartext einer Rolle: Systemrollen übersetzt, eigene Rollen mit ihrem Namen. */
+function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): string {
+  const key = SYSTEM_ROLE_LABELS[code];
+  if (key) return translate(key);
+  return groupRoles.find((role) => role.code === code)?.name ?? code;
+}
+
 /**
- * Administrationsansicht (TICKET-026, Redesign TICKET-038): Mitglieder & Gruppen,
- * Rollen & Berechtigungen sowie Einladungen.
+ * Administrationsansicht (TICKET-026, Redesign TICKET-038): Mitglieder, Rollen
+ * und Einladungen der gewählten Gruppe.
  *
  * Die Mitgliedertabelle nutzt die geteilten `ui/`-Primitive (Tabelle, Avatar,
  * Rollen-Chip, Status-Badge) mit clientseitiger Suche, Filterung und
- * Paginierung. Die Rollen-Matrix und das Einladungs-Modal sind reine
- * Präsentation (siehe Abweichungen im Ticket). Sämtliche `admin-api`-Aufrufe
+ * Paginierung. Zuweisbar sind die System- und die eigenen Rollen der Gruppe;
+ * Rollen selbst (Name, Berechtigungen) werden in den Gruppeneinstellungen gepflegt. Sämtliche `admin-api`-Aufrufe
  * bleiben unverändert; die Rollen-/Statusprüfung (`admin`) verbessert nur die
  * Navigation, die verbindliche Autorisierung erfolgt serverseitig
  * (`deny by default`), unberechtigte Aufrufe erhalten `403`. Die Ansicht wird
@@ -95,8 +116,8 @@ function formatDate(iso: string): string {
     InfoPanelComponent,
     RoleChipComponent,
     StatusBadgeComponent,
-    RolesMatrixComponent,
     InviteModalComponent,
+    RouterLink,
     TranslatePipe,
   ],
   template: `
@@ -104,7 +125,11 @@ function formatDate(iso: string): string {
       <section class="page-card member-card" aria-labelledby="admin-title">
         <span class="eyebrow">{{ 'admin.eyebrow' | t }}</span>
         <h1 id="admin-title">{{ 'admin.title' | t }}</h1>
-        <p>{{ 'admin.intro' | t }}</p>
+        @if (groupName(); as name) {
+          <p>{{ 'admin.intro' | t: { name } }}</p>
+        } @else {
+          <p>{{ 'admin.introNoName' | t }}</p>
+        }
 
         <vereint-info-panel icon="admin" [title]="'admin.eyebrow' | t">
           {{ 'admin.infoPanel' | t }}
@@ -153,6 +178,9 @@ function formatDate(iso: string): string {
                 >
                   @for (option of roleFilters; track option.value) {
                     <option [value]="option.value">{{ option.labelKey | t }}</option>
+                  }
+                  @for (role of customRoles(); track role.code) {
+                    <option [value]="role.code">{{ role.name }}</option>
                   }
                 </select>
               </label>
@@ -247,15 +275,19 @@ function formatDate(iso: string): string {
             <form class="manage-form" (ngSubmit)="saveRoles(user.id)">
               <fieldset class="admin-fieldset">
                 <legend>{{ 'admin.user.roles' | t }}</legend>
-                @for (role of assignableRoles; track role) {
+                @for (role of assignableRoles(); track role.code) {
                   <label class="admin-check">
-                    <input type="checkbox" [(ngModel)]="roleState[role]" [name]="'role-' + role" />
-                    <span>{{ role }}</span>
+                    <input type="checkbox" [(ngModel)]="roleState[role.code]" [name]="'role-' + role.code" />
+                    <span>{{ role.label }}</span>
                   </label>
                 }
               </fieldset>
               <button type="submit" class="member-button" [disabled]="busy()">{{ 'admin.user.saveRoles' | t }}</button>
             </form>
+            <p class="member-list-meta">
+              {{ 'admin.user.customRolesHint' | t }}
+              <a [routerLink]="groupSettingsLink">{{ 'admin.user.customRolesLink' | t }}</a>
+            </p>
 
             <form class="manage-form manage-inline" (ngSubmit)="saveProfile(user.id)">
               <label class="manage-field">
@@ -281,8 +313,6 @@ function formatDate(iso: string): string {
               <button type="submit" class="member-button" [disabled]="busy()">{{ 'admin.user.saveStatus' | t }}</button>
             </form>
           }
-
-          <app-admin-roles-matrix [roleCounts]="roleCounts()" />
 
           <h2 class="member-subtitle">{{ 'admin.audit.heading' | t: { count: view.audit.length } }}</h2>
           @if (view.audit.length === 0) {
@@ -420,6 +450,7 @@ function formatDate(iso: string): string {
 })
 export class AdminComponent implements OnInit, OnDestroy {
   private readonly api = inject(AdminApiService);
+  private readonly groups = inject(StammtischApiService);
 
   protected readonly load = new AsyncState<AdminView>();
   protected readonly selected = signal<MemberProfile | null>(null);
@@ -428,7 +459,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   protected readonly actionError = signal<string | null>(null);
   protected readonly actionInfo = signal<string | null>(null);
 
-  protected readonly assignableRoles = ASSIGNABLE_ROLES;
+  /** Gruppeneinstellungen, in denen eigene Rollen angelegt werden. */
+  protected readonly groupSettingsLink = '/gruppe';
   protected readonly boardRoles = BOARD_ROLES;
   protected readonly roleFilters = ROLE_FILTERS;
 
@@ -437,6 +469,23 @@ export class AdminComponent implements OnInit, OnDestroy {
   protected readonly roleFilter = signal<RoleFilter>('all');
   protected readonly page = signal(0);
   protected readonly inviteOpen = signal(false);
+
+  /** Name der gewählten Gruppe für den Einleitungstext; `null`, solange unbekannt. */
+  protected readonly groupName = signal<string | null>(null);
+  /** Rollen der Gruppe (`GET /stammtisch/roles`); leer, wenn nicht ladbar. */
+  protected readonly groupRoles = signal<StammtischRoleDto[]>([]);
+
+  /** Eigene (nicht System-)Rollen der Gruppe, z. B. für den Rollenfilter. */
+  protected readonly customRoles = computed(() =>
+    this.groupRoles().filter((role) => !role.systemRole && !SYSTEM_ROLE_LABELS[role.code]),
+  );
+
+  /** Zuweisbare Rollen: System- und eigene Rollen der Gruppe in ihrer Reihenfolge. */
+  protected readonly assignableRoles = computed<AssignableRole[]>(() => {
+    const roles = this.groupRoles();
+    const codes = roles.length > 0 ? roles.map((role) => role.code) : [...SYSTEM_ROLES];
+    return codes.map((code) => ({ code, label: roleLabel(code, roles) }));
+  });
 
   /** Nach Suche und Rollenfilter reduzierte Mitgliederliste. */
   protected readonly filteredUsers = computed<UserSummary[]>(() => {
@@ -448,7 +497,7 @@ export class AdminComponent implements OnInit, OnDestroy {
         !term ||
         user.displayName.toLowerCase().includes(term) ||
         (user.email ?? '').toLowerCase().includes(term);
-      const matchesRole = role === 'all' || user.roles.includes(role);
+      const matchesRole = role === 'all' || (user.roles as string[]).includes(role);
       return matchesTerm && matchesRole;
     });
   });
@@ -471,26 +520,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     Math.min(this.filteredUsers().length, (this.page() + 1) * PAGE_SIZE),
   );
 
-  /** Mitgliederverteilung für die Karten der Rollen-Matrix. */
-  protected readonly roleCounts = computed(() => {
-    const users = this.load.data()?.users ?? [];
-    const counts = { admin: 0, treasurer: 0, secretary: 0, host: 0, member: 0 };
-    for (const user of users) {
-      if (user.roles.includes('admin')) counts.admin++;
-      else if (user.boardRole === 'treasurer') counts.treasurer++;
-      else if (user.boardRole === 'secretary') counts.secretary++;
-      else if (user.boardRole === 'chair') counts.host++;
-      else counts.member++;
-    }
-    return counts;
-  });
-
-  protected roleState: Record<AssignableRole, boolean> = {
-    member: false,
-    board: false,
-    admin: false,
-    tabletRecorder: false,
-  };
+  protected roleState: Record<string, boolean> = {};
   protected boardRole: '' | BoardRole = '';
   protected drinkRecorder = false;
   protected disabled = false;
@@ -514,7 +544,14 @@ export class AdminComponent implements OnInit, OnDestroy {
   protected readonly auditTargetLabel = auditTargetLabel;
   protected readonly auditActionLabel = auditActionLabel;
   protected readonly auditDetails = auditDetails;
-  protected readonly memberRoleLabel = memberRoleLabel;
+
+  /** Rollen-Chip: Systemrolle wie bisher, eigene Rollen der Gruppe angehängt. */
+  protected memberRoleLabel(user: UserSummary): string {
+    const custom = this.customRoles()
+      .filter((role) => (user.roles as string[]).includes(role.code))
+      .map((role) => role.name);
+    return [memberRoleLabel(user), ...custom].join(' · ');
+  }
 
   protected statusTone(user: UserSummary): StatusTone {
     return user.disabled ? 'neutral' : 'success';
@@ -530,6 +567,15 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   protected reload(): void {
     this.page.set(0);
+    // Gruppenname und Rollen sind Beiwerk: fehlen sie, bleibt die Ansicht nutzbar.
+    this.groups
+      .current()
+      .pipe(catchError(() => of(null)))
+      .subscribe((group) => this.groupName.set(group?.name ?? null));
+    this.groups
+      .roles()
+      .pipe(catchError(() => of(null)))
+      .subscribe((data) => this.groupRoles.set(data?.roles ?? []));
     this.load.run(
       forkJoin({
         users: this.api.listUsers().pipe(map((page: PagedResponse<UserSummary>) => page.content)),
@@ -570,12 +616,10 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.api.getUser(userId).subscribe({
       next: (profile) => {
         this.selected.set(profile);
-        this.roleState = {
-          member: profile.roles.includes('member'),
-          board: profile.roles.includes('board'),
-          admin: profile.roles.includes('admin'),
-          tabletRecorder: (profile.roles as string[]).includes('tabletRecorder'),
-        };
+        const current = new Set<string>(profile.roles);
+        this.roleState = Object.fromEntries(
+          this.assignableRoles().map((role) => [role.code, current.has(role.code)]),
+        );
         this.boardRole = profile.boardRole ?? '';
         this.drinkRecorder = profile.drinkRecorder;
         this.disabled = profile.disabled;
@@ -602,7 +646,9 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   protected saveRoles(userId: string): void {
-    const roles = this.assignableRoles.filter((role) => this.roleState[role]);
+    const roles = this.assignableRoles()
+      .map((role) => role.code)
+      .filter((code) => this.roleState[code]);
     this.runAction(this.api.assignRoles(userId, { roles }), translate('admin.user.rolesSaved'));
   }
 

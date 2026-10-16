@@ -1093,8 +1093,9 @@
   "admin": {
     "eyebrow": "Administration",
     "title": "Members & groups",
-    "intro": "Members, roles and invitations of the “Durstige Eber”.",
-    "infoPanel": "Roles and permissions are authorised on the server; this page only prepares the administration.",
+    "intro": "Members, roles and invitations of the group “{name}”.",
+    "introNoName": "Members, roles and invitations of your group.",
+    "infoPanel": "Changes apply to the selected group right away; the server checks every permission.",
     "loadingMessage": "Loading users and audit log.",
     "unavailable": "Administration unavailable",
     "roles": {
@@ -1105,7 +1106,7 @@
       "treasurer": "Treasurer",
       "secretary": "Secretary",
       "assessor": "Assessor",
-      "host": "Host"
+      "tabletRecorder": "Bar terminal"
     },
     "members": {
       "search": "Search members",
@@ -1146,7 +1147,9 @@
       "saveStatus": "Save status",
       "rolesSaved": "Roles saved.",
       "profileSaved": "Profile saved.",
-      "statusSaved": "Status saved."
+      "statusSaved": "Status saved.",
+      "customRolesHint": "Create your own roles and their permissions in the group settings.",
+      "customRolesLink": "Manage roles"
     },
     "audit": {
       "heading": "Audit log ({count})",
@@ -1200,25 +1203,6 @@
         "emailTaken": "An account with this e-mail address already exists. Sign in with it or reset your password.",
         "passwordRejected": "The password does not meet the requirements. Please choose a longer password.",
         "unavailable": "Registration is currently not possible. Please try again later."
-      }
-    },
-    "matrix": {
-      "title": "Roles & permissions",
-      "saved": "Permissions saved.",
-      "permission": "Permission",
-      "hint": "System permissions are protected globally for Vereint.",
-      "discard": "Discard",
-      "save": "Save changes",
-      "permissions": {
-        "credit": "Manage balances (top up / book)",
-        "events": "Create / plan events & get-togethers",
-        "notify": "Send group notifications",
-        "attendance": "Start attendance poll",
-        "invite": "Invite new members",
-        "tally": "Edit every member’s tally sheet",
-        "stats": "View statistics and Eber analytics",
-        "moderate": "Delete / moderate chat posts",
-        "pin": "Pin info panels to the notice board"
       }
     }
   },
