@@ -30,6 +30,14 @@ baseservice/src/main/resources/db/changelog/
 | `301-302` | `004-image-assets.xml` | `image_assets` Tabelle für S3 Storage Keys | ✅ |
 | `107-108` | `005-ledger-transactions.xml` | `entry_type`, `reverses_entry_id` und nullable Spalten für Ein-/Auszahlungen | ✅ |
 | `109-112` | `007-food-and-cost-prices.xml` | `cost_price` für Getränke, Tabellen `food_catalog` & `event_food`, Ledger/Snapshot `food_id`, `item_type`, `cost_price`, `profit` | ✅ |
+| `113` | `008-encrypted-content.xml` | Benachrichtigungstitel als verschlüsselter Text | ✅ |
+| `120-123` | `009-chat-and-rsvp.xml` | Chat-Lesestand, Direktchats, Reaktionen, Zu-/Absagen und Einladungsversand | ✅ |
+| `130-131` | `010-member-invites.xml` | Einladungslinks und Einlösungen | ✅ |
+| `140` | `011-kiosk-sessions.xml` | Kiosk-Sitzungen am Thekenterminal | ✅ |
+| `150-153` | `012-moment-types-and-media.xml` | Moment-Typen und Reaktionen (mit Startbestand), Beiträge ohne Pflicht-Reaktion, `moment_media` | ✅ |
+| `160-165` | `013-stammtische.xml` | Gruppen (`stammtische`), `stammtisch_id` an allen fachlichen Tabellen, Mitgliedschaften und Rollen je Gruppe, Übernahme der Bestandsdaten in „Meine Gruppe“, Row-Level-Security | ✅ |
+| `170` | `014-drink-library.xml` | Gemeinsame Getränkedatenbank `drink_library` mit Barcodes | ✅ |
+| `180-183` | `015-billing.xml` | Tarife je Gruppe (`stammtisch_subscriptions`), Stripe-Ereignisse (`billing_events`), Recht `billing.manage`, Name der Standardgruppe | ✅ |
 
 ---
 

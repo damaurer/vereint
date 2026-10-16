@@ -1,13 +1,13 @@
 # Fachdomäne: Speisenkatalog & Eventspeisen
 
-Die Speisenverwaltung in **Vereint** ermöglicht die strukturierte Verwaltung von Verzehrangeboten – vom zentralen Vereins-Speisenkatalog bis hin zum veranstaltungsspezifischen Speisenangebot mit individueller Preisanpassung und Kiosk-Steuerung.
+Die Speisenverwaltung in **Vereint** ermöglicht die strukturierte Verwaltung von Verzehrangeboten – vom zentralen Speisenkatalog der Gruppe bis hin zum veranstaltungsspezifischen Speisenangebot mit individueller Preisanpassung und Kiosk-Steuerung.
 
 ---
 
 ## 🎯 Fachliche Sicht (Business Domain)
 
 ### 1. Globaler Speisenkatalog (`food_catalog`)
-- **Stammdatenverwaltung**: Zentrales Sortiment aller im Verein zubereiteten oder angebotenen Speisen (z. B. Grillgut, Kuchen, Brezeln, Snacks, vegetarische/vegane Optionen).
+- **Stammdatenverwaltung**: Zentrales Sortiment aller in der Gruppe zubereiteten oder angebotenen Speisen (z. B. Grillgut, Kuchen, Brezeln, Snacks, vegetarische/vegane Optionen).
 - **Attribute**:
   - Name, Beschreibung und Kategorie (z. B. `Grill`, `Kuchen`, `Snacks`).
   - Standard-Verkaufspreis (`defaultPrice: BigDecimal`) und Standard-Einkaufspreis (`costPrice: BigDecimal`).

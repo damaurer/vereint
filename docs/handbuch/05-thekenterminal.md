@@ -12,7 +12,17 @@ Voraussetzung: Das Tablet ist mit dem Thekenkonto angemeldet (siehe [Thekentable
 
 Erscheint kein Event, ist der Abend noch nicht auf **Aktiv** gestellt. Bitte den Vorstand oder Gastgeber darum.
 
-**Standalone Terminal Modus** blendet alles Übrige aus, damit am Tablet nur noch die Strichliste zu sehen ist. **Terminal-Modus verlassen** schaltet zurück.
+## Kiosk-Modus
+
+Im **Kiosk-Modus** bleibt das Tablet auf der Strichliste: Menü, Mitteilungen und Abmelden sind ausgeblendet, und auch nach Neuladen oder Schließen und Öffnen der App landet es wieder hier, beim zuletzt gewählten Abend.
+
+1. **Kiosk-Modus starten** tippen.
+2. Optional einen **Gerätenamen** eintragen, z. B. „Theke links“.
+3. Eine **PIN** aus 4 bis 8 Ziffern vergeben und wiederholen, dann **Starten**.
+
+In den Tarifen Kostenlos und Standard läuft je Gruppe nur ein Thekenterminal gleichzeitig. Ein zweites Gerät meldet dann „Der aktuelle Tarif erlaubt nur ein aktives Thekenterminal.“
+
+Zum Verlassen oben rechts auf das Schloss (**Kiosk entsperren**) oder auf **Kiosk-Modus verlassen** tippen und die PIN eingeben. Nach 5 falschen Eingaben ist die PIN-Eingabe eine Weile gesperrt. PIN vergessen? Vorstand oder Administration entsperren das Gerät unter **Vorstand → Kiosk-Geräte** (siehe [Leitfaden Vorstand](03-vorstand.md#kiosk-geräte)).
 
 ## Getränk wählen
 
@@ -65,5 +75,5 @@ Eine Runde wird als Einnahme der Kasse gebucht und nicht vom Guthaben der Empfä
 ## Tipps für den Abend
 
 - Tablet quer aufstellen, dann passen zwei Spalten Namen nebeneinander.
-- Zum Schichtwechsel nicht abmelden; das Terminal läuft einfach weiter.
+- Zum Schichtwechsel nicht abmelden; das Terminal läuft im Kiosk-Modus einfach weiter.
 - Ist das WLAN kurz weg, erscheint eine Fehlermeldung und der Strich wurde nicht gebucht. Nach dem Wiederverbinden noch einmal tippen und auf den Balken „Strich erfasst“ achten.

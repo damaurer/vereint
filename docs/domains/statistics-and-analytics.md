@@ -8,10 +8,10 @@ Das Statistik- und Analysemodul in **Vereint** liefert visuelle Auswertungen üb
 
 ### 1. Auswertungsbereiche & Kennzahlen
 - **Getränkekonsum (Liter / Bierkonsum)**: Zeigt den summierten Konsum der Mitglieder im Betrachtungszeitraum als Rangliste an.
-- **Anwesenheitsquote (`attendancePercent`)**: Prozentualer Anteil besuchter Vereins-Events basierend auf RSVPs und Thekenbuchungen.
+- **Anwesenheitsquote (`attendancePercent`)**: Prozentualer Anteil besuchter Events basierend auf RSVPs und Thekenbuchungen.
 - **Ausgaben- & Finanztrend (`SpendingTrend`)**: Monatliche Ausgabenentwicklung, prozentuale Veränderung zum Vormonat und Sparkline-Trendkurve.
 - **Top-Rundengeber (`topRounds`)**: Auszeichnung besonders spendabler Mitglieder, die Runden für die Gemeinschaft ausgegeben haben.
-- **Getränke-Ranking (`drinkRanking`)**: Beliebteste Getränke nach Marktanteil im Verein.
+- **Getränke-Ranking (`drinkRanking`)**: Beliebteste Getränke nach Marktanteil in der Gruppe.
 
 ### 2. Revisionssicheres Audit-Logging
 - Alle administrativen und finanziellen Aktionen (Rollenänderungen, manuelle Guthabenkorrekturen, Account-Sperrungen) werden manipulationssicher mit Zeitstempel, Akteur-ID, Ziel-ID und Aktionsart in `audit_logs` protokolliert.

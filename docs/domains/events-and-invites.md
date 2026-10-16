@@ -1,6 +1,6 @@
 # Fachdomäne: Event-Management & Gast-Einladungen
 
-Das Event-Modul in **Vereint** verwaltet den gesamten Lebenszyklus von Vereinsveranstaltungen – von der Planung über die Teilnehmerverwaltung bis hin zu sicheren, tokenbasierten Einladungen für externe Gäste ohne vollwertiges Vereinskonto.
+Das Event-Modul in **Vereint** verwaltet den gesamten Lebenszyklus von Veranstaltungen der Gruppe – von der Planung über die Teilnehmerverwaltung bis hin zu sicheren, tokenbasierten Einladungen für externe Gäste ohne vollwertiges Guthabenkonto.
 
 ---
 
@@ -32,7 +32,7 @@ stateDiagram-v2
 Statusänderungen und Stammdatenaktualisierungen werden über `PUT /api/v1/events/{id}` (`UpdateEventRequest`) vorgenommen.
 
 ### 2. Teilnehmerverwaltung (`EventParticipantDto`)
-- Vereinsmitglieder und Vorstände verwalten Teilnehmer über `/api/v1/events/{id}/participants`:
+- Mitglieder der Gruppe und Vorstände verwalten Teilnehmer über `/api/v1/events/{id}/participants`:
   - `GET /api/v1/events/{id}/participants`: Liefert die Liste aller registrierten Teilnehmer.
   - `POST /api/v1/events/{id}/participants`: Fügt einen Teilnehmer (`AddParticipantRequest`) mit einer Rolle (z. B. `participant`) hinzu.
   - `DELETE /api/v1/events/{id}/participants/{userId}`: Entfernt einen Teilnehmer aus dem Event.
@@ -40,7 +40,7 @@ Statusänderungen und Stammdatenaktualisierungen werden über `PUT /api/v1/event
 ### 3. Event-Verpflegungsangebot (Getränke & Speisen)
 - Neben Teilnehmern verwalten Event-Owner und Vorstände das gastronomische Angebot der Veranstaltung:
   - **Event-Getränke (`event_drinks`)**: Zuweisung über Sublisten oder Einzelauswahl (`EventDrinkController`) mit eventbezogener Preisanpassung (`price`, `costPrice`) und Freischaltung für Tablet-Strichliste (`tabletEnabled`).
-  - **Event-Speisen (`event_food`)**: Zuweisung aus dem Vereinskatalog (`EventFoodController`) mit individuellen Verkaufspreisen, Wareneinsatz-Kosten (`costPrice`) und Kiosk-Steuerung (`tabletEnabled`).
+  - **Event-Speisen (`event_food`)**: Zuweisung aus dem Katalog der Gruppe (`EventFoodController`) mit individuellen Verkaufspreisen, Wareneinsatz-Kosten (`costPrice`) und Kiosk-Steuerung (`tabletEnabled`).
 - Im Zustand `active` werden diese Artikel über die Kiosk-API (`/api/v1/tablet/events/{eventId}/items`) für das Thekenteam bereitgestellt.
 
 ### 4. Gast-Einladungen via Krypto-Token

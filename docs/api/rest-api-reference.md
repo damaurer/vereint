@@ -97,8 +97,8 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/food` | Globalen Speisenkatalog auflisten (Filter `active`) | `member` (aktive) / `board`, `admin` (alle) |
 | `GET` | `/api/v1/food/{id}` | Details einer Speise abrufen (`FoodDto`) | `member` |
-| `POST` | `/api/v1/food` | Neue Speise im Vereinskatalog anlegen (`CreateFoodRequest`) | `board`, `admin` |
-| `PUT` | `/api/v1/food/{id}` | Speise im Vereinskatalog aktualisieren (`UpdateFoodRequest`) | `board`, `admin` |
+| `POST` | `/api/v1/food` | Neue Speise im Katalog der Gruppe anlegen (`CreateFoodRequest`) | `board`, `admin` |
+| `PUT` | `/api/v1/food/{id}` | Speise im Katalog der Gruppe aktualisieren (`UpdateFoodRequest`) | `board`, `admin` |
 
 ### 5.2. Eventspeisen (`EventFoodController`)
 | Methode | Pfad | Beschreibung | Berechtigung / Rolle |
@@ -118,6 +118,12 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | `GET` | `/api/v1/events/{eventId}/moments/{momentId}/map` | GeoJSON FeatureCollection mit Teilnehmer-Standorten abrufen (RFC 7946) | `member` |
 | `POST` | `/api/v1/events/{eventId}/moments/{momentId}/complete` | Moment abschließen und in Event-Kalender archivieren | `member` (Initiator) / `board`, `admin` |
 | `GET` | `/api/v1/events/{eventId}/moments/history` | Abgeschlossene Moments mit Zusammenfassungen abrufen | `member` |
+| `POST` | `/api/v1/events/{eventId}/moments/{momentId}/media` | Foto (JPEG/PNG/GIF, ≤ 10 MB) oder Video (MP4/MOV, ≤ 60 s, ≤ 100 MB) als rohen Request-Körper hochladen (`Content-Type`, `Content-Length` Pflicht) | `member` |
+| `GET` | `/api/v1/events/{eventId}/moments/{momentId}/media/{mediaId}/content` | Datei entschlüsselt abrufen, mit HTTP-Range (`206`) | `member` mit Zugriff auf den Moment |
+| `DELETE` | `/api/v1/events/{eventId}/moments/{momentId}/media/{mediaId}` | Datei entfernen | Eigentümer; `board`, `admin`, Gastgeber für fremde Beiträge |
+| `GET` | `/api/v1/moment-config` | Typen, Reaktionen (inkl. ausgemusterter) und Upload-Grenzen | angemeldet |
+| `POST` / `PUT` | `/api/v1/moment-config/types`, `/types/{id}` | Moment-Typ anlegen bzw. ändern oder ausmustern | `board`, `admin` |
+| `POST` / `PUT` | `/api/v1/moment-config/reactions`, `/reactions/{id}` | Reaktion anlegen bzw. ändern oder ausmustern | `board`, `admin` |
 
 ### 6. Events & Gast-Einladungen (`EventController`, `InviteController`)
 | Methode | Pfad | Beschreibung | Berechtigung / Rolle |
@@ -154,7 +160,42 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | Methode | Pfad | Beschreibung | Berechtigung / Rolle |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/images` | Bilder nach `purpose` und `targetId` filtern | Authentifiziert |
-| `POST` | `/api/v1/images/upload` | Bild hochladen (`multipart/form-data`, `purpose`, `targetId`) | Authentifiziert |
-| `GET` | `/api/v1/images/{id}` | Bildmetadaten und zeitlich limitierte Download-URL abrufen | Authentifiziert |
-| `DELETE` | `/api/v1/images/{id}` | Bild löschen / als gelöscht markieren | Eigentümer / `admin` |
+| `POST` | `/api/v1/images` | Bild hochladen (`multipart/form-data`, `purpose`, `targetId`); wird verschlüsselt gespeichert | Authentifiziert |
+| `GET` | `/api/v1/images/{id}` | Bildmetadaten und URL der Bilddaten (zeigt auf `/content`, keine direkte S3-URL) | Authentifiziert |
+| `GET` | `/api/v1/images/{id}/content` | Entschlüsselte Bilddaten für berechtigte Personen | Authentifiziert |
+| `DELETE` | `/api/v1/images/{id}` | Bild löschen / als gelöscht markieren | Eigentümer / `board`, `admin` |
 | `GET` | `/api/v1/audit-logs` | Revisionsprotokolle abrufen (`AuditLogDto`, Paging & Filter) | `audit.read` |
+
+### 9. Gruppen, Tarife & Getränkedatenbank (`StammtischController`, `BillingController`, `DrinkLibraryController`)
+
+Alle fachlichen Endpunkte oben gelten für die gewählte Gruppe. Der BFF setzt dafür
+den Header `X-Stammtisch-Id` aus dem HttpOnly-Cookie `vereint.stammtisch`; fehlt
+er bei mehreren Mitgliedschaften, antwortet der Fachservice mit
+`409 stammtisch_required`, ohne Mitgliedschaft mit `403 stammtisch_access_denied`.
+Fachlich: [Gruppen](../domains/stammtische.md), [Tarife & Abrechnung](../domains/abrechnung.md).
+
+| Methode | Pfad | Beschreibung | Berechtigung / Rolle |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/stammtische` | Eigene Gruppen auflisten | Authentifiziert |
+| `POST` | `/api/v1/stammtische` | Weitere eigene Gruppe eröffnen (höchstens `SIGNUP_MAX_OWNED`) | Authentifiziert |
+| `POST` | `/api/v1/signup` | Gruppe und Konto in einem Schritt eröffnen (öffentlich, je IP begrenzt, `SIGNUP_ENABLED`) | Öffentlich |
+| `GET` | `/api/v1/stammtisch` | Gewählte Gruppe mit Tarif und eigenen Rechten | Mitglied |
+| `PUT` | `/api/v1/stammtisch` | Gruppe umbenennen | `stammtisch.manage` |
+| `POST` | `/api/v1/stammtisch/leave` | Gruppe verlassen | Mitglied |
+| `PUT` / `DELETE` | `/api/v1/stammtisch/image` | Bild der Gruppe setzen oder entfernen (PNG/JPEG/GIF bis 5 MB) | `stammtisch.manage` |
+| `GET` | `/api/v1/stammtische/{id}/image` | Bild einer Gruppe | Mitglied dieser Gruppe |
+| `GET` | `/api/v1/stammtisch/roles` | Rollen der Gruppe | `roles.manage` oder `members.read` |
+| `POST` / `PUT` / `DELETE` | `/api/v1/stammtisch/roles`, `/api/v1/stammtisch/roles/{id}` | Eigene Rollen anlegen, ändern, löschen (Systemrollen nicht löschbar) | `roles.manage` |
+| `POST` | `/api/v1/member-invites/join` | Mit bestehendem Konto per Einladungslink beitreten | Authentifiziert |
+| `GET` | `/api/v1/stammtisch/billing` | Tarif, Status, Grenzen und Verbrauch | Mitglied |
+| `POST` | `/api/v1/stammtisch/billing/checkout` | Stripe Checkout für Tarif und Zahlweise starten | `billing.manage` |
+| `POST` | `/api/v1/stammtisch/billing/portal` | Stripe-Kundenportal öffnen | `billing.manage` |
+| `POST` | `/api/v1/stammtisch/billing/supporter` | Förderbeitrag abschließen | Mitglied |
+| `GET` | `/api/v1/stammtisch/export` | Alle Daten der Gruppe als JSON (ohne Bilder und Videos) | `stammtisch.manage` oder `billing.manage` |
+| `POST` | `/api/v1/billing/stripe/webhook` | Stripe-Ereignisse (Signatur geprüft, Caddy leitet direkt weiter) | Stripe |
+| `GET` | `/api/v1/drink-library` | Gemeinsame Getränkedatenbank durchsuchen (Name oder Barcode) | Authentifiziert |
+| `GET` | `/api/v1/drink-library/{id}` | Eintrag der Getränkedatenbank | Authentifiziert |
+| `PUT` / `DELETE` | `/api/v1/drink-library/{id}` | Eintrag ändern oder löschen | Plattform-Admin |
+| `POST` | `/api/v1/drinks/{id}/share-to-library` | Eigenes freigegebenes Getränk in die Datenbank teilen | `catalog.approve` |
+| `GET` / `POST` | `/api/v1/platform/stammtische` | Alle Gruppen auflisten, Gruppe anlegen | Plattform-Admin |
+| `PUT` | `/api/v1/platform/stammtische/{id}` | Gruppe umbenennen, archivieren, Tarif von Hand vergeben | Plattform-Admin |

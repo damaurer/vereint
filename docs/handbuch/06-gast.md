@@ -1,6 +1,6 @@
 # Leitfaden Gast
 
-Für Gäste ohne Vereinskonto, zum Beispiel Freunde, Familie oder Mitglieder eines befreundeten Vereins. Du brauchst nichts zu installieren und kein Konto anzulegen.
+Für Gäste ohne Konto, zum Beispiel Freunde, Familie oder Mitglieder einer befreundeten Gruppe. Du brauchst nichts zu installieren und kein Konto anzulegen.
 
 ## So kommst du rein
 
@@ -22,4 +22,4 @@ Als Gast siehst du den Titel des Events und den **Event-Chat**:
 - Der Link gilt nur für dieses eine Event und nur für eine begrenzte Zeit. Wie lange und wie oft er genutzt werden darf, legt der Gastgeber fest.
 - Jedes Öffnen des Links zählt als eine Nutzung. Lass die Seite deshalb einfach offen, statt den Link immer wieder neu anzutippen.
 - Funktioniert der Link nicht mehr, ist er abgelaufen, aufgebraucht oder wurde widerrufen. Bitte den Gastgeber um einen neuen.
-- Guthaben, Käufe und andere Vereinsbereiche sind nur für Mitglieder.
+- Guthaben, Käufe und die anderen Bereiche der Gruppe sind nur für Mitglieder.

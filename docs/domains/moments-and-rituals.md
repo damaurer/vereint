@@ -7,7 +7,7 @@
 ## 🎯 Fachliche Sicht (Business Domain)
 
 ### 1. Moments-Konzept & Anwendungsfälle
-**Moments** ist ein **ereignisgesteuertes, zeitlich begrenzte Kollaborationsmerkmal**, das Vereinsmitglieder nutzen können, um spontane Momente gemeinsamer Aktivität zu initiieren:
+**Moments** ist ein **ereignisgesteuertes, zeitlich begrenzte Kollaborationsmerkmal**, das Mitglieder der Gruppe nutzen können, um spontane Momente gemeinsamer Aktivität zu initiieren:
 
 - **Soziale & Stammtisch-Clubs**: Gemeinsames Anstoßen ("Gemeinsames Anstoßen 🍻")
 - **Glaubensgemeinschaften & Kirchen**: Gemeinsame Gebetskreise ("Gemeinsames Beten & Fürbitten 🙏")
@@ -24,7 +24,8 @@ Ein Moment durchläuft folgende Zustände:
 ### 3. Teilnehmer-Multi-Status-Einreichungen
 Teilnehmer können während der aktiven Moment-Dauer **mehrfach Status-Updates und Reaktionen** einreichen (z. B. progressive Updates während eines Gebets, wiederholte Toasts/Jubelrufe):
 
-- **Reaktionstypen**: `TOAST`, `PRAYER`, `CHEER`, `CHECKIN`, `THUMBS_UP`, `HEART`, `FIRE` (erweiterbar)
+- **Reaktionen**: vom Vorstand verwaltet (siehe [Typen & Reaktionen verwalten](#7-typen--reaktionen-verwalten)); Startbestand u. a. `TOAST`, `PRAYER`, `CHEER`, `CHECKIN`, `THUMBS_UP`, `HEART`, `FIRE`
+- **Fotos & Videos** (optional): bis zu 4 Dateien je Beitrag (siehe [Fotos & Videos](#8-fotos--videos))
 - **Status-Text** (optional): Persönliche Nachricht oder Kommentar (max. 255 Zeichen)
 - **Opt-in Koordinaten**: `latitude` und `longitude` mit expliziter Zustimmung (`consent = true`)
 
@@ -47,7 +48,25 @@ Wenn ein Moment abläuft oder fertiggestellt wird, wird die Session abgeschlosse
 
 - **Zusammenfassung**: Die Moment-Historie liefert `momentId`, `title`, `topicType`, `totalResponses`, `uniqueParticipants`, `summary` und das nullable Feld `completedAt`.
 - **Beispiel-Zusammenfassung**: "5 Teilnehmer haben 8 Statusbeiträge zum Moment 'Stammtisch Anstoßen' (toast) geteilt."
-- **Zweck**: Bewahrt Vereinserinnerungen, ohne Haupt-Planungskalender mit Mikro-Events zu überladen.
+- **Zweck**: Bewahrt gemeinsame Erinnerungen, ohne Haupt-Planungskalender mit Mikro-Events zu überladen.
+
+### 7. Typen & Reaktionen verwalten
+Vorstand und Administration legen unter *Vorstand → Moments · Typen & Reaktionen* (`/board/moments`) fest, welche Arten von Moments es gibt und mit welchen Reaktionen Mitglieder antworten:
+
+- **Typ**: Emoji, Name, optionale Beschreibung, Reihenfolge. Je Typ sind entweder alle aktiven Reaktionen erlaubt oder eine Auswahl.
+- **Reaktion**: Emoji, Name, Reihenfolge.
+- **Ausmustern statt Löschen**: Ausgemusterte Typen und Reaktionen sind für neue Moments nicht mehr wählbar; bestehende Moments und Beiträge behalten sie.
+- Die früher fest eingebauten Typen (Anstoßen, Gebet, Jubeln, Check-in, Sonstiges) und Reaktionen sind der Startbestand (Migration `012-moment-types-and-media.xml`).
+- Änderungen stehen im Audit-Protokoll.
+
+### 8. Fotos & Videos
+Zu einem Beitrag lassen sich bis zu **4 Fotos oder Videos** anhängen (höchstens 40 je Mitglied und Moment):
+
+- **Fotos**: JPEG, PNG oder GIF bis 10 MB. Der Browser verkleinert sie vor dem Hochladen; der Server entfernt EXIF/XMP-Metadaten (GPS, Gerät, Aufnahmezeit).
+- **Videos**: MP4 oder MOV, höchstens **60 Sekunden** und **100 MB**. Der Server entfernt ohne Transkodierung die Metadaten-Boxen (`udta`, `meta`, XMP) mit Ort und Gerät.
+- **Speicherung**: AES-256-GCM-verschlüsselt in 64-KiB-Blöcken im Objektspeicher, gestreamt statt ganz im Speicher gehalten.
+- **Auslieferung**: nur über den berechtigungsgeprüften Endpunkt mit HTTP-Range, damit Videos abspielbar und spulbar sind.
+- **Entfernen**: die eigene Datei jederzeit; Vorstand, Administration und Gastgeber des Events können Dateien in Beiträgen anderer entfernen (Audit `MOMENT_MEDIA_REMOVED`).
 
 ---
 
@@ -57,15 +76,19 @@ Wenn ein Moment abläuft oder fertiggestellt wird, wird die Session abgeschlosse
 
 #### Backend (Spring Boot / Kotlin)
 - **Controller**:
-  - `MomentController`: Verwaltet Moment-Sessions, Antworten, GeoJSON-Kartendaten und Fertigstellungs-Trigger (`/api/v1/events/{eventId}/moments`).
+  - `MomentController`: Verwaltet Moment-Sessions, Antworten, GeoJSON-Kartendaten, Fertigstellungs-Trigger und Medien (`/api/v1/events/{eventId}/moments`).
+  - `MomentConfigController`: Typen und Reaktionen (`/api/v1/moment-config`; Lesen für alle Angemeldeten, Schreiben nur Vorstand/Admin).
 - **Services**:
   - `MomentService`: Kerngeschäftslogik für Session-Orchestrierung, Multi-Status-Antworten, Push-Benachrichtigungsverteilung via `NotificationService` / `PushSender`, Chat-Erstellung via `ChatService` und Bereitstellung der Moment-Historie.
   - `NotificationService` & `PushSender`: Verteilt Web-Push- und In-App-Benachrichtigungen an alle Event-Mitglieder bei Moment-Initiierung.
   - `ChatService`: Aktualisiert zur Unterstützung temporärer Moment-Konversationen mit 24-Stunden-Ablauf.
-  - `ImageService`: `ImagePurpose`-Enum aktualisiert von `drinkWithMe` zu `moment`.
+  - `MomentConfigService`: Typen, Reaktionen und erlaubte Kombinationen.
+  - `MomentMediaService` & `Mp4Sanitizer`: Upload, Bereinigung, Verschlüsselung und Range-Auslieferung von Fotos und Videos.
 - **Entitäten**:
   - `MomentSessionEntity`: Aggregat-Root für eine Moment-Session mit Metadaten (Titel, Thementyp, Nachricht, Initiator, Ablauf).
   - `MomentResponseEntity`: Chronologische Status-Events ohne Eindeutigkeitsbeschränkung pro Benutzer (ermöglicht mehrfache Einreichungen).
+  - `MomentTypeEntity`, `MomentReactionEntity`: verwaltbare Typen und Reaktionen.
+  - `MomentMediaEntity`: Foto oder Video zu einem Beitrag (Art, Größe, Abmessungen, Dauer, Speicher-Schlüssel).
 
 #### Frontend (Angular 22)
 - **Komponenten**:
@@ -73,6 +96,8 @@ Wenn ein Moment abläuft oder fertiggestellt wird, wird die Session abgeschlosse
   - `MomentTimelineComponent`: Chronologischer Feed von Teilnehmer-Status-Updates mit Benutzer-Badges.
   - `MomentMapComponent`: Responsive Welt-Karte mit GeoJSON-Marker-Projektion.
   - `EventDetailComponent`: Eingebettete aktive Moments-Schnellaktion und vergangene Moment-Aktivitätszusammenfassungen.
+  - `MomentConfigComponent`: Verwaltung der Typen und Reaktionen für den Vorstand (`/board/moments`).
+  - `moment-media.ts`: Verkleinern, Prüfen und Hochladen von Fotos und Videos.
 
 ### 2. Datenbank-Schema (PostgreSQL / Liquibase)
 
@@ -83,7 +108,7 @@ CREATE TABLE moment_sessions (
     creator_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     conversation_id UUID REFERENCES conversations(id) ON DELETE SET NULL,
     title VARCHAR(255) NOT NULL,
-    topic_type VARCHAR(64) NOT NULL, -- 'toast', 'prayer', 'cheer', 'checkin', 'other'
+    topic_type VARCHAR(64) NOT NULL, -- Code aus moment_types, z. B. 'toast'
     message VARCHAR(500),
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
@@ -107,6 +132,16 @@ CREATE TABLE moment_responses (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     version BIGINT NOT NULL DEFAULT 0
 );
+
+-- Seit Migration 012: verwaltbare Typen und Reaktionen, Medien
+CREATE TABLE moment_types (id UUID PRIMARY KEY, code VARCHAR(64), name VARCHAR(64), emoji VARCHAR(16),
+    description VARCHAR(255), sort_order INTEGER, active BOOLEAN, all_reactions BOOLEAN, ...);
+CREATE TABLE moment_reactions (id UUID PRIMARY KEY, code VARCHAR(64), name VARCHAR(64), emoji VARCHAR(16),
+    sort_order INTEGER, active BOOLEAN, ...);
+CREATE TABLE moment_type_reactions (type_id UUID, reaction_id UUID, PRIMARY KEY (type_id, reaction_id));
+CREATE TABLE moment_media (id UUID PRIMARY KEY, moment_id UUID, response_id UUID, owner_id UUID,
+    kind VARCHAR(16), content_type VARCHAR(64), size_bytes BIGINT, storage_key VARCHAR(512),
+    encrypted BOOLEAN, width INTEGER, height INTEGER, duration_ms BIGINT, ...);
 
 CREATE INDEX idx_moment_sessions_event_active ON moment_sessions(event_id, active);
 CREATE INDEX idx_moment_responses_moment_created ON moment_responses(moment_id, created_at ASC);
@@ -244,7 +279,7 @@ sequenceDiagram
 ### 1. Moment starten (Initiator)
 1. Navigiere zu `/events/:eventId/moments`
 2. Klicke auf "Moment starten"
-3. Wähle Thementyp (Anstoßen, Gebet, Anfeuern, Check-in, Sonstiges)
+3. Wähle einen der aktiven Moment-Typen (vom Vorstand verwaltet)
 4. Gib optionale Nachricht ein
 5. Wähle Dauer (15–1440 Minuten, Standard 60)
 6. Aktiviere Standortfreigabe (optional, mit Browser-GPS)
@@ -256,9 +291,10 @@ sequenceDiagram
 2. Klicke auf aktiven Moment
 3. Wähle Reaktion (Emoji/Typ)
 4. Gib optionalen Status-Text ein
-5. Aktiviere Standortfreigabe (optional)
-6. Klicke "Antwort einreichen"
-7. Wiederhole Schritte 3–6 für mehrfache Updates während des Moments
+5. Hänge optional bis zu 4 Fotos oder Videos an ("Foto/Video teilen")
+6. Aktiviere Standortfreigabe (optional)
+7. Klicke "Antwort einreichen"
+8. Wiederhole Schritte 3–7 für mehrfache Updates während des Moments
 
 ### 3. Timeline & Karte anzeigen
 1. Öffne Moment-Details
@@ -291,14 +327,3 @@ Beispiel-Zusammenfassung:
 ```
 "5 Teilnehmer haben 8 Statusbeiträge zum Moment 'Stammtisch Anstoßen' (toast) geteilt."
 ```
-
----
-
-## 🚀 Implementierungs-Roadmap
-
-| Phase | Komponente | Status |
-| :--- | :--- | :--- |
-| 1 | Datenbank-Schema, Domain-Entitäten, DTOs | ✅ Abgeschlossen |
-| 2 | Backend-Services, Push-Benachrichtigungen, REST-API, Unit-Tests | ✅ Abgeschlossen |
-| 3 | Frontend-UI, Karte, Timeline, Push-Alert-Handling, Temporary-Chat-Integration | ✅ Abgeschlossen |
-| 4 | Dokumentation, API-Referenz, Domain-Modell-Updates | 🔄 In Bearbeitung |

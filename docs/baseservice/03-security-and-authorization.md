@@ -35,8 +35,9 @@ graph TD
 Folgende Pfade sind ohne Bearer-Token öffentlich erreichbar:
 - **Health- & Info-Probes**: `/actuator/health`, `/actuator/health/liveness`, `/actuator/health/readiness`, `/actuator/info`, `/api/v1/health`, `/api/v1/info`
 - **Gast-Zugang & Einladungen**: `/api/v1/auth/access/guest`, `/api/v1/invites/accept`
+- **Registrierung per Einladungslink**: `/api/v1/member-invites/preview`, `/api/v1/member-invites/register` (das Token im Body ist das Geheimnis)
 - **Gast-Chat**: `/api/v1/events/*/chat/guest/**` (die Autorisierung erfolgt über den kryptografischen `X-Guest-Token`-Header)
-- **API-Dokumentation**: `/v3/api-docs/**`, `/swagger-ui/**`, `/swagger-ui.html`
+- **API-Dokumentation**: `/v3/api-docs/**`, `/swagger-ui/**`, `/swagger-ui.html` (nur erreichbar, wenn `API_DOCS_ENABLED=true`; in Produktion aus)
 
 Alle übrigen Actuator-Endpunkte (`/actuator/**`) erfordern zwingend die Rolle `ADMIN`. Alle Fach-Endpunkte (`/api/v1/**`) erfordern standardmäßig ein gültiges JWT.
 
@@ -113,7 +114,7 @@ Die Zuordnung von Benutzerrollen zu fachlichen Berechtigungen ist zentral in `Ro
 | `profile.read.self` | Eigenes Profil und Einstellungen einsehen | ✅ | ✅ | ✅ | ❌ |
 | `balance.read.self` | Eigenen Kontostand & Buchungen einsehen | ✅ | ✅ | ✅ | ❌ |
 | `purchase.self` | Eigene Getränke-/Speisenkäufe buchen | ✅ | ✅ | ✅ | ❌ |
-| `chat.member` | Im allgemeinen Vereinschat lesen/schreiben | ✅ | ✅ | ✅ | ❌ |
+| `chat.member` | Im allgemeinen Gruppenchat lesen/schreiben | ✅ | ✅ | ✅ | ❌ |
 | `chat.event` | Im Event-Chat teilnehmen | ✅ | ✅ | ✅ | ❌ |
 | `event.create` | Neue Veranstaltungen erstellen | ✅ | ✅ | ✅ | ❌ |
 | `event.manage` | Veranstaltungen bearbeiten & absagen | ❌ | ✅ | ✅ | ❌ |

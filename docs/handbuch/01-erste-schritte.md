@@ -1,37 +1,49 @@
 # Erste Schritte
 
-Dieser Teil gilt für alle, die ein Vereinskonto haben. Gäste ohne Konto lesen den [Leitfaden Gast](06-gast.md).
+Dieser Teil gilt für alle, die ein Konto bei Vereint haben. Gäste ohne Konto lesen den [Leitfaden Gast](06-gast.md).
 
 ## Mit einem Einladungslink registrieren
 
 <img src="bilder/g-registrieren.png" alt="Registrierung über den Einladungslink" width="300" align="right">
 
-Neu im Verein? Dann bekommst du vom Vorstand einen **Einladungslink**.
+Neu in einer Gruppe? Dann bekommst du vom Vorstand einen **Einladungslink**.
 
 1. Den Link öffnen. Vereint prüft ihn und zeigt, bis wann er gilt.
 2. **Vorname**, **Nachname** und **E-Mail-Adresse** eintragen.
 3. Ein **Passwort** mit mindestens 10 Zeichen wählen und wiederholen.
 4. **Konto anlegen** tippen, danach **Jetzt anmelden** und mit E-Mail-Adresse und Passwort anmelden.
 
-Funktioniert der Link nicht, ist er abgelaufen, schon verwendet oder zurückgezogen. Bitte den Vorstand um einen neuen. Gibt es für deine E-Mail-Adresse schon ein Konto, melde dich damit an oder setze dein Passwort zurück.
+Funktioniert der Link nicht, ist er abgelaufen, schon verwendet oder zurückgezogen. Bitte den Vorstand um einen neuen. Gibt es für deine E-Mail-Adresse schon ein Konto, melde dich damit an und öffne den Link danach noch einmal (siehe unten). Passwort vergessen? Siehe unten.
 
 <br clear="right">
+
+## Mit einem bestehenden Konto beitreten
+
+Du hast schon ein Konto, etwa weil du in einer anderen Gruppe bist? Dann brauchst du kein neues.
+
+1. Melde dich in diesem Browser an.
+2. Öffne den Einladungslink. Vereint zeigt **Gruppe beitreten**.
+3. Tippe auf **Dieser Gruppe beitreten**.
+
+Du bist sofort Mitglied und landest auf der Startseite der neuen Gruppe. Dein Konto, dein Name und deine Einstellungen bleiben gleich.
 
 ## Anmelden
 
 <img src="bilder/login.png" alt="Anmeldeseite" width="300" align="right">
 
-1. Öffne die Adresse eures Vereins im Browser, am Handy oder am Rechner.
+1. Öffne die Adresse von Vereint im Browser, am Handy oder am Rechner.
 2. Gib deinen **Benutzernamen oder deine E-Mail-Adresse** und dein **Passwort** ein.
 3. Tippe auf **Anmelden**.
 
 Weitere Möglichkeiten auf dieser Seite:
 
 - **Angemeldet bleiben**: Du musst dich auf diesem Gerät nicht jedes Mal neu anmelden. Nur auf deinem eigenen Gerät anhaken.
-- **Passwort vergessen?** führt dich durch das Zurücksetzen deines Passworts per E-Mail.
+- **Passwort vergessen?** Vereint verschickt keine E-Mails. Melde dich beim Admin deiner Gruppe. Ein neues, vorläufiges Passwort setzt, wer Zugang zur Keycloak-Verwaltung hat (meist der Betreiber von Vereint); du änderst es beim nächsten Anmelden.
 - Oben kannst du die Sprache der Anmeldeseite wählen.
 
-Nach der Anmeldung landest du auf der Startseite.
+Nach der Anmeldung landest du auf der Startseite. Bist du in mehreren Gruppen, wählst du vorher eine aus (siehe [Gruppe wählen und wechseln](#gruppe-wählen-und-wechseln)).
+
+Unter der Anmeldung steht außerdem **Noch keine Gruppe? Eigene Gruppe eröffnen** (siehe [Eine eigene Gruppe eröffnen](#eine-eigene-gruppe-eröffnen)).
 
 <br clear="right">
 
@@ -56,8 +68,8 @@ Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, w
 
 **Am Handy** steht unten eine Leiste mit den vier wichtigsten Bereichen: **Start**, **Events**, **Chat** und **Guthaben**. Alles andere findest du unter **Mehr**, sortiert nach:
 
-- **Verein**: Moments, Direktnachrichten
-- **Mein Konto**: Bezahlen, Käufe, Mitteilungen, Profil
+- **Gruppe**: Moments, Direktnachrichten
+- **Mein Konto**: Bezahlen, Käufe, Mitteilungen, Profil, Gruppeneinstellungen
 - **Theke**: Getränkekatalog, Getränkelisten, Statistik
 - **Verwaltung**: nur für Vorstand, Administration und Theke
 
@@ -66,6 +78,32 @@ Ganz unten im Mehr-Menü meldest du dich mit **Abmelden** ab.
 **Am Tablet und am Rechner** stehen dieselben Bereiche in einer Seitenleiste links (siehe Bilder im [Leitfaden Administration](04-administration.md)). Abmelden geht dort über deinen Namen oben rechts.
 
 <br clear="right">
+
+## Gruppe wählen und wechseln
+
+Vereint kann mehrere Gruppen tragen, zum Beispiel einen Stammtisch, einen Verein oder ein Team. Mit einem Konto kannst du Mitglied in mehreren Gruppen sein. Events, Chat, Guthaben, Katalog und Mitteilungen gehören immer zu genau einer Gruppe. Du siehst immer nur die Daten der Gruppe, die gerade offen ist.
+
+- Bist du nur in einer Gruppe, öffnet Vereint sie von selbst.
+- Bist du in mehreren, zeigt Vereint nach der Anmeldung die Seite **Gruppe wählen**. Dort stehen alle deine Gruppen mit deinen Rollen. Tippe bei der gewünschten Gruppe auf **Öffnen**. Die offene Gruppe trägt das Kennzeichen **Aktuell**.
+- Oben rechts stehen Bild und Name der offenen Gruppe. Bist du in mehreren Gruppen, führt ein Tipp darauf zurück zur Auswahl. Dasselbe geht unter **Gruppeneinstellungen** mit **Gruppe wechseln**.
+
+Die Auswahl erreichst du auch direkt unter der Adresse `/gruppen`. Bist du noch in keiner Gruppe, steht dort „Noch keine Gruppe“. Bitte dann den Vorstand um einen Einladungslink oder eröffne eine eigene Gruppe.
+
+Wie du eine Gruppe verlässt, steht im [Leitfaden Mitglied](02-mitglied.md#eine-gruppe-verlassen).
+
+## Eine eigene Gruppe eröffnen
+
+Jede Person kann selbst eine Gruppe gründen und ist dann ihr Admin. Den Weg dorthin findest du auf der Anmeldeseite unter **Eigene Gruppe eröffnen**, auf der Seite **Gruppe wählen** oder direkt unter `/gruppe-eroeffnen`.
+
+**Ohne Konto**: **Name der Gruppe**, **Vorname**, **Nachname**, **E-Mail-Adresse** und ein **Passwort** eintragen und **Gruppe eröffnen** tippen. Vereint legt Konto und Gruppe in einem Schritt an. Danach mit **Jetzt anmelden** anmelden.
+
+**Mit Konto**: Bist du schon angemeldet, reicht der **Name der Gruppe**. Nach **Gruppe eröffnen** öffnet sich die neue Gruppe gleich.
+
+In beiden Fällen gilt:
+
+- Die Gruppe startet im Tarif **Kostenlos** mit bis zu 10 Mitgliedern. Einen größeren Tarif kannst du später buchen (siehe [Leitfaden Administration](04-administration.md#tarif-zahlung-und-rechnungen)).
+- Nach der Anmeldung landest du in den **Gruppeneinstellungen**. Dort wählst du den Tarif. Mitglieder lädst du per Einladungslink ein (siehe [Neue Mitglieder einladen](04-administration.md#neue-mitglieder-einladen)).
+- Pro Person sind höchstens drei eigene Gruppen möglich.
 
 ## Profil, Darstellung und Sprache
 
@@ -76,6 +114,7 @@ Unter **Mehr → Profil** siehst du deine Kontodaten und deine Rollen.
 - **Anzeigename**: So sehen dich die anderen, etwa im Chat, in Teilnehmerlisten und am Thekenterminal. Ändern und **Speichern** tippen.
 - **Darstellung**: **System** folgt der Einstellung deines Geräts, **Hell** und **Dunkel** legen das Aussehen fest.
 - **Sprache**: **Deutsch** oder **English**. Die Wahl gilt sofort für die ganze App und auch für die Anmeldeseite. Hast du nichts gewählt, nimmt Vereint die Sprache deines Browsers.
+- **Sicherheit**: **Zwei-Faktor-Anmeldung einrichten** öffnet die Kontoverwaltung. Dort hinterlegst du eine Authenticator-App (z. B. Google Authenticator); danach fragt die Anmeldung nach Passwort und einem 6-stelligen Code. Das ist freiwillig, für Vorstand und Administration aber empfohlen.
 - **BeerWithMe Status** ist eine Vorschau und wird noch nicht an andere übertragen.
 
 <br clear="right">
@@ -93,7 +132,7 @@ Ist Vereint installiert, steht dort „Vereint ist installiert.“
 
 ## Mitteilungen aufs Handy (Push)
 
-Unter **Mitteilungen auf diesem Gerät** schaltest du Push-Nachrichten ein. Dann bekommst du Mitteilungen des Vereins, Einladungen und Erinnerungen zu Events auch, wenn Vereint geschlossen ist.
+Unter **Mitteilungen auf diesem Gerät** schaltest du Push-Nachrichten ein. Dann bekommst du Mitteilungen der Gruppe, Einladungen und Erinnerungen zu Events auch, wenn Vereint geschlossen ist.
 
 1. Schalter einschalten.
 2. Das Handy fragt einmal, ob Vereint Mitteilungen senden darf. Mit **Erlauben** bestätigen.

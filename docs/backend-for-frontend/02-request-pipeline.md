@@ -89,6 +89,12 @@ In `webservice/src/server.ts` ist die Pipeline wie folgt aufgebaut:
 ### 8. `authRoutes`
 - **Zweck**: Behandelt Login, OIDC-Callback, Session-Status und Logout. Gemountet unter `/api/auth`, `/oauth2/authorization` und `/login/oauth2/code`.
 
+### Schutz vor den Routen (`security/request-guards.ts`)
+- **`trust proxy`**: Nur Caddy im privaten Container-Netz darf `X-Forwarded-For` setzen; direkte Clients können ihre IP nicht fälschen. `x-powered-by` ist abgeschaltet.
+- **`crossSiteRequestGuard`**: Lehnt schreibende Anfragen ab, die nicht von der eigenen Seite stammen (`Sec-Fetch-Site`, ersatzweise `Origin`). Das schützt auch gegen andere Subdomains derselben Domain.
+- **Rate-Limits** (`rateLimit`, im Speicher des Prozesses): öffentliche Token-Pfade (Einladungen, Gast-Zugang) 30 je IP in 15 Minuten, Gast-Chat 60 je Minute, Login-Start (`/api/auth/login`, `/oauth2/authorization`) 120 je IP in 5 Minuten, übrige API 600 je Sitzung und Minute.
+- **API-Proxy**: reicht nur Pfade unter `/api/v1` weiter und verwirft `..` sowie kodierte Schrägstriche.
+
 ### 9. `/api/invites` (`inviteRoutes`)
 - **Zweck**: Syntaktische Vorab-Validierung von Einladungstokens.
 

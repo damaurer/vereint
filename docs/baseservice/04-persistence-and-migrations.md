@@ -39,7 +39,7 @@ Alle Entities liegen unter `de.maurer.baseservice.domain` und sind nach Fachdom�
 | **`EventEntities.kt`** | `EventEntity`, `EventParticipantEntity`, `EventInviteEntity`, `EventGuestEntity` | Veranstaltungs-Lebenszyklus (`EventStatus`), Teilnehmerzusagen (RSVP), Einladungstokens und Gast-Profile. |
 | **`LedgerEntities.kt`** | `LedgerEntryEntity`, `LedgerCorrectionEntity` | Unveränderliches Buchungsjournal, Transaktionstypen (`TOPUP`, `PURCHASE`, `PAYOUT`, `CORRECTION`), Idempotency-Keys. |
 | **`ImageEntities.kt`** | `ImageAssetEntity` | Metadaten für hochgeladene Bilder, S3-Objektschlüssel, MIME-Typ und Dateigröße. |
-| **`CommunicationEntities.kt`** | `ChatMessageEntity`, `PushSubscriptionEntity`, `NotificationEntity`, `MomentSessionEntity`, `MomentResponseEntity` | Vereins- und Event-Chat, VAPID Web-Push-Abonnements, Moment-Sessions und Rituale. |
+| **`CommunicationEntities.kt`** | `ChatMessageEntity`, `PushSubscriptionEntity`, `NotificationEntity`, `MomentSessionEntity`, `MomentResponseEntity` | Gruppen- und Event-Chat, VAPID Web-Push-Abonnements, Moment-Sessions und Rituale. |
 | **`DomainEnums.kt`** | `AssignedRole`, `BoardRole`, `DrinkStatus`, `EventStatus`, `TransactionType`, `PaymentMethod` | Typsichere JPA-Enums (gespeichert als `EnumType.STRING`). |
 
 ---

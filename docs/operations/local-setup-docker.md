@@ -7,7 +7,7 @@ Dieses Handbuch beschreibt die Einrichtung und den Betrieb der lokalen Entwicklu
 ## 🛠️ Voraussetzungen
 - **Docker & Docker Compose** (Docker Desktop oder Docker Engine ab Version 24+)
 - **Java JDK 25** (Temurin, Corretto oder OpenJDK)
-- **Node.js 22 LTS & npm 11+**
+- **Node.js ≥ 22.22.3 & npm 11+** (die Angular-CLI verlangt mindestens 22.22.3)
 
 ---
 
@@ -19,8 +19,8 @@ Die Datei `docker-compose.yml` startet die vollständige Infrastruktur für die 
 services:
   keycloak-db:      # PostgreSQL 17.6 Alpine auf Port 5433 (Keycloak Realm DB)
   vereint-db:       # PostgreSQL 17.6 Alpine auf Port 5432 (Hauptanwendung)
-  keycloak:         # Keycloak 26 Dev Mode auf Port 8082 (Importiert ./keycloak/dev)
-  object-storage:   # MinIO S3 Objektspeicher auf Port 9000 (API) & 9001 (Console)
+  keycloak:         # Keycloak 26.8.1 Dev Mode auf Port 8082 (importiert ./keycloak/dev)
+  object-storage:   # MinIO als lokaler S3-Ersatz auf Port 9000 (API) & 9001 (Console); Produktion nutzt AWS S3
 ```
 
 ### Befehle zum Starten und Stoppen
@@ -47,7 +47,7 @@ docker compose down -v
 
 | Variable | Beschreibung | Standard / Entwicklung |
 | :--- | :--- | :--- |
-| `VEREINT_DB_PORT` | Host-Port der Vereinsdatenbank | `5432` |
+| `VEREINT_DB_PORT` | Host-Port der App-Datenbank | `5432` |
 | `VEREINT_DB_USERNAME` | PostgreSQL Benutzername | `vereint` |
 | `VEREINT_DB_PASSWORD` | PostgreSQL Passwort | `change-me-vereint-db-password` |
 | `KEYCLOAK_DB_PORT` | Host-Port der Keycloak-Datenbank | `5433` |
@@ -56,6 +56,9 @@ docker compose down -v
 | `KEYCLOAK_ADMIN_PASSWORD` | Admin-Passwort für Keycloak | `admin` |
 | `S3_ACCESS_KEY` | MinIO S3 Access Key | `vereint-minio-admin` |
 | `S3_SECRET_KEY` | MinIO S3 Secret Key | `change-me-minio-secret` |
+| `TENANCY_BOOTSTRAP_REALM_ROLES` | Testkonten ohne Mitgliedschaft treten „Meine Gruppe“ bei, Realmrollen werden Gruppenrollen. Nur lokal und in E2E, in Produktion nie | `true` |
+| `SIGNUP_ENABLED`, `SIGNUP_MAX_OWNED` | Eigene Gruppen eröffnen (`/gruppe-eroeffnen`) an/aus, Höchstzahl eigener Gruppen | `true`, `3` |
+| `STRIPE_ENABLED` | Online-Zahlung der Tarife; lokal nur mit Test-Schlüsseln (siehe [abrechnung.md](../domains/abrechnung.md#einrichtung)) | `false` |
 
 ---
 
@@ -66,12 +69,12 @@ docker compose down -v
 cd baseservice
 ./gradlew bootRun
 ```
-*Backend ist erreichbar unter `http://localhost:8080` (bzw. Port 8081 je nach Konfiguration).*
+*Backend ist erreichbar unter `http://localhost:8081`. Swagger UI nur mit `API_DOCS_ENABLED=true`.*
 
 ### 2. Frontend & SSR-BFF (`webservice`)
 ```bash
 cd webservice
 npm install
-npm run dev:ssr
+npm start
 ```
-*Frontend & BFF laufen auf `http://localhost:4000`.*
+*Frontend, SSR und BFF laufen auf `http://localhost:4200`. `PUBLIC_BASE_URL` in der `.env` muss auf `http://localhost:4200` zeigen, weil der Entwicklungs-Realm nur dorthin weiterleitet.*

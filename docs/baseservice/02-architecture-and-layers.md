@@ -39,7 +39,7 @@ graph TD
 
   subgraph InfraLayer["5. Infrastruktur"]
     DB[(PostgreSQL)]
-    S3Store[(MinIO / S3)]
+    S3Store[(S3: AWS / lokal MinIO)]
     PushGw[(Web Push Gateway)]
   end
 
@@ -155,7 +155,7 @@ Unter `de.maurer.baseservice` sind alle Controller und Services modular organisi
 | `ApiInfoController` | `/api/v1/info` | Öffentliche Versions-, Umgebungs- und Feature-Informationen | [05. Observability](05-error-handling-and-observability.md) |
 | `AuditLogController` | `/api/v1/audit` | Revisionssichere Audit-Log-Abfragen für Vorstände | [docs/domains/ledger-and-finance.md](../domains/ledger-and-finance.md) |
 | `AuthController` | `/api/v1/auth` | Benutzer-Provisionierung und Session-Kontext | [03. Security](03-security-and-authorization.md) |
-| `ChatController` | `/api/v1/chat`, `/api/v1/events/{id}/chat` | Vereins- und Event-Chat, Gast-Chat-Nachrichten | [docs/domains/chat-and-push-notifications.md](../domains/chat-and-push-notifications.md) |
+| `ChatController` | `/api/v1/chat`, `/api/v1/events/{id}/chat` | Gruppen- und Event-Chat, Gast-Chat-Nachrichten | [docs/domains/chat-and-push-notifications.md](../domains/chat-and-push-notifications.md) |
 | `DrinkCatalogController` | `/api/v1/drinks` | Globaler Getränkekatalog & Genehmigungsworkflow | [docs/domains/drink-catalog-and-sublists.md](../domains/drink-catalog-and-sublists.md) |
 | `DrinkSublistController` | `/api/v1/drinks/sublists` | Freigeschaltete Getränke-Sublisten für Veranstaltungen | [docs/domains/drink-catalog-and-sublists.md](../domains/drink-catalog-and-sublists.md) |
 | `EventController` | `/api/v1/events` | Veranstaltungs-Lebenszyklus, RSVPs und Strichlisten | [docs/domains/events-and-invites.md](../domains/events-and-invites.md) |
@@ -177,7 +177,7 @@ Unter `de.maurer.baseservice` sind alle Controller und Services modular organisi
 
 - **`AccessResolverService`**: Berechnet dynamisch zugreifbare Rollen, Berechtigungen und AppContexts für das BFF.
 - **`AuditService` / `AuditLogService`**: Asynchrone Erfassung und Filterung von sicherheits- und finanzrelevanten Ereignissen.
-- **`ChatService`**: Versand, Speicherung und Historisierung von Vereins-, Event- und Gast-Chatnachrichten.
+- **`ChatService`**: Versand, Speicherung und Historisierung von Gruppen-, Event- und Gast-Chatnachrichten.
 - **`DrinkCatalogService` & `DrinkSublistService`**: Verwaltung des Getränkekatalogs und veranstaltungsspezifischer Sortimente.
 - **`EventService`, `EventDrinkService` & `EventFoodService`**: Event-Lebenszyklus, Teilnehmer-Zusagen (RSVP) und Kiosksortimente.
 - **`FoodCatalogService`**: Verwaltung des globalen Speisenkatalogs inklusive Einkaufspreisen und Deckungsbeitrag.

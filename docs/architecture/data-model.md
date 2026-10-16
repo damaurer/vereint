@@ -172,10 +172,17 @@ FOR EACH ROW EXECUTE FUNCTION vereint_reject_ledger_mutation();
 
 | Changeset | Datei | Beschreibung |
 | :--- | :--- | :--- |
-| `001` | `001-initial-schema.xml` | Grundlegendes relationales Datenmodell (Users, Events, Drinks, Ledger, Chat, Push). |
+| `001` | `001-initial-schema.xml` | Grundlegendes relationales Datenmodell (Users, Events, Drinks, Ledger, Chat, Push, Moments). |
 | `002` | `002-integrity-constraints.xml` | CHECK-Constraints für Enums, Optimistic Locking (`version`), Append-Only Trigger für Ledger, Query-Indizes. |
 | `003` | `003-drink-catalog-approval.xml` | Getränke-Vorschlagsworkflow (`proposed`, `approved`, `rejected`) mit `proposed_by` und `approved_by`. |
 | `004` | `004-image-assets.xml` | S3 Metadatentabelle `image_assets` mit Zweckzuordnung (`profile`, `event`, `drink`, `moment`). |
 | `005` | `005-ledger-transactions.xml` | Erweiterte Buchungstypen (`topup`, `payout`, `correction`), Storno-Referenz (`reverses_entry_id`) und gelockerte Null-Constraints. |
-| `006` | `006-moments-and-rituals.xml` | Moment-Sessions und Responses für Gemeinschaftsmomente mit Multi-Status-Unterstützung, GeoJSON-Koordinaten und 24h-Linked-Chats. |
 | `007` | `007-food-and-cost-prices.xml` | Einkaufspreise für Getränke/Speisen, `food_catalog`, `event_food` und Beleg-Snapshots mit `item_type`, `food_name`, `cost_price` und `profit`. |
+| `008` | `008-encrypted-content.xml` | Benachrichtigungstitel als verschlüsselter Text (Anwendungsverschlüsselung). |
+| `009` | `009-chat-and-rsvp.xml` | Lesestand je Mitglied (`last_read_at`), Direktchats, Chat-Reaktionen, Zu-/Absagen und Versandzeitpunkte von Event-Einladungen. |
+| `010` | `010-member-invites.xml` | Einladungslinks (`member_invites`, nur Token-Hash) und Einlösungen. |
+| `011` | `011-kiosk-sessions.xml` | Kiosk-Sitzungen am Thekenterminal (`kiosk_sessions`, PIN nur als BCrypt-Hash). |
+| `012` | `012-moment-types-and-media.xml` | Verwaltbare Moment-Typen und Reaktionen mit Startbestand, Fotos und Videos zu Beiträgen (`moment_media`). |
+| `013` | `013-stammtische.xml` | Gruppen (`stammtische`, `stammtisch_members`, `stammtisch_roles`), Spalte `stammtisch_id` an allen fachlichen Tabellen, Row-Level-Security (Details: [stammtische.md](../domains/stammtische.md)). |
+| `014` | `014-drink-library.xml` | Gemeinsame Getränkedatenbank (`drink_library`, `drink_library_barcodes`) ohne Preise. |
+| `015` | `015-billing.xml` | Tarife je Gruppe (`stammtisch_subscriptions`) und verarbeitete Stripe-Ereignisse (`billing_events`). |

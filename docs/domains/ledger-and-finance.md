@@ -17,14 +17,14 @@ Das System unterscheidet vier elementare Buchungstypen (`entryType`):
    - Verringert das Guthaben im Modus `credit` oder wird als Bareinnahme im Modus `revenueOnly` verbucht.
    - Erzeugt einen unveränderlichen Beleg-Snapshot (`PurchaseSnapshot`) mit Verkaufs- und Einkaufspreis zur exakten Deckungsbeitragsermittlung.
 3. **Guthaben-Auszahlung (`payout`)**:
-   - Rückzahlung von verbleibendem Restguthaben bei Vereinsaustritt.
+   - Rückzahlung von verbleibendem Restguthaben beim Verlassen der Gruppe.
    - Verringert das Guthaben.
 4. **Korrekturbuchung / Stornierung (`correction`)**:
    - Revisionssichere Gegenbuchung zu einer früheren Fehlbuchung.
    - Da Einträge niemals gelöscht werden dürfen (*Append-Only*), hebt ein Storno den Ursprungsbetrag über einen referenzierten Gegeneintrag auf.
 
 ### Abrechnungsmodi (`accountingMode`)
-- **`credit`**: Der Kaufbetrag wird direkt dem persönlichen Vereinskonto des Mitglieds belastet.
+- **`credit`**: Der Kaufbetrag wird direkt dem persönlichen Guthabenkonto des Mitglieds belastet.
 - **`revenueOnly`**: Der Umsatz wird statistisch und kassenmäßig erfasst (z. B. bei Barzahlung auf Events oder Pauschal-/Rundenbuchungen), ohne ein Mitgliedskonto zu belasten.
 
 ---

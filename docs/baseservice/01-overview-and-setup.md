@@ -77,11 +77,11 @@ baseservice/
 ## ⚡ Lokales Starten & Entwicklung
 
 ### 1. Infrastruktur mit Docker Compose starten
-Bevor der `baseservice` gestartet werden kann, müssen PostgreSQL und Keycloak (sowie optional MinIO) laufen:
+Bevor der `baseservice` gestartet werden kann, müssen PostgreSQL und Keycloak (sowie optional MinIO als lokaler S3-Ersatz) laufen:
 
 ```bash
 # Im Projekt-Hauptverzeichnis:
-docker compose up -d postgres keycloak minio
+docker compose up -d vereint-db keycloak-db keycloak object-storage
 ```
 
 - **PostgreSQL**: `localhost:5432` (User: `vereint`, DB: `vereint`)
@@ -165,4 +165,4 @@ In `application.yaml` sind strikte Obergrenzen für Header und Payloads konfigur
 - Weiter zu [02. Architektur & Schichten](02-architecture-and-layers.md)
 - [BFF Übersicht & Setup](../backend-for-frontend/01-overview-and-setup.md)
 - [Betrieb: Docker Compose Setup](../operations/local-setup-docker.md)
-- [Betrieb: Keycloak & MinIO Storage](../operations/keycloak-and-storage.md)
+- [Betrieb: Keycloak & S3-Objektspeicher](../operations/keycloak-and-storage.md)
