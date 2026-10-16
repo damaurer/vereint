@@ -81,4 +81,4 @@ class ImageAssetEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()

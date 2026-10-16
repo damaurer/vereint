@@ -1,6 +1,8 @@
 package de.maurer.baseservice.repository
 
 import de.maurer.baseservice.domain.*
+import jakarta.persistence.LockModeType
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
@@ -9,7 +11,6 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
-import jakarta.persistence.LockModeType
 import java.time.Instant
 import java.util.Optional
 import java.util.UUID
@@ -20,30 +21,82 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     fun findByEmail(email: String): Optional<UserEntity>
     fun existsByEmailIgnoreCase(email: String): Boolean
     fun findByDisabled(disabled: Boolean): List<UserEntity>
-
-    /**
-     * Anzahl aktiver Konten mit der angegebenen Rolle; sichert ab, dass immer
-     * mindestens ein aktives Adminkonto verbleibt.
-     */
-    @Query(
-        """
-        select count(u) from UserEntity u
-        where u.disabled = false
-          and exists (select 1 from UserRoleEntity r where r.id.userId = u.id and r.id.role = :role)
-        """
-    )
-    fun countActiveUsersWithRole(@Param("role") role: AssignedRole): Long
+    fun findFirstByEmailIgnoreCase(email: String): Optional<UserEntity>
 }
 
 @Repository
 interface UserRoleRepository : JpaRepository<UserRoleEntity, UserRoleId> {
     fun findByIdUserId(userId: UUID): List<UserRoleEntity>
+    fun findByIdRole(role: String): List<UserRoleEntity>
+    fun findByStammtischIdAndIdUserId(stammtischId: UUID, userId: UUID): List<UserRoleEntity>
     fun deleteByIdUserId(userId: UUID)
+    fun deleteByIdRole(role: String)
+}
+
+/** Gemeinsame Getränkedatenbank; gehört keinem Stammtisch. */
+@Repository
+interface DrinkLibraryRepository : JpaRepository<DrinkLibraryEntity, UUID> {
+    @Query(
+        """
+        select d from DrinkLibraryEntity d
+        where lower(d.name) like lower(concat('%', :term, '%'))
+           or lower(coalesce(d.category, '')) like lower(concat('%', :term, '%'))
+        order by d.name
+        """
+    )
+    fun search(@Param("term") term: String, pageable: Pageable): List<DrinkLibraryEntity>
+}
+
+@Repository
+interface DrinkLibraryBarcodeRepository : JpaRepository<DrinkLibraryBarcodeEntity, UUID> {
+    fun findByBarcode(barcode: String): Optional<DrinkLibraryBarcodeEntity>
+    fun findByBarcodeIn(barcodes: Collection<String>): List<DrinkLibraryBarcodeEntity>
+    fun findByDrinkIdIn(drinkIds: Collection<UUID>): List<DrinkLibraryBarcodeEntity>
+}
+
+@Repository
+interface StammtischRepository : JpaRepository<StammtischEntity, UUID> {
+    fun countByCreatedByAndArchivedFalse(createdBy: UUID): Long
+
+    fun findAllByOrderByNameAsc(): List<StammtischEntity>
+}
+
+/** Mitgliedschaften im aktuellen Stammtisch (Hibernate filtert über `@TenantId`). */
+@Repository
+interface StammtischMemberRepository : JpaRepository<StammtischMemberEntity, UUID> {
+    fun findByUserId(userId: UUID): Optional<StammtischMemberEntity>
+
+    @EntityGraph(attributePaths = ["user"])
+    fun findByActiveTrue(): List<StammtischMemberEntity>
+
+    @EntityGraph(attributePaths = ["user"])
+    fun findAllBy(): List<StammtischMemberEntity>
+
+    fun countByActiveTrue(): Long
+
+    @Query("select m.user.id from StammtischMemberEntity m where m.active = true")
+    fun findActiveUserIds(): List<UUID>
+
+    @Query("select (count(m) > 0) from StammtischMemberEntity m where m.user.id = :userId and m.active = true")
+    fun isActiveMember(@Param("userId") userId: UUID): Boolean
+
+    /** Im System-Kontext: alle aktiven Mitgliedschaften einer Person über alle Stammtische. */
+    fun findByUserIdAndActiveTrue(userId: UUID): List<StammtischMemberEntity>
+}
+
+@Repository
+interface StammtischRoleRepository : JpaRepository<StammtischRoleEntity, UUID> {
+    fun findAllByOrderBySortOrderAscNameAsc(): List<StammtischRoleEntity>
+    fun findByCode(code: String): Optional<StammtischRoleEntity>
+
+    /** Für den System-Kontext, der alle Stammtische sieht. */
+    fun findByStammtischId(stammtischId: UUID): List<StammtischRoleEntity>
 }
 
 @Repository
 interface UserPermissionRepository : JpaRepository<UserPermissionEntity, UserPermissionId> {
     fun findByIdUserId(userId: UUID): List<UserPermissionEntity>
+    fun findByStammtischIdAndIdUserId(stammtischId: UUID, userId: UUID): List<UserPermissionEntity>
     fun deleteByIdUserId(userId: UUID)
 }
 
@@ -112,6 +165,7 @@ interface DrinkCatalogRepository : JpaRepository<DrinkCatalogEntity, UUID> {
     fun findByActiveTrue(): List<DrinkCatalogEntity>
     fun findByStatusOrderByNameAsc(status: DrinkStatus): List<DrinkCatalogEntity>
     fun findAllByOrderByNameAsc(): List<DrinkCatalogEntity>
+    fun findByLibraryDrinkIdIn(libraryDrinkIds: Collection<UUID>): List<DrinkCatalogEntity>
 }
 
 @Repository
@@ -166,18 +220,22 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
     fun count(): Long
     fun findByIdempotencyKey(idempotencyKey: String): Optional<LedgerEntryEntity>
 
+    /** Alle Buchungen des Stammtischs für den Datenexport. */
+    @EntityGraph(attributePaths = ["event", "member", "drink", "food", "actor", "reversesEntry"])
+    fun findAllByOrderByCreatedAtAsc(): List<LedgerEntryEntity>
+
     @EntityGraph(attributePaths = ["event", "member", "drink", "actor"])
     fun findByMemberId(memberId: UUID): List<LedgerEntryEntity>
 
     /** Vollständiger Kontoauszug einer Person in Buchungsreihenfolge. */
-    @EntityGraph(attributePaths = ["event", "member", "drink", "actor", "purchaseSnapshot", "reversesEntry"])
+    @EntityGraph(attributePaths = ["event", "member", "drink", "actor", "reversesEntry"])
     fun findByMemberIdOrderByCreatedAtAsc(memberId: UUID): List<LedgerEntryEntity>
 
     @EntityGraph(attributePaths = ["event", "member", "drink", "actor"])
     fun findByEventId(eventId: UUID): List<LedgerEntryEntity>
 
     /** Buchungen ab einem Zeitpunkt für die Vereinsstatistik. */
-    @EntityGraph(attributePaths = ["event", "member", "drink", "food", "purchaseSnapshot", "reversesEntry"])
+    @EntityGraph(attributePaths = ["event", "member", "drink", "food", "reversesEntry"])
     fun findByCreatedAtGreaterThanEqual(since: Instant): List<LedgerEntryEntity>
 
     /** Mehrere Buchungen samt Mitglied, z. B. um Audit-Einträge mit Namen anzuzeigen. */
@@ -188,7 +246,7 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
     fun findByReversesEntryId(reversesEntryId: UUID): List<LedgerEntryEntity>
 
     /** Guthaben und Käufe einer Person je Event (Composite-Index). */
-    @EntityGraph(attributePaths = ["event", "member", "drink", "actor", "purchaseSnapshot"])
+    @EntityGraph(attributePaths = ["event", "member", "drink", "actor"])
     fun findByEventIdAndMemberIdOrderByCreatedAtAsc(eventId: UUID, memberId: UUID): List<LedgerEntryEntity>
 
     /** Buchungen im Zeitraum ohne N+1-Nachladen. */
@@ -212,6 +270,7 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
 @Repository
 interface PurchaseSnapshotRepository : JpaRepository<PurchaseSnapshotEntity, UUID> {
     fun findByLedgerEntryId(ledgerEntryId: UUID): Optional<PurchaseSnapshotEntity>
+    fun findByLedgerEntryIdIn(ledgerEntryIds: Collection<UUID>): List<PurchaseSnapshotEntity>
 }
 
 @Repository
@@ -231,12 +290,13 @@ interface ConversationRepository : JpaRepository<ConversationEntity, UUID> {
      */
     @Modifying
     @Query(
-        value = "INSERT INTO conversations (id, type, title, direct_key, created_at, version) " +
-            "VALUES (:id, :type, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
+        value = "INSERT INTO conversations (id, stammtisch_id, type, title, direct_key, created_at, version) " +
+            "VALUES (:id, :stammtischId, :type, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
         nativeQuery = true
     )
     fun insertKeyedIfAbsent(
         @Param("id") id: UUID,
+        @Param("stammtischId") stammtischId: UUID,
         @Param("type") type: String,
         @Param("title") title: String,
         @Param("key") key: String
@@ -245,12 +305,13 @@ interface ConversationRepository : JpaRepository<ConversationEntity, UUID> {
     /** Wie [insertKeyedIfAbsent], für den einen Chat eines Events. */
     @Modifying
     @Query(
-        value = "INSERT INTO conversations (id, type, event_id, title, direct_key, created_at, version) " +
-            "VALUES (:id, :type, :eventId, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
+        value = "INSERT INTO conversations (id, stammtisch_id, type, event_id, title, direct_key, created_at, version) " +
+            "VALUES (:id, :stammtischId, :type, :eventId, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
         nativeQuery = true
     )
     fun insertEventIfAbsent(
         @Param("id") id: UUID,
+        @Param("stammtischId") stammtischId: UUID,
         @Param("type") type: String,
         @Param("eventId") eventId: UUID,
         @Param("title") title: String?,
@@ -272,12 +333,13 @@ interface ConversationMemberRepository : JpaRepository<ConversationMemberEntity,
      */
     @Modifying
     @Query(
-        value = "INSERT INTO conversation_members (id, conversation_id, user_id, joined_at) " +
-            "VALUES (:id, :conversationId, :userId, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING",
+        value = "INSERT INTO conversation_members (id, stammtisch_id, conversation_id, user_id, joined_at) " +
+            "VALUES (:id, :stammtischId, :conversationId, :userId, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING",
         nativeQuery = true
     )
     fun insertUserIfAbsent(
         @Param("id") id: UUID,
+        @Param("stammtischId") stammtischId: UUID,
         @Param("conversationId") conversationId: UUID,
         @Param("userId") userId: UUID
     ): Int
@@ -355,6 +417,10 @@ interface ImageAssetRepository : JpaRepository<ImageAssetEntity, UUID> {
 
     fun findByOwnerIdAndStatus(ownerId: UUID, status: ImageStatus): List<ImageAssetEntity>
 
+    /** Belegter Speicher der aktuellen Bilder des Stammtischs (Tarifgrenze). */
+    @Query("select coalesce(sum(i.sizeBytes), 0) from ImageAssetEntity i where i.status = :status")
+    fun sumSizeBytesByStatus(@Param("status") status: ImageStatus): Long
+
     /** Höchste bisher vergebene fachliche Bildversion eines Objekts (für die Fortschreibung). */
     @Query(
         """
@@ -395,6 +461,8 @@ interface KioskSessionRepository : JpaRepository<KioskSessionEntity, UUID> {
 
     @EntityGraph(attributePaths = ["startedBy"])
     fun findByEndedAtIsNullOrderByStartedAtAsc(): List<KioskSessionEntity>
+
+    fun countByEndedAtIsNull(): Long
 }
 
 @Repository
@@ -420,4 +488,17 @@ interface MomentMediaRepository : JpaRepository<MomentMediaEntity, UUID> {
     fun findByResponseIdIn(responseIds: Collection<UUID>): List<MomentMediaEntity>
     fun countByMomentIdAndOwnerId(momentId: UUID, ownerId: UUID): Long
     fun findByResponseIsNullAndCreatedAtBefore(cutoff: Instant): List<MomentMediaEntity>
+
+    /** Belegter Speicher aller Moment-Medien des Stammtischs (Tarifgrenze). */
+    @Query("select coalesce(sum(m.sizeBytes), 0) from MomentMediaEntity m")
+    fun sumSizeBytes(): Long
 }
+
+@Repository
+interface StammtischSubscriptionRepository : JpaRepository<StammtischSubscriptionEntity, UUID> {
+    fun findByStripeSubscriptionId(stripeSubscriptionId: String): Optional<StammtischSubscriptionEntity>
+    fun findFirstByStripeCustomerId(stripeCustomerId: String): Optional<StammtischSubscriptionEntity>
+}
+
+@Repository
+interface BillingEventRepository : JpaRepository<BillingEventEntity, String>

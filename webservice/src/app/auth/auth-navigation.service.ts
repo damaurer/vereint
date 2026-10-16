@@ -1,7 +1,7 @@
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { Router, UrlTree } from '@angular/router';
-import { defaultRouteForSession } from './app-context';
+import { defaultRouteForSession, STAMMTISCH_CHOICE_ROUTE } from './app-context';
 import { AuthService } from './auth.service';
 import { AuthSessionUser } from './auth.types';
 import { RememberedLoginService } from './remembered-login.service';
@@ -59,6 +59,12 @@ export class AuthNavigationService {
   }
 
   /** Ziel für einen verweigerten Zugriff. */
+  /** Ohne gewählten Stammtisch gibt es keine Rechte: erst auswählen. */
+  stammtischChoiceUrlTree(returnTo?: string): UrlTree {
+    const safe = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : undefined;
+    return this.router.createUrlTree([STAMMTISCH_CHOICE_ROUTE], safe ? { queryParams: { returnTo: safe } } : {});
+  }
+
   forbiddenUrlTree(): UrlTree {
     return this.router.parseUrl('/403');
   }

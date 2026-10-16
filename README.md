@@ -112,6 +112,8 @@ Rollback aus.
 
 - [docs/README.md](docs/README.md) – Übersicht aller Dokumente und Glossar
 - [docs/handbuch/](docs/handbuch/README.md) – Benutzerhandbuch je Rolle
+- [docs/domains/stammtische.md](docs/domains/stammtische.md) – Mehrere Gruppen, Trennung der Daten, Rollen je Gruppe
+- [docs/domains/abrechnung.md](docs/domains/abrechnung.md) – Tarife (Kostenlos, Standard, Premium) mit Stripe
 - [deploy/README.md](deploy/README.md) – Produktionsbetrieb, Backups, Deployments
 - [infra/aws/README.md](infra/aws/README.md) – AWS mit Terraform
 - [e2e/README.md](e2e/README.md) – E2E-Tests

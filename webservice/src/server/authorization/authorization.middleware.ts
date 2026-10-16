@@ -1,9 +1,10 @@
 import type { Request, RequestHandler, Response } from 'express';
 import { isSafeReturnTo } from '../auth/redirect';
 import { createCorrelationId, logSecurityEvent } from '../auth/security-log';
-import { publicPaths, pathIs } from '../config/server-config';
+import { GROUP_CHOICE_PAGE, LEGACY_PAGE_REDIRECTS, publicPaths, pathIs } from '../config/server-config';
 import { validateInvite } from '../invites/invite.service';
 import { checkResourceAccess, resolvePathAppContext } from './authorization.service';
+import { readStammtischCookie } from '../stammtisch/stammtisch-cookie';
 import { isApiRequest } from './delivery.middleware';
 import type { AppContext } from '../auth/auth.types';
 
@@ -102,6 +103,15 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
   // 1. API-Routen und öffentliche Seiten benötigen keine Seitenautorisierung
   if (pathname.startsWith('/api/') || publicPaths.has(pathname)) {
     next();
+    return;
+  }
+
+  // 1b. Frühere Adressen der Gruppen-Seiten (`/stammtisch`, …) samt Query umleiten;
+  //     Stripe kehrt etwa nach `/stammtisch?billing=success` zurück.
+  const renamed = LEGACY_PAGE_REDIRECTS.get(pathname);
+  if (renamed) {
+    const query = (req.originalUrl ?? '').indexOf('?');
+    res.redirect(301, query >= 0 ? `${renamed}${req.originalUrl.slice(query)}` : renamed);
     return;
   }
 
@@ -233,6 +243,7 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
     accessToken: req.sessionData?.tokens.accessToken,
     sessionId: req.sessionData?.sessionId,
     requestId,
+    stammtischId: readStammtischCookie(req),
   });
 
   if (result.outcome === 'allowed') {
@@ -284,6 +295,14 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
     },
     req,
   );
+
+  // Ohne gewählte Gruppe (Stammtisch) gibt es keine Rechte: erst auswählen lassen.
+  const noStammtisch =
+    result.decision?.memberships !== undefined && !result.decision.disabled && !result.decision.stammtischId;
+  if (noStammtisch && !isApiRequest(req)) {
+    res.redirect(`${GROUP_CHOICE_PAGE}?returnTo=${encodeURIComponent(req.originalUrl ?? pathname)}`);
+    return;
+  }
 
   if (isApiRequest(req)) {
     sendProblem(

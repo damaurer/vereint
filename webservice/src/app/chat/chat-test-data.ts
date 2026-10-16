@@ -5,7 +5,7 @@ export function summary(partial: Partial<ConversationSummary> = {}): Conversatio
   return {
     id: 'c-club',
     type: 'club',
-    title: 'Vereinschat',
+    title: 'Gruppenchat',
     eventId: null,
     partnerId: null,
     partnerName: null,

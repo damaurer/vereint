@@ -13,6 +13,7 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.FoodCatalogService
 import de.maurer.baseservice.service.UserService
+import de.maurer.baseservice.support.StammtischTestSupport
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -52,7 +53,7 @@ class FoodCatalogServiceTest {
 
     @BeforeEach
     fun setup() {
-        service = FoodCatalogService(foodCatalogRepository, userRoleRepository, userService)
+        service = FoodCatalogService(foodCatalogRepository, StammtischTestSupport.access(userRoleRepository), userService)
     }
 
     @Test

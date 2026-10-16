@@ -7,9 +7,9 @@ import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.*
 import de.maurer.baseservice.repository.MomentReactionRepository
 import de.maurer.baseservice.repository.MomentTypeRepository
-import de.maurer.baseservice.repository.UserRoleRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -28,7 +28,7 @@ import java.util.UUID
 class MomentConfigService(
     private val momentTypeRepository: MomentTypeRepository,
     private val momentReactionRepository: MomentReactionRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService,
     private val auditService: AuditService
 ) {
@@ -169,9 +169,7 @@ class MomentConfigService(
 
     private fun requireBoardOrAdmin(principal: UserPrincipal): UserEntity {
         val caller = userService.getOrCreateUser(principal)
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        val roles = principal.roles + dbRoles
-        if (roles.none { it == UserRole.BOARD || it == UserRole.ADMIN }) {
+        if (!access.has(principal, caller, Permission.MOMENTS_MANAGE)) {
             throw AccessDeniedException(Msg("error.momentConfig.manageDenied"), ErrorCode.ACCESS_DENIED)
         }
         return caller

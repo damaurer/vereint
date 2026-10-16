@@ -1,5 +1,6 @@
 package de.maurer.baseservice.dto
 
+import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.NotBlank
@@ -39,7 +40,10 @@ data class ProposeDrinkRequest(
     val imageReference: String? = null,
 
     @field:Size(max = 64, message = "barcodes {validation.size.maxEntries}")
-    val barcodes: List<String>? = null
+    val barcodes: List<String>? = null,
+
+    @Schema(description = "Eintrag der gemeinsamen Getränkedatenbank, aus dem das Getränk übernommen wird")
+    val libraryDrinkId: String? = null
 )
 
 data class UpdateDrinkRequest(
@@ -97,7 +101,9 @@ data class DrinkDto(
     val approvedById: String?,
     val barcodes: List<DrinkBarcodeDto>,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    @Schema(description = "Herkunft aus der gemeinsamen Getränkedatenbank")
+    val libraryDrinkId: String? = null
 )
 
 data class DrinkSummaryDto(
@@ -110,4 +116,25 @@ data class DrinkSummaryDto(
     val status: String,
     val active: Boolean,
     val catalogVersion: Int
+)
+
+@Schema(description = "Eintrag der gemeinsamen Getränkedatenbank (ohne Preis)")
+data class DrinkLibraryEntryDto(
+    val id: String,
+    val name: String,
+    val description: String?,
+    val category: String?,
+    val barcodes: List<String>,
+    @Schema(description = "Id des Katalogeintrags im aktuellen Stammtisch, falls schon übernommen")
+    val catalogDrinkId: String? = null
+)
+
+data class SaveDrinkLibraryEntryRequest(
+    @field:Size(max = 255, message = "name {validation.size.max}")
+    val name: String? = null,
+    val description: String? = null,
+    @field:Size(max = 64, message = "category {validation.size.max}")
+    val category: String? = null,
+    @field:Size(max = 64, message = "barcodes {validation.size.maxEntries}")
+    val barcodes: List<String>? = null
 )

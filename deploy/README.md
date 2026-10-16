@@ -216,3 +216,41 @@ systemctl list-timers vereint-backup.timer
 systemctl start vereint-backup.service    # Backup sofort ausführen
 journalctl -u vereint-backup.service      # Backup-Protokoll
 ```
+
+## Mehrere Gruppen
+
+Mit mehreren Gruppen (siehe `docs/domains/stammtische.md`) gilt:
+
+- Wer in Keycloak die Realmrolle `admin` hat, ist **Plattform-Admin**: Er legt
+  unter `/plattform` Gruppen an und benennt oder archiviert sie.
+- Frische Installation: Der erste Plattform-Admin, der sich anmeldet, wird
+  automatisch Admin der noch nie genutzten Gruppe „Meine Gruppe" und
+  benennt sie in der App unter *Gruppeneinstellungen* um. Alle Weiteren kommen per
+  Einladungslink dazu.
+- Alle anderen Rollen vergibt jede Gruppe selbst in der App; Realmrollen
+  wie `board` oder `member` haben keine Wirkung mehr.
+- Die Trennung per Row-Level-Security setzt voraus, dass sich der baseservice
+  als `vereint` verbindet (kein Superuser, Eigentümer der Tabellen), wie es
+  `postgres/init-databases.sh` anlegt. Nicht auf `postgres` umstellen.
+- Bestehende Daten landen beim Update in der Gruppe „Meine Gruppe".
+
+- Kunden können unter `/gruppe-eroeffnen` selbst Gruppen eröffnen. Solange
+  Impressum, AGB und Datenschutz fehlen, den SSM-Parameter
+  `/vereint/SIGNUP_ENABLED` auf `false` setzen und neu ausrollen.
+
+### Abrechnung (Stripe)
+
+Tarife je Gruppe und die Einrichtung von Stripe beschreibt
+`docs/domains/abrechnung.md`. Ohne Stripe-Werte bleibt die Online-Zahlung aus,
+„Meine Gruppe" läuft kostenlos mit allen Funktionen weiter. Zum Einschalten
+die Werte als SSM-Parameter anlegen und neu ausrollen, zum Beispiel:
+
+```bash
+aws ssm put-parameter --name /vereint/STRIPE_ENABLED --type String --value true
+aws ssm put-parameter --name /vereint/STRIPE_SECRET_KEY --type SecureString --value '<sk_live_...>'
+aws ssm put-parameter --name /vereint/STRIPE_WEBHOOK_SECRET --type SecureString --value '<whsec_...>'
+aws ssm put-parameter --name /vereint/STRIPE_PRICE_STAMMTISCH_MONTH --type String --value '<price_...>'
+```
+
+(entsprechend für die übrigen Preis-IDs). Der Webhook-Pfad
+`/api/v1/billing/stripe/webhook` geht in Caddy direkt an den Fachservice.

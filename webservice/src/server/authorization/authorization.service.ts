@@ -7,6 +7,7 @@ import {
   readStaleAccessDecision,
   writeAccessDecision,
 } from './access-decision-cache';
+import { STAMMTISCH_HEADER } from '../stammtisch/stammtisch-cookie';
 import {
   denyAllDecision,
   normalizeDecision,
@@ -162,6 +163,8 @@ export interface ResolveAccessOptions {
   sessionId?: string;
   /** Korrelations-Id; wird als `X-Request-Id` mitgesendet. */
   requestId?: string;
+  /** Gewählter Stammtisch (Cookie); ohne Wert wählt der Fachservice bei genau einer Mitgliedschaft. */
+  stammtischId?: string;
 }
 
 export interface AccessDecisionResult {
@@ -169,6 +172,14 @@ export interface AccessDecisionResult {
   decision?: ResolvedAccessDecision;
   fromCache?: boolean;
   traceId?: string;
+  /** Der gewählte Stammtisch gehört nicht (mehr) zur Person; der Cookie ist zu verwerfen. */
+  stammtischRejected?: boolean;
+}
+
+/** Entscheidungen gelten je Session und Stammtisch. */
+function decisionCacheKey(sessionId: string | undefined, stammtischId: string | undefined): string | undefined {
+  if (!sessionId) return undefined;
+  return stammtischId ? `${sessionId}#${stammtischId}` : sessionId;
 }
 
 /**
@@ -179,7 +190,8 @@ export interface AccessDecisionResult {
  * Resolver-Antwort nicht mehr (`fail closed`).
  */
 export async function resolveAccessDecision(options: ResolveAccessOptions): Promise<AccessDecisionResult> {
-  const { identity, accessToken, sessionId } = options;
+  const { identity, accessToken, stammtischId } = options;
+  const sessionId = decisionCacheKey(options.sessionId, stammtischId);
 
   if (!identity?.uid) {
     return { outcome: 'unauthenticated', decision: denyAllDecision() };
@@ -209,6 +221,7 @@ export async function resolveAccessDecision(options: ResolveAccessOptions): Prom
         Authorization: `Bearer ${accessToken}`,
         Accept: 'application/json',
         'X-Request-Id': requestId,
+        ...(stammtischId ? { [STAMMTISCH_HEADER]: stammtischId } : {}),
       },
     });
 
@@ -236,6 +249,13 @@ export async function resolveAccessDecision(options: ResolveAccessOptions): Prom
         subject: identity.uid,
         detail: problem.detail,
       });
+
+      // Ein veralteter Stammtisch-Cookie (z. B. nach dem Austritt) sperrt die
+      // Person nicht aus: Die Entscheidung wird ohne Auswahl neu geholt.
+      if (response.status === 403 && problem.code === 'stammtisch_access_denied' && stammtischId) {
+        const fallback = await resolveAccessDecision({ ...options, stammtischId: undefined, requestId });
+        return { ...fallback, stammtischRejected: true };
+      }
 
       // Eine eindeutige Ablehnung des Fachservices ist keine Störung.
       if (response.status === 401 || response.status === 403) {
@@ -317,6 +337,8 @@ export interface CheckResourceAccessOptions {
   requestId?: string;
   /** Aufrufer-Adresse; ausschließlich für die Protokollierung. */
   remoteAddress?: string;
+  /** Gewählter Stammtisch (Cookie). */
+  stammtischId?: string;
 }
 
 /** Gastzugriff wird ausschließlich vom Fachservice entschieden. */
@@ -377,6 +399,9 @@ async function checkGuestAccess(options: CheckResourceAccessOptions): Promise<Ac
   }
 }
 
+/** Rollen sind je Stammtisch frei definierbar; maßgeblich ist die Berechtigung. */
+const EVENT_MANAGE_PERMISSION = 'event.manage';
+
 function evaluateEventAccess(
   decision: ResolvedAccessDecision,
   appContext: 'event' | 'eventOwner',
@@ -387,7 +412,7 @@ function evaluateEventAccess(
   const inScope = appContext === 'eventOwner'
     ? decision.ownedEvents.includes(eventId)
     : decision.eventScopes.includes(eventId);
-  return inScope || decision.roles.includes('board') || decision.roles.includes('admin');
+  return inScope || decision.permissions.includes(EVENT_MANAGE_PERMISSION);
 }
 
 /**
@@ -408,6 +433,7 @@ export async function checkResourceAccess(options: CheckResourceAccessOptions): 
     accessToken: options.accessToken,
     sessionId: options.sessionId,
     requestId: options.requestId,
+    stammtischId: options.stammtischId,
   });
 
   if (resolved.outcome === 'unauthenticated') return { outcome: 'unauthenticated' };
@@ -428,7 +454,7 @@ export async function checkResourceAccess(options: CheckResourceAccessOptions): 
     // Ablehnung aus dem Cache wird deshalb einmal frisch beim Fachservice
     // geprüft, statt neu Eingeladene bis zum Ablauf der TTL auszusperren.
     if (!isAllowed && resolved.fromCache && options.sessionId) {
-      dropCachedDecision(options.sessionId);
+      dropCachedDecision(decisionCacheKey(options.sessionId, options.stammtischId));
       return checkResourceAccess(options);
     }
     return { outcome: isAllowed ? 'allowed' : 'denied', decision };

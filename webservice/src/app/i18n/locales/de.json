@@ -15,7 +15,17 @@
       "permissionDenied": "Für diese Aktion fehlen die erforderlichen Rechte.",
       "notFound": "Der angeforderte Eintrag wurde nicht gefunden.",
       "invalid": "Die Eingabe ist ungültig. Bitte prüfen und erneut versuchen.",
-      "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen."
+      "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen.",
+      "stammtischRequired": "Bitte zuerst eine Gruppe wählen.",
+      "stammtischDenied": "Du gehörst dieser Gruppe nicht (mehr) an.",
+      "stammtischReadOnly": "Die Gruppe ist nur noch lesbar, weil die Zahlung überfällig ist. Nach der Zahlung geht wieder alles.",
+      "planLimitMembers": "Der aktuelle Tarif erlaubt keine weiteren Mitglieder. Ein größerer Tarif schafft Platz.",
+      "planLimitStorage": "Der Speicherplatz des aktuellen Tarifs ist aufgebraucht.",
+      "planLimitVideos": "Videos sind im aktuellen Tarif nicht enthalten.",
+      "planLimitKiosk": "Der aktuelle Tarif erlaubt nur ein aktives Thekenterminal.",
+      "billingUnavailable": "Online-Zahlung ist noch nicht eingerichtet. Bitte später erneut versuchen.",
+      "billingNoCustomer": "Es gibt noch kein Zahlungskonto. Bitte zuerst einen Tarif buchen.",
+      "stammtischLimit": "Du hast bereits drei eigene Gruppen eröffnet. Mehr sind pro Person nicht möglich."
     }
   },
   "member": {
@@ -56,7 +66,7 @@
       "greeting": {
         "morning": "Guten Morgen, schön dass du da bist.",
         "day": "Schön, dass du wieder da bist.",
-        "evening": "Guten Abend. Wer ist heute am Stammtisch?"
+        "evening": "Guten Abend. Wer ist heute dabei?"
       },
       "balanceHeading": "Dein Guthaben",
       "statementLink": "Kontoauszug ansehen",
@@ -87,7 +97,7 @@
         },
         "notifications": {
           "title": "Mitteilungen",
-          "sub": "Neuigkeiten vom Verein"
+          "sub": "Neuigkeiten aus der Gruppe"
         }
       },
       "declined": "Du hast abgesagt",
@@ -227,7 +237,7 @@
     "eyebrow": "Mitteilungen",
     "title": "Benachrichtigungen",
     "unread": "{count} ungelesen",
-    "intro": "Bleibe über Events, Vereinsankündigungen und Neuigkeiten auf dem Laufenden.",
+    "intro": "Bleibe über Events, Ankündigungen der Gruppe und Neuigkeiten auf dem Laufenden.",
     "markAllRead": "Alle als gelesen markieren",
     "markRead": "Als gelesen markieren",
     "loadingMessage": "Benachrichtigungen werden abgerufen.",
@@ -265,7 +275,10 @@
     "logout": "Abmelden",
     "notifications": "Mitteilungen",
     "notificationsUnread": "Mitteilungen, {count} ungelesen",
-    "chatUnread": "{label}, {count} ungelesen"
+    "chatUnread": "{label}, {count} ungelesen",
+    "switchStammtisch": "Gruppe wechseln (aktuell: {name})",
+    "readOnly": "Diese Gruppe ist nur noch lesbar, weil die Zahlung überfällig ist.",
+    "readOnlyLink": "Zum Tarif"
   },
   "nav": {
     "items": {
@@ -286,10 +299,11 @@
       "communications": "Kommunikation",
       "admin": "Administration",
       "tablet": "Thekenterminal",
-      "scan": "Bezahlen"
+      "scan": "Bezahlen",
+      "stammtisch": "Gruppeneinstellungen"
     },
     "sections": {
-      "club": "Verein",
+      "club": "Gruppe",
       "account": "Mein Konto",
       "bar": "Theke",
       "admin": "Verwaltung"
@@ -315,12 +329,13 @@
   "auth": {
     "status": {
       "eyebrow": "Öffentlich",
-      "brandClaim": "Dein Verein. Vereint.",
+      "brandClaim": "Deine Gruppe. Vereint.",
       "brandSub": "Mitglieder, Events, Kasse und Theke an einem Ort – sicher und auf jedem Gerät.",
       "loginFailed": "Anmeldung fehlgeschlagen",
       "loggedOutTitle": "Abgemeldet",
       "loggedOutMessage": "Sie wurden erfolgreich abgemeldet.",
-      "retryLogin": "Erneut anmelden"
+      "retryLogin": "Erneut anmelden",
+      "openOwn": "Eigene Gruppe eröffnen"
     },
     "errors": {
       "invalidState": "Die Anmeldung ist abgelaufen. Bitte erneut starten.",
@@ -332,7 +347,7 @@
     "register": {
       "eyebrow": "Einladung",
       "title": "Mitglied werden",
-      "doneTitle": "Willkommen im Verein!",
+      "doneTitle": "Willkommen in der Gruppe!",
       "checking": "Einladungslink wird geprüft …",
       "invalidTitle": "Registrierung nicht möglich",
       "toLogin": "Zur Anmeldung",
@@ -354,7 +369,11 @@
         "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
         "passwordMismatch": "Die beiden Passwörter stimmen nicht überein.",
         "checkInput": "Bitte prüfe deine Eingaben. Das Passwort muss mindestens {min} Zeichen lang sein."
-      }
+      },
+      "joinTitle": "Gruppe beitreten",
+      "joinIntro": "Du bist bereits angemeldet. Mit diesem Einladungslink trittst du der Gruppe mit deinem bestehenden Konto bei.",
+      "join": "Dieser Gruppe beitreten",
+      "joining": "Wird beigetreten …"
     }
   },
   "errorPages": {
@@ -385,7 +404,8 @@
       "boardOrAdmin": "Vorstand oder Admin",
       "admin": "Admin",
       "drinkRecorder": "drinkRecorder",
-      "statistics": "Statistiken einsehen"
+      "statistics": "Statistiken einsehen",
+      "platform": "Plattform-Admin"
     },
     "authError": {
       "title": "Anmeldefehler",
@@ -502,10 +522,30 @@
     "boardMoments": {
       "title": "Moment-Typen & Reaktionen",
       "description": "Typen und Reaktionen für Moments festlegen."
+    },
+    "stammtische": {
+      "title": "Gruppe wählen",
+      "description": "Eine deiner Gruppen öffnen."
+    },
+    "platform": {
+      "title": "Plattform",
+      "description": "Gruppen dieser Installation verwalten."
+    },
+    "stammtisch": {
+      "title": "Gruppe",
+      "description": "Name, Bild, Rollen und Mitgliedschaft der Gruppe."
+    },
+    "drinkLibrary": {
+      "title": "Getränkedatenbank",
+      "description": "Getränke aus der gemeinsamen Datenbank übernehmen."
+    },
+    "stammtischOpen": {
+      "title": "Gruppe eröffnen",
+      "description": "Eine eigene Gruppe anlegen und verwalten."
     }
   },
   "chat": {
-    "eyebrow": "Vereinschat",
+    "eyebrow": "Gruppenchat",
     "title": "Chat",
     "toDirectMessages": "Direktnachrichten →",
     "loadingMessage": "Die Konversationen werden abgerufen.",
@@ -517,7 +557,7 @@
       "ariaLabel": "Konversationen",
       "newMessage": "+ Neue Nachricht",
       "groupOnline": "{count} online",
-      "clubChat": "Vereinschat",
+      "clubChat": "Gruppenchat",
       "eventChats": "Event-Chats",
       "noEventChats": "Du hast gerade keine Event-Chats. Sie erscheinen, sobald du zu einem Event eingeladen bist.",
       "noMessages": "Noch keine Nachrichten"
@@ -551,7 +591,7 @@
       "eyebrow": "Direktnachrichten",
       "title": "Einzelgespräche",
       "badge": "DMs",
-      "toGroupChat": "← Zum Vereinschat",
+      "toGroupChat": "← Zum Gruppenchat",
       "unavailable": "Direktnachrichten nicht verfügbar",
       "searchLabel": "Mitglieder durchsuchen",
       "searchPlaceholder": "Mitglieder durchsuchen…",
@@ -625,7 +665,7 @@
       "titlePlaceholder": "z. B. Gemeinsames Anstoßen, Abendgebet, Jubelwelle",
       "topicLabel": "Thema / Ritualtyp *",
       "messageLabel": "Nachricht / Impuls (optional)",
-      "messagePlaceholder": "z. B. Ein Hoch auf unseren Verein! Wer stößt aus der Ferne mit an?",
+      "messagePlaceholder": "z. B. Ein Hoch auf unsere Gruppe! Wer stößt aus der Ferne mit an?",
       "durationLabel": "Dauer des Moments",
       "duration": {
         "m15": "15 Minuten (Kurzer Impuls)",
@@ -655,7 +695,7 @@
     "topics": {
       "toast": {
         "label": "Gemeinsames Anstoßen",
-        "description": "Für Stammtische & Feste"
+        "description": "Für Treffen & Feste"
       },
       "prayer": {
         "label": "Gebet & Fürbitte",
@@ -739,9 +779,9 @@
   },
   "catalog": {
     "header": {
-      "eyebrow": "Vereinskatalog",
+      "eyebrow": "Gruppenkatalog",
       "title": "Getränke- & Speisenkatalog",
-      "intro": "Übersicht aller Vereinsgetränke, Barcodes und Verpflegungsangebote."
+      "intro": "Übersicht aller Getränke der Gruppe, Barcodes und Verpflegungsangebote."
     },
     "actions": {
       "proposeDrink": "+ Getränk vorschlagen",
@@ -854,7 +894,36 @@
       "search": "Suchen",
       "newBarcode": "Der Barcode {barcode} ist noch keinem Getränk zugeordnet. Er wird mit dem neuen Getränk gespeichert."
     },
-    "createInfo": "„{name}“ wurde angelegt und ist sofort im Katalog."
+    "createInfo": "„{name}“ wurde angelegt und ist sofort im Katalog.",
+    "library": {
+      "open": "Aus der Getränkedatenbank",
+      "back": "Zurück zum Katalog",
+      "title": "Getränkedatenbank",
+      "intro": "Die Getränkedatenbank teilen sich alle Gruppen; sie enthält keine Preise – den Preis legt jede Gruppe beim Übernehmen selbst fest.",
+      "searchLabel": "Name oder Sorte",
+      "searchPlaceholder": "z. B. Helles",
+      "barcodeLabel": "Strichcode (EAN)",
+      "search": "Suchen",
+      "unavailable": "Die Getränkedatenbank ist gerade nicht erreichbar.",
+      "empty": "Keine Treffer",
+      "emptyHint": "Probier einen anderen Namen oder Strichcode.",
+      "inCatalog": "Schon im Katalog",
+      "adopt": "Übernehmen",
+      "adoptSubmit": "In den Katalog übernehmen",
+      "name": "Name",
+      "category": "Sorte",
+      "description": "Beschreibung",
+      "price": "Verkaufspreis (€)",
+      "costPrice": "Einkaufspreis (€, optional)",
+      "priceHint": "Der Preis gilt nur für deine Gruppe.",
+      "priceRequired": "Bitte einen Namen und einen Preis ab 0 € angeben.",
+      "adopted": "„{name}“ ist jetzt in eurem Katalog.",
+      "proposed": "„{name}“ wurde für euren Katalog vorgeschlagen.",
+      "toCatalog": "Zum Katalog",
+      "share": "In die Getränkedatenbank teilen",
+      "shared": "Dieses Getränk ist mit der Getränkedatenbank verknüpft.",
+      "sharedInfo": "„{name}“ ist jetzt in der Getränkedatenbank (ohne Preis)."
+    }
   },
   "sublists": {
     "header": {
@@ -888,9 +957,9 @@
       "editTitle": "Sublist bearbeiten",
       "createTitle": "Neue Sublist erstellen",
       "name": "Name der Sublist *",
-      "namePlaceholder": "z. B. Standard-Stammtisch",
+      "namePlaceholder": "z. B. Standardauswahl",
       "description": "Beschreibung",
-      "descriptionPlaceholder": "z. B. Standardauswahl an Bieren und Softdrinks für reguläre Stammtische",
+      "descriptionPlaceholder": "z. B. Standardauswahl an Bieren und Softdrinks für reguläre Treffen",
       "nameRequired": "Bitte geben Sie einen Namen ein."
     },
     "detail": {
@@ -1109,7 +1178,7 @@
       "save": "Änderungen speichern",
       "permissions": {
         "credit": "Guthaben verwalten (Aufladen / Buchen)",
-        "events": "Events & Stammtische erstellen / planen",
+        "events": "Events & Treffen erstellen / planen",
         "notify": "Gruppen-Benachrichtigungen senden",
         "attendance": "Anwesenheitsabfrage starten",
         "invite": "Neue Mitglieder einladen",
@@ -1180,7 +1249,7 @@
       "title": "Eber-Führungsstab",
       "intro": "Moderation, Finanzübersichten und vorbereitete Mitteilungen.",
       "infoTitle": "Vorstandsbereich",
-      "infoText": "Verwalte hier die Bierkasse, versende wichtige Ankündigungen oder plane die nächsten Stammtisch-Sitzungen.",
+      "infoText": "Verwalte hier die Gruppenkasse, versende wichtige Ankündigungen oder plane die nächsten Treffen.",
       "panelsTitle": "Rollenspezifische Verwaltung",
       "panelsNav": "Vorstandsbereiche",
       "treasuryTitle": "Kassenwart · Kasse & Finanzen",
@@ -1206,10 +1275,10 @@
     "comms": {
       "eyebrow": "Schriftwart",
       "title": "Infotafeln & Rundbriefe",
-      "intro": "Infotafel im Vereinschat, Rundbriefe an Mitglieder und versendete Benachrichtigungen.",
-      "pinboardTitle": "Infotafel im Vereinschat",
+      "intro": "Infotafel im Gruppenchat, Rundbriefe an Mitglieder und versendete Benachrichtigungen.",
+      "pinboardTitle": "Infotafel im Gruppenchat",
       "infoTitle": "Info vom Schriftwart",
-      "infoText": "Die Infotafel steht oben im Vereinschat und ist für alle Mitglieder sichtbar.",
+      "infoText": "Die Infotafel steht oben im Gruppenchat und ist für alle Mitglieder sichtbar.",
       "composeTitle": "Meldung verfassen",
       "recipientId": "Empfänger (Mitglieds-ID)",
       "messageTitle": "Titel",
@@ -1516,7 +1585,7 @@
     "consumption": {
       "ariaLabel": "Rangliste nach Strichen",
       "title": "Rangliste",
-      "total": "Striche im Verein",
+      "total": "Striche in der Gruppe",
       "mine": "Deine Striche",
       "myRank": "Dein Platz",
       "rankValue": "Platz {rank}",
@@ -1696,6 +1765,201 @@
       "submit": "Starten",
       "format": "Die PIN muss aus {min} bis {max} Ziffern bestehen.",
       "mismatch": "Die beiden Eingaben stimmen nicht überein."
+    }
+  },
+  "stammtisch": {
+    "choice": {
+      "eyebrow": "Gruppen",
+      "title": "Gruppe wählen",
+      "intro": "Wähle, welche Gruppe du öffnen möchtest. Du kannst jederzeit wechseln.",
+      "current": "Aktuell",
+      "open": "Öffnen",
+      "opening": "Wird geöffnet …",
+      "emptyTitle": "Noch keine Gruppe",
+      "emptyMessage": "Du bist noch in keiner Gruppe. Bitte den Vorstand um einen Einladungslink.",
+      "platform": "Plattform verwalten",
+      "selectFailed": "Die Gruppe konnte nicht geöffnet werden. Bitte erneut versuchen.",
+      "openOwn": "Eigene Gruppe eröffnen"
+    },
+    "platform": {
+      "back": "Zur Gruppenauswahl",
+      "eyebrow": "Plattform",
+      "title": "Gruppen verwalten",
+      "intro": "Alle Gruppen dieser Installation. Archivierte Gruppen sind für ihre Mitglieder nicht mehr erreichbar.",
+      "createTitle": "Neue Gruppe anlegen",
+      "name": "Name",
+      "adminEmail": "E-Mail des Admins (optional)",
+      "adminEmailHint": "Ein bestehendes Konto mit dieser E-Mail wird Admin der Gruppe; ohne Angabe wirst du selbst Admin.",
+      "create": "Anlegen",
+      "created": "„{name}“ wurde angelegt.",
+      "listTitle": "Alle Gruppen",
+      "unavailable": "Die Gruppen konnten nicht geladen werden.",
+      "empty": "Noch keine Gruppen",
+      "archived": "Archiviert",
+      "members": {
+        "one": "{count} Mitglied",
+        "other": "{count} Mitglieder"
+      },
+      "createdAt": "angelegt {date}",
+      "rename": "Umbenennen",
+      "archive": "Archivieren",
+      "unarchive": "Wiederherstellen",
+      "archiveConfirm": "„{name}“ archivieren? Mitglieder können ihn danach nicht mehr öffnen.",
+      "plan": "Tarif",
+      "setPlan": "Tarif von „{name}“",
+      "storage": "{size} belegt",
+      "readOnly": "Nur lesbar",
+      "planChanged": "„{name}“ hat jetzt den Tarif {plan}."
+    },
+    "settings": {
+      "eyebrow": "Gruppe",
+      "title": "Gruppe",
+      "memberCount": {
+        "one": "{count} Mitglied",
+        "other": "{count} Mitglieder"
+      },
+      "switch": "Gruppe wechseln",
+      "unavailable": "Die Gruppe konnte nicht geladen werden.",
+      "nameTitle": "Name",
+      "name": "Name der Gruppe",
+      "renamed": "Der Name wurde gespeichert.",
+      "leaveTitle": "Gruppe verlassen",
+      "leaveHint": "Wenn du „{name}“ verlässt, verlierst du hier alle Rechte. Wieder dabei bist du nur mit einem neuen Einladungslink.",
+      "leave": "Gruppe verlassen",
+      "leaveConfirm": "„{name}“ wirklich verlassen?",
+      "lastManager": "Du bist die letzte Person, die Mitglieder und Rollen verwalten kann. Gib diese Rolle zuerst jemand anderem.",
+      "imageTitle": "Bild",
+      "imageAlt": "Bild der Gruppe {name}",
+      "imageHint": "PNG, JPEG oder GIF. Große Bilder werden vor dem Hochladen verkleinert.",
+      "imageUpload": "Bild hochladen",
+      "imageChange": "Bild ändern",
+      "imageRemove": "Bild entfernen",
+      "imageRemoveConfirm": "Das Bild der Gruppe wirklich entfernen?",
+      "imageUploading": "Bild wird hochgeladen …",
+      "imageSaved": "Das Bild wurde gespeichert.",
+      "imageRemoved": "Das Bild wurde entfernt.",
+      "imageType": "Bitte wähle ein Bild im Format PNG, JPEG oder GIF.",
+      "imageTooLarge": "Das Bild ist zu groß (höchstens {max} MB)."
+    },
+    "roles": {
+      "title": "Rollen & Berechtigungen",
+      "readOnly": "Nur Ansicht – Rollen ändern kann, wer Rollen verwalten darf.",
+      "new": "Neue Rolle",
+      "editTitle": "Rolle bearbeiten",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "deleteConfirm": "Rolle „{name}“ löschen? Personen mit dieser Rolle verlieren ihre Berechtigungen.",
+      "system": "System",
+      "memberCount": {
+        "zero": "niemand",
+        "one": "{count} Person",
+        "other": "{count} Personen"
+      },
+      "permissions": "Berechtigungen",
+      "noPermissions": "Keine Berechtigungen",
+      "name": "Name",
+      "description": "Beschreibung (optional)"
+    },
+    "permissionGroups": {
+      "audit": "Protokoll",
+      "balance": "Guthaben",
+      "billing": "Tarif und Zahlung",
+      "catalog": "Katalog",
+      "chat": "Chat",
+      "event": "Veranstaltungen",
+      "kiosk": "Kiosk",
+      "ledger": "Buchungen",
+      "members": "Mitglieder",
+      "moments": "Moments",
+      "notifications": "Benachrichtigungen",
+      "profile": "Profil",
+      "purchase": "Einkäufe",
+      "roles": "Rollen",
+      "stammtisch": "Gruppe"
+    },
+    "billing": {
+      "title": "Tarif",
+      "plans": {
+        "free": "Kostenlos",
+        "stammtisch": "Standard",
+        "verein": "Premium"
+      },
+      "status": {
+        "active": "Aktiv",
+        "past_due": "Zahlung offen",
+        "canceled": "Gekündigt",
+        "comped": "Kostenlos vergeben"
+      },
+      "renews": "Verlängert sich am {date}.",
+      "endsOn": "Läuft bis {date}.",
+      "comped": "Dieser Tarif wurde kostenlos vergeben.",
+      "pastDue": "Die letzte Zahlung ist fehlgeschlagen. Bitte die Zahlungsart bis {date} aktualisieren, sonst ist die Gruppe danach nur noch lesbar.",
+      "pastDueNoDate": "Die letzte Zahlung ist fehlgeschlagen. Bitte die Zahlungsart aktualisieren.",
+      "readOnly": "Die Zahlung ist überfällig: Die Gruppe ist nur noch lesbar. Ansehen geht, Ändern und Buchen nicht. Nach der Zahlung geht sofort wieder alles.",
+      "usage": "Verbrauch",
+      "members": "Mitglieder",
+      "membersOf": "{count} von {max}",
+      "membersUnlimited": "{count} (unbegrenzt)",
+      "storage": "Speicher",
+      "storageOf": "{used} von {limit}",
+      "videos": "Videos in Moments",
+      "kiosks": "Thekenterminals",
+      "kiosksOne": "eines ({count} aktiv)",
+      "kiosksMany": "mehrere ({count} aktiv)",
+      "yes": "Ja",
+      "no": "Nein",
+      "choose": "Tarif wählen",
+      "interval": "Zahlweise",
+      "month": "Monatlich",
+      "year": "Jährlich",
+      "perMonth": "{price} / Monat",
+      "perYear": "{price} / Jahr",
+      "intervalMissing": "In dieser Zahlweise nicht buchbar.",
+      "current": "Aktueller Tarif",
+      "limitMembers": {
+        "one": "Bis zu {count} Mitglied",
+        "other": "Bis zu {count} Mitglieder"
+      },
+      "limitMembersUnlimited": "Unbegrenzt viele Mitglieder",
+      "limitStorage": "{size} Speicher",
+      "limitVideos": "Videos in Moments",
+      "limitNoVideos": "Keine Videos",
+      "limitKiosks": "Mehrere Thekenterminals",
+      "limitOneKiosk": "Ein Thekenterminal",
+      "book": "Buchen",
+      "checkoutUnavailable": "Online-Zahlung ist noch nicht eingerichtet.",
+      "portal": "Zahlung und Rechnungen",
+      "portalHint": "Zahlungsart, Rechnungen, Tarif wechseln oder kündigen.",
+      "supporter": "Vereint unterstützen",
+      "supporterHint": "Freiwillig und persönlich: {price} im Monat helfen, Vereint weiterzuentwickeln.",
+      "supporterHintNoAmount": "Freiwillig und persönlich: Ein monatlicher Beitrag hilft, Vereint weiterzuentwickeln.",
+      "export": "Daten exportieren",
+      "exportHint": "Alle Daten dieser Gruppe als JSON-Datei.",
+      "success": "Danke! Der Tarif wird in wenigen Sekunden aktiv.",
+      "thanks": "Danke für deine Unterstützung!",
+      "canceled": "Zahlung abgebrochen, nichts wurde gebucht.",
+      "unavailable": "Der Tarif konnte nicht geladen werden."
+    },
+    "open": {
+      "eyebrow": "Neue Gruppe",
+      "title": "Gruppe eröffnen",
+      "doneTitle": "Deine Gruppe ist eröffnet!",
+      "checking": "Wird vorbereitet …",
+      "intro": "Lege deine Gruppe und dein Konto in einem Schritt an. Du wirst Admin der Gruppe.",
+      "createIntro": "Du bist angemeldet. Gib deiner neuen Gruppe einen Namen – du wirst ihr Admin.",
+      "planInfo": "Die Gruppe startet im kostenlosen Tarif mit bis zu 10 Mitgliedern. Einen größeren Tarif kannst du später jederzeit buchen. Mitglieder kommen per Einladungslink dazu.",
+      "name": "Name der Gruppe",
+      "submit": "Gruppe eröffnen",
+      "submitting": "Gruppe wird eröffnet …",
+      "done": "„{name}“ ist eröffnet und dein Konto für {email} angelegt. Melde dich jetzt an, um den Tarif zu wählen und Mitglieder einzuladen.",
+      "haveAccount": "Du hast schon ein Konto?",
+      "loginFirst": "Erst anmelden, dann eröffnen",
+      "back": "Zurück zur Gruppenauswahl",
+      "errors": {
+        "nameRequired": "Bitte gib deiner Gruppe einen Namen.",
+        "checkInput": "Bitte prüfe deine Eingaben. Der Gruppenname darf höchstens {max} Zeichen lang sein, das Passwort braucht mindestens {min} Zeichen.",
+        "selectFailed": "Die Gruppe ist eröffnet, konnte aber nicht geöffnet werden. Du findest sie in der Gruppenauswahl."
+      }
     }
   }
 }

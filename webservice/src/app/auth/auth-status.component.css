@@ -42,3 +42,15 @@
 .login-error strong {
   color: var(--color-danger, #dc2626);
 }
+
+/* Einstieg für Neue ohne Einladung: eigenen Stammtisch eröffnen. */
+.open-own {
+  margin: 0;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.open-own a {
+  color: var(--color-brand, #1e3a8a);
+  font-weight: 600;
+}

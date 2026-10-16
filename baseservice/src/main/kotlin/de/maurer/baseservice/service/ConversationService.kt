@@ -25,8 +25,9 @@ import de.maurer.baseservice.repository.ConversationMemberRepository
 import de.maurer.baseservice.repository.ConversationRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
-import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.UserPrincipal
+import de.maurer.baseservice.tenancy.StammtischMembers
+import de.maurer.baseservice.tenancy.TenantContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -56,7 +57,7 @@ class ConversationService(
     private val chatReactionRepository: ChatReactionRepository,
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
-    private val userRepository: UserRepository,
+    private val members: StammtischMembers,
     private val userService: UserService,
     private val chatService: ChatService
 ) {
@@ -88,10 +89,9 @@ class ConversationService(
         if (partnerId == caller.id) {
             throw InvalidRequestException(Msg("error.chat.directSelf"), ErrorCode.INVALID_REQUEST)
         }
-        val partner = userRepository.findById(partnerId).orElseThrow {
-            ResourceNotFoundException(Msg("error.user.notFound", partnerId), ErrorCode.NOT_FOUND)
-        }
-        if (partner.disabled) {
+        // Direktnachrichten nur an Mitglieder desselben Stammtischs.
+        val partner = members.requireKnownUser(partnerId)
+        if (partner.disabled || !members.isActiveMember(partner.id)) {
             throw InvalidRequestException(Msg("error.chat.partnerDisabled"), ErrorCode.INVALID_REQUEST)
         }
         val key = listOf(caller.id, partner.id).map { it.toString() }.sorted().joinToString(":")
@@ -183,7 +183,7 @@ class ConversationService(
 
     private fun clubConversation(): ConversationEntity {
         conversationRepository.findByDirectKey(CLUB_KEY).getOrNull()?.let { return it }
-        conversationRepository.insertKeyedIfAbsent(UUID.randomUUID(), TYPE_CLUB, CLUB_TITLE, CLUB_KEY)
+        conversationRepository.insertKeyedIfAbsent(UUID.randomUUID(), TenantContext.requireStammtischId(), TYPE_CLUB, CLUB_TITLE, CLUB_KEY)
         return conversationRepository.findByDirectKey(CLUB_KEY).orElseThrow()
     }
 
@@ -304,7 +304,7 @@ class ConversationService(
         const val TYPE_CLUB = "club"
         const val TYPE_DIRECT = "direct"
         const val TYPE_EVENT = ChatService.CONVERSATION_TYPE_EVENT
-        const val CLUB_TITLE = "Vereinschat"
+        const val CLUB_TITLE = "Gruppenchat"
 
         /** Eindeutiger Schlüssel des einen Vereinschats (Spalte `direct_key`). */
         const val CLUB_KEY = "club"

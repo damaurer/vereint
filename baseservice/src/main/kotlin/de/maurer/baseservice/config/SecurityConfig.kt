@@ -4,13 +4,16 @@ import de.maurer.baseservice.security.JwtAuthConverter
 import de.maurer.baseservice.security.RestAccessDeniedHandler
 import de.maurer.baseservice.security.RestAuthenticationEntryPoint
 import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.tenancy.StammtischContextFilter
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
@@ -24,8 +27,14 @@ class SecurityConfig(
     private val jwtAuthConverter: JwtAuthConverter,
     private val restAuthenticationEntryPoint: RestAuthenticationEntryPoint,
     private val restAccessDeniedHandler: RestAccessDeniedHandler,
-    private val corsProperties: CorsProperties
+    private val corsProperties: CorsProperties,
+    private val stammtischContextFilter: StammtischContextFilter
 ) {
+
+    /** Der Filter läuft ausschließlich in der Security-Kette, nicht zusätzlich als Servlet-Filter. */
+    @Bean
+    fun stammtischContextFilterRegistration(): FilterRegistrationBean<StammtischContextFilter> =
+        FilterRegistrationBean(stammtischContextFilter).apply { isEnabled = false }
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -58,6 +67,10 @@ class SecurityConfig(
                         "/api/v1/member-invites/register",
                         // Gast-Chat: das eventgebundene Gast-Token im Header ist das Geheimnis
                         "/api/v1/events/*/chat/guest/**",
+                        // Selbstregistrierung: Konto anlegen und Stammtisch eröffnen
+                        "/api/v1/signup",
+                        // Stripe-Webhook: geschützt durch die Signatur (StripeWebhookService)
+                        "/api/v1/billing/stripe/webhook",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html"
@@ -72,6 +85,8 @@ class SecurityConfig(
                 oauth2.authenticationEntryPoint(restAuthenticationEntryPoint)
                 oauth2.accessDeniedHandler(restAccessDeniedHandler)
             }
+
+        http.addFilterAfter(stammtischContextFilter, BearerTokenAuthenticationFilter::class.java)
 
         return http.build()
     }

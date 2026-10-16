@@ -12,6 +12,7 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.service.LedgerService
 import de.maurer.baseservice.service.TabletRecorderService
 import de.maurer.baseservice.service.UserService
+import de.maurer.baseservice.support.StammtischTestSupport
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -116,7 +117,8 @@ class TabletRecorderServiceTest {
             eventFoodRepository,
             eventParticipantRepository,
             userRepository,
-            userRoleRepository,
+            StammtischTestSupport.access(userRoleRepository),
+            StammtischTestSupport.members(userRepository),
             userService,
             ledgerService
         )

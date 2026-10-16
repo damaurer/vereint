@@ -87,7 +87,11 @@ export function writeAccessDecision(
 /** Verwirft die Entscheidung einer Session, zum Beispiel bei Logout. */
 export function invalidateAccessDecision(sessionId: string | undefined): void {
   if (!sessionId) return;
-  cache.delete(sessionId);
+  // Einträge sind je Session und Stammtisch abgelegt (`<session>#<stammtisch>`).
+  const base = sessionId.split('#')[0];
+  for (const key of [...cache.keys()]) {
+    if (key === sessionId || key === base || key.startsWith(`${base}#`)) cache.delete(key);
+  }
 }
 
 /**

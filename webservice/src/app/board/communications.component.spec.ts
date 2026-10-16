@@ -36,7 +36,7 @@ const audit: PagedResponse<AuditLogEntry> = {
 const club = (text: string | null): ConversationSummary => ({
   id: 'c-1',
   type: 'club',
-  title: 'Vereinschat',
+  title: 'Gruppenchat',
   eventId: null,
   partnerId: null,
   partnerName: null,

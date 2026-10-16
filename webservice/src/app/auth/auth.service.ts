@@ -67,7 +67,26 @@ export class AuthService {
       roles: body.identity.roles,
       boardRole: body.identity.boardRole ?? undefined,
       permissions: body.identity.permissions ?? [],
+      stammtisch: body.identity.stammtisch,
+      memberships: body.identity.memberships,
+      platformAdmin: body.identity.platformAdmin,
+      appContexts: body.identity.appContexts,
     };
+  }
+
+  /**
+   * Wählt den Stammtisch dieser Session (`null` hebt die Auswahl auf). Express
+   * merkt ihn sich im HttpOnly-Cookie; der Fachservice prüft die Mitgliedschaft.
+   */
+  async selectStammtisch(stammtischId: string | null): Promise<boolean> {
+    if (!this.isAvailable()) return false;
+    const response = await fetch('/api/auth/stammtisch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ stammtischId }),
+    }).catch(() => null);
+    this.clearClientState();
+    return response?.ok === true;
   }
 
   /**

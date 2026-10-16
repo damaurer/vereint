@@ -1,11 +1,13 @@
 import { Component, afterNextRender, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApiError } from '../api/api-client.service';
 import { MemberInvitesApiService, describeInviteError } from '../invites/member-invites-api.service';
 import { formatDateTime } from '../member/member-format';
 import { AuthService } from './auth.service';
 import { EMAIL_PATTERN } from './auth.types';
 import { TranslatePipe, translate } from '../i18n';
+import { StammtischApiService } from '../stammtisch/stammtisch-api.service';
 
 type RegisterState = 'checking' | 'invalid' | 'form' | 'done';
 
@@ -52,7 +54,7 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
             <div class="vereint-card-heading">
               <p class="vereint-eyebrow">{{ 'auth.register.eyebrow' | t }}</p>
               <h1 class="vereint-title" id="register-title">
-                {{ (state() === 'done' ? 'auth.register.doneTitle' : 'auth.register.title') | t }}
+                {{ (state() === 'done' ? 'auth.register.doneTitle' : state() === 'form' && signedIn() ? 'auth.register.joinTitle' : 'auth.register.title') | t }}
               </h1>
             </div>
           </div>
@@ -72,6 +74,19 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
                 </div>
               }
               @case ('form') {
+                @if (signedIn()) {
+                  <p class="vereint-subtitle">{{ 'auth.register.joinIntro' | t }}</p>
+                  @if (error()) {
+                    <div class="state-card state-error login-error" role="alert">
+                      <span>{{ error() }}</span>
+                    </div>
+                  }
+                  <div class="login-form">
+                    <button type="button" [disabled]="submitting()" (click)="join()">
+                      {{ (submitting() ? 'auth.register.joining' : 'auth.register.join') | t }}
+                    </button>
+                  </div>
+                } @else {
                 <p class="vereint-subtitle">
                   {{ 'auth.register.intro' | t }}
                   @if (expiresAt()) {
@@ -127,6 +142,7 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
                     </button>
                   </div>
                 </form>
+                }
               }
               @case ('done') {
                 <p class="vereint-subtitle">
@@ -155,6 +171,8 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
 export class RegisterComponent {
   private readonly invites = inject(MemberInvitesApiService);
   private readonly auth = inject(AuthService);
+  private readonly stammtische = inject(StammtischApiService);
+  private readonly router = inject(Router);
 
   protected readonly minPasswordLength = MIN_PASSWORD_LENGTH;
   protected readonly formatDateTime = formatDateTime;
@@ -164,6 +182,8 @@ export class RegisterComponent {
   protected readonly expiresAt = signal<string | null>(null);
   protected readonly submitting = signal(false);
   protected readonly registeredEmail = signal('');
+  /** Bereits angemeldet: statt eines neuen Kontos dem Stammtisch des Links beitreten. */
+  protected readonly signedIn = signal(false);
 
   protected firstName = '';
   protected lastName = '';
@@ -189,6 +209,10 @@ export class RegisterComponent {
       return;
     }
     this.token = token;
+    void this.auth
+      .getSession()
+      .then((session) => this.signedIn.set(session !== null))
+      .catch(() => undefined);
     this.invites.preview(token).subscribe({
       next: (preview) => {
         this.expiresAt.set(preview.expiresAt);
@@ -244,6 +268,32 @@ export class RegisterComponent {
           this.error.set(this.describe(err));
         },
       });
+  }
+
+  /** Angemeldet beitreten, den Stammtisch wählen und zur Startseite wechseln. */
+  protected join(): void {
+    if (this.submitting()) return;
+    this.error.set(null);
+    this.submitting.set(true);
+    this.stammtische.join(this.token).subscribe({
+      next: async (result) => {
+        await this.auth.selectStammtisch(result.stammtischId);
+        await this.auth.getSession(true);
+        this.submitting.set(false);
+        await this.router.navigateByUrl('/');
+      },
+      error: (err: unknown) => {
+        this.submitting.set(false);
+        const code = err instanceof ApiError ? err.code : '';
+        const message =
+          describeInviteError(code) ?? ((err instanceof ApiError && err.detail) || translate('admin.invite.errors.unavailable'));
+        if (['not_found', 'invitation_expired', 'invitation_revoked', 'invitation_used_up'].includes(code)) {
+          this.fail(message);
+          return;
+        }
+        this.error.set(message);
+      },
+    });
   }
 
   protected login(): void {

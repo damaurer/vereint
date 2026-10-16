@@ -78,7 +78,7 @@ describe('DirectMessagesComponent', () => {
     expect(list.textContent).toContain('Ben Probe');
     expect(list.textContent).toContain('Bringst du Karten mit?');
     expect(list.textContent).toContain('Clara Test');
-    expect(list.textContent).not.toContain('Vereinschat');
+    expect(list.textContent).not.toContain('Gruppenchat');
     expect(list.querySelector('vereint-avatar-badge')).toBeTruthy();
     // Ben ist geöffnet und damit gelesen; Clara behält ihr Badge.
     const badges = Array.from(list.querySelectorAll('.dm-unread')).map((node) => node.textContent?.trim());

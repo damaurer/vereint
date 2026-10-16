@@ -104,6 +104,19 @@ Um Netzwerk-Latenzen bei jedem SSR-Seitenwechsel zu vermeiden, speichert der BFF
 
 ---
 
+## 🍻 Gewählter Stammtisch
+
+Rollen, Rechte und App-Kontexte gelten je Stammtisch.
+
+- `POST /api/auth/stammtisch` mit `{ "stammtischId": "<uuid>" }` wählt den Stammtisch. Der BFF fragt `/api/v1/auth/access` mit diesem Stammtisch ab und setzt das HttpOnly-Cookie `vereint.stammtisch` nur, wenn der Fachservice die Mitgliedschaft bestätigt (sonst `403`). `{ "stammtischId": null }` hebt die Auswahl auf.
+- Der API-Proxy reicht den Cookie-Wert als `X-Stammtisch-Id` weiter und verwirft einen vom Browser gesendeten Header dieses Namens.
+- Der Entscheidungscache ist je Session **und** Stammtisch geschlüsselt (`<session>#<stammtisch>`); `invalidateAccessDecision(session)` leert alle Einträge der Session.
+- Lehnt der Fachservice einen veralteten Cookie ab (`stammtisch_access_denied`, z. B. nach dem Austritt), holt der BFF die Entscheidung ohne Auswahl neu; `/api/auth/me` löscht den Cookie dann.
+- `authorizePages` leitet Seitenaufrufe ohne gewählten Stammtisch (Antwort mit `memberships`, aber ohne `stammtischId`) auf `/gruppen?returnTo=…` um (die App nennt Stammtische „Gruppen“).
+- `/api/auth/me` liefert zusätzlich `stammtisch`, `memberships`, `platformAdmin` und `appContexts`; Rollen und Rechte stammen dort aus dem gewählten Stammtisch.
+
+Details: [Mehrere Stammtische](../domains/stammtische.md).
+
 ## 🎟️ Gastzugang für Veranstaltungen (`eventGuest`)
 
 Gäste ohne Vereinskonto können über einen Einladungslink auf Veranstaltungsdetails zugreifen:

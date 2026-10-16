@@ -8,6 +8,7 @@ import de.maurer.baseservice.dto.InviteDto
 import de.maurer.baseservice.security.AuthContext
 import de.maurer.baseservice.service.InviteService
 import de.maurer.baseservice.support.Identifiers
+import de.maurer.baseservice.tenancy.TenantLookup
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -26,7 +27,8 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Invites", description = "Magic-Link-Einladungen und temporäre Gäste")
 class InviteController(
     private val inviteService: InviteService,
-    private val authContext: AuthContext
+    private val authContext: AuthContext,
+    private val tenantLookup: TenantLookup
 ) {
 
     private fun eventId(id: String) = Identifiers.parseUuid(id, "eventId")
@@ -81,6 +83,8 @@ class InviteController(
         description = "Löst einen Magic Link ein und liefert ein einmaliges Gast-Token für den eingeschränkten Eventkontext"
     )
     fun acceptInvite(@Valid @RequestBody request: AcceptInviteRequest): ResponseEntity<AcceptInviteResponse> {
-        return ResponseEntity.status(HttpStatus.CREATED).body(inviteService.acceptInvite(request))
+        // Der Stammtisch ergibt sich aus dem Link, nicht aus einer Anmeldung.
+        val response = tenantLookup.inStammtischOfEventInviteOrNone(request.token) { inviteService.acceptInvite(request) }
+        return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 }

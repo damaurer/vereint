@@ -34,7 +34,7 @@ class ConversationEntity(
      * für den Vereinschat bzw. `event:{id}` für den Chat eines Events.
      * Garantiert jeweils genau einen Chat.
      */
-    @Column(name = "direct_key", length = 80, unique = true)
+    @Column(name = "direct_key", length = 80)
     var directKey: String? = null,
 
     /** Angepinnte Infotafel des Vereinschats (verschlüsselt gespeichert). */
@@ -56,7 +56,7 @@ class ConversationEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "conversation_members")
@@ -85,7 +85,7 @@ class ConversationMemberEntity(
     /** Zeitpunkt der zuletzt gelesenen Nachricht; Grundlage für ungelesene Zähler. */
     @Column(name = "last_read_at")
     var lastReadAt: Instant? = null
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "chat_messages")
@@ -117,7 +117,7 @@ class ChatMessageEntity(
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now()
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "chat_reactions")
@@ -139,7 +139,7 @@ class ChatReactionEntity(
 
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now()
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "notifications")
@@ -178,7 +178,7 @@ class NotificationEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "push_subscriptions")
@@ -275,7 +275,7 @@ class MomentSessionEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "moment_responses")
@@ -313,7 +313,7 @@ class MomentResponseEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 /**
  * Append-only Audit-Protokoll für sicherheitsrelevante Änderungen
@@ -349,4 +349,4 @@ class AuditLogEntity(
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now()
-)
+) : StammtischScoped()

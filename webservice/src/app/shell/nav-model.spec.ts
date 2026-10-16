@@ -86,6 +86,20 @@ describe('nav-model', () => {
     expect(ids(withPermission)).toEqual(['tablet']);
   });
 
+  it('follows the app contexts of the selected Stammtisch instead of role names', () => {
+    // Eigene Rolle „Kassenwart" im Stammtisch: kein `board`, aber Kassenrechte.
+    const custom = buildPanelNav(
+      session({ roles: ['kasse' as never], permissions: [], appContexts: ['memberPwa', 'boardTreasury'] }),
+    );
+    expect(ids(custom)).toEqual(['treasury']);
+
+    // Vorstand in diesem Stammtisch ohne Admin-Kontext: kein Admin-Eintrag.
+    const board = buildPanelNav(
+      session({ roles: ['admin'], permissions: [], appContexts: ['memberPwa', 'boardGeneral'] }),
+    );
+    expect(ids(board)).toEqual(['board']);
+  });
+
   it('renders only unrestricted entries without a session (deny by default)', () => {
     const primary = buildPrimaryNav(null);
     expect(ids(primary)).toEqual(['home', 'events', 'chat', 'wallet']);

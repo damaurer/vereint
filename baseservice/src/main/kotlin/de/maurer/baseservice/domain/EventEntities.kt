@@ -61,7 +61,7 @@ class EventEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 @Entity
 @Table(
@@ -101,7 +101,7 @@ class EventParticipantEntity(
     @CreatedDate
     @Column(name = "joined_at", nullable = false, updatable = false)
     var joinedAt: Instant = Instant.now()
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "event_invites")
@@ -144,7 +144,7 @@ class EventInviteEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "event_guests")
@@ -186,4 +186,4 @@ class EventGuestEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()

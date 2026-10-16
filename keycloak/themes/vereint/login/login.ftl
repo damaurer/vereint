@@ -2,13 +2,14 @@
   Vereint Login-Theme: Anmeldeseite.
   Basis: keycloak.v2/login/login.ftl aus Keycloak 26.1.4.
   Aenderungen: Eyebrow/Untertitel, "Angemeldet bleiben" und "Passwort vergessen?"
-  als gemeinsame Zeile (.vereint-form-row); alle Keycloak-Variablen unveraendert.
+  als gemeinsame Zeile (.vereint-form-row); Link "Eigene Gruppe eroeffnen" im
+  Info-Bereich (immer sichtbar); alle Keycloak-Variablen unveraendert.
 -->
 <#import "template.ftl" as layout>
 <#import "field.ftl" as field>
 <#import "buttons.ftl" as buttons>
 <#import "social-providers.ftl" as identityProviders>
-<@layout.registrationLayout displayMessage=!messagesPerField.existsError('username','password') displayInfo=realm.password && realm.registrationAllowed && !registrationDisabled??; section>
+<@layout.registrationLayout displayMessage=!messagesPerField.existsError('username','password') displayInfo=true; section>
     <#if section = "eyebrow">
         ${msg("vereintEyebrow")}
     <#elseif section = "header">
@@ -54,6 +55,12 @@
                 </div>
             </div>
         </#if>
+        <#-- Keycloak laeuft unter /kc auf demselben Host wie die App: Wurzelpfad der App. -->
+        <div id="vereint-open-group" class="${properties.kcLoginFooterBand!}">
+            <div class="${properties.kcLoginFooterBandItem!}">
+                <span>${msg("vereintNoGroup")} <a id="vereint-open-group-link" href="/gruppe-eroeffnen">${msg("vereintOpenOwnGroup")}</a></span>
+            </div>
+        </div>
     <#elseif section = "socialProviders" >
         <#if realm.password && social.providers?? && social.providers?has_content>
             <@identityProviders.show social=social/>

@@ -8,7 +8,7 @@ import {
 } from '@angular/router';
 import { AuthNavigationService } from './auth-navigation.service';
 import { AuthService } from './auth.service';
-import { UserRole } from './auth.types';
+import { AppContext, UserRole } from './auth.types';
 
 /**
  * Clientseitige Navigations-Guards (TICKET-023).
@@ -57,9 +57,66 @@ export const authGuard: CanActivateFn = async (
   const navigation = inject(AuthNavigationService);
 
   const session = await auth.getSession();
-  if (session) return true;
+  if (!session) return navigation.redirectToLogin(state.url);
+  if (session.stammtisch === null) return navigation.stammtischChoiceUrlTree(state.url);
+  return true;
+};
 
-  return navigation.redirectToLogin(state.url);
+/**
+ * Nur Anmeldung, ohne gewählten Stammtisch: Auswahlseite, Stammtisch beitreten
+ * und Plattformverwaltung.
+ */
+export const signedInGuard: CanActivateFn = async (
+  _route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot,
+): Promise<GuardResult> => {
+  if (!isBrowser()) return true;
+
+  const auth = inject(AuthService);
+  const navigation = inject(AuthNavigationService);
+  const session = await auth.getSession();
+  return session ? true : navigation.redirectToLogin(state.url);
+};
+
+/**
+ * Prüft den App-Kontext (`data.appContext`) im gewählten Stammtisch. Rollen
+ * sind je Stammtisch frei definierbar; maßgeblich sind die vom Fachservice
+ * freigegebenen Kontexte. Fehlen sie (ältere Session), gelten `data.roles`.
+ */
+export const contextGuard: CanActivateFn = async (
+  route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot,
+): Promise<GuardResult> => {
+  if (!isBrowser()) return true;
+
+  const auth = inject(AuthService);
+  const navigation = inject(AuthNavigationService);
+
+  const session = await auth.getSession();
+  if (!session) return navigation.redirectToLogin(state.url);
+
+  const context = route.data['appContext'] as AppContext | undefined;
+  if (context && session.appContexts) {
+    return session.appContexts.includes(context) ? true : navigation.forbiddenUrlTree();
+  }
+  const required = (route.data['roles'] as UserRole[] | undefined) ?? [];
+  const roles = session.roles ?? [];
+  if (required.length === 0 || required.some((role) => roles.includes(role))) return true;
+  return navigation.forbiddenUrlTree();
+};
+
+/** Plattformverwaltung: nur Plattform-Admins (Keycloak-Realmrolle `admin`). */
+export const platformGuard: CanActivateFn = async (
+  _route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot,
+): Promise<GuardResult> => {
+  if (!isBrowser()) return true;
+
+  const auth = inject(AuthService);
+  const navigation = inject(AuthNavigationService);
+  const session = await auth.getSession();
+  if (!session) return navigation.redirectToLogin(state.url);
+  return session.platformAdmin ? true : navigation.forbiddenUrlTree();
 };
 
 /**
