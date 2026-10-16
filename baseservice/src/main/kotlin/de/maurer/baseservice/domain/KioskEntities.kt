@@ -54,7 +54,7 @@ class KioskSessionEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-) {
+) : StammtischScoped() {
     val active: Boolean get() = endedAt == null
 
     fun isLocked(now: Instant): Boolean = lockedUntil?.isAfter(now) == true

@@ -42,6 +42,11 @@
 		respond 404
 	}
 
+	# Stripe-Webhooks gehen direkt an den Fachservice, der die Signatur prueft.
+	handle /api/v1/billing/stripe/webhook {
+		reverse_proxy baseservice:8081
+	}
+
 	handle /kc/* {
 		reverse_proxy keycloak:8080
 	}

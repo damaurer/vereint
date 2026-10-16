@@ -37,6 +37,19 @@ export interface DrinkDto {
   barcodes: DrinkBarcodeDto[];
   createdAt: string;
   updatedAt: string;
+  /** Herkunft aus der gemeinsamen Getränkedatenbank (`null` = nicht geteilt). */
+  libraryDrinkId?: string | null;
+}
+
+/** Eintrag der stammtischübergreifenden Getränkedatenbank (ohne Preise). */
+export interface DrinkLibraryEntryDto {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  barcodes: string[];
+  /** Katalogeintrag dieses Stammtischs, falls schon übernommen. */
+  catalogDrinkId: string | null;
 }
 
 export interface ProposeDrinkRequest {
@@ -48,6 +61,8 @@ export interface ProposeDrinkRequest {
   currency?: string | null;
   imageReference?: string | null;
   barcodes?: string[] | null;
+  /** Eintrag der Getränkedatenbank, aus dem das Getränk übernommen wird. */
+  libraryDrinkId?: string | null;
 }
 
 export interface UpdateDrinkRequest {
@@ -149,6 +164,19 @@ export class CatalogApiService {
 
   removeBarcode(id: string, barcodeId: string): Observable<void> {
     return this.api.delete<void>(`/drinks/${encodeURIComponent(id)}/barcodes/${encodeURIComponent(barcodeId)}`);
+  }
+
+  /** Sucht in der gemeinsamen Getränkedatenbank nach Text oder Strichcode. */
+  searchLibrary(query: { q?: string; barcode?: string }): Observable<DrinkLibraryEntryDto[]> {
+    const params = query.barcode
+      ? `barcode=${encodeURIComponent(query.barcode)}`
+      : `q=${encodeURIComponent(query.q ?? '')}`;
+    return this.api.get<DrinkLibraryEntryDto[]>(`/drink-library?${params}`);
+  }
+
+  /** Teilt ein freigegebenes Getränk dieses Stammtischs in die Getränkedatenbank. */
+  shareToLibrary(id: string): Observable<DrinkLibraryEntryDto> {
+    return this.api.post<DrinkLibraryEntryDto>(`/drinks/${encodeURIComponent(id)}/share-to-library`, {});
   }
 
   listFoods(active?: boolean): Observable<FoodSummaryDto[]> {

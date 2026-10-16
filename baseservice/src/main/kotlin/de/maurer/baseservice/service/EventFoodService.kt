@@ -16,9 +16,9 @@ import de.maurer.baseservice.repository.EventFoodRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.FoodCatalogRepository
-import de.maurer.baseservice.repository.UserRoleRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -34,7 +34,7 @@ class EventFoodService(
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
     private val foodCatalogRepository: FoodCatalogRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService
 ) {
 
@@ -170,12 +170,8 @@ class EventFoodService(
     }
 
     private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.BOARD || it == UserRole.ADMIN }
+        access.has(principal, caller, Permission.EVENT_MANAGE)
 
-    private fun rolesOf(caller: UserEntity, principal: UserPrincipal): Set<String> {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        return principal.roles + dbRoles
-    }
 
     private fun normalizeCurrency(value: String?): String? {
         val trimmed = value?.trim()

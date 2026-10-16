@@ -28,13 +28,14 @@ import java.time.Instant
 class StatisticsService(
     private val ledgerEntryRepository: LedgerEntryRepository,
     private val eventParticipantRepository: EventParticipantRepository,
-    private val userService: UserService
+    private val userService: UserService,
+    private val snapshots: LedgerSnapshots
 ) {
 
     fun clubStatistics(principal: UserPrincipal, now: Instant = Instant.now()): ClubStatisticsDto {
         val caller = userService.getOrCreateUser(principal)
         val since = now.minus(Duration.ofDays(PERIOD_DAYS.toLong()))
-        val entries = ledgerEntryRepository.findByCreatedAtGreaterThanEqual(since)
+        val entries = snapshots.attach(ledgerEntryRepository.findByCreatedAtGreaterThanEqual(since))
         val reversed = entries.mapNotNull { it.reversesEntry?.id }.toSet()
         val purchases = entries.filter { it.entryType == LedgerEntryType.purchase && it.id !in reversed }
 

@@ -5,10 +5,14 @@ import de.maurer.baseservice.dto.AccessCheckRequest
 import de.maurer.baseservice.dto.AccessCheckResponse
 import de.maurer.baseservice.dto.AccessDecisionDto
 import de.maurer.baseservice.dto.RolePermissionMatrixDto
+import de.maurer.baseservice.dto.StammtischMembershipDto
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.repository.*
 import de.maurer.baseservice.security.*
 import de.maurer.baseservice.support.Identifiers
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.StammtischMemberships
+import de.maurer.baseservice.tenancy.TenantContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.nio.charset.StandardCharsets
@@ -20,13 +24,21 @@ import java.util.UUID
 @Transactional(readOnly = true)
 class AccessResolverService(
     private val userRepository: UserRepository,
-    private val userRoleRepository: UserRoleRepository,
-    private val userPermissionRepository: UserPermissionRepository,
+    private val access: StammtischAccess,
+    private val memberships: StammtischMemberships,
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
     private val eventGuestRepository: EventGuestRepository
 ) {
 
+    /**
+     * Zugriffsentscheidung im aktuellen Stammtisch.
+     *
+     * Rollen, Berechtigungen und Vorstandsfunktion stammen aus dem Principal,
+     * den der [de.maurer.baseservice.tenancy.StammtischContextFilter] bereits
+     * auf den gewählten Stammtisch umgestellt hat. Ohne gewählten Stammtisch
+     * gibt es nur die Liste der Mitgliedschaften und keine App-Kontexte.
+     */
     fun resolveUserAccess(principal: UserPrincipal?): AccessDecisionDto {
         if (principal == null || principal.subject.isBlank()) {
             return AccessDecisionDto(
@@ -36,134 +48,91 @@ class AccessResolverService(
             )
         }
 
-        val dbUserOpt = userRepository.findByKeycloakSubject(principal.subject)
-        if (dbUserOpt.isPresent) {
-            val dbUser = dbUserOpt.get()
-
-            // Deaktivierte Benutzer erhalten keinerlei Rechte (deny by default)
-            if (dbUser.disabled) {
-                return AccessDecisionDto(
-                    subject = principal.subject,
-                    userId = dbUser.id.toString(),
-                    displayName = dbUser.displayName,
-                    email = dbUser.email,
-                    disabled = true,
-                    roles = emptySet(),
-                    boardRole = null,
-                    drinkRecorder = false,
-                    permissions = emptySet(),
-                    eventScopes = emptySet(),
-                    ownedEvents = emptySet(),
-                    allowedAppContexts = emptySet()
-                )
-            }
-
-            val dbRoles = userRoleRepository.findByIdUserId(dbUser.id).map { it.id.role.name }.toSet()
-            val effectiveRoles = (principal.roles + dbRoles).filter { UserRole.ALL.contains(it) || it == "tabletRecorder" }.toSet()
-
-            // Die Datenbankspalte ist als Enum abgebildet und damit bereits validiert.
-            val effectiveBoardRole = when {
-                dbUser.boardRole != null -> dbUser.boardRole?.name
-                principal.boardRole != null && BoardRole.ALL.contains(principal.boardRole) -> principal.boardRole
-                else -> null
-            }
-
-            val effectiveDrinkRecorder = dbUser.drinkRecorder || principal.drinkRecorder || effectiveRoles.contains("tabletRecorder")
-
-            val dbPermissions = userPermissionRepository.findByIdUserId(dbUser.id).map { it.id.permission }.toSet()
-            val derivedPermissions = derivePermissions(effectiveRoles, effectiveDrinkRecorder)
-            val effectivePermissions = (principal.permissions + dbPermissions + derivedPermissions).toSet()
-
-            val ownedEvents = eventRepository.findByOwnerId(dbUser.id).map { it.id.toString() }.toSet()
-            val participatingEvents = eventParticipantRepository.findByUserId(dbUser.id)
-                .mapNotNull { it.event?.id?.toString() }
-                .toSet()
-            val effectiveEventScopes = (principal.eventScopes + ownedEvents + participatingEvents).toSet()
-
-            val allowedAppContexts = computeAllowedAppContexts(
-                roles = effectiveRoles,
-                boardRole = effectiveBoardRole,
-                drinkRecorder = effectiveDrinkRecorder,
-                eventScopes = effectiveEventScopes,
-                ownedEvents = ownedEvents
+        val dbUser = userRepository.findByKeycloakSubject(principal.subject).orElse(null)
+            ?: return AccessDecisionDto(
+                subject = principal.subject,
+                displayName = principal.displayName,
+                email = principal.email,
+                platformAdmin = principal.platformAdmin
             )
 
+        // Deaktivierte Benutzer erhalten keinerlei Rechte (deny by default)
+        if (dbUser.disabled) {
+            return AccessDecisionDto(
+                subject = principal.subject,
+                userId = dbUser.id.toString(),
+                displayName = dbUser.displayName,
+                email = dbUser.email,
+                disabled = true
+            )
+        }
+
+        val memberships = memberships.memberships(dbUser.id).map {
+            StammtischMembershipDto(
+                id = it.stammtischId.toString(),
+                name = it.stammtischName,
+                roles = it.roles,
+                boardRole = it.boardRole,
+                imageVersion = it.imageVersion
+            )
+        }
+        val stammtischId = TenantContext.stammtischId()
+        val current = stammtischId?.let { id -> memberships.firstOrNull { it.id == id.toString() } }
+
+        if (current == null) {
             return AccessDecisionDto(
                 subject = principal.subject,
                 userId = dbUser.id.toString(),
                 displayName = dbUser.displayName.ifBlank { principal.displayName },
                 email = dbUser.email ?: principal.email,
-                disabled = false,
-                roles = effectiveRoles,
-                boardRole = effectiveBoardRole,
-                drinkRecorder = effectiveDrinkRecorder,
-                permissions = effectivePermissions,
-                eventScopes = effectiveEventScopes,
-                ownedEvents = ownedEvents,
-                allowedAppContexts = allowedAppContexts
+                platformAdmin = principal.platformAdmin,
+                memberships = memberships
             )
         }
 
-        // Falls kein DB-Profil existiert, evaluieren wir die Token-Claims nach deny-by-default-Regeln
-        val effectiveRoles = principal.roles.filter { UserRole.ALL.contains(it) || it == "tabletRecorder" }.toSet()
-        if (effectiveRoles.isEmpty() && !principal.drinkRecorder) {
-            // Fehlende oder unzureichende Rollen -> deny by default
-            return AccessDecisionDto(
-                subject = principal.subject,
-                displayName = principal.displayName,
-                email = principal.email,
-                disabled = false,
-                roles = emptySet(),
-                boardRole = null,
-                drinkRecorder = false,
-                permissions = emptySet(),
-                eventScopes = emptySet(),
-                ownedEvents = emptySet(),
-                allowedAppContexts = emptySet()
-            )
-        }
-
-        val effectiveBoardRole = principal.boardRole?.takeIf { BoardRole.ALL.contains(it) }
-        val effectiveDrinkRecorder = principal.drinkRecorder || effectiveRoles.contains("tabletRecorder")
-        val derivedPermissions = derivePermissions(effectiveRoles, effectiveDrinkRecorder)
-        val effectivePermissions = (principal.permissions + derivedPermissions).toSet()
-        val effectiveEventScopes = principal.eventScopes
-
-        val allowedAppContexts = computeAllowedAppContexts(
-            roles = effectiveRoles,
-            boardRole = effectiveBoardRole,
-            drinkRecorder = effectiveDrinkRecorder,
-            eventScopes = effectiveEventScopes,
-            ownedEvents = emptySet()
-        )
+        val roles = principal.roles
+        val permissions = access.permissionsOf(principal, dbUser)
+        val ownedEvents = eventRepository.findByOwnerId(dbUser.id).map { it.id.toString() }.toSet()
+        val participatingEvents = eventParticipantRepository.findByUserId(dbUser.id)
+            .mapNotNull { it.event?.id?.toString() }
+            .toSet()
+        val eventScopes = ownedEvents + participatingEvents
 
         return AccessDecisionDto(
             subject = principal.subject,
-            displayName = principal.displayName,
-            email = principal.email,
+            userId = dbUser.id.toString(),
+            displayName = dbUser.displayName.ifBlank { principal.displayName },
+            email = dbUser.email ?: principal.email,
             disabled = false,
-            roles = effectiveRoles,
-            boardRole = effectiveBoardRole,
-            drinkRecorder = effectiveDrinkRecorder,
-            permissions = effectivePermissions,
-            eventScopes = effectiveEventScopes,
-            ownedEvents = emptySet(),
-            allowedAppContexts = allowedAppContexts
+            roles = roles,
+            boardRole = principal.boardRole,
+            drinkRecorder = permissions.contains(Permission.PURCHASE_TABLET),
+            permissions = permissions,
+            eventScopes = eventScopes,
+            ownedEvents = ownedEvents,
+            allowedAppContexts = computeAllowedAppContexts(permissions, eventScopes, ownedEvents),
+            stammtischId = current.id,
+            stammtischName = current.name,
+            platformAdmin = principal.platformAdmin,
+            memberships = memberships
         )
     }
 
     /**
-     * Liefert die versionierte Rollen-/Permission-Matrix. Kotlin ist die einzige
-     * Quelle dieser Zuordnung; Express wertet die Antwort ausschließlich aus
-     * (TICKET-006).
+     * Rollen und Berechtigungen des aktuellen Stammtischs. Ohne Stammtisch
+     * liefert der Endpunkt die Standardrollen, mit denen neue Stammtische
+     * starten.
      */
-    fun describeRolePermissionMatrix(): RolePermissionMatrixDto = RolePermissionMatrixDto(
-        version = RolePermissionMatrix.VERSION,
-        roles = RolePermissionMatrix.MATRIX,
-        assignableRoles = RolePermissionMatrix.ASSIGNABLE_ROLES,
-        knownPermissions = RolePermissionMatrix.KNOWN_PERMISSIONS,
-        appContexts = ALL_APP_CONTEXTS
-    )
+    fun describeRolePermissionMatrix(): RolePermissionMatrixDto {
+        val definitions = access.roleDefinitions().ifEmpty { RolePermissionMatrix.MATRIX }
+        return RolePermissionMatrixDto(
+            version = RolePermissionMatrix.VERSION,
+            roles = definitions,
+            assignableRoles = definitions.keys,
+            knownPermissions = RolePermissionMatrix.KNOWN_PERMISSIONS,
+            appContexts = ALL_APP_CONTEXTS
+        )
+    }
 
     fun checkAccess(request: AccessCheckRequest, principal: UserPrincipal?): AccessCheckResponse {
         val targetContext = request.appContext.trim()
@@ -355,7 +324,7 @@ class AccessResolverService(
     }
 
     private fun canAccessEvent(decision: AccessDecisionDto, eventId: UUID): Boolean {
-        if (decision.roles.contains(UserRole.ADMIN) || decision.roles.contains(UserRole.BOARD)) {
+        if (decision.permissions.contains(Permission.EVENT_MANAGE)) {
             return true
         }
         if (decision.eventScopes.contains(eventId.toString())) {
@@ -375,7 +344,7 @@ class AccessResolverService(
     }
 
     private fun canManageEvent(decision: AccessDecisionDto, eventId: UUID): Boolean {
-        if (decision.roles.contains(UserRole.ADMIN) || decision.roles.contains(UserRole.BOARD)) {
+        if (decision.permissions.contains(Permission.EVENT_MANAGE)) {
             return true
         }
         val callerId = Identifiers.parseUuidOrNull(decision.userId)
@@ -389,59 +358,28 @@ class AccessResolverService(
     }
 
     /**
-     * Die Zuordnung Rolle zu Permission wird ausschließlich aus
-     * [RolePermissionMatrix] abgeleitet (einzige Quelle, versioniert).
+     * App-Kontexte folgen allein aus den Berechtigungen im Stammtisch, damit
+     * eigene Rollen eines Stammtischs dieselben Bereiche öffnen können wie die
+     * Standardrollen.
      */
-    private fun derivePermissions(roles: Set<String>, drinkRecorder: Boolean): Set<String> =
-        RolePermissionMatrix.derivePermissions(roles, drinkRecorder)
-
     private fun computeAllowedAppContexts(
-        roles: Set<String>,
-        boardRole: String?,
-        drinkRecorder: Boolean,
+        permissions: Set<String>,
         eventScopes: Set<String>,
         ownedEvents: Set<String>
     ): Set<String> {
         val contexts = mutableSetOf<String>()
+        val eventManager = permissions.contains(Permission.EVENT_MANAGE)
 
-        val isMember = roles.contains(UserRole.MEMBER)
-        val isBoard = roles.contains(UserRole.BOARD)
-        val isAdmin = roles.contains(UserRole.ADMIN)
-
-        if (isMember || isBoard || isAdmin) {
-            contexts.add(AppContext.MEMBER_PWA)
-        }
-
-        if (isBoard || isAdmin || eventScopes.isNotEmpty()) {
-            contexts.add(AppContext.EVENT)
-        }
-
-        if (isBoard || isAdmin || ownedEvents.isNotEmpty()) {
-            contexts.add(AppContext.EVENT_OWNER)
-        }
-
-        if (isBoard || isAdmin) {
-            contexts.add(AppContext.BOARD_GENERAL)
-        }
-
-        if (isAdmin || (isBoard && (boardRole == BoardRole.TREASURER || boardRole == BoardRole.CHAIR || boardRole == null))) {
+        if (permissions.contains(Permission.PROFILE_READ_SELF)) contexts.add(AppContext.MEMBER_PWA)
+        if (eventManager || eventScopes.isNotEmpty()) contexts.add(AppContext.EVENT)
+        if (eventManager || ownedEvents.isNotEmpty()) contexts.add(AppContext.EVENT_OWNER)
+        if (permissions.any { it in BOARD_AREA_PERMISSIONS }) contexts.add(AppContext.BOARD_GENERAL)
+        if (permissions.contains(Permission.LEDGER_READ) || permissions.contains(Permission.LEDGER_CORRECT)) {
             contexts.add(AppContext.BOARD_TREASURY)
         }
-
-        if (isAdmin || (isBoard && (boardRole == BoardRole.SECRETARY || boardRole == BoardRole.CHAIR || boardRole == null))) {
-            contexts.add(AppContext.BOARD_COMMUNICATIONS)
-        }
-
-        if (isAdmin) {
-            contexts.add(AppContext.ADMIN)
-        }
-
-        // Admins besitzen `purchase.tablet` (RolePermissionMatrix) und duerfen
-        // die Thekenerfassung daher auch oeffnen.
-        if (drinkRecorder || isAdmin) {
-            contexts.add(AppContext.TABLET_RECORDER)
-        }
-
+        if (permissions.contains(Permission.NOTIFICATIONS_BROADCAST)) contexts.add(AppContext.BOARD_COMMUNICATIONS)
+        if (permissions.any { it in ADMIN_AREA_PERMISSIONS }) contexts.add(AppContext.ADMIN)
+        if (permissions.contains(Permission.PURCHASE_TABLET)) contexts.add(AppContext.TABLET_RECORDER)
         return contexts
     }
 
@@ -451,6 +389,28 @@ class AccessResolverService(
     }
 
     companion object {
+        /** Berechtigungen, die den Vorstandsbereich öffnen. */
+        private val BOARD_AREA_PERMISSIONS = setOf(
+            Permission.EVENT_MANAGE,
+            Permission.EVENT_INVITES_MANAGE,
+            Permission.CATALOG_APPROVE,
+            Permission.LEDGER_READ,
+            Permission.LEDGER_CORRECT,
+            Permission.AUDIT_READ,
+            Permission.MEMBERS_READ,
+            Permission.MEMBERS_INVITE,
+            Permission.MOMENTS_MANAGE,
+            Permission.KIOSK_MANAGE,
+            Permission.NOTIFICATIONS_BROADCAST
+        )
+
+        /** Berechtigungen, die den Admin-Bereich öffnen. */
+        private val ADMIN_AREA_PERMISSIONS = setOf(
+            Permission.MEMBERS_MANAGE,
+            Permission.ROLES_MANAGE,
+            Permission.STAMMTISCH_MANAGE
+        )
+
         /** Alle bekannten App-Kontexte gemäß Datenvertrag. */
         val ALL_APP_CONTEXTS: Set<String> = setOf(
             AppContext.MEMBER_PWA,

@@ -46,6 +46,8 @@ services:
       VEREIN_CORS_ALLOWED_ORIGINS: https://vereint.test:8443
       S3_ENDPOINT: http://object-storage:9090
       S3_PATH_STYLE_ACCESS: "true"
+      # Testbenutzer aus Keycloak treten ohne Einladungslink „Meine Gruppe" bei.
+      TENANCY_BOOTSTRAP_REALM_ROLES: "true"
     depends_on:
       object-storage:
         condition: service_healthy

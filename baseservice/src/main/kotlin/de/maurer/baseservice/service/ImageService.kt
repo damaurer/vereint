@@ -1,5 +1,6 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.crypto.DataEncryptor
 import de.maurer.baseservice.domain.DrinkStatus
 import de.maurer.baseservice.domain.ImageAssetEntity
@@ -16,11 +17,11 @@ import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.ImageAssetRepository
-import de.maurer.baseservice.repository.UserRoleRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.storage.ObjectStorage
 import de.maurer.baseservice.support.ImageMetadata
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayInputStream
@@ -45,10 +46,11 @@ class ImageService(
     private val objectStorage: ObjectStorage,
     private val dataEncryptor: DataEncryptor,
     private val userService: UserService,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
-    private val drinkCatalogRepository: DrinkCatalogRepository
+    private val drinkCatalogRepository: DrinkCatalogRepository,
+    private val planLimits: PlanLimits
 ) {
 
     fun uploadImage(
@@ -90,6 +92,7 @@ class ImageService(
 
         // Zielobjekt auflösen und Uploadberechtigung objektbezogen prüfen.
         val targetId = resolveTargetForWrite(purpose, targetIdValue, caller, principal)
+        planLimits.requireStorage(cleaned.size.toLong())
 
         val nextVersion = imageAssetRepository.findMaxImageVersion(purpose, targetId) + 1
         // Bisher aktuelle Bilder desselben Objekts werden als abgelöst markiert;
@@ -319,15 +322,11 @@ class ImageService(
     }
 
     private fun isMemberOrHigher(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.MEMBER || it == UserRole.BOARD || it == UserRole.ADMIN }
+        access.isMember(principal, caller)
 
     private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.BOARD || it == UserRole.ADMIN }
+        access.hasAny(principal, caller, Permission.EVENT_MANAGE, Permission.CATALOG_APPROVE)
 
-    private fun rolesOf(caller: UserEntity, principal: UserPrincipal): Set<String> {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        return principal.roles + dbRoles
-    }
 
     private fun toDto(image: ImageAssetEntity): ImageAssetDto {
         return ImageAssetDto(

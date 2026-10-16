@@ -1,13 +1,12 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.domain.AssignedRole
+import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.domain.MemberInviteEntity
 import de.maurer.baseservice.domain.MemberInviteRedemptionEntity
 import de.maurer.baseservice.domain.UserEntity
-import de.maurer.baseservice.domain.UserRoleEntity
-import de.maurer.baseservice.domain.UserRoleId
 import de.maurer.baseservice.dto.CreateMemberInviteRequest
 import de.maurer.baseservice.dto.CreateMemberInviteResponse
+import de.maurer.baseservice.dto.JoinStammtischResponse
 import de.maurer.baseservice.dto.MemberInviteDto
 import de.maurer.baseservice.dto.MemberInvitePreviewDto
 import de.maurer.baseservice.dto.RegisterMemberRequest
@@ -25,11 +24,15 @@ import de.maurer.baseservice.identity.IdentityProvisioner
 import de.maurer.baseservice.identity.NewAccount
 import de.maurer.baseservice.repository.MemberInviteRedemptionRepository
 import de.maurer.baseservice.repository.MemberInviteRepository
+import de.maurer.baseservice.repository.StammtischRepository
 import de.maurer.baseservice.repository.UserRepository
-import de.maurer.baseservice.repository.UserRoleRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.support.SecureTokens
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.TenantContext
+import de.maurer.baseservice.tenancy.TenantLookup
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.PlatformTransactionManager
@@ -43,12 +46,15 @@ import java.util.UUID
 /**
  * Einladungslinks, mit denen sich neue Personen selbst als Mitglied registrieren.
  *
- * - Erzeugen, Auflisten und Widerrufen dürfen nur Vorstand und Administration.
+ * - Ein Link gehört zu genau einem Stammtisch. Erzeugen, Auflisten und
+ *   Widerrufen erfordert dort `members.invite` (Standard: Vorstand und Admin).
  * - Der Link trägt ein zufälliges 256-Bit-Token; gespeichert wird nur dessen
  *   SHA-256-Hash. Er ist zeitlich begrenzt, hat eine Nutzungsgrenze (Standard 1)
  *   und lässt sich widerrufen.
  * - Registrieren kann man sich nur mit einem gültigen Token. Das neue Konto
- *   erhält ausschließlich die Rolle `member`; Rollen aus der Anfrage gibt es nicht.
+ *   wird Mitglied dieses einen Stammtischs mit ausschließlich der Rolle
+ *   `member`; Rollen aus der Anfrage gibt es nicht.
+ * - Wer schon ein Konto hat, tritt mit demselben Link angemeldet bei ([join]).
  *
  * Die Registrierung sperrt die Einladung (`SELECT … FOR UPDATE`), legt das
  * Keycloak-Konto an und schreibt Profil, Rolle und Einlösung in derselben
@@ -60,10 +66,14 @@ class MemberInviteService(
     private val memberInviteRepository: MemberInviteRepository,
     private val redemptionRepository: MemberInviteRedemptionRepository,
     private val userRepository: UserRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val stammtischRepository: StammtischRepository,
+    private val membershipService: MembershipService,
+    private val access: StammtischAccess,
+    private val tenantLookup: TenantLookup,
     private val userService: UserService,
     private val auditService: AuditService,
     private val identityProvisioner: IdentityProvisioner,
+    private val planLimits: PlanLimits,
     transactionManager: PlatformTransactionManager,
     private val clock: Clock = Clock.systemUTC()
 ) {
@@ -128,11 +138,60 @@ class MemberInviteService(
     }
 
     /** Öffentliche Prüfung, ob ein Link noch nutzbar ist (ohne ihn zu verbrauchen). */
-    @Transactional(readOnly = true)
     fun preview(rawToken: String?): MemberInvitePreviewDto {
-        val invite = memberInviteRepository.findByTokenHash(hashOf(rawToken)).orElseThrow { notFound() }
-        requireUsable(invite)
-        return MemberInvitePreviewDto(expiresAt = invite.expiresAt)
+        val tokenHash = hashOf(rawToken)
+        return inStammtischOf(rawToken) { stammtischId ->
+            transactionTemplate.execute {
+                val invite = memberInviteRepository.findByTokenHash(tokenHash).orElseThrow { notFound() }
+                requireUsable(invite)
+                MemberInvitePreviewDto(
+                    expiresAt = invite.expiresAt,
+                    stammtischName = stammtischRepository.findById(stammtischId).map { it.name }.orElse("")
+                )
+            }!!
+        }
+    }
+
+    /**
+     * Angemeldete Person mit bestehendem Konto tritt dem Stammtisch des Links
+     * bei. Wer schon Mitglied ist, verbraucht den Link nicht.
+     */
+    fun join(rawToken: String?, principal: UserPrincipal): JoinStammtischResponse {
+        val tokenHash = hashOf(rawToken)
+        val user = TenantContext.runWithoutTenant { userService.getOrCreateUser(principal) }
+        return inStammtischOf(rawToken) { stammtischId ->
+            transactionTemplate.execute {
+                val invite = memberInviteRepository.findByTokenHashForUpdate(tokenHash).orElseThrow { notFound() }
+                val name = stammtischRepository.findById(stammtischId).map { it.name }.orElse("")
+                if (membershipService.isActiveMember(user)) {
+                    return@execute JoinStammtischResponse(stammtischId.toString(), name, alreadyMember = true)
+                }
+                requireUsable(invite)
+                membershipService.addMember(user)
+                if (redemptionRepository.findByInviteIdIn(listOf(invite.id)).none { it.user?.id == user.id }) {
+                    redemptionRepository.save(
+                        MemberInviteRedemptionEntity(invite = invite, user = user, redeemedAt = Instant.now(clock))
+                    )
+                }
+                invite.usesCount += 1
+                memberInviteRepository.save(invite)
+                auditService.recordUserChange(
+                    invite.createdBy,
+                    AuditService.ACTION_MEMBER_JOINED,
+                    user.id,
+                    null,
+                    "invite=${invite.id}; roles=${UserRole.MEMBER}"
+                )
+                JoinStammtischResponse(stammtischId.toString(), name, alreadyMember = false)
+            }!!
+        }
+    }
+
+    /** Löst den Stammtisch des Links auf; unbekannte Links ergeben `404`. */
+    private fun <T> inStammtischOf(rawToken: String?, block: (UUID) -> T): T {
+        hashOf(rawToken)
+        val stammtischId = tenantLookup.forMemberInviteToken(rawToken!!) ?: throw notFound()
+        return TenantContext.runIn(stammtischId) { block(stammtischId) }
     }
 
     /**
@@ -157,9 +216,11 @@ class MemberInviteService(
 
         var createdSubject: String? = null
         try {
-            return transactionTemplate.execute {
+            return inStammtischOf(request.token) { stammtischId -> transactionTemplate.execute {
                 val invite = memberInviteRepository.findByTokenHashForUpdate(tokenHash).orElseThrow { notFound() }
                 requireUsable(invite)
+                // Vor dem Anlegen des Kontos: ein voller Stammtisch nimmt niemanden auf.
+                planLimits.requireMemberSlot()
 
                 if (userRepository.existsByEmailIgnoreCase(email)) {
                     throw EmailAlreadyRegisteredException()
@@ -174,11 +235,10 @@ class MemberInviteService(
                         keycloakSubject = subject,
                         displayName = "$firstName $lastName",
                         email = email,
-                        disabled = false,
-                        drinkRecorder = false
+                        disabled = false
                     )
                 )
-                userRoleRepository.save(UserRoleEntity(UserRoleId(user.id, AssignedRole.member), user))
+                membershipService.addMember(user)
                 redemptionRepository.save(
                     MemberInviteRedemptionEntity(invite = invite, user = user, redeemedAt = Instant.now(clock))
                 )
@@ -192,8 +252,12 @@ class MemberInviteService(
                     null,
                     "invite=${invite.id}; roles=${UserRole.MEMBER}"
                 )
-                RegisterMemberResponse(email = email, displayName = user.displayName)
-            }!!
+                RegisterMemberResponse(
+                    email = email,
+                    displayName = user.displayName,
+                    stammtischId = stammtischId.toString()
+                )
+            }!! }
         } catch (ex: RuntimeException) {
             createdSubject?.let { subject ->
                 try {
@@ -233,9 +297,7 @@ class MemberInviteService(
 
     private fun requireBoardOrAdmin(principal: UserPrincipal): UserEntity {
         val caller = userService.getOrCreateUser(principal)
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        val roles = principal.roles + dbRoles
-        if (roles.none { it == UserRole.BOARD || it == UserRole.ADMIN }) {
+        if (!access.has(principal, caller, Permission.MEMBERS_INVITE)) {
             throw AccessDeniedException(
                 Msg("error.memberInvite.manageDenied"),
                 ErrorCode.ACCESS_DENIED

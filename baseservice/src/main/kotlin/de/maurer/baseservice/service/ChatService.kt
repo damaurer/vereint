@@ -25,10 +25,11 @@ import de.maurer.baseservice.repository.ConversationRepository
 import de.maurer.baseservice.repository.EventGuestRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
-import de.maurer.baseservice.repository.UserRoleRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.support.SecureTokens
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.TenantContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
@@ -56,7 +57,7 @@ class ChatService(
     private val conversationMemberRepository: ConversationMemberRepository,
     private val chatMessageRepository: ChatMessageRepository,
     private val eventGuestRepository: EventGuestRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService
 ) {
 
@@ -215,7 +216,7 @@ class ChatService(
     internal fun requireEventConversation(event: EventEntity): ConversationEntity {
         val key = eventConversationKey(event.id)
         conversationRepository.findByDirectKey(key).getOrNull()?.let { return it }
-        conversationRepository.insertEventIfAbsent(UUID.randomUUID(), CONVERSATION_TYPE_EVENT, event.id, event.title, key)
+        conversationRepository.insertEventIfAbsent(UUID.randomUUID(), TenantContext.requireStammtischId(), CONVERSATION_TYPE_EVENT, event.id, event.title, key)
         return conversationRepository.findByDirectKey(key).orElseThrow()
     }
 
@@ -285,7 +286,7 @@ class ChatService(
 
     internal fun ensureMember(conversation: ConversationEntity, user: UserEntity) {
         if (conversationMemberRepository.findByConversationIdAndUserId(conversation.id, user.id).isEmpty) {
-            conversationMemberRepository.insertUserIfAbsent(UUID.randomUUID(), conversation.id, user.id)
+            conversationMemberRepository.insertUserIfAbsent(UUID.randomUUID(), TenantContext.requireStammtischId(), conversation.id, user.id)
         }
     }
 
@@ -311,11 +312,8 @@ class ChatService(
 
     internal fun normalizeImageUrl(value: String?): String? = value?.trim()?.ifBlank { null }
 
-    internal fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        val roles = principal.roles + dbRoles
-        return roles.any { it == UserRole.BOARD || it == UserRole.ADMIN }
-    }
+    internal fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
+        access.hasAny(principal, caller, Permission.CHAT_MODERATE, Permission.EVENT_MANAGE)
 
     private fun toConversationDto(conversation: ConversationEntity): ConversationDto =
         ConversationDto(

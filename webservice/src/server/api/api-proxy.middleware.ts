@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import http from 'node:http';
 import https from 'node:https';
 import { serverEnvironment } from '../config/environment';
+import { readStammtischCookie, STAMMTISCH_HEADER } from '../stammtisch/stammtisch-cookie';
 
 /**
  * Auslieferungs-Proxy für die fachliche API (`/api/v1/*`).
@@ -32,6 +33,7 @@ const STRIPPED_REQUEST_HEADERS = new Set([
   'authorization',
   'content-length',
   'accept-encoding',
+  'x-stammtisch-id',
 ]);
 
 /** Antwort-Header, die der Proxy nicht selbst weiterreicht. */
@@ -73,6 +75,8 @@ function isPublicOrGuestRequest(req: Request): boolean {
     '/api/v1/invites/accept',
     '/api/v1/member-invites/preview',
     '/api/v1/member-invites/register',
+    // Stammtisch eröffnen ohne Konto: legt Konto und Stammtisch an.
+    '/api/v1/signup',
     '/api/v1/auth/access/guest',
     '/api/v1/health',
     '/api/v1/info',
@@ -105,6 +109,10 @@ function forwardHeaders(req: Request, traceId: string, accessToken?: string): He
   }
   if (accessToken) {
     headers.set('authorization', `Bearer ${accessToken}`);
+    // Der Stammtisch kommt nur aus dem Cookie des BFF; der Fachservice prüft
+    // die Mitgliedschaft selbst.
+    const stammtischId = readStammtischCookie(req);
+    if (stammtischId) headers.set(STAMMTISCH_HEADER, stammtischId);
   }
   headers.set('x-request-id', traceId);
   if (!headers.has('accept')) headers.set('accept', 'application/json');

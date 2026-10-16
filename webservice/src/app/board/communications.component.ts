@@ -24,7 +24,7 @@ type RecipientMode = 'all' | 'selected';
 /**
  * Kommunikationsansicht des Vorstands/Schriftführers (TICKET-026).
  *
- * Pflegt die Infotafel des Vereinschats (`GET /conversations/club`,
+ * Pflegt die Infotafel des Gruppenchats (`GET /conversations/club`,
  * `PUT /conversations/club/pin`) und verschickt Rundbriefe an alle oder an
  * ausgewählte Mitglieder (`POST /notifications/broadcast`). Empfänger werden
  * per Name aus dem Mitgliederverzeichnis (`GET /users/directory`) gewählt.
@@ -43,7 +43,7 @@ type RecipientMode = 'all' | 'selected';
         <p>{{ 'board.comms.intro' | t }}</p>
         <a class="member-back" routerLink="/board">{{ 'board.backToBoard' | t }}</a>
 
-        <!-- Infotafel des Vereinschats -->
+        <!-- Infotafel des Gruppenchats -->
         <h2 class="member-subtitle">{{ 'board.comms.pinboardTitle' | t }}</h2>
         <vereint-info-panel icon="pin" [title]="'board.comms.infoTitle' | t">
           {{ 'board.comms.infoText' | t }}

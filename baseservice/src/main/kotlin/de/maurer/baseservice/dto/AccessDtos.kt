@@ -49,7 +49,33 @@ data class AccessDecisionDto(
         description = "Version der Rollen-/Permission-Matrix, aus der die Entscheidung abgeleitet wurde",
         example = "1"
     )
-    val matrixVersion: Int = RolePermissionMatrix.VERSION
+    val matrixVersion: Int = RolePermissionMatrix.VERSION,
+
+    @Schema(description = "Id des Stammtischs, für den diese Entscheidung gilt; leer ohne gewählten Stammtisch")
+    val stammtischId: String? = null,
+
+    @Schema(description = "Name des aktuellen Stammtischs", example = "Stammtisch Am Markt")
+    val stammtischName: String? = null,
+
+    @Schema(description = "Plattform-Administration (Keycloak-Realm-Rolle admin): darf Stammtische anlegen")
+    val platformAdmin: Boolean = false,
+
+    @Schema(description = "Alle aktiven Mitgliedschaften der Person")
+    val memberships: List<StammtischMembershipDto> = emptyList()
+)
+
+@Schema(description = "Eine Mitgliedschaft in einem Stammtisch")
+data class StammtischMembershipDto(
+    @Schema(description = "Id des Stammtischs")
+    val id: String,
+    @Schema(description = "Name des Stammtischs")
+    val name: String,
+    @Schema(description = "Rollen-Codes der Person in diesem Stammtisch", example = "[\"member\"]")
+    val roles: Set<String> = emptySet(),
+    @Schema(description = "Vorstandsfunktion in diesem Stammtisch", example = "treasurer")
+    val boardRole: String? = null,
+    @Schema(description = "Version des Gruppenbilds; fehlt ohne Bild")
+    val imageVersion: Int? = null
 )
 
 @Schema(
@@ -63,7 +89,7 @@ data class RolePermissionMatrixDto(
     @Schema(description = "Zuordnung Rolle zu Permissions")
     val roles: Map<String, Set<String>>,
 
-    @Schema(description = "Alle zuweisbaren Rollennamen", example = "[\"member\", \"board\", \"admin\"]")
+    @Schema(description = "Rollen-Codes, die im aktuellen Stammtisch vergeben werden können", example = "[\"member\", \"board\", \"admin\"]")
     val assignableRoles: Set<String>,
 
     @Schema(description = "Alle bekannten Permission-Namen")

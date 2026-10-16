@@ -100,6 +100,24 @@ describe('api-proxy.middleware', () => {
     expect(response.headers.get('cache-control')).toBe('private, no-store');
   });
 
+  it('passes Content-Disposition through so the data export downloads as a file', async () => {
+    globalThis.fetch = vi.fn(async () =>
+      new Response('{"stammtisch":{}}', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Disposition': 'attachment; filename="vereint-export.json"',
+        },
+      }),
+    ) as unknown as typeof fetch;
+
+    const response = await originalFetch(`${baseUrl}/api/v1/stammtisch/export`);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-disposition')).toBe('attachment; filename="vereint-export.json"');
+    expect(await response.text()).toBe('{"stammtisch":{}}');
+  });
+
   it('never leaks a client-supplied Authorization header to the upstream', async () => {
     let capturedAuth: string | null = null;
     globalThis.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
@@ -112,6 +130,27 @@ describe('api-proxy.middleware', () => {
     });
 
     expect(capturedAuth).toBe('Bearer access-token-abc');
+  });
+
+  it('forwards the selected Stammtisch from the BFF cookie, never from a client header', async () => {
+    let captured: Headers | undefined;
+    globalThis.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      captured = new Headers(init?.headers);
+      return new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }) as unknown as typeof fetch;
+
+    await originalFetch(`${baseUrl}/api/v1/events`, {
+      headers: {
+        Cookie: 'vereint.stammtisch=11111111-1111-4111-8111-111111111111',
+        'X-Stammtisch-Id': '22222222-2222-4222-8222-222222222222',
+      },
+    });
+    expect(captured?.get('x-stammtisch-id')).toBe('11111111-1111-4111-8111-111111111111');
+
+    await originalFetch(`${baseUrl}/api/v1/events`, {
+      headers: { 'X-Stammtisch-Id': '22222222-2222-4222-8222-222222222222' },
+    });
+    expect(captured?.get('x-stammtisch-id')).toBeNull();
   });
 
   it('forwards multipart uploads byte for byte with their boundary', async () => {
@@ -147,6 +186,55 @@ describe('api-proxy.middleware', () => {
     expect(response.status).toBe(201);
     expect(captured?.contentType).toBe(`multipart/form-data; boundary=${boundary}`);
     expect(captured?.body.equals(form)).toBe(true);
+  });
+
+  it('forwards a multipart PUT (group picture) and relays binary image responses', async () => {
+    const calls: { url: string; method?: string; body: Buffer | null; contentType: string | null }[] = [];
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0xfe]);
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      calls.push({
+        url: String(url),
+        method: init?.method,
+        body: init?.body ? Buffer.from(init.body as Uint8Array) : null,
+        contentType: new Headers(init?.headers).get('content-type'),
+      });
+      if (init?.method === 'PUT') {
+        return new Response(JSON.stringify({ imageVersion: 3 }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(new Uint8Array(png), { status: 200, headers: { 'Content-Type': 'image/png' } });
+    }) as unknown as typeof fetch;
+
+    const boundary = 'vereint-put-boundary';
+    const form = Buffer.concat([
+      Buffer.from(
+        `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="gruppe.jpg"\r\n` +
+          'Content-Type: image/jpeg\r\n\r\n',
+      ),
+      Buffer.from([0xff, 0xd8, 0xff, 0x00, 0xd9]),
+      Buffer.from(`\r\n--${boundary}--\r\n`),
+    ]);
+    const upload = await originalFetch(`${baseUrl}/api/v1/stammtisch/image`, {
+      method: 'PUT',
+      headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+      body: new Uint8Array(form),
+    });
+    expect(upload.status).toBe(200);
+    expect(await upload.json()).toEqual({ imageVersion: 3 });
+    expect(calls[0]).toMatchObject({
+      url: 'http://spring.test/api/v1/stammtisch/image',
+      method: 'PUT',
+      contentType: `multipart/form-data; boundary=${boundary}`,
+    });
+    expect(calls[0].body?.equals(form)).toBe(true);
+
+    const image = await originalFetch(`${baseUrl}/api/v1/stammtische/abc/image?v=3`);
+    expect(image.status).toBe(200);
+    expect(image.headers.get('content-type')).toBe('image/png');
+    expect(Buffer.from(await image.arrayBuffer()).equals(png)).toBe(true);
+    expect(calls[1]).toMatchObject({ url: 'http://spring.test/api/v1/stammtische/abc/image?v=3', method: 'GET' });
   });
 
   it('forwards POST bodies and the Idempotency-Key header', async () => {
@@ -268,6 +356,42 @@ describe('api-proxy.middleware', () => {
       `${serverEnvironment.springApiBaseUrl}/api/v1/member-invites/preview`,
       `${serverEnvironment.springApiBaseUrl}/api/v1/member-invites/register`,
     ]);
+  });
+
+  it('forwards the open signup without a session', async () => {
+    injectedSession = undefined;
+    let captured: { url: string; body: unknown; authorization: string | null } | undefined;
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      captured = {
+        url: String(url),
+        body: JSON.parse(String(init?.body)),
+        authorization: new Headers(init?.headers).get('authorization'),
+      };
+      return new Response(JSON.stringify({ email: 'anna@example.org', stammtischId: 'st-1' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }) as unknown as typeof fetch;
+
+    const body = { stammtischName: 'Eber', firstName: 'Anna', lastName: 'Neu', email: 'anna@example.org', password: 'x'.repeat(12) };
+    const response = await originalFetch(`${baseUrl}/api/v1/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    expect(response.status).toBe(201);
+    expect(captured?.url).toBe(`${serverEnvironment.springApiBaseUrl}/api/v1/signup`);
+    expect(captured?.body).toEqual(body);
+    expect(captured?.authorization).toBeNull();
+
+    // Ein Stammtisch für ein bestehendes Konto braucht dagegen eine Session.
+    const own = await originalFetch(`${baseUrl}/api/v1/stammtische`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Eber' }),
+    });
+    expect(own.status).toBe(401);
   });
 
   describe('path confinement', () => {

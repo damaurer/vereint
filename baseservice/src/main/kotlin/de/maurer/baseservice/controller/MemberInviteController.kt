@@ -2,6 +2,7 @@ package de.maurer.baseservice.controller
 
 import de.maurer.baseservice.dto.CreateMemberInviteRequest
 import de.maurer.baseservice.dto.CreateMemberInviteResponse
+import de.maurer.baseservice.dto.JoinStammtischResponse
 import de.maurer.baseservice.dto.MemberInviteDto
 import de.maurer.baseservice.dto.MemberInvitePreviewDto
 import de.maurer.baseservice.dto.MemberInviteTokenRequest
@@ -70,4 +71,13 @@ class MemberInviteController(
     )
     fun register(@Valid @RequestBody request: RegisterMemberRequest): ResponseEntity<RegisterMemberResponse> =
         ResponseEntity.status(HttpStatus.CREATED).body(memberInviteService.register(request))
+
+    /** Angemeldet: mit bestehendem Konto dem Stammtisch des Links beitreten. */
+    @PostMapping("/join")
+    @Operation(
+        summary = "Mit Einladungslink beitreten",
+        description = "Angemeldet; macht das bestehende Konto zum Mitglied des Stammtischs, zu dem der Link gehört"
+    )
+    fun join(@Valid @RequestBody request: MemberInviteTokenRequest): ResponseEntity<JoinStammtischResponse> =
+        ResponseEntity.ok(memberInviteService.join(request.token, authContext.getRequiredPrincipal()))
 }

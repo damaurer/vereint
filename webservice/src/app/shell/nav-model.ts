@@ -1,4 +1,4 @@
-import { AuthSessionUser, UserRole } from '../auth/auth.types';
+import { AppContext, AuthSessionUser, UserRole } from '../auth/auth.types';
 import type { IconName } from '../ui/icons';
 
 /**
@@ -22,6 +22,8 @@ export interface NavItem {
   requiredRoles?: UserRole[];
   /** Erfüllt, wenn die Session alle dieser Permissions besitzt. */
   requiredPermissions?: string[];
+  /** Vom Fachservice freigegebener App-Kontext im gewählten Stammtisch; geht vor `requiredRoles`. */
+  requiredContext?: AppContext;
 }
 
 /**
@@ -64,6 +66,7 @@ export const SECONDARY_NAV: readonly NavItem[] = [
     route: '/statistik',
   },
   { id: 'profil', labelKey: 'nav.items.profil', icon: 'user', route: '/profile' },
+  { id: 'stammtisch', labelKey: 'nav.items.stammtisch', icon: 'users', route: '/gruppe' },
 ];
 
 /**
@@ -77,6 +80,7 @@ export const PANEL_NAV: readonly NavItem[] = [
     icon: 'board',
     route: '/board',
     requiredRoles: ['board', 'admin'],
+    requiredContext: 'boardGeneral',
   },
   {
     id: 'treasury',
@@ -84,6 +88,7 @@ export const PANEL_NAV: readonly NavItem[] = [
     icon: 'treasury',
     route: '/board/treasury',
     requiredRoles: ['board', 'admin'],
+    requiredContext: 'boardTreasury',
   },
   {
     id: 'communications',
@@ -91,6 +96,7 @@ export const PANEL_NAV: readonly NavItem[] = [
     icon: 'megaphone',
     route: '/board/communications',
     requiredRoles: ['board', 'admin'],
+    requiredContext: 'boardCommunications',
   },
   {
     id: 'admin',
@@ -98,6 +104,7 @@ export const PANEL_NAV: readonly NavItem[] = [
     icon: 'admin',
     route: '/admin',
     requiredRoles: ['admin'],
+    requiredContext: 'admin',
   },
   {
     id: 'tablet',
@@ -118,7 +125,7 @@ export interface NavSection {
 
 const SECTION_LAYOUT: readonly { id: NavSection['id']; labelKey: string; ids: readonly string[] }[] = [
   { id: 'club', labelKey: 'nav.sections.club', ids: ['home', 'events', 'moments', 'chat', 'direct'] },
-  { id: 'account', labelKey: 'nav.sections.account', ids: ['wallet', 'scan', 'purchases', 'notifications', 'profil'] },
+  { id: 'account', labelKey: 'nav.sections.account', ids: ['wallet', 'scan', 'purchases', 'notifications', 'profil', 'stammtisch'] },
   { id: 'bar', labelKey: 'nav.sections.bar', ids: ['catalog', 'sublists', 'statistik'] },
   {
     id: 'admin',
@@ -138,7 +145,9 @@ export function isNavItemVisible(item: NavItem, session: AuthSessionUser | null)
   const hasRequirements = Boolean(item.requiredRoles || item.requiredPermissions);
   if (!session) return !hasRequirements;
 
-  if (item.requiredRoles) {
+  if (item.requiredContext && session.appContexts) {
+    if (!session.appContexts.includes(item.requiredContext)) return false;
+  } else if (item.requiredRoles) {
     const roles = session.roles ?? [];
     if (!item.requiredRoles.some((role) => roles.includes(role))) return false;
   }

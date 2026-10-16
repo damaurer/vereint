@@ -1,5 +1,8 @@
 package de.maurer.baseservice
 
+import de.maurer.baseservice.domain.StammtischMemberEntity
+import de.maurer.baseservice.repository.StammtischMemberRepository
+import de.maurer.baseservice.support.StammtischTestSupport
 import de.maurer.baseservice.domain.AuditLogEntity
 import de.maurer.baseservice.domain.BoardRole as DomainBoardRole
 import de.maurer.baseservice.domain.UserEntity
@@ -34,6 +37,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.domain.Specification
 import java.time.Instant
+import java.util.Optional
 import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
@@ -53,6 +57,9 @@ class AuditLogServiceTest {
     private lateinit var userRepository: UserRepository
 
     @Mock
+    private lateinit var memberRepository: StammtischMemberRepository
+
+    @Mock
     private lateinit var ledgerEntryRepository: LedgerEntryRepository
 
     @Mock
@@ -68,9 +75,12 @@ class AuditLogServiceTest {
     @BeforeEach
     fun setup() {
         service = AuditLogService(
-            auditLogRepository, userService, userRoleRepository,
+            auditLogRepository, userService, StammtischTestSupport.access(userRoleRepository), memberRepository,
             userRepository, ledgerEntryRepository, notificationRepository, kioskSessionRepository
         )
+        `when`(memberRepository.findByUserId(callerId)).thenAnswer {
+            Optional.of(StammtischMemberEntity(boardRole = callerBoardRole))
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -79,8 +89,13 @@ class AuditLogServiceTest {
 
     private fun anyPageable(): Pageable = any(Pageable::class.java) ?: Pageable.unpaged()
 
-    private fun caller(boardRole: DomainBoardRole? = null) =
-        UserEntity(id = callerId, keycloakSubject = "sub-caller", displayName = "Caller", boardRole = boardRole)
+    /** Die Vorstandsfunktion gehört zur Mitgliedschaft im Stammtisch (siehe [setup]). */
+    private var callerBoardRole: DomainBoardRole? = null
+
+    private fun caller(boardRole: DomainBoardRole? = null): UserEntity {
+        callerBoardRole = boardRole
+        return UserEntity(id = callerId, keycloakSubject = "sub-caller", displayName = "Caller")
+    }
 
     private fun principal(vararg roles: String) =
         UserPrincipal(subject = "sub-caller", roles = roles.toSet())

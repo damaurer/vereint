@@ -3,6 +3,8 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
 import { MemberInvitesApiService } from '../invites/member-invites-api.service';
+import { Router } from '@angular/router';
+import { StammtischApiService } from '../stammtisch/stammtisch-api.service';
 import { AuthService } from './auth.service';
 import { RegisterComponent } from './register.component';
 
@@ -17,20 +19,36 @@ interface RegisterInternals {
   passwordRepeat: string;
   start(hash: string): void;
   submit(): void;
+  signedIn(): boolean;
+  join(): void;
 }
 
 const TOKEN = 'abcdefghijklmnopqrstuvwxyz012345';
 
 describe('RegisterComponent', () => {
   let api: { preview: ReturnType<typeof vi.fn>; register: ReturnType<typeof vi.fn> };
-  let auth: { isAvailable: ReturnType<typeof vi.fn>; startLogin: ReturnType<typeof vi.fn> };
+  let auth: {
+    isAvailable: ReturnType<typeof vi.fn>;
+    startLogin: ReturnType<typeof vi.fn>;
+    getSession: ReturnType<typeof vi.fn>;
+    selectStammtisch: ReturnType<typeof vi.fn>;
+  };
+  let stammtische: { join: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     api = {
       preview: vi.fn(() => of({ expiresAt: '2026-10-21T08:00:00Z' })),
       register: vi.fn(() => of({ email: 'anna@example.org', displayName: 'Anna Neumann' })),
     };
-    auth = { isAvailable: vi.fn(() => true), startLogin: vi.fn() };
+    auth = {
+      isAvailable: vi.fn(() => true),
+      startLogin: vi.fn(),
+      getSession: vi.fn(() => Promise.resolve(null)),
+      selectStammtisch: vi.fn(() => Promise.resolve(true)),
+    };
+    stammtische = {
+      join: vi.fn(() => of({ stammtischId: 'st-2', stammtischName: 'Zweiter', alreadyMember: false })),
+    };
   });
 
   const create = () => {
@@ -39,6 +57,7 @@ describe('RegisterComponent', () => {
       providers: [
         { provide: MemberInvitesApiService, useValue: api },
         { provide: AuthService, useValue: auth },
+        { provide: StammtischApiService, useValue: stammtische },
       ],
     });
     const fixture = TestBed.createComponent(RegisterComponent);
@@ -128,5 +147,22 @@ describe('RegisterComponent', () => {
     api.register.mockReturnValueOnce(throwError(() => new ApiError(410, 'invitation_used_up', 'weg')));
     cmp.submit();
     expect(cmp.state()).toBe('invalid');
+  });
+
+  it('lets a signed-in person join the Stammtisch of the link instead of registering', async () => {
+    auth.getSession.mockResolvedValue({ uid: 'u-1', email: null, provider: 'keycloak' });
+    const { cmp } = create();
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    cmp.start(`#${TOKEN}`);
+    await Promise.resolve();
+    expect(cmp.signedIn()).toBe(true);
+
+    cmp.join();
+    await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/'));
+    expect(stammtische.join).toHaveBeenCalledWith(TOKEN);
+    expect(auth.selectStammtisch).toHaveBeenCalledWith('st-2');
+    expect(auth.getSession).toHaveBeenCalledWith(true);
+    expect(api.register).not.toHaveBeenCalled();
   });
 });

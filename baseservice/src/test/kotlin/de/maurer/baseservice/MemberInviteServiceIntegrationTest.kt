@@ -1,6 +1,5 @@
 package de.maurer.baseservice
 
-import de.maurer.baseservice.domain.AssignedRole
 import de.maurer.baseservice.domain.MemberInviteEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.CreateMemberInviteRequest
@@ -28,11 +27,11 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
@@ -131,9 +130,7 @@ class MemberInviteServiceIntegrationTest @Autowired constructor(
 
         val user = userRepository.findAll().single { it.email == email }
         assertFalse(user.disabled)
-        assertFalse(user.drinkRecorder)
-        assertNull(user.boardRole)
-        assertEquals(listOf(AssignedRole.member), userRoleRepository.findByIdUserId(user.id).map { it.id.role })
+        assertEquals(listOf(UserRole.MEMBER), userRoleRepository.findByIdUserId(user.id).map { it.id.role })
 
         val invite = memberInviteRepository.findByTokenHash(SecureTokens.sha256Hex(token)).orElseThrow()
         assertEquals(1, invite.usesCount)

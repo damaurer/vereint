@@ -1,5 +1,6 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.crypto.DataEncryptor
 import de.maurer.baseservice.domain.MomentMediaEntity
 import de.maurer.baseservice.domain.MomentMediaKind
@@ -14,6 +15,7 @@ import de.maurer.baseservice.support.ImageMetadata
 import de.maurer.baseservice.support.InvalidVideoException
 import de.maurer.baseservice.support.Mp4SanitizingInputStream
 import de.maurer.baseservice.support.VideoTooLongException
+import de.maurer.baseservice.tenancy.StammtischJobs
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Scheduled
@@ -50,6 +52,8 @@ class MomentMediaService(
     private val objectStorage: ObjectStorage,
     private val dataEncryptor: DataEncryptor,
     private val auditService: AuditService,
+    private val stammtischJobs: StammtischJobs,
+    private val planLimits: PlanLimits,
     transactionManager: PlatformTransactionManager
 ) {
 
@@ -92,6 +96,8 @@ class MomentMediaService(
 
         val ownerId = tx.execute {
             val access = momentService.requireMomentAccess(eventId, momentId, principal, requireActive = true)
+            if (kind == MomentMediaKind.video) planLimits.requireVideos()
+            planLimits.requireStorage(contentLength)
             val count = momentMediaRepository.countByMomentIdAndOwnerId(momentId, access.caller.id)
             if (count >= MAX_MEDIA_PER_MEMBER_AND_MOMENT) {
                 throw InvalidRequestException(
@@ -194,8 +200,12 @@ class MomentMediaService(
         objectStorage.delete(storageKey)
     }
 
-    /** Löscht Uploads, die nie zu einem Beitrag wurden (abgebrochene Beiträge). */
+    /** Löscht Uploads, die nie zu einem Beitrag wurden (abgebrochene Beiträge), in jedem Stammtisch. */
     @Scheduled(fixedDelayString = "PT1H", initialDelayString = "PT10M")
+    fun removeAbandonedUploadsEverywhere() {
+        stammtischJobs.forEachStammtisch("moment-media-cleanup") { removeAbandonedUploads() }
+    }
+
     fun removeAbandonedUploads() {
         val cutoff = Instant.now().minus(ABANDONED_AFTER)
         val keys = tx.execute {
