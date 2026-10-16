@@ -66,9 +66,10 @@ Rollback exakt genauso wieder.
   einrichten" zur Keycloak-Kontoverwaltung (`/kc/realms/vereint/account`). Wer
   dort eine Authenticator-App hinterlegt, wird beim Login nach dem Code gefragt
   (Standard-Browser-Flow von Keycloak). Pflicht ist sie für niemanden.
-- **Caddy:** Anfragen über 8 MB werden abgewiesen; `Permissions-Policy`
-  schaltet Mikrofon, Standort, Zahlungen usw. ab (Kamera nur für den
-  Barcode-Scan).
+- **Caddy:** Anfragen über 8 MB werden abgewiesen, außer Bilder und Videos in
+  Moments (bis 110 MB, nur dieser eine Pfad). `Permissions-Policy` schaltet
+  Mikrofon, Zahlungen usw. ab; Kamera (Barcode-Scan) und Standort (freiwillige
+  Standortfreigabe in Moments) sind nur für die eigene Seite erlaubt.
 - **Lieferkette:** GitHub Actions sind auf Commit-SHAs gepinnt, Images auf
   Digests; Dependabot hält beides aktuell.
 
@@ -191,6 +192,33 @@ aws ssm start-session --target <instance-id> \
   --document-name AWS-StartPortForwardingSession \
   --parameters portNumber=8082,localPortNumber=8082
 ```
+
+### Ersten Administrator anlegen
+
+Der Produktions-Realm enthält keine Benutzer. Nach dem ersten Deployment
+einmal von Hand (Admin-Konsole per Tunnel, Realm `vereint`):
+
+1. *Users → Create new user*: Benutzername, E-Mail, Vor- und Nachname,
+   *Email verified* an.
+2. *Credentials → Set password*: Passwort (mindestens 10 Zeichen),
+   *Temporary* an, damit beim ersten Login ein eigenes vergeben wird.
+3. *Role mapping → Assign role → Realm roles*: `admin` (Plattform-Admin, siehe
+   „Mehrere Gruppen“ unten).
+4. In der App anmelden. Beim ersten Login legt der baseservice das Profil an
+   und macht diese Person zum Admin der Gruppe „Meine Gruppe“. Alle weiteren
+   Mitglieder kommen per Einladungslink dazu, Rollen vergibt danach jede Gruppe
+   in der App.
+
+„Passwort vergessen" ist im Produktions-Realm ausgeschaltet, weil Keycloak
+keinen Mailserver hat. Vergisst jemand sein Passwort, setzt die Administration
+es in der Admin-Konsole zurück (*Users → Benutzer → Credentials → Reset
+password*, *Temporary* an). Wird später ein Mailserver eingerichtet (z. B.
+Amazon SES unter *Realm settings → Email*), kann die Funktion unter
+*Realm settings → Login → Forgot password* wieder eingeschaltet werden.
+
+Der Keycloak-Benutzer `admin` (Passwort aus `/vereint/KEYCLOAK_ADMIN_PASSWORD`)
+gehört zum Master-Realm, ist nur über den Tunnel erreichbar und kein
+App-Konto.
 
 ### Client für Einladungslinks in einem bestehenden Realm
 

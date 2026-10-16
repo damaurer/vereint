@@ -87,7 +87,7 @@ show_failure() {
 # Liquibase-Migrationen des fehlgeschlagenen Stands werden nicht
 # zurueckgenommen (siehe README, Abschnitt Rollback).
 restore_previous() {
-  [ -d "$PREVIOUS" ] || die "Kein vorheriger Stand vorhanden"
+  [ -f "$PREVIOUS/compose.yaml" ] || die "Kein vorheriger Stand vorhanden"
   log "Stelle vorherigen Stand wieder her"
   rm -rf "$RELEASES/failed"
   [ -d "$APP_DIR" ] && mv "$APP_DIR" "$RELEASES/failed"
@@ -129,7 +129,13 @@ deploy() {
   fi
 
   rm -rf "$PREVIOUS"
-  [ -d "$APP_DIR" ] && mv "$APP_DIR" "$PREVIOUS"
+  if [ -f "$APP_DIR/compose.yaml" ]; then
+    mv "$APP_DIR" "$PREVIOUS"
+  elif [ -d "$APP_DIR" ]; then
+    # Beim ersten Deployment legt die Server-Einrichtung ein leeres app/ an.
+    # Es ist kein vorheriger Stand; rmdir bricht ab, falls doch etwas darin liegt.
+    rmdir "$APP_DIR"
+  fi
   mv "$stage" "$APP_DIR"
   # fetch-env.sh hat .env im Bundle-Verzeichnis erzeugt; nach dem Verschieben
   # neu schreiben, damit Pfade und Inhalt garantiert zusammenpassen.
@@ -144,7 +150,7 @@ deploy() {
 
   log "Neuer Stand ist nicht gesund"
   show_failure
-  if [ -d "$PREVIOUS" ]; then
+  if [ -f "$PREVIOUS/compose.yaml" ]; then
     # Eigener Prozess, damit `set -e` im Rollback wirkt.
     DEPLOY_LOCK_HELD=1 bash "$0" rollback || die "Rollback fehlgeschlagen, bitte manuell pruefen"
     die "Deployment fehlgeschlagen, vorheriger Stand wurde wiederhergestellt"
