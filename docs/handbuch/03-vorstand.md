@@ -16,9 +16,11 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr → Verwaltung**, am Re
 | einen Gast einladen | Event moderieren → **Einladungen** → **Gasteinladung erzeugen** |
 | ein vorgeschlagenes Getränk freigeben | **Getränkekatalog** → Vorschlag → **Freigeben** |
 | ein Getränk anlegen oder den Preis ändern | **Getränkekatalog** → **Getränk anlegen** oder **Bearbeiten** |
+| ein Getränk aus der gemeinsamen Datenbank holen | **Getränkekatalog** → **Aus der Getränkedatenbank** → **Übernehmen** |
+| ein eigenes Getränk mit anderen Gruppen teilen | **Getränkekatalog** → Getränk → **Bearbeiten** → **In die Getränkedatenbank teilen** |
 | ein neues Mitglied einladen | **Vorstand** → **Mitglied einladen** (siehe [Leitfaden Administration](04-administration.md#neue-mitglieder-einladen)) |
 | allen eine Nachricht schicken | **Kommunikation** → Meldung verfassen → **Alle Mitglieder** |
-| einen Hinweis oben im Vereinschat anheften | **Kommunikation** → Infotafel → **Anpinnen** |
+| einen Hinweis oben im Gruppenchat anheften | **Kommunikation** → Infotafel → **Anpinnen** |
 | ein Thekenterminal ohne PIN entsperren | **Vorstand** → **Kiosk-Geräte** → **Entsperren** |
 | festlegen, welche Moments und Reaktionen es gibt | **Vorstand** → **Moments · Typen & Reaktionen** |
 
@@ -49,7 +51,7 @@ Hier verwaltet der Kassenwart die Bierkasse.
 
 Tippe auf ein Mitglied. Es öffnen sich sein Guthaben, alle seine Buchungen und die Formulare zum Buchen:
 
-1. **Guthaben aufladen**: Betrag und eine Notiz (z. B. „Bareinzahlung Stammtisch“) eintragen, **Aufladen** tippen. Das Mitglied sieht die Aufladung sofort in seinem Guthaben.
+1. **Guthaben aufladen**: Betrag und eine Notiz (z. B. „Bareinzahlung beim Treffen“) eintragen, **Aufladen** tippen. Das Mitglied sieht die Aufladung sofort in seinem Guthaben.
 2. **Guthaben auszahlen**: genauso, wenn jemand Guthaben bar zurückbekommt, etwa beim Austritt.
 3. **Buchung korrigieren**: Buchungen werden nie gelöscht. Eine falsche Buchung hebst du mit einer Gegenbuchung auf: Buchung in der Auswahl wählen (oder in der Liste darunter auf **Zur Korrektur wählen** tippen), einen Grund eintragen und **Korrigieren** tippen. Beide Buchungen bleiben sichtbar, so ist jede Änderung nachvollziehbar.
 
@@ -107,7 +109,7 @@ Zum Hinzufügen unter **Getränk aus dem Katalog** ein Getränk wählen, optiona
 
 <img src="bilder/v-event-einladungen.png" alt="Gasteinladungen" width="300" align="right">
 
-**Einladungen**: So holst du Gäste ohne Vereinskonto dazu.
+**Einladungen**: So holst du Gäste ohne Konto dazu.
 
 1. **Gültig (Minuten)** und **Max. Nutzungen** eintragen, z. B. 10080 Minuten (eine Woche) und 5 Nutzungen.
 2. **Gasteinladung erzeugen** tippen.
@@ -127,7 +129,7 @@ Die Liste zeigt jede Einladung mit Stand und Nutzungen, z. B. „aktiv · 0 / 5�
 
 <img src="bilder/v-katalog-freigabe.png" alt="Getränkekatalog für den Vorstand" width="300" align="right">
 
-Im **Getränkekatalog** pflegst du alle Getränke des Vereins. Bei jedem Getränk steht neben dem Preis die **Marge**, also was der Verein pro Verkauf verdient. Mit **Alle Status** filterst du zum Beispiel nur Vorschläge.
+Im **Getränkekatalog** pflegst du alle Getränke der Gruppe. Bei jedem Getränk steht neben dem Preis die **Marge**, also was die Gruppe pro Verkauf verdient. Mit **Alle Status** filterst du zum Beispiel nur Vorschläge.
 
 **Vorschläge** von Mitgliedern stehen mit dem Kennzeichen **Vorgeschlagen** in der Liste:
 
@@ -151,6 +153,17 @@ Vereint warnt, wenn ein Name oder Strichcode schon vergeben ist. **Speichern** �
 
 <br clear="right">
 
+**Getränkedatenbank**: Alle Gruppen teilen sich eine gemeinsame Getränkedatenbank. Sie enthält Name, Sorte, Beschreibung und Strichcodes, aber keine Preise und keine Bilder.
+
+1. Im **Getränkekatalog** auf **Aus der Getränkedatenbank** tippen.
+2. Nach **Name oder Sorte** oder nach dem **Strichcode (EAN)** suchen.
+3. Beim passenden Getränk **Übernehmen** tippen. Name, Sorte und Beschreibung sind schon ausgefüllt, die Strichcodes kommen mit.
+4. **Verkaufspreis** eintragen, optional den **Einkaufspreis**, dann **In den Katalog übernehmen**.
+
+Der Preis gilt nur für deine Gruppe. Getränke, die ihr schon habt, tragen das Kennzeichen **Schon im Katalog**.
+
+**In die Getränkedatenbank teilen**: Ein eigenes, freigegebenes Getränk kannst du für andere Gruppen bereitstellen. Öffne es mit **Bearbeiten** und tippe auf **In die Getränkedatenbank teilen**. Geteilt werden nur Name, Sorte, Beschreibung und Strichcodes, nie euer Preis. Gibt es den Strichcode dort schon, verknüpft Vereint euer Getränk mit dem vorhandenen Eintrag. Danach steht im Formular „Dieses Getränk ist mit der Getränkedatenbank verknüpft.“ Dafür brauchst du das Recht, Getränke freizugeben (`catalog.approve`). Einträge der Datenbank ändern oder löschen kann nur das Vereint-Team.
+
 <img src="bilder/v-getraenkelisten.png" alt="Getränkelisten" width="300" align="right">
 
 **Getränkelisten** sind Vorlagen, z. B. „Stammtisch-Standard“ mit den üblichen sieben Getränken. Statt jedes Getränk einzeln zu einem Event hinzuzufügen, weist du eine ganze Liste zu.
@@ -163,11 +176,11 @@ Vereint warnt, wenn ein Name oder Strichcode schon vergeben ist. **Speichern** �
 
 ## Kommunikation
 
-<img src="bilder/v-kommunikation.png" alt="Infotafel im Vereinschat" width="300" align="right">
+<img src="bilder/v-kommunikation.png" alt="Infotafel im Gruppenchat" width="300" align="right">
 
 Hier verschickt der Schriftwart Rundbriefe und pflegt die Infotafel.
 
-**Infotafel im Vereinschat**: ein kurzer Hinweis, der oben im Vereinschat für alle sichtbar bleibt, etwa der nächste wichtige Termin.
+**Infotafel im Gruppenchat**: ein kurzer Hinweis, der oben im Gruppenchat für alle sichtbar bleibt, etwa der nächste wichtige Termin.
 
 1. Text unter **Infotafel** eintragen.
 2. **Anpinnen** tippen. Unter **Aktuell angepinnt** siehst du, was gerade oben steht.

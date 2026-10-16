@@ -1,6 +1,6 @@
 # Leitfaden Mitglied
 
-Für alle Vereinsmitglieder. Anmeldung, Navigation und Profil stehen in den [Ersten Schritten](01-erste-schritte.md).
+Für alle Mitglieder einer Gruppe. Anmeldung, Navigation und Profil stehen in den [Ersten Schritten](01-erste-schritte.md).
 
 ## Auf einen Blick
 
@@ -8,7 +8,7 @@ Für alle Vereinsmitglieder. Anmeldung, Navigation und Profil stehen in den [Ers
 | :--- | :--- |
 | zu einem Termin zusagen | **Events** → **Zusagen** bei der Einladung, oder direkt in der Push-Nachricht |
 | selbst ein Event planen | **Events** → **Event anlegen** |
-| mit allen im Verein schreiben | **Chat** → **Vereinschat** |
+| mit allen in der Gruppe schreiben | **Chat** → **Gruppenchat** |
 | jemandem persönlich schreiben | **Mehr → Direktnachrichten** → **Neue Nachricht** |
 | sehen, wer am meisten Striche hat | **Mehr → Statistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
@@ -17,6 +17,8 @@ Für alle Vereinsmitglieder. Anmeldung, Navigation und Profil stehen in den [Ers
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
 | beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments ansehen** |
 | ein neues Getränk vorschlagen | **Mehr → Getränkekatalog** → **Getränk vorschlagen** oder **Barcode scannen** |
+| die Gruppe wechseln | Gruppenname oben rechts antippen, oder **Mehr → Gruppeneinstellungen** → **Gruppe wechseln** |
+| eine Gruppe verlassen | **Mehr → Gruppeneinstellungen** → **Gruppe verlassen** |
 
 ## Einladungen und Zusagen
 
@@ -83,13 +85,13 @@ Danach verwaltest du dein Event wie im [Leitfaden Vorstand](03-vorstand.md#ein-e
 
 <img src="bilder/m-chat.png" alt="Chatübersicht" width="300" align="right">
 
-Unter **Chat** (untere Leiste) stehen oben der **Vereinschat** für alle Mitglieder und darunter die **Event-Chats** deiner Events. Jede Zeile zeigt die letzte Nachricht; eine Zahl rechts steht für ungelesene Nachrichten.
+Unter **Chat** (untere Leiste) stehen oben der **Gruppenchat** für alle Mitglieder und darunter die **Event-Chats** deiner Events. Jede Zeile zeigt die letzte Nachricht; eine Zahl rechts steht für ungelesene Nachrichten.
 
 <br clear="right">
 
-<img src="bilder/m-vereinschat.png" alt="Vereinschat" width="300" align="right">
+<img src="bilder/m-vereinschat.png" alt="Gruppenchat" width="300" align="right">
 
-Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Vereinschat kann der Vorstand eine **Infotafel** anheften, etwa einen wichtigen Termin.
+Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vorstand eine **Infotafel** anheften, etwa einen wichtigen Termin.
 
 - Unten Nachricht eintippen und senden.
 - Mit **+** unter einer Nachricht reagierst du mit einem Emoji.
@@ -123,7 +125,7 @@ Ein Guthaben kann auch ins Minus gehen. Dann bitte zeitnah beim Kassenwart ausgl
 
 ## Getränk selbst bezahlen
 
-Steht keine Theke bereit, etwa am Kühlschrank im Vereinsheim, bezahlst du ein Getränk selbst mit deinem Guthaben. Das geht während eines laufenden Events, zu dem du gehörst.
+Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst mit deinem Guthaben. Das geht während eines laufenden Events, zu dem du gehörst.
 
 <img src="bilder/m-bezahlen.png" alt="Getränk scannen" width="300" align="right">
 
@@ -168,7 +170,7 @@ Stimmt etwas nicht, sprich den Thekendienst oder den Kassenwart an. Der Thekendi
 
 <img src="bilder/m-mitteilungen.png" alt="Mitteilungen" width="300" align="right">
 
-Die **Glocke** oben rechts (oder **Mehr → Mitteilungen**) sammelt alles, was der Verein dir mitteilt: Rundbriefe des Vorstands, Einladungen und Erinnerungen zu Events und neue Moments.
+Die **Glocke** oben rechts (oder **Mehr → Mitteilungen**) sammelt alles, was die Gruppe dir mitteilt: Rundbriefe des Vorstands, Einladungen und Erinnerungen zu Events und neue Moments.
 
 - Ungelesene Mitteilungen haben einen Punkt und einen farbigen Rand.
 - **Als gelesen markieren** gilt für eine Mitteilung, **Alle als gelesen markieren** für alle.
@@ -192,7 +194,7 @@ Ein **Moment** ist eine kurze gemeinsame Aktion während eines Events, zum Beisp
 
 **Reagieren**: Tippe auf **Reagieren** oder unter **Schnell reagieren** direkt auf eine Reaktion wie **Anstoßen**, **Jubel** oder **Daumen hoch**. Mit **+ Status & Text** schreibst du einen eigenen Satz dazu.
 
-**Fotos und Videos teilen**: Beim Starten unter **Fotos & Videos (optional)** oder später im Moment mit **Foto/Video teilen** hängst du bis zu vier Bilder oder Videos an. Videos dürfen höchstens 60 Sekunden lang und 100 MB groß sein (MP4 oder MOV); zu große Videos am besten in 720p aufnehmen. Standort und Gerätedaten werden vor dem Speichern aus den Dateien entfernt. Eigene Bilder und Videos kannst du mit **Entfernen** wieder löschen.
+**Fotos und Videos teilen**: Beim Starten unter **Fotos & Videos (optional)** oder später im Moment mit **Foto/Video teilen** hängst du bis zu vier Bilder oder Videos an. Videos dürfen höchstens 60 Sekunden lang und 100 MB groß sein (MP4 oder MOV); zu große Videos am besten in 720p aufnehmen. Videos gehen nur, wenn der Tarif der Gruppe sie enthält. Standort und Gerätedaten werden vor dem Speichern aus den Dateien entfernt. Eigene Bilder und Videos kannst du mit **Entfernen** wieder löschen.
 
 Die **Timeline** zeigt alle Reaktionen, Bilder und Videos. Wer beim Reagieren den Standort freigibt, erscheint zusätzlich auf der **Weltkarte**. Das ist freiwillig.
 
@@ -204,11 +206,13 @@ Ist ein Moment vorbei, landet er unter **Archivierte Moments & Rituale**.
 
 <img src="bilder/m-katalog.png" alt="Getränkekatalog" width="300" align="right">
 
-Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen des Vereins mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, das Suchfeld findet Getränke nach Name oder Kategorie. **Details & Barcodes** zeigt Preis, Beschreibung und die hinterlegten Strichcodes.
+Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen der Gruppe mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, das Suchfeld findet Getränke nach Name oder Kategorie. **Details & Barcodes** zeigt Preis, Beschreibung und die hinterlegten Strichcodes.
 
 **Barcode scannen**: Scanne eine Flasche, um zu sehen, ob sie schon im Katalog ist. Kennt Vereint den Strichcode, öffnet sich das Getränk. Sonst öffnet sich gleich der Vorschlag mit dem Strichcode.
 
 Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, Kategorie, Preis und Strichcode vor. Vereint warnt dich, wenn es schon ein Getränk mit diesem Namen oder Strichcode gibt. Der Vorstand prüft den Vorschlag und gibt ihn frei; bis dahin steht er als „Vorgeschlagen“ in der Liste.
+
+**Aus der Getränkedatenbank**: Viele Getränke gibt es schon in der gemeinsamen Getränkedatenbank aller Gruppen. Dort suchst du nach Name oder Strichcode, tippst auf **Übernehmen**, trägst einen Preis ein und tippst **In den Katalog übernehmen**. Bei dir wird daraus ein Vorschlag, den der Vorstand freigibt.
 
 <br clear="right">
 
@@ -218,9 +222,24 @@ Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, K
 
 Unter **Mehr → Statistik** siehst du Auswertungen der letzten 90 Tage:
 
-- **Rangliste**: Striche im ganzen Verein, deine eigenen Striche und dein Platz.
+- **Rangliste**: Striche in der ganzen Gruppe, deine eigenen Striche und dein Platz.
 - **Zusagequote**: wie viele Einladungen mit Zusage beantwortet wurden.
 - **Umsatz 30 Tage** mit dem Verlauf der letzten acht Wochen.
 - **Beliebteste Artikel** und **Events mit den meisten Strichen**.
 
 <br clear="right">
+
+## Eine Gruppe verlassen
+
+Unter **Mehr → Gruppeneinstellungen** steht ganz unten **Gruppe verlassen**.
+
+1. **Gruppe verlassen** tippen.
+2. Die Rückfrage bestätigen.
+
+Danach hast du in dieser Gruppe keine Rechte mehr. Deine Buchungen und Beiträge bleiben in der Gruppe erhalten. Dein Konto und deine anderen Gruppen bleiben unberührt. Wieder dabei bist du nur mit einem neuen Einladungslink.
+
+Bist du die letzte Person, die Mitglieder und Rollen verwalten darf, geht das Verlassen nicht. Gib diese Rolle zuerst jemand anderem.
+
+## Vereint unterstützen
+
+Hat der Betreiber einen Förderbeitrag eingerichtet, steht unter **Gruppeneinstellungen** im Abschnitt **Tarif** der Knopf **Vereint unterstützen**. Das ist ein freiwilliger, persönlicher Monatsbeitrag für die Weiterentwicklung von Vereint. Bezahlt wird über Stripe. Am Tarif deiner Gruppe ändert der Beitrag nichts.

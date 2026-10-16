@@ -23,7 +23,8 @@ Zusätzlich gibt es Vorstandsfunktionen als Kennzeichnung: `chair` (Vorsitz),
 ## Eigene Rollen
 
 Wer Rollen verwalten darf (`roles.manage`), legt unter *Gruppeneinstellungen →
-Rollen & Berechtigungen* eigene Rollen an, schneidet Rechte zu und weist sie zu.
+Rollen & Berechtigungen* eigene Rollen an und schneidet Rechte zu. Zuweisen
+lassen sich in der Oberfläche bisher nur die vier Systemrollen.
 Eine Rolle „Kasse“ mit `ledger.read` sieht so die Kasse, aber nicht den
 Adminbereich. Rechte für die Verwaltung:
 

@@ -13,6 +13,7 @@ austragen.
 | Rechtliches vor dem Eröffnen von Gruppen | Impressum, AGB, Datenschutzerklärung und Auftragsverarbeitung fehlen. Bis dahin in Produktion `/vereint/SIGNUP_ENABLED` auf `false` setzen ([deploy/README.md](../deploy/README.md#mehrere-gruppen)). |
 | Online-Zahlung | Stripe ist noch nicht eingerichtet; ohne Stripe bleibt die Online-Zahlung aus, Tarife vergibt die Plattform-Administration von Hand ([abrechnung.md](domains/abrechnung.md#einrichtung)). |
 | Push aus einer anderen Gruppe | Kommt eine Mitteilung aus einer anderen als der gerade gewählten Gruppe, zeigt das Gerät nur die neueste Mitteilung der gewählten Gruppe oder „Du hast eine neue Mitteilung“. |
+| Eigene Rollen zuweisen | Eigene Rollen lassen sich unter *Gruppeneinstellungen* anlegen und zuschneiden, aber noch nicht zuweisen: Das Formular beim Mitglied bietet nur die vier Systemrollen. |
 | Reste in der Administration | Die Tabelle „Rollen & Berechtigungen“ in der Administration ist noch eine Vorschau und speichert nichts; echte Rollen pflegt man unter *Gruppeneinstellungen*. Der Einleitungstext der Seite nennt noch fest „Durstige Eber“ statt den Namen der Gruppe. |
 | BeerWithMe Status | Im Profil nur eine Vorschau, wird nicht an andere übertragen. |
 | Push für Chat-Nachrichten | Einzelne Chat-Nachrichten lösen keinen Push aus; neue Nachrichten zeigt der Ungelesen-Zähler am Chat. |
