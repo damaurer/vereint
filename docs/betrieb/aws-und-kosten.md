@@ -14,7 +14,7 @@ Ziel: günstig, sicher und ohne Datenverlust.
 | Tägliche Snapshots des Datenvolumes, 7 Tage | Schnelle Wiederherstellung der Disk |
 | S3-Bucket `vereint-backups-<account>` | Nächtliche, verschlüsselte Datenbank-Dumps (30 Tage), Deployment-Bundles |
 | S3-Bucket `vereint-app-<account>` | Bilder der App |
-| SSM Parameter Store unter `/vereint/*` | Alle Secrets, von Terraform zufällig erzeugt |
+| SSM Parameter Store unter `/vereint/*` | Alle Secrets, von Terraform zufällig erzeugt; Stripe-Werte und `SIGNUP_ENABLED` legt man bei Bedarf von Hand an ([deploy/README.md](../../deploy/README.md#abrechnung-stripe)) |
 | Budget-Alarm | E-Mail bei 80 % des Budgets (Ist) bzw. 100 % (Prognose) |
 | Backup- und Hardware-Alarm | E-Mail, wenn 26 Stunden kein Backup kam oder die Hardware ausfällt |
 | GitHub-OIDC-Rolle | Deployments ohne dauerhafte AWS-Schlüssel |

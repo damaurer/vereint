@@ -1,6 +1,6 @@
 # Fachdomäne: Tablet Strichlisten-Recorder (Kiosk Mode)
 
-Der Tablet Strichlisten-Recorder in **Vereint** ist für den hochfrequenten Thekenbetrieb auf Vereinsfesten, Feiern und Mitgliederversammlungen optimiert. Er bietet eine touch-optimierte Kiosk-Oberfläche zur blitzschnellen 1-Tap-Getränke- und Speisenbuchung, Rundenabrechnung und zum Abendabschluss.
+Der Tablet Strichlisten-Recorder in **Vereint** ist für den hochfrequenten Thekenbetrieb auf Festen, Feiern und Mitgliederversammlungen optimiert. Er bietet eine touch-optimierte Kiosk-Oberfläche zur blitzschnellen 1-Tap-Getränke- und Speisenbuchung, Rundenabrechnung und zum Abendabschluss.
 
 ---
 
@@ -8,10 +8,10 @@ Der Tablet Strichlisten-Recorder in **Vereint** ist für den hochfrequenten Thek
 
 ### 1. Kiosk-Modus & Theken-Bedienung
 - **1-Tap Schnellbuchung**:
-  - Thekenbediener sehen eine touch-optimierte Liste aller aktiven Vereinsmitglieder (`TabletMemberDto`).
+  - Thekenbediener sehen eine touch-optimierte Liste aller aktiven Mitglieder der Gruppe (`TabletMemberDto`).
   - Ein Antippen einer Mitgliedszeile öffnet das Artikel-Overlay mit Tabs für **Getränke** und **Speisen**.
   - Große Kachel-Buttons zeigen die für dieses Event freigeschalteten Artikel (`tabletEnabled = true`) mit Name und effektivem Preis.
-  - Eine Artikelauswahl löst die sofortige Buchung auf das persönliche Vereinskonto aus (`accountingMode = credit, source = tabletManual`, `eventDrinkId` oder `eventFoodId`).
+  - Eine Artikelauswahl löst die sofortige Buchung auf das persönliche Guthabenkonto aus (`accountingMode = credit, source = tabletManual`, `eventDrinkId` oder `eventFoodId`).
 - **Kombiniertes Sortiment (`/items`)**:
   - Der Endpunkt `/api/v1/tablet/events/{eventId}/items` liefert in einer Abfrage alle freigegebenen Event-Getränke (`drinks`) und Event-Speisen (`food`) zur Minimierung von Latenzen.
 - **Runden-Erfassung (`round`)**:

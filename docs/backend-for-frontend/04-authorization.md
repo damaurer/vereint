@@ -119,7 +119,7 @@ Details: [Mehrere Stammtische](../domains/stammtische.md).
 
 ## 🎟️ Gastzugang für Veranstaltungen (`eventGuest`)
 
-Gäste ohne Vereinskonto können über einen Einladungslink auf Veranstaltungsdetails zugreifen:
+Gäste ohne Konto können über einen Einladungslink auf Veranstaltungsdetails zugreifen:
 1. **Pfad**: `/guest/:eventId`
 2. **Token-Quellen**: Query-Parameter `?token=...`, Header `X-Guest-Token` oder Cookie `guest_token`.
 3. **Validierung**: Express fragt `GET /api/v1/auth/access/guest?eventId=...&token=...` bei Spring Boot an.

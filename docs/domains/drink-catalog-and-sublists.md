@@ -1,13 +1,13 @@
 # Fachdomäne: Getränkekatalog & Sublisten
 
-Die Getränkeverwaltung in **Vereint** bildet das gesamte Sortiment ab – vom globalen Vereins-Masterkatalog über Event-spezifische Sublisten bis hin zu flexiblen Event-Getränkeauswahlen.
+Die Getränkeverwaltung in **Vereint** bildet das gesamte Sortiment ab – vom Masterkatalog der Gruppe über Event-spezifische Sublisten bis hin zu flexiblen Event-Getränkeauswahlen.
 
 ---
 
 ## 🎯 Fachliche Sicht (Business Domain)
 
 ### 1. Globaler Getränkekatalog & Vorschlagsworkflow
-- **Masterkatalog**: Zentrales Verzeichnis aller im Verein verfügbaren Getränke mit Name, Beschreibung, Kategorie (z. B. Bier, Softdrinks, Heißgetränke), Standard-Verkaufspreis (`defaultPrice: BigDecimal`), Einkaufspreis (`costPrice: BigDecimal`), Währung (`currency: String`, z. B. `EUR`), Bildreferenz und Barcode(s).
+- **Masterkatalog**: Zentrales Verzeichnis aller in der Gruppe verfügbaren Getränke mit Name, Beschreibung, Kategorie (z. B. Bier, Softdrinks, Heißgetränke), Standard-Verkaufspreis (`defaultPrice: BigDecimal`), Einkaufspreis (`costPrice: BigDecimal`), Währung (`currency: String`, z. B. `EUR`), Bildreferenz und Barcode(s).
 - **Einkaufspreise & Wirtschaftlichkeit**: Die Pflege von `costPrice` ermöglicht exakte Deckungsbeitrags- und Gewinnrechnungen (`profit = unitPrice - costPrice`) pro Event und Verkaufskanal.
 - **Vorschlags- & Freigabeprozess**:
   1. Mitglieder oder Vorstände schlagen neue Getränke vor (`status = proposed`, erfasst `proposed_by_user_id`).
@@ -21,7 +21,7 @@ Die Getränkeverwaltung in **Vereint** bildet das gesamte Sortiment ab – vom g
   - „Im Sortiment“ nimmt ein Getränk aus dem Verkauf (`active = false`), ohne es zu löschen; die Karte zeigt dann „Inaktiv“.
 
 ### 2. Event-Sublisten (Sortimentssteuerung) & Event-Getränke
-- Nicht jedes Vereins-Event bietet das gesamte Vereinssortiment an.
+- Nicht jedes Event bietet das gesamte Sortiment der Gruppe an.
 - **Sublisten** definieren ausgewählte Sortiments-Teilmengen (z. B. "Sommerfest", "Mitgliederversammlung", "Sportturnier").
 - Innerhalb einer Subliste können globale Katalogpreise mit einem spezifischen `default_price` überschrieben werden.
 - Über `EventDrinkController` (`/api/v1/events/{eventId}/drinks/assign-sublist`) werden Sublisten an Events gekoppelt oder Einzelgetränke (`AddEventDrinkRequest`) mit festen Eventpreisen (`price`, `costPrice`), `selfServiceEnabled` und `tabletEnabled` zugewiesen.

@@ -7,7 +7,7 @@
 ## 🎯 Fachliche Sicht (Business Domain)
 
 ### 1. Moments-Konzept & Anwendungsfälle
-**Moments** ist ein **ereignisgesteuertes, zeitlich begrenzte Kollaborationsmerkmal**, das Vereinsmitglieder nutzen können, um spontane Momente gemeinsamer Aktivität zu initiieren:
+**Moments** ist ein **ereignisgesteuertes, zeitlich begrenzte Kollaborationsmerkmal**, das Mitglieder der Gruppe nutzen können, um spontane Momente gemeinsamer Aktivität zu initiieren:
 
 - **Soziale & Stammtisch-Clubs**: Gemeinsames Anstoßen ("Gemeinsames Anstoßen 🍻")
 - **Glaubensgemeinschaften & Kirchen**: Gemeinsame Gebetskreise ("Gemeinsames Beten & Fürbitten 🙏")
@@ -48,7 +48,7 @@ Wenn ein Moment abläuft oder fertiggestellt wird, wird die Session abgeschlosse
 
 - **Zusammenfassung**: Die Moment-Historie liefert `momentId`, `title`, `topicType`, `totalResponses`, `uniqueParticipants`, `summary` und das nullable Feld `completedAt`.
 - **Beispiel-Zusammenfassung**: "5 Teilnehmer haben 8 Statusbeiträge zum Moment 'Stammtisch Anstoßen' (toast) geteilt."
-- **Zweck**: Bewahrt Vereinserinnerungen, ohne Haupt-Planungskalender mit Mikro-Events zu überladen.
+- **Zweck**: Bewahrt gemeinsame Erinnerungen, ohne Haupt-Planungskalender mit Mikro-Events zu überladen.
 
 ### 7. Typen & Reaktionen verwalten
 Vorstand und Administration legen unter *Vorstand → Moments · Typen & Reaktionen* (`/board/moments`) fest, welche Arten von Moments es gibt und mit welchen Reaktionen Mitglieder antworten:

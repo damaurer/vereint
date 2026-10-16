@@ -1,6 +1,6 @@
 # Fachdomäne: Benutzerverwaltung & Authentifizierung
 
-Die Benutzerverwaltung in **Vereint** verbindet das externe Identitätsmanagement (Keycloak OIDC) mit einer internen, vereinsbezogenen Profildatenbank in PostgreSQL. Sie regelt Mitglieder-Onboarding, Stammdatenpflege, Rollen- und Rechtevergabe sowie das administrative Sperren (*Disabling*) von Accounts.
+Die Benutzerverwaltung in **Vereint** verbindet das externe Identitätsmanagement (Keycloak OIDC) mit einer internen, gruppenbezogenen Profildatenbank in PostgreSQL. Sie regelt Mitglieder-Onboarding, Stammdatenpflege, Rollen- und Rechtevergabe sowie das administrative Sperren (*Disabling*) von Accounts.
 
 ---
 
@@ -8,14 +8,15 @@ Die Benutzerverwaltung in **Vereint** verbindet das externe Identitätsmanagemen
 
 ### Benutzer-Lebenszyklus & Onboarding
 1. **Erstregistrierung / OIDC-Provisionierung**:
-   - Wenn sich ein Benutzer erstmals über Keycloak anmeldet, wird anhand des OIDC-Subjekts (`keycloak_subject`) automatisch ein Vereinsbenutzerdatensatz angelegt (*Just-in-Time Provisioning*).
+   - Wenn sich ein Benutzer erstmals über Keycloak anmeldet, wird anhand des OIDC-Subjekts (`keycloak_subject`) automatisch ein Benutzerdatensatz angelegt (*Just-in-Time Provisioning*).
    - Standardmäßig erhält jedes neue Mitglied die Rolle `member` und wird als aktiv (`disabled = false`) geführt.
-   - Neue Personen kommen über einen Einladungslink von Vorstand oder Administration in den Verein und legen ihr Konto selbst an; siehe [Mitglieder per Einladungslink](member-invites.md).
+   - Neue Personen kommen über einen Einladungslink von Vorstand oder Administration in die Gruppe und legen ihr Konto selbst an; siehe [Mitglieder per Einladungslink](member-invites.md).
 2. **Profilpflege**:
    - Mitglieder können ihren Anzeigenamen (`displayName`), ihre E-Mail-Adresse und Profilbild-Referenzen selbst verwalten.
    - **Zwei-Faktor-Anmeldung (freiwillig)**: „Zwei-Faktor-Anmeldung einrichten“ im Profil öffnet die Keycloak-Kontoverwaltung (`/kc/realms/vereint/account`). Wer dort eine Authenticator-App hinterlegt, wird beim Login nach dem Code gefragt. Pflicht ist sie für niemanden.
 3. **Rollen- & Funktionszuweisung (Vorstand/Admin)**:
    - Administratoren können Mitgliedern zusätzliche Rollen (`board`, `admin`, `tabletRecorder`) sowie Vorstandsfunktionen (`chair`, `treasurer`, `secretary`, `assessor`) zuweisen.
+   - Rollen gelten je Gruppe (`stammtisch_roles`); neben den vier Systemrollen kann jede Gruppe eigene Rollen anlegen. Keycloak-Realmrollen zählen nicht mehr, außer `admin` für den Plattform-Admin. Siehe [Gruppen](stammtische.md#rollen-je-stammtisch).
 4. **Sperrung (Account Disablement)**:
    - Bei Austritt oder Beitragsrückstand kann ein Administrator einen Benutzer sperren (`disabled = true`).
    - Gesperrte Benutzer können keine Kassenbuchungen, Barcodekäufe oder Chat-Nachrichten mehr tätigen.
@@ -93,7 +94,7 @@ data class UpdateUserStatusRequest(
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Vereinsmitglied
+    actor User as Mitglied der Gruppe
     participant BFF as Express BFF
     participant KC as Keycloak 26
     participant Spring as Spring Boot Backend

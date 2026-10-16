@@ -1,4 +1,4 @@
-# 🍻 Vereint – Vereinsverwaltung & digitale Strichliste
+# 🍻 Vereint – Deine Gruppe. Vereint.
 
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1+-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.3+-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
@@ -7,7 +7,10 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![AWS](https://img.shields.io/badge/AWS-S3_%26_EC2-FF9900?logo=amazonwebservices&logoColor=white)](infra/aws/)
 
-**Vereint** ist die App für den Verein: Events mit Zu- und Absagen, Vereinschat,
+**Vereint** ist die App für Gruppen aller Art, ob Stammtisch, Verein oder Team.
+Eine Installation trägt beliebig viele Gruppen; jede hat eigene Mitglieder,
+Rollen und einen Tarif (Kostenlos, Standard, Premium; Zahlung über Stripe). Je
+Gruppe gibt es Treffen und Events mit Zu- und Absagen, Gruppenchat,
 Direkt- und Event-Chats, Guthaben statt Bargeld, Bezahlen per Barcode-Scan, das
 Thekenterminal im Kiosk-Modus, Getränke- und Speisenkatalog, Moments mit Fotos
 und kurzen Videos, Statistiken und Einladungen per Link. Sie läuft als
@@ -72,7 +75,7 @@ Rollback aus.
 
 | Verzeichnis | Technologie | Aufgabe |
 | :--- | :--- | :--- |
-| `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-API, Fachlogik, PostgreSQL/Liquibase, Verschlüsselung, S3, Web Push |
+| `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-API, Fachlogik, Trennung der Gruppen (Row-Level-Security), PostgreSQL/Liquibase, Verschlüsselung, S3, Web Push, Stripe |
 | `webservice/` | Angular 22, Express 5, TypeScript 6 | Oberfläche, PWA, SSR, BFF mit Session-Cookie und API-Proxy |
 | `keycloak/` | Keycloak 26.8.1 | Realm-Definitionen, Login-Theme, Produktions-Image |
 | `deploy/` | Docker Compose, Caddy | Produktions-Stack, Backups, Deployment-Skripte |

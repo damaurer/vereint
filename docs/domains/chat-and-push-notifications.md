@@ -1,16 +1,16 @@
 # Fachdomäne: Kommunikation & Push-Benachrichtigungen
 
-Das Kommunikationsmodul in **Vereint** ermöglicht den interaktiven Austausch zwischen Vereinsmitgliedern sowie die zuverlässige Zustellung zeitkritischer Informationen über Web Push (VAPID).
+Das Kommunikationsmodul in **Vereint** ermöglicht den interaktiven Austausch zwischen Mitgliedern der Gruppe sowie die zuverlässige Zustellung zeitkritischer Informationen über Web Push (VAPID).
 
 ---
 
 ## 🎯 Fachliche Sicht (Business Domain)
 
-### 1. Vereinschat & Konversationsarten
-- **Hauptkanal (Club Channel)**: Zentraler Raum für alle Vereinsmitglieder zum Austausch allgemeiner Neuigkeiten.
+### 1. Gruppenchat & Konversationsarten
+- **Hauptkanal (Club Channel)**: Zentraler Raum für alle Mitglieder der Gruppe zum Austausch allgemeiner Neuigkeiten.
 - **Event-Chaträume**: Jeder Veranstaltung kann ein eigener temporärer Chatraum zugeordnet werden, in dem Teilnehmer und autorisierte Gäste Fragen zu Treffpunkt, Mitbringseln oder Ablauf stellen können.
 - **Direktnachrichten (Direct Messages)**: 1:1-Gespräche zwischen zwei Mitgliedern.
-- **Gast-Chat**: Externe Gäste mit gültigem Einladungstoken können im jeweiligen Event-Chatraum mitlesen und schreiben, ohne ein Vereinsbenutzerkonto zu besitzen.
+- **Gast-Chat**: Externe Gäste mit gültigem Einladungstoken können im jeweiligen Event-Chatraum mitlesen und schreiben, ohne ein Benutzerkonto zu besitzen.
 - **Ungelesen-Zähler**: Je Mitglied und Konversation wird der Lesestand gespeichert (`conversation_members.last_read_at`); die App zeigt die Zahl ungelesener Nachrichten als Badge am Chat-Eintrag der Navigation.
 - **Verschlüsselung**: Nachrichten werden vor dem Speichern mit AES-256-GCM verschlüsselt (`DATA_ENCRYPTION_KEY`).
 

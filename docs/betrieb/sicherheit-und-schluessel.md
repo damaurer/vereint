@@ -17,6 +17,18 @@ Bewusst **keine** Ende-zu-Ende-Verschlüsselung: Sie würde Suche und
 Push-Vorschauen verhindern. Der Schlüssel liegt auf dem Server, nicht bei den
 Mitgliedern.
 
+## Trennung der Gruppen
+
+Daten einer Gruppe sieht nur, wer Mitglied dieser Gruppe ist. Das sichern zwei
+unabhängige Schichten: Hibernate hängt an jede Abfrage die Gruppe an, und
+PostgreSQL erzwingt dieselbe Grenze per Row-Level-Security auf allen fachlichen
+Tabellen. Das greift nur, wenn sich der baseservice als Benutzer `vereint`
+verbindet (kein Superuser); in Produktion legt `deploy/postgres/init-databases.sh`
+ihn so an. Details: [stammtische.md](../domains/stammtische.md#trennung).
+
+Zahlungsdaten speichert Vereint nicht; Stripe-Webhooks werden über die Signatur
+geprüft (`STRIPE_WEBHOOK_SECRET`).
+
 ## Schlüssel, die offline gesichert sein müssen
 
 > **Wichtig:** Diese zwei Werte aus dem SSM Parameter Store zusätzlich offline

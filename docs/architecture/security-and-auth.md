@@ -42,11 +42,18 @@ sequenceDiagram
 
 Die Zuordnung von Systemrollen zu atomaren Berechtigungen ist im Backend in `RolePermissionMatrix` (Version `2`) zentral verankert.
 
+> **Rollen je Gruppe:** Seit den mehreren Gruppen kommen Rollen und Rechte einer
+> Anfrage nur aus der gewählten Gruppe (`stammtisch_roles`), nicht mehr aus den
+> Keycloak-Realmrollen. Die Tabelle unten zeigt die Startwerte der vier
+> Systemrollen; jede Gruppe kann sie anpassen und eigene Rollen anlegen. Die
+> Realmrolle `admin` macht eine Person zusätzlich zum Plattform-Admin. Details:
+> [Gruppen](../domains/stammtische.md#rollen-je-stammtisch).
+
 ### Rollen im System (`UserRole`)
-- `member`: Reguläres Vereinsmitglied mit Basisrechten.
+- `member`: Reguläres Mitglied der Gruppe mit Basisrechten.
 - `board`: Vorstandsmitglied mit erweiterten Verwaltungsrechten.
 - `admin`: Administrator mit Vollzugriff auf das Gesamtsystem.
-- `tabletRecorder`: Technische Rolle für Kiosksysteme an der Vereinstheke.
+- `tabletRecorder`: Technische Rolle für Kiosksysteme an der Theke.
 
 ### Vorstands-Funktionsrollen (`BoardRole`)
 Optionale Funktionsbezeichnung innerhalb des Vorstands:
@@ -63,14 +70,14 @@ Optionale Funktionsbezeichnung innerhalb des Vorstands:
 | `balance.read.self` | ✅ | ✅ | ✅ | ❌ | Eigenen Kassenstand und Buchungshistorie abfragen |
 | `purchase.self` | ✅ | ✅ | ✅ | ❌ | Eigene Einkäufe via Barcode-Scan buchen |
 | `purchase.tablet` | ❌ | ❌ | ✅ | ✅ | Getränkebuchungen für alle Mitglieder am Theken-Tablet durchführen |
-| `event.create` | ✅ | ✅ | ✅ | ❌ | Neue Vereinsveranstaltungen anlegen |
+| `event.create` | ✅ | ✅ | ✅ | ❌ | Neue Veranstaltungen der Gruppe anlegen |
 | `event.manage` | ❌ | ✅ | ✅ | ❌ | Bestehende Events bearbeiten, absagen oder abschließen |
 | `event.invites.manage` | ❌ | ✅ | ✅ | ❌ | Gästelisten und Einladungstoken generieren |
 | `catalog.propose` | ❌ | ✅ | ✅ | ❌ | Neue Getränke zur Aufnahme in den Katalog vorschlagen |
 | `catalog.approve` | ❌ | ✅ | ✅ | ❌ | Vorgeschlagene Getränke freigeben oder ablehnen |
-| `ledger.read` | ❌ | ✅ | ✅ | ❌ | Vollständiges Vereins-Kassenbuch und Salden einsehen |
+| `ledger.read` | ❌ | ✅ | ✅ | ❌ | Vollständiges Kassenbuch der Gruppe und Salden einsehen |
 | `ledger.correct` | ❌ | ✅ | ✅ | ❌ | Fehlbuchungen stornieren und Korrekturbuchungen ausführen |
-| `chat.member` | ✅ | ✅ | ✅ | ❌ | Am vereinsweiten Chat und Gruppenkanälen teilnehmen |
+| `chat.member` | ✅ | ✅ | ✅ | ❌ | Am Gruppenchat und Gruppenkanälen teilnehmen |
 | `chat.event` | ✅ | ✅ | ✅ | ❌ | In Event-spezifischen Chaträumen schreiben |
 | `audit.read` | ❌ | ✅ | ✅ | ❌ | Audit-Logs und administrative Änderungsprotokolle einsehen |
 

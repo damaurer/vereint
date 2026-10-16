@@ -66,7 +66,7 @@ graph TD
 ### 2. Express SSR & BFF Layer (`webservice/src/server`)
 - **Runtime**: Node.js 22+, Express 5.
 - **Server-Side Rendering (SSR)**: Schneller First Contentful Paint (FCP) durch serverseitiges Vorrendern der HTML-Seiten mit Angular SSR Engine.
-- **State Hydration**: Übertragung des serverseitigen Authentifizierungs- und Vereinskontexts (`TransferState`, `CLUB_CONFIG_KEY`, Auth-State) verhindert Layout-Shifts und Flackern beim Laden.
+- **State Hydration**: Übertragung des serverseitigen Authentifizierungs- und Gruppenkontexts (`TransferState`, `CLUB_CONFIG_KEY`, Auth-State) verhindert Layout-Shifts und Flackern beim Laden.
 - **Backend-for-Frontend (BFF) Pattern**:
   - Verwaltet OIDC PKCE Login/Logout-Abläufe und schützt Tokens vor XSS in verschlüsselten, HTTP-Only, SameSite Cookies.
   - Proxy-Middleware (`api-proxy.middleware.ts`) leitet Client-Anfragen transparent an das Spring Boot Backend weiter und hängt das gültige Bearer-Access-Token an.

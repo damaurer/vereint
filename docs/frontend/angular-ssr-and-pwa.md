@@ -44,7 +44,7 @@ Die Progressive Web App (`pwa/`) gewährleistet Installationsfähigkeit (A2HS - 
 | Ressourcentyp | Caching-Strategie | Begründung |
 | :--- | :--- | :--- |
 | **Statische Bundles (JS, CSS)** | `Cache-First` (Cache-Busting via Hash) | Maximale Ladegeschwindigkeit bei wiederholten Aufrufen. |
-| **Bilder & Icons (SVG, WebP)** | `Network-First` mit Cache-Fallback | Vereinslogo und Icons bleiben offline sichtbar. |
+| **Bilder & Icons (SVG, WebP)** | `Network-First` mit Cache-Fallback | Logo und Icons bleiben offline sichtbar. |
 | **API-Anfragen (`/api/*`)** | `Network-Only` (kein Caching) | Kassen- und Transaktionsdaten dürfen niemals veraltet sein. |
 | **SSR-Seitenanfragen** | `Network-Only` mit `/offline.html` als Fallback | Seiten enthalten persönliche Daten und werden deshalb nie gecacht; ohne Netz erscheint die Offline-Seite. |
 

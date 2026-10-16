@@ -47,7 +47,7 @@ docker compose down -v
 
 | Variable | Beschreibung | Standard / Entwicklung |
 | :--- | :--- | :--- |
-| `VEREINT_DB_PORT` | Host-Port der Vereinsdatenbank | `5432` |
+| `VEREINT_DB_PORT` | Host-Port der App-Datenbank | `5432` |
 | `VEREINT_DB_USERNAME` | PostgreSQL Benutzername | `vereint` |
 | `VEREINT_DB_PASSWORD` | PostgreSQL Passwort | `change-me-vereint-db-password` |
 | `KEYCLOAK_DB_PORT` | Host-Port der Keycloak-Datenbank | `5433` |
@@ -56,6 +56,9 @@ docker compose down -v
 | `KEYCLOAK_ADMIN_PASSWORD` | Admin-Passwort für Keycloak | `admin` |
 | `S3_ACCESS_KEY` | MinIO S3 Access Key | `vereint-minio-admin` |
 | `S3_SECRET_KEY` | MinIO S3 Secret Key | `change-me-minio-secret` |
+| `TENANCY_BOOTSTRAP_REALM_ROLES` | Testkonten ohne Mitgliedschaft treten „Meine Gruppe“ bei, Realmrollen werden Gruppenrollen. Nur lokal und in E2E, in Produktion nie | `true` |
+| `SIGNUP_ENABLED`, `SIGNUP_MAX_OWNED` | Eigene Gruppen eröffnen (`/gruppe-eroeffnen`) an/aus, Höchstzahl eigener Gruppen | `true`, `3` |
+| `STRIPE_ENABLED` | Online-Zahlung der Tarife; lokal nur mit Test-Schlüsseln (siehe [abrechnung.md](../domains/abrechnung.md#einrichtung)) | `false` |
 
 ---
 

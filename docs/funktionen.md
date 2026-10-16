@@ -4,6 +4,42 @@
 [Rollen und Berechtigungen](rollen-und-berechtigungen.md); Schritt-für-Schritt-
 Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 
+## Gruppen
+
+- Eine Installation trägt beliebig viele **Gruppen** (Stammtisch, Verein, Team
+  oder jede andere Gemeinschaft). Ein Konto kann Mitglied in mehreren Gruppen
+  sein; über *Gruppe wechseln* bzw. die Seite *Gruppe wählen* (`/gruppen`)
+  wechselt man zwischen ihnen.
+- Alles Fachliche gehört genau einer Gruppe: Events, Chats, Guthaben, Katalog,
+  Moments, Mitteilungen, Einladungen, Kiosk-Geräte, Protokoll und Statistik. Die
+  Trennung sichern Anwendung und Datenbank (Row-Level-Security) doppelt ab.
+- Eigene Gruppe eröffnen unter *Eigene Gruppe eröffnen* (`/gruppe-eroeffnen`):
+  Gruppenname und Konto in einem Schritt, die Person wird Admin, die Gruppe
+  startet im Tarif *Kostenlos*. Höchstens drei eigene Gruppen pro Person.
+- *Gruppeneinstellungen*: Name und Bild der Gruppe, Rollen und Berechtigungen,
+  Tarif, Datenexport, Gruppe verlassen.
+- Die Plattform-Administration (Vereint-Team) legt unter `/plattform` Gruppen an,
+  archiviert sie und vergibt Tarife von Hand.
+- Details: [docs/domains/stammtische.md](domains/stammtische.md)
+
+## Tarife
+
+| | Kostenlos | Standard | Premium |
+| :--- | :--- | :--- | :--- |
+| Preis | 0 € | 4 €/Monat oder 40 €/Jahr | 9 €/Monat oder 90 €/Jahr |
+| Mitglieder | bis 10 | bis 40 | unbegrenzt |
+| Speicher für Bilder und Videos | 1 GB | 10 GB | 50 GB |
+| Videos in Moments | nein | ja | ja |
+| Thekenterminals gleichzeitig | 1 | 1 | mehrere |
+
+- Gebucht und bezahlt wird je Gruppe online über Stripe. Rechnungen, Zahlart,
+  Wechsel und Kündigung laufen über das Stripe-Kundenportal.
+- Nach einer fehlgeschlagenen Zahlung läuft die Gruppe 30 Tage normal weiter,
+  danach ist sie nur lesbar, bis bezahlt ist. Gelöscht wird nichts.
+- Ohne Stripe-Einrichtung ist die Online-Zahlung aus; „Meine Gruppe“ aus der
+  Migration läuft mit allen Funktionen weiter.
+- Details: [docs/domains/abrechnung.md](domains/abrechnung.md)
+
 ## Start und Navigation
 
 - Dashboard mit Guthaben, nächsten Events (direkt zu- oder absagen) und neuen
@@ -27,7 +63,7 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 
 ## Chat und Mitteilungen
 
-- Vereinschat, Direktnachrichten zwischen Mitgliedern und Event-Chats, mit Zähler für ungelesene Nachrichten am Chat-Eintrag.
+- Gruppenchat, Direktnachrichten zwischen Mitgliedern und Event-Chats, mit Zähler für ungelesene Nachrichten am Chat-Eintrag.
 - Mitteilungen (Glocke oben) und Rundbriefe des Vorstands, auf Wunsch als
   Web-Push aufs Handy (siehe [PWA und Push](frontend/angular-ssr-and-pwa.md)).
 - Nachrichten und Mitteilungen werden verschlüsselt gespeichert (siehe
@@ -63,6 +99,9 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 - Statt Löschen gibt es den Schalter *Im Sortiment*. Warnungen bei doppeltem
   Barcode oder Namen.
 - Je Event eine Auswahl aus dem Katalog (Subliste) mit eigenen Preisen.
+- Gemeinsame **Getränkedatenbank** aller Gruppen (ohne Preise und Bilder): unter
+  *Aus der Getränkedatenbank* übernimmt man ein Getränk und setzt den eigenen
+  Preis; eigene freigegebene Getränke lassen sich dorthin teilen.
 - Details: [docs/domains/drink-catalog-and-sublists.md](domains/drink-catalog-and-sublists.md),
   [docs/domains/food-catalog-and-event-food.md](domains/food-catalog-and-event-food.md)
 
@@ -98,10 +137,13 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 
 ## Mitglieder per Einladungslink
 
-- Vorstand und Administration erstellen Einladungslinks mit Bezeichnung,
-  Gültigkeit (1, 7 oder 30 Tage) und Anzahl Nutzungen (1 bis 50).
-- Die eingeladene Person registriert sich über den Link und ist danach normales
-  Mitglied. Eine offene Selbstregistrierung gibt es nicht.
+- Wer Mitglieder einladen darf (Vorstand und Admin), erstellt Einladungslinks
+  der Gruppe mit Bezeichnung, Gültigkeit (1, 7 oder 30 Tage) und Anzahl
+  Nutzungen (1 bis 50).
+- Neue Personen registrieren sich über den Link und sind danach Mitglied der
+  Gruppe. Wer schon ein Konto hat, öffnet den Link angemeldet und tritt mit
+  *Dieser Gruppe beitreten* bei. In eine bestehende Gruppe kommt man nur per
+  Einladung.
 - Links sind zufällig, laufen ab und lassen sich zurückziehen; gespeichert wird
   nur ein Hash.
 - Details: [docs/domains/member-invites.md](domains/member-invites.md)
@@ -111,7 +153,8 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 - Vorstand: Events, Kasse, Kommunikation (Rundbriefe, Infotafel), Einladungen,
   Moment-Typen und Reaktionen, Kiosk-Geräte. Die Übersicht zeigt unter
   *Letzte Aktionen* das Protokoll mit Namen.
-- Administration: Mitglieder, Rollen, Konten deaktivieren, Audit-Protokoll.
+- Administration: Mitglieder, Konten deaktivieren, Audit-Protokoll. Rollen
+  vergibt und gestaltet man unter *Gruppeneinstellungen*.
 - In Formularen und Protokollen wird mit Namen gearbeitet, nicht mit rohen IDs.
 - Passwort vergessen: Vereint verschickt keine E-Mails. Die Administration setzt
   in der Keycloak-Verwaltung ein vorläufiges Passwort.

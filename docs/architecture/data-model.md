@@ -183,3 +183,6 @@ FOR EACH ROW EXECUTE FUNCTION vereint_reject_ledger_mutation();
 | `010` | `010-member-invites.xml` | Einladungslinks (`member_invites`, nur Token-Hash) und Einlösungen. |
 | `011` | `011-kiosk-sessions.xml` | Kiosk-Sitzungen am Thekenterminal (`kiosk_sessions`, PIN nur als BCrypt-Hash). |
 | `012` | `012-moment-types-and-media.xml` | Verwaltbare Moment-Typen und Reaktionen mit Startbestand, Fotos und Videos zu Beiträgen (`moment_media`). |
+| `013` | `013-stammtische.xml` | Gruppen (`stammtische`, `stammtisch_members`, `stammtisch_roles`), Spalte `stammtisch_id` an allen fachlichen Tabellen, Row-Level-Security (Details: [stammtische.md](../domains/stammtische.md)). |
+| `014` | `014-drink-library.xml` | Gemeinsame Getränkedatenbank (`drink_library`, `drink_library_barcodes`) ohne Preise. |
+| `015` | `015-billing.xml` | Tarife je Gruppe (`stammtisch_subscriptions`) und verarbeitete Stripe-Ereignisse (`billing_events`). |

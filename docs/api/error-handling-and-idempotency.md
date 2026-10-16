@@ -19,7 +19,7 @@ Jede fehlerhafte Antwort des Backends wird im standardisierten JSON-Format `appl
   "traceId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
   "timestamp": "2026-09-15T06:45:00.123Z",
   "details": [
-    "Wenden Sie sich an den Vereinsvorstand zur Klärung des Status."
+    "Wenden Sie sich an den Vorstand der Gruppe zur Klärung des Status."
   ]
 }
 ```
@@ -47,7 +47,7 @@ Jede fehlerhafte Antwort des Backends wird im standardisierten JSON-Format `appl
 | `self_privilege_change_denied` | `403 Forbidden` | Administratoren dürfen sich eigene Privilegien nicht selbst entziehen. |
 | `last_admin_protected` | `403 Forbidden` | Der letzte verbleibende Administrator kann nicht degradiert werden. |
 | `not_found` | `404 Not Found` | Angefragte Ressource (User, Event, Drink, Sublist) existiert nicht. |
-| `profile_not_found` | `404 Not Found` | Kein lokaler Vereinsdatensatz für den OIDC-Subject vorhanden. |
+| `profile_not_found` | `404 Not Found` | Kein lokaler Benutzerdatensatz für den OIDC-Subject vorhanden. |
 | `invitation_expired` | `410 Gone` | Gast-Einladungstoken ist zeitlich abgelaufen. |
 | `invitation_revoked` | `410 Gone` | Einladungslink wurde manuell storniert oder Limit erreicht. |
 | `event_not_active` | `409 Conflict` | Event ist nicht im Status `active` (Thekenbuchung nicht erlaubt). |

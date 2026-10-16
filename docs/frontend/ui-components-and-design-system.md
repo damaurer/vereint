@@ -6,11 +6,11 @@ Die Benutzeroberfläche von **Vereint** basiert auf dem **Optimus Design System*
 
 ## 🎨 Optimus Design Tokens (`styles.css`)
 
-Das Design-System definiert CSS Custom Properties für ein einheitliches Erscheinungsbild und einfache Theme-Anpassbarkeit pro Vereinsinstanz:
+Das Design-System definiert CSS Custom Properties für ein einheitliches Erscheinungsbild und einfache Theme-Anpassbarkeit pro Installation:
 
 | Token-Kategorie | CSS Variable | Standardwert / Zweck |
 | :--- | :--- | :--- |
-| **Primärfarbe** | `--opt-color-primary` | Vereins-Hauptfarbe (z. B. `#1e3a8a`) für Buttons, Header und aktive Navigationselemente. |
+| **Primärfarbe** | `--opt-color-primary` | Hauptfarbe (z. B. `#1e3a8a`) für Buttons, Header und aktive Navigationselemente. |
 | **Akzentfarbe** | `--opt-color-accent` | Hervorhebungen (z. B. `#d97706`) für Badges, Warnungen und Runden. |
 | **Erfolg & Guthaben** | `--opt-color-success` | `#16a34a` für positive Kassenstände, Buchungsbestätigungen und Zusagen. |
 | **Gefahr & Minusstand** | `--opt-color-danger` | `#dc2626` für negative Kassenstände, Stornos und Absagen. |
@@ -79,7 +79,7 @@ Alle UI-Komponenten sind als **Angular Standalone Components** ohne externe UI-F
 
 ## 🧭 Navigation (`webservice/src/app/shell`)
 
-`nav-model.ts` ist die einzige Quelle für alle Ziele, gruppiert in **Verein**, **Mein Konto**, **Theke** und **Verwaltung** (nur mit Rolle/Permission).
+`nav-model.ts` ist die einzige Quelle für alle Ziele, gruppiert in **Gruppe**, **Mein Konto**, **Theke** und **Verwaltung** (nur mit Rolle/Permission).
 
 | Gerät | Darstellung |
 | :--- | :--- |

@@ -35,6 +35,9 @@ baseservice/src/main/resources/db/changelog/
 | `130-131` | `010-member-invites.xml` | Einladungslinks und Einlösungen | ✅ |
 | `140` | `011-kiosk-sessions.xml` | Kiosk-Sitzungen am Thekenterminal | ✅ |
 | `150-153` | `012-moment-types-and-media.xml` | Moment-Typen und Reaktionen (mit Startbestand), Beiträge ohne Pflicht-Reaktion, `moment_media` | ✅ |
+| `160-165` | `013-stammtische.xml` | Gruppen (`stammtische`), `stammtisch_id` an allen fachlichen Tabellen, Mitgliedschaften und Rollen je Gruppe, Übernahme der Bestandsdaten in „Meine Gruppe“, Row-Level-Security | ✅ |
+| `170` | `014-drink-library.xml` | Gemeinsame Getränkedatenbank `drink_library` mit Barcodes | ✅ |
+| `180-183` | `015-billing.xml` | Tarife je Gruppe (`stammtisch_subscriptions`), Stripe-Ereignisse (`billing_events`), Recht `billing.manage`, Name der Standardgruppe | ✅ |
 
 ---
 

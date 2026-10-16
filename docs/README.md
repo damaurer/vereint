@@ -1,6 +1,6 @@
 # Vereint – Dokumentations-Hub & Wissensbasis
 
-Herzlich willkommen in der zentralen Wissensbasis und Dokumentationssuite des Projekts **Vereint** (Vereinsmanagement- & Strichlisten-Plattform).
+Herzlich willkommen in der zentralen Wissensbasis und Dokumentationssuite des Projekts **Vereint** (Plattform für Gruppen: Treffen, Guthaben & digitale Strichliste).
 
 Dieses Dokumentationszentrum bietet eine lückenlose, hochdetaillierte fachliche (*Business Logic & User Stories*) und technische (*Architektur, Code & API-Design*) Referenz aller bereits implementierten Module und Systemkomponenten.
 
@@ -57,6 +57,8 @@ docs/
 │   └── 06-extending-the-server.md        # How-Tos, Testing mit Vitest & Debugging
 │
 ├── domains/                              # Fachliche & Technische Spezifikationen der Kernmodule
+│   ├── stammtische.md                    # Mehrere Gruppen, Trennung (RLS), Rollen je Gruppe, Getränkedatenbank
+│   ├── abrechnung.md                     # Tarife je Gruppe, Stripe, Kulanzfrist, Datenexport
 │   ├── auth-and-user-management.md       # Profile, Rollen, Deaktivierung & Provisionierung
 │   ├── ledger-and-finance.md             # Kassenbuch, Buchungslogik, Einkaufspreise & Deckungsbeitrag
 │   ├── drink-catalog-and-sublists.md     # Getränkekatalog & Event-Sublisten
@@ -64,7 +66,7 @@ docs/
 │   ├── moments-and-rituals.md            # Moments & Rituale, Multi-Status-Updates & Welt-Karten
 │   ├── events-and-invites.md             # Event-Lebenszyklus, RSVPs & Gast-Einladungstoken
 │   ├── tablet-strichliste-recorder.md    # Kiosk-Strichliste, 1-Tap-Buchung & Abendabrechnung
-│   ├── chat-and-push-notifications.md    # Vereinschat, Direktnachrichten & VAPID Web Push
+│   ├── chat-and-push-notifications.md    # Gruppenchat, Direktnachrichten & VAPID Web Push
 │   └── statistics-and-analytics.md       # Verbrauchs- & Eber-Statistiken, Auswertungen
 │
 ├── frontend/                             # Client-Architektur & UI-Bibliothek
@@ -88,15 +90,18 @@ docs/
 
 | Fachbegriff | Technische Repräsentation | Beschreibung |
 | :--- | :--- | :--- |
-| **Mitglied (Member)** | `UserEntity`, `UserProfileDto` | Reguläres Vereinsmitglied mit Zugriff auf Profil, Guthaben, Getränke und Events. |
-| **Vorstand (Board)** | Rolle `board` | Vereinsführung mit Rechten zur Event-Erstellung, Kassenverwaltung und Broadcasts. |
-| **Administrator (Admin)** | Rolle `admin` | System- und Vereinsadministrator mit Vollzugriff inkl. Rollenvergabe und Account-Deaktivierung. |
+| **Gruppe** | `StammtischEntity`, Tabelle `stammtische`, Header `X-Stammtisch-Id` | Eine Gemeinschaft (Stammtisch, Verein, Team) mit eigenen Mitgliedern, Rollen, Daten und Tarif. In der App „Gruppe“, im Code `stammtisch`. |
+| **Tarif** | `stammtisch_subscriptions`, `PlanLimits` | Kostenlos (`free`), Standard (`stammtisch`) oder Premium (`verein`) je Gruppe, bezahlt über Stripe. |
+| **Plattform-Admin** | Keycloak-Realmrolle `admin` | Team der Installation: legt Gruppen an, archiviert sie, vergibt Tarife von Hand. |
+| **Mitglied (Member)** | `UserEntity`, `UserProfileDto` | Reguläres Mitglied einer Gruppe mit Zugriff auf Profil, Guthaben, Getränke und Events. |
+| **Vorstand (Board)** | Gruppenrolle `board` | Leitung der Gruppe mit Rechten zur Event-Erstellung, Kassenverwaltung und Broadcasts. |
+| **Administrator (Admin)** | Gruppenrolle `admin` | Admin der Gruppe mit Vollzugriff inkl. Rollen, Tarif und Account-Deaktivierung. |
 | **Strichlisten-Schreiber** | Rolle `tabletRecorder`, Berechtigung `purchase.tablet` | Berechtigung zur Bedienung des Tablet-Kiosks zur Getränkebuchung auf Events. |
 | **Kassenbuch / Ledger** | `LedgerEntry`, `LedgerService` | Unveränderliches Transaktionsjournal (Double-Entry Prinzip) für `topup`, `purchase`, `payout` und `correction`. |
 | **Guthaben (Balance)** | `MemberBalanceDto.creditBalance` | Aktueller Kontostand eines Mitglieds als `BigDecimal` (in EUR). |
 | **Idempotenzschlüssel** | `Idempotency-Key` (UUIDv4) | Eindeutiger HTTP-Header zur Vermeidung von Doppelbuchungen bei Verbindungsabbrüchen. |
 | **Subliste (Sublist)** | `DrinkSublistEntity`, `DrinkSublistItemEntity` | Eine für ein Event freigeschaltete Untermenge des globalen Getränkekatalogs. |
-| **Speisenkatalog (Food Catalog)** | `FoodCatalogEntity`, `FoodCatalogService` | Globaler Vereinskatalog für Speisen und Verzehrartikel mit Standard- und Einkaufspreisen. |
+| **Speisenkatalog (Food Catalog)** | `FoodCatalogEntity`, `FoodCatalogService` | Katalog der Gruppe für Speisen und Verzehrartikel mit Standard- und Einkaufspreisen. |
 | **Eventspeisen (Event Food)** | `EventFoodEntity`, `EventFoodService` | Veranstaltungsbezogenes Speisenangebot mit individueller Preisanpassung und Kiosk-Steuerung. |
 | **Einkaufspreis & Deckungsbeitrag** | `costPrice`, `profit = unitPrice - costPrice` | Erfassung des Wareneinsatzes zur automatischen Ermittlung der Gewinnmarge im Beleg-Snapshot und Kassenbuch. |
 | **Moments & Rituale** | `MomentSessionEntity`, `MomentResponseEntity` | Ereignisgesteuerte Kollaborationsfunktion für spontane Momente gemeinsamer Aktivität (Toasts, Gebete, Jubelrufe, Check-ins) mit Multi-Status-Updates, Welt-Karten und 24h-Linked-Chats. |
@@ -125,10 +130,11 @@ docs/
 - **Für Frontend- & UI-Entwickler**:
   1. Siehe [Angular SSR & PWA](frontend/angular-ssr-and-pwa.md) bezüglich TransferState und Service Worker.
   2. Siehe [UI-Komponenten & Design System](frontend/ui-components-and-design-system.md) für wiederverwendbare Komponenten.
-- **Für Vorstände & Vereinsverwalter**:
-  1. Siehe [Kassenbuch & Finanzen](domains/ledger-and-finance.md) für das Buchungs- und Guthabensystem sowie Deckungsbeitragsanalysen.
-  2. Siehe [Getränkekatalog](domains/drink-catalog-and-sublists.md) und [Speisenkatalog & Eventspeisen](domains/food-catalog-and-event-food.md) für die Sortimentspflege und Einkaufspreise.
-  3. Siehe [Benutzerverwaltung](domains/auth-and-user-management.md), [Mitglieder per Einladungslink](domains/member-invites.md) und [Events & Einladungen](domains/events-and-invites.md).
+- **Für Vorstände & Gruppenverwalter**:
+  1. Siehe [Gruppen](domains/stammtische.md) und [Tarife & Abrechnung](domains/abrechnung.md).
+  2. Siehe [Kassenbuch & Finanzen](domains/ledger-and-finance.md) für das Buchungs- und Guthabensystem sowie Deckungsbeitragsanalysen.
+  3. Siehe [Getränkekatalog](domains/drink-catalog-and-sublists.md) und [Speisenkatalog & Eventspeisen](domains/food-catalog-and-event-food.md) für die Sortimentspflege und Einkaufspreise.
+  4. Siehe [Benutzerverwaltung](domains/auth-and-user-management.md), [Mitglieder per Einladungslink](domains/member-invites.md) und [Events & Einladungen](domains/events-and-invites.md).
 - **Für Event-Betreiber & Thekenteams**:
   1. Siehe [Tablet Strichlisten-Recorder](domains/tablet-strichliste-recorder.md) für Kiosk-Abläufe, Speisen-/Getränkeauswahl und 1-Tap-Touch-Buchungen.
 - **Für den Betrieb (Produktion)**:

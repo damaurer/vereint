@@ -114,7 +114,7 @@ Die Zuordnung von Benutzerrollen zu fachlichen Berechtigungen ist zentral in `Ro
 | `profile.read.self` | Eigenes Profil und Einstellungen einsehen | ✅ | ✅ | ✅ | ❌ |
 | `balance.read.self` | Eigenen Kontostand & Buchungen einsehen | ✅ | ✅ | ✅ | ❌ |
 | `purchase.self` | Eigene Getränke-/Speisenkäufe buchen | ✅ | ✅ | ✅ | ❌ |
-| `chat.member` | Im allgemeinen Vereinschat lesen/schreiben | ✅ | ✅ | ✅ | ❌ |
+| `chat.member` | Im allgemeinen Gruppenchat lesen/schreiben | ✅ | ✅ | ✅ | ❌ |
 | `chat.event` | Im Event-Chat teilnehmen | ✅ | ✅ | ✅ | ❌ |
 | `event.create` | Neue Veranstaltungen erstellen | ✅ | ✅ | ✅ | ❌ |
 | `event.manage` | Veranstaltungen bearbeiten & absagen | ❌ | ✅ | ✅ | ❌ |

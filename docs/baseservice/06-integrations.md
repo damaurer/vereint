@@ -89,11 +89,11 @@ sequenceDiagram
 
 ## 💬 WebSocket & Echtzeit-Chat (`ChatService.kt`, `ChatController.kt`)
 
-Für den Vereins- und Event-Chat bietet der `baseservice` sowohl REST-Endpunkte zur Nachrichtenabfrage als auch WebSocket-Kanäle für den verzögerungsfreien Empfang:
+Für den Gruppen- und Event-Chat bietet der `baseservice` sowohl REST-Endpunkte zur Nachrichtenabfrage als auch WebSocket-Kanäle für den verzögerungsfreien Empfang:
 
 - **WebSocket-Endpunkt**: `/ws/chat`
 - **Kanäle**:
-  - `/topic/chat/general`: Allgemeiner Vereinschat (autorisiert für Rollen `member`, `board`, `admin`).
+  - `/topic/chat/general`: Allgemeiner Gruppenchat (autorisiert für Rollen `member`, `board`, `admin`).
   - `/topic/events/{eventId}/chat`: Veranstaltungschat (autorisiert für Teilnehmer und registrierte Gäste).
 - **Gast-Chat-Besonderheit**: Externe Gäste mit gültigem `X-Guest-Token` können ohne Keycloak-Login am Chat ihres spezifischen Events teilnehmen (`/api/v1/events/*/chat/guest/**`).
 

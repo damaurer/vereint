@@ -45,7 +45,17 @@ Details: [AWS-Infrastruktur und Kosten](aws-und-kosten.md#einrichtung)
       Backups nicht lesbar. Siehe
       [Sicherheit und Verschlüsselung](sicherheit-und-schluessel.md#schlüssel-die-offline-gesichert-sein-müssen).
 
-## 5. Ausrollen
+## 5. Gruppen und Abrechnung festlegen
+
+- [ ] Eröffnen eigener Gruppen über `/gruppe-eroeffnen` ist ab Werk an. Solange
+      Impressum, AGB und Datenschutzerklärung fehlen, den SSM-Parameter
+      `/vereint/SIGNUP_ENABLED` mit dem Wert `false` anlegen. Einladungslinks
+      funktionieren weiter.
+- [ ] Stripe ist optional. Ohne Stripe-Werte bleibt die Online-Zahlung aus und
+      „Meine Gruppe“ läuft mit allen Funktionen. Einrichtung:
+      [docs/domains/abrechnung.md](../domains/abrechnung.md#einrichtung).
+
+## 6. Ausrollen
 
 - [ ] [Pull Request #27](https://github.com/damaurer/vereint/pull/27) mergen.
       Er behebt einen falschen Rollback beim allerersten Deployment, beschreibt
@@ -57,14 +67,18 @@ Details: [AWS-Infrastruktur und Kosten](aws-und-kosten.md#einrichtung)
       `webservice CI/CD` und `keycloak CI/CD` einmal mit *Run workflow* starten.
 - [ ] Den **ersten Administrator** anlegen. Der Produktions-Realm hat keine
       Benutzer; die Anleitung steht nach #27 in
-      [deploy/README.md](../../deploy/README.md).
+      [deploy/README.md](../../deploy/README.md). Er braucht die Realmrolle
+      `admin` (Plattform-Admin). Meldet er sich als Erster an, wird er
+      automatisch Admin der Gruppe „Meine Gruppe“
+      ([Mehrere Gruppen](../../deploy/README.md#mehrere-gruppen)).
 
 Der Keycloak-Handgriff für Einladungslinks entfällt, weil der Realm beim ersten
 Start frisch importiert wird.
 
-## 6. Nach dem ersten Deployment prüfen
+## 7. Nach dem ersten Deployment prüfen
 
-- [ ] Anmelden, Rollen vergeben, einen Einladungslink testen.
+- [ ] Anmelden, „Meine Gruppe“ unter *Gruppeneinstellungen* umbenennen, Rollen
+      vergeben, einen Einladungslink testen.
 - [ ] Barcode-Kamera und Web Push am Handy testen; beides geht erst unter echtem
       HTTPS ([PWA und Push](../frontend/angular-ssr-and-pwa.md)).
 - [ ] Zwei-Faktor-Anmeldung einmal einrichten. Die OTP-Seiten kommen aus
