@@ -69,7 +69,7 @@ class LedgerEntryEntity(
     @JoinColumn(name = "reverses_entry_id")
     var reversesEntry: LedgerEntryEntity? = null,
 
-    @Column(name = "idempotency_key", length = 128, nullable = false, unique = true)
+    @Column(name = "idempotency_key", length = 128, nullable = false)
     var idempotencyKey: String = "",
 
     @CreatedDate
@@ -82,7 +82,7 @@ class LedgerEntryEntity(
      */
     @OneToOne(mappedBy = "ledgerEntry", cascade = [CascadeType.PERSIST, CascadeType.MERGE], fetch = FetchType.LAZY)
     var purchaseSnapshot: PurchaseSnapshotEntity? = null
-)
+) : StammtischScoped()
 
 @Entity
 @Table(name = "purchase_snapshots")
@@ -129,7 +129,7 @@ class PurchaseSnapshotEntity(
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now()
-)
+) : StammtischScoped()
 
 /**
  * Idempotenzeinträge sind je Kontext (`scope`) eindeutig, damit ein Schlüssel aus
@@ -169,4 +169,4 @@ class IdempotencyRecordEntity(
 
     @Column(name = "expires_at", nullable = false)
     var expiresAt: Instant = Instant.now()
-)
+) : StammtischScoped()

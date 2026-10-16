@@ -31,5 +31,8 @@ object ErrorCode {
     const val KIOSK_PIN_INVALID_FORMAT = "kiosk_pin_invalid_format"
     const val MEDIA_TOO_LARGE = "media_too_large"
     const val VIDEO_TOO_LONG = "video_too_long"
+    const val STAMMTISCH_REQUIRED = "stammtisch_required"
+    const val STAMMTISCH_ACCESS_DENIED = "stammtisch_access_denied"
+    const val LAST_ROLE_MANAGER_PROTECTED = "last_role_manager_protected"
     const val INTERNAL_ERROR = "internal_error"
 }

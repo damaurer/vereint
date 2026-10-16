@@ -1,5 +1,7 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.ChatMessageEntity
 import de.maurer.baseservice.domain.ConversationEntity
 import de.maurer.baseservice.domain.ConversationMemberEntity
@@ -25,9 +27,7 @@ import de.maurer.baseservice.repository.ConversationRepository
 import de.maurer.baseservice.repository.EventGuestRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
-import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.support.SecureTokens
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -56,7 +56,7 @@ class ChatService(
     private val conversationMemberRepository: ConversationMemberRepository,
     private val chatMessageRepository: ChatMessageRepository,
     private val eventGuestRepository: EventGuestRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService
 ) {
 
@@ -311,11 +311,8 @@ class ChatService(
 
     internal fun normalizeImageUrl(value: String?): String? = value?.trim()?.ifBlank { null }
 
-    internal fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        val roles = principal.roles + dbRoles
-        return roles.any { it == UserRole.BOARD || it == UserRole.ADMIN }
-    }
+    internal fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
+        access.hasAny(principal, caller, Permission.CHAT_MODERATE, Permission.EVENT_MANAGE)
 
     private fun toConversationDto(conversation: ConversationEntity): ConversationDto =
         ConversationDto(

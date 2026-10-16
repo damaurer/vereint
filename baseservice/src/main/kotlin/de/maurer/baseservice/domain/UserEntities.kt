@@ -28,17 +28,6 @@ class UserEntity(
     @Column(name = "disabled", nullable = false)
     var disabled: Boolean = false,
 
-    @Column(name = "drink_recorder", nullable = false)
-    var drinkRecorder: Boolean = false,
-
-    /**
-     * Zulässige Werte gemäß [BoardRole]; die Datenbank erzwingt sie über
-     * `ck_users_board_role`.
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "board_role", length = 32)
-    var boardRole: BoardRole? = null,
-
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),
@@ -58,12 +47,11 @@ data class UserRoleId(
     var userId: UUID = UUID.randomUUID(),
 
     /**
-     * Zulässige Werte gemäß [AssignedRole] (Vertragsrollen zuzüglich
-     * `tabletRecorder`); die Datenbank erzwingt sie über `ck_user_roles_role`.
+     * Code einer Rolle des Stammtischs (`stammtisch_roles.code`), etwa `member`,
+     * `board`, `admin`, `tabletRecorder` oder eine eigene Rolle.
      */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", length = 32, nullable = false)
-    var role: AssignedRole = AssignedRole.member
+    @Column(name = "role", length = 64, nullable = false)
+    var role: String = AssignedRole.member.name
 ) : Serializable
 
 @Entity
@@ -76,7 +64,7 @@ class UserRoleEntity(
     @MapsId("userId")
     @JoinColumn(name = "user_id")
     var user: UserEntity? = null
-)
+) : StammtischScoped()
 
 @Embeddable
 data class UserPermissionId(
@@ -97,4 +85,4 @@ class UserPermissionEntity(
     @MapsId("userId")
     @JoinColumn(name = "user_id")
     var user: UserEntity? = null
-)
+) : StammtischScoped()

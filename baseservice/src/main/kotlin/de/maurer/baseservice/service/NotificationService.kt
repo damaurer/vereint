@@ -1,5 +1,7 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.NotificationEntity
 import de.maurer.baseservice.domain.PushSubscriptionEntity
 import de.maurer.baseservice.domain.UserEntity
@@ -22,9 +24,7 @@ import de.maurer.baseservice.push.PushDispatcher
 import de.maurer.baseservice.repository.NotificationRepository
 import de.maurer.baseservice.repository.PushSubscriptionRepository
 import de.maurer.baseservice.repository.UserRepository
-import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.support.Identifiers
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -47,7 +47,7 @@ class NotificationService(
     private val notificationRepository: NotificationRepository,
     private val pushSubscriptionRepository: PushSubscriptionRepository,
     private val userRepository: UserRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService,
     private val pushSender: PushSender,
     private val pushDispatcher: PushDispatcher,
@@ -250,11 +250,8 @@ class NotificationService(
         }
     }
 
-    private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        val roles = principal.roles + dbRoles
-        return roles.any { it == UserRole.BOARD || it == UserRole.ADMIN }
-    }
+    private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
+        access.has(principal, caller, Permission.NOTIFICATIONS_BROADCAST)
 
     private fun require(value: String?, field: String): String {
         val text = value?.trim()

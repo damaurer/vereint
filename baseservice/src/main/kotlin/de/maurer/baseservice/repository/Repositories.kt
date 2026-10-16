@@ -25,25 +25,71 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
      * Anzahl aktiver Konten mit der angegebenen Rolle; sichert ab, dass immer
      * mindestens ein aktives Adminkonto verbleibt.
      */
+    /**
+     * Aktive Mitglieder des aktuellen Stammtischs mit der angegebenen Rolle;
+     * sichert ab, dass immer jemand die Mitglieder verwalten kann.
+     */
     @Query(
         """
         select count(u) from UserEntity u
         where u.disabled = false
-          and exists (select 1 from UserRoleEntity r where r.id.userId = u.id and r.id.role = :role)
+          and exists (select 1 from StammtischMemberEntity m where m.user.id = u.id and m.active = true)
+          and exists (select 1 from UserRoleEntity r where r.id.userId = u.id and r.id.role in :roles)
         """
     )
-    fun countActiveUsersWithRole(@Param("role") role: AssignedRole): Long
+    fun countActiveMembersWithAnyRole(@Param("roles") roles: Collection<String>): Long
 }
 
 @Repository
 interface UserRoleRepository : JpaRepository<UserRoleEntity, UserRoleId> {
     fun findByIdUserId(userId: UUID): List<UserRoleEntity>
+    fun findByIdRole(role: String): List<UserRoleEntity>
+    fun findByStammtischIdAndIdUserId(stammtischId: UUID, userId: UUID): List<UserRoleEntity>
     fun deleteByIdUserId(userId: UUID)
+    fun deleteByIdRole(role: String)
+}
+
+@Repository
+interface StammtischRepository : JpaRepository<StammtischEntity, UUID> {
+    fun findAllByOrderByNameAsc(): List<StammtischEntity>
+}
+
+/** Mitgliedschaften im aktuellen Stammtisch (Hibernate filtert über `@TenantId`). */
+@Repository
+interface StammtischMemberRepository : JpaRepository<StammtischMemberEntity, UUID> {
+    fun findByUserId(userId: UUID): Optional<StammtischMemberEntity>
+
+    @EntityGraph(attributePaths = ["user"])
+    fun findByActiveTrue(): List<StammtischMemberEntity>
+
+    @EntityGraph(attributePaths = ["user"])
+    fun findAllBy(): List<StammtischMemberEntity>
+
+    fun countByActiveTrue(): Long
+
+    @Query("select m.user.id from StammtischMemberEntity m where m.active = true")
+    fun findActiveUserIds(): List<UUID>
+
+    @Query("select (count(m) > 0) from StammtischMemberEntity m where m.user.id = :userId and m.active = true")
+    fun isActiveMember(@Param("userId") userId: UUID): Boolean
+
+    /** Im System-Kontext: alle aktiven Mitgliedschaften einer Person über alle Stammtische. */
+    fun findByUserIdAndActiveTrue(userId: UUID): List<StammtischMemberEntity>
+}
+
+@Repository
+interface StammtischRoleRepository : JpaRepository<StammtischRoleEntity, UUID> {
+    fun findAllByOrderBySortOrderAscNameAsc(): List<StammtischRoleEntity>
+    fun findByCode(code: String): Optional<StammtischRoleEntity>
+
+    /** Für den System-Kontext, der alle Stammtische sieht. */
+    fun findByStammtischId(stammtischId: UUID): List<StammtischRoleEntity>
 }
 
 @Repository
 interface UserPermissionRepository : JpaRepository<UserPermissionEntity, UserPermissionId> {
     fun findByIdUserId(userId: UUID): List<UserPermissionEntity>
+    fun findByStammtischIdAndIdUserId(stammtischId: UUID, userId: UUID): List<UserPermissionEntity>
     fun deleteByIdUserId(userId: UUID)
 }
 

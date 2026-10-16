@@ -1,5 +1,6 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.tenancy.StammtischAccess
 import de.maurer.baseservice.domain.EventDrinkEntity
 import de.maurer.baseservice.domain.EventEntity
 import de.maurer.baseservice.domain.EventFoodEntity
@@ -26,9 +27,7 @@ import de.maurer.baseservice.repository.EventFoodRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.UserRepository
-import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.Permission
-import de.maurer.baseservice.security.RolePermissionMatrix
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.Identifiers
 import org.springframework.stereotype.Service
@@ -51,7 +50,7 @@ class TabletRecorderService(
     private val eventFoodRepository: EventFoodRepository,
     private val eventParticipantRepository: EventParticipantRepository,
     private val userRepository: UserRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService,
     private val ledgerService: LedgerService
 ) {
@@ -304,11 +303,7 @@ class TabletRecorderService(
 
     private fun requireTabletRecorder(principal: UserPrincipal): UserEntity {
         val actor = userService.getOrCreateUser(principal)
-        val dbRoles = userRoleRepository.findByIdUserId(actor.id).map { it.id.role.name }.toSet()
-        val roles = principal.roles + dbRoles
-        val drinkRecorder = principal.drinkRecorder || actor.drinkRecorder
-        val permissions = principal.permissions + RolePermissionMatrix.derivePermissions(roles, drinkRecorder)
-        if (!permissions.contains(Permission.PURCHASE_TABLET)) {
+        if (!access.has(principal, actor, Permission.PURCHASE_TABLET)) {
             throw AccessDeniedException(
                 Msg("error.tablet.recorderOnly"),
                 ErrorCode.ACCESS_DENIED

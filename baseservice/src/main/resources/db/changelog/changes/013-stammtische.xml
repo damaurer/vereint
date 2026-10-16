@@ -1,0 +1,885 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+    <property name="default.stammtisch" value="00000000-0000-0000-0000-000000000001"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 160. Mehrere Stammtische. Jeder Stammtisch ist ein abgeschlossener
+         Bereich; ein Konto (users) kann in mehreren Stammtischen Mitglied sein.
+         Alle bisherigen Daten gehören dem Stammtisch "Mein Stammtisch" mit der
+         festen Id ${default.stammtisch}. -->
+    <changeSet id="160-create-stammtische" author="claude">
+        <createTable tableName="stammtische">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(80)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="archived" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <insert tableName="stammtische">
+            <column name="id" value="${default.stammtisch}"/>
+            <column name="name" value="Mein Stammtisch"/>
+        </insert>
+        <rollback>
+            <dropTable tableName="stammtische"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 161. Jede fachliche Tabelle erhält stammtisch_id. Der Standardwert füllt
+         bestehende Zeilen ohne UPDATE (die Ledger-Tabellen verbieten Änderungen)
+         und wird danach wieder entfernt. -->
+    <changeSet id="161-add-stammtisch-id" author="claude">
+        <addColumn tableName="user_roles">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_user_roles_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="user_roles" columnName="stammtisch_id"/>
+        <createIndex tableName="user_roles" indexName="idx_user_roles_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="user_permissions">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_user_permissions_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="user_permissions" columnName="stammtisch_id"/>
+        <createIndex tableName="user_permissions" indexName="idx_user_permissions_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="events">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_events_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="events" columnName="stammtisch_id"/>
+        <createIndex tableName="events" indexName="idx_events_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="event_participants">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_event_participants_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="event_participants" columnName="stammtisch_id"/>
+        <createIndex tableName="event_participants" indexName="idx_event_participants_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="event_invites">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_event_invites_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="event_invites" columnName="stammtisch_id"/>
+        <createIndex tableName="event_invites" indexName="idx_event_invites_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="event_guests">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_event_guests_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="event_guests" columnName="stammtisch_id"/>
+        <createIndex tableName="event_guests" indexName="idx_event_guests_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="drink_catalog">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_drink_catalog_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="drink_catalog" columnName="stammtisch_id"/>
+        <createIndex tableName="drink_catalog" indexName="idx_drink_catalog_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="drink_barcodes">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_drink_barcodes_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="drink_barcodes" columnName="stammtisch_id"/>
+        <createIndex tableName="drink_barcodes" indexName="idx_drink_barcodes_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="drink_sublists">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_drink_sublists_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="drink_sublists" columnName="stammtisch_id"/>
+        <createIndex tableName="drink_sublists" indexName="idx_drink_sublists_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="drink_sublist_items">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_drink_sublist_items_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="drink_sublist_items" columnName="stammtisch_id"/>
+        <createIndex tableName="drink_sublist_items" indexName="idx_drink_sublist_items_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="event_drinks">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_event_drinks_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="event_drinks" columnName="stammtisch_id"/>
+        <createIndex tableName="event_drinks" indexName="idx_event_drinks_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="ledger_entries">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_ledger_entries_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="ledger_entries" columnName="stammtisch_id"/>
+        <createIndex tableName="ledger_entries" indexName="idx_ledger_entries_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="purchase_snapshots">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_purchase_snapshots_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="purchase_snapshots" columnName="stammtisch_id"/>
+        <createIndex tableName="purchase_snapshots" indexName="idx_purchase_snapshots_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="idempotency_records">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_idempotency_records_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="idempotency_records" columnName="stammtisch_id"/>
+        <createIndex tableName="idempotency_records" indexName="idx_idempotency_records_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="conversations">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_conversations_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="conversations" columnName="stammtisch_id"/>
+        <createIndex tableName="conversations" indexName="idx_conversations_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="conversation_members">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_conversation_members_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="conversation_members" columnName="stammtisch_id"/>
+        <createIndex tableName="conversation_members" indexName="idx_conversation_members_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="chat_messages">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_chat_messages_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="chat_messages" columnName="stammtisch_id"/>
+        <createIndex tableName="chat_messages" indexName="idx_chat_messages_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="chat_reactions">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_chat_reactions_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="chat_reactions" columnName="stammtisch_id"/>
+        <createIndex tableName="chat_reactions" indexName="idx_chat_reactions_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="notifications">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_notifications_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="notifications" columnName="stammtisch_id"/>
+        <createIndex tableName="notifications" indexName="idx_notifications_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="moment_sessions">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_moment_sessions_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="moment_sessions" columnName="stammtisch_id"/>
+        <createIndex tableName="moment_sessions" indexName="idx_moment_sessions_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="moment_responses">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_moment_responses_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="moment_responses" columnName="stammtisch_id"/>
+        <createIndex tableName="moment_responses" indexName="idx_moment_responses_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="audit_logs">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_audit_logs_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="audit_logs" columnName="stammtisch_id"/>
+        <createIndex tableName="audit_logs" indexName="idx_audit_logs_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="image_assets">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_image_assets_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="image_assets" columnName="stammtisch_id"/>
+        <createIndex tableName="image_assets" indexName="idx_image_assets_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="food_catalog">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_food_catalog_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="food_catalog" columnName="stammtisch_id"/>
+        <createIndex tableName="food_catalog" indexName="idx_food_catalog_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="event_food">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_event_food_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="event_food" columnName="stammtisch_id"/>
+        <createIndex tableName="event_food" indexName="idx_event_food_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="member_invites">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_member_invites_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="member_invites" columnName="stammtisch_id"/>
+        <createIndex tableName="member_invites" indexName="idx_member_invites_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="member_invite_redemptions">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_member_invite_redemptions_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="member_invite_redemptions" columnName="stammtisch_id"/>
+        <createIndex tableName="member_invite_redemptions" indexName="idx_member_invite_redemptions_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="kiosk_sessions">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_kiosk_sessions_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="kiosk_sessions" columnName="stammtisch_id"/>
+        <createIndex tableName="kiosk_sessions" indexName="idx_kiosk_sessions_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="moment_types">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_moment_types_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="moment_types" columnName="stammtisch_id"/>
+        <createIndex tableName="moment_types" indexName="idx_moment_types_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="moment_reactions">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_moment_reactions_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="moment_reactions" columnName="stammtisch_id"/>
+        <createIndex tableName="moment_reactions" indexName="idx_moment_reactions_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <addColumn tableName="moment_media">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+                <constraints nullable="false" foreignKeyName="fk_moment_media_stammtisch" references="stammtische(id)"/>
+            </column>
+        </addColumn>
+        <dropDefaultValue tableName="moment_media" columnName="stammtisch_id"/>
+        <createIndex tableName="moment_media" indexName="idx_moment_media_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <rollback>
+            <dropColumn tableName="user_roles" columnName="stammtisch_id"/>
+            <dropColumn tableName="user_permissions" columnName="stammtisch_id"/>
+            <dropColumn tableName="events" columnName="stammtisch_id"/>
+            <dropColumn tableName="event_participants" columnName="stammtisch_id"/>
+            <dropColumn tableName="event_invites" columnName="stammtisch_id"/>
+            <dropColumn tableName="event_guests" columnName="stammtisch_id"/>
+            <dropColumn tableName="drink_catalog" columnName="stammtisch_id"/>
+            <dropColumn tableName="drink_barcodes" columnName="stammtisch_id"/>
+            <dropColumn tableName="drink_sublists" columnName="stammtisch_id"/>
+            <dropColumn tableName="drink_sublist_items" columnName="stammtisch_id"/>
+            <dropColumn tableName="event_drinks" columnName="stammtisch_id"/>
+            <dropColumn tableName="ledger_entries" columnName="stammtisch_id"/>
+            <dropColumn tableName="purchase_snapshots" columnName="stammtisch_id"/>
+            <dropColumn tableName="idempotency_records" columnName="stammtisch_id"/>
+            <dropColumn tableName="conversations" columnName="stammtisch_id"/>
+            <dropColumn tableName="conversation_members" columnName="stammtisch_id"/>
+            <dropColumn tableName="chat_messages" columnName="stammtisch_id"/>
+            <dropColumn tableName="chat_reactions" columnName="stammtisch_id"/>
+            <dropColumn tableName="notifications" columnName="stammtisch_id"/>
+            <dropColumn tableName="moment_sessions" columnName="stammtisch_id"/>
+            <dropColumn tableName="moment_responses" columnName="stammtisch_id"/>
+            <dropColumn tableName="audit_logs" columnName="stammtisch_id"/>
+            <dropColumn tableName="image_assets" columnName="stammtisch_id"/>
+            <dropColumn tableName="food_catalog" columnName="stammtisch_id"/>
+            <dropColumn tableName="event_food" columnName="stammtisch_id"/>
+            <dropColumn tableName="member_invites" columnName="stammtisch_id"/>
+            <dropColumn tableName="member_invite_redemptions" columnName="stammtisch_id"/>
+            <dropColumn tableName="kiosk_sessions" columnName="stammtisch_id"/>
+            <dropColumn tableName="moment_types" columnName="stammtisch_id"/>
+            <dropColumn tableName="moment_reactions" columnName="stammtisch_id"/>
+            <dropColumn tableName="moment_media" columnName="stammtisch_id"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 162. Mitgliedschaften und Rollen je Stammtisch. Systemrollen haben feste
+         Codes; eigene Rollen legt die Rollenverwaltung des Stammtischs an. -->
+    <changeSet id="162-create-memberships-and-roles" author="claude">
+        <createTable tableName="stammtisch_members">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_stammtisch_members_stammtisch" references="stammtische(id)"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_stammtisch_members_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="board_role" type="VARCHAR(32)"/>
+            <column name="joined_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="stammtisch_members" columnNames="stammtisch_id, user_id"
+                             constraintName="uk_stammtisch_members_user"/>
+        <createIndex tableName="stammtisch_members" indexName="idx_stammtisch_members_user">
+            <column name="user_id"/>
+        </createIndex>
+        <sql>
+            ALTER TABLE stammtisch_members
+            ADD CONSTRAINT ck_stammtisch_members_board_role
+            CHECK (board_role IS NULL OR board_role IN ('chair', 'treasurer', 'secretary', 'assessor'))
+        </sql>
+
+        <createTable tableName="stammtisch_roles">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_stammtisch_roles_stammtisch" references="stammtische(id)"/>
+            </column>
+            <column name="code" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="permissions" type="VARCHAR(2000)" defaultValue="">
+                <constraints nullable="false"/>
+            </column>
+            <column name="system_role" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sort_order" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="stammtisch_roles" columnNames="stammtisch_id, code"
+                             constraintName="uk_stammtisch_roles_code"/>
+        <insert tableName="stammtisch_roles">
+            <column name="id" value="00000000-0000-0000-0001-000000000001"/>
+            <column name="stammtisch_id" value="${default.stammtisch}"/>
+            <column name="code" value="member"/>
+            <column name="name" value="Mitglied"/>
+            <column name="description" value="Alle Mitglieder des Stammtischs"/>
+            <column name="permissions" value="balance.read.self,catalog.propose,chat.event,chat.member,event.create,profile.read.self,purchase.self"/>
+            <column name="system_role" valueBoolean="true"/>
+            <column name="sort_order" valueNumeric="10"/>
+        </insert>
+        <insert tableName="stammtisch_roles">
+            <column name="id" value="00000000-0000-0000-0001-000000000002"/>
+            <column name="stammtisch_id" value="${default.stammtisch}"/>
+            <column name="code" value="board"/>
+            <column name="name" value="Vorstand"/>
+            <column name="description" value="Organisiert Events, Kasse und Katalog"/>
+            <column name="permissions" value="audit.read,balance.read.self,catalog.approve,catalog.propose,chat.event,chat.member,chat.moderate,event.create,event.invites.manage,event.manage,kiosk.manage,ledger.correct,ledger.read,members.invite,members.read,moments.manage,notifications.broadcast,profile.read.self,purchase.self"/>
+            <column name="system_role" valueBoolean="true"/>
+            <column name="sort_order" valueNumeric="20"/>
+        </insert>
+        <insert tableName="stammtisch_roles">
+            <column name="id" value="00000000-0000-0000-0001-000000000003"/>
+            <column name="stammtisch_id" value="${default.stammtisch}"/>
+            <column name="code" value="admin"/>
+            <column name="name" value="Admin"/>
+            <column name="description" value="Verwaltet Mitglieder, Rollen und den Stammtisch"/>
+            <column name="permissions" value="audit.read,audit.read.all,balance.read.self,catalog.approve,catalog.propose,chat.event,chat.member,chat.moderate,event.create,event.invites.manage,event.manage,kiosk.manage,ledger.correct,ledger.read,members.invite,members.manage,members.read,moments.manage,notifications.broadcast,profile.read.self,purchase.self,purchase.tablet,roles.manage,stammtisch.manage"/>
+            <column name="system_role" valueBoolean="true"/>
+            <column name="sort_order" valueNumeric="30"/>
+        </insert>
+        <insert tableName="stammtisch_roles">
+            <column name="id" value="00000000-0000-0000-0001-000000000004"/>
+            <column name="stammtisch_id" value="${default.stammtisch}"/>
+            <column name="code" value="tabletRecorder"/>
+            <column name="name" value="Theke"/>
+            <column name="description" value="Konto für das Thekenterminal"/>
+            <column name="permissions" value="purchase.tablet"/>
+            <column name="system_role" valueBoolean="true"/>
+            <column name="sort_order" valueNumeric="40"/>
+        </insert>
+        <rollback>
+            <dropTable tableName="stammtisch_roles"/>
+            <dropTable tableName="stammtisch_members"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 163. Bestehende Konten werden Mitglieder des Standard-Stammtischs. Die
+         Vorstandsfunktion und das Thekenkonto-Flag wandern von users in die
+         Mitgliedschaft bzw. die Rolle tabletRecorder. Die Mitgliedschafts-Id ist
+         die Konto-Id, damit die Migration ohne UUID-Funktion auskommt. -->
+    <changeSet id="163-migrate-users-into-default-stammtisch" author="claude">
+        <sql>
+            INSERT INTO stammtisch_members (id, stammtisch_id, user_id, active, board_role, joined_at, updated_at, version)
+            SELECT id, '${default.stammtisch}', id, TRUE, board_role, created_at, updated_at, 0 FROM users
+        </sql>
+        <sql>
+            INSERT INTO user_roles (user_id, role, stammtisch_id)
+            SELECT u.id, 'tabletRecorder', '${default.stammtisch}' FROM users u
+            WHERE u.drink_recorder = TRUE
+              AND NOT EXISTS (SELECT 1 FROM user_roles r WHERE r.user_id = u.id AND r.role = 'tabletRecorder')
+        </sql>
+        <sql>ALTER TABLE users DROP CONSTRAINT ck_users_board_role</sql>
+        <dropColumn tableName="users" columnName="board_role"/>
+        <dropColumn tableName="users" columnName="drink_recorder"/>
+
+        <sql>ALTER TABLE user_roles DROP CONSTRAINT ck_user_roles_role</sql>
+        <modifyDataType tableName="user_roles" columnName="role" newDataType="VARCHAR(64)"/>
+        <dropPrimaryKey tableName="user_roles" constraintName="pk_user_roles"/>
+        <addPrimaryKey tableName="user_roles" columnNames="stammtisch_id, user_id, role" constraintName="pk_user_roles"/>
+        <addForeignKeyConstraint baseTableName="user_roles" baseColumnNames="stammtisch_id, role"
+                                 constraintName="fk_user_roles_role"
+                                 referencedTableName="stammtisch_roles" referencedColumnNames="stammtisch_id, code"
+                                 onDelete="CASCADE"/>
+        <dropPrimaryKey tableName="user_permissions" constraintName="pk_user_permissions"/>
+        <addPrimaryKey tableName="user_permissions" columnNames="stammtisch_id, user_id, permission"
+                       constraintName="pk_user_permissions"/>
+    </changeSet>
+
+    <!-- 164. Eindeutigkeit gilt je Stammtisch: derselbe Barcode, Moment-Code oder
+         Idempotenzschlüssel darf in zwei Stammtischen vorkommen, und ein Konto
+         kann je Stammtisch eine Einladung einlösen. -->
+    <changeSet id="164-unique-per-stammtisch" author="claude">
+        <dropUniqueConstraint tableName="drink_barcodes" constraintName="uk_drink_barcodes_barcode"/>
+        <addUniqueConstraint tableName="drink_barcodes" columnNames="stammtisch_id, barcode" constraintName="uk_drink_barcodes_barcode"/>
+        <dropUniqueConstraint tableName="conversations" constraintName="uk_conversations_direct_key"/>
+        <addUniqueConstraint tableName="conversations" columnNames="stammtisch_id, direct_key" constraintName="uk_conversations_direct_key"/>
+        <dropUniqueConstraint tableName="moment_types" constraintName="uk_moment_types_code"/>
+        <addUniqueConstraint tableName="moment_types" columnNames="stammtisch_id, code" constraintName="uk_moment_types_code"/>
+        <dropUniqueConstraint tableName="moment_reactions" constraintName="uk_moment_reactions_code"/>
+        <addUniqueConstraint tableName="moment_reactions" columnNames="stammtisch_id, code" constraintName="uk_moment_reactions_code"/>
+        <dropUniqueConstraint tableName="ledger_entries" constraintName="uk_ledger_entries_idempotency_key"/>
+        <addUniqueConstraint tableName="ledger_entries" columnNames="stammtisch_id, idempotency_key" constraintName="uk_ledger_entries_idempotency_key"/>
+        <dropUniqueConstraint tableName="idempotency_records" constraintName="uk_idempotency_records_scope_key"/>
+        <addUniqueConstraint tableName="idempotency_records" columnNames="stammtisch_id, scope, idempotency_key" constraintName="uk_idempotency_records_scope_key"/>
+        <dropUniqueConstraint tableName="member_invite_redemptions" constraintName="uk_member_invite_redemptions_user"/>
+        <addUniqueConstraint tableName="member_invite_redemptions" columnNames="stammtisch_id, user_id" constraintName="uk_member_invite_redemptions_user"/>
+    </changeSet>
+
+    <!-- 165. Zweite Sicherung neben Hibernate (@TenantId): PostgreSQL gibt jede
+         Zeile nur im Kontext ihres Stammtischs heraus. Der Fachservice setzt bei
+         jeder Verbindungsausgabe vereint.stammtisch_id bzw. vereint.rls_bypass
+         (TenantAwareDataSource). Ohne Kontext sind die Tabellen leer.
+         FORCE gilt auch für den Tabelleneigentümer (Konto vereint); Superuser
+         sind von PostgreSQL immer ausgenommen.
+         Spätere Migrationen, die Daten dieser Tabellen ändern, müssen vorher
+         SET vereint.rls_bypass = 'on' ausführen. -->
+    <changeSet id="165-row-level-security" author="claude" dbms="postgresql">
+        <sql splitStatements="false">
+            ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE user_roles FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON user_roles
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE user_permissions ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE user_permissions FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON user_permissions
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE events FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON events
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE event_participants ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE event_participants FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON event_participants
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE event_invites ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE event_invites FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON event_invites
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE event_guests ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE event_guests FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON event_guests
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE drink_catalog ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE drink_catalog FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON drink_catalog
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE drink_barcodes ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE drink_barcodes FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON drink_barcodes
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE drink_sublists ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE drink_sublists FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON drink_sublists
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE drink_sublist_items ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE drink_sublist_items FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON drink_sublist_items
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE event_drinks ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE event_drinks FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON event_drinks
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE ledger_entries ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE ledger_entries FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON ledger_entries
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE purchase_snapshots ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE purchase_snapshots FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON purchase_snapshots
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE idempotency_records ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE idempotency_records FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON idempotency_records
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE conversations FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON conversations
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE conversation_members ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE conversation_members FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON conversation_members
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE chat_messages FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON chat_messages
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE chat_reactions ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE chat_reactions FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON chat_reactions
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE notifications FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON notifications
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE moment_sessions ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE moment_sessions FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON moment_sessions
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE moment_responses ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE moment_responses FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON moment_responses
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE audit_logs FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON audit_logs
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE image_assets ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE image_assets FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON image_assets
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE food_catalog ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE food_catalog FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON food_catalog
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE event_food ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE event_food FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON event_food
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE member_invites ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE member_invites FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON member_invites
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE member_invite_redemptions ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE member_invite_redemptions FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON member_invite_redemptions
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE kiosk_sessions ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE kiosk_sessions FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON kiosk_sessions
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE moment_types ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE moment_types FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON moment_types
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE moment_reactions ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE moment_reactions FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON moment_reactions
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE moment_media ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE moment_media FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON moment_media
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE stammtisch_members ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE stammtisch_members FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON stammtisch_members
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <sql splitStatements="false">
+            ALTER TABLE stammtisch_roles ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE stammtisch_roles FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON stammtisch_roles
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <rollback>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON user_roles; ALTER TABLE user_roles NO FORCE ROW LEVEL SECURITY; ALTER TABLE user_roles DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON user_permissions; ALTER TABLE user_permissions NO FORCE ROW LEVEL SECURITY; ALTER TABLE user_permissions DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON events; ALTER TABLE events NO FORCE ROW LEVEL SECURITY; ALTER TABLE events DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON event_participants; ALTER TABLE event_participants NO FORCE ROW LEVEL SECURITY; ALTER TABLE event_participants DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON event_invites; ALTER TABLE event_invites NO FORCE ROW LEVEL SECURITY; ALTER TABLE event_invites DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON event_guests; ALTER TABLE event_guests NO FORCE ROW LEVEL SECURITY; ALTER TABLE event_guests DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON drink_catalog; ALTER TABLE drink_catalog NO FORCE ROW LEVEL SECURITY; ALTER TABLE drink_catalog DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON drink_barcodes; ALTER TABLE drink_barcodes NO FORCE ROW LEVEL SECURITY; ALTER TABLE drink_barcodes DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON drink_sublists; ALTER TABLE drink_sublists NO FORCE ROW LEVEL SECURITY; ALTER TABLE drink_sublists DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON drink_sublist_items; ALTER TABLE drink_sublist_items NO FORCE ROW LEVEL SECURITY; ALTER TABLE drink_sublist_items DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON event_drinks; ALTER TABLE event_drinks NO FORCE ROW LEVEL SECURITY; ALTER TABLE event_drinks DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON ledger_entries; ALTER TABLE ledger_entries NO FORCE ROW LEVEL SECURITY; ALTER TABLE ledger_entries DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON purchase_snapshots; ALTER TABLE purchase_snapshots NO FORCE ROW LEVEL SECURITY; ALTER TABLE purchase_snapshots DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON idempotency_records; ALTER TABLE idempotency_records NO FORCE ROW LEVEL SECURITY; ALTER TABLE idempotency_records DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON conversations; ALTER TABLE conversations NO FORCE ROW LEVEL SECURITY; ALTER TABLE conversations DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON conversation_members; ALTER TABLE conversation_members NO FORCE ROW LEVEL SECURITY; ALTER TABLE conversation_members DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON chat_messages; ALTER TABLE chat_messages NO FORCE ROW LEVEL SECURITY; ALTER TABLE chat_messages DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON chat_reactions; ALTER TABLE chat_reactions NO FORCE ROW LEVEL SECURITY; ALTER TABLE chat_reactions DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON notifications; ALTER TABLE notifications NO FORCE ROW LEVEL SECURITY; ALTER TABLE notifications DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON moment_sessions; ALTER TABLE moment_sessions NO FORCE ROW LEVEL SECURITY; ALTER TABLE moment_sessions DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON moment_responses; ALTER TABLE moment_responses NO FORCE ROW LEVEL SECURITY; ALTER TABLE moment_responses DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON audit_logs; ALTER TABLE audit_logs NO FORCE ROW LEVEL SECURITY; ALTER TABLE audit_logs DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON image_assets; ALTER TABLE image_assets NO FORCE ROW LEVEL SECURITY; ALTER TABLE image_assets DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON food_catalog; ALTER TABLE food_catalog NO FORCE ROW LEVEL SECURITY; ALTER TABLE food_catalog DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON event_food; ALTER TABLE event_food NO FORCE ROW LEVEL SECURITY; ALTER TABLE event_food DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON member_invites; ALTER TABLE member_invites NO FORCE ROW LEVEL SECURITY; ALTER TABLE member_invites DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON member_invite_redemptions; ALTER TABLE member_invite_redemptions NO FORCE ROW LEVEL SECURITY; ALTER TABLE member_invite_redemptions DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON kiosk_sessions; ALTER TABLE kiosk_sessions NO FORCE ROW LEVEL SECURITY; ALTER TABLE kiosk_sessions DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON moment_types; ALTER TABLE moment_types NO FORCE ROW LEVEL SECURITY; ALTER TABLE moment_types DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON moment_reactions; ALTER TABLE moment_reactions NO FORCE ROW LEVEL SECURITY; ALTER TABLE moment_reactions DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON moment_media; ALTER TABLE moment_media NO FORCE ROW LEVEL SECURITY; ALTER TABLE moment_media DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON stammtisch_members; ALTER TABLE stammtisch_members NO FORCE ROW LEVEL SECURITY; ALTER TABLE stammtisch_members DISABLE ROW LEVEL SECURITY</sql>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON stammtisch_roles; ALTER TABLE stammtisch_roles NO FORCE ROW LEVEL SECURITY; ALTER TABLE stammtisch_roles DISABLE ROW LEVEL SECURITY</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,5 +1,7 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.EventEntity
 import de.maurer.baseservice.domain.EventGuestEntity
 import de.maurer.baseservice.domain.EventInviteEntity
@@ -22,9 +24,7 @@ import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.EventGuestRepository
 import de.maurer.baseservice.repository.EventInviteRepository
 import de.maurer.baseservice.repository.EventRepository
-import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.support.SecureTokens
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -49,7 +49,7 @@ class InviteService(
     private val eventRepository: EventRepository,
     private val eventInviteRepository: EventInviteRepository,
     private val eventGuestRepository: EventGuestRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService
 ) {
 
@@ -217,11 +217,8 @@ class InviteService(
         }
     }
 
-    private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        val roles = principal.roles + dbRoles
-        return roles.any { it == UserRole.BOARD || it == UserRole.ADMIN }
-    }
+    private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
+        access.has(principal, caller, Permission.EVENT_INVITES_MANAGE)
 
     private fun normalizeRole(role: String?): String {
         val trimmed = role?.trim()?.ifBlank { null } ?: return DEFAULT_INVITE_ROLE

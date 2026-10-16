@@ -17,10 +17,10 @@ import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.IdempotencyRecordRepository
 import de.maurer.baseservice.repository.LedgerEntryRepository
 import de.maurer.baseservice.repository.PurchaseSnapshotRepository
-import de.maurer.baseservice.repository.UserRepository
-import de.maurer.baseservice.repository.UserRoleRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.StammtischMembers
 import de.maurer.baseservice.support.Identifiers
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -47,8 +47,8 @@ class LedgerService(
     private val ledgerEntryRepository: LedgerEntryRepository,
     private val idempotencyRecordRepository: IdempotencyRecordRepository,
     private val purchaseSnapshotRepository: PurchaseSnapshotRepository,
-    private val userRepository: UserRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
+    private val members: StammtischMembers,
     private val eventRepository: EventRepository,
     private val drinkBarcodeRepository: DrinkBarcodeRepository,
     private val eventDrinkRepository: EventDrinkRepository,
@@ -64,9 +64,8 @@ class LedgerService(
     @Transactional(readOnly = true)
     fun listBalances(principal: UserPrincipal): List<MemberBalanceOverviewDto> {
         val caller = userService.getOrCreateUser(principal)
-        requireLedgerWrite(caller, principal)
-        return userRepository.findByDisabled(false)
-            .sortedBy { it.displayName.lowercase() }
+        requireLedgerRead(caller, principal)
+        return members.activeUsers()
             .map { member ->
                 val entries = ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(member.id)
                 val balance = computeBalance(member, entries)
@@ -100,7 +99,7 @@ class LedgerService(
     @Transactional(readOnly = true)
     fun getEventSummary(eventId: UUID, principal: UserPrincipal): EventLedgerSummaryDto {
         val caller = userService.getOrCreateUser(principal)
-        if (!isBoardOrAdmin(caller, principal)) {
+        if (!access.hasAny(principal, caller, Permission.LEDGER_READ, Permission.EVENT_MANAGE)) {
             throw AccessDeniedException(
                 Msg("error.ledger.eventSummaryDenied"),
                 ErrorCode.ACCESS_DENIED
@@ -139,7 +138,7 @@ class LedgerService(
         requireLedgerWrite(caller, principal)
         val key = requireIdempotencyKey(idempotencyKey)
         val amount = requirePositiveAmount(request.amount)
-        val member = requireUser(parseId(request.memberId, "memberId"))
+        val member = members.requireActiveUser(parseId(request.memberId, "memberId"))
         val currency = normalizeCurrency(request.currency)
         return appendWrite(
             AppendWriteCommand(
@@ -166,7 +165,7 @@ class LedgerService(
         requireLedgerWrite(caller, principal)
         val key = requireIdempotencyKey(idempotencyKey)
         val amount = requirePositiveAmount(request.amount)
-        val member = requireUser(parseId(request.memberId, "memberId"))
+        val member = members.requireActiveUser(parseId(request.memberId, "memberId"))
         val currency = normalizeCurrency(request.currency)
         return appendWrite(
             AppendWriteCommand(
@@ -888,15 +887,24 @@ class LedgerService(
 
     private fun requireCanReadMember(caller: UserEntity, principal: UserPrincipal, memberId: UUID) {
         if (caller.id == memberId) return
-        if (isBoardOrAdmin(caller, principal)) return
+        if (access.has(principal, caller, Permission.LEDGER_READ)) return
         throw AccessDeniedException(
             Msg("error.ledger.balanceViewDenied"),
             ErrorCode.ACCESS_DENIED
         )
     }
 
+    private fun requireLedgerRead(caller: UserEntity, principal: UserPrincipal) {
+        if (!access.has(principal, caller, Permission.LEDGER_READ)) {
+            throw AccessDeniedException(
+                Msg("error.ledger.cashDenied"),
+                ErrorCode.ACCESS_DENIED
+            )
+        }
+    }
+
     private fun requireLedgerWrite(caller: UserEntity, principal: UserPrincipal) {
-        if (!isBoardOrAdmin(caller, principal)) {
+        if (!access.has(principal, caller, Permission.LEDGER_CORRECT)) {
             throw AccessDeniedException(
                 Msg("error.ledger.cashDenied"),
                 ErrorCode.ACCESS_DENIED
@@ -910,10 +918,7 @@ class LedgerService(
      * Tablet-Rolle sind ausgeschlossen (`deny by default`).
      */
     private fun requireMember(caller: UserEntity, principal: UserPrincipal) {
-        val allowed = rolesOf(caller, principal).any {
-            it == UserRole.MEMBER || it == UserRole.BOARD || it == UserRole.ADMIN
-        }
-        if (!allowed) {
+        if (!access.has(principal, caller, Permission.PURCHASE_SELF)) {
             throw AccessDeniedException(
                 Msg("error.ledger.barcodeMembersOnly"),
                 ErrorCode.ACCESS_DENIED
@@ -921,9 +926,9 @@ class LedgerService(
         }
     }
 
-    /** Wer an einem Event kaufen darf: Vorstand/Admin, Veranstalter und Eingeladene. */
+    /** Wer an einem Event kaufen darf: Event-Verwaltung (Vorstand), Veranstalter und Eingeladene. */
     private fun canBuyAt(caller: UserEntity, principal: UserPrincipal, event: EventEntity): Boolean =
-        isBoardOrAdmin(caller, principal) ||
+        access.has(principal, caller, Permission.EVENT_MANAGE) ||
             event.owner?.id == caller.id ||
             eventParticipantRepository.findByEventIdAndUserId(event.id, caller.id).isPresent
 
@@ -964,18 +969,8 @@ class LedgerService(
         return normalized
     }
 
-    private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.BOARD || it == UserRole.ADMIN }
-
-    private fun rolesOf(caller: UserEntity, principal: UserPrincipal): Set<String> {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        return principal.roles + dbRoles
-    }
-
-    private fun requireUser(id: UUID): UserEntity =
-        userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
-        }
+    /** Auch frühere Mitglieder: Kontoauszüge bleiben nach dem Austritt lesbar. */
+    private fun requireUser(id: UUID): UserEntity = members.requireKnownUser(id)
 
     private fun parseId(value: String?, field: String): UUID = Identifiers.parseUuid(value, field)
 

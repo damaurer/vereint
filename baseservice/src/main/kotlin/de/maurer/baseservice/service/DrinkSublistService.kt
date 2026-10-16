@@ -1,5 +1,7 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.DrinkCatalogEntity
 import de.maurer.baseservice.domain.DrinkStatus
 import de.maurer.baseservice.domain.DrinkSublistEntity
@@ -14,9 +16,7 @@ import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.DrinkSublistItemRepository
 import de.maurer.baseservice.repository.DrinkSublistRepository
-import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -40,7 +40,7 @@ class DrinkSublistService(
     private val drinkSublistRepository: DrinkSublistRepository,
     private val drinkSublistItemRepository: DrinkSublistItemRepository,
     private val drinkCatalogRepository: DrinkCatalogRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService
 ) {
 
@@ -178,15 +178,11 @@ class DrinkSublistService(
     }
 
     private fun canCreate(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.MEMBER || it == UserRole.BOARD || it == UserRole.ADMIN }
+        access.isMember(principal, caller)
 
     private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.BOARD || it == UserRole.ADMIN }
+        access.has(principal, caller, Permission.CATALOG_APPROVE)
 
-    private fun rolesOf(caller: UserEntity, principal: UserPrincipal): Set<String> {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        return principal.roles + dbRoles
-    }
 
     private fun parseId(value: String?, field: String): UUID {
         val trimmed = value?.trim()

@@ -44,6 +44,25 @@ object Permission {
     const val CHAT_MEMBER = "chat.member"
     const val CHAT_EVENT = "chat.event"
     const val AUDIT_READ = "audit.read"
+    const val AUDIT_READ_ALL = "audit.read.all"
+    const val MEMBERS_READ = "members.read"
+    const val MEMBERS_INVITE = "members.invite"
+    const val MEMBERS_MANAGE = "members.manage"
+    const val ROLES_MANAGE = "roles.manage"
+    const val STAMMTISCH_MANAGE = "stammtisch.manage"
+    const val MOMENTS_MANAGE = "moments.manage"
+    const val KIOSK_MANAGE = "kiosk.manage"
+    const val NOTIFICATIONS_BROADCAST = "notifications.broadcast"
+    const val CHAT_MODERATE = "chat.moderate"
+
+    /** Alle Berechtigungen, die eine Rolle eines Stammtischs tragen kann. */
+    val ALL: Set<String> = linkedSetOf(
+        PROFILE_READ_SELF, BALANCE_READ_SELF, PURCHASE_SELF, CHAT_MEMBER, CHAT_EVENT, EVENT_CREATE,
+        CATALOG_PROPOSE, EVENT_MANAGE, EVENT_INVITES_MANAGE, CATALOG_APPROVE, LEDGER_READ, LEDGER_CORRECT,
+        AUDIT_READ, AUDIT_READ_ALL, MEMBERS_READ, MEMBERS_INVITE, MEMBERS_MANAGE, ROLES_MANAGE,
+        STAMMTISCH_MANAGE, MOMENTS_MANAGE, KIOSK_MANAGE, NOTIFICATIONS_BROADCAST, CHAT_MODERATE,
+        PURCHASE_TABLET
+    )
 }
 
 object PurchaseSource {

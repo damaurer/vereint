@@ -1,5 +1,7 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.DrinkBarcodeEntity
 import de.maurer.baseservice.domain.DrinkCatalogEntity
 import de.maurer.baseservice.domain.DrinkStatus
@@ -12,9 +14,7 @@ import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.DrinkCatalogRepository
-import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -34,7 +34,7 @@ import java.util.UUID
 class DrinkCatalogService(
     private val drinkCatalogRepository: DrinkCatalogRepository,
     private val drinkBarcodeRepository: DrinkBarcodeRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
     private val userService: UserService
 ) {
 
@@ -320,15 +320,11 @@ class DrinkCatalogService(
     }
 
     private fun canPropose(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.MEMBER || it == UserRole.BOARD || it == UserRole.ADMIN }
+        access.has(principal, caller, Permission.CATALOG_PROPOSE)
 
     private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.BOARD || it == UserRole.ADMIN }
+        access.has(principal, caller, Permission.CATALOG_APPROVE)
 
-    private fun rolesOf(caller: UserEntity, principal: UserPrincipal): Set<String> {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        return principal.roles + dbRoles
-    }
 
     private fun normalizeName(value: String?): String =
         value?.trim()?.replace(WHITESPACE_REGEX, " ").orEmpty()

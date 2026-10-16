@@ -13,10 +13,10 @@ import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
-import de.maurer.baseservice.repository.UserRepository
-import de.maurer.baseservice.repository.UserRoleRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.StammtischMembers
 import org.springframework.stereotype.Service
 import java.time.Instant
 import org.springframework.transaction.annotation.Transactional
@@ -35,8 +35,8 @@ import java.util.UUID
 class EventService(
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
-    private val userRepository: UserRepository,
-    private val userRoleRepository: UserRoleRepository,
+    private val members: StammtischMembers,
+    private val access: StammtischAccess,
     private val userService: UserService,
     private val eventInvitationService: EventInvitationService
 ) {
@@ -110,15 +110,9 @@ class EventService(
 
     private fun invite(event: EventEntity, userIds: List<String>?, allMembers: Boolean) {
         val targets = if (allMembers) {
-            userRepository.findByDisabled(false)
+            members.activeUsers()
         } else {
-            val ids = userIds.orEmpty().map { parseParticipantId(it) }.distinct()
-            val found = userRepository.findAllById(ids)
-            if (found.size != ids.size) {
-                val missing = ids - found.map { it.id }.toSet()
-                throw ResourceNotFoundException(Msg("error.user.notFound", missing.first()), ErrorCode.NOT_FOUND)
-            }
-            found
+            members.requireActiveUsers(userIds.orEmpty().map { parseParticipantId(it) })
         }
         val existing = eventParticipantRepository.findByEventId(event.id).mapNotNull { it.user?.id }.toSet()
         targets
@@ -230,9 +224,7 @@ class EventService(
         requireManage(caller, principal, event)
 
         val targetId = parseParticipantId(request.userId)
-        val targetUser = userRepository.findById(targetId).orElseThrow {
-            ResourceNotFoundException(Msg("error.user.notFound", targetId), ErrorCode.NOT_FOUND)
-        }
+        val targetUser = members.requireActiveUser(targetId)
 
         if (event.owner?.id == targetUser.id) {
             throw InvalidRequestException(
@@ -298,15 +290,11 @@ class EventService(
     }
 
     private fun canCreateEvents(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.MEMBER || it == UserRole.BOARD || it == UserRole.ADMIN }
+        access.has(principal, caller, Permission.EVENT_CREATE)
 
+    /** Vorstand und andere Rollen mit `event.manage` sehen und moderieren alle Events des Stammtischs. */
     private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
-        rolesOf(caller, principal).any { it == UserRole.BOARD || it == UserRole.ADMIN }
-
-    private fun rolesOf(caller: UserEntity, principal: UserPrincipal): Set<String> {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        return principal.roles + dbRoles
-    }
+        access.has(principal, caller, Permission.EVENT_MANAGE)
 
     private fun parseParticipantId(value: String?): UUID {
         val trimmed = value?.trim()

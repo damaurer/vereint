@@ -12,11 +12,12 @@ import de.maurer.baseservice.repository.AuditLogRepository
 import de.maurer.baseservice.repository.KioskSessionRepository
 import de.maurer.baseservice.repository.LedgerEntryRepository
 import de.maurer.baseservice.repository.NotificationRepository
+import de.maurer.baseservice.repository.StammtischMemberRepository
 import de.maurer.baseservice.repository.UserRepository
-import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.BoardRole
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.tenancy.StammtischAccess
 import de.maurer.baseservice.support.Identifiers
 import jakarta.persistence.criteria.Predicate
 import org.springframework.data.domain.Page
@@ -52,7 +53,8 @@ import java.util.UUID
 class AuditLogService(
     private val auditLogRepository: AuditLogRepository,
     private val userService: UserService,
-    private val userRoleRepository: UserRoleRepository,
+    private val access: StammtischAccess,
+    private val memberRepository: StammtischMemberRepository,
     private val userRepository: UserRepository,
     private val ledgerEntryRepository: LedgerEntryRepository,
     private val notificationRepository: NotificationRepository,
@@ -129,8 +131,8 @@ class AuditLogService(
      * (`deny by default`).
      */
     private fun visibleTargetsFor(caller: UserEntity, principal: UserPrincipal): Set<String> {
-        val roles = rolesOf(caller, principal)
-        if (roles.contains(UserRole.ADMIN)) {
+        val permissions = access.permissionsOf(principal, caller)
+        if (permissions.contains(Permission.AUDIT_READ_ALL)) {
             return setOf(
                 AuditService.TARGET_USER,
                 AuditService.TARGET_LEDGER,
@@ -138,7 +140,7 @@ class AuditLogService(
                 AuditService.TARGET_KIOSK
             )
         }
-        if (!roles.contains(UserRole.BOARD)) {
+        if (!permissions.contains(Permission.AUDIT_READ)) {
             return emptySet()
         }
         return when (boardRoleOf(caller, principal)) {
@@ -190,14 +192,10 @@ class AuditLogService(
         return PageRequest.of(pageNumber, size, DEFAULT_SORT)
     }
 
+    /** Vorstandsfunktion der Mitgliedschaft in diesem Stammtisch. */
     private fun boardRoleOf(caller: UserEntity, principal: UserPrincipal): String? {
-        caller.boardRole?.let { return it.name }
+        memberRepository.findByUserId(caller.id).orElse(null)?.boardRole?.let { return it.name }
         return principal.boardRole?.takeIf { BoardRole.ALL.contains(it) }
-    }
-
-    private fun rolesOf(caller: UserEntity, principal: UserPrincipal): Set<String> {
-        val dbRoles = userRoleRepository.findByIdUserId(caller.id).map { it.id.role.name }
-        return principal.roles + dbRoles
     }
 
     /**
