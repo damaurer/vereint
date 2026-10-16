@@ -97,7 +97,7 @@
         },
         "notifications": {
           "title": "Mitteilungen",
-          "sub": "Neuigkeiten vom Verein"
+          "sub": "Neuigkeiten aus der Gruppe"
         }
       },
       "declined": "Du hast abgesagt",
@@ -237,7 +237,7 @@
     "eyebrow": "Mitteilungen",
     "title": "Benachrichtigungen",
     "unread": "{count} ungelesen",
-    "intro": "Bleibe über Events, Vereinsankündigungen und Neuigkeiten auf dem Laufenden.",
+    "intro": "Bleibe über Events, Ankündigungen der Gruppe und Neuigkeiten auf dem Laufenden.",
     "markAllRead": "Alle als gelesen markieren",
     "markRead": "Als gelesen markieren",
     "loadingMessage": "Benachrichtigungen werden abgerufen.",
@@ -300,10 +300,10 @@
       "admin": "Administration",
       "tablet": "Thekenterminal",
       "scan": "Bezahlen",
-      "stammtisch": "Gruppe"
+      "stammtisch": "Gruppeneinstellungen"
     },
     "sections": {
-      "club": "Verein",
+      "club": "Gruppe",
       "account": "Mein Konto",
       "bar": "Theke",
       "admin": "Verwaltung"
@@ -347,7 +347,7 @@
     "register": {
       "eyebrow": "Einladung",
       "title": "Mitglied werden",
-      "doneTitle": "Willkommen im Verein!",
+      "doneTitle": "Willkommen in der Gruppe!",
       "checking": "Einladungslink wird geprüft …",
       "invalidTitle": "Registrierung nicht möglich",
       "toLogin": "Zur Anmeldung",
@@ -545,7 +545,7 @@
     }
   },
   "chat": {
-    "eyebrow": "Vereinschat",
+    "eyebrow": "Gruppenchat",
     "title": "Chat",
     "toDirectMessages": "Direktnachrichten →",
     "loadingMessage": "Die Konversationen werden abgerufen.",
@@ -557,7 +557,7 @@
       "ariaLabel": "Konversationen",
       "newMessage": "+ Neue Nachricht",
       "groupOnline": "{count} online",
-      "clubChat": "Vereinschat",
+      "clubChat": "Gruppenchat",
       "eventChats": "Event-Chats",
       "noEventChats": "Du hast gerade keine Event-Chats. Sie erscheinen, sobald du zu einem Event eingeladen bist.",
       "noMessages": "Noch keine Nachrichten"
@@ -591,7 +591,7 @@
       "eyebrow": "Direktnachrichten",
       "title": "Einzelgespräche",
       "badge": "DMs",
-      "toGroupChat": "← Zum Vereinschat",
+      "toGroupChat": "← Zum Gruppenchat",
       "unavailable": "Direktnachrichten nicht verfügbar",
       "searchLabel": "Mitglieder durchsuchen",
       "searchPlaceholder": "Mitglieder durchsuchen…",
@@ -665,7 +665,7 @@
       "titlePlaceholder": "z. B. Gemeinsames Anstoßen, Abendgebet, Jubelwelle",
       "topicLabel": "Thema / Ritualtyp *",
       "messageLabel": "Nachricht / Impuls (optional)",
-      "messagePlaceholder": "z. B. Ein Hoch auf unseren Verein! Wer stößt aus der Ferne mit an?",
+      "messagePlaceholder": "z. B. Ein Hoch auf unsere Gruppe! Wer stößt aus der Ferne mit an?",
       "durationLabel": "Dauer des Moments",
       "duration": {
         "m15": "15 Minuten (Kurzer Impuls)",
@@ -779,9 +779,9 @@
   },
   "catalog": {
     "header": {
-      "eyebrow": "Vereinskatalog",
+      "eyebrow": "Gruppenkatalog",
       "title": "Getränke- & Speisenkatalog",
-      "intro": "Übersicht aller Vereinsgetränke, Barcodes und Verpflegungsangebote."
+      "intro": "Übersicht aller Getränke der Gruppe, Barcodes und Verpflegungsangebote."
     },
     "actions": {
       "proposeDrink": "+ Getränk vorschlagen",
@@ -1275,10 +1275,10 @@
     "comms": {
       "eyebrow": "Schriftwart",
       "title": "Infotafeln & Rundbriefe",
-      "intro": "Infotafel im Vereinschat, Rundbriefe an Mitglieder und versendete Benachrichtigungen.",
-      "pinboardTitle": "Infotafel im Vereinschat",
+      "intro": "Infotafel im Gruppenchat, Rundbriefe an Mitglieder und versendete Benachrichtigungen.",
+      "pinboardTitle": "Infotafel im Gruppenchat",
       "infoTitle": "Info vom Schriftwart",
-      "infoText": "Die Infotafel steht oben im Vereinschat und ist für alle Mitglieder sichtbar.",
+      "infoText": "Die Infotafel steht oben im Gruppenchat und ist für alle Mitglieder sichtbar.",
       "composeTitle": "Meldung verfassen",
       "recipientId": "Empfänger (Mitglieds-ID)",
       "messageTitle": "Titel",
@@ -1585,7 +1585,7 @@
     "consumption": {
       "ariaLabel": "Rangliste nach Strichen",
       "title": "Rangliste",
-      "total": "Striche im Verein",
+      "total": "Striche in der Gruppe",
       "mine": "Deine Striche",
       "myRank": "Dein Platz",
       "rankValue": "Platz {rank}",

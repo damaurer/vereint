@@ -97,7 +97,7 @@
         },
         "notifications": {
           "title": "Notifications",
-          "sub": "News from the club"
+          "sub": "News from the group"
         }
       },
       "declined": "You declined",
@@ -243,7 +243,7 @@
     "eyebrow": "Messages",
     "title": "Notifications",
     "unread": "{count} unread",
-    "intro": "Stay up to date on events, club announcements and news.",
+    "intro": "Stay up to date on events, group announcements and news.",
     "markAllRead": "Mark all as read",
     "markRead": "Mark as read",
     "loadingMessage": "Loading notifications.",
@@ -306,10 +306,10 @@
       "admin": "Administration",
       "tablet": "Bar terminal",
       "scan": "Pay",
-      "stammtisch": "Group"
+      "stammtisch": "Group settings"
     },
     "sections": {
-      "club": "Club",
+      "club": "Group",
       "account": "My account",
       "bar": "Bar",
       "admin": "Management"
@@ -353,7 +353,7 @@
     "register": {
       "eyebrow": "Invitation",
       "title": "Become a member",
-      "doneTitle": "Welcome to the club!",
+      "doneTitle": "Welcome to the group!",
       "checking": "Checking invite link …",
       "invalidTitle": "Registration not possible",
       "toLogin": "Go to sign-in",
@@ -551,7 +551,7 @@
     }
   },
   "chat": {
-    "eyebrow": "Club chat",
+    "eyebrow": "Group chat",
     "title": "Chat",
     "toDirectMessages": "Direct messages →",
     "loadingMessage": "Loading conversations.",
@@ -566,7 +566,7 @@
       "ariaLabel": "Conversations",
       "newMessage": "+ New message",
       "groupOnline": "{count} online",
-      "clubChat": "Club chat",
+      "clubChat": "Group chat",
       "eventChats": "Event chats",
       "noEventChats": "You have no event chats right now. They appear once you are invited to an event.",
       "noMessages": "No messages yet"
@@ -603,7 +603,7 @@
       "eyebrow": "Direct messages",
       "title": "One-to-one chats",
       "badge": "DMs",
-      "toGroupChat": "← To the club chat",
+      "toGroupChat": "← To the group chat",
       "unavailable": "Direct messages unavailable",
       "searchLabel": "Search members",
       "searchPlaceholder": "Search members…",
@@ -689,7 +689,7 @@
       "titlePlaceholder": "e.g. Joint toast, evening prayer, cheering wave",
       "topicLabel": "Topic / ritual type *",
       "messageLabel": "Message / prompt (optional)",
-      "messagePlaceholder": "e.g. Here’s to our club! Who’s raising a glass from afar?",
+      "messagePlaceholder": "e.g. Here’s to our group! Who’s raising a glass from afar?",
       "durationLabel": "Duration of the moment",
       "duration": {
         "m15": "15 minutes (short prompt)",
@@ -812,9 +812,9 @@
   },
   "catalog": {
     "header": {
-      "eyebrow": "Club catalogue",
+      "eyebrow": "Group catalogue",
       "title": "Drinks & food catalogue",
-      "intro": "Overview of all club drinks, barcodes and food offerings."
+      "intro": "Overview of all group drinks, barcodes and food offerings."
     },
     "actions": {
       "proposeDrink": "+ Propose drink",
@@ -1308,10 +1308,10 @@
     "comms": {
       "eyebrow": "Secretary",
       "title": "Info panels & newsletters",
-      "intro": "Club chat notice, newsletters to members and sent notifications.",
-      "pinboardTitle": "Club chat notice",
+      "intro": "Group chat notice, newsletters to members and sent notifications.",
+      "pinboardTitle": "Group chat notice",
       "infoTitle": "Info from the secretary",
-      "infoText": "The notice sits at the top of the club chat and is visible to all members.",
+      "infoText": "The notice sits at the top of the group chat and is visible to all members.",
       "composeTitle": "Compose message",
       "recipientId": "Recipient (member ID)",
       "messageTitle": "Title",
@@ -1618,7 +1618,7 @@
     "consumption": {
       "ariaLabel": "Leaderboard by tallies",
       "title": "Leaderboard",
-      "total": "Club tallies",
+      "total": "Group tallies",
       "mine": "Your tallies",
       "myRank": "Your rank",
       "rankValue": "Rank {rank}",

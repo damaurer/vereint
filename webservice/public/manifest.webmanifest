@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Vereint",
   "short_name": "Vereint",
-  "description": "Strichliste, Events, Guthaben und Chat für deinen Verein.",
+  "description": "Strichliste, Events, Guthaben und Chat für deine Gruppe.",
   "lang": "de",
   "dir": "ltr",
   "start_url": "/dashboard",

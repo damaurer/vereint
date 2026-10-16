@@ -304,7 +304,7 @@ class ConversationService(
         const val TYPE_CLUB = "club"
         const val TYPE_DIRECT = "direct"
         const val TYPE_EVENT = ChatService.CONVERSATION_TYPE_EVENT
-        const val CLUB_TITLE = "Vereinschat"
+        const val CLUB_TITLE = "Gruppenchat"
 
         /** Eindeutiger Schlüssel des einen Vereinschats (Spalte `direct_key`). */
         const val CLUB_KEY = "club"

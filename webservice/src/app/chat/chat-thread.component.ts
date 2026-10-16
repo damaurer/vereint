@@ -39,7 +39,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
 
 /**
  * Verlauf einer Konversation mit Infotafel, Nachrichten, Reaktionen und
- * Composer. Wird von Vereinschat und Direktnachrichten gemeinsam genutzt.
+ * Composer. Wird von Gruppenchat und Direktnachrichten gemeinsam genutzt.
  *
  * Lädt die Nachrichten beim Öffnen, markiert die Konversation als gelesen und
  * fragt alle 10 Sekunden nach neuen Nachrichten, solange die Seite sichtbar
