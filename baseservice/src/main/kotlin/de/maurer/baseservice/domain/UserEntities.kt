@@ -1,5 +1,6 @@
 package de.maurer.baseservice.domain
 
+import de.maurer.baseservice.security.UserRole
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
@@ -51,7 +52,7 @@ data class UserRoleId(
      * `board`, `admin`, `tabletRecorder` oder eine eigene Rolle.
      */
     @Column(name = "role", length = 64, nullable = false)
-    var role: String = AssignedRole.member.name
+    var role: String = UserRole.MEMBER
 ) : Serializable
 
 @Entity

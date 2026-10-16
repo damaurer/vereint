@@ -1,6 +1,5 @@
 package de.maurer.baseservice
 
-import de.maurer.baseservice.domain.AssignedRole
 import de.maurer.baseservice.domain.EventEntity
 import de.maurer.baseservice.domain.EventGuestEntity
 import de.maurer.baseservice.domain.EventParticipantEntity
@@ -11,7 +10,6 @@ import de.maurer.baseservice.domain.UserPermissionEntity
 import de.maurer.baseservice.domain.UserPermissionId
 import de.maurer.baseservice.domain.UserRoleEntity
 import de.maurer.baseservice.domain.UserRoleId
-import de.maurer.baseservice.domain.BoardRole as DomainBoardRole
 import de.maurer.baseservice.dto.AccessCheckRequest
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
@@ -23,9 +21,14 @@ import de.maurer.baseservice.security.RolePermissionMatrix
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.AccessResolverService
+import de.maurer.baseservice.support.DefaultStammtischExtension
+import de.maurer.baseservice.support.StammtischTestSupport
+import de.maurer.baseservice.tenancy.MembershipView
+import de.maurer.baseservice.tenancy.StammtischMemberships
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -53,10 +56,16 @@ class AccessResolverServiceTest {
         eventParticipantRepository = mock(EventParticipantRepository::class.java)
         eventGuestRepository = mock(EventGuestRepository::class.java)
 
+        // Jede Person ist Mitglied des Standard-Stammtischs, in dem der Test läuft.
+        val memberships = mock(StammtischMemberships::class.java)
+        `when`(memberships.memberships(any(UUID::class.java) ?: UUID.randomUUID())).thenReturn(
+            listOf(MembershipView(DefaultStammtischExtension.DEFAULT_STAMMTISCH_ID, "Mein Stammtisch", emptySet(), emptySet(), null))
+        )
+
         service = AccessResolverService(
             userRepository,
-            userRoleRepository,
-            userPermissionRepository,
+            StammtischTestSupport.access(userRoleRepository, userPermissionRepository),
+            memberships,
             eventRepository,
             eventParticipantRepository,
             eventGuestRepository
@@ -118,7 +127,7 @@ class AccessResolverServiceTest {
         )
         `when`(userRepository.findByKeycloakSubject("sub-member")).thenReturn(Optional.of(dbUser))
         `when`(userRoleRepository.findByIdUserId(memberId)).thenReturn(
-            listOf(UserRoleEntity(id = UserRoleId(memberId, AssignedRole.member), user = dbUser))
+            listOf(UserRoleEntity(id = UserRoleId(memberId, UserRole.MEMBER), user = dbUser))
         )
         `when`(userPermissionRepository.findByIdUserId(memberId)).thenReturn(emptyList())
         `when`(eventRepository.findByOwnerId(memberId)).thenReturn(emptyList())
@@ -149,7 +158,6 @@ class AccessResolverServiceTest {
             id = treasurerId,
             keycloakSubject = "sub-treasurer",
             displayName = "Treasurer User",
-            boardRole = DomainBoardRole.treasurer,
             disabled = false
         )
         `when`(userRepository.findByKeycloakSubject("sub-treasurer")).thenReturn(Optional.of(dbUser))
@@ -215,7 +223,6 @@ class AccessResolverServiceTest {
             id = tabletId,
             keycloakSubject = "sub-tablet",
             displayName = "Tablet User",
-            drinkRecorder = true,
             disabled = false
         )
         `when`(userRepository.findByKeycloakSubject("sub-tablet")).thenReturn(Optional.of(dbUser))

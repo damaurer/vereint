@@ -14,6 +14,7 @@ import de.maurer.baseservice.service.MomentLabels
 import de.maurer.baseservice.service.MomentService
 import de.maurer.baseservice.service.NotificationService
 import de.maurer.baseservice.service.UserService
+import de.maurer.baseservice.support.StammtischTestSupport
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -97,7 +98,7 @@ class MomentServiceTest {
             momentResponseRepository = momentResponseRepository,
             eventRepository = eventRepository,
             eventParticipantRepository = eventParticipantRepository,
-            userRoleRepository = userRoleRepository,
+            access = StammtischTestSupport.access(userRoleRepository),
             userService = userService,
             chatService = chatService,
             notificationService = notificationService,

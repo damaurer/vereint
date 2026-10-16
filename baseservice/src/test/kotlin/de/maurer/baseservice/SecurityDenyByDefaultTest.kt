@@ -67,7 +67,7 @@ class SecurityDenyByDefaultTest {
             .andExpect(jsonPath("$.subject").value("test-user-sub-123"))
             .andExpect(jsonPath("$.displayName").value("Max Mustermann"))
             .andExpect(jsonPath("$.roles[0]").value("member"))
-            .andExpect(jsonPath("$.permissions[0]").value("profile.read.self"))
+            .andExpect(jsonPath("$.permissions", org.hamcrest.Matchers.hasItem("profile.read.self")))
             .andExpect(jsonPath("$.attributes").doesNotExist())
             .andExpect(jsonPath("$.email").doesNotExist())
             .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("must-not-leak"))))

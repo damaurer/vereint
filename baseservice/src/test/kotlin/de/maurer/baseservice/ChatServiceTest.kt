@@ -29,6 +29,7 @@ import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.ChatService
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.SecureTokens
+import de.maurer.baseservice.support.StammtischTestSupport
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -87,7 +88,7 @@ class ChatServiceTest {
             conversationMemberRepository,
             chatMessageRepository,
             eventGuestRepository,
-            userRoleRepository,
+            StammtischTestSupport.access(userRoleRepository),
             userService
         )
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: ownerId)).thenReturn(emptyList())

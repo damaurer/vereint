@@ -6,6 +6,7 @@ import de.maurer.baseservice.error.ApiException
 import de.maurer.baseservice.error.ApiProblem
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.ErrorMessageResolver
+import de.maurer.baseservice.security.AuthContext
 import de.maurer.baseservice.security.RolePermissionMatrix
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
@@ -40,6 +41,7 @@ import java.util.UUID
 class StammtischContextFilter(
     private val userService: UserService,
     private val memberships: StammtischMemberships,
+    private val authContext: AuthContext,
     private val messages: ErrorMessageResolver
 ) : OncePerRequestFilter() {
 
@@ -47,7 +49,8 @@ class StammtischContextFilter(
 
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
         val authentication = SecurityContextHolder.getContext().authentication as? JwtAuthenticationToken
-        val tokenPrincipal = authentication?.details as? UserPrincipal
+        // Wie AuthContext: Principal aus den Details, sonst aus den Token-Claims.
+        val tokenPrincipal = authentication?.let { authContext.getCurrentPrincipal() }
         if (authentication == null || tokenPrincipal == null) {
             TenantContext.runWithoutTenant { chain.doFilter(request, response) }
             return

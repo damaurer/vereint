@@ -8,6 +8,9 @@
     <property name="uuid.type" value="UUID" dbms="postgresql"/>
     <property name="uuid.type" value="UUID" dbms="h2"/>
     <property name="default.stammtisch" value="00000000-0000-0000-0000-000000000001"/>
+    <!-- Als Spaltenvorgabe braucht PostgreSQL einen UUID-Ausdruck, keinen Text. -->
+    <property name="default.stammtisch.sql" value="'00000000-0000-0000-0000-000000000001'::uuid" dbms="postgresql"/>
+    <property name="default.stammtisch.sql" value="CAST('00000000-0000-0000-0000-000000000001' AS UUID)" dbms="h2"/>
 
     <preConditions>
         <or>
@@ -55,7 +58,7 @@
          und wird danach wieder entfernt. -->
     <changeSet id="161-add-stammtisch-id" author="claude">
         <addColumn tableName="user_roles">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_user_roles_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -64,7 +67,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="user_permissions">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_user_permissions_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -73,7 +76,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="events">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_events_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -82,7 +85,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="event_participants">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_event_participants_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -91,7 +94,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="event_invites">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_event_invites_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -100,7 +103,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="event_guests">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_event_guests_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -109,7 +112,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="drink_catalog">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_drink_catalog_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -118,7 +121,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="drink_barcodes">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_drink_barcodes_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -127,7 +130,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="drink_sublists">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_drink_sublists_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -136,7 +139,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="drink_sublist_items">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_drink_sublist_items_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -145,7 +148,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="event_drinks">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_event_drinks_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -154,7 +157,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="ledger_entries">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_ledger_entries_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -163,7 +166,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="purchase_snapshots">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_purchase_snapshots_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -172,7 +175,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="idempotency_records">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_idempotency_records_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -181,7 +184,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="conversations">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_conversations_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -190,7 +193,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="conversation_members">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_conversation_members_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -199,7 +202,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="chat_messages">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_chat_messages_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -208,7 +211,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="chat_reactions">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_chat_reactions_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -217,7 +220,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="notifications">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_notifications_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -226,7 +229,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="moment_sessions">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_moment_sessions_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -235,7 +238,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="moment_responses">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_moment_responses_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -244,7 +247,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="audit_logs">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_audit_logs_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -253,7 +256,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="image_assets">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_image_assets_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -262,7 +265,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="food_catalog">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_food_catalog_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -271,7 +274,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="event_food">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_event_food_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -280,7 +283,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="member_invites">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_member_invites_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -289,7 +292,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="member_invite_redemptions">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_member_invite_redemptions_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -298,7 +301,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="kiosk_sessions">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_kiosk_sessions_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -307,7 +310,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="moment_types">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_moment_types_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -316,7 +319,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="moment_reactions">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_moment_reactions_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>
@@ -325,7 +328,7 @@
             <column name="stammtisch_id"/>
         </createIndex>
         <addColumn tableName="moment_media">
-            <column name="stammtisch_id" type="${uuid.type}" defaultValue="${default.stammtisch}">
+            <column name="stammtisch_id" type="${uuid.type}" defaultValueComputed="${default.stammtisch.sql}">
                 <constraints nullable="false" foreignKeyName="fk_moment_media_stammtisch" references="stammtische(id)"/>
             </column>
         </addColumn>

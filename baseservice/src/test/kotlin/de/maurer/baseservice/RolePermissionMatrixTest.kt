@@ -42,8 +42,8 @@ class RolePermissionMatrixTest {
     }
 
     @Test
-    fun `drink recorder flag adds the tablet purchase permission`() {
-        val derived = RolePermissionMatrix.derivePermissions(setOf(UserRole.MEMBER), drinkRecorder = true)
+    fun `tablet recorder role adds the tablet purchase permission`() {
+        val derived = RolePermissionMatrix.derivePermissions(setOf(UserRole.MEMBER, RolePermissionMatrix.ROLE_TABLET_RECORDER))
 
         assertTrue(derived.contains(Permission.PURCHASE_TABLET))
         assertTrue(derived.contains(Permission.PURCHASE_SELF))
@@ -56,10 +56,10 @@ class RolePermissionMatrixTest {
     }
 
     @Test
-    fun `assignable roles match the documented data contract`() {
+    fun `system roles match the documented data contract`() {
         assertEquals(
             setOf("member", "board", "admin", "tabletRecorder"),
-            RolePermissionMatrix.ASSIGNABLE_ROLES
+            RolePermissionMatrix.SYSTEM_ROLES
         )
     }
 
@@ -77,7 +77,6 @@ class RolePermissionMatrixTest {
     @Test
     fun `no roles yield no permissions by default`() {
         assertTrue(RolePermissionMatrix.derivePermissions(emptySet()).isEmpty())
-        assertTrue(RolePermissionMatrix.derivePermissions(emptySet(), drinkRecorder = false).isEmpty())
     }
 
     @Test
@@ -90,23 +89,23 @@ class RolePermissionMatrixTest {
     }
 
     @Test
-    fun `drink recorder flag alone grants only tablet purchase`() {
-        val derived = RolePermissionMatrix.derivePermissions(emptySet(), drinkRecorder = true)
+    fun `tablet recorder role alone grants only tablet purchase`() {
+        val derived = RolePermissionMatrix.derivePermissions(setOf(RolePermissionMatrix.ROLE_TABLET_RECORDER))
 
         assertEquals(setOf(Permission.PURCHASE_TABLET), derived)
     }
 
     @Test
-    fun `matrix covers every assignable role and exposes only known permissions`() {
-        RolePermissionMatrix.ASSIGNABLE_ROLES.forEach { role ->
+    fun `matrix covers every system role and admins start with every permission`() {
+        RolePermissionMatrix.SYSTEM_ROLES.forEach { role ->
             assertTrue(
                 RolePermissionMatrix.MATRIX.containsKey(role),
                 "Zuweisbare Rolle '$role' fehlt in der Matrix"
             )
         }
         assertEquals(
-            RolePermissionMatrix.MATRIX.values.flatten().toSet(),
-            RolePermissionMatrix.KNOWN_PERMISSIONS
+            RolePermissionMatrix.KNOWN_PERMISSIONS,
+            RolePermissionMatrix.permissionsForRole(UserRole.ADMIN)
         )
         assertTrue(RolePermissionMatrix.VERSION >= 1)
     }
