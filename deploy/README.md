@@ -202,10 +202,12 @@ einmal von Hand (Admin-Konsole per Tunnel, Realm `vereint`):
    *Email verified* an.
 2. *Credentials → Set password*: Passwort (mindestens 10 Zeichen),
    *Temporary* an, damit beim ersten Login ein eigenes vergeben wird.
-3. *Role mapping → Assign role → Realm roles*: `admin` und `board`.
-4. In der App anmelden. Beim ersten Login legt der baseservice das Profil mit
-   diesen Rollen an. Alle weiteren Mitglieder kommen per Einladungslink dazu,
-   Rollen vergibt danach die Administration in der App.
+3. *Role mapping → Assign role → Realm roles*: `admin` (Plattform-Admin, siehe
+   „Mehrere Gruppen“ unten).
+4. In der App anmelden. Beim ersten Login legt der baseservice das Profil an
+   und macht diese Person zum Admin der Gruppe „Meine Gruppe“. Alle weiteren
+   Mitglieder kommen per Einladungslink dazu, Rollen vergibt danach jede Gruppe
+   in der App.
 
 „Passwort vergessen" ist im Produktions-Realm ausgeschaltet, weil Keycloak
 keinen Mailserver hat. Vergisst jemand sein Passwort, setzt die Administration
