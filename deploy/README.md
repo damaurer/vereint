@@ -207,6 +207,13 @@ einmal von Hand (Admin-Konsole per Tunnel, Realm `vereint`):
    diesen Rollen an. Alle weiteren Mitglieder kommen per Einladungslink dazu,
    Rollen vergibt danach die Administration in der App.
 
+„Passwort vergessen" ist im Produktions-Realm ausgeschaltet, weil Keycloak
+keinen Mailserver hat. Vergisst jemand sein Passwort, setzt die Administration
+es in der Admin-Konsole zurück (*Users → Benutzer → Credentials → Reset
+password*, *Temporary* an). Wird später ein Mailserver eingerichtet (z. B.
+Amazon SES unter *Realm settings → Email*), kann die Funktion unter
+*Realm settings → Login → Forgot password* wieder eingeschaltet werden.
+
 Der Keycloak-Benutzer `admin` (Passwort aus `/vereint/KEYCLOAK_ADMIN_PASSWORD`)
 gehört zum Master-Realm, ist nur über den Tunnel erreichbar und kein
 App-Konto.
