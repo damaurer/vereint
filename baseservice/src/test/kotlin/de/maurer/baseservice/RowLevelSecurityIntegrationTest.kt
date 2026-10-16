@@ -1,15 +1,21 @@
 package de.maurer.baseservice
 
+import de.maurer.baseservice.dto.CorrectionRequest
 import de.maurer.baseservice.dto.CreateEventRequest
 import de.maurer.baseservice.dto.CreateStammtischRequest
+import de.maurer.baseservice.dto.TopupRequest
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.service.AuditLogService
 import de.maurer.baseservice.service.EventService
+import de.maurer.baseservice.service.LedgerService
 import de.maurer.baseservice.service.PlatformService
+import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.DefaultStammtischExtension.Companion.DEFAULT_STAMMTISCH_ID
 import de.maurer.baseservice.tenancy.TenantContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,6 +28,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
+import java.math.BigDecimal
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -41,6 +48,9 @@ import java.util.UUID
 class RowLevelSecurityIntegrationTest @Autowired constructor(
     private val platformService: PlatformService,
     private val eventService: EventService,
+    private val ledgerService: LedgerService,
+    private val auditLogService: AuditLogService,
+    private val userService: UserService,
     private val jdbcTemplate: JdbcTemplate
 ) {
 
@@ -62,6 +72,23 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
 
     private fun countEvent(id: UUID): Int =
         jdbcTemplate.queryForObject("select count(*) from events where id = ?", Int::class.java, id)!!
+
+    @Test
+    fun `the audit log of a Stammtisch can be read under row level security`() {
+        val admin = UserPrincipal(subject = "kc-rls-admin-${UUID.randomUUID()}", roles = setOf(UserRole.ADMIN))
+        val member = UserPrincipal(subject = "kc-rls-member-${UUID.randomUUID()}", roles = setOf(UserRole.MEMBER))
+        val memberId = TenantContext.runWithoutTenant { userService.getOrCreateUser(member) }.id
+        ledgerService.topup(TopupRequest(memberId = memberId.toString(), amount = BigDecimal("5.00")), "rls-audit-${UUID.randomUUID()}", admin)
+
+        val page = auditLogService.listAuditLogs(null, null, null, null, null, admin)
+
+        assertTrue(page.content.isNotEmpty())
+        // Buchungen ohne Beleg lassen sich auch einzeln und je Mitglied laden.
+        val entries = ledgerService.listMemberEntries(memberId, admin)
+        assertTrue(entries.isNotEmpty())
+        ledgerService.correct(CorrectionRequest(originalEntryId = entries.first().id, reason = "RLS-Test"), "rls-correct-${UUID.randomUUID()}", admin)
+        assertEquals(2, ledgerService.listMemberEntries(memberId, admin).size)
+    }
 
     @Test
     fun `every Stammtisch table enforces row level security even for the owner`() {

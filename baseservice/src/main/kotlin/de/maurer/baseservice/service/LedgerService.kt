@@ -54,7 +54,8 @@ class LedgerService(
     private val eventDrinkRepository: EventDrinkRepository,
     private val eventParticipantRepository: EventParticipantRepository,
     private val userService: UserService,
-    private val auditService: AuditService
+    private val auditService: AuditService,
+    private val snapshots: LedgerSnapshots
 ) {
 
     /**
@@ -93,7 +94,7 @@ class LedgerService(
         val caller = userService.getOrCreateUser(principal)
         requireCanReadMember(caller, principal, memberId)
         requireUser(memberId)
-        return ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(memberId).map { toDto(it) }
+        return snapshots.attach(ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(memberId)).map { toDto(it) }
     }
 
     @Transactional(readOnly = true)
@@ -105,7 +106,7 @@ class LedgerService(
                 ErrorCode.ACCESS_DENIED
             )
         }
-        val entries = ledgerEntryRepository.findByEventId(eventId)
+        val entries = snapshots.attach(ledgerEntryRepository.findByEventId(eventId))
         val purchases = entries.filter { it.entryType == LedgerEntryType.purchase }
         val purchaseCorrections = entries.filter {
             it.entryType == LedgerEntryType.correction && it.reversesEntry?.entryType == LedgerEntryType.purchase
@@ -255,7 +256,7 @@ class LedgerService(
         }
         val replay = ledgerEntryRepository.findByIdempotencyKey(key).orElse(null)
         if (replay != null && replay.reversesEntry?.id == original.id) {
-            return toDto(replay)
+            return toDto(snapshots.attach(replay))
         }
         if (original.entryType != LedgerEntryType.purchase ||
             original.source != PurchaseSource.tabletManual ||
@@ -473,7 +474,7 @@ class LedgerService(
             }
         val replay = ledgerEntryRepository.findByIdempotencyKey(key).orElse(null)
         if (replay != null && replay.reversesEntry?.id == original.id) {
-            return toDto(replay)
+            return toDto(snapshots.attach(replay))
         }
         if (original.entryType != LedgerEntryType.purchase || original.source != PurchaseSource.pwaBarcode) {
             throw InvalidRequestException(
@@ -790,7 +791,7 @@ class LedgerService(
         val existing = ledgerEntryRepository.findByIdempotencyKey(cmd.key).orElse(null)
         if (existing != null) {
             if (matchesReplay(existing, cmd.entryType, cmd.member, cmd.amount, cmd.currency)) {
-                return toDto(existing)
+                return toDto(snapshots.attach(existing))
             }
             throw IdempotencyConflictException(
                 Msg("error.idempotency.conflict", cmd.key),

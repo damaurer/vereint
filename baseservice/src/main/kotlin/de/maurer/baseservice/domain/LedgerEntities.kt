@@ -79,8 +79,13 @@ class LedgerEntryEntity(
     /**
      * Der Beleg-Snapshot ist eigenständig und wird nicht mit der Buchung
      * gelöscht (Fremdschlüssel auf `RESTRICT`).
+     *
+     * Bewusst keine JPA-Zuordnung: Hibernate lädt die Gegenseite einer
+     * `@OneToOne(mappedBy)` immer nach und wertet einen fehlenden Beleg (jede
+     * Einzahlung) bei aktivem Stammtisch-Mandanten als „gefiltert". Die Belege
+     * füllt [de.maurer.baseservice.service.LedgerSnapshots] gesammelt nach.
      */
-    @OneToOne(mappedBy = "ledgerEntry", cascade = [CascadeType.PERSIST, CascadeType.MERGE], fetch = FetchType.LAZY)
+    @Transient
     var purchaseSnapshot: PurchaseSnapshotEntity? = null
 ) : StammtischScoped()
 

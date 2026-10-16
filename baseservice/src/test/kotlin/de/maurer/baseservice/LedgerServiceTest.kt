@@ -24,6 +24,7 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.AuditService
 import de.maurer.baseservice.service.LedgerService
+import de.maurer.baseservice.service.LedgerSnapshots
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.StammtischTestSupport
 import org.junit.jupiter.api.Assertions.*
@@ -151,7 +152,8 @@ class LedgerServiceTest {
             eventDrinkRepository,
             eventParticipantRepository,
             userService,
-            auditService
+            auditService,
+            LedgerSnapshots(purchaseSnapshotRepository)
         )
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: adminId)).thenReturn(emptyList())
         `when`(idempotencyRecordRepository.findByScopeAndIdempotencyKey(anyString(), anyString()))

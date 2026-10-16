@@ -222,14 +222,14 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
     fun findByMemberId(memberId: UUID): List<LedgerEntryEntity>
 
     /** Vollständiger Kontoauszug einer Person in Buchungsreihenfolge. */
-    @EntityGraph(attributePaths = ["event", "member", "drink", "actor", "purchaseSnapshot", "reversesEntry"])
+    @EntityGraph(attributePaths = ["event", "member", "drink", "actor", "reversesEntry"])
     fun findByMemberIdOrderByCreatedAtAsc(memberId: UUID): List<LedgerEntryEntity>
 
     @EntityGraph(attributePaths = ["event", "member", "drink", "actor"])
     fun findByEventId(eventId: UUID): List<LedgerEntryEntity>
 
     /** Buchungen ab einem Zeitpunkt für die Vereinsstatistik. */
-    @EntityGraph(attributePaths = ["event", "member", "drink", "food", "purchaseSnapshot", "reversesEntry"])
+    @EntityGraph(attributePaths = ["event", "member", "drink", "food", "reversesEntry"])
     fun findByCreatedAtGreaterThanEqual(since: Instant): List<LedgerEntryEntity>
 
     /** Mehrere Buchungen samt Mitglied, z. B. um Audit-Einträge mit Namen anzuzeigen. */
@@ -240,7 +240,7 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
     fun findByReversesEntryId(reversesEntryId: UUID): List<LedgerEntryEntity>
 
     /** Guthaben und Käufe einer Person je Event (Composite-Index). */
-    @EntityGraph(attributePaths = ["event", "member", "drink", "actor", "purchaseSnapshot"])
+    @EntityGraph(attributePaths = ["event", "member", "drink", "actor"])
     fun findByEventIdAndMemberIdOrderByCreatedAtAsc(eventId: UUID, memberId: UUID): List<LedgerEntryEntity>
 
     /** Buchungen im Zeitraum ohne N+1-Nachladen. */
@@ -264,6 +264,7 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
 @Repository
 interface PurchaseSnapshotRepository : JpaRepository<PurchaseSnapshotEntity, UUID> {
     fun findByLedgerEntryId(ledgerEntryId: UUID): Optional<PurchaseSnapshotEntity>
+    fun findByLedgerEntryIdIn(ledgerEntryIds: Collection<UUID>): List<PurchaseSnapshotEntity>
 }
 
 @Repository
