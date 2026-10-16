@@ -57,18 +57,14 @@ Details: [AWS-Infrastruktur und Kosten](aws-und-kosten.md#einrichtung)
 
 ## 6. Ausrollen
 
-- [ ] [Pull Request #27](https://github.com/damaurer/vereint/pull/27) mergen.
-      Er behebt einen falschen Rollback beim allerersten Deployment, beschreibt
-      das Anlegen des ersten Administrators und schaltet „Passwort vergessen“ im
-      Produktions-Realm ab, weil es keinen Mailserver gibt.
 - [ ] `develop` nach `main` mergen (Fast-Forward, gern über `qs`). Die drei
       Image-Workflows starten von selbst, danach rollt `Deployment (Produktion)`
       aus. Fehlen auf `main` Images, die Workflows `baseservice CI/CD`,
       `webservice CI/CD` und `keycloak CI/CD` einmal mit *Run workflow* starten.
 - [ ] Den **ersten Administrator** anlegen. Der Produktions-Realm hat keine
-      Benutzer; die Anleitung steht nach #27 in
-      [deploy/README.md](../../deploy/README.md). Er braucht die Realmrolle
-      `admin` (Plattform-Admin). Meldet er sich als Erster an, wird er
+      Benutzer; die Anleitung steht in
+      [deploy/README.md](../../deploy/README.md#ersten-administrator-anlegen).
+      Er braucht nur die Realmrolle `admin` (Plattform-Admin). Meldet er sich als Erster an, wird er
       automatisch Admin der Gruppe „Meine Gruppe“
       ([Mehrere Gruppen](../../deploy/README.md#mehrere-gruppen)).
 
