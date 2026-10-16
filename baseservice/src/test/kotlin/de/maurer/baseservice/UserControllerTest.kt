@@ -275,6 +275,34 @@ class UserControllerTest {
     }
 
     @Test
+    fun `PUT roles accepts a group's own role code`() {
+        `when`(userService.assignRoles(anyUuid(), anySet(), anyPrincipal())).thenReturn(
+            UserProfileDto(
+                id = targetId.toString(),
+                keycloakSubject = "sub-target",
+                displayName = "Target User",
+                email = "target@example.com",
+                disabled = false,
+                drinkRecorder = false,
+                boardRole = null,
+                roles = setOf("member", "kassenpruefung"),
+                permissions = setOf("profile.read.self"),
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            )
+        )
+
+        mockMvc.perform(
+            put("/api/v1/users/$targetId/roles")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"roles\":[\"member\",\"kassenpruefung\"]}")
+                .with(jwt().jwt { it.subject("sub-admin") })
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.roles[1]").value("kassenpruefung"))
+    }
+
+    @Test
     fun `PUT status sets disabled flag`() {
         `when`(userService.setUserStatus(anyUuid(), anyBoolean(), anyPrincipal())).thenReturn(
             UserProfileDto(
