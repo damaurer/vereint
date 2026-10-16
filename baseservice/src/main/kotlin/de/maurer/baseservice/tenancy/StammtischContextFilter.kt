@@ -149,6 +149,7 @@ class StammtischContextFilter(
             "/api/v1/member-invites/preview",
             "/api/v1/member-invites/register",
             "/api/v1/member-invites/join",
+            "/api/v1/invites/accept",
             "/api/v1/notifications/vapid-public-key",
             "/api/v1/notifications/subscriptions",
             "/api/v1/health",
@@ -158,10 +159,15 @@ class StammtischContextFilter(
 
         private val STAMMTISCH_FREE_EXACT = setOf("/api/v1/auth", "/api/v1/users/me")
 
+        /** Gast-Chat: der Controller wählt den Stammtisch über das Event. */
+        private val GUEST_CHAT = Regex("^/api/v1/events/[^/]+/chat/guest(/.*)?$")
+
         fun isStammtischFree(request: HttpServletRequest): Boolean {
             val path = request.requestURI.removePrefix(request.contextPath)
             if (!path.startsWith("/api/") && !path.startsWith("/actuator")) return true
-            return path in STAMMTISCH_FREE_EXACT || STAMMTISCH_FREE_PREFIXES.any { path.startsWith(it) }
+            return path in STAMMTISCH_FREE_EXACT ||
+                STAMMTISCH_FREE_PREFIXES.any { path.startsWith(it) } ||
+                GUEST_CHAT.matches(path)
         }
     }
 }

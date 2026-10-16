@@ -1,6 +1,7 @@
 package de.maurer.baseservice.service
 
 import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.StammtischMembers
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.NotificationEntity
 import de.maurer.baseservice.domain.PushSubscriptionEntity
@@ -23,7 +24,6 @@ import de.maurer.baseservice.push.PushSender
 import de.maurer.baseservice.push.PushDispatcher
 import de.maurer.baseservice.repository.NotificationRepository
 import de.maurer.baseservice.repository.PushSubscriptionRepository
-import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.Identifiers
 import org.springframework.stereotype.Service
@@ -46,7 +46,7 @@ import java.util.UUID
 class NotificationService(
     private val notificationRepository: NotificationRepository,
     private val pushSubscriptionRepository: PushSubscriptionRepository,
-    private val userRepository: UserRepository,
+    private val members: StammtischMembers,
     private val access: StammtischAccess,
     private val userService: UserService,
     private val pushSender: PushSender,
@@ -151,9 +151,7 @@ class NotificationService(
         requireBoardOrAdmin(caller, principal)
 
         val targetId = Identifiers.parseUuid(request.userId, "userId")
-        val target = userRepository.findById(targetId).orElseThrow {
-            ResourceNotFoundException(Msg("error.user.notFound", targetId), ErrorCode.NOT_FOUND)
-        }
+        val target = members.requireActiveUser(targetId)
         val title = require(request.title, "title")
         val body = require(request.body, "body")
         val type = request.type?.trim()?.ifBlank { null } ?: DEFAULT_TYPE
@@ -184,18 +182,13 @@ class NotificationService(
         val title = require(request.title, "title")
         val body = require(request.body, "body")
         val targets = if (request.allMembers == true) {
-            userRepository.findByDisabled(false)
+            members.activeUsers()
         } else {
             val ids = request.userIds.orEmpty().map { Identifiers.parseUuid(it, "userIds") }.distinct()
             if (ids.isEmpty()) {
                 throw InvalidRequestException(Msg("error.notification.noRecipients"), ErrorCode.INVALID_REQUEST)
             }
-            val found = userRepository.findAllById(ids)
-            if (found.size != ids.size) {
-                val missing = ids - found.map { it.id }.toSet()
-                throw ResourceNotFoundException(Msg("error.user.notFound", missing.first()), ErrorCode.NOT_FOUND)
-            }
-            found
+            members.requireActiveUsers(ids)
         }
         val notifications = notifyUsers(targets, title, body, DEFAULT_TYPE)
         notifications.forEach {

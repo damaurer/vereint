@@ -1,5 +1,6 @@
 package de.maurer.baseservice.service
 
+import de.maurer.baseservice.tenancy.TenantContext
 import de.maurer.baseservice.tenancy.StammtischAccess
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.ChatMessageEntity
@@ -215,7 +216,7 @@ class ChatService(
     internal fun requireEventConversation(event: EventEntity): ConversationEntity {
         val key = eventConversationKey(event.id)
         conversationRepository.findByDirectKey(key).getOrNull()?.let { return it }
-        conversationRepository.insertEventIfAbsent(UUID.randomUUID(), CONVERSATION_TYPE_EVENT, event.id, event.title, key)
+        conversationRepository.insertEventIfAbsent(UUID.randomUUID(), TenantContext.requireStammtischId(), CONVERSATION_TYPE_EVENT, event.id, event.title, key)
         return conversationRepository.findByDirectKey(key).orElseThrow()
     }
 
@@ -285,7 +286,7 @@ class ChatService(
 
     internal fun ensureMember(conversation: ConversationEntity, user: UserEntity) {
         if (conversationMemberRepository.findByConversationIdAndUserId(conversation.id, user.id).isEmpty) {
-            conversationMemberRepository.insertUserIfAbsent(UUID.randomUUID(), conversation.id, user.id)
+            conversationMemberRepository.insertUserIfAbsent(UUID.randomUUID(), TenantContext.requireStammtischId(), conversation.id, user.id)
         }
     }
 

@@ -1,6 +1,7 @@
 package de.maurer.baseservice.service
 
 import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.StammtischMembers
 import de.maurer.baseservice.domain.EventDrinkEntity
 import de.maurer.baseservice.domain.EventEntity
 import de.maurer.baseservice.domain.EventFoodEntity
@@ -51,6 +52,7 @@ class TabletRecorderService(
     private val eventParticipantRepository: EventParticipantRepository,
     private val userRepository: UserRepository,
     private val access: StammtischAccess,
+    private val members: StammtischMembers,
     private val userService: UserService,
     private val ledgerService: LedgerService
 ) {
@@ -349,7 +351,7 @@ class TabletRecorderService(
         }
         val isOwner = event.owner?.id == memberId
         val isParticipant = eventParticipantRepository.findByEventIdAndUserId(event.id, memberId).isPresent
-        if (buyer.disabled || (!isOwner && !isParticipant)) {
+        if (buyer.disabled || !members.isActiveMember(memberId) || (!isOwner && !isParticipant)) {
             throw InvalidRequestException(
                 Msg("error.tablet.buyerNotMember"),
                 ErrorCode.INVALID_REQUEST

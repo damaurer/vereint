@@ -14,6 +14,7 @@ import de.maurer.baseservice.support.ImageMetadata
 import de.maurer.baseservice.support.InvalidVideoException
 import de.maurer.baseservice.support.Mp4SanitizingInputStream
 import de.maurer.baseservice.support.VideoTooLongException
+import de.maurer.baseservice.tenancy.StammtischJobs
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.scheduling.annotation.Scheduled
@@ -50,6 +51,7 @@ class MomentMediaService(
     private val objectStorage: ObjectStorage,
     private val dataEncryptor: DataEncryptor,
     private val auditService: AuditService,
+    private val stammtischJobs: StammtischJobs,
     transactionManager: PlatformTransactionManager
 ) {
 
@@ -194,8 +196,12 @@ class MomentMediaService(
         objectStorage.delete(storageKey)
     }
 
-    /** Löscht Uploads, die nie zu einem Beitrag wurden (abgebrochene Beiträge). */
+    /** Löscht Uploads, die nie zu einem Beitrag wurden (abgebrochene Beiträge), in jedem Stammtisch. */
     @Scheduled(fixedDelayString = "PT1H", initialDelayString = "PT10M")
+    fun removeAbandonedUploadsEverywhere() {
+        stammtischJobs.forEachStammtisch("moment-media-cleanup") { removeAbandonedUploads() }
+    }
+
     fun removeAbandonedUploads() {
         val cutoff = Instant.now().minus(ABANDONED_AFTER)
         val keys = tx.execute {

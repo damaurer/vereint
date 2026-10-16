@@ -1,6 +1,6 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.domain.AssignedRole
+import de.maurer.baseservice.domain.StammtischMemberEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.domain.UserPermissionEntity
 import de.maurer.baseservice.domain.UserPermissionId
@@ -9,13 +9,18 @@ import de.maurer.baseservice.domain.UserRoleId
 import de.maurer.baseservice.domain.BoardRole as DomainBoardRole
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.*
+import de.maurer.baseservice.repository.StammtischMemberRepository
 import de.maurer.baseservice.repository.UserPermissionRepository
 import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.BoardRole
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.RolePermissionMatrix
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.StammtischMembers
+import de.maurer.baseservice.tenancy.TenantContext
 import jakarta.persistence.criteria.Predicate
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
@@ -27,19 +32,31 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
+/**
+ * Konten (global) und Mitglieder (je Stammtisch).
+ *
+ * Ein Konto gehört der Person und gilt in allen ihren Stammtischen. Rollen,
+ * individuelle Berechtigungen, Vorstandsfunktion und der Status „aktiv“
+ * gehören zur Mitgliedschaft und gelten nur im aktuellen Stammtisch.
+ * Verwaltungsfunktionen sehen ausschließlich Mitglieder des eigenen
+ * Stammtischs.
+ */
 @Service
 @Transactional
 class UserService(
     private val userRepository: UserRepository,
     private val userRoleRepository: UserRoleRepository,
     private val userPermissionRepository: UserPermissionRepository,
+    private val memberRepository: StammtischMemberRepository,
     private val userProvisioningService: UserProvisioningService,
-    private val permissionCache: UserPermissionCache,
+    private val membershipService: MembershipService,
+    private val access: StammtischAccess,
+    private val members: StammtischMembers,
     private val auditService: AuditService
 ) {
 
     /**
-     * Liest oder legt das Profil zur Keycloak-Identität an.
+     * Liest oder legt das Konto zur Keycloak-Identität an.
      *
      * Nebenläufige Erstanfragen derselben Person führen im Verlierer zu einer
      * `DataIntegrityViolationException`; in diesem Fall wird erneut gelesen.
@@ -62,7 +79,6 @@ class UserService(
             }
         }
 
-        permissionCache.invalidate(created.id)
         return requireEnabled(created)
     }
 
@@ -105,49 +121,42 @@ class UserService(
     }
 
     /**
-     * `deny by default`: Nicht-Administratoren erhalten weder Zugriff auf fremde
-     * noch auf deaktivierte Profile; Statusinformationen werden dabei nicht preisgegeben.
+     * `deny by default`: Fremde Profile sehen nur Personen mit
+     * Mitgliederverwaltung, und nur von Mitgliedern des eigenen Stammtischs.
      */
     @Transactional(readOnly = true)
     fun getUserById(id: UUID, principal: UserPrincipal): UserProfileDto {
         val callerUser = getOrCreateUser(principal)
-        val isAdmin = isAdmin(principal, callerUser)
+        if (callerUser.id == id) return toProfileDto(callerUser)
 
-        val user = userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
-        }
-
-        val isSelf = callerUser.id == user.id || callerUser.keycloakSubject == user.keycloakSubject
-
-        if (!isAdmin && !isSelf) {
+        if (!access.has(principal, callerUser, Permission.MEMBERS_MANAGE)) {
             throw AccessDeniedException(Msg("error.user.profileViewDenied"), ErrorCode.ACCESS_DENIED)
         }
-
-        if (!isAdmin && user.disabled) {
-            throw AccessDeniedException(Msg("error.user.profileViewDenied"), ErrorCode.ACCESS_DENIED)
-        }
-
-        return toProfileDto(user)
+        return toProfileDto(members.requireKnownUser(id))
     }
 
-    /** Aktive Mitglieder für Auswahllisten; für alle Angemeldeten sichtbar. */
+    /** Aktive Mitglieder des Stammtischs für Auswahllisten; für alle Mitglieder sichtbar. */
     @Transactional(readOnly = true)
     fun directory(principal: UserPrincipal): List<MemberDirectoryEntryDto> {
         getOrCreateUser(principal)
-        return userRepository.findByDisabled(false)
-            .sortedBy { it.displayName.lowercase() }
-            .map { user ->
+        val rolesByUser = rolesByUser()
+        return memberRepository.findByActiveTrue()
+            .filter { it.user?.disabled == false }
+            .sortedBy { it.user!!.displayName.lowercase() }
+            .map { member ->
+                val user = member.user!!
                 MemberDirectoryEntryDto(
                     id = user.id.toString(),
                     displayName = user.displayName,
-                    boardRole = user.boardRole?.name,
-                    roles = rolesOf(user.id)
+                    boardRole = member.boardRole?.name,
+                    roles = rolesByUser[user.id].orEmpty()
                 )
             }
     }
 
     /**
-     * Paginierte, gefilterte und sortierte Benutzerliste für Vorstand und Administration.
+     * Paginierte, gefilterte und sortierte Mitgliederliste des Stammtischs.
+     * `disabled` meint hier: Mitgliedschaft beendet oder Konto gesperrt.
      */
     @Transactional(readOnly = true)
     fun listUsers(
@@ -158,14 +167,14 @@ class UserService(
         principal: UserPrincipal
     ): PagedResponse<UserSummaryDto> {
         val callerUser = getOrCreateUser(principal)
-        if (!isBoardOrAdmin(principal, callerUser)) {
+        if (!access.has(principal, callerUser, Permission.MEMBERS_READ)) {
             throw AccessDeniedException(
                 Msg("error.user.listDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
 
-        if (role != null && !RolePermissionMatrix.ASSIGNABLE_ROLES.contains(role)) {
+        if (role != null && !access.roleDefinitions().containsKey(role)) {
             throw InvalidRequestException(Msg("error.user.invalidRoleFilter", role), ErrorCode.INVALID_REQUEST)
         }
 
@@ -175,18 +184,20 @@ class UserService(
             effectivePageable
         )
 
+        val membersByUser = memberRepository.findAllBy().associateBy { it.user?.id }
         val content = page.content.map { user ->
+            val member = membersByUser[user.id]
             val roles = rolesOf(user.id)
             UserSummaryDto(
                 id = user.id.toString(),
                 keycloakSubject = user.keycloakSubject,
                 displayName = user.displayName,
                 email = user.email,
-                disabled = user.disabled,
-                drinkRecorder = user.drinkRecorder,
-                boardRole = user.boardRole?.name,
+                disabled = user.disabled || member?.active != true,
+                drinkRecorder = roles.contains(RolePermissionMatrix.ROLE_TABLET_RECORDER),
+                boardRole = member?.boardRole?.name,
                 roles = roles,
-                createdAt = user.createdAt
+                createdAt = member?.joinedAt ?: user.createdAt
             )
         }
 
@@ -200,54 +211,63 @@ class UserService(
         )
     }
 
+    /**
+     * Ändert eine Mitgliedschaft. Name und E-Mail gehören zum Konto, das in
+     * mehreren Stammtischen gilt; sie ändert nur die Person selbst oder die
+     * Plattform-Administration.
+     */
     fun adminUpdateUser(id: UUID, request: AdminUpdateUserRequest, principal: UserPrincipal): UserProfileDto {
         val callerUser = getOrCreateUser(principal)
-        requireAdmin(principal, callerUser)
+        requireMembersManage(principal, callerUser)
 
-        val user = userRepository.findById(id).orElseThrow {
+        val user = members.requireKnownUser(id)
+        val member = memberRepository.findByUserId(user.id).orElseThrow {
             ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
         }
 
-        val touchesPrivileges = request.roles != null || request.permissions != null || request.disabled != null
+        val touchesPrivileges = request.roles != null || request.permissions != null ||
+            request.disabled != null || request.drinkRecorder != null
         if (touchesPrivileges) {
             requireNotSelf(callerUser, user)
         }
 
-        var updated = false
-
-        if (request.displayName != null) {
-            val name = request.displayName.trim()
-            if (name.isBlank()) {
-                throw InvalidRequestException(Msg("error.user.displayNameBlank"), ErrorCode.INVALID_REQUEST)
+        val changesAccount = (request.displayName != null && request.displayName.trim() != user.displayName) ||
+            (request.email != null && request.email.trim().ifBlank { null } != user.email)
+        if (changesAccount) {
+            if (!principal.platformAdmin) {
+                throw AccessDeniedException(Msg("error.user.accountEditDenied"), ErrorCode.ACCESS_DENIED)
             }
-            user.displayName = name
-            updated = true
+            if (request.displayName != null) {
+                val name = request.displayName.trim()
+                if (name.isBlank()) {
+                    throw InvalidRequestException(Msg("error.user.displayNameBlank"), ErrorCode.INVALID_REQUEST)
+                }
+                user.displayName = name
+            }
+            if (request.email != null) {
+                user.email = request.email.trim().ifBlank { null }
+            }
+            userRepository.save(user)
         }
 
-        if (request.email != null) {
-            user.email = request.email.trim().ifBlank { null }
-            updated = true
-        }
+        var updated = changesAccount
 
-        if (request.disabled != null && request.disabled != user.disabled) {
+        val wasDisabled = !member.active
+        if (request.disabled != null && request.disabled != wasDisabled) {
             if (request.disabled) {
-                requireRemainingAdmin(user)
+                requireRemainingManager(user)
+                membershipService.deactivate(user)
+            } else {
+                membershipService.addMember(user, emptySet())
             }
-            val previous = user.disabled
-            user.disabled = request.disabled
             updated = true
             auditService.recordUserChange(
                 callerUser,
                 AuditService.ACTION_STATUS_CHANGED,
                 user.id,
-                previous,
+                wasDisabled,
                 request.disabled
             )
-        }
-
-        if (request.drinkRecorder != null) {
-            user.drinkRecorder = request.drinkRecorder
-            updated = true
         }
 
         if (request.boardRole != null) {
@@ -255,80 +275,79 @@ class UserService(
             if (boardRole.isNotBlank() && !BoardRole.ALL.contains(boardRole)) {
                 throw InvalidRequestException(Msg("error.user.invalidBoardRole", boardRole), ErrorCode.INVALID_REQUEST)
             }
-            user.boardRole = DomainBoardRole.fromValue(boardRole)
+            member.boardRole = DomainBoardRole.fromValue(boardRole)
+            memberRepository.save(member)
             updated = true
         }
 
         if (updated) {
-            userRepository.save(user)
             auditService.recordUserChange(
                 callerUser,
                 AuditService.ACTION_PROFILE_ADMIN_UPDATED,
                 user.id,
                 null,
-                "displayName=${user.displayName}; disabled=${user.disabled}; boardRole=${user.boardRole?.name}"
+                "displayName=${user.displayName}; active=${member.active}; boardRole=${member.boardRole?.name}"
             )
         }
 
-        if (request.roles != null) {
-            setRolesForUser(callerUser, user, request.roles)
+        if (request.roles != null || request.drinkRecorder != null) {
+            requireRolesManage(principal, callerUser)
+            var roles = request.roles ?: rolesOf(user.id)
+            if (request.drinkRecorder != null) {
+                roles = if (request.drinkRecorder) {
+                    roles + RolePermissionMatrix.ROLE_TABLET_RECORDER
+                } else {
+                    roles - RolePermissionMatrix.ROLE_TABLET_RECORDER
+                }
+            }
+            setRolesForUser(callerUser, user, roles)
         }
 
         if (request.permissions != null) {
+            requireRolesManage(principal, callerUser)
             setPermissionsForUser(callerUser, user, request.permissions)
         }
 
-        permissionCache.invalidate(user.id)
         return toProfileDto(user)
     }
 
     fun assignRoles(id: UUID, roles: Set<String>, principal: UserPrincipal): UserProfileDto {
         val callerUser = getOrCreateUser(principal)
-        requireAdmin(principal, callerUser)
+        requireRolesManage(principal, callerUser)
 
-        val user = userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
-        }
+        val user = members.requireActiveUser(id)
         requireNotSelf(callerUser, user)
 
         setRolesForUser(callerUser, user, roles)
-        userRepository.save(user)
-        permissionCache.invalidate(user.id)
         return toProfileDto(user)
     }
 
     fun assignPermissions(id: UUID, permissions: Set<String>, principal: UserPrincipal): UserProfileDto {
         val callerUser = getOrCreateUser(principal)
-        requireAdmin(principal, callerUser)
+        requireRolesManage(principal, callerUser)
 
-        val user = userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
-        }
+        val user = members.requireActiveUser(id)
         requireNotSelf(callerUser, user)
 
         setPermissionsForUser(callerUser, user, permissions)
-        userRepository.save(user)
-        permissionCache.invalidate(user.id)
         return toProfileDto(user)
     }
 
+    /** Beendet oder reaktiviert die Mitgliedschaft im aktuellen Stammtisch. */
     fun setUserStatus(id: UUID, disabled: Boolean, principal: UserPrincipal): UserProfileDto {
         val callerUser = getOrCreateUser(principal)
-        requireAdmin(principal, callerUser)
+        requireMembersManage(principal, callerUser)
 
-        val user = userRepository.findById(id).orElseThrow {
-            ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
-        }
+        val user = members.requireKnownUser(id)
         requireNotSelf(callerUser, user)
 
+        val previous = !membershipService.isActiveMember(user)
         if (disabled) {
-            requireRemainingAdmin(user)
+            requireRemainingManager(user)
+            membershipService.deactivate(user)
+        } else if (previous) {
+            membershipService.addMember(user, setOf(UserRole.MEMBER))
         }
-
-        val previous = user.disabled
-        user.disabled = disabled
-        userRepository.save(user)
-        permissionCache.invalidate(user.id)
 
         auditService.recordUserChange(
             callerUser,
@@ -357,8 +376,28 @@ class UserService(
         Specification { root, query, builder ->
             val predicates = mutableListOf<Predicate>()
 
-            if (disabled != null) {
-                predicates.add(builder.equal(root.get<Boolean>("disabled"), disabled))
+            // Nur Personen mit einer Mitgliedschaft in diesem Stammtisch (aktiv oder beendet).
+            val memberQuery = query!!.subquery(UUID::class.java)
+            val memberRoot = memberQuery.from(StammtischMemberEntity::class.java)
+            val memberUserId = memberRoot.get<UserEntity>("user").get<UUID>("id")
+            val memberPredicates = mutableListOf<Predicate>(builder.equal(memberUserId, root.get<UUID>("id")))
+            if (disabled == false) {
+                memberPredicates.add(builder.isTrue(memberRoot.get("active")))
+            }
+            memberQuery.select(memberUserId).where(*memberPredicates.toTypedArray())
+            predicates.add(builder.exists(memberQuery))
+
+            if (disabled == false) {
+                predicates.add(builder.isFalse(root.get("disabled")))
+            } else if (disabled == true) {
+                val activeQuery = query.subquery(UUID::class.java)
+                val activeRoot = activeQuery.from(StammtischMemberEntity::class.java)
+                val activeUserId = activeRoot.get<UserEntity>("user").get<UUID>("id")
+                activeQuery.select(activeUserId).where(
+                    builder.equal(activeUserId, root.get<UUID>("id")),
+                    builder.isTrue(activeRoot.get("active"))
+                )
+                predicates.add(builder.or(builder.isTrue(root.get("disabled")), builder.not(builder.exists(activeQuery))))
             }
 
             if (!search.isNullOrBlank()) {
@@ -372,45 +411,40 @@ class UserService(
             }
 
             if (role != null) {
-                val subquery = query?.subquery(UUID::class.java)
-                if (subquery != null) {
-                    val roleRoot = subquery.from(UserRoleEntity::class.java)
-                    subquery.select(roleRoot.get<UserRoleId>("id").get<UUID>("userId"))
-                    subquery.where(
-                        builder.and(
-                            builder.equal(
-                                roleRoot.get<UserRoleId>("id").get<AssignedRole>("role"),
-                                AssignedRole.fromValue(role)
-                            ),
-                            builder.equal(roleRoot.get<UserRoleId>("id").get<UUID>("userId"), root.get<UUID>("id"))
-                        )
-                    )
-                    predicates.add(builder.exists(subquery))
-                }
+                val subquery = query.subquery(UUID::class.java)
+                val roleRoot = subquery.from(UserRoleEntity::class.java)
+                subquery.select(roleRoot.get<UserRoleId>("id").get<UUID>("userId"))
+                subquery.where(
+                    builder.equal(roleRoot.get<UserRoleId>("id").get<String>("role"), role),
+                    builder.equal(roleRoot.get<UserRoleId>("id").get<UUID>("userId"), root.get<UUID>("id"))
+                )
+                predicates.add(builder.exists(subquery))
             }
 
-            if (predicates.isEmpty()) null else builder.and(*predicates.toTypedArray())
+            builder.and(*predicates.toTypedArray())
         }
 
     private fun setRolesForUser(actor: UserEntity, user: UserEntity, roles: Set<String>) {
-        val invalidRoles = roles.filter { !RolePermissionMatrix.ASSIGNABLE_ROLES.contains(it) }
+        val known = access.roleDefinitions().keys
+        val invalidRoles = roles.filter { it !in known }
         if (invalidRoles.isNotEmpty()) {
             throw InvalidRequestException(Msg("error.user.invalidRoles", invalidRoles), ErrorCode.INVALID_REQUEST)
         }
 
         val previousRoles = rolesOf(user.id)
-        if (previousRoles.contains(UserRole.ADMIN) && !roles.contains(UserRole.ADMIN)) {
-            requireRemainingAdmin(user)
+        if (access.permissionsForRoles(previousRoles).any { it in MANAGER_PERMISSIONS } &&
+            access.permissionsForRoles(roles).none { it in MANAGER_PERMISSIONS }
+        ) {
+            requireRemainingManager(user)
         }
 
         userRoleRepository.deleteByIdUserId(user.id)
         userRoleRepository.flush()
 
         roles.forEach { role ->
-            userRoleRepository.save(UserRoleEntity(UserRoleId(user.id, AssignedRole.valueOf(role)), user))
+            userRoleRepository.save(UserRoleEntity(UserRoleId(user.id, role), user))
         }
         userRoleRepository.flush()
-        permissionCache.invalidate(user.id)
 
         auditService.recordUserChange(
             actor,
@@ -422,17 +456,20 @@ class UserService(
     }
 
     private fun setPermissionsForUser(actor: UserEntity, user: UserEntity, permissions: Set<String>) {
+        val effective = permissions.map { it.trim() }.filter { it.isNotBlank() }.toSet()
+        val unknown = effective.filter { it !in RolePermissionMatrix.KNOWN_PERMISSIONS }
+        if (unknown.isNotEmpty()) {
+            throw InvalidRequestException(Msg("error.user.invalidPermissions", unknown), ErrorCode.INVALID_REQUEST)
+        }
         val previousPermissions = userPermissionRepository.findByIdUserId(user.id).map { it.id.permission }.toSet()
 
         userPermissionRepository.deleteByIdUserId(user.id)
         userPermissionRepository.flush()
 
-        val effective = permissions.filter { it.isNotBlank() }.toSet()
         effective.forEach { permission ->
             userPermissionRepository.save(UserPermissionEntity(UserPermissionId(user.id, permission), user))
         }
         userPermissionRepository.flush()
-        permissionCache.invalidate(user.id)
 
         auditService.recordUserChange(
             actor,
@@ -453,13 +490,21 @@ class UserService(
         }
     }
 
-    /** Es muss immer mindestens ein aktives Adminkonto verbleiben. */
-    private fun requireRemainingAdmin(target: UserEntity) {
-        val targetIsActiveAdmin = !target.disabled && rolesOf(target.id).contains(UserRole.ADMIN)
-        if (!targetIsActiveAdmin) {
+    /**
+     * Im Stammtisch muss immer mindestens ein aktives Mitglied bleiben, das
+     * Mitglieder und Rollen verwalten kann; sonst wäre der Stammtisch nicht
+     * mehr verwaltbar.
+     */
+    private fun requireRemainingManager(target: UserEntity) {
+        val managerRoles = access.roleDefinitions()
+            .filterValues { permissions -> permissions.any { it in MANAGER_PERMISSIONS } }
+            .keys
+        val targetIsManager = !target.disabled && membershipService.isActiveMember(target) &&
+            rolesOf(target.id).any { it in managerRoles }
+        if (!targetIsManager) {
             return
         }
-        if (userRepository.countActiveUsersWithRole(AssignedRole.admin) <= 1) {
+        if (managerRoles.isEmpty() || userRepository.countActiveMembersWithAnyRole(managerRoles) <= 1) {
             throw LastAdminProtectedException(
                 Msg("error.user.lastAdmin"),
                 ErrorCode.LAST_ADMIN_PROTECTED
@@ -467,61 +512,55 @@ class UserService(
         }
     }
 
-    private fun requireAdmin(principal: UserPrincipal, callerUser: UserEntity) {
-        if (!isAdmin(principal, callerUser)) {
+    private fun requireMembersManage(principal: UserPrincipal, callerUser: UserEntity) {
+        if (!access.has(principal, callerUser, Permission.MEMBERS_MANAGE)) {
             throw AccessDeniedException(Msg("error.user.adminRequired"), ErrorCode.ACCESS_DENIED)
         }
     }
 
-    private fun isAdmin(principal: UserPrincipal, callerUser: UserEntity): Boolean {
-        if (principal.roles.contains(UserRole.ADMIN)) return true
-        return rolesOf(callerUser.id).contains(UserRole.ADMIN)
+    private fun requireRolesManage(principal: UserPrincipal, callerUser: UserEntity) {
+        if (!access.has(principal, callerUser, Permission.ROLES_MANAGE)) {
+            throw AccessDeniedException(Msg("error.user.adminRequired"), ErrorCode.ACCESS_DENIED)
+        }
     }
 
-    private fun isBoardOrAdmin(principal: UserPrincipal, callerUser: UserEntity): Boolean {
-        if (isAdmin(principal, callerUser)) return true
-        if (principal.roles.contains(UserRole.BOARD)) return true
-        return rolesOf(callerUser.id).contains(UserRole.BOARD)
+    /** Rollen im aktuellen Stammtisch; ohne Stammtisch keine. */
+    private fun rolesOf(userId: UUID): Set<String> {
+        if (TenantContext.stammtischId() == null) return emptySet()
+        return userRoleRepository.findByIdUserId(userId).map { it.id.role }.toSet()
     }
 
-    /** Rollen aus dem Cache oder aus der Datenbank. */
-    private fun rolesOf(userId: UUID): Set<String> =
-        cacheEntry(userId).roles
-
-    private fun cacheEntry(userId: UUID): UserPermissionCache.Entry {
-        permissionCache.get(userId)?.let { return it }
-
-        val roles = userRoleRepository.findByIdUserId(userId).map { it.id.role.name }.toSet()
-        val customPermissions = userPermissionRepository.findByIdUserId(userId).map { it.id.permission }.toSet()
-        val entry = UserPermissionCache.Entry(
-            roles = roles,
-            customPermissions = customPermissions,
-            effectivePermissions = customPermissions + RolePermissionMatrix.derivePermissions(roles)
-        )
-        permissionCache.put(userId, entry)
-        return entry
-    }
+    private fun rolesByUser(): Map<UUID, Set<String>> =
+        userRoleRepository.findAll().groupBy({ it.id.userId }, { it.id.role }).mapValues { it.value.toSet() }
 
     private fun toProfileDto(user: UserEntity): UserProfileDto {
-        val entry = cacheEntry(user.id)
-        val permissions = entry.effectivePermissions +
-            RolePermissionMatrix.derivePermissions(entry.roles, user.drinkRecorder)
+        val inStammtisch = TenantContext.stammtischId() != null
+        val roles = rolesOf(user.id)
+        val member = if (inStammtisch) memberRepository.findByUserId(user.id).orElse(null) else null
+        val custom = if (inStammtisch) {
+            userPermissionRepository.findByIdUserId(user.id).map { it.id.permission }.toSet()
+        } else {
+            emptySet()
+        }
         return UserProfileDto(
             id = user.id.toString(),
             keycloakSubject = user.keycloakSubject,
             displayName = user.displayName,
             email = user.email,
-            disabled = user.disabled,
-            drinkRecorder = user.drinkRecorder,
-            boardRole = user.boardRole?.name,
-            roles = entry.roles,
-            permissions = permissions,
+            disabled = user.disabled || (inStammtisch && member?.active != true),
+            drinkRecorder = roles.contains(RolePermissionMatrix.ROLE_TABLET_RECORDER),
+            boardRole = member?.boardRole?.name,
+            roles = roles,
+            permissions = access.permissionsForRoles(roles) + custom,
             createdAt = user.createdAt,
             updatedAt = user.updatedAt
         )
     }
 
     companion object {
+        /** Wer eine dieser Berechtigungen hat, kann den Stammtisch verwalten. */
+        private val MANAGER_PERMISSIONS = setOf(Permission.MEMBERS_MANAGE, Permission.ROLES_MANAGE)
+
         const val DEFAULT_PAGE_SIZE = 25
         const val MAX_PAGE_SIZE = 100
         val DEFAULT_SORT: Sort = Sort.by(Sort.Direction.ASC, "displayName")

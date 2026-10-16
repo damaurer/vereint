@@ -22,10 +22,6 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     fun findByDisabled(disabled: Boolean): List<UserEntity>
 
     /**
-     * Anzahl aktiver Konten mit der angegebenen Rolle; sichert ab, dass immer
-     * mindestens ein aktives Adminkonto verbleibt.
-     */
-    /**
      * Aktive Mitglieder des aktuellen Stammtischs mit der angegebenen Rolle;
      * sichert ab, dass immer jemand die Mitglieder verwalten kann.
      */
@@ -277,12 +273,13 @@ interface ConversationRepository : JpaRepository<ConversationEntity, UUID> {
      */
     @Modifying
     @Query(
-        value = "INSERT INTO conversations (id, type, title, direct_key, created_at, version) " +
-            "VALUES (:id, :type, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
+        value = "INSERT INTO conversations (id, stammtisch_id, type, title, direct_key, created_at, version) " +
+            "VALUES (:id, :stammtischId, :type, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
         nativeQuery = true
     )
     fun insertKeyedIfAbsent(
         @Param("id") id: UUID,
+        @Param("stammtischId") stammtischId: UUID,
         @Param("type") type: String,
         @Param("title") title: String,
         @Param("key") key: String
@@ -291,12 +288,13 @@ interface ConversationRepository : JpaRepository<ConversationEntity, UUID> {
     /** Wie [insertKeyedIfAbsent], für den einen Chat eines Events. */
     @Modifying
     @Query(
-        value = "INSERT INTO conversations (id, type, event_id, title, direct_key, created_at, version) " +
-            "VALUES (:id, :type, :eventId, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
+        value = "INSERT INTO conversations (id, stammtisch_id, type, event_id, title, direct_key, created_at, version) " +
+            "VALUES (:id, :stammtischId, :type, :eventId, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
         nativeQuery = true
     )
     fun insertEventIfAbsent(
         @Param("id") id: UUID,
+        @Param("stammtischId") stammtischId: UUID,
         @Param("type") type: String,
         @Param("eventId") eventId: UUID,
         @Param("title") title: String?,
@@ -318,12 +316,13 @@ interface ConversationMemberRepository : JpaRepository<ConversationMemberEntity,
      */
     @Modifying
     @Query(
-        value = "INSERT INTO conversation_members (id, conversation_id, user_id, joined_at) " +
-            "VALUES (:id, :conversationId, :userId, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING",
+        value = "INSERT INTO conversation_members (id, stammtisch_id, conversation_id, user_id, joined_at) " +
+            "VALUES (:id, :stammtischId, :conversationId, :userId, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING",
         nativeQuery = true
     )
     fun insertUserIfAbsent(
         @Param("id") id: UUID,
+        @Param("stammtischId") stammtischId: UUID,
         @Param("conversationId") conversationId: UUID,
         @Param("userId") userId: UUID
     ): Int

@@ -36,6 +36,21 @@ class TenantLookup(private val jdbcTemplate: JdbcTemplate) {
         return TenantContext.runIn(stammtischId, block)
     }
 
+    /**
+     * Führt [block] im Stammtisch des Events aus. Ist das Event unbekannt,
+     * läuft [block] ohne Stammtisch und findet damit selbst nichts; so bleiben
+     * die bisherigen Antworten für unbekannte Events unverändert.
+     */
+    fun <T> inStammtischOfEventOrNone(eventId: UUID?, block: () -> T): T =
+        runInOrNone(eventId?.let { forEvent(it) }, block)
+
+    /** Wie [inStammtischOfEventOrNone], ermittelt über das Rohtoken eines Event-Magic-Links. */
+    fun <T> inStammtischOfEventInviteOrNone(rawToken: String?, block: () -> T): T =
+        runInOrNone(rawToken?.takeIf { it.isNotBlank() }?.let { forEventInviteToken(it) }, block)
+
+    private fun <T> runInOrNone(stammtischId: UUID?, block: () -> T): T =
+        if (stammtischId != null) TenantContext.runIn(stammtischId, block) else TenantContext.runWithoutTenant(block)
+
     private fun single(sql: String, arg: Any): UUID? = TenantContext.runAsSystem {
         jdbcTemplate.query(sql, { rs, _ -> rs.getObject(1, UUID::class.java) }, arg).firstOrNull()
     }
