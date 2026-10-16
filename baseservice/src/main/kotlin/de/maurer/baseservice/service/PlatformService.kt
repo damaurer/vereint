@@ -67,8 +67,18 @@ class PlatformService(
                 ?.takeIf { !it.disabled }
         } ?: creator
 
+        return toDto(createStammtisch(name, admin, creator))
+    }
+
+    /**
+     * Legt einen Stammtisch mit Systemrollen und Moment-Startbestand an und
+     * macht [admin] zu seinem Stammtisch-Admin. Neue Stammtische starten im
+     * kostenlosen Tarif. Gemeinsamer Weg für Plattform-Administration und
+     * Selbstregistrierung ([StammtischSignupService]).
+     */
+    fun createStammtisch(name: String, admin: UserEntity, creator: UserEntity): StammtischEntity {
         val stammtisch = tenantTransactions.asSystem {
-            stammtischRepository.saveAndFlush(StammtischEntity(name = name))
+            stammtischRepository.saveAndFlush(StammtischEntity(name = name, createdBy = creator.id))
         }
         tenantTransactions.inStammtisch(stammtisch.id) {
             seeder.seed()
@@ -80,7 +90,7 @@ class PlatformService(
                 "name=$name; admin=${admin.id}"
             )
         }
-        return toDto(stammtisch)
+        return stammtisch
     }
 
     fun update(id: UUID, request: UpdatePlatformStammtischRequest, principal: UserPrincipal): PlatformStammtischDto {
@@ -141,11 +151,12 @@ class PlatformService(
             plan = (subscription?.plan ?: BillingPlan.free).name,
             billingStatus = (subscription?.status ?: SubscriptionStatus.none).name,
             readOnly = subscription?.isReadOnly(Instant.now()) == true,
-            storageBytes = usage.storageBytes
+            storageBytes = usage.storageBytes,
+            imageVersion = stammtisch.imageVersion.takeIf { stammtisch.imageKey != null }
         )
     }
 
-    private fun requireName(value: String?): String {
+    fun requireName(value: String?): String {
         val name = value?.trim().orEmpty()
         if (name.isBlank()) {
             throw InvalidRequestException(Msg("error.stammtisch.nameBlank"), ErrorCode.INVALID_REQUEST)

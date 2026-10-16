@@ -9,6 +9,8 @@ import { TranslatePipe, translate } from '../i18n';
 import { ModalComponent } from '../ui/modal.component';
 import { StateComponent } from '../ui/state.component';
 import { BillingStatusStore, ExternalNavigation } from './billing-status';
+import { GroupAvatarComponent } from './group-avatar.component';
+import { GroupImageError, GroupImagePreparer, type PreparedGroupImage } from './group-image';
 import { billingStatusLabel, formatBytes, formatCents, formatDay, planName, usagePercent } from './billing-format';
 import {
   STAMMTISCH_EXPORT_URL,
@@ -54,14 +56,14 @@ const BILLING_RETURN_MESSAGES: Record<string, string> = {
 const BILLING_ACTIVATION_DELAY_MS = 4000;
 
 /**
- * Einstellungen des gewählten Stammtischs (`/stammtisch`): Name, Tarif mit
+ * Einstellungen der gewählten Gruppe (`/gruppe`, im Code Stammtisch): Name, Bild, Tarif mit
  * Verbrauch und Zahlung, Datenexport, Rollen mit ihren Berechtigungen und Austritt. Was sichtbar ist, richtet sich nach den
  * eigenen Berechtigungen dieses Stammtischs (`myPermissions`); verbindlich
  * prüft der Fachservice (`deny by default`).
  */
 @Component({
   selector: 'app-stammtisch-settings',
-  imports: [FormsModule, RouterLink, TranslatePipe, StateComponent, ModalComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, StateComponent, ModalComponent, GroupAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './stammtisch.css',
   template: `
@@ -69,14 +71,25 @@ const BILLING_ACTIVATION_DELAY_MS = 4000;
       <section class="page-card member-card" aria-labelledby="stammtisch-title">
         <span class="eyebrow">{{ 'stammtisch.settings.eyebrow' | t }}</span>
         @if (stammtisch(); as st) {
-          <h1 id="stammtisch-title">{{ st.name }}</h1>
-          <p>{{ 'stammtisch.settings.memberCount' | t: { count: st.memberCount } }}</p>
+          <div class="st-identity">
+            <vereint-group-avatar
+              [groupId]="st.id"
+              [name]="st.name"
+              [imageVersion]="st.imageVersion"
+              size="4rem"
+              [label]="'stammtisch.settings.imageAlt' | t: { name: st.name }"
+            />
+            <div>
+              <h1 id="stammtisch-title">{{ st.name }}</h1>
+              <p>{{ 'stammtisch.settings.memberCount' | t: { count: st.memberCount } }}</p>
+            </div>
+          </div>
         } @else {
           <h1 id="stammtisch-title">{{ 'stammtisch.settings.title' | t }}</h1>
         }
 
         @if (canSwitch()) {
-          <a class="member-back" routerLink="/stammtische">{{ 'stammtisch.settings.switch' | t }}</a>
+          <a class="member-back" routerLink="/gruppen">{{ 'stammtisch.settings.switch' | t }}</a>
         }
 
         @if (info(); as message) {
@@ -105,6 +118,36 @@ const BILLING_ACTIVATION_DELAY_MS = 4000;
                   </button>
                 </div>
               </form>
+            </section>
+
+            <section class="st-section" aria-labelledby="st-image-title">
+              <h2 class="member-subtitle" id="st-image-title">{{ 'stammtisch.settings.imageTitle' | t }}</h2>
+              <div class="st-image-row">
+                <vereint-group-avatar [groupId]="st.id" [name]="st.name" [imageVersion]="st.imageVersion" size="5rem" />
+                <div>
+                  <p class="member-hint member-muted">{{ 'stammtisch.settings.imageHint' | t }}</p>
+                  <input
+                    #imageInput
+                    class="st-file-input"
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif"
+                    (change)="pickImage($event)"
+                  />
+                  <div class="st-actions">
+                    <button type="button" class="member-button" [disabled]="imageBusy()" (click)="imageInput.click()">
+                      {{ (hasImage(st) ? 'stammtisch.settings.imageChange' : 'stammtisch.settings.imageUpload') | t }}
+                    </button>
+                    @if (hasImage(st)) {
+                      <button type="button" class="member-button member-button-ghost" [disabled]="imageBusy()" (click)="removeImage()">
+                        {{ 'stammtisch.settings.imageRemove' | t }}
+                      </button>
+                    }
+                  </div>
+                  @if (imageBusy()) {
+                    <p class="member-hint" role="status">{{ 'stammtisch.settings.imageUploading' | t }}</p>
+                  }
+                </div>
+              </div>
             </section>
           }
 
@@ -400,6 +443,7 @@ export class StammtischSettingsComponent implements OnInit {
   private readonly external = inject(ExternalNavigation);
   private readonly destroyRef = inject(DestroyRef);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly imagePreparer = inject(GroupImagePreparer);
 
   protected readonly planName = planName;
   protected readonly formatBytes = formatBytes;
@@ -418,6 +462,7 @@ export class StammtischSettingsComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly info = signal<string | null>(null);
   protected readonly leaveError = signal<string | null>(null);
+  protected readonly imageBusy = signal(false);
 
   protected readonly roleFormOpen = signal(false);
   protected readonly editingRole = signal<StammtischRoleDto | null>(null);
@@ -587,6 +632,59 @@ export class StammtischSettingsComponent implements OnInit {
     });
   }
 
+  protected hasImage(stammtisch: StammtischDto): boolean {
+    return typeof stammtisch.imageVersion === 'number';
+  }
+
+  /** Gewähltes Gruppenbild prüfen, verkleinern und hochladen. */
+  protected async pickImage(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0];
+    if (input) input.value = '';
+    if (!file || this.imageBusy()) return;
+    this.imageBusy.set(true);
+    this.error.set(null);
+    this.info.set(null);
+    let prepared: PreparedGroupImage;
+    try {
+      prepared = await this.imagePreparer.prepare(file);
+    } catch (error) {
+      this.imageBusy.set(false);
+      this.error.set(error instanceof GroupImageError ? error.message : apiErrorText(error));
+      return;
+    }
+    this.api.uploadImage(prepared.blob, prepared.filename).subscribe({
+      next: ({ imageVersion }) => this.imageChanged(imageVersion, 'stammtisch.settings.imageSaved'),
+      error: (error: unknown) => {
+        this.imageBusy.set(false);
+        this.error.set(apiErrorText(error));
+      },
+    });
+  }
+
+  protected removeImage(): void {
+    if (this.imageBusy()) return;
+    if (!globalThis.confirm?.(translate('stammtisch.settings.imageRemoveConfirm'))) return;
+    this.imageBusy.set(true);
+    this.error.set(null);
+    this.info.set(null);
+    this.api.removeImage().subscribe({
+      next: () => this.imageChanged(null, 'stammtisch.settings.imageRemoved'),
+      error: (error: unknown) => {
+        this.imageBusy.set(false);
+        this.error.set(apiErrorText(error));
+      },
+    });
+  }
+
+  private imageChanged(imageVersion: number | null, message: string): void {
+    this.imageBusy.set(false);
+    this.stammtisch.update((current) => (current ? { ...current, imageVersion } : current));
+    this.info.set(translate(message));
+    // Bild in der Shell (Session) auffrischen.
+    void this.auth.getSession(true);
+  }
+
   protected editRole(role: StammtischRoleDto | null): void {
     this.editingRole.set(role);
     this.roleName = role?.name ?? '';
@@ -667,7 +765,7 @@ export class StammtischSettingsComponent implements OnInit {
     await this.auth.selectStammtisch(null);
     await this.auth.getSession(true);
     this.busy.set(false);
-    await this.router.navigateByUrl('/stammtische');
+    await this.router.navigateByUrl('/gruppen');
   }
 
   private start(): void {

@@ -98,11 +98,15 @@ export interface StammtischMembership {
   name: string;
   roles: string[];
   boardRole?: BoardRole | null;
+  /** Version des Gruppenbilds; fehlt oder `null` = kein Bild. */
+  imageVersion?: number | null;
 }
 
 export interface StammtischRef {
   id: string;
   name: string;
+  /** Version des Gruppenbilds; fehlt oder `null` = kein Bild. */
+  imageVersion?: number | null;
 }
 
 export interface AuthMeResponse {

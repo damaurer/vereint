@@ -73,7 +73,9 @@ data class StammtischMembershipDto(
     @Schema(description = "Rollen-Codes der Person in diesem Stammtisch", example = "[\"member\"]")
     val roles: Set<String> = emptySet(),
     @Schema(description = "Vorstandsfunktion in diesem Stammtisch", example = "treasurer")
-    val boardRole: String? = null
+    val boardRole: String? = null,
+    @Schema(description = "Version des Gruppenbilds; fehlt ohne Bild")
+    val imageVersion: Int? = null
 )
 
 @Schema(

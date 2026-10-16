@@ -168,6 +168,7 @@ class StammtischContextFilter(
         private val STAMMTISCH_FREE_PREFIXES = listOf(
             "/api/v1/auth/",
             "/api/v1/stammtische",
+            "/api/v1/signup",
             "/api/v1/platform/",
             "/api/v1/drink-library",
             "/api/v1/member-invites/preview",

@@ -94,6 +94,8 @@ export function normalizeDecision(raw: unknown): ResolvedAccessDecision | undefi
           name: entry.name,
           roles: Array.isArray(entry.roles) ? entry.roles : [],
           boardRole: entry.boardRole ?? null,
+          // Version des Gruppenbilds; fehlt oder `null` = kein Bild.
+          imageVersion: typeof entry.imageVersion === 'number' ? entry.imageVersion : null,
         }))
       : undefined,
   };

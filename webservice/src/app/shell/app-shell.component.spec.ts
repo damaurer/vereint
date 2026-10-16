@@ -235,13 +235,34 @@ describe('AppShellComponent', () => {
     expect(el(fixture).querySelector('a[href="/statistik"]')).toBeTruthy();
   });
 
-  it('warns when the chosen Stammtisch is read-only', async () => {
+  it('warns when the chosen group is read-only', async () => {
     session = { ...member(['member']), stammtisch: { id: 'st-1', name: 'Eber' } };
     readOnly = true;
     const fixture = await create();
     const banner = el(fixture).querySelector('.shell-readonly');
     expect(banner?.textContent).toContain('nur noch lesbar');
-    expect(banner?.querySelector('a')?.getAttribute('href')).toBe('/stammtisch');
+    expect(banner?.querySelector('a')?.getAttribute('href')).toBe('/gruppe');
+  });
+
+  it('shows the picture of the chosen group in the switcher, initials without one', async () => {
+    session = {
+      ...member(['member']),
+      stammtisch: { id: 'st-1', name: 'Eber' },
+      memberships: [
+        { id: 'st-1', name: 'Eber', roles: ['member'], imageVersion: 5 },
+        { id: 'st-2', name: 'Kegelfreunde', roles: ['member'] },
+      ],
+    };
+    const fixture = await create();
+    const chip = el(fixture).querySelector('a.shell-stammtisch') as HTMLAnchorElement;
+    expect(chip.getAttribute('href')).toBe('/gruppen');
+    expect(chip.getAttribute('aria-label')).toBe('Gruppe wechseln (aktuell: Eber)');
+    expect(chip.querySelector('vereint-group-avatar img')?.getAttribute('src')).toBe('/api/v1/stammtische/st-1/image?v=5');
+
+    TestBed.resetTestingModule();
+    session = { ...member(['member']), stammtisch: { id: 'st-2', name: 'Kegelfreunde' } };
+    const other = await create();
+    expect(el(other).querySelector('.shell-stammtisch vereint-group-avatar')?.textContent?.trim()).toBe('K');
   });
 
   it('shows no read-only banner while payment is fine', async () => {

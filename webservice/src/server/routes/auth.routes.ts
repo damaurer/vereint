@@ -10,7 +10,7 @@ import { resolveSafeReturnTo } from '../auth/redirect';
 import { createCorrelationId, logSecurityEvent } from '../auth/security-log';
 import { createSessionFromTokens, destroySession } from '../auth/session.service';
 import { serverEnvironment } from '../config/environment';
-import { resolveAccessDecision } from '../authorization/authorization.service';
+import { invalidateAccessDecision, resolveAccessDecision } from '../authorization/authorization.service';
 import { requestLanguage } from '../../app/i18n/language-cookie';
 import {
   clearStammtischCookie,
@@ -215,7 +215,13 @@ async function respondWithIdentity(req: Request, res: Response): Promise<void> {
       boardRole: (decision ? decision.boardRole : req.identity.boardRole) ?? null,
       permissions: [...permissions],
       stammtisch: decision?.stammtischId
-        ? { id: decision.stammtischId, name: decision.stammtischName ?? '' }
+        ? {
+            id: decision.stammtischId,
+            name: decision.stammtischName ?? '',
+            // Das Bild der gewählten Gruppe steht an ihrer Mitgliedschaft.
+            imageVersion:
+              decision.memberships?.find((membership) => membership.id === decision.stammtischId)?.imageVersion ?? null,
+          }
         : null,
       memberships: decision?.memberships ?? [],
       platformAdmin: decision?.platformAdmin === true,
@@ -246,6 +252,9 @@ async function selectStammtisch(req: Request, res: Response): Promise<void> {
   }
 
   const stammtischId = requested.toLowerCase();
+  // Die Auswahl folgt oft auf eine neue Mitgliedschaft (Stammtisch eröffnet,
+  // Einladung angenommen): gecachte Entscheidungen kennen sie noch nicht.
+  invalidateAccessDecision(req.sessionData?.sessionId);
   const resolved = await resolveAccessDecision({
     identity: req.identity,
     accessToken: req.sessionData?.tokens.accessToken,

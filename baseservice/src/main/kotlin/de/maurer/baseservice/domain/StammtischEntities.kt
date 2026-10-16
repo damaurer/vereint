@@ -27,6 +27,21 @@ class StammtischEntity(
     @Column(name = "archived", nullable = false)
     var archived: Boolean = false,
 
+    /** Konto, das den Stammtisch eröffnet hat; `null` für den Stammtisch aus der Migration. */
+    @Column(name = "created_by")
+    var createdBy: UUID? = null,
+
+    /** Gruppenbild im Objektspeicher (verschlüsselt); `null` ohne Bild. */
+    @Column(name = "image_key", length = 255)
+    var imageKey: String? = null,
+
+    @Column(name = "image_content_type", length = 64)
+    var imageContentType: String? = null,
+
+    /** Steigt mit jedem neuen Bild; die App hängt sie an die Bild-URL. */
+    @Column(name = "image_version", nullable = false)
+    var imageVersion: Int = 0,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),

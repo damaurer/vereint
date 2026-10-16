@@ -6,6 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { TranslatePipe, translate } from '../i18n';
 import { IconComponent } from '../ui/icon.component';
 import { StateComponent } from '../ui/state.component';
+import { GroupAvatarComponent } from './group-avatar.component';
 import { StammtischApiService, apiErrorText, type StammtischMembershipDto } from './stammtisch-api.service';
 
 /** Nur relative Ziele innerhalb der App (kein `//host`). */
@@ -14,15 +15,17 @@ function safeReturnTo(value: string | null): string {
 }
 
 /**
- * Stammtisch-Auswahl (`/stammtische`), außerhalb der App-Shell.
+ * Stammtisch-Auswahl (`/gruppen`), außerhalb der App-Shell.
  *
  * Listet die eigenen Mitgliedschaften; „Öffnen“ wählt den Stammtisch für diese
  * Session (HttpOnly-Cookie in Express) und kehrt zum Ziel `returnTo` zurück.
- * Ohne Mitgliedschaft hilft nur ein Einladungslink des Vorstands.
+ * Mit genau einer Mitgliedschaft und ohne Auswahl geschieht das von selbst.
+ * Ohne Mitgliedschaft hilft ein Einladungslink des Vorstands – oder ein
+ * eigener Stammtisch (`/gruppe-eroeffnen`).
  */
 @Component({
   selector: 'app-stammtisch-choice',
-  imports: [RouterLink, TranslatePipe, IconComponent, StateComponent],
+  imports: [RouterLink, TranslatePipe, IconComponent, StateComponent, GroupAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './stammtisch.css',
   template: `
@@ -49,6 +52,7 @@ function safeReturnTo(value: string | null): string {
           <ul class="member-list">
             @for (item of memberships(); track item.id) {
               <li class="member-list-item st-row" [class.st-current]="item.id === currentId()">
+                <vereint-group-avatar [groupId]="item.id" [name]="item.name" [imageVersion]="item.imageVersion" size="3rem" />
                 <span class="st-row-main">
                   <span class="member-list-title">
                     {{ item.name }}
@@ -71,6 +75,12 @@ function safeReturnTo(value: string | null): string {
               </li>
             }
           </ul>
+        }
+
+        @if (!loading()) {
+          <p class="st-open-own">
+            <a class="member-button member-button-ghost" routerLink="/gruppe-eroeffnen">{{ 'stammtisch.choice.openOwn' | t }}</a>
+          </p>
         }
 
         <div class="st-footer-links">
@@ -114,9 +124,14 @@ export class StammtischChoiceComponent implements OnInit {
       const fallback = session?.memberships ?? [];
       this.memberships.set(fallback.map((m) => ({ ...m, boardRole: m.boardRole ?? null })));
       if (fallback.length === 0) this.error.set(apiErrorText(error));
-    } finally {
-      this.loading.set(false);
     }
+    // Genau eine Gruppe und noch keine gewählt (etwa direkt nach Eröffnen und
+    // Anmelden): ohne Klick hinein. Ab zwei Gruppen bleibt die Auswahl.
+    const only = this.memberships();
+    if (this.currentId() === null && only.length === 1) {
+      await this.open(only[0].id);
+    }
+    this.loading.set(false);
   }
 
   protected async open(id: string): Promise<void> {

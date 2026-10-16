@@ -114,16 +114,20 @@
               @if (canSwitchStammtisch()) {
                 <a
                   class="shell-stammtisch"
-                  routerLink="/stammtische"
+                  routerLink="/gruppen"
                   [attr.aria-label]="'shell.switchStammtisch' | t: { name }"
                   [attr.title]="'shell.switchStammtisch' | t: { name }"
                 >
-                  <vereint-icon name="users" />
+                  @if (stammtischId(); as id) {
+                    <vereint-group-avatar [groupId]="id" [name]="name" [imageVersion]="stammtischImageVersion()" size="1.75rem" />
+                  }
                   <span class="shell-stammtisch-name">{{ name }}</span>
                 </a>
               } @else {
                 <span class="shell-stammtisch" [attr.title]="name">
-                  <vereint-icon name="users" />
+                  @if (stammtischId(); as id) {
+                    <vereint-group-avatar [groupId]="id" [name]="name" [imageVersion]="stammtischImageVersion()" size="1.75rem" />
+                  }
                   <span class="shell-stammtisch-name">{{ name }}</span>
                 </span>
               }
@@ -187,7 +191,7 @@
           <p class="shell-readonly" role="alert">
             {{ 'shell.readOnly' | t }}
             @if (!kiosk()) {
-              <a routerLink="/stammtisch">{{ 'shell.readOnlyLink' | t }}</a>
+              <a routerLink="/gruppe">{{ 'shell.readOnlyLink' | t }}</a>
             }
           </p>
         }

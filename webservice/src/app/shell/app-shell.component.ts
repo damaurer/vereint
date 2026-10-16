@@ -36,6 +36,7 @@ import { BottomSheetComponent } from '../ui/bottom-sheet.component';
 import { IconComponent } from '../ui/icon.component';
 import { KioskModeService } from '../kiosk/kiosk-mode.service';
 import { BillingStatusStore } from '../stammtisch/billing-status';
+import { GroupAvatarComponent } from '../stammtisch/group-avatar.component';
 import { buildNavSections, buildPrimaryNav, NavItem, NavSection, PRIMARY_NAV } from './nav-model';
 
 const PRIMARY_IDS = new Set(PRIMARY_NAV.map((item) => item.id));
@@ -84,6 +85,7 @@ function titleOf(root: ActivatedRouteSnapshot): string {
     RouterLinkActive,
     IconComponent,
     BottomSheetComponent,
+    GroupAvatarComponent,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -205,6 +207,15 @@ export class AppShellComponent implements OnInit, OnDestroy {
   readonly displayName = computed(() => this.sessionSignal()?.displayName ?? null);
   /** Gewählter Stammtisch; Wechsel nur, wenn es etwas zu wechseln gibt. */
   readonly stammtischName = computed(() => this.sessionSignal()?.stammtisch?.name ?? null);
+  readonly stammtischId = computed(() => this.sessionSignal()?.stammtisch?.id ?? null);
+  /** Bildversion der gewählten Gruppe; sonst aus ihrer Mitgliedschaft. */
+  readonly stammtischImageVersion = computed(() => {
+    const session = this.sessionSignal();
+    const current = session?.stammtisch;
+    if (!current) return null;
+    if (typeof current.imageVersion === 'number') return current.imageVersion;
+    return session?.memberships?.find((membership) => membership.id === current.id)?.imageVersion ?? null;
+  });
   readonly canSwitchStammtisch = computed(() => {
     const session = this.sessionSignal();
     return (session?.memberships?.length ?? 0) > 1 || session?.platformAdmin === true;

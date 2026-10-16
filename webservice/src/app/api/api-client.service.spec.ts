@@ -93,4 +93,8 @@ describe('ApiClient', () => {
     expect(describeApiError(new ApiError(503, 'billing_unavailable', ''))).toContain('Online-Zahlung');
     expect(describeApiError(new ApiError(409, 'billing_no_customer', ''))).toContain('Zahlungskonto');
   });
+
+  it('describeApiError explains the limit of own Stammtische', () => {
+    expect(describeApiError(new ApiError(409, 'stammtisch_limit', ''))).toContain('drei');
+  });
 });

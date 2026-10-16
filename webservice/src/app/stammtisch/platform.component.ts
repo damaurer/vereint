@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe, translate } from '../i18n';
 import { formatDateTime } from '../member/member-format';
 import { StateComponent } from '../ui/state.component';
+import { GroupAvatarComponent } from './group-avatar.component';
 import { billingStatusLabel, formatBytes, planName } from './billing-format';
 import {
   StammtischApiService,
@@ -23,13 +24,13 @@ const PLANS: readonly BillingPlan[] = ['free', 'stammtisch', 'verein'];
  */
 @Component({
   selector: 'app-platform',
-  imports: [FormsModule, RouterLink, TranslatePipe, StateComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, StateComponent, GroupAvatarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './stammtisch.css',
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="platform-title">
-        <a class="member-back" routerLink="/stammtische">{{ 'stammtisch.platform.back' | t }}</a>
+        <a class="member-back" routerLink="/gruppen">{{ 'stammtisch.platform.back' | t }}</a>
         <span class="eyebrow">{{ 'stammtisch.platform.eyebrow' | t }}</span>
         <h1 id="platform-title">{{ 'stammtisch.platform.title' | t }}</h1>
         <p>{{ 'stammtisch.platform.intro' | t }}</p>
@@ -89,6 +90,7 @@ const PLANS: readonly BillingPlan[] = ['free', 'stammtisch', 'verein'];
                   </form>
                 } @else {
                   <div class="st-row">
+                    <vereint-group-avatar [groupId]="item.id" [name]="item.name" [imageVersion]="item.imageVersion" />
                     <span class="st-row-main">
                       <span class="member-list-title">
                         {{ item.name }}

@@ -53,8 +53,8 @@ export function contextForPath(pathname: string): AppContext | null {
  * ab. Priorität `admin` vor `board` vor `member`; die Vorstandsrolle bestimmt
  * das Vorstandsressort.
  */
-/** Auswahlseite, solange kein Stammtisch gewählt ist. */
-export const STAMMTISCH_CHOICE_ROUTE = '/stammtische';
+/** Auswahlseite (`/gruppen`), solange keine Gruppe (Stammtisch) gewählt ist. */
+export const STAMMTISCH_CHOICE_ROUTE = '/gruppen';
 
 export function defaultRouteForSession(session: AuthSessionUser): string {
   if (session.stammtisch === null) return STAMMTISCH_CHOICE_ROUTE;

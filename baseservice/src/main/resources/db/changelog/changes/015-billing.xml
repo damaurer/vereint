@@ -74,6 +74,26 @@
         </rollback>
     </changeSet>
 
+    <!-- 182. Wer einen Stammtisch eröffnet hat (Selbstregistrierung oder
+         Plattform-Administration); begrenzt die Zahl eigener Stammtische. -->
+    <changeSet id="182-stammtisch-created-by" author="claude">
+        <addColumn tableName="stammtische">
+            <column name="created_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_stammtische_created_by" references="users(id)"/>
+            </column>
+            <!-- Gruppenbild: verschlüsselt im Objektspeicher, hier nur Schlüssel,
+                 Typ und eine Version zum Neuladen im Browser. -->
+            <column name="image_key" type="VARCHAR(255)"/>
+            <column name="image_content_type" type="VARCHAR(64)"/>
+            <column name="image_version" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="stammtische" indexName="idx_stammtische_created_by">
+            <column name="created_by"/>
+        </createIndex>
+    </changeSet>
+
     <!-- 181. Neues Recht billing.manage (Tarif buchen, Zahlungsportal) für die
          Systemrolle Admin aller Stammtische. stammtisch_roles hat
          Row-Level-Security, daher der Bypass für diese Transaktion. -->

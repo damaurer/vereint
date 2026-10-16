@@ -67,6 +67,8 @@ class SecurityConfig(
                         "/api/v1/member-invites/register",
                         // Gast-Chat: das eventgebundene Gast-Token im Header ist das Geheimnis
                         "/api/v1/events/*/chat/guest/**",
+                        // Selbstregistrierung: Konto anlegen und Stammtisch eröffnen
+                        "/api/v1/signup",
                         // Stripe-Webhook: geschützt durch die Signatur (StripeWebhookService)
                         "/api/v1/billing/stripe/webhook",
                         "/v3/api-docs/**",

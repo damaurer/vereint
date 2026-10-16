@@ -112,7 +112,7 @@ Rollen, Rechte und App-Kontexte gelten je Stammtisch.
 - Der API-Proxy reicht den Cookie-Wert als `X-Stammtisch-Id` weiter und verwirft einen vom Browser gesendeten Header dieses Namens.
 - Der Entscheidungscache ist je Session **und** Stammtisch geschlüsselt (`<session>#<stammtisch>`); `invalidateAccessDecision(session)` leert alle Einträge der Session.
 - Lehnt der Fachservice einen veralteten Cookie ab (`stammtisch_access_denied`, z. B. nach dem Austritt), holt der BFF die Entscheidung ohne Auswahl neu; `/api/auth/me` löscht den Cookie dann.
-- `authorizePages` leitet Seitenaufrufe ohne gewählten Stammtisch (Antwort mit `memberships`, aber ohne `stammtischId`) auf `/stammtische?returnTo=…` um.
+- `authorizePages` leitet Seitenaufrufe ohne gewählten Stammtisch (Antwort mit `memberships`, aber ohne `stammtischId`) auf `/gruppen?returnTo=…` um (die App nennt Stammtische „Gruppen“).
 - `/api/auth/me` liefert zusätzlich `stammtisch`, `memberships`, `platformAdmin` und `appContexts`; Rollen und Rechte stammen dort aus dem gewählten Stammtisch.
 
 Details: [Mehrere Stammtische](../domains/stammtische.md).

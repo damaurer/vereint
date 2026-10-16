@@ -8,6 +8,8 @@ export interface StammtischMembershipDto {
   name: string;
   roles: string[];
   boardRole: string | null;
+  /** Version des Gruppenbilds; fehlt oder `null` = kein Bild. */
+  imageVersion?: number | null;
 }
 
 /** Der aktuell gewählte Stammtisch (`GET /stammtisch`). */
@@ -18,6 +20,30 @@ export interface StammtischDto {
   myRoles: string[];
   myPermissions: string[];
   createdAt: string;
+  /** Version des Gruppenbilds; fehlt oder `null` = kein Bild. */
+  imageVersion?: number | null;
+}
+
+/** Antwort von `PUT /stammtisch/image`. */
+export interface StammtischImageDto {
+  imageVersion: number;
+}
+
+/** Zulässige Formate des Gruppenbilds (der Fachservice prüft verbindlich). */
+export const STAMMTISCH_IMAGE_TYPES: readonly string[] = ['image/png', 'image/jpeg', 'image/gif'];
+/** Obergrenze des Fachservice für das Gruppenbild. */
+export const STAMMTISCH_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+/** Längste Kante nach dem Verkleinern im Browser. */
+export const STAMMTISCH_IMAGE_MAX_EDGE = 1024;
+
+/**
+ * Adresse des Gruppenbilds (`GET /api/v1/stammtische/{id}/image`), mit der
+ * Version als Cache-Schlüssel; `null`, solange die Gruppe kein Bild hat.
+ * Mitglieder dürfen das Bild jeder ihrer Gruppen laden, auch ohne sie gewählt zu haben.
+ */
+export function stammtischImageUrl(id: string, imageVersion: number | null | undefined): string | null {
+  if (typeof imageVersion !== 'number') return null;
+  return `${API_BASE_PATH}/stammtische/${encodeURIComponent(id)}/image?v=${imageVersion}`;
 }
 
 export interface StammtischRoleDto {
@@ -103,6 +129,8 @@ export interface PlatformStammtischDto {
   billingStatus: BillingStatus;
   readOnly: boolean;
   storageBytes: number;
+  /** Version des Gruppenbilds; fehlt oder `null` = kein Bild. */
+  imageVersion?: number | null;
 }
 
 export interface CreateStammtischRequest {
@@ -124,6 +152,29 @@ export interface JoinStammtischResult {
   alreadyMember: boolean;
 }
 
+/** Öffentliche Eröffnung samt neuem Konto (`POST /signup`). */
+export interface SignupRequest {
+  stammtischName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
+
+export interface SignupResult {
+  email: string;
+  displayName: string;
+  stammtischId: string;
+  stammtischName: string;
+}
+
+/** Antwort von `POST /stammtische`: der neue Stammtisch, die Person ist Admin. */
+export interface CreatedStammtischDto {
+  id: string;
+  name: string;
+  roles: string[];
+}
+
 /**
  * Stammtische: eigene Mitgliedschaften, Einstellungen und Rollen des gewählten
  * Stammtischs sowie die Plattform-Administration. Welcher Stammtisch gewählt
@@ -137,12 +188,33 @@ export class StammtischApiService {
     return this.api.get<StammtischMembershipDto[]>('/stammtische');
   }
 
+  /** Eigenen Stammtisch eröffnen (angemeldet); höchstens drei je Person. */
+  createOwn(name: string): Observable<CreatedStammtischDto> {
+    return this.api.post<CreatedStammtischDto>('/stammtische', { name });
+  }
+
+  /** Stammtisch samt Konto eröffnen, ohne Anmeldung. Danach normal anmelden. */
+  signup(request: SignupRequest): Observable<SignupResult> {
+    return this.api.post<SignupResult>('/signup', request);
+  }
+
   current(): Observable<StammtischDto> {
     return this.api.get<StammtischDto>('/stammtisch');
   }
 
   rename(name: string): Observable<StammtischDto> {
     return this.api.put<StammtischDto>('/stammtisch', { name });
+  }
+
+  /** Gruppenbild hochladen (`stammtisch.manage`); Feld `file`, PNG, JPEG oder GIF. */
+  uploadImage(file: Blob, filename = 'gruppe.jpg'): Observable<StammtischImageDto> {
+    const form = new FormData();
+    form.append('file', file, filename);
+    return this.api.put<StammtischImageDto>('/stammtisch/image', form);
+  }
+
+  removeImage(): Observable<void> {
+    return this.api.delete<void>('/stammtisch/image');
   }
 
   leave(): Observable<void> {
@@ -199,7 +271,11 @@ export class StammtischApiService {
   }
 }
 
+/** Codes, deren Text die App selbst formuliert (mit Hinweis, was weiterhilft). */
+const APP_TEXT_CODES = new Set(['stammtisch_limit']);
+
 /** Lokalisierte Meldung des Fachservice, sonst ein neutraler Text. */
 export function apiErrorText(error: unknown): string {
+  if (error instanceof ApiError && APP_TEXT_CODES.has(error.code)) return describeApiError(error);
   return (error instanceof ApiError && error.detail) || describeApiError(error);
 }

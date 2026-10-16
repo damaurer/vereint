@@ -1,7 +1,8 @@
-# Mehrere Stammtische
+# Gruppen (mehrere Stammtische)
 
-Eine Vereint-Installation trägt beliebig viele Stammtische, ähnlich wie Server
-bei Discord. Eine Person hat ein Konto (Keycloak) und kann Mitglied in mehreren
+In der App heißen sie **Gruppen**; im Code, in API-Pfaden und Tabellen heißen
+sie weiterhin `stammtisch`. Eine Vereint-Installation trägt beliebig viele
+Gruppen, ähnlich wie Server bei Discord. Eine Person hat ein Konto (Keycloak) und kann Mitglied in mehreren
 Stammtischen sein. Alles Fachliche gehört genau einem Stammtisch: Events, Chat,
 Direktnachrichten, Guthaben und Buchungen, Katalog und Sublisten, Moments,
 Benachrichtigungen, Einladungen, Kiosk-Geräte, Audit-Log und Statistik.
@@ -44,7 +45,10 @@ die Trennung.
 - `StammtischContextFilter` prüft bei jeder Anfrage die Mitgliedschaft
   (`403 stammtisch_access_denied` sonst). Wer nur in einem Stammtisch ist,
   braucht keine Auswahl. Wer in mehreren ist und nichts gewählt hat, erhält
-  `409 stammtisch_required`; die App zeigt dann die Auswahlseite `/stammtische`.
+  `409 stammtisch_required`; die App zeigt dann die Auswahlseite `/gruppen`.
+- Es gibt zwei Arten von Admin: den **Stammtisch-Admin** (Rolle `admin` in
+  einem Stammtisch: Mitglieder, Rollen, Tarif) und den **Applikations-Admin**
+  des Vereint-Teams (Plattform-Admin, siehe unten).
 - Rollen und Rechte der Anfrage stammen ausschließlich aus dem gewählten
   Stammtisch. Realmrollen aus Keycloak zählen nicht mehr, mit einer Ausnahme:
   die Realmrolle `admin` macht eine Person zum **Plattform-Admin**.
@@ -87,14 +91,29 @@ Rolle „Kasse" mit `ledger.read` sieht so die Kasse, aber nicht den Adminbereic
   registrieren sich darüber; wer schon ein Konto hat, öffnet den Link angemeldet
   und tritt mit einem Klick bei (`POST /api/v1/member-invites/join`). Eine
   offene Registrierung ohne Einladung gibt es weiterhin nicht.
-- **Verlassen:** unter **Stammtisch → Stammtisch verlassen**. Buchungen und
+- **Name und Bild:** Wer `stammtisch.manage` hat (beim Eröffnen die
+  eröffnende Person), benennt die Gruppe und lädt unter **Gruppe** ein Bild hoch
+  (`PUT /api/v1/stammtisch/image`, PNG/JPEG/GIF bis 5 MB). Es liegt
+  verschlüsselt und ohne Metadaten im Objektspeicher; sehen können es nur
+  Mitglieder der Gruppe (`GET /api/v1/stammtische/{id}/image`).
+- **Verlassen:** unter **Gruppe → Gruppe verlassen**. Buchungen und
   Beiträge bleiben im Stammtisch erhalten.
 - **Erster Start:** Der erste Plattform-Admin ohne Mitgliedschaft wird
   automatisch Admin von „Mein Stammtisch", solange dort noch nie jemand Mitglied
   war (`PlatformService.claimUnclaimedStammtisch`).
-- **Anlegen:** nur Plattform-Admins unter `/plattform`. Optional wird ein
-  bestehendes Konto per E-Mail Admin des neuen Stammtischs, sonst die anlegende
-  Person. Stammtische werden archiviert, nicht gelöscht.
+- **Eröffnen (Kunden):** Wer einen Stammtisch gründen will, registriert sich
+  unter `/gruppe-eroeffnen` mit Stammtischname, Name, E-Mail und Passwort
+  (`POST /api/v1/signup`, öffentlich, je IP begrenzt). Das Konto entsteht in
+  Keycloak, die Person wird Stammtisch-Admin, der Stammtisch startet im
+  kostenlosen Tarif. Danach bucht sie unter **Gruppe → Tarif** und lädt
+  Mitglieder per Einladungslink ein. Angemeldete Personen eröffnen weitere
+  Gruppen unter `/gruppen` (`POST /api/v1/stammtische`), höchstens drei
+  eigene aktive (`SIGNUP_MAX_OWNED`, Fehler `stammtisch_limit`).
+  `SIGNUP_ENABLED=false` schaltet das Eröffnen ab.
+- **Anlegen (Vereint-Team):** Plattform-Admins legen unter `/plattform`
+  Stammtische an. Optional wird ein bestehendes Konto per E-Mail Admin des
+  neuen Stammtischs, sonst die anlegende Person. Stammtische werden archiviert,
+  nicht gelöscht.
 
 ## Gemeinsame Getränkedatenbank
 

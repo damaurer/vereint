@@ -208,7 +208,7 @@ class BillingService(
         }
     }
 
-    private fun returnUrl() = "${properties.appUrl.trimEnd('/')}/stammtisch"
+    private fun returnUrl() = "${properties.appUrl.trimEnd('/')}/gruppe"
 
     private fun requireManage(principal: UserPrincipal) {
         if (!principal.hasPermission(Permission.BILLING_MANAGE)) {

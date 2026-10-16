@@ -56,6 +56,8 @@ interface DrinkLibraryBarcodeRepository : JpaRepository<DrinkLibraryBarcodeEntit
 
 @Repository
 interface StammtischRepository : JpaRepository<StammtischEntity, UUID> {
+    fun countByCreatedByAndArchivedFalse(createdBy: UUID): Long
+
     fun findAllByOrderByNameAsc(): List<StammtischEntity>
 }
 

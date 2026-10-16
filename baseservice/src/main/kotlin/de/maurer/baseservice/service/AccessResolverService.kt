@@ -72,7 +72,8 @@ class AccessResolverService(
                 id = it.stammtischId.toString(),
                 name = it.stammtischName,
                 roles = it.roles,
-                boardRole = it.boardRole
+                boardRole = it.boardRole,
+                imageVersion = it.imageVersion
             )
         }
         val stammtischId = TenantContext.stammtischId()

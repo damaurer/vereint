@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
 import { AuthService } from '../auth/auth.service';
 import { BillingStatusStore, ExternalNavigation } from './billing-status';
+import { GroupImageError, GroupImagePreparer } from './group-image';
 import {
   StammtischApiService,
   type BillingOverviewDto,
@@ -16,6 +17,10 @@ import { StammtischSettingsComponent, groupPermissions } from './stammtisch-sett
 
 interface SettingsInternals {
   leave(): void;
+  pickImage(event: Event): Promise<void>;
+  removeImage(): void;
+  error(): string | null;
+  stammtisch(): StammtischDto | null;
   leaveError(): string | null;
   info(): string | null;
   billingActionError(): string | null;
@@ -86,7 +91,7 @@ const rolesData: StammtischRolesDto = {
   knownPermissions: ['ledger.read', 'ledger.correct', 'roles.manage'],
 };
 
-function stammtisch(permissions: string[]): StammtischDto {
+function stammtisch(permissions: string[], imageVersion: number | null = null): StammtischDto {
   return {
     id: 'st-1',
     name: 'Eber',
@@ -94,7 +99,19 @@ function stammtisch(permissions: string[]): StammtischDto {
     myRoles: [],
     myPermissions: permissions,
     createdAt: '2026-01-01T10:00:00Z',
+    imageVersion,
   };
+}
+
+const buttonByText = (root: HTMLElement, text: string) =>
+  [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === text) as HTMLButtonElement | undefined;
+
+/** `change`-Ereignis einer Dateiauswahl mit genau dieser Datei. */
+function fileEvent(file: File): Event {
+  const input = document.createElement('input');
+  input.type = 'file';
+  Object.defineProperty(input, 'files', { value: [file] });
+  return { target: input } as unknown as Event;
 }
 
 describe('StammtischSettingsComponent', () => {
@@ -102,14 +119,18 @@ describe('StammtischSettingsComponent', () => {
   let auth: { getSession: ReturnType<typeof vi.fn>; selectStammtisch: ReturnType<typeof vi.fn> };
 
   let external: { assign: ReturnType<typeof vi.fn> };
+  let preparer: { prepare: ReturnType<typeof vi.fn> };
 
   const create = async (
     permissions: string[],
     billingData: BillingOverviewDto = billing({ canManage: false }),
     queryParams: Record<string, string> = {},
+    imageVersion: number | null = null,
   ) => {
     api = {
-      current: vi.fn(() => of(stammtisch(permissions))),
+      current: vi.fn(() => of(stammtisch(permissions, imageVersion))),
+      uploadImage: vi.fn(() => of({ imageVersion: 9 })),
+      removeImage: vi.fn(() => of(undefined)),
       billing: vi.fn(() => of(billingData)),
       billingCheckout: vi.fn(() => of({ url: 'https://checkout.stripe.test/c/1' })),
       billingPortal: vi.fn(() => of({ url: 'https://billing.stripe.test/p/1' })),
@@ -126,6 +147,7 @@ describe('StammtischSettingsComponent', () => {
       selectStammtisch: vi.fn(() => Promise.resolve(true)),
     };
     external = { assign: vi.fn() };
+    preparer = { prepare: vi.fn(async (file: File) => ({ blob: new Blob(['jpeg']), filename: 'gruppe.jpg', file })) };
     TestBed.configureTestingModule({
       imports: [StammtischSettingsComponent],
       providers: [
@@ -133,6 +155,7 @@ describe('StammtischSettingsComponent', () => {
         { provide: StammtischApiService, useValue: api },
         { provide: AuthService, useValue: auth },
         { provide: ExternalNavigation, useValue: external },
+        { provide: GroupImagePreparer, useValue: preparer },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(queryParams) } } },
       ],
     });
@@ -155,11 +178,71 @@ describe('StammtischSettingsComponent', () => {
     const { fixture } = await create(['roles.manage', 'stammtisch.manage']);
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('Neue Rolle');
-    expect(text).toContain('Name des Stammtischs');
+    expect(text).toContain('Name der Gruppe');
     const deleteButtons = [...fixture.nativeElement.querySelectorAll('button')].filter(
       (b: HTMLButtonElement) => b.textContent?.trim() === 'Löschen',
     );
     expect(deleteButtons.length).toBe(1);
+  });
+
+  describe('group picture', () => {
+    it('shows the picture next to the name and lets managers change or remove it', async () => {
+      const { fixture } = await create(['stammtisch.manage'], billing({ canManage: false }), {}, 3);
+      const root = fixture.nativeElement as HTMLElement;
+      const img = root.querySelector('.st-identity vereint-group-avatar img') as HTMLImageElement;
+      expect(img.getAttribute('src')).toBe('/api/v1/stammtische/st-1/image?v=3');
+      expect(img.getAttribute('alt')).toBe('Bild der Gruppe Eber');
+      expect(buttonByText(root, 'Bild ändern')).toBeTruthy();
+      expect(buttonByText(root, 'Bild entfernen')).toBeTruthy();
+      expect(root.querySelector('input[type="file"]')?.getAttribute('accept')).toBe('image/png,image/jpeg,image/gif');
+    });
+
+    it('shows initials without a picture and no upload without stammtisch.manage', async () => {
+      const { fixture } = await create([]);
+      const root = fixture.nativeElement as HTMLElement;
+      expect(root.querySelector('.st-identity vereint-group-avatar img')).toBeNull();
+      expect(root.querySelector('.st-identity vereint-group-avatar')?.textContent?.trim()).toBe('E');
+      expect(root.querySelector('input[type="file"]')).toBeNull();
+      expect(buttonByText(root, 'Bild hochladen')).toBeUndefined();
+    });
+
+    it('scales the chosen picture, uploads it and refreshes the session', async () => {
+      const { fixture, cmp } = await create(['stammtisch.manage']);
+      expect(buttonByText(fixture.nativeElement, 'Bild hochladen')).toBeTruthy();
+      const file = new File(['png'], 'logo.png', { type: 'image/png' });
+      await cmp.pickImage(fileEvent(file));
+      expect(preparer.prepare).toHaveBeenCalledWith(file);
+      expect(api['uploadImage']).toHaveBeenCalledWith(expect.any(Blob), 'gruppe.jpg');
+      expect(cmp.stammtisch()?.imageVersion).toBe(9);
+      expect(cmp.info()).toBe('Das Bild wurde gespeichert.');
+      expect(auth.getSession).toHaveBeenCalledWith(true);
+    });
+
+    it('reports an unsuitable file without uploading', async () => {
+      const { cmp } = await create(['stammtisch.manage']);
+      preparer.prepare.mockRejectedValue(new GroupImageError('Bitte wähle ein Bild im Format PNG, JPEG oder GIF.'));
+      await cmp.pickImage(fileEvent(new File(['x'], 'x.webp', { type: 'image/webp' })));
+      expect(api['uploadImage']).not.toHaveBeenCalled();
+      expect(cmp.error()).toContain('PNG, JPEG oder GIF');
+    });
+
+    it('shows the problem detail of a rejected upload', async () => {
+      const { cmp } = await create(['stammtisch.manage']);
+      api['uploadImage'].mockReturnValue(throwError(() => new ApiError(400, 'image_too_large', 'Das Bild ist zu groß.')));
+      await cmp.pickImage(fileEvent(new File(['png'], 'logo.png', { type: 'image/png' })));
+      expect(cmp.error()).toBe('Das Bild ist zu groß.');
+      expect(cmp.stammtisch()?.imageVersion).toBeNull();
+    });
+
+    it('removes the picture after confirmation', async () => {
+      const confirm = vi.spyOn(globalThis, 'confirm').mockReturnValue(true);
+      const { cmp } = await create(['stammtisch.manage'], billing({ canManage: false }), {}, 3);
+      cmp.removeImage();
+      expect(api['removeImage']).toHaveBeenCalled();
+      expect(cmp.stammtisch()?.imageVersion).toBeNull();
+      expect(cmp.info()).toBe('Das Bild wurde entfernt.');
+      confirm.mockRestore();
+    });
   });
 
   it('shows roles read-only with members.read only', async () => {
@@ -168,7 +251,7 @@ describe('StammtischSettingsComponent', () => {
     expect(api['roles']).toHaveBeenCalled();
     expect(text).toContain('Kasse');
     expect(text).not.toContain('Neue Rolle');
-    expect(text).not.toContain('Name des Stammtischs');
+    expect(text).not.toContain('Name der Gruppe');
   });
 
   it('hides roles entirely without roles.manage or members.read', async () => {
@@ -182,7 +265,7 @@ describe('StammtischSettingsComponent', () => {
     const { cmp } = await create([]);
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     cmp.leave();
-    await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/stammtische'));
+    await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/gruppen'));
     expect(auth.selectStammtisch).toHaveBeenCalledWith(null);
     expect(auth.getSession).toHaveBeenCalledWith(true);
     confirm.mockRestore();
@@ -203,9 +286,6 @@ describe('StammtischSettingsComponent', () => {
   describe('billing', () => {
     // Intl setzt vor „€“ ein geschütztes Leerzeichen.
     const textOf = (root: HTMLElement) => (root.textContent ?? '').replace(/\u00a0/g, ' ');
-    const buttonByText = (root: HTMLElement, text: string) =>
-      [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === text) as HTMLButtonElement | undefined;
-
     it('shows plan and usage to every member, without plan cards or export', async () => {
       const { fixture } = await create([]);
       const root = fixture.nativeElement as HTMLElement;

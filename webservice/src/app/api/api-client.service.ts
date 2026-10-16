@@ -86,6 +86,8 @@ export function describeApiError(error: unknown): string {
       return translate('errors.api.billingUnavailable');
     case 'billing_no_customer':
       return translate('errors.api.billingNoCustomer');
+    case 'stammtisch_limit':
+      return translate('errors.api.stammtischLimit');
     default:
       return translate('errors.api.generic');
   }

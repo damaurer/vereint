@@ -16,15 +16,16 @@
       "notFound": "The requested item was not found.",
       "invalid": "The input is invalid. Please check it and try again.",
       "generic": "The action could not be completed. Please try again later.",
-      "stammtischRequired": "Please choose a club first.",
-      "stammtischDenied": "You are not (or no longer) a member of this club.",
-      "stammtischReadOnly": "This club is read-only because a payment is overdue. Everything works again once it is paid.",
+      "stammtischRequired": "Please choose a group first.",
+      "stammtischDenied": "You are not (or no longer) a member of this group.",
+      "stammtischReadOnly": "This group is read-only because a payment is overdue. Everything works again once it is paid.",
       "planLimitMembers": "The current plan does not allow more members. A larger plan makes room.",
       "planLimitStorage": "The storage of the current plan is used up.",
       "planLimitVideos": "Videos are not included in the current plan.",
       "planLimitKiosk": "The current plan allows only one active bar terminal.",
       "billingUnavailable": "Online payment is not set up yet. Please try again later.",
-      "billingNoCustomer": "There is no payment account yet. Please book a plan first."
+      "billingNoCustomer": "There is no payment account yet. Please book a plan first.",
+      "stammtischLimit": "You have already opened three groups of your own. That is the maximum per person."
     }
   },
   "member": {
@@ -281,8 +282,8 @@
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} unread",
     "chatUnread": "{label}, {count} unread",
-    "switchStammtisch": "Switch club (current: {name})",
-    "readOnly": "This club is read-only because a payment is overdue.",
+    "switchStammtisch": "Switch group (current: {name})",
+    "readOnly": "This group is read-only because a payment is overdue.",
     "readOnlyLink": "Go to plan"
   },
   "nav": {
@@ -305,7 +306,7 @@
       "admin": "Administration",
       "tablet": "Bar terminal",
       "scan": "Pay",
-      "stammtisch": "Club"
+      "stammtisch": "Group"
     },
     "sections": {
       "club": "Club",
@@ -339,7 +340,8 @@
       "loginFailed": "Sign-in failed",
       "loggedOutTitle": "Signed out",
       "loggedOutMessage": "You have been signed out successfully.",
-      "retryLogin": "Sign in again"
+      "retryLogin": "Sign in again",
+      "openOwn": "Open your own group"
     },
     "errors": {
       "invalidState": "The sign-in has expired. Please start again.",
@@ -374,9 +376,9 @@
         "passwordMismatch": "The two passwords do not match.",
         "checkInput": "Please check your input. The password must be at least {min} characters long."
       },
-      "joinTitle": "Join club",
-      "joinIntro": "You are already signed in. Use this invitation link to join the club with your existing account.",
-      "join": "Join this club",
+      "joinTitle": "Join group",
+      "joinIntro": "You are already signed in. Use this invitation link to join the group with your existing account.",
+      "join": "Join this group",
       "joining": "Joining …"
     }
   },
@@ -528,20 +530,24 @@
       "description": "Define types and reactions for moments."
     },
     "stammtische": {
-      "title": "Choose club",
-      "description": "Open one of your clubs."
+      "title": "Choose group",
+      "description": "Open one of your groups."
     },
     "platform": {
       "title": "Platform",
-      "description": "Manage the clubs of this installation."
+      "description": "Manage the groups of this installation."
     },
     "stammtisch": {
-      "title": "Club",
-      "description": "Name, roles and membership of the club."
+      "title": "Group",
+      "description": "Name, picture, roles and membership of the group."
     },
     "drinkLibrary": {
       "title": "Drinks database",
       "description": "Add drinks from the shared database."
+    },
+    "stammtischOpen": {
+      "title": "Open a group",
+      "description": "Create and run your own group."
     }
   },
   "chat": {
@@ -926,7 +932,7 @@
       "open": "From the drinks database",
       "back": "Back to catalogue",
       "title": "Drinks database",
-      "intro": "The drinks database is shared by all clubs and holds no prices – each club sets its own price when adding a drink.",
+      "intro": "The drinks database is shared by all groups and holds no prices – each group sets its own price when adding a drink.",
       "searchLabel": "Name or type",
       "searchPlaceholder": "e.g. lager",
       "barcodeLabel": "Barcode (EAN)",
@@ -942,7 +948,7 @@
       "description": "Description",
       "price": "Sales price (€)",
       "costPrice": "Purchase price (€, optional)",
-      "priceHint": "The price only applies to your club.",
+      "priceHint": "The price only applies to your group.",
       "priceRequired": "Please enter a name and a price of at least €0.",
       "adopted": "“{name}” is now in your catalogue.",
       "proposed": "“{name}” has been proposed for your catalogue.",
@@ -1796,31 +1802,32 @@
   },
   "stammtisch": {
     "choice": {
-      "eyebrow": "Clubs",
-      "title": "Choose a club",
-      "intro": "Choose which club you want to open. You can switch at any time.",
+      "eyebrow": "Groups",
+      "title": "Choose a group",
+      "intro": "Choose which group you want to open. You can switch at any time.",
       "current": "Current",
       "open": "Open",
       "opening": "Opening …",
-      "emptyTitle": "No club yet",
-      "emptyMessage": "You are not a member of any club yet. Ask the board for an invitation link.",
+      "emptyTitle": "No group yet",
+      "emptyMessage": "You are not a member of any group yet. Ask the board for an invitation link.",
       "platform": "Manage platform",
-      "selectFailed": "The club could not be opened. Please try again."
+      "selectFailed": "The group could not be opened. Please try again.",
+      "openOwn": "Open your own group"
     },
     "platform": {
-      "back": "Back to club selection",
+      "back": "Back to group selection",
       "eyebrow": "Platform",
-      "title": "Manage clubs",
-      "intro": "All clubs of this installation. Archived clubs can no longer be opened by their members.",
-      "createTitle": "Create a new club",
+      "title": "Manage groups",
+      "intro": "All groups of this installation. Archived groups can no longer be opened by their members.",
+      "createTitle": "Create a new group",
       "name": "Name",
       "adminEmail": "Admin e-mail (optional)",
-      "adminEmailHint": "An existing account with this e-mail becomes the club admin; without one, you become the admin.",
+      "adminEmailHint": "An existing account with this e-mail becomes the group admin; without one, you become the admin.",
       "create": "Create",
       "created": "“{name}” has been created.",
-      "listTitle": "All clubs",
-      "unavailable": "The clubs could not be loaded.",
-      "empty": "No clubs yet",
+      "listTitle": "All groups",
+      "unavailable": "The groups could not be loaded.",
+      "empty": "No groups yet",
       "archived": "Archived",
       "members": {
         "one": "{count} member",
@@ -1838,22 +1845,34 @@
       "planChanged": "“{name}” is now on the {plan} plan."
     },
     "settings": {
-      "eyebrow": "Club",
-      "title": "Club",
+      "eyebrow": "Group",
+      "title": "Group",
       "memberCount": {
         "one": "{count} member",
         "other": "{count} members"
       },
-      "switch": "Switch club",
-      "unavailable": "The club could not be loaded.",
+      "switch": "Switch group",
+      "unavailable": "The group could not be loaded.",
       "nameTitle": "Name",
-      "name": "Club name",
+      "name": "Group name",
       "renamed": "The name has been saved.",
-      "leaveTitle": "Leave club",
+      "leaveTitle": "Leave group",
       "leaveHint": "If you leave “{name}”, you lose all permissions here. You can only rejoin with a new invitation link.",
-      "leave": "Leave club",
+      "leave": "Leave group",
       "leaveConfirm": "Really leave “{name}”?",
-      "lastManager": "You are the last person who can manage members and roles. Hand this role to someone else first."
+      "lastManager": "You are the last person who can manage members and roles. Hand this role to someone else first.",
+      "imageTitle": "Picture",
+      "imageAlt": "Picture of the group {name}",
+      "imageHint": "PNG, JPEG or GIF. Large pictures are scaled down before uploading.",
+      "imageUpload": "Upload picture",
+      "imageChange": "Change picture",
+      "imageRemove": "Remove picture",
+      "imageRemoveConfirm": "Really remove the group picture?",
+      "imageUploading": "Uploading picture …",
+      "imageSaved": "The picture has been saved.",
+      "imageRemoved": "The picture has been removed.",
+      "imageType": "Please choose a PNG, JPEG or GIF picture.",
+      "imageTooLarge": "The picture is too large (at most {max} MB)."
     },
     "roles": {
       "title": "Roles & permissions",
@@ -1889,14 +1908,14 @@
       "profile": "Profile",
       "purchase": "Purchases",
       "roles": "Roles",
-      "stammtisch": "Club"
+      "stammtisch": "Group"
     },
     "billing": {
       "title": "Plan",
       "plans": {
         "free": "Free",
-        "stammtisch": "Stammtisch",
-        "verein": "Verein"
+        "stammtisch": "Standard",
+        "verein": "Club"
       },
       "status": {
         "active": "Active",
@@ -1907,9 +1926,9 @@
       "renews": "Renews on {date}.",
       "endsOn": "Runs until {date}.",
       "comped": "This plan was granted free of charge.",
-      "pastDue": "The last payment failed. Please update the payment method by {date}, otherwise the club becomes read-only.",
+      "pastDue": "The last payment failed. Please update the payment method by {date}, otherwise the group becomes read-only.",
       "pastDueNoDate": "The last payment failed. Please update the payment method.",
-      "readOnly": "The payment is overdue: this club is read-only. Viewing works, changes and purchases do not. Everything works again as soon as it is paid.",
+      "readOnly": "The payment is overdue: this group is read-only. Viewing works, changes and purchases do not. Everything works again as soon as it is paid.",
       "usage": "Usage",
       "members": "Members",
       "membersOf": "{count} of {max}",
@@ -1948,11 +1967,32 @@
       "supporterHint": "Voluntary and personal: {price} a month helps to develop Vereint further.",
       "supporterHintNoAmount": "Voluntary and personal: a monthly contribution helps to develop Vereint further.",
       "export": "Export data",
-      "exportHint": "All data of this club as a JSON file.",
+      "exportHint": "All data of this group as a JSON file.",
       "success": "Thank you! The plan will be active in a few seconds.",
       "thanks": "Thank you for your support!",
       "canceled": "Payment cancelled, nothing was booked.",
       "unavailable": "The plan could not be loaded."
+    },
+    "open": {
+      "eyebrow": "New group",
+      "title": "Open a group",
+      "doneTitle": "Your group is open!",
+      "checking": "Getting ready …",
+      "intro": "Create your group and your account in one step. You will be the group admin.",
+      "createIntro": "You are signed in. Give your new group a name – you will be its admin.",
+      "planInfo": "The group starts on the free plan with up to 10 members. You can book a larger plan at any time later. Members join via an invitation link.",
+      "name": "Group name",
+      "submit": "Open group",
+      "submitting": "Opening group …",
+      "done": "“{name}” is open and your account for {email} has been created. Sign in now to choose a plan and invite members.",
+      "haveAccount": "Already have an account?",
+      "loginFirst": "Sign in first, then open it",
+      "back": "Back to group selection",
+      "errors": {
+        "nameRequired": "Please give your group a name.",
+        "checkInput": "Please check your input. The group name may be at most {max} characters long, the password needs at least {min} characters.",
+        "selectFailed": "The group has been created but could not be opened. You will find it in the group selection."
+      }
     }
   }
 }

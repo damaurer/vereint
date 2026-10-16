@@ -37,6 +37,8 @@ export interface StammtischMembership {
   name: string;
   roles: string[];
   boardRole?: BoardRole | null;
+  /** Version des Gruppenbilds (`/api/v1/stammtische/{id}/image?v=…`); `null` = kein Bild. */
+  imageVersion?: number | null;
 }
 
 export interface UserProfile {
@@ -109,7 +111,7 @@ export interface AuthMeResponse {
   roles: UserRole[];
   boardRole: BoardRole | null;
   permissions: string[];
-  stammtisch: { id: string; name: string } | null;
+  stammtisch: { id: string; name: string; imageVersion?: number | null } | null;
   memberships: StammtischMembership[];
   platformAdmin: boolean;
   appContexts: AppContext[];

@@ -180,11 +180,27 @@ describe('authorizePages Express Middleware', () => {
     expect(redirect).toHaveBeenCalledWith(`/api/auth/login?returnTo=${encodeURIComponent('/board')}`);
   });
 
-  it('lets the public registration page through', async () => {
-    const { req, res, next, redirect } = createMockReqRes({ path: '/register' });
-    await authorizePages(req, res, next);
-    expect(next).toHaveBeenCalled();
-    expect(redirect).not.toHaveBeenCalled();
+  it('lets the public registration pages through', async () => {
+    for (const path of ['/register', '/gruppe-eroeffnen']) {
+      const { req, res, next, redirect } = createMockReqRes({ path });
+      await authorizePages(req, res, next);
+      expect(next).toHaveBeenCalled();
+      expect(redirect).not.toHaveBeenCalled();
+    }
+  });
+
+  it('moves the former group addresses to the new ones and keeps the query', async () => {
+    const cases: [string, string, string][] = [
+      ['/stammtisch', '/stammtisch?billing=success&returnTo=%2Fdashboard', '/gruppe?billing=success&returnTo=%2Fdashboard'],
+      ['/stammtische', '/stammtische?returnTo=%2Fboard', '/gruppen?returnTo=%2Fboard'],
+      ['/eroeffnen', '/eroeffnen', '/gruppe-eroeffnen'],
+    ];
+    for (const [path, originalUrl, target] of cases) {
+      const { req, res, next, redirect } = createMockReqRes({ path, originalUrl });
+      await authorizePages(req, res, next);
+      expect(next).not.toHaveBeenCalled();
+      expect(redirect).toHaveBeenCalledWith(301, target);
+    }
   });
 
   it('moves a path invite code into the fragment and sends invalid codes to /404', async () => {
@@ -326,7 +342,7 @@ describe('authorizePages Express Middleware', () => {
       expect(redirect).toHaveBeenCalledWith('/403');
     });
 
-    it('sends a person with several Stammtische but none selected to the choice page', async () => {
+    it('sends a person with several groups but none selected to the choice page', async () => {
       stubResolver(
         accessDecision({
           roles: [],
@@ -343,7 +359,7 @@ describe('authorizePages Express Middleware', () => {
       await authorizePages(req, res, next);
 
       expect(next).not.toHaveBeenCalled();
-      expect(redirect).toHaveBeenCalledWith(expect.stringMatching(/^\/stammtische\?returnTo=/));
+      expect(redirect).toHaveBeenCalledWith(expect.stringMatching(/^\/gruppen\?returnTo=/));
     });
 
     it('allows a treasurer in the treasury context', async () => {

@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { RedirectFunction, Router, Routes } from '@angular/router';
 import { AppShellComponent } from './shell/app-shell.component';
 import {
   authGuard,
@@ -10,6 +11,21 @@ import {
   signedInGuard,
 } from './auth/auth.guards';
 import { kioskGuard } from './kiosk/kiosk.guard';
+
+/** Sichtbare Adressen der Gruppen-Seiten (im Code weiterhin „Stammtisch“). */
+export const GROUP_CHOICE_PATH = 'gruppen';
+export const GROUP_SETTINGS_PATH = 'gruppe';
+export const GROUP_OPEN_PATH = 'gruppe-eroeffnen';
+
+/**
+ * Frühere Adressen (`/stammtische`, `/stammtisch`, `/eroeffnen`) führen auf die
+ * neuen; Query-Parameter (etwa `?billing=success` der Stripe-Rückkehr oder
+ * `returnTo`) und Fragment bleiben erhalten.
+ */
+export function legacyRedirect(target: string): RedirectFunction {
+  return ({ queryParams, fragment }) =>
+    inject(Router).createUrlTree([`/${target}`], { queryParams, fragment: fragment ?? undefined });
+}
 
 /**
  * `data.title`, `data.description` und `data.access` sind Übersetzungsschlüssel
@@ -40,12 +56,23 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/register.component').then((m) => m.RegisterComponent),
   },
   {
-    // Ohne gewählten Stammtisch: auswählen, beitreten oder (Plattform-Admin) anlegen.
-    path: 'stammtische',
+    // Eigene Gruppe eröffnen: ohne Konto samt Registrierung, angemeldet nur mit Namen.
+    path: GROUP_OPEN_PATH,
+    canActivate: [kioskGuard],
+    data: { title: 'routes.stammtischOpen.title', description: 'routes.stammtischOpen.description', access: 'routes.access.public' },
+    loadComponent: () => import('./stammtisch/stammtisch-open.component').then((m) => m.StammtischOpenComponent),
+  },
+  {
+    // Ohne gewählte Gruppe: auswählen, beitreten oder (Plattform-Admin) anlegen.
+    path: GROUP_CHOICE_PATH,
     canActivate: [kioskGuard, signedInGuard],
     data: { title: 'routes.stammtische.title', description: 'routes.stammtische.description', access: 'routes.access.protected' },
     loadComponent: () => import('./stammtisch/stammtisch-choice.component').then((m) => m.StammtischChoiceComponent),
   },
+  { path: 'eroeffnen', pathMatch: 'full', redirectTo: legacyRedirect(GROUP_OPEN_PATH) },
+  { path: 'stammtische', pathMatch: 'full', redirectTo: legacyRedirect(GROUP_CHOICE_PATH) },
+  // Stripe kehrt (noch) nach `/stammtisch?billing=…` zurück.
+  { path: 'stammtisch', pathMatch: 'full', redirectTo: legacyRedirect(GROUP_SETTINGS_PATH) },
   {
     path: 'plattform',
     canActivate: [kioskGuard, platformGuard],
@@ -257,8 +284,8 @@ export const routes: Routes = [
     loadComponent: () => import('./tablet/tablet.component').then((m) => m.TabletComponent),
   },
   {
-    // Name, Rollen und Austritt des gewählten Stammtischs.
-    path: 'stammtisch',
+    // Name, Bild, Tarif, Rollen und Austritt der gewählten Gruppe.
+    path: GROUP_SETTINGS_PATH,
     canActivate: [authGuard],
     data: { title: 'routes.stammtisch.title', description: 'routes.stammtisch.description', access: 'routes.access.protected' },
     loadComponent: () => import('./stammtisch/stammtisch-settings.component').then((m) => m.StammtischSettingsComponent),

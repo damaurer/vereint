@@ -381,7 +381,12 @@ describe('auth.routes', () => {
     const memberOf = '11111111-1111-4111-8111-111111111111';
     const foreign = '22222222-2222-4222-8222-222222222222';
 
-    async function loginWithStammtischBackend(): Promise<string> {
+    async function loginWithStammtischBackend(
+      memberships: { id: string; name: string; roles: string[]; imageVersion?: number }[] = [
+        { id: memberOf, name: 'Stammtisch A', roles: ['board'], imageVersion: 7 },
+        { id: '33333333-3333-4333-8333-333333333333', name: 'Stammtisch C', roles: ['member'] },
+      ],
+    ): Promise<string> {
       const tokens = await signTokenPair({
         subject: 'u-multi',
         nonce: 'nonce-multi',
@@ -412,10 +417,7 @@ describe('auth.routes', () => {
               stammtischId: selected,
               stammtischName: selected ? 'Stammtisch A' : undefined,
               platformAdmin: false,
-              memberships: [
-                { id: memberOf, name: 'Stammtisch A', roles: ['board'] },
-                { id: '33333333-3333-4333-8333-333333333333', name: 'Stammtisch C', roles: ['member'] },
-              ],
+              memberships,
             }),
             { status: 200, headers: { 'Content-Type': 'application/json' } },
           );
@@ -435,9 +437,13 @@ describe('auth.routes', () => {
       const session = await loginWithStammtischBackend();
 
       const before = await originalFetch(`${baseUrl}/api/auth/me`, { headers: { Cookie: session } });
-      const beforeData = (await before.json()) as { identity: { stammtisch: unknown; memberships: unknown[] } };
+      const beforeData = (await before.json()) as {
+        identity: { stammtisch: unknown; memberships: { id: string; imageVersion: number | null }[] };
+      };
       expect(beforeData.identity.stammtisch).toBeNull();
       expect(beforeData.identity.memberships).toHaveLength(2);
+      // Die Bildversion der Gruppe wird durchgereicht; ohne Bild `null`.
+      expect(beforeData.identity.memberships.map((m) => m.imageVersion)).toEqual([7, null]);
 
       const select = await originalFetch(`${baseUrl}/api/auth/stammtisch`, {
         method: 'POST',
@@ -453,9 +459,9 @@ describe('auth.routes', () => {
         headers: { Cookie: `${session}; vereint.stammtisch=${memberOf}` },
       });
       const afterData = (await after.json()) as {
-        identity: { stammtisch: { id: string; name: string }; roles: string[]; appContexts: string[] };
+        identity: { stammtisch: { id: string; name: string; imageVersion: number | null }; roles: string[]; appContexts: string[] };
       };
-      expect(afterData.identity.stammtisch).toEqual({ id: memberOf, name: 'Stammtisch A' });
+      expect(afterData.identity.stammtisch).toEqual({ id: memberOf, name: 'Stammtisch A', imageVersion: 7 });
       expect(afterData.identity.roles).toEqual(['board']);
       expect(afterData.identity.appContexts).toContain('boardGeneral');
     });
@@ -477,6 +483,29 @@ describe('auth.routes', () => {
       const meData = (await me.json()) as { identity: { stammtisch: unknown } };
       expect(meData.identity.stammtisch).toBeNull();
       expect(me.headers.getSetCookie().some((c) => c.startsWith('vereint.stammtisch=;') && c.includes('Max-Age=0'))).toBe(true);
+    });
+
+    it('drops cached decisions on selection so a new membership shows up everywhere', async () => {
+      const memberships = [{ id: memberOf, name: 'Stammtisch A', roles: ['board'] }];
+      const session = await loginWithStammtischBackend(memberships);
+
+      const before = await originalFetch(`${baseUrl}/api/auth/me`, { headers: { Cookie: session } });
+      expect(((await before.json()) as { identity: { memberships: unknown[] } }).identity.memberships).toHaveLength(1);
+
+      // Eigenen Stammtisch eröffnet: Der Fachservice kennt jetzt zwei Mitgliedschaften.
+      const created = '44444444-4444-4444-8444-444444444444';
+      memberships.push({ id: created, name: 'Neuer Stammtisch', roles: ['admin'] });
+      const select = await originalFetch(`${baseUrl}/api/auth/stammtisch`, {
+        method: 'POST',
+        headers: { Cookie: session, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stammtischId: created }),
+      });
+      expect(select.status).toBe(204);
+
+      // Auch die zuvor gecachte Entscheidung ohne Auswahl ist verworfen.
+      const after = await originalFetch(`${baseUrl}/api/auth/me`, { headers: { Cookie: session } });
+      const afterData = (await after.json()) as { identity: { memberships: { id: string }[] } };
+      expect(afterData.identity.memberships.map((m) => m.id)).toEqual([memberOf, created]);
     });
 
     it('rejects values that are not a Stammtisch id', async () => {

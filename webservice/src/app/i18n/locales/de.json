@@ -16,15 +16,16 @@
       "notFound": "Der angeforderte Eintrag wurde nicht gefunden.",
       "invalid": "Die Eingabe ist ungültig. Bitte prüfen und erneut versuchen.",
       "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen.",
-      "stammtischRequired": "Bitte zuerst einen Stammtisch wählen.",
-      "stammtischDenied": "Du gehörst diesem Stammtisch nicht (mehr) an.",
-      "stammtischReadOnly": "Der Stammtisch ist nur noch lesbar, weil die Zahlung überfällig ist. Nach der Zahlung geht wieder alles.",
+      "stammtischRequired": "Bitte zuerst eine Gruppe wählen.",
+      "stammtischDenied": "Du gehörst dieser Gruppe nicht (mehr) an.",
+      "stammtischReadOnly": "Die Gruppe ist nur noch lesbar, weil die Zahlung überfällig ist. Nach der Zahlung geht wieder alles.",
       "planLimitMembers": "Der aktuelle Tarif erlaubt keine weiteren Mitglieder. Ein größerer Tarif schafft Platz.",
       "planLimitStorage": "Der Speicherplatz des aktuellen Tarifs ist aufgebraucht.",
       "planLimitVideos": "Videos sind im aktuellen Tarif nicht enthalten.",
       "planLimitKiosk": "Der aktuelle Tarif erlaubt nur ein aktives Thekenterminal.",
       "billingUnavailable": "Online-Zahlung ist noch nicht eingerichtet. Bitte später erneut versuchen.",
-      "billingNoCustomer": "Es gibt noch kein Zahlungskonto. Bitte zuerst einen Tarif buchen."
+      "billingNoCustomer": "Es gibt noch kein Zahlungskonto. Bitte zuerst einen Tarif buchen.",
+      "stammtischLimit": "Du hast bereits drei eigene Gruppen eröffnet. Mehr sind pro Person nicht möglich."
     }
   },
   "member": {
@@ -275,8 +276,8 @@
     "notifications": "Mitteilungen",
     "notificationsUnread": "Mitteilungen, {count} ungelesen",
     "chatUnread": "{label}, {count} ungelesen",
-    "switchStammtisch": "Stammtisch wechseln (aktuell: {name})",
-    "readOnly": "Dieser Stammtisch ist nur noch lesbar, weil die Zahlung überfällig ist.",
+    "switchStammtisch": "Gruppe wechseln (aktuell: {name})",
+    "readOnly": "Diese Gruppe ist nur noch lesbar, weil die Zahlung überfällig ist.",
     "readOnlyLink": "Zum Tarif"
   },
   "nav": {
@@ -299,7 +300,7 @@
       "admin": "Administration",
       "tablet": "Thekenterminal",
       "scan": "Bezahlen",
-      "stammtisch": "Stammtisch"
+      "stammtisch": "Gruppe"
     },
     "sections": {
       "club": "Verein",
@@ -333,7 +334,8 @@
       "loginFailed": "Anmeldung fehlgeschlagen",
       "loggedOutTitle": "Abgemeldet",
       "loggedOutMessage": "Sie wurden erfolgreich abgemeldet.",
-      "retryLogin": "Erneut anmelden"
+      "retryLogin": "Erneut anmelden",
+      "openOwn": "Eigene Gruppe eröffnen"
     },
     "errors": {
       "invalidState": "Die Anmeldung ist abgelaufen. Bitte erneut starten.",
@@ -368,9 +370,9 @@
         "passwordMismatch": "Die beiden Passwörter stimmen nicht überein.",
         "checkInput": "Bitte prüfe deine Eingaben. Das Passwort muss mindestens {min} Zeichen lang sein."
       },
-      "joinTitle": "Stammtisch beitreten",
-      "joinIntro": "Du bist bereits angemeldet. Mit diesem Einladungslink trittst du dem Stammtisch mit deinem bestehenden Konto bei.",
-      "join": "Diesem Stammtisch beitreten",
+      "joinTitle": "Gruppe beitreten",
+      "joinIntro": "Du bist bereits angemeldet. Mit diesem Einladungslink trittst du der Gruppe mit deinem bestehenden Konto bei.",
+      "join": "Dieser Gruppe beitreten",
       "joining": "Wird beigetreten …"
     }
   },
@@ -522,20 +524,24 @@
       "description": "Typen und Reaktionen für Moments festlegen."
     },
     "stammtische": {
-      "title": "Stammtisch wählen",
-      "description": "Einen deiner Stammtische öffnen."
+      "title": "Gruppe wählen",
+      "description": "Eine deiner Gruppen öffnen."
     },
     "platform": {
       "title": "Plattform",
-      "description": "Stammtische dieser Installation verwalten."
+      "description": "Gruppen dieser Installation verwalten."
     },
     "stammtisch": {
-      "title": "Stammtisch",
-      "description": "Name, Rollen und Mitgliedschaft des Stammtischs."
+      "title": "Gruppe",
+      "description": "Name, Bild, Rollen und Mitgliedschaft der Gruppe."
     },
     "drinkLibrary": {
       "title": "Getränkedatenbank",
       "description": "Getränke aus der gemeinsamen Datenbank übernehmen."
+    },
+    "stammtischOpen": {
+      "title": "Gruppe eröffnen",
+      "description": "Eine eigene Gruppe anlegen und verwalten."
     }
   },
   "chat": {
@@ -893,7 +899,7 @@
       "open": "Aus der Getränkedatenbank",
       "back": "Zurück zum Katalog",
       "title": "Getränkedatenbank",
-      "intro": "Die Getränkedatenbank teilen sich alle Stammtische; sie enthält keine Preise – den Preis legt jeder Stammtisch beim Übernehmen selbst fest.",
+      "intro": "Die Getränkedatenbank teilen sich alle Gruppen; sie enthält keine Preise – den Preis legt jede Gruppe beim Übernehmen selbst fest.",
       "searchLabel": "Name oder Sorte",
       "searchPlaceholder": "z. B. Helles",
       "barcodeLabel": "Strichcode (EAN)",
@@ -909,7 +915,7 @@
       "description": "Beschreibung",
       "price": "Verkaufspreis (€)",
       "costPrice": "Einkaufspreis (€, optional)",
-      "priceHint": "Der Preis gilt nur für deinen Stammtisch.",
+      "priceHint": "Der Preis gilt nur für deine Gruppe.",
       "priceRequired": "Bitte einen Namen und einen Preis ab 0 € angeben.",
       "adopted": "„{name}“ ist jetzt in eurem Katalog.",
       "proposed": "„{name}“ wurde für euren Katalog vorgeschlagen.",
@@ -1763,31 +1769,32 @@
   },
   "stammtisch": {
     "choice": {
-      "eyebrow": "Stammtische",
-      "title": "Stammtisch wählen",
-      "intro": "Wähle, welchen Stammtisch du öffnen möchtest. Du kannst jederzeit wechseln.",
+      "eyebrow": "Gruppen",
+      "title": "Gruppe wählen",
+      "intro": "Wähle, welche Gruppe du öffnen möchtest. Du kannst jederzeit wechseln.",
       "current": "Aktuell",
       "open": "Öffnen",
       "opening": "Wird geöffnet …",
-      "emptyTitle": "Noch kein Stammtisch",
-      "emptyMessage": "Du bist noch in keinem Stammtisch. Bitte den Vorstand um einen Einladungslink.",
+      "emptyTitle": "Noch keine Gruppe",
+      "emptyMessage": "Du bist noch in keiner Gruppe. Bitte den Vorstand um einen Einladungslink.",
       "platform": "Plattform verwalten",
-      "selectFailed": "Der Stammtisch konnte nicht geöffnet werden. Bitte erneut versuchen."
+      "selectFailed": "Die Gruppe konnte nicht geöffnet werden. Bitte erneut versuchen.",
+      "openOwn": "Eigene Gruppe eröffnen"
     },
     "platform": {
-      "back": "Zur Stammtisch-Auswahl",
+      "back": "Zur Gruppenauswahl",
       "eyebrow": "Plattform",
-      "title": "Stammtische verwalten",
-      "intro": "Alle Stammtische dieser Installation. Archivierte Stammtische sind für ihre Mitglieder nicht mehr erreichbar.",
-      "createTitle": "Neuen Stammtisch anlegen",
+      "title": "Gruppen verwalten",
+      "intro": "Alle Gruppen dieser Installation. Archivierte Gruppen sind für ihre Mitglieder nicht mehr erreichbar.",
+      "createTitle": "Neue Gruppe anlegen",
       "name": "Name",
       "adminEmail": "E-Mail des Admins (optional)",
-      "adminEmailHint": "Ein bestehendes Konto mit dieser E-Mail wird Admin des Stammtischs; ohne Angabe wirst du selbst Admin.",
+      "adminEmailHint": "Ein bestehendes Konto mit dieser E-Mail wird Admin der Gruppe; ohne Angabe wirst du selbst Admin.",
       "create": "Anlegen",
       "created": "„{name}“ wurde angelegt.",
-      "listTitle": "Alle Stammtische",
-      "unavailable": "Die Stammtische konnten nicht geladen werden.",
-      "empty": "Noch keine Stammtische",
+      "listTitle": "Alle Gruppen",
+      "unavailable": "Die Gruppen konnten nicht geladen werden.",
+      "empty": "Noch keine Gruppen",
       "archived": "Archiviert",
       "members": {
         "one": "{count} Mitglied",
@@ -1805,22 +1812,34 @@
       "planChanged": "„{name}“ hat jetzt den Tarif {plan}."
     },
     "settings": {
-      "eyebrow": "Stammtisch",
-      "title": "Stammtisch",
+      "eyebrow": "Gruppe",
+      "title": "Gruppe",
       "memberCount": {
         "one": "{count} Mitglied",
         "other": "{count} Mitglieder"
       },
-      "switch": "Stammtisch wechseln",
-      "unavailable": "Der Stammtisch konnte nicht geladen werden.",
+      "switch": "Gruppe wechseln",
+      "unavailable": "Die Gruppe konnte nicht geladen werden.",
       "nameTitle": "Name",
-      "name": "Name des Stammtischs",
+      "name": "Name der Gruppe",
       "renamed": "Der Name wurde gespeichert.",
-      "leaveTitle": "Stammtisch verlassen",
+      "leaveTitle": "Gruppe verlassen",
       "leaveHint": "Wenn du „{name}“ verlässt, verlierst du hier alle Rechte. Wieder dabei bist du nur mit einem neuen Einladungslink.",
-      "leave": "Stammtisch verlassen",
+      "leave": "Gruppe verlassen",
       "leaveConfirm": "„{name}“ wirklich verlassen?",
-      "lastManager": "Du bist die letzte Person, die Mitglieder und Rollen verwalten kann. Gib diese Rolle zuerst jemand anderem."
+      "lastManager": "Du bist die letzte Person, die Mitglieder und Rollen verwalten kann. Gib diese Rolle zuerst jemand anderem.",
+      "imageTitle": "Bild",
+      "imageAlt": "Bild der Gruppe {name}",
+      "imageHint": "PNG, JPEG oder GIF. Große Bilder werden vor dem Hochladen verkleinert.",
+      "imageUpload": "Bild hochladen",
+      "imageChange": "Bild ändern",
+      "imageRemove": "Bild entfernen",
+      "imageRemoveConfirm": "Das Bild der Gruppe wirklich entfernen?",
+      "imageUploading": "Bild wird hochgeladen …",
+      "imageSaved": "Das Bild wurde gespeichert.",
+      "imageRemoved": "Das Bild wurde entfernt.",
+      "imageType": "Bitte wähle ein Bild im Format PNG, JPEG oder GIF.",
+      "imageTooLarge": "Das Bild ist zu groß (höchstens {max} MB)."
     },
     "roles": {
       "title": "Rollen & Berechtigungen",
@@ -1856,13 +1875,13 @@
       "profile": "Profil",
       "purchase": "Einkäufe",
       "roles": "Rollen",
-      "stammtisch": "Stammtisch"
+      "stammtisch": "Gruppe"
     },
     "billing": {
       "title": "Tarif",
       "plans": {
         "free": "Kostenlos",
-        "stammtisch": "Stammtisch",
+        "stammtisch": "Standard",
         "verein": "Verein"
       },
       "status": {
@@ -1874,9 +1893,9 @@
       "renews": "Verlängert sich am {date}.",
       "endsOn": "Läuft bis {date}.",
       "comped": "Dieser Tarif wurde kostenlos vergeben.",
-      "pastDue": "Die letzte Zahlung ist fehlgeschlagen. Bitte die Zahlungsart bis {date} aktualisieren, sonst ist der Stammtisch danach nur noch lesbar.",
+      "pastDue": "Die letzte Zahlung ist fehlgeschlagen. Bitte die Zahlungsart bis {date} aktualisieren, sonst ist die Gruppe danach nur noch lesbar.",
       "pastDueNoDate": "Die letzte Zahlung ist fehlgeschlagen. Bitte die Zahlungsart aktualisieren.",
-      "readOnly": "Die Zahlung ist überfällig: Der Stammtisch ist nur noch lesbar. Ansehen geht, Ändern und Buchen nicht. Nach der Zahlung geht sofort wieder alles.",
+      "readOnly": "Die Zahlung ist überfällig: Die Gruppe ist nur noch lesbar. Ansehen geht, Ändern und Buchen nicht. Nach der Zahlung geht sofort wieder alles.",
       "usage": "Verbrauch",
       "members": "Mitglieder",
       "membersOf": "{count} von {max}",
@@ -1915,11 +1934,32 @@
       "supporterHint": "Freiwillig und persönlich: {price} im Monat helfen, Vereint weiterzuentwickeln.",
       "supporterHintNoAmount": "Freiwillig und persönlich: Ein monatlicher Beitrag hilft, Vereint weiterzuentwickeln.",
       "export": "Daten exportieren",
-      "exportHint": "Alle Daten dieses Stammtischs als JSON-Datei.",
+      "exportHint": "Alle Daten dieser Gruppe als JSON-Datei.",
       "success": "Danke! Der Tarif wird in wenigen Sekunden aktiv.",
       "thanks": "Danke für deine Unterstützung!",
       "canceled": "Zahlung abgebrochen, nichts wurde gebucht.",
       "unavailable": "Der Tarif konnte nicht geladen werden."
+    },
+    "open": {
+      "eyebrow": "Neue Gruppe",
+      "title": "Gruppe eröffnen",
+      "doneTitle": "Deine Gruppe ist eröffnet!",
+      "checking": "Wird vorbereitet …",
+      "intro": "Lege deine Gruppe und dein Konto in einem Schritt an. Du wirst Admin der Gruppe.",
+      "createIntro": "Du bist angemeldet. Gib deiner neuen Gruppe einen Namen – du wirst ihr Admin.",
+      "planInfo": "Die Gruppe startet im kostenlosen Tarif mit bis zu 10 Mitgliedern. Einen größeren Tarif kannst du später jederzeit buchen. Mitglieder kommen per Einladungslink dazu.",
+      "name": "Name der Gruppe",
+      "submit": "Gruppe eröffnen",
+      "submitting": "Gruppe wird eröffnet …",
+      "done": "„{name}“ ist eröffnet und dein Konto für {email} angelegt. Melde dich jetzt an, um den Tarif zu wählen und Mitglieder einzuladen.",
+      "haveAccount": "Du hast schon ein Konto?",
+      "loginFirst": "Erst anmelden, dann eröffnen",
+      "back": "Zurück zur Gruppenauswahl",
+      "errors": {
+        "nameRequired": "Bitte gib deiner Gruppe einen Namen.",
+        "checkInput": "Bitte prüfe deine Eingaben. Der Gruppenname darf höchstens {max} Zeichen lang sein, das Passwort braucht mindestens {min} Zeichen.",
+        "selectFailed": "Die Gruppe ist eröffnet, konnte aber nicht geöffnet werden. Du findest sie in der Gruppenauswahl."
+      }
     }
   }
 }

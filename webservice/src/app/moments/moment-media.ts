@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { API_BASE_PATH, ApiError } from '../api/api-client.service';
 import type { MomentMediaDto, MomentMediaLimitsDto } from '../api/api.types';
 import { translate } from '../i18n/i18n.service';
+import { resizeImageToJpeg } from '../ui/image-resize';
 
 /**
  * Bilder und kurze Videos für Moment-Beiträge: Prüfen und Verkleinern im
@@ -112,27 +113,8 @@ function readVideoDuration(url: string): Promise<number | null> {
 }
 
 /** Verkleinert ein Bild auf [MAX_IMAGE_EDGE] und kodiert es als JPEG; `null`, wenn der Browser es nicht lesen kann. */
-async function resizeImage(file: Blob): Promise<Blob | null> {
-  let bitmap: ImageBitmap;
-  try {
-    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  } catch {
-    return null;
-  }
-  try {
-    const scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(bitmap.width, bitmap.height));
-    const width = Math.max(1, Math.round(bitmap.width * scale));
-    const height = Math.max(1, Math.round(bitmap.height * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext('2d');
-    if (!context) return null;
-    context.drawImage(bitmap, 0, 0, width, height);
-    return await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY));
-  } finally {
-    bitmap.close();
-  }
+function resizeImage(file: Blob): Promise<Blob | null> {
+  return resizeImageToJpeg(file, MAX_IMAGE_EDGE, JPEG_QUALITY);
 }
 
 /** Laufender Upload: Ergebnis und Abbruch. */

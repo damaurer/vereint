@@ -75,6 +75,8 @@ function isPublicOrGuestRequest(req: Request): boolean {
     '/api/v1/invites/accept',
     '/api/v1/member-invites/preview',
     '/api/v1/member-invites/register',
+    // Stammtisch eröffnen ohne Konto: legt Konto und Stammtisch an.
+    '/api/v1/signup',
     '/api/v1/auth/access/guest',
     '/api/v1/health',
     '/api/v1/info',

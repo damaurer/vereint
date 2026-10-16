@@ -14,7 +14,9 @@ data class MembershipView(
     val stammtischName: String,
     val roles: Set<String>,
     val permissions: Set<String>,
-    val boardRole: String?
+    val boardRole: String?,
+    /** Version des Gruppenbilds, `null` ohne Bild. */
+    val imageVersion: Int? = null
 )
 
 /**
@@ -54,7 +56,8 @@ class StammtischMemberships(
                 stammtischName = stammtisch.name,
                 roles = roles,
                 permissions = roles.flatMapTo(mutableSetOf()) { definitions[it].orEmpty() } + custom,
-                boardRole = member.boardRole?.name
+                boardRole = member.boardRole?.name,
+                imageVersion = stammtisch.imageVersion.takeIf { stammtisch.imageKey != null }
             )
         }.sortedBy { it.stammtischName.lowercase() }
     }

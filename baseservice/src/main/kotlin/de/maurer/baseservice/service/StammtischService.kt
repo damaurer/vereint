@@ -54,7 +54,7 @@ class StammtischService(
     fun myStammtische(principal: UserPrincipal): List<StammtischMembershipDto> {
         val caller = userService.getOrCreateUser(principal)
         return memberships.memberships(caller.id).map {
-            StammtischMembershipDto(it.stammtischId.toString(), it.stammtischName, it.roles, it.boardRole)
+            StammtischMembershipDto(it.stammtischId.toString(), it.stammtischName, it.roles, it.boardRole, it.imageVersion)
         }
     }
 
@@ -68,7 +68,8 @@ class StammtischService(
             memberCount = memberRepository.countByActiveTrue(),
             myRoles = access.rolesOf(principal, caller),
             myPermissions = access.permissionsOf(principal, caller),
-            createdAt = stammtisch.createdAt
+            createdAt = stammtisch.createdAt,
+            imageVersion = stammtisch.imageVersion.takeIf { stammtisch.imageKey != null }
         )
     }
 

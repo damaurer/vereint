@@ -66,7 +66,7 @@ export const SECONDARY_NAV: readonly NavItem[] = [
     route: '/statistik',
   },
   { id: 'profil', labelKey: 'nav.items.profil', icon: 'user', route: '/profile' },
-  { id: 'stammtisch', labelKey: 'nav.items.stammtisch', icon: 'users', route: '/stammtisch' },
+  { id: 'stammtisch', labelKey: 'nav.items.stammtisch', icon: 'users', route: '/gruppe' },
 ];
 
 /**

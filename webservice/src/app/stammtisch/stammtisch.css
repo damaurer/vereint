@@ -162,6 +162,15 @@ code {
   filter: brightness(0.92);
 }
 
+.st-open-own {
+  margin: 1rem 0 0;
+}
+
+.st-open-own .member-button {
+  display: inline-block;
+  text-decoration: none;
+}
+
 .st-footer-links {
   display: flex;
   flex-wrap: wrap;
@@ -268,4 +277,25 @@ a.member-button {
   border-color: transparent;
   background-color: var(--color-danger-light);
   color: var(--color-danger);
+}
+
+/* Gruppenbild neben dem Namen und zum Hochladen (Einstellungen). */
+.st-identity,
+.st-image-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.st-image-row > div {
+  flex: 1 1 14rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* Die Dateiauswahl öffnet der Knopf daneben. */
+.st-file-input {
+  display: none;
 }

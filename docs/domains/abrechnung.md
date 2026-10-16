@@ -1,4 +1,4 @@
-# Tarife und Abrechnung je Stammtisch
+# Tarife und Abrechnung je Gruppe
 
 Jeder Stammtisch hat einen eigenen Tarif nach dem Finanzierungsmodell. Bezahlt
 wird online über **Stripe**; die App speichert keine Zahlungsdaten, nur die
@@ -6,7 +6,7 @@ Stripe-Kennungen von Kunde und Abo.
 
 ## Tarife
 
-| | Kostenlos | Stammtisch | Verein |
+| | Kostenlos | Standard (Code `stammtisch`) | Verein |
 | :--- | :--- | :--- | :--- |
 | Preis | 0 € | 4 €/Monat oder 40 €/Jahr | 9 €/Monat oder 90 €/Jahr |
 | Mitglieder | bis 10 | bis 40 | unbegrenzt |
@@ -30,14 +30,15 @@ für sich abschließen kann. Er ändert keinen Tarif.
 
 - „Mein Stammtisch" aus der Migration läuft als Tarif Verein mit Status
   `comped` (ohne Zahlung) weiter; am bestehenden Betrieb ändert sich nichts.
-- Neue Stammtische starten im kostenlosen Tarif.
+- Neue Stammtische starten im kostenlosen Tarif, auch die, die Kunden selbst
+  eröffnen (siehe `stammtische.md`, „Eröffnen“).
 - Die Plattform-Administration kann unter `/plattform` jeden Tarif von Hand
   vergeben (`comped`) oder auf kostenlos zurücksetzen, z. B. ohne Stripe oder
   für befreundete Vereine.
 
 ## Ablauf
 
-1. Unter **Stammtisch → Tarif** wählt eine Person mit `billing.manage`
+1. Unter **Gruppe → Tarif** wählt eine Person mit `billing.manage`
    (Systemrolle Admin) Tarif und Zahlweise. Die App leitet zu Stripe Checkout.
 2. Stripe meldet per Webhook an `POST /api/v1/billing/stripe/webhook`; der
    Fachservice prüft die Signatur und setzt Tarif und Status.
@@ -76,7 +77,7 @@ nicht enthalten. Der Export funktioniert auch im Nur-Lesen-Zustand.
 Ohne Konfiguration ist die Online-Zahlung aus (`503 billing_unavailable`); die
 App zeigt die Tarife trotzdem an.
 
-1. In Stripe zwei Produkte (Stammtisch, Verein) mit je einem Monats- und einem
+1. In Stripe zwei Produkte (Standard, Verein) mit je einem Monats- und einem
    Jahrespreis anlegen, optional ein Produkt „Förderbeitrag" mit Monatspreis.
 2. Kundenportal in Stripe aktivieren (Rechnungen, Zahlart, Kündigung,
    Tarifwechsel zwischen den vier Preisen).
@@ -91,7 +92,7 @@ App zeigt die Tarife trotzdem an.
 | `STRIPE_ENABLED` | `true` |
 | `STRIPE_SECRET_KEY` | geheimer API-Schlüssel (`sk_live_...`) |
 | `STRIPE_WEBHOOK_SECRET` | Signatur-Secret des Webhooks (`whsec_...`) |
-| `STRIPE_PRICE_STAMMTISCH_MONTH`, `..._YEAR` | Preis-IDs Tarif Stammtisch |
+| `STRIPE_PRICE_STAMMTISCH_MONTH`, `..._YEAR` | Preis-IDs Tarif Standard |
 | `STRIPE_PRICE_VEREIN_MONTH`, `..._YEAR` | Preis-IDs Tarif Verein |
 | `STRIPE_PRICE_SUPPORTER` | Preis-ID Förderbeitrag (optional) |
 

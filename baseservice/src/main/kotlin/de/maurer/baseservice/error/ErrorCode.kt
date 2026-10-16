@@ -38,6 +38,7 @@ object ErrorCode {
     const val PLAN_LIMIT_STORAGE = "plan_limit_storage"
     const val PLAN_LIMIT_VIDEOS = "plan_limit_videos"
     const val PLAN_LIMIT_KIOSK = "plan_limit_kiosk"
+    const val STAMMTISCH_LIMIT = "stammtisch_limit"
     const val STAMMTISCH_READ_ONLY = "stammtisch_read_only"
     const val BILLING_UNAVAILABLE = "billing_unavailable"
     const val BILLING_NO_CUSTOMER = "billing_no_customer"

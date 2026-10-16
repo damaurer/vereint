@@ -44,14 +44,14 @@ describe('PlatformComponent', () => {
     return { fixture, cmp: fixture.componentInstance as unknown as PlatformInternals };
   };
 
-  it('lists all Stammtische with member count', () => {
+  it('lists all groups with member count', () => {
     const { fixture } = create();
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('Eber');
     expect(text).toContain('12 Mitglieder');
   });
 
-  it('creates a Stammtisch with an optional admin e-mail', () => {
+  it('creates a group with an optional admin e-mail', () => {
     const { cmp } = create();
     cmp.newName = ' Neu ';
     cmp.adminEmail = 'chef@example.org';
@@ -71,7 +71,7 @@ describe('PlatformComponent', () => {
   it('shows plan, payment status, storage and the read-only mark', () => {
     const { fixture } = create();
     const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Tarif: Stammtisch');
+    expect(text).toContain('Tarif: Standard');
     expect(text).toContain('Zahlung offen');
     expect(text).toContain('3 GB belegt');
     expect(text).toContain('Nur lesbar');
