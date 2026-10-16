@@ -1,141 +1,93 @@
-# 🍻 Vereint – Moderne Vereinsverwaltung & Digitale Strichliste
+# 🍻 Vereint – Vereinsverwaltung & digitale Strichliste
 
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1+-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.3+-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![Angular](https://img.shields.io/badge/Angular-22_SSR-DD0031?logo=angular&logoColor=white)](https://angular.dev/)
-[![Keycloak](https://img.shields.io/badge/Keycloak-26_OIDC-4D4D4D?logo=redhat&logoColor=white)](https://www.keycloak.org/)
+[![Keycloak](https://img.shields.io/badge/Keycloak-26.8-4D4D4D?logo=redhat&logoColor=white)](https://www.keycloak.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![MinIO](https://img.shields.io/badge/MinIO-S3_Storage-C72C48?logo=minio&logoColor=white)](https://min.io/)
+[![AWS](https://img.shields.io/badge/AWS-S3_%26_EC2-FF9900?logo=amazonwebservices&logoColor=white)](infra/aws/)
 
-**Vereint** ist eine moderne, hochperformante All-in-One-Plattform für Vereine, Clubs und Organisationen. Sie kombiniert ein **doppeltes Kassenbuch (Double-Entry Ledger)**, eine blitzschnelle **Tablet-Strichliste (Kiosk Touch Mode)**, ein vollumfängliches **Event- & Teilnehmer-Management mit Gäste-Einladungstoken**, einen **Getränkekatalog mit Sublisten**, **Moments & Rituale (Gemeinschaftsmomente)**, **Vereinschat & Push-Benachrichtigungen** sowie tiefe **Verbrauchs- und Finanzanalysen**.
+**Vereint** ist die App für den Verein: Events mit Zu- und Absagen, Vereinschat,
+Direkt- und Event-Chats, Guthaben statt Bargeld, Bezahlen per Barcode-Scan, das
+Thekenterminal im Kiosk-Modus, Getränke- und Speisenkatalog, Moments mit Fotos
+und kurzen Videos, Statistiken und Einladungen per Link. Sie läuft als
+installierbare Web-App (PWA) mit Web Push.
+
+**Einstieg und Betriebsüberblick: das [Projekt-Wiki](https://github.com/damaurer/vereint/wiki)**
+(gepflegt unter [`wiki/`](wiki/)). Anleitungen je Rolle mit Bildschirmfotos stehen
+im [Benutzerhandbuch](docs/handbuch/README.md).
 
 ---
 
-## 🚀 Schnellstart & Lokale Entwicklung (Quickstart)
+## 🚀 Lokale Entwicklung
 
-### Voraussetzungen
-- **Docker & Docker Compose** (Docker Desktop oder Engine)
-- **Node.js 22+ & npm 11+** (für das Frontend/BFF)
-- **Java 25 JDK** (für das Spring Boot Backend)
+Voraussetzungen: Docker mit Compose, Java 25, Node.js ≥ 22.22.3 und npm 11.
 
-### 1. Infrastruktur starten (PostgreSQL, Keycloak, MinIO)
 ```bash
-# Kopiere die Beispiel-Umgebungskonfiguration
+# 1. Umgebungsvariablen anlegen; PUBLIC_BASE_URL auf http://localhost:4200 setzen
 cp .env.example .env
 
-# Starte alle Abhängigkeiten im Hintergrund
+# 2. PostgreSQL (2x), Keycloak und MinIO (lokaler S3-Ersatz) starten
 docker compose up -d
+
+# 3. Fachservice, Port 8081
+cd baseservice && ./gradlew bootRun
+
+# 4. Oberfläche mit SSR und BFF, Port 4200
+cd webservice && npm install && npm start
 ```
 
-### 2. Backend starten (`baseservice`)
-```bash
-cd baseservice
-./gradlew bootRun
-# Backend läuft auf http://localhost:8080
-```
+Die App läuft dann unter `http://localhost:4200`. Der Entwicklungs-Realm legt die
+Konten `admin`, `board` und `member` an; ihre Passwörter stehen in der `.env`
+(`KEYCLOAK_SEED_*_PASSWORD`) und müssen beim ersten Login geändert werden.
 
-### 3. Frontend & SSR-BFF starten (`webservice`)
-```bash
-cd webservice
-npm install
-npm run dev:ssr
-# Frontend läuft auf http://localhost:4000
-```
-
-### 4. Standard-Zugangsdaten (Development Seed)
-
-| Benutzername | Passwort | Zugewiesene Rollen | Anwendungsbereich |
-| :--- | :--- | :--- | :--- |
-| `admin` | `admin` | `admin`, `board`, `member` | Systemadministration & Vollzugriff |
-| `board` | `board` | `board`, `member` | Vorstand (Events, Kasse, Broadcasts) |
-| `member` | `member` | `member` | Reguläres Vereinsmitglied |
-| `tablet` | `tablet` | `member`, `tabletRecorder` (`purchase.tablet`) | Kiosk-Tablet an der Vereinstheke |
+Details: [Wiki: Lokale Entwicklung](https://github.com/damaurer/vereint/wiki/Lokale-Entwicklung)
+und [docs/operations/local-setup-docker.md](docs/operations/local-setup-docker.md).
 
 ---
 
-## 🏛️ Systemarchitektur im Überblick
+## 🏛️ Architektur
 
 ```mermaid
-graph TD
-    subgraph ClientLayer ["Client & PWA Layer"]
-        Browser["Angular 22 PWA (Browser / Mobile / Tablet)"]
-        SW["Service Worker (VAPID Push / Offline Caching)"]
-    end
-
-    subgraph BFFLayer ["Express SSR & BFF (Port 4000)"]
-        SSR["Express Server (Angular Engine)"]
-        AuthBFF["OIDC / PKCE & Session Cookie Manager"]
-        ApiProxy["API Proxy Middleware (/api/*)"]
-    end
-
-    subgraph BackendLayer ["Spring Boot Kotlin Backend (baseservice - Port 8080)"]
-        SecurityFilter["Spring Security (JWT Validator & Role Matrix)"]
-        Controllers["REST Controllers (Tablet, Ledger, Events, Chat, etc.)"]
-        Services["Business Services (Idempotency, Domain Logic)"]
-    end
-
-    subgraph ExternalInfra ["Infrastructure Services"]
-        KC["Keycloak 26 (Port 8082 / OIDC Provider)"]
-        PG["PostgreSQL 17 (Port 5432 / Liquibase Managed)"]
-        S3["MinIO S3 (Port 9000 / Object Storage)"]
-    end
-
-    Browser -->|HTTP / HTML / Assets| SSR
-    Browser -->|OIDC Login / Refresh| AuthBFF
-    Browser -->|BFF REST Requests| ApiProxy
-    SW -->|Push Events| Browser
-
-    AuthBFF -->|Token Exchange| KC
-    ApiProxy -->|Forward with Bearer JWT| SecurityFilter
-    SecurityFilter --> Controllers
-    Controllers --> Services
-    Services -->|JPA / SQL| PG
-    Services -->|Asset Uploads| S3
+graph LR
+    Browser["Browser / PWA"] -->|HTTPS| Caddy
+    Caddy -->|"/kc/*"| Keycloak
+    Caddy -->|"/*"| Web["webservice<br/>Angular SSR + BFF"]
+    Web -->|"/api/v1"| Base["baseservice<br/>Spring Boot"]
+    Base --> PG[("PostgreSQL")]
+    Keycloak --> PG
+    Base -->|"verschlüsselte Dateien"| S3[("AWS S3")]
 ```
 
----
-
-## 📚 Vollständige Dokumentations-Suite
-
-Einstieg und Betriebsüberblick: das **[Projekt-Wiki](https://github.com/damaurer/vereint/wiki)** (gepflegt unter [`wiki/`](wiki/)).
-
-Die Dokumentation ist lückenlos nach Fachbereichen und technischen Schichten unter `docs/` gegliedert:
-
-### 🏛️ [Architektur & Sicherheit](docs/architecture/)
-- **[System-Überblick](docs/architecture/system-overview.md)** – Multi-Tier Topologie, Komponenten-Interaktion, SSR-Hydration & Technologiestack.
-- **[Sicherheit & Authentifizierung](docs/architecture/security-and-auth.md)** – Keycloak OIDC/PKCE Flow, HTTP-Only Cookies, Rollen- & Berechtigungsmatrix, Spring Security Filter.
-- **[Datenmodell & Schema](docs/architecture/data-model.md)** – Vollständiges ERD-Diagramm, Tabellenstrukturen, Constraints & Liquibase Migrationen.
-
-### 💼 [Fachdomänen & Module (Functional & Technical Deep Dives)](docs/domains/)
-- **[Benutzerverwaltung & Authentifizierung](docs/domains/auth-and-user-management.md)** – Profile, Rollen, Account-Deaktivierung, Keycloak Sync & Provisionierung.
-- **[Kassenbuch & Finanzwesen (Ledger)](docs/domains/ledger-and-finance.md)** – Double-Entry Journal, Buchungstypen (`topup`, `purchase`, `payout`, `correction`), Kontostand & Idempotenz.
-- **[Getränkekatalog & Sublisten](docs/domains/drink-catalog-and-sublists.md)** – Master-Katalog, Kategorien und Event-Sublisten.
-- **[Moments & Rituale (Gemeinschaftsmomente)](docs/domains/moments-and-rituals.md)** – Spontane Momente gemeinsamer Aktivität, Multi-Status-Updates, Welt-Karten und Event-Kalender-Archivierung.
-- **[Event-Management & Gast-Einladungen](docs/domains/events-and-invites.md)** – Event-Lifecycle, Teilnehmerverwaltung, Krypto-Gasttoken und passwortlose Anmeldung.
-- **[Tablet Strichlisten-Recorder](docs/domains/tablet-strichliste-recorder.md)** – Touch-Kiosk UI, 1-Tap-Getränkebuchung, Rundenabrechnung & Abendabschluss.
-- **[Kommunikation & Push-Benachrichtigungen](docs/domains/chat-and-push-notifications.md)** – Vereinskanäle, Direktnachrichten, VAPID Web Push & Board-Broadcasts.
-- **[Statistiken & Eber-Analytics](docs/domains/statistics-and-analytics.md)** – Verbrauchsanalysen, Top-Listen, Anwesenheiten und Finanzkurven.
-
-### 💻 [Frontend, PWA & Design-System](docs/frontend/)
-- **[Angular SSR, BFF & PWA](docs/frontend/angular-ssr-and-pwa.md)** – Express Server-Side Rendering, TransferState Hydration, Service Worker Cache Policies.
-- **[UI-Komponenten & Optimus Design-System](docs/frontend/ui-components-and-design-system.md)** – Standalone UI-Komponenten (`balance-card`, `modal`, `stepper` etc.) & Design Tokens.
-
-### 🔌 [API-Referenz & Fehlerbehandlung](docs/api/)
-- **[REST-API Referenz & DTOs](docs/api/rest-api-reference.md)** – Umfassender Endpunktkatalog, Request/Response Payloads & Validierungsregeln.
-- **[Fehlerbehandlung & Idempotenz-Standards](docs/api/error-handling-and-idempotency.md)** – RFC 7807 Problem Details, UUIDv4 Idempotenzschlüssel & Retry-Sicherheit.
-
-### ⚙️ [Betrieb & Infrastruktur](docs/operations/)
-- **[Lokales Docker Setup & Umgebungsvariablen](docs/operations/local-setup-docker.md)** – `docker-compose.yml`, Ports, Healthchecks und `.env`-Konfiguration.
-- **[Keycloak & S3 Objektspeicher](docs/operations/keycloak-and-storage.md)** – Realm-Import/Export, MinIO S3 Buckets & Asset-Handling.
-- **[Datenbankmigrationen (Liquibase)](docs/operations/database-migrations.md)** – Master-Changelog, XML Changesets & Migrations-Best-Practices.
+Produktion: ein ARM-Server bei AWS in Frankfurt, per Terraform angelegt
+([infra/aws](infra/aws/README.md)), Docker Compose hinter Caddy
+([deploy](deploy/README.md)). Chat-Nachrichten, Mitteilungen, Bilder und Videos
+verschlüsselt der baseservice mit AES-256-GCM, bevor sie gespeichert werden.
+Jeder Merge nach `main` rollt mit Backup, Health Check und automatischem
+Rollback aus.
 
 ---
 
-## 🛠️ Modulübersicht im Repository
+## 🛠️ Module
 
-| Verzeichnis | Technologie | Zweck & Verantwortung |
+| Verzeichnis | Technologie | Aufgabe |
 | :--- | :--- | :--- |
-| `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-Backend, Business-Logik, JPA/PostgreSQL, Liquibase, S3 Storage, Web Push. |
-| `webservice/` | Angular 22, Express 5, TypeScript 6 | SSR-BFF, PWA Frontend, Session-Cookie Handling, Optimus UI Komponenten. |
-| `keycloak/` | Keycloak 26 | OIDC/OAuth2 Identity Provider, Realm-Definitionen (`realm-export-dev.json`). |
-| `docs/` | Markdown & Mermaid | Vollständige technische und fachliche Dokumentationssuite. |
+| `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-API, Fachlogik, PostgreSQL/Liquibase, Verschlüsselung, S3, Web Push |
+| `webservice/` | Angular 22, Express 5, TypeScript 6 | Oberfläche, PWA, SSR, BFF mit Session-Cookie und API-Proxy |
+| `keycloak/` | Keycloak 26.8.1 | Realm-Definitionen, Login-Theme, Produktions-Image |
+| `deploy/` | Docker Compose, Caddy | Produktions-Stack, Backups, Deployment-Skripte |
+| `infra/aws/` | Terraform | AWS-Server, Buckets, Secrets, Alarme, GitHub-OIDC |
+| `e2e/` | Playwright | Tests gegen den kompletten Produktions-Stack |
+| `scripts/handbook/` | Playwright | Bildschirmfotos für das Benutzerhandbuch |
+| `docs/` | Markdown | Technische und fachliche Dokumentation, Benutzerhandbuch |
+| `wiki/` | Markdown | Quelle des GitHub-Wikis |
+
+---
+
+## 📚 Dokumentation
+
+- [docs/README.md](docs/README.md) – Übersicht aller Dokumente und Glossar
+- [docs/handbuch/](docs/handbuch/README.md) – Benutzerhandbuch je Rolle
+- [deploy/README.md](deploy/README.md) – Produktionsbetrieb, Backups, Deployments
+- [infra/aws/README.md](infra/aws/README.md) – AWS mit Terraform
+- [e2e/README.md](e2e/README.md) – E2E-Tests

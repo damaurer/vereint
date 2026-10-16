@@ -1,60 +1,72 @@
 # Betriebshandbuch: Keycloak IAM & S3-Objektspeicher
 
-Dieses Dokument beschreibt die Konfiguration und Verwaltung des Identity Providers **Keycloak 26** sowie des **MinIO S3-kompatiblen Objektspeichers**.
+Dieses Dokument beschreibt die Konfiguration des Identity Providers **Keycloak 26.8.1** und des Objektspeichers (**AWS S3** in Produktion, **MinIO** lokal). Den Produktionsbetrieb beschreibt [deploy/README.md](../../deploy/README.md).
 
 ---
 
-## 🔐 Keycloak 26 OIDC Realm Konfiguration
+## 🔐 Keycloak OIDC Realm Konfiguration
 
-Keycloak dient als zentraler Identity & Access Provider (OIDC). Für die lokale Entwicklung wird das Realm `vereint` automatisch beim Start des Containers importiert.
+Keycloak ist der zentrale Identity & Access Provider (OIDC). Das Realm `vereint` wird beim ersten Start des Containers importiert; einen bestehenden Realm überschreibt der Import nicht.
 
 ### 1. Realm-Import & Speicherorte
-- **Entwicklungs-Export**: `keycloak/dev/realm-export-dev.json` (wird in `/opt/keycloak/data/import` gemountet).
-- **Produktions-Export**: `keycloak/realm-export.json`.
-- **Admin-Konsole**: `http://localhost:8082/admin` (Login: `admin` / `admin`).
+- **Entwicklungs-Export**: `keycloak/dev/realm-export-dev.json` (wird in `/opt/keycloak/data/import` gemountet), mit Seed-Benutzern und erlaubter Registrierungsseite.
+- **Produktions-Export**: `keycloak/realm-export.json`, ohne Seed-Benutzer und ohne offene Registrierung; im Produktions-Image eingebaut.
+- **Admin-Konsole lokal**: `http://localhost:8082/admin` (Zugang aus `KEYCLOAK_ADMIN` / `KEYCLOAK_ADMIN_PASSWORD` der `.env`).
+- **Admin-Konsole in Produktion**: von außen gesperrt, nur per SSM-Tunnel, siehe [deploy/README.md](../../deploy/README.md#keycloak-verwaltung).
 
 ### 2. OIDC Clients
-| Client ID | Protokoll | Flow | Redirect URIs | Zweck |
-| :--- | :--- | :--- | :--- | :--- |
-| `vereint-web` | OpenID Connect | Standard Flow mit **PKCE (S256)** | `http://localhost:4000/auth/callback` | Web-BFF (Express / Angular) |
-| `vereint-backend` | OpenID Connect | Bearer-Only / Resource Server | N/A | Spring Boot JWT-Validierung |
+| Client ID | Flow | Zweck |
+| :--- | :--- | :--- |
+| `vereint-web` | Standard Flow mit **PKCE (S256)**, vertraulich | Login über den BFF (lokal `http://localhost:4200/api/auth/callback`) |
+| `vereint-service` | Service-Account | Zugriffe des Fachservice |
+| `vereint-tablet` | Service-Account | Thekenterminal (Rolle `tabletRecorder`) |
+| `vereint-registration` | Service-Account, nur `realm-management/manage-users` | Kontoanlage über [Einladungslinks](../domains/member-invites.md) |
 
-### 3. Vorkonfigurierte Seed-Benutzer
+Die Secrets kommen beim Import aus Umgebungsvariablen (`keycloak/README.md`); in Produktion erzeugt Terraform sie im SSM Parameter Store.
 
-| Benutzername | Passwort | Zugewiesene Rollen | Zweck |
-| :--- | :--- | :--- | :--- |
-| `admin` | `admin` | `admin`, `board`, `member` | Vollständige Vereins- und Systemadministration |
-| `board` | `board` | `board`, `member` | Vorstandsmitglied (Events, Kassenbuch, Chat) |
-| `member` | `member` | `member` | Normales Vereinsmitglied (Profil, Kasse, RSVPs) |
-| `tablet` | `tablet` | `member`, `tabletRecorder` | Kiosk-Tablet an der Vereinstheke |
+### 3. Seed-Benutzer (nur Entwicklungs-Realm)
 
-### 4. Login-Theme `vereint`
-- **Speicherort**: `keycloak/themes/vereint/login` (wird in `/opt/keycloak/themes` gemountet), Basis `keycloak.v2` (PatternFly 5).
-- **Aktivierung**: Beide Realm-Exports setzen `loginTheme: "vereint"`, `defaultLocale: "de"` und `supportedLocales: ["de", "en"]`; nach `docker compose up` ist das Theme ohne manuelle Konfiguration aktiv.
-- **Gestaltete Seiten**: Login, Passwort zurücksetzen und Registrierung (Registrierung nur im Entwicklungs-Realm aktiviert). Alle weiteren Keycloak-Seiten erben Rahmen und Branding.
-- **Design**: Split-Screen mit Vereint-Verlauf und Logo, Optimus-Design-Tokens, responsiv ab 320 px, automatischer Dark-Mode über `prefers-color-scheme`.
-- **Dev-Cache**: `KC_SPI_THEME_CACHE_THEMES=false`, `KC_SPI_THEME_CACHE_TEMPLATES=false`, `KC_SPI_THEME_STATIC_MAX_AGE=-1` in `docker-compose.yml` – Änderungen sind sofort sichtbar. In Produktion diese Variablen nicht setzen (Cache bleibt aktiv). Details in `keycloak/README.md`.
+| Benutzername | Rollen | Passwort |
+| :--- | :--- | :--- |
+| `admin` | `admin`, `board`, `member` | `KEYCLOAK_SEED_ADMIN_PASSWORD` aus der `.env`, temporär |
+| `board` | `board`, `treasurer`, `member` | `KEYCLOAK_SEED_BOARD_PASSWORD`, temporär |
+| `member` | `member` | `KEYCLOAK_SEED_MEMBER_PASSWORD`, temporär |
+
+Im Produktions-Realm gibt es keine Benutzer; der erste Administrator wird nach dem ersten Deployment von Hand angelegt.
+
+### 4. Sicherheitseinstellungen
+- Passwortregeln: 10 bis 128 Zeichen, nicht gleich Benutzername oder E-Mail, nicht eines der letzten drei.
+- Brute-Force-Schutz: nach 5 Fehlversuchen wachsende Sperre.
+- Keine Direct Access Grants, keine Wildcard-Redirects, Refresh-Token-Rotation.
+- Login- und Admin-Ereignisse werden 90 Tage gespeichert.
+- Zwei-Faktor-Anmeldung ist freiwillig: Im Profil der App führt „Zwei-Faktor-Anmeldung einrichten“ zur Keycloak-Kontoverwaltung, wo eine Authenticator-App hinterlegt wird.
+
+### 5. Login-Theme `vereint`
+- **Speicherort**: `keycloak/themes/vereint/login`, Basis `keycloak.v2` (PatternFly 5).
+- **Aktivierung**: Beide Realm-Exports setzen `loginTheme: "vereint"`, `defaultLocale: "de"` und `supportedLocales: ["de", "en"]`.
+- **Gestaltete Seiten**: Login, Passwort zurücksetzen und Registrierung. Alle weiteren Keycloak-Seiten (z. B. OTP) erben Rahmen und Branding.
+- **Dev-Cache**: `docker-compose.yml` schaltet den Theme-Cache ab, damit Änderungen sofort sichtbar sind. In Produktion bleibt der Cache aktiv. Details in `keycloak/README.md`.
 
 ---
 
-## 🪣 MinIO / S3 Objektspeicher
+## 🪣 S3-Objektspeicher
 
-Bilder (Profilbilder, Event-Banner, Getränkefotos) werden in S3-kompatiblen Buckets gespeichert. In der Datenbank verbleiben lediglich die Metadaten (`image_assets`).
+Bilder sowie Fotos und Videos aus Moments liegen im Objektspeicher; in der Datenbank stehen nur die Metadaten (`image_assets`, Moment-Medien).
 
-### 1. Bucket & Zugangsdaten
-- **S3 API Endpunkt**: `http://localhost:9000`
-- **MinIO Web Console**: `http://localhost:9001` (Login: `vereint-minio-admin` / `change-me-minio-secret`)
-- **Bucket-Name**: `vereint`
+| Umgebung | Speicher |
+| :--- | :--- |
+| Produktion | Privater AWS-S3-Bucket `vereint-app-<account>`, von Terraform angelegt, serverseitig verschlüsselt, nur per TLS erreichbar |
+| Lokal | MinIO aus `docker-compose.yml`: API `http://localhost:9000`, Console `http://localhost:9001` (Zugang aus `S3_ACCESS_KEY` / `S3_SECRET_KEY` der `.env`), Bucket `vereint` |
+| E2E-Tests | S3-Ersatz im Test-Stack |
 
-### 2. Speicher-Schlüsselstruktur (Storage Keys)
-Dateien werden nach Zweck strukturiert abgelegt:
+### Speicher-Schlüssel
 ```text
-images/profile/{user_uuid}/{image_uuid}.webp
-images/event/{event_uuid}/{image_uuid}.webp
-images/drink/{drink_uuid}/{image_uuid}.webp
-images/moment/{session_uuid}/{image_uuid}.webp
+{purpose}/{ziel_uuid}/{datei_uuid}.{png|jpg|gif}   # purpose: profile, event, drink, moment
+moment/{moment_uuid}/{datei_uuid}.bin              # Fotos und Videos aus Moments
 ```
 
-### 3. Presigned URLs & Sicherheit
-- Bilder werden nicht öffentlich freigegeben, sondern über kurzlebige **Presigned URLs** (`S3_URL_TTL_SECONDS: 900`, 15 Minuten) für autorisierte Clients gestreamt.
-- Der direkte Zugriff auf den S3-Speicher erfolgt ausschließlich serverintern über `baseservice` (`S3ObjectStorage.kt`).
+### Sicherheit
+- Jede Datei wird vor dem Hochladen mit `DATA_ENCRYPTION_KEY` (AES-256-GCM) verschlüsselt; Moment-Medien in 64-KiB-Blöcken, damit auch Videos gestreamt statt ganz im Speicher gehalten werden.
+- Bilder werden vor dem Verschlüsseln von EXIF/XMP-Metadaten (z. B. GPS) befreit, Videos von Orts- und Geräteangaben.
+- Der Browser lädt Dateien nie direkt aus S3, sondern nur über berechtigungsgeprüfte Endpunkte des baseservice (`/api/v1/images/{id}/content`, `/api/v1/events/{eventId}/moments/{momentId}/media/{mediaId}/content` mit HTTP-Range für Videos).
+- Nur der baseservice spricht mit S3 (`S3ObjectStorage.kt`); er signiert seine Anfragen selbst (SigV4, `S3_URL_TTL_SECONDS`) und gibt keine Links an Clients heraus.

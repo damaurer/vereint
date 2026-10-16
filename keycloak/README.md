@@ -19,7 +19,7 @@ KEYCLOAK_SEED_BOARD_PASSWORD     nur Entwicklungsimport
 KEYCLOAK_SEED_MEMBER_PASSWORD    nur Entwicklungsimport
 ```
 
-Für die lokale Entwicklung wird `./keycloak/dev` als Importverzeichnis eingebunden; Keycloak liest nur reguläre `.json`-Dateien der obersten Ebene, Unterverzeichnisse werden ignoriert. Die Werte der Realm-Härtung und ihr Zusammenspiel mit der Express-Session sind in `docs/authentifizierung.md` beschrieben.
+Für die lokale Entwicklung wird `./keycloak/dev` als Importverzeichnis eingebunden; Keycloak liest nur reguläre `.json`-Dateien der obersten Ebene, Unterverzeichnisse werden ignoriert. Die Werte der Realm-Härtung und ihr Zusammenspiel mit der Express-Session sind in [`docs/backend-for-frontend/03-authentication-and-session.md`](../docs/backend-for-frontend/03-authentication-and-session.md) beschrieben.
 
 Im Entwicklungs-Export ist zusätzlich `registrationAllowed: true` gesetzt, damit die Registrierungsseite lokal erreichbar ist. Achtung: `default-roles-vereint` vergibt automatisch die Rolle `member`, registrierte Benutzer erhalten also sofort Mitgliedsrechte. Im deployten Export bleibt die Registrierung deaktiviert.
 

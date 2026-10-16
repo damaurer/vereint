@@ -11,9 +11,11 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den interaktiven Austausch zw
 - **Event-Chaträume**: Jeder Veranstaltung kann ein eigener temporärer Chatraum zugeordnet werden, in dem Teilnehmer und autorisierte Gäste Fragen zu Treffpunkt, Mitbringseln oder Ablauf stellen können.
 - **Direktnachrichten (Direct Messages)**: 1:1-Gespräche zwischen zwei Mitgliedern.
 - **Gast-Chat**: Externe Gäste mit gültigem Einladungstoken können im jeweiligen Event-Chatraum mitlesen und schreiben, ohne ein Vereinsbenutzerkonto zu besitzen.
+- **Ungelesen-Zähler**: Je Mitglied und Konversation wird der Lesestand gespeichert (`conversation_members.last_read_at`); die App zeigt die Zahl ungelesener Nachrichten als Badge am Chat-Eintrag der Navigation.
+- **Verschlüsselung**: Nachrichten werden vor dem Speichern mit AES-256-GCM verschlüsselt (`DATA_ENCRYPTION_KEY`).
 
 ### 2. Push-Benachrichtigungen & Board-Broadcasts
-- **Web Push Notifications**: Browserbasierte Benachrichtigungen (auch bei geschlossener App auf Smartphone oder Desktop) bei neuen Chat-Nachrichten, Event-Einladungen oder Kassenabbuchungen.
+- **Web Push Notifications**: Browserbasierte Benachrichtigungen (auch bei geschlossener App auf Smartphone oder Desktop) für Mitteilungen: Event-Einladungen und Erinnerungen, neue Moments sowie Rundbriefe und Nachrichten des Vorstands. Einzelne Chat-Nachrichten lösen keinen Push aus; sie erscheinen über den Ungelesen-Zähler.
 - **Vorstands-Broadcasts**: Vorstände und Administratoren können wichtige Ankündigungen an alle Mitglieder oder gezielte Personen senden (`SendNotificationRequest`).
 
 ---

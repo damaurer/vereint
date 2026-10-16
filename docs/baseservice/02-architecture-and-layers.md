@@ -39,7 +39,7 @@ graph TD
 
   subgraph InfraLayer["5. Infrastruktur"]
     DB[(PostgreSQL)]
-    S3Store[(MinIO / S3)]
+    S3Store[(S3: AWS / lokal MinIO)]
     PushGw[(Web Push Gateway)]
   end
 

@@ -1,19 +1,19 @@
 # 🔌 Integrationen, Objektspeicher & Push-Dienste
 
-In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: S3-kompatibler Objektspeicher (MinIO / AWS S3), Web-Push-Zustellung über das VAPID-Protokoll, WebSocket-Echtzeit-Chat sowie die zugehörigen Feature-Toggles.
+In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: S3-kompatibler Objektspeicher (AWS S3 in Produktion, MinIO lokal), Web-Push-Zustellung über das VAPID-Protokoll, WebSocket-Echtzeit-Chat sowie die zugehörigen Feature-Toggles.
 
 ---
 
 ## 🗄️ Objektspeicher (`ObjectStorage.kt`)
 
-Der `baseservice` speichert Binärdaten (Profil- und Eventbilder) nicht in der relationalen Datenbank, sondern in einem S3-kompatiblen Objektspeicher.
+Der `baseservice` speichert Binärdaten (Bilder sowie Fotos und Videos aus Moments) nicht in der relationalen Datenbank, sondern in einem S3-kompatiblen Objektspeicher.
 
 ```mermaid
 graph LR
   Client[Browser / PWA] -->|1. Multipart Upload| Ctrl[ImageController]
   Ctrl --> Svc[ImageService]
   Svc --> Store{S3_ENABLED?}
-  Store -- true --> S3[S3ObjectStorage - MinIO / S3]
+  Store -- true --> S3[S3ObjectStorage - AWS S3 / MinIO]
   Store -- false --> Mem[InMemoryObjectStorage]
   Svc --> DB[(PostgreSQL: image_assets)]
 
@@ -25,24 +25,26 @@ graph LR
 ```
 
 ### 1. Schnittstelle `ObjectStorage`
-Die Fachschicht (`ImageService`) interagiert ausschließlich über das Interface `ObjectStorage`:
+Die Fachschicht (`ImageService`, `MomentMediaService`) interagiert ausschließlich über das Interface `ObjectStorage`:
 
 ```kotlin
 interface ObjectStorage {
     fun store(key: String, data: ByteArray, contentType: String)
     fun read(key: String): ByteArray?
+    fun storeStream(key: String, data: InputStream, length: Long, contentType: String)
+    fun readRange(key: String, start: Long, endInclusive: Long): InputStream?
     fun delete(key: String)
     fun presignedGetUrl(key: String, ttl: Duration): URI
 }
 ```
 
 ### 2. Implementierungen & Konfiguration (`StorageConfig.kt`)
-- **`S3ObjectStorage`**: Aktiviert, wenn `vereint.storage.enabled=true` (`S3_ENABLED=true`). Verwendet AWS S3 SDK / MinIO mit Path-Style-Access (`/bucket/key`), Access- und Secret-Key.
+- **`S3ObjectStorage`**: Aktiviert, wenn `vereint.storage.enabled=true` (`S3_ENABLED=true`). Spricht die S3-REST-API mit selbst signierten Anfragen (SigV4) an, lokal gegen MinIO mit Path-Style-Access (`/bucket/key`), in Produktion gegen AWS S3 mit dem IAM-Benutzer `vereint-app-storage`.
 - **`InMemoryObjectStorage`**: Fallback für lokale Entwicklung und Tests (`S3_ENABLED=false`). Hält Binärdaten in einer Concurrent-Map und erzeugt lokale Data-URIs.
 - **Sicherheitsgarantie**: S3-Credentials gelangen **niemals** an den Client. Der Browser lädt Bilder nie direkt aus S3, sondern nur über `GET /api/v1/images/{id}/content`: Der `ImageService` prüft die Berechtigung bei jedem Abruf, liest den Chiffretext und liefert die entschlüsselten Daten mit `Cache-Control: private, no-store` aus. Presigned URLs nutzt der Service nur noch intern für den eigenen Zugriff auf S3 (Lebensdauer `S3_URL_TTL_SECONDS`).
 
 ### 3. Anwendungsverschlüsselung (`crypto/DataEncryptor.kt`)
-Bilddateien, Chat-Nachrichten (`chat_messages.message`) sowie Titel und Text von Benachrichtigungen (`notifications.title`, `notifications.body`) werden vor dem Speichern mit **AES-256-GCM** verschlüsselt. Ein geleakter Datenbank-Dump oder Bucket-Inhalt ist ohne den Schlüssel unlesbar; GCM erkennt zusätzlich jede Manipulation.
+Bilddateien, Fotos und Videos aus Moments (in 64-KiB-Blöcken, damit Videos gestreamt werden können), Chat-Nachrichten (`chat_messages.message`) sowie Titel und Text von Benachrichtigungen (`notifications.title`, `notifications.body`) werden vor dem Speichern mit **AES-256-GCM** verschlüsselt. Ein geleakter Datenbank-Dump oder Bucket-Inhalt ist ohne den Schlüssel unlesbar; GCM erkennt zusätzlich jede Manipulation.
 
 - **Schlüssel:** `DATA_ENCRYPTION_KEY` (32 Byte, Base64), in Produktion aus dem SSM Parameter Store. Mit `DATA_ENCRYPTION_ENABLED=true` startet der Service ohne gültigen Schlüssel nicht. Lokal ist die Verschlüsselung standardmäßig aus; Tests laufen mit einem festen Testschlüssel.
 - **Textspalten** nutzen den JPA-Konverter `EncryptedStringConverter` und speichern `enc:v1:` + Base64. Diese Spalten lassen sich nicht mehr per SQL durchsuchen oder sortieren.
@@ -101,11 +103,11 @@ Für den Vereins- und Event-Chat bietet der `baseservice` sowohl REST-Endpunkte 
 
 | Toggle (Umgebungsvariable) | Default | Bei `true` | Bei `false` (Fallback) |
 | :--- | :---: | :--- | :--- |
-| **`S3_ENABLED`** | `false` | Verwendet MinIO / S3 für Bild-Assets | `InMemoryObjectStorage` (In-Memory Data URIs) |
+| **`S3_ENABLED`** | `false` | Verwendet S3 (lokal MinIO) für Bilder und Moment-Medien | `InMemoryObjectStorage` (In-Memory Data URIs) |
 | **`VAPID_ENABLED`** | `false` | Sendet echte Web-Push-Nachrichten via VAPID | `NoOpPushSender` (Persistenz ohne Versand) |
 | **`EV_LIQUIBASE_ENABLED`** | `true` | Führt Schema-Migrationen beim Start aus | Migrationen deaktiviert (z. B. für externe Tools) |
 
-Durch diese Toggles kann der gesamte `baseservice` lokal ohne externe MinIO- oder Push-Infrastruktur voll funktionsfähig betrieben und getestet werden.
+Durch diese Toggles kann der gesamte `baseservice` lokal ohne Objektspeicher oder Push-Infrastruktur voll funktionsfähig betrieben und getestet werden.
 
 ---
 

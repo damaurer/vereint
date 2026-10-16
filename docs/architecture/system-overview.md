@@ -15,14 +15,14 @@ graph TD
         SW["Service Worker (VAPID Push / Offline Cache)"]
     end
 
-    subgraph BFFLayer ["2. Express SSR & BFF Layer (Port 4000)"]
+    subgraph BFFLayer ["2. Express SSR & BFF Layer (lokal Port 4200)"]
         SSR["Express 5 Server (Angular SSR Engine)"]
         AuthBFF["OIDC / PKCE & Session Cookie Manager"]
         DeliveryMW["Authorization & TransferState Middleware"]
         ApiProxy["API Proxy Middleware (/api/*)"]
     end
 
-    subgraph BackendLayer ["3. Spring Boot Core Service (baseservice - Port 8080)"]
+    subgraph BackendLayer ["3. Spring Boot Core Service (baseservice - Port 8081)"]
         SecFilter["Spring Security 6 Resource Server (JWT Validator)"]
         AccessCtrl["AccessResolver & AuthContext"]
         Controllers["REST Controllers (Tablet, Ledger, Events, Chat etc.)"]
@@ -33,7 +33,7 @@ graph TD
     subgraph InfraLayer ["4. Infrastructure & Persistence"]
         PG["PostgreSQL 17 (vereint-db:5432)"]
         KC["Keycloak 26 (keycloak:8082)"]
-        S3["MinIO S3 Objektspeicher (object-storage:9000)"]
+        S3["S3 Objektspeicher (Produktion AWS S3, lokal MinIO)"]
     end
 
     Browser -->|HTTP / Hydration / Static Assets| SSR
@@ -50,7 +50,7 @@ graph TD
     Controllers --> Services
     Services --> DataLayer
     DataLayer -->|SQL Transactions & Liquibase| PG
-    Services -->|Presigned URLs & Asset Streaming| S3
+    Services -->|"verschlüsselte Dateien (AES-256-GCM)"| S3
 ```
 
 ---
@@ -81,14 +81,15 @@ graph TD
   - **Revisionssicheres Kassenbuch & Gewinnermittlung**: Transaktionsjournal (`LedgerService`) mit Beleg-Snapshots (`PurchaseSnapshot`), Einkaufspreiserfassung und Deckungsbeitragsberechnung (`profit = unit_price - cost_price`).
   - **Tablet Strichlisten-Recorder**: Kiosk-API (`TabletRecorderService`) für Getränke und Speisen mit kombinierten Katalogen (`/items`), Runden- und Abendbuchungen.
 - **Storage & Push**:
-  - Integrierter S3-Client (`S3ObjectStorage`) für Profilbilder, Event-Banner und Artikelbilder.
+  - Integrierter S3-Client (`S3ObjectStorage`) für Bilder sowie Fotos und Videos aus Moments. Alle Dateien werden vor dem Speichern mit `DATA_ENCRYPTION_KEY` verschlüsselt und nur über berechtigungsgeprüfte Endpunkte des baseservice ausgeliefert, nie über direkte S3-Links.
   - VAPID Web Push Sender (`VapidPushSender`) mit RFC-8292-konformer Payload-Verschlüsselung.
 
-### 4. Daten- & Infrastrukturschicht (`docker-compose.yml`)
+### 4. Daten- & Infrastrukturschicht
 - **PostgreSQL 17**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.
 - **Liquibase**: Versionskontrollierte Datenbankmigrationen (`db.changelog-master.xml`).
-- **Keycloak 26**: Identity & Access Management (OIDC Provider) mit vorkonfigurierten Rollen und Testbenutzern (`realm-export-dev.json`).
-- **MinIO**: S3-kompatibler Objektspeicher mit privatem Asset-Bucket.
+- **Keycloak 26.8.1**: Identity & Access Management (OIDC Provider). Lokal mit Testbenutzern (`keycloak/dev/realm-export-dev.json`), in Produktion ohne Seed-Benutzer (`keycloak/realm-export.json`).
+- **Objektspeicher**: In Produktion ein privater AWS-S3-Bucket (`vereint-app-<account>`), lokal MinIO (`docker-compose.yml`), in den E2E-Tests ein S3-Ersatz.
+- **Produktion**: Alle Dienste laufen per Docker Compose hinter Caddy auf einem AWS-Server, siehe [deploy/README.md](../../deploy/README.md) und [infra/aws/README.md](../../infra/aws/README.md).
 
 ---
 
@@ -98,8 +99,8 @@ graph TD
 sequenceDiagram
     autonumber
     actor User as Benutzer / Tablet-Kiosk
-    participant BFF as Express BFF (Port 4000)
-    participant Spring as Spring Boot (Port 8080)
+    participant BFF as Express BFF
+    participant Spring as Spring Boot
     participant DB as PostgreSQL 17
 
     User->>BFF: POST /api/v1/tablet/events/{id}/purchases (Cookie-Session)
@@ -120,10 +121,12 @@ sequenceDiagram
 
 | Dienst | Container / Prozess | Host-Port | Interner Port | Protokoll / Zweck |
 | :--- | :--- | :--- | :--- | :--- |
-| **Frontend / BFF** | Node.js Express | `4000` | `4000` | HTTP / SSR & BFF API Proxy |
-| **Backend Core** | Spring Boot Kotlin | `8080` | `8080` | HTTP / REST API & Actuator |
+| **Frontend / BFF** | Node.js Express (`npm start`) | `4200` | `4200` | HTTP / SSR & BFF API Proxy |
+| **Backend Core** | Spring Boot Kotlin | `8081` | `8081` | HTTP / REST API & Actuator |
 | **Keycloak IAM** | Keycloak 26 Dev | `8082` | `8080` | HTTP / OIDC Provider & Admin-Console |
 | **Keycloak DB** | PostgreSQL 17 | `5433` | `5432` | PostgreSQL JDBC (Keycloak Realm DB) |
 | **Vereint DB** | PostgreSQL 17 | `5432` | `5432` | PostgreSQL JDBC (Hauptanwendung) |
-| **MinIO S3 API** | MinIO Storage | `9000` | `9000` | S3 REST API (Asset Storage) |
-| **MinIO Console** | MinIO Web UI | `9001` | `9001` | HTTP / MinIO Management Console |
+| **MinIO S3 API** | MinIO (nur lokal) | `9000` | `9000` | S3 REST API (Asset Storage) |
+| **MinIO Console** | MinIO (nur lokal) | `9001` | `9001` | HTTP / MinIO Management Console |
+
+In Produktion ist von außen nur Caddy auf Port 80/443 erreichbar; alle anderen Dienste sprechen nur im internen Container-Netz miteinander ([deploy/README.md](../../deploy/README.md)).

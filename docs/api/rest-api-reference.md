@@ -118,6 +118,12 @@ Die **Vereint Backend API** (`baseservice`) folgt strikten REST-Prinzipien, verw
 | `GET` | `/api/v1/events/{eventId}/moments/{momentId}/map` | GeoJSON FeatureCollection mit Teilnehmer-Standorten abrufen (RFC 7946) | `member` |
 | `POST` | `/api/v1/events/{eventId}/moments/{momentId}/complete` | Moment abschließen und in Event-Kalender archivieren | `member` (Initiator) / `board`, `admin` |
 | `GET` | `/api/v1/events/{eventId}/moments/history` | Abgeschlossene Moments mit Zusammenfassungen abrufen | `member` |
+| `POST` | `/api/v1/events/{eventId}/moments/{momentId}/media` | Foto (JPEG/PNG/GIF, ≤ 10 MB) oder Video (MP4/MOV, ≤ 60 s, ≤ 100 MB) als rohen Request-Körper hochladen (`Content-Type`, `Content-Length` Pflicht) | `member` |
+| `GET` | `/api/v1/events/{eventId}/moments/{momentId}/media/{mediaId}/content` | Datei entschlüsselt abrufen, mit HTTP-Range (`206`) | `member` mit Zugriff auf den Moment |
+| `DELETE` | `/api/v1/events/{eventId}/moments/{momentId}/media/{mediaId}` | Datei entfernen | Eigentümer; `board`, `admin`, Gastgeber für fremde Beiträge |
+| `GET` | `/api/v1/moment-config` | Typen, Reaktionen (inkl. ausgemusterter) und Upload-Grenzen | angemeldet |
+| `POST` / `PUT` | `/api/v1/moment-config/types`, `/types/{id}` | Moment-Typ anlegen bzw. ändern oder ausmustern | `board`, `admin` |
+| `POST` / `PUT` | `/api/v1/moment-config/reactions`, `/reactions/{id}` | Reaktion anlegen bzw. ändern oder ausmustern | `board`, `admin` |
 
 ### 6. Events & Gast-Einladungen (`EventController`, `InviteController`)
 | Methode | Pfad | Beschreibung | Berechtigung / Rolle |

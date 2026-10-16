@@ -13,6 +13,7 @@ Die Benutzerverwaltung in **Vereint** verbindet das externe Identitätsmanagemen
    - Neue Personen kommen über einen Einladungslink von Vorstand oder Administration in den Verein und legen ihr Konto selbst an; siehe [Mitglieder per Einladungslink](member-invites.md).
 2. **Profilpflege**:
    - Mitglieder können ihren Anzeigenamen (`displayName`), ihre E-Mail-Adresse und Profilbild-Referenzen selbst verwalten.
+   - **Zwei-Faktor-Anmeldung (freiwillig)**: „Zwei-Faktor-Anmeldung einrichten“ im Profil öffnet die Keycloak-Kontoverwaltung (`/kc/realms/vereint/account`). Wer dort eine Authenticator-App hinterlegt, wird beim Login nach dem Code gefragt. Pflicht ist sie für niemanden.
 3. **Rollen- & Funktionszuweisung (Vorstand/Admin)**:
    - Administratoren können Mitgliedern zusätzliche Rollen (`board`, `admin`, `tabletRecorder`) sowie Vorstandsfunktionen (`chair`, `treasurer`, `secretary`, `assessor`) zuweisen.
 4. **Sperrung (Account Disablement)**:

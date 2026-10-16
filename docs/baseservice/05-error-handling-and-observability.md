@@ -131,7 +131,7 @@ Spring Boot Actuator liefert standardisierte Schnittstellen für Health-Checks u
 
 ## 📖 OpenAPI 3.1 & Swagger UI (`OpenApiConfig.kt`)
 
-Der `baseservice` generiert seine Schnittstellendokumentation dynamisch über `springdoc-openapi` (Version `3.1.0`):
+Der `baseservice` generiert seine Schnittstellendokumentation dynamisch über `springdoc-openapi` (Version `3.1.0`). Sie ist standardmäßig und in Produktion abgeschaltet und wird lokal mit `API_DOCS_ENABLED=true` eingeschaltet:
 
 - **Swagger UI**: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
 - **OpenAPI Schema (JSON)**: [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs)

@@ -85,8 +85,9 @@ In `baseservice` wird jede eingehende Anfrage durch `SecurityConfig` und `JwtAut
    - `/api/v1/health`, `/api/v1/info`
    - `/api/v1/auth/access/guest` (Gast-Zugangsprüfung)
    - `/api/v1/invites/accept` (Gäste-Einladung einlösen)
+   - `/api/v1/member-invites/preview`, `/api/v1/member-invites/register` (Registrierung per Einladungslink)
    - `/api/v1/events/*/chat/guest/**` (Gast-Chat via temporärem Gasttoken im Header)
-   - `/v3/api-docs/**`, `/swagger-ui/**` (OpenAPI Dokumentation)
+   - `/v3/api-docs/**`, `/swagger-ui/**` (OpenAPI Dokumentation, nur mit `API_DOCS_ENABLED=true`, in Produktion aus)
 2. **Admin-Endpunkte**:
    - `/actuator/**` erfordert Rolle `ROLE_ADMIN`.
 3. **Stateless JWT-Konvertierung (`JwtAuthConverter`)**:
@@ -105,3 +106,21 @@ Um beim serverseitigen Rendern (SSR) im Express BFF eine nahtlose Authentifizier
 1. **`delivery.middleware.ts`**: Ermittelt aus dem Session-Cookie die Rollen und Berechtigungen des aktuellen Benutzers.
 2. **`transfer-state.ts`**: Injiziert das `AuthStateDto` sowie die Instanzkonfiguration (`CLUB_CONFIG_KEY`) in den HTML-Renderbaum.
 3. **Client-Hydration**: Die Angular-App liest beim Start im Browser den State aus dem DOM aus, initialisiert die Signals im `AuthService` synchron und verhindert Ladeverzögerungen oder unberechtigte Redirects.
+
+---
+
+## 🧱 Härtung im Überblick
+
+| Maßnahme | Wo |
+| :--- | :--- |
+| **Zwei-Faktor-Anmeldung (freiwillig)**: Im Profil führt „Zwei-Faktor-Anmeldung einrichten“ zur Keycloak-Kontoverwaltung (`/kc/realms/vereint/account`). Wer eine Authenticator-App hinterlegt, wird beim Login nach dem Code gefragt. | Keycloak, Profil |
+| **Passwortregeln**: 10 bis 128 Zeichen, nicht Benutzername oder E-Mail, nicht eines der letzten drei; nach 5 Fehlversuchen wachsende Sperre. | Keycloak-Realm |
+| **Cross-Site-Schutz**: Der BFF lehnt schreibende Anfragen ab, die nicht von der eigenen Seite kommen (`Sec-Fetch-Site` bzw. `Origin`). | webservice |
+| **Rate-Limits**: Einladungs- und Gast-Token-Endpunkte 30 Versuche je IP in 15 Minuten, Login-Start 120 je IP in 5 Minuten, übrige API 600 Anfragen je Sitzung und Minute. | webservice |
+| **Pfad-Prüfung**: Der API-Proxy reicht nur `/api/v1` weiter und verwirft Pfade mit `..` oder kodierten Schrägstrichen. | webservice |
+| **Keine API-Beschreibung in Produktion**: Swagger/OpenAPI nur mit `API_DOCS_ENABLED=true`. | baseservice |
+| **Metadaten entfernen**: EXIF/XMP (GPS, Gerät, Zeit) aus Bildern, Orts- und Geräteangaben aus Videos, bevor sie verschlüsselt gespeichert werden. | baseservice |
+| **Container**: ohne Root, ohne Linux-Capabilities, schreibgeschütztes Dateisystem für baseservice und webservice, Prozess- und Speicherlimits. | `deploy/compose.yaml` |
+| **Caddy**: HTTPS mit HSTS, Anfragen bis 8 MB (Moment-Medien bis 110 MB), `Permissions-Policy` erlaubt Kamera (Barcode-Scan, Fotos) und Standort (Moments) nur für die eigene Seite. | `deploy/Caddyfile` |
+
+Details und die einmaligen Einstellungen in GitHub und Keycloak: [deploy/README.md](../../deploy/README.md#sicherheit).
