@@ -12,11 +12,14 @@ import java.util.UUID
  * anderen nicht auf.
  */
 @Component
-class StammtischJobs(private val stammtischRepository: StammtischRepository) {
+class StammtischJobs(
+    private val stammtischRepository: StammtischRepository,
+    private val tenantTransactions: TenantTransactions
+) {
 
     private val log = LoggerFactory.getLogger(StammtischJobs::class.java)
 
-    fun activeStammtischIds(): List<UUID> = TenantContext.runAsSystem {
+    fun activeStammtischIds(): List<UUID> = tenantTransactions.readAsSystem {
         stammtischRepository.findAll().filter { !it.archived }.map { it.id }
     }
 

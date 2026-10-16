@@ -1,7 +1,5 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.tenancy.StammtischAccess
-import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.DrinkBarcodeEntity
 import de.maurer.baseservice.domain.DrinkCatalogEntity
 import de.maurer.baseservice.domain.DrinkStatus
@@ -14,7 +12,11 @@ import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.DrinkCatalogRepository
+import de.maurer.baseservice.repository.DrinkLibraryRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
+import de.maurer.baseservice.support.Identifiers
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -34,6 +36,7 @@ import java.util.UUID
 class DrinkCatalogService(
     private val drinkCatalogRepository: DrinkCatalogRepository,
     private val drinkBarcodeRepository: DrinkBarcodeRepository,
+    private val drinkLibraryRepository: DrinkLibraryRepository,
     private val access: StammtischAccess,
     private val userService: UserService
 ) {
@@ -108,6 +111,15 @@ class DrinkCatalogService(
             throw InvalidRequestException(Msg("error.field.negative", "defaultPrice"), ErrorCode.INVALID_REQUEST)
         }
 
+        // Übernahme aus der gemeinsamen Getränkedatenbank: nur die Herkunft merken.
+        val libraryDrinkId = request.libraryDrinkId?.trim()?.takeIf { it.isNotEmpty() }?.let { value ->
+            val id = Identifiers.parseUuid(value, "libraryDrinkId")
+            if (!drinkLibraryRepository.existsById(id)) {
+                throw ResourceNotFoundException(Msg("error.drinkLibrary.notFound", id), ErrorCode.NOT_FOUND)
+            }
+            id
+        }
+
         // Barcodes vor dem Speichern prüfen, damit ein belegter Code kein halb angelegtes Getränk hinterlässt.
         val barcodes = request.barcodes.orEmpty().map { normalizeBarcode(it) }.distinct()
         barcodes.forEach { requireBarcodeAvailable(it) }
@@ -122,6 +134,7 @@ class DrinkCatalogService(
             costPrice = request.costPrice ?: BigDecimal.ZERO,
             currency = normalizeCurrency(request.currency),
             imageReference = request.imageReference?.trim()?.ifBlank { null },
+            libraryDrinkId = libraryDrinkId,
             catalogVersion = 1,
             active = privileged,
             status = if (privileged) DrinkStatus.approved else DrinkStatus.proposed,
@@ -369,7 +382,8 @@ class DrinkCatalogService(
             approvedById = drink.approvedBy?.id?.toString(),
             barcodes = barcodes,
             createdAt = drink.createdAt,
-            updatedAt = drink.updatedAt
+            updatedAt = drink.updatedAt,
+            libraryDrinkId = drink.libraryDrinkId?.toString()
         )
     }
 

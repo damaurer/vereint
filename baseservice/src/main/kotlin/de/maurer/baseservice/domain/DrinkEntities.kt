@@ -37,6 +37,10 @@ class DrinkCatalogEntity(
     @Column(name = "image_reference", length = 512)
     var imageReference: String? = null,
 
+    /** Herkunft aus der gemeinsamen Getränkedatenbank, falls übernommen oder dorthin geteilt. */
+    @Column(name = "library_drink_id")
+    var libraryDrinkId: UUID? = null,
+
     @Column(name = "catalog_version", nullable = false)
     var catalogVersion: Int = 1,
 

@@ -18,7 +18,10 @@ import java.util.UUID
  * ob es den Stammtisch gibt.
  */
 @Component
-class TenantLookup(private val jdbcTemplate: JdbcTemplate) {
+class TenantLookup(
+    private val jdbcTemplate: JdbcTemplate,
+    private val tenantTransactions: TenantTransactions
+) {
 
     fun forEvent(eventId: UUID): UUID? =
         single("select stammtisch_id from events where id = ?", eventId)
@@ -51,7 +54,8 @@ class TenantLookup(private val jdbcTemplate: JdbcTemplate) {
     private fun <T> runInOrNone(stammtischId: UUID?, block: () -> T): T =
         if (stammtischId != null) TenantContext.runIn(stammtischId, block) else TenantContext.runWithoutTenant(block)
 
-    private fun single(sql: String, arg: Any): UUID? = TenantContext.runAsSystem {
+    /** Eigene Verbindung im System-Kontext, auch innerhalb einer laufenden Transaktion. */
+    private fun single(sql: String, arg: Any): UUID? = tenantTransactions.readAsSystem {
         jdbcTemplate.query(sql, { rs, _ -> rs.getObject(1, UUID::class.java) }, arg).firstOrNull()
     }
 }

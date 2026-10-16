@@ -1,7 +1,5 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.tenancy.StammtischMembers
-import de.maurer.baseservice.tenancy.TenantContext
 import de.maurer.baseservice.domain.ChatMessageEntity
 import de.maurer.baseservice.domain.ChatReactionEntity
 import de.maurer.baseservice.domain.ConversationEntity
@@ -28,6 +26,8 @@ import de.maurer.baseservice.repository.ConversationRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.security.UserPrincipal
+import de.maurer.baseservice.tenancy.StammtischMembers
+import de.maurer.baseservice.tenancy.TenantContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant

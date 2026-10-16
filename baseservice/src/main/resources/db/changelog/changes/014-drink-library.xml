@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 170. Gemeinsame Getränkedatenbank über alle Stammtische. Sie enthält nur
+         Stammdaten (Name, Sorte, Beschreibung, Barcodes), keine Preise, Bilder
+         oder Personen. Jeder Stammtisch übernimmt daraus Getränke in seinen
+         eigenen Katalog und legt dort Preis und Sortiment selbst fest. -->
+    <changeSet id="170-create-drink-library" author="claude">
+        <createTable tableName="drink_library">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="category" type="VARCHAR(64)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="drink_library" indexName="idx_drink_library_name">
+            <column name="name"/>
+        </createIndex>
+
+        <createTable tableName="drink_library_barcodes">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="library_drink_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_drink_library_barcodes_drink"
+                             references="drink_library(id)" deleteCascade="true"/>
+            </column>
+            <column name="barcode" type="VARCHAR(128)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_drink_library_barcodes_barcode"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="drink_library_barcodes" indexName="idx_drink_library_barcodes_drink">
+            <column name="library_drink_id"/>
+        </createIndex>
+
+        <!-- Herkunft eines Katalogeintrags; bleibt beim Löschen aus der Datenbank als Kopie bestehen. -->
+        <addColumn tableName="drink_catalog">
+            <column name="library_drink_id" type="${uuid.type}"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="drink_catalog" baseColumnNames="library_drink_id"
+                                 constraintName="fk_drink_catalog_library_drink"
+                                 referencedTableName="drink_library" referencedColumnNames="id"
+                                 onDelete="SET NULL"/>
+        <createIndex tableName="drink_catalog" indexName="idx_drink_catalog_library_drink">
+            <column name="library_drink_id"/>
+        </createIndex>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="drink_catalog" constraintName="fk_drink_catalog_library_drink"/>
+            <dropColumn tableName="drink_catalog" columnName="library_drink_id"/>
+            <dropTable tableName="drink_library_barcodes"/>
+            <dropTable tableName="drink_library"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

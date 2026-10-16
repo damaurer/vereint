@@ -30,11 +30,12 @@ class StammtischMemberships(
     private val memberRepository: StammtischMemberRepository,
     private val roleRepository: StammtischRoleRepository,
     private val userRoleRepository: UserRoleRepository,
-    private val userPermissionRepository: UserPermissionRepository
+    private val userPermissionRepository: UserPermissionRepository,
+    private val tenantTransactions: TenantTransactions
 ) {
 
-    /** Jeder Repository-Aufruf öffnet eine eigene Sitzung im System-Kontext. */
-    fun memberships(userId: UUID): List<MembershipView> = TenantContext.runAsSystem { load(userId) }
+    /** Eigene Transaktion im System-Kontext, auch wenn der Aufrufer schon in einer läuft. */
+    fun memberships(userId: UUID): List<MembershipView> = tenantTransactions.readAsSystem { load(userId) }
 
     private fun load(userId: UUID): List<MembershipView> {
         val members = memberRepository.findByUserIdAndActiveTrue(userId)

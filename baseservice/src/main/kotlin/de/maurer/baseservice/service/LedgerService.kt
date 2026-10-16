@@ -19,9 +19,9 @@ import de.maurer.baseservice.repository.LedgerEntryRepository
 import de.maurer.baseservice.repository.PurchaseSnapshotRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
+import de.maurer.baseservice.support.Identifiers
 import de.maurer.baseservice.tenancy.StammtischAccess
 import de.maurer.baseservice.tenancy.StammtischMembers
-import de.maurer.baseservice.support.Identifiers
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

@@ -5,8 +5,8 @@ import de.maurer.baseservice.security.RestAccessDeniedHandler
 import de.maurer.baseservice.security.RestAuthenticationEntryPoint
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.tenancy.StammtischContextFilter
-import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity

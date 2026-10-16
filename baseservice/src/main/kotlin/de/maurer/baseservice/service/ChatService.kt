@@ -1,8 +1,5 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.tenancy.TenantContext
-import de.maurer.baseservice.tenancy.StammtischAccess
-import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.ChatMessageEntity
 import de.maurer.baseservice.domain.ConversationEntity
 import de.maurer.baseservice.domain.ConversationMemberEntity
@@ -28,8 +25,11 @@ import de.maurer.baseservice.repository.ConversationRepository
 import de.maurer.baseservice.repository.EventGuestRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.SecureTokens
+import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.TenantContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration

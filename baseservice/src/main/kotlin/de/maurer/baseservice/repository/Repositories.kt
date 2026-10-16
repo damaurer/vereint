@@ -1,6 +1,8 @@
 package de.maurer.baseservice.repository
 
 import de.maurer.baseservice.domain.*
+import jakarta.persistence.LockModeType
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
@@ -9,7 +11,6 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
-import jakarta.persistence.LockModeType
 import java.time.Instant
 import java.util.Optional
 import java.util.UUID
@@ -20,20 +21,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     fun findByEmail(email: String): Optional<UserEntity>
     fun existsByEmailIgnoreCase(email: String): Boolean
     fun findByDisabled(disabled: Boolean): List<UserEntity>
-
-    /**
-     * Aktive Mitglieder des aktuellen Stammtischs mit der angegebenen Rolle;
-     * sichert ab, dass immer jemand die Mitglieder verwalten kann.
-     */
-    @Query(
-        """
-        select count(u) from UserEntity u
-        where u.disabled = false
-          and exists (select 1 from StammtischMemberEntity m where m.user.id = u.id and m.active = true)
-          and exists (select 1 from UserRoleEntity r where r.id.userId = u.id and r.id.role in :roles)
-        """
-    )
-    fun countActiveMembersWithAnyRole(@Param("roles") roles: Collection<String>): Long
+    fun findFirstByEmailIgnoreCase(email: String): Optional<UserEntity>
 }
 
 @Repository
@@ -43,6 +31,27 @@ interface UserRoleRepository : JpaRepository<UserRoleEntity, UserRoleId> {
     fun findByStammtischIdAndIdUserId(stammtischId: UUID, userId: UUID): List<UserRoleEntity>
     fun deleteByIdUserId(userId: UUID)
     fun deleteByIdRole(role: String)
+}
+
+/** Gemeinsame Getränkedatenbank; gehört keinem Stammtisch. */
+@Repository
+interface DrinkLibraryRepository : JpaRepository<DrinkLibraryEntity, UUID> {
+    @Query(
+        """
+        select d from DrinkLibraryEntity d
+        where lower(d.name) like lower(concat('%', :term, '%'))
+           or lower(coalesce(d.category, '')) like lower(concat('%', :term, '%'))
+        order by d.name
+        """
+    )
+    fun search(@Param("term") term: String, pageable: Pageable): List<DrinkLibraryEntity>
+}
+
+@Repository
+interface DrinkLibraryBarcodeRepository : JpaRepository<DrinkLibraryBarcodeEntity, UUID> {
+    fun findByBarcode(barcode: String): Optional<DrinkLibraryBarcodeEntity>
+    fun findByBarcodeIn(barcodes: Collection<String>): List<DrinkLibraryBarcodeEntity>
+    fun findByDrinkIdIn(drinkIds: Collection<UUID>): List<DrinkLibraryBarcodeEntity>
 }
 
 @Repository
@@ -154,6 +163,7 @@ interface DrinkCatalogRepository : JpaRepository<DrinkCatalogEntity, UUID> {
     fun findByActiveTrue(): List<DrinkCatalogEntity>
     fun findByStatusOrderByNameAsc(status: DrinkStatus): List<DrinkCatalogEntity>
     fun findAllByOrderByNameAsc(): List<DrinkCatalogEntity>
+    fun findByLibraryDrinkIdIn(libraryDrinkIds: Collection<UUID>): List<DrinkCatalogEntity>
 }
 
 @Repository

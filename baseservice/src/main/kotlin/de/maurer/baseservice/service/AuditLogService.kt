@@ -17,8 +17,8 @@ import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.BoardRole
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.tenancy.StammtischAccess
 import de.maurer.baseservice.support.Identifiers
+import de.maurer.baseservice.tenancy.StammtischAccess
 import jakarta.persistence.criteria.Predicate
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest

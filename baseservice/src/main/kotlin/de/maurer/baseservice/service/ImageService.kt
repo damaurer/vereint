@@ -1,7 +1,5 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.tenancy.StammtischAccess
-import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.crypto.DataEncryptor
 import de.maurer.baseservice.domain.DrinkStatus
 import de.maurer.baseservice.domain.ImageAssetEntity
@@ -18,9 +16,11 @@ import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.ImageAssetRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.storage.ObjectStorage
 import de.maurer.baseservice.support.ImageMetadata
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayInputStream

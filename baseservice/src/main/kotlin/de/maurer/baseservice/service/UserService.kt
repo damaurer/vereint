@@ -19,6 +19,7 @@ import de.maurer.baseservice.security.RolePermissionMatrix
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.StammtischManagers
 import de.maurer.baseservice.tenancy.StammtischMembers
 import de.maurer.baseservice.tenancy.TenantContext
 import jakarta.persistence.criteria.Predicate
@@ -52,6 +53,7 @@ class UserService(
     private val membershipService: MembershipService,
     private val access: StammtischAccess,
     private val members: StammtischMembers,
+    private val managers: StammtischManagers,
     private val auditService: AuditService
 ) {
 
@@ -255,7 +257,7 @@ class UserService(
         val wasDisabled = !member.active
         if (request.disabled != null && request.disabled != wasDisabled) {
             if (request.disabled) {
-                requireRemainingManager(user)
+                managers.requireRemaining(leaving = setOf(user.id))
                 membershipService.deactivate(user)
             } else {
                 membershipService.addMember(user, emptySet())
@@ -343,7 +345,7 @@ class UserService(
 
         val previous = !membershipService.isActiveMember(user)
         if (disabled) {
-            requireRemainingManager(user)
+            managers.requireRemaining(leaving = setOf(user.id))
             membershipService.deactivate(user)
         } else if (previous) {
             membershipService.addMember(user, setOf(UserRole.MEMBER))
@@ -432,11 +434,7 @@ class UserService(
         }
 
         val previousRoles = rolesOf(user.id)
-        if (access.permissionsForRoles(previousRoles).any { it in MANAGER_PERMISSIONS } &&
-            access.permissionsForRoles(roles).none { it in MANAGER_PERMISSIONS }
-        ) {
-            requireRemainingManager(user)
-        }
+        managers.requireRemaining(assignments = mapOf(user.id to roles))
 
         userRoleRepository.deleteByIdUserId(user.id)
         userRoleRepository.flush()
@@ -490,28 +488,6 @@ class UserService(
         }
     }
 
-    /**
-     * Im Stammtisch muss immer mindestens ein aktives Mitglied bleiben, das
-     * Mitglieder und Rollen verwalten kann; sonst wäre der Stammtisch nicht
-     * mehr verwaltbar.
-     */
-    private fun requireRemainingManager(target: UserEntity) {
-        val managerRoles = access.roleDefinitions()
-            .filterValues { permissions -> permissions.any { it in MANAGER_PERMISSIONS } }
-            .keys
-        val targetIsManager = !target.disabled && membershipService.isActiveMember(target) &&
-            rolesOf(target.id).any { it in managerRoles }
-        if (!targetIsManager) {
-            return
-        }
-        if (managerRoles.isEmpty() || userRepository.countActiveMembersWithAnyRole(managerRoles) <= 1) {
-            throw LastAdminProtectedException(
-                Msg("error.user.lastAdmin"),
-                ErrorCode.LAST_ADMIN_PROTECTED
-            )
-        }
-    }
-
     private fun requireMembersManage(principal: UserPrincipal, callerUser: UserEntity) {
         if (!access.has(principal, callerUser, Permission.MEMBERS_MANAGE)) {
             throw AccessDeniedException(Msg("error.user.adminRequired"), ErrorCode.ACCESS_DENIED)
@@ -558,9 +534,6 @@ class UserService(
     }
 
     companion object {
-        /** Wer eine dieser Berechtigungen hat, kann den Stammtisch verwalten. */
-        private val MANAGER_PERMISSIONS = setOf(Permission.MEMBERS_MANAGE, Permission.ROLES_MANAGE)
-
         const val DEFAULT_PAGE_SIZE = 25
         const val MAX_PAGE_SIZE = 100
         val DEFAULT_SORT: Sort = Sort.by(Sort.Direction.ASC, "displayName")

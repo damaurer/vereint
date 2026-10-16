@@ -1,7 +1,5 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.tenancy.StammtischAccess
-import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.EventEntity
 import de.maurer.baseservice.domain.EventFoodEntity
 import de.maurer.baseservice.domain.FoodCatalogEntity
@@ -18,7 +16,9 @@ import de.maurer.baseservice.repository.EventFoodRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.FoodCatalogRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal

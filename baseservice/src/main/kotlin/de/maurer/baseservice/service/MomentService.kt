@@ -1,13 +1,13 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.tenancy.StammtischAccess
-import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.*
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.*
 import de.maurer.baseservice.repository.*
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.Identifiers
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration

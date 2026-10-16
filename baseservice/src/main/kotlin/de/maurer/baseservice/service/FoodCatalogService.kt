@@ -1,7 +1,5 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.tenancy.StammtischAccess
-import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.domain.FoodCatalogEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.CreateFoodRequest
@@ -14,7 +12,9 @@ import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.FoodCatalogRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
+import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal

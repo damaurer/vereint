@@ -28,10 +28,10 @@ import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.support.SecureTokens
 import de.maurer.baseservice.tenancy.StammtischAccess
 import de.maurer.baseservice.tenancy.TenantContext
 import de.maurer.baseservice.tenancy.TenantLookup
-import de.maurer.baseservice.support.SecureTokens
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.PlatformTransactionManager

@@ -147,6 +147,21 @@ class AuditService(
         log.info("audit action={} actor={} target={} {}", action, actor?.id, kioskSessionId, details)
     }
 
+    /** Protokolliert Änderungen am Stammtisch selbst (Name, Rollen) und seine Anlage. */
+    fun recordStammtischChange(actor: UserEntity?, action: String, targetId: UUID, details: String) {
+        auditLogRepository.save(
+            AuditLogEntity(
+                id = UUID.randomUUID(),
+                actor = actor,
+                action = action,
+                targetEntity = TARGET_STAMMTISCH,
+                targetId = targetId.toString(),
+                details = details
+            )
+        )
+        log.info("audit action={} actor={} target={} {}", action, actor?.id, targetId, details)
+    }
+
     private fun render(value: Any?): String = when (value) {
         null -> "-"
         is Collection<*> -> value.map { it.toString() }.sorted().joinToString(",")
@@ -155,6 +170,11 @@ class AuditService(
 
     companion object {
         const val TARGET_USER = "User"
+        const val TARGET_STAMMTISCH = "Stammtisch"
+        const val ACTION_STAMMTISCH_CREATED = "STAMMTISCH_CREATED"
+        const val ACTION_STAMMTISCH_RENAMED = "STAMMTISCH_RENAMED"
+        const val ACTION_STAMMTISCH_ROLE_CHANGED = "STAMMTISCH_ROLE_CHANGED"
+        const val ACTION_MEMBER_LEFT = "MEMBER_LEFT"
         const val TARGET_LEDGER = "Ledger"
         const val TARGET_NOTIFICATION = "Notification"
         const val TARGET_MOMENT = "Moment"

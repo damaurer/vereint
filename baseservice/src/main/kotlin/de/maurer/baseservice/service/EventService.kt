@@ -18,8 +18,8 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.tenancy.StammtischAccess
 import de.maurer.baseservice.tenancy.StammtischMembers
 import org.springframework.stereotype.Service
-import java.time.Instant
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
 import java.util.UUID
 
 /**
