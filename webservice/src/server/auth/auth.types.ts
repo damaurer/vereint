@@ -24,6 +24,19 @@ export interface AccessDecision {
   permissions: string[];
   eventScopes: string[];
   allowedAppContexts: AppContext[];
+  /** Stammtisch, für den Rollen und Rechte gelten; fehlt ohne Auswahl. */
+  stammtischId?: string;
+  stammtischName?: string;
+  /** Plattform-Admin (Keycloak-Realmrolle `admin`): legt Stammtische an. */
+  platformAdmin?: boolean;
+  memberships?: StammtischMembership[];
+}
+
+export interface StammtischMembership {
+  id: string;
+  name: string;
+  roles: string[];
+  boardRole?: BoardRole | null;
 }
 
 export interface UserProfile {
@@ -96,6 +109,10 @@ export interface AuthMeResponse {
   roles: UserRole[];
   boardRole: BoardRole | null;
   permissions: string[];
+  stammtisch: { id: string; name: string } | null;
+  memberships: StammtischMembership[];
+  platformAdmin: boolean;
+  appContexts: AppContext[];
 }
 
 export interface ServiceStatus {

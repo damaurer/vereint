@@ -1,6 +1,14 @@
 import { Routes } from '@angular/router';
 import { AppShellComponent } from './shell/app-shell.component';
-import { authGuard, guestGuard, homeGuard, permissionGuard, roleGuard } from './auth/auth.guards';
+import {
+  authGuard,
+  contextGuard,
+  guestGuard,
+  homeGuard,
+  permissionGuard,
+  platformGuard,
+  signedInGuard,
+} from './auth/auth.guards';
 import { kioskGuard } from './kiosk/kiosk.guard';
 
 /**
@@ -30,6 +38,19 @@ export const routes: Routes = [
     canActivate: [kioskGuard],
     data: { title: 'Registrieren', description: 'Mit einem Einladungslink als Mitglied registrieren.', access: 'Gültiger Einladungslink erforderlich' },
     loadComponent: () => import('./auth/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    // Ohne gewählten Stammtisch: auswählen, beitreten oder (Plattform-Admin) anlegen.
+    path: 'stammtische',
+    canActivate: [kioskGuard, signedInGuard],
+    data: { title: 'routes.stammtische.title', description: 'routes.stammtische.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./stammtisch/stammtisch-choice.component').then((m) => m.StammtischChoiceComponent),
+  },
+  {
+    path: 'plattform',
+    canActivate: [kioskGuard, platformGuard],
+    data: { title: 'routes.platform.title', description: 'routes.platform.description', access: 'routes.access.platform' },
+    loadComponent: () => import('./stammtisch/platform.component').then((m) => m.PlatformComponent),
   },
   {
     path: '403',
@@ -164,8 +185,9 @@ export const routes: Routes = [
   },
   {
     path: 'board',
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, contextGuard],
     data: {
+      appContext: 'boardGeneral',
       title: 'routes.board.title',
       description: 'routes.board.description',
       access: 'routes.access.boardOrAdmin',
@@ -175,8 +197,9 @@ export const routes: Routes = [
   },
   {
     path: 'board/treasury',
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, contextGuard],
     data: {
+      appContext: 'boardTreasury',
       title: 'routes.treasury.title',
       description: 'routes.treasury.description',
       access: 'routes.access.boardOrAdmin',
@@ -186,8 +209,9 @@ export const routes: Routes = [
   },
   {
     path: 'board/communications',
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, contextGuard],
     data: {
+      appContext: 'boardCommunications',
       title: 'routes.communications.title',
       description: 'routes.communications.description',
       access: 'routes.access.boardOrAdmin',
@@ -198,8 +222,9 @@ export const routes: Routes = [
   },
   {
     path: 'board/moments',
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, contextGuard],
     data: {
+      appContext: 'boardGeneral',
       title: 'routes.boardMoments.title',
       description: 'routes.boardMoments.description',
       access: 'routes.access.boardOrAdmin',
@@ -210,8 +235,9 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    canActivate: [authGuard, roleGuard],
+    canActivate: [authGuard, contextGuard],
     data: {
+      appContext: 'admin',
       title: 'routes.admin.title',
       description: 'routes.admin.description',
       access: 'routes.access.admin',
@@ -229,6 +255,20 @@ export const routes: Routes = [
       permissions: ['purchase.tablet'],
     },
     loadComponent: () => import('./tablet/tablet.component').then((m) => m.TabletComponent),
+  },
+  {
+    // Name, Rollen und Austritt des gewählten Stammtischs.
+    path: 'stammtisch',
+    canActivate: [authGuard],
+    data: { title: 'routes.stammtisch.title', description: 'routes.stammtisch.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./stammtisch/stammtisch-settings.component').then((m) => m.StammtischSettingsComponent),
+  },
+  {
+    // Übergreifende Getränkedatenbank: Getränke in den eigenen Katalog übernehmen.
+    path: 'catalog/library',
+    canActivate: [authGuard],
+    data: { title: 'routes.drinkLibrary.title', description: 'routes.drinkLibrary.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./catalog/drink-library.component').then((m) => m.DrinkLibraryComponent),
   },
   {
     // Statistik sehen alle Angemeldeten (eigene Werte und Vereinsranking).

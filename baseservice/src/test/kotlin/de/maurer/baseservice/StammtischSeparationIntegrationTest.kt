@@ -1,5 +1,6 @@
 package de.maurer.baseservice
 
+import de.maurer.baseservice.domain.StammtischEntity
 import de.maurer.baseservice.dto.CreateEventRequest
 import de.maurer.baseservice.dto.CreateMemberInviteRequest
 import de.maurer.baseservice.dto.CreateStammtischRequest
@@ -12,6 +13,7 @@ import de.maurer.baseservice.error.LastAdminProtectedException
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.EventRepository
+import de.maurer.baseservice.repository.StammtischRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
@@ -24,7 +26,10 @@ import de.maurer.baseservice.service.PlatformService
 import de.maurer.baseservice.service.StammtischService
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.DefaultStammtischExtension.Companion.DEFAULT_STAMMTISCH_ID
+import de.maurer.baseservice.tenancy.StammtischMemberships
+import de.maurer.baseservice.tenancy.StammtischSeeder
 import de.maurer.baseservice.tenancy.TenantContext
+import de.maurer.baseservice.tenancy.TenantTransactions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
@@ -69,7 +74,11 @@ class StammtischSeparationIntegrationTest @Autowired constructor(
     private val drinkLibraryService: DrinkLibraryService,
     private val memberInviteService: MemberInviteService,
     private val eventRepository: EventRepository,
-    private val drinkCatalogRepository: DrinkCatalogRepository
+    private val drinkCatalogRepository: DrinkCatalogRepository,
+    private val stammtischRepository: StammtischRepository,
+    private val stammtischMemberships: StammtischMemberships,
+    private val stammtischSeeder: StammtischSeeder,
+    private val tenantTransactions: TenantTransactions
 ) {
 
     private lateinit var mockMvc: MockMvc
@@ -281,5 +290,22 @@ class StammtischSeparationIntegrationTest @Autowired constructor(
             platformService.create(CreateStammtischRequest(name = "Nicht erlaubt"), boardA)
         }
         assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
+    }
+
+    @Test
+    fun `the first platform admin takes over a never used Stammtisch, nobody takes over a used one`() {
+        val empty = tenantTransactions.asSystem { stammtischRepository.saveAndFlush(StammtischEntity(name = "Frisch installiert")) }
+        tenantTransactions.inStammtisch(empty.id) { stammtischSeeder.seed() }
+        val first = TenantContext.runWithoutTenant { userService.getOrCreateUser(platform) }
+
+        assertTrue(platformService.claimUnclaimedStammtisch(first, empty.id))
+        val membership = stammtischMemberships.memberships(first.id).single { it.stammtischId == empty.id }
+        assertTrue(UserRole.ADMIN in membership.roles)
+
+        val second = TenantContext.runWithoutTenant {
+            userService.getOrCreateUser(platform.copy(subject = "kc-platform-2-${UUID.randomUUID()}"))
+        }
+        assertFalse(platformService.claimUnclaimedStammtisch(second, empty.id))
+        assertTrue(stammtischMemberships.memberships(second.id).none { it.stammtischId == empty.id })
     }
 }

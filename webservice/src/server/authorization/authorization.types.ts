@@ -1,4 +1,4 @@
-import type { AccessDecision, AppContext } from '../auth/auth.types';
+import type { AccessDecision, AppContext, StammtischMembership } from '../auth/auth.types';
 
 /**
  * Zugriffsentscheidung, wie sie der Spring-Boot-Access-Resolver ausliefert.
@@ -81,5 +81,20 @@ export function normalizeDecision(raw: unknown): ResolvedAccessDecision | undefi
     ownedEvents: Array.isArray(value.ownedEvents) ? value.ownedEvents : [],
     allowedAppContexts: Array.isArray(value.allowedAppContexts) ? value.allowedAppContexts : [],
     matrixVersion: typeof value.matrixVersion === 'number' ? value.matrixVersion : undefined,
+    stammtischId: typeof value.stammtischId === 'string' ? value.stammtischId : undefined,
+    stammtischName: typeof value.stammtischName === 'string' ? value.stammtischName : undefined,
+    platformAdmin: value.platformAdmin === true ? true : undefined,
+    // Fehlt die Liste, stammt die Antwort nicht aus einem Stammtisch-fähigen Fachservice.
+    memberships: Array.isArray(value.memberships)
+      ? value.memberships.filter(
+          (entry): entry is StammtischMembership =>
+            !!entry && typeof entry.id === 'string' && typeof entry.name === 'string',
+        ).map((entry) => ({
+          id: entry.id,
+          name: entry.name,
+          roles: Array.isArray(entry.roles) ? entry.roles : [],
+          boardRole: entry.boardRole ?? null,
+        }))
+      : undefined,
   };
 }

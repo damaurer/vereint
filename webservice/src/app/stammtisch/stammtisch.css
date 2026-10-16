@@ -1,0 +1,184 @@
+/* Gemeinsame Bausteine der Stammtisch-Seiten (Auswahl, Plattform, Einstellungen, Getränkedatenbank). */
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.st-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.st-row-main {
+  flex: 1 1 12rem;
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+  overflow-wrap: anywhere;
+}
+
+.st-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.st-actions .member-button,
+.st-row > .member-button {
+  padding: 0.55rem 0.95rem;
+  font-size: 0.95rem;
+}
+
+.st-current {
+  border-color: var(--color-brand);
+}
+
+.st-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  vertical-align: middle;
+}
+
+.st-badge-brand {
+  border-color: transparent;
+  background-color: var(--color-brand-soft);
+  color: var(--color-brand);
+}
+
+.st-form {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0.75rem 0 0;
+}
+
+.st-form label {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.st-form input:not([type='checkbox']),
+.st-form textarea,
+.st-input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.st-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 0.75rem;
+}
+
+.st-label {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.st-check {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.st-fieldset {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.st-fieldset legend {
+  padding: 0 0.25rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.st-perm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  gap: 0.35rem 0.75rem;
+}
+
+.st-perms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+code {
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.st-error {
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.st-info {
+  margin: 0.75rem 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.5rem;
+  background-color: var(--color-brand-soft);
+  color: var(--color-text);
+}
+
+.st-section {
+  margin-top: 1.5rem;
+}
+
+.st-danger {
+  background-color: var(--color-danger);
+}
+
+.st-danger:hover:not(:disabled) {
+  background-color: var(--color-danger);
+  filter: brightness(0.92);
+}
+
+.st-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.st-link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-brand);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.st-link-button:hover {
+  text-decoration: underline;
+}

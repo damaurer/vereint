@@ -89,6 +89,28 @@ function titleOf(root: ActivatedRouteSnapshot): string {
   templateUrl: './app-shell.component.html',
   styles: [
     `
+      .shell-stammtisch {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        max-width: 11rem;
+        min-height: 2.75rem;
+        padding: 0 0.6rem;
+        border-radius: 999px;
+        color: var(--color-text-muted);
+        text-decoration: none;
+      }
+      a.shell-stammtisch:hover,
+      a.shell-stammtisch:focus-visible {
+        color: var(--color-text);
+        background: var(--color-surface-muted, rgba(0, 0, 0, 0.05));
+      }
+      .shell-stammtisch-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.9rem;
+      }
       .shell-rail-link,
       .shell-bottom-link {
         position: relative;
@@ -169,6 +191,12 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   /** Anzeigename der aktiven Session für die Topbar. */
   readonly displayName = computed(() => this.sessionSignal()?.displayName ?? null);
+  /** Gewählter Stammtisch; Wechsel nur, wenn es etwas zu wechseln gibt. */
+  readonly stammtischName = computed(() => this.sessionSignal()?.stammtisch?.name ?? null);
+  readonly canSwitchStammtisch = computed(() => {
+    const session = this.sessionSignal();
+    return (session?.memberships?.length ?? 0) > 1 || session?.platformAdmin === true;
+  });
 
   /** Initialen für den Avatar im Profil-Menü. */
   readonly initials = computed(() => {

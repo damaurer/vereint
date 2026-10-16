@@ -15,7 +15,9 @@
       "permissionDenied": "Für diese Aktion fehlen die erforderlichen Rechte.",
       "notFound": "Der angeforderte Eintrag wurde nicht gefunden.",
       "invalid": "Die Eingabe ist ungültig. Bitte prüfen und erneut versuchen.",
-      "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen."
+      "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen.",
+      "stammtischRequired": "Bitte zuerst einen Stammtisch wählen.",
+      "stammtischDenied": "Du gehörst diesem Stammtisch nicht (mehr) an."
     }
   },
   "member": {
@@ -265,7 +267,8 @@
     "logout": "Abmelden",
     "notifications": "Mitteilungen",
     "notificationsUnread": "Mitteilungen, {count} ungelesen",
-    "chatUnread": "{label}, {count} ungelesen"
+    "chatUnread": "{label}, {count} ungelesen",
+    "switchStammtisch": "Stammtisch wechseln (aktuell: {name})"
   },
   "nav": {
     "items": {
@@ -286,7 +289,8 @@
       "communications": "Kommunikation",
       "admin": "Administration",
       "tablet": "Thekenterminal",
-      "scan": "Bezahlen"
+      "scan": "Bezahlen",
+      "stammtisch": "Stammtisch"
     },
     "sections": {
       "club": "Verein",
@@ -354,7 +358,11 @@
         "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
         "passwordMismatch": "Die beiden Passwörter stimmen nicht überein.",
         "checkInput": "Bitte prüfe deine Eingaben. Das Passwort muss mindestens {min} Zeichen lang sein."
-      }
+      },
+      "joinTitle": "Stammtisch beitreten",
+      "joinIntro": "Du bist bereits angemeldet. Mit diesem Einladungslink trittst du dem Stammtisch mit deinem bestehenden Konto bei.",
+      "join": "Diesem Stammtisch beitreten",
+      "joining": "Wird beigetreten …"
     }
   },
   "errorPages": {
@@ -385,7 +393,8 @@
       "boardOrAdmin": "Vorstand oder Admin",
       "admin": "Admin",
       "drinkRecorder": "drinkRecorder",
-      "statistics": "Statistiken einsehen"
+      "statistics": "Statistiken einsehen",
+      "platform": "Plattform-Admin"
     },
     "authError": {
       "title": "Anmeldefehler",
@@ -502,6 +511,22 @@
     "boardMoments": {
       "title": "Moment-Typen & Reaktionen",
       "description": "Typen und Reaktionen für Moments festlegen."
+    },
+    "stammtische": {
+      "title": "Stammtisch wählen",
+      "description": "Einen deiner Stammtische öffnen."
+    },
+    "platform": {
+      "title": "Plattform",
+      "description": "Stammtische dieser Installation verwalten."
+    },
+    "stammtisch": {
+      "title": "Stammtisch",
+      "description": "Name, Rollen und Mitgliedschaft des Stammtischs."
+    },
+    "drinkLibrary": {
+      "title": "Getränkedatenbank",
+      "description": "Getränke aus der gemeinsamen Datenbank übernehmen."
     }
   },
   "chat": {
@@ -854,7 +879,36 @@
       "search": "Suchen",
       "newBarcode": "Der Barcode {barcode} ist noch keinem Getränk zugeordnet. Er wird mit dem neuen Getränk gespeichert."
     },
-    "createInfo": "„{name}“ wurde angelegt und ist sofort im Katalog."
+    "createInfo": "„{name}“ wurde angelegt und ist sofort im Katalog.",
+    "library": {
+      "open": "Aus der Getränkedatenbank",
+      "back": "Zurück zum Katalog",
+      "title": "Getränkedatenbank",
+      "intro": "Die Getränkedatenbank teilen sich alle Stammtische; sie enthält keine Preise – den Preis legt jeder Stammtisch beim Übernehmen selbst fest.",
+      "searchLabel": "Name oder Sorte",
+      "searchPlaceholder": "z. B. Helles",
+      "barcodeLabel": "Strichcode (EAN)",
+      "search": "Suchen",
+      "unavailable": "Die Getränkedatenbank ist gerade nicht erreichbar.",
+      "empty": "Keine Treffer",
+      "emptyHint": "Probier einen anderen Namen oder Strichcode.",
+      "inCatalog": "Schon im Katalog",
+      "adopt": "Übernehmen",
+      "adoptSubmit": "In den Katalog übernehmen",
+      "name": "Name",
+      "category": "Sorte",
+      "description": "Beschreibung",
+      "price": "Verkaufspreis (€)",
+      "costPrice": "Einkaufspreis (€, optional)",
+      "priceHint": "Der Preis gilt nur für deinen Stammtisch.",
+      "priceRequired": "Bitte einen Namen und einen Preis ab 0 € angeben.",
+      "adopted": "„{name}“ ist jetzt in eurem Katalog.",
+      "proposed": "„{name}“ wurde für euren Katalog vorgeschlagen.",
+      "toCatalog": "Zum Katalog",
+      "share": "In die Getränkedatenbank teilen",
+      "shared": "Dieses Getränk ist mit der Getränkedatenbank verknüpft.",
+      "sharedInfo": "„{name}“ ist jetzt in der Getränkedatenbank (ohne Preis)."
+    }
   },
   "sublists": {
     "header": {
@@ -1696,6 +1750,98 @@
       "submit": "Starten",
       "format": "Die PIN muss aus {min} bis {max} Ziffern bestehen.",
       "mismatch": "Die beiden Eingaben stimmen nicht überein."
+    }
+  },
+  "stammtisch": {
+    "choice": {
+      "eyebrow": "Stammtische",
+      "title": "Stammtisch wählen",
+      "intro": "Wähle, welchen Stammtisch du öffnen möchtest. Du kannst jederzeit wechseln.",
+      "current": "Aktuell",
+      "open": "Öffnen",
+      "opening": "Wird geöffnet …",
+      "emptyTitle": "Noch kein Stammtisch",
+      "emptyMessage": "Du bist noch in keinem Stammtisch. Bitte den Vorstand um einen Einladungslink.",
+      "platform": "Plattform verwalten",
+      "selectFailed": "Der Stammtisch konnte nicht geöffnet werden. Bitte erneut versuchen."
+    },
+    "platform": {
+      "back": "Zur Stammtisch-Auswahl",
+      "eyebrow": "Plattform",
+      "title": "Stammtische verwalten",
+      "intro": "Alle Stammtische dieser Installation. Archivierte Stammtische sind für ihre Mitglieder nicht mehr erreichbar.",
+      "createTitle": "Neuen Stammtisch anlegen",
+      "name": "Name",
+      "adminEmail": "E-Mail des Admins (optional)",
+      "adminEmailHint": "Ein bestehendes Konto mit dieser E-Mail wird Admin des Stammtischs; ohne Angabe wirst du selbst Admin.",
+      "create": "Anlegen",
+      "created": "„{name}“ wurde angelegt.",
+      "listTitle": "Alle Stammtische",
+      "unavailable": "Die Stammtische konnten nicht geladen werden.",
+      "empty": "Noch keine Stammtische",
+      "archived": "Archiviert",
+      "members": {
+        "one": "{count} Mitglied",
+        "other": "{count} Mitglieder"
+      },
+      "createdAt": "angelegt {date}",
+      "rename": "Umbenennen",
+      "archive": "Archivieren",
+      "unarchive": "Wiederherstellen",
+      "archiveConfirm": "„{name}“ archivieren? Mitglieder können ihn danach nicht mehr öffnen."
+    },
+    "settings": {
+      "eyebrow": "Stammtisch",
+      "title": "Stammtisch",
+      "memberCount": {
+        "one": "{count} Mitglied",
+        "other": "{count} Mitglieder"
+      },
+      "switch": "Stammtisch wechseln",
+      "unavailable": "Der Stammtisch konnte nicht geladen werden.",
+      "nameTitle": "Name",
+      "name": "Name des Stammtischs",
+      "renamed": "Der Name wurde gespeichert.",
+      "leaveTitle": "Stammtisch verlassen",
+      "leaveHint": "Wenn du „{name}“ verlässt, verlierst du hier alle Rechte. Wieder dabei bist du nur mit einem neuen Einladungslink.",
+      "leave": "Stammtisch verlassen",
+      "leaveConfirm": "„{name}“ wirklich verlassen?",
+      "lastManager": "Du bist die letzte Person, die Mitglieder und Rollen verwalten kann. Gib diese Rolle zuerst jemand anderem."
+    },
+    "roles": {
+      "title": "Rollen & Berechtigungen",
+      "readOnly": "Nur Ansicht – Rollen ändern kann, wer Rollen verwalten darf.",
+      "new": "Neue Rolle",
+      "editTitle": "Rolle bearbeiten",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "deleteConfirm": "Rolle „{name}“ löschen? Personen mit dieser Rolle verlieren ihre Berechtigungen.",
+      "system": "System",
+      "memberCount": {
+        "zero": "niemand",
+        "one": "{count} Person",
+        "other": "{count} Personen"
+      },
+      "permissions": "Berechtigungen",
+      "noPermissions": "Keine Berechtigungen",
+      "name": "Name",
+      "description": "Beschreibung (optional)"
+    },
+    "permissionGroups": {
+      "audit": "Protokoll",
+      "balance": "Guthaben",
+      "catalog": "Katalog",
+      "chat": "Chat",
+      "event": "Veranstaltungen",
+      "kiosk": "Kiosk",
+      "ledger": "Buchungen",
+      "members": "Mitglieder",
+      "moments": "Moments",
+      "notifications": "Benachrichtigungen",
+      "profile": "Profil",
+      "purchase": "Einkäufe",
+      "roles": "Rollen",
+      "stammtisch": "Stammtisch"
     }
   }
 }

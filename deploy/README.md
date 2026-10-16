@@ -216,3 +216,20 @@ systemctl list-timers vereint-backup.timer
 systemctl start vereint-backup.service    # Backup sofort ausführen
 journalctl -u vereint-backup.service      # Backup-Protokoll
 ```
+
+## Mehrere Stammtische
+
+Mit mehreren Stammtischen (siehe `docs/domains/stammtische.md`) gilt:
+
+- Wer in Keycloak die Realmrolle `admin` hat, ist **Plattform-Admin**: Er legt
+  unter `/plattform` Stammtische an und benennt oder archiviert sie.
+- Frische Installation: Der erste Plattform-Admin, der sich anmeldet, wird
+  automatisch Admin des noch nie genutzten Stammtischs „Mein Stammtisch" und
+  benennt ihn in der App unter *Stammtisch* um. Alle Weiteren kommen per
+  Einladungslink dazu.
+- Alle anderen Rollen vergibt jeder Stammtisch selbst in der App; Realmrollen
+  wie `board` oder `member` haben keine Wirkung mehr.
+- Die Trennung per Row-Level-Security setzt voraus, dass sich der baseservice
+  als `vereint` verbindet (kein Superuser, Eigentümer der Tabellen), wie es
+  `postgres/init-databases.sh` anlegt. Nicht auf `postgres` umstellen.
+- Bestehende Daten landen beim Update im Stammtisch „Mein Stammtisch".

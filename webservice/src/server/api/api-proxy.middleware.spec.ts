@@ -114,6 +114,27 @@ describe('api-proxy.middleware', () => {
     expect(capturedAuth).toBe('Bearer access-token-abc');
   });
 
+  it('forwards the selected Stammtisch from the BFF cookie, never from a client header', async () => {
+    let captured: Headers | undefined;
+    globalThis.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
+      captured = new Headers(init?.headers);
+      return new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }) as unknown as typeof fetch;
+
+    await originalFetch(`${baseUrl}/api/v1/events`, {
+      headers: {
+        Cookie: 'vereint.stammtisch=11111111-1111-4111-8111-111111111111',
+        'X-Stammtisch-Id': '22222222-2222-4222-8222-222222222222',
+      },
+    });
+    expect(captured?.get('x-stammtisch-id')).toBe('11111111-1111-4111-8111-111111111111');
+
+    await originalFetch(`${baseUrl}/api/v1/events`, {
+      headers: { 'X-Stammtisch-Id': '22222222-2222-4222-8222-222222222222' },
+    });
+    expect(captured?.get('x-stammtisch-id')).toBeNull();
+  });
+
   it('forwards multipart uploads byte for byte with their boundary', async () => {
     let captured: { body: Buffer; contentType: string | null } | undefined;
     globalThis.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {

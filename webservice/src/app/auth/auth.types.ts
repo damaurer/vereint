@@ -92,12 +92,29 @@ export const MAX_PAGE_SIZE = 100;
 export const DEFAULT_USER_SORT = 'displayName,asc';
 
 /** Antwort von `GET /api/v1/auth/me` und `GET /api/auth/me`. */
+/** Mitgliedschaft in einem Stammtisch; Rollen sind je Stammtisch definiert. */
+export interface StammtischMembership {
+  id: string;
+  name: string;
+  roles: string[];
+  boardRole?: BoardRole | null;
+}
+
+export interface StammtischRef {
+  id: string;
+  name: string;
+}
+
 export interface AuthMeResponse {
   subject: string;
   displayName: string | null;
   roles: UserRole[];
   boardRole: BoardRole | null;
   permissions: string[];
+  stammtisch?: StammtischRef | null;
+  memberships?: StammtischMembership[];
+  platformAdmin?: boolean;
+  appContexts?: AppContext[];
 }
 
 export interface ServiceStatus {
@@ -115,6 +132,12 @@ export interface AuthSessionUser {
   permissions?: string[];
   drinkRecorder?: boolean;
   eventScopes?: string[];
+  /** Gewählter Stammtisch; `null` heißt: keiner gewählt (Auswahlseite). */
+  stammtisch?: StammtischRef | null;
+  memberships?: StammtischMembership[];
+  platformAdmin?: boolean;
+  /** Freigegebene App-Kontexte im gewählten Stammtisch (Navigation). */
+  appContexts?: AppContext[];
 }
 
 export interface RememberedLogin {

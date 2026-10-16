@@ -10,6 +10,7 @@ import de.maurer.baseservice.security.AuthContext
 import de.maurer.baseservice.security.RolePermissionMatrix
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
+import de.maurer.baseservice.service.PlatformService
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.web.RequestIdFilter
 import jakarta.servlet.FilterChain
@@ -42,6 +43,8 @@ class StammtischContextFilter(
     private val userService: UserService,
     private val memberships: StammtischMemberships,
     private val authContext: AuthContext,
+    private val platformService: PlatformService,
+    private val realmRoleBootstrap: RealmRoleBootstrap,
     private val messages: ErrorMessageResolver
 ) : OncePerRequestFilter() {
 
@@ -70,7 +73,12 @@ class StammtischContextFilter(
             // Deaktivierte Konten erhalten keinerlei Rechte; die Endpunkte melden den Grund.
             null
         }
-        val available = user?.let { memberships.memberships(it.id) }.orEmpty()
+        var available = user?.let { memberships.memberships(it.id) }.orEmpty()
+        if (user != null && available.isEmpty()) {
+            val joined = realmRoleBootstrap.joinDefault(user, tokenPrincipal) ||
+                (platformAdmin && platformService.claimUnclaimedStammtisch(user))
+            if (joined) available = memberships.memberships(user.id)
+        }
         val selected = when {
             requested != null -> available.firstOrNull { it.stammtischId == requested } ?: run {
                 writeProblem(

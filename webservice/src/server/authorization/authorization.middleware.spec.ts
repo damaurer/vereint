@@ -326,6 +326,26 @@ describe('authorizePages Express Middleware', () => {
       expect(redirect).toHaveBeenCalledWith('/403');
     });
 
+    it('sends a person with several Stammtische but none selected to the choice page', async () => {
+      stubResolver(
+        accessDecision({
+          roles: [],
+          allowedAppContexts: [],
+          memberships: [
+            { id: '11111111-1111-4111-8111-111111111111', name: 'A', roles: ['member'] },
+            { id: '22222222-2222-4222-8222-222222222222', name: 'B', roles: ['board'] },
+          ],
+        }),
+      );
+      const identity: RequestIdentity = { uid: 'user-multi', roles: [], drinkRecorder: false };
+
+      const { req, res, next, redirect } = createMockReqRes({ path: '/board', identity });
+      await authorizePages(req, res, next);
+
+      expect(next).not.toHaveBeenCalled();
+      expect(redirect).toHaveBeenCalledWith(expect.stringMatching(/^\/stammtische\?returnTo=/));
+    });
+
     it('allows a treasurer in the treasury context', async () => {
       stubResolver(
         accessDecision({

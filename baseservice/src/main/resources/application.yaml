@@ -45,6 +45,10 @@ vereint:
     # Neue Sprache: i18n/messages_<code>.properties anlegen und hier ergänzen.
     supported-locales: ${VEREINT_I18N_SUPPORTED_LOCALES:de,en}
     default-locale: de
+  tenancy:
+    # Nur Entwicklung/E2E: Konten ohne Mitgliedschaft treten „Mein Stammtisch"
+    # mit ihren Keycloak-Realmrollen bei. In Produktion aus (nur per Einladung).
+    bootstrap-realm-roles: ${TENANCY_BOOTSTRAP_REALM_ROLES:false}
   cors:
     # Ausschließlich explizite Ursprünge; Wildcards werden verworfen
     allowed-origins: ${VEREIN_CORS_ALLOWED_ORIGINS:http://localhost:4200}

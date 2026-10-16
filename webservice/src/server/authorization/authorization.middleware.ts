@@ -4,6 +4,7 @@ import { createCorrelationId, logSecurityEvent } from '../auth/security-log';
 import { publicPaths, pathIs } from '../config/server-config';
 import { validateInvite } from '../invites/invite.service';
 import { checkResourceAccess, resolvePathAppContext } from './authorization.service';
+import { readStammtischCookie } from '../stammtisch/stammtisch-cookie';
 import { isApiRequest } from './delivery.middleware';
 import type { AppContext } from '../auth/auth.types';
 
@@ -233,6 +234,7 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
     accessToken: req.sessionData?.tokens.accessToken,
     sessionId: req.sessionData?.sessionId,
     requestId,
+    stammtischId: readStammtischCookie(req),
   });
 
   if (result.outcome === 'allowed') {
@@ -284,6 +286,14 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
     },
     req,
   );
+
+  // Ohne gewählten Stammtisch gibt es keine Rechte: erst auswählen lassen.
+  const noStammtisch =
+    result.decision?.memberships !== undefined && !result.decision.disabled && !result.decision.stammtischId;
+  if (noStammtisch && !isApiRequest(req)) {
+    res.redirect(`/stammtische?returnTo=${encodeURIComponent(req.originalUrl ?? pathname)}`);
+    return;
+  }
 
   if (isApiRequest(req)) {
     sendProblem(

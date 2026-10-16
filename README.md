@@ -105,6 +105,7 @@ Die Dokumentation ist lückenlos nach Fachbereichen und technischen Schichten un
 - **[Datenmodell & Schema](docs/architecture/data-model.md)** – Vollständiges ERD-Diagramm, Tabellenstrukturen, Constraints & Liquibase Migrationen.
 
 ### 💼 [Fachdomänen & Module (Functional & Technical Deep Dives)](docs/domains/)
+- **[Mehrere Stammtische](docs/domains/stammtische.md)** – Trennung je Stammtisch (Hibernate + PostgreSQL Row-Level-Security), Rollen je Stammtisch, Plattform-Admin, gemeinsame Getränkedatenbank.
 - **[Benutzerverwaltung & Authentifizierung](docs/domains/auth-and-user-management.md)** – Profile, Rollen, Account-Deaktivierung, Keycloak Sync & Provisionierung.
 - **[Kassenbuch & Finanzwesen (Ledger)](docs/domains/ledger-and-finance.md)** – Double-Entry Journal, Buchungstypen (`topup`, `purchase`, `payout`, `correction`), Kontostand & Idempotenz.
 - **[Getränkekatalog & Sublisten](docs/domains/drink-catalog-and-sublists.md)** – Master-Katalog, Kategorien und Event-Sublisten.

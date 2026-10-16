@@ -1,6 +1,7 @@
 package de.maurer.baseservice.service
 
 import de.maurer.baseservice.domain.StammtischEntity
+import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.CreateStammtischRequest
 import de.maurer.baseservice.dto.PlatformStammtischDto
 import de.maurer.baseservice.dto.UpdatePlatformStammtischRequest
@@ -17,6 +18,7 @@ import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.tenancy.StammtischSeeder
 import de.maurer.baseservice.tenancy.TenantContext
 import de.maurer.baseservice.tenancy.TenantTransactions
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
 import java.util.UUID
 
@@ -87,6 +89,35 @@ class PlatformService(
         return toDto(updated)
     }
 
+    /**
+     * Frische Installation: Den Stammtisch aus der Migration hat noch nie jemand
+     * betreten. Der erste Plattform-Admin ohne Mitgliedschaft wird dort Admin,
+     * statt neben einem leeren Stammtisch einen neuen anlegen zu müssen.
+     * Liefert `true`, wenn die Person aufgenommen wurde.
+     */
+    fun claimUnclaimedStammtisch(user: UserEntity, stammtischId: UUID = DEFAULT_STAMMTISCH_ID): Boolean {
+        val stammtisch = tenantTransactions.readAsSystem { stammtischRepository.findById(stammtischId).orElse(null) }
+        if (stammtisch == null || stammtisch.archived) return false
+        return try {
+            tenantTransactions.inStammtisch(stammtischId) {
+                // Auch beendete Mitgliedschaften zählen: Ein einmal genutzter
+                // Stammtisch wird nie automatisch vergeben.
+                if (memberRepository.count() > 0) return@inStammtisch false
+                membershipService.addMember(user, setOf(UserRole.MEMBER, UserRole.ADMIN))
+                auditService.recordStammtischChange(
+                    user,
+                    AuditService.ACTION_STAMMTISCH_CREATED,
+                    stammtischId,
+                    "claimed=${user.id}"
+                )
+                true
+            }
+        } catch (ex: DataIntegrityViolationException) {
+            // Paralleler Erstaufruf derselben Person: die andere Anfrage hat aufgenommen.
+            false
+        }
+    }
+
     private fun toDto(stammtisch: StammtischEntity) = PlatformStammtischDto(
         id = stammtisch.id.toString(),
         name = stammtisch.name,
@@ -101,6 +132,11 @@ class PlatformService(
             throw InvalidRequestException(Msg("error.stammtisch.nameBlank"), ErrorCode.INVALID_REQUEST)
         }
         return name.take(StammtischService.MAX_NAME_LENGTH)
+    }
+
+    companion object {
+        /** Stammtisch, den Migration `013-stammtische.xml` für bestehende Daten anlegt. */
+        val DEFAULT_STAMMTISCH_ID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
     }
 
     private fun requirePlatformAdmin(principal: UserPrincipal) {
