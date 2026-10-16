@@ -10,12 +10,27 @@ Dieses Dokumentationszentrum bietet eine lückenlose, hochdetaillierte fachliche
 
 Das Handbuch für Mitglieder, Vorstand, Administration, Thekendienst und Gäste mit echten Screenshots liegt unter [`handbuch/`](handbuch/README.md).
 
+Kurzüberblick ohne Bildschirmfotos: [Funktionen](funktionen.md), [Rollen und Berechtigungen](rollen-und-berechtigungen.md) und [Offene Punkte](offene-punkte.md).
+
 ## 🗺️ Dokumentationsübersicht & Verzeichnisstruktur
 
-Die Dokumentation ist modular in acht Kernbereiche unterteilt:
+Die Dokumentation ist modular in diese Bereiche unterteilt:
 
 ```text
 docs/
+├── funktionen.md                         # Was die App kann, Bereich für Bereich
+├── rollen-und-berechtigungen.md          # Mitglied, Vorstand, Administration, Terminal
+├── offene-punkte.md                      # Bekannte Lücken und nächste Schritte
+├── handbuch/                             # Benutzerhandbuch je Rolle mit Bildschirmfotos
+│
+├── betrieb/                              # Produktion: Go-Live, CI, AWS, Deployment, Backups, Schlüssel
+│   ├── go-live-checkliste.md             # Was vor dem ersten Produktivbetrieb von Hand zu tun ist
+│   ├── branches-und-ci.md                # develop, qs, main, Prüfungen vor jedem Merge, Images
+│   ├── aws-und-kosten.md                 # Terraform, Server, Budget, monatliche Kosten
+│   ├── deployment-und-rollback.md        # Automatisches Ausrollen, Health Check, Zurückrollen
+│   ├── backups-und-wiederherstellung.md  # Nächtliche Backups, Snapshots, Restore
+│   └── sicherheit-und-schluessel.md      # Verschlüsselung, Secrets, Offline-Schlüssel, Härtung
+│
 ├── architecture/                         # Systemarchitektur, Sicherheit & Datenmodelle
 │   ├── system-overview.md                # Multi-Tier Systemarchitektur & Tech-Stack
 │   ├── security-and-auth.md              # OIDC, PKCE, Cookie-Session, Rollen & Berechtigungen
@@ -61,7 +76,7 @@ docs/
 │   ├── rest-api-reference.md             # REST API Endpunktkatalog & DTO-Schemas
 │   └── error-handling-and-idempotency.md # RFC 7807 Problem Details & Idempotenz-Muster
 │
-└── operations/                           # Betrieb, Deployment & Infrastruktur
+└── operations/                           # Lokaler Betrieb, Keycloak, Speicher & Migrationen
     ├── local-setup-docker.md             # Lokale Entwicklung & Docker Compose Topology
     ├── keycloak-and-storage.md           # Keycloak Realms & S3-Objektspeicher (AWS, lokal MinIO)
     └── database-migrations.md            # Liquibase Migrationen & Schema-Verwaltung
@@ -116,3 +131,6 @@ docs/
   3. Siehe [Benutzerverwaltung](domains/auth-and-user-management.md), [Mitglieder per Einladungslink](domains/member-invites.md) und [Events & Einladungen](domains/events-and-invites.md).
 - **Für Event-Betreiber & Thekenteams**:
   1. Siehe [Tablet Strichlisten-Recorder](domains/tablet-strichliste-recorder.md) für Kiosk-Abläufe, Speisen-/Getränkeauswahl und 1-Tap-Touch-Buchungen.
+- **Für den Betrieb (Produktion)**:
+  1. Vor dem ersten Ausrollen die [Go-Live-Checkliste](betrieb/go-live-checkliste.md) abarbeiten.
+  2. Siehe [Deployment & Rollback](betrieb/deployment-und-rollback.md), [Backups & Wiederherstellung](betrieb/backups-und-wiederherstellung.md) und [Sicherheit & Schlüssel](betrieb/sicherheit-und-schluessel.md).

@@ -1,8 +1,8 @@
 # Funktionen
 
 Überblick über alles, was die App heute kann. Wer was darf, steht unter
-[Rollen und Berechtigungen](Rollen-und-Berechtigungen); Schritt-für-Schritt-
-Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
+[Rollen und Berechtigungen](rollen-und-berechtigungen.md); Schritt-für-Schritt-
+Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 
 ## Start und Navigation
 
@@ -23,15 +23,15 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
 - Jedes Event hat einen eigenen Chat für die Eingeladenen.
 - Gäste ohne Konto können über einen Gast-Link zu einem einzelnen Event
   eingeladen werden.
-- Fachliche Details: [docs/domains/events-and-invites.md](https://github.com/damaurer/vereint/blob/develop/docs/domains/events-and-invites.md)
+- Fachliche Details: [docs/domains/events-and-invites.md](domains/events-and-invites.md)
 
 ## Chat und Mitteilungen
 
 - Vereinschat, Direktnachrichten zwischen Mitgliedern und Event-Chats, mit Zähler für ungelesene Nachrichten am Chat-Eintrag.
 - Mitteilungen (Glocke oben) und Rundbriefe des Vorstands, auf Wunsch als
-  Web-Push aufs Handy (siehe [PWA und Push](PWA-und-Push)).
+  Web-Push aufs Handy (siehe [PWA und Push](frontend/angular-ssr-and-pwa.md)).
 - Nachrichten und Mitteilungen werden verschlüsselt gespeichert (siehe
-  [Sicherheit und Verschlüsselung](Sicherheit-und-Verschluesselung)).
+  [Sicherheit und Verschlüsselung](betrieb/sicherheit-und-schluessel.md)).
 
 ## Guthaben
 
@@ -41,7 +41,7 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
   Guthaben in der Kasse über eine Mitgliederauswahl.
 - Das Guthaben darf wie bei der Strichliste ins Minus gehen.
 - Technisch ein unveränderliches Kassenbuch mit Idempotenzschlüssel gegen
-  Doppelbuchungen: [docs/domains/ledger-and-finance.md](https://github.com/damaurer/vereint/blob/develop/docs/domains/ledger-and-finance.md)
+  Doppelbuchungen: [docs/domains/ledger-and-finance.md](domains/ledger-and-finance.md)
 
 ## Bezahlen per Barcode
 
@@ -63,8 +63,8 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
 - Statt Löschen gibt es den Schalter *Im Sortiment*. Warnungen bei doppeltem
   Barcode oder Namen.
 - Je Event eine Auswahl aus dem Katalog (Subliste) mit eigenen Preisen.
-- Details: [docs/domains/drink-catalog-and-sublists.md](https://github.com/damaurer/vereint/blob/develop/docs/domains/drink-catalog-and-sublists.md),
-  [docs/domains/food-catalog-and-event-food.md](https://github.com/damaurer/vereint/blob/develop/docs/domains/food-catalog-and-event-food.md)
+- Details: [docs/domains/drink-catalog-and-sublists.md](domains/drink-catalog-and-sublists.md),
+  [docs/domains/food-catalog-and-event-food.md](domains/food-catalog-and-event-food.md)
 
 ## Thekenterminal (Strichliste)
 
@@ -77,7 +77,7 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
   unter *Vorstand → Kiosk-Geräte* auch ohne PIN.
 - Striche des Terminals lassen sich 10 Minuten lang rückgängig machen.
 - Abendabschluss mit Bareinnahmen.
-- Details: [docs/domains/tablet-strichliste-recorder.md](https://github.com/damaurer/vereint/blob/develop/docs/domains/tablet-strichliste-recorder.md)
+- Details: [docs/domains/tablet-strichliste-recorder.md](domains/tablet-strichliste-recorder.md)
 
 ## Moments
 
@@ -88,13 +88,13 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
   verschlüsselt gespeichert.
 - Welche Moment-Typen und Reaktionen es gibt, legt der Vorstand unter
   *Vorstand → Moments · Typen & Reaktionen* fest.
-- Details: [docs/domains/moments-and-rituals.md](https://github.com/damaurer/vereint/blob/develop/docs/domains/moments-and-rituals.md)
+- Details: [docs/domains/moments-and-rituals.md](domains/moments-and-rituals.md)
 
 ## Statistiken
 
 - Für alle angemeldeten Mitglieder erreichbar: Verbrauch, Top-Listen,
   Anwesenheit.
-- Details: [docs/domains/statistics-and-analytics.md](https://github.com/damaurer/vereint/blob/develop/docs/domains/statistics-and-analytics.md)
+- Details: [docs/domains/statistics-and-analytics.md](domains/statistics-and-analytics.md)
 
 ## Mitglieder per Einladungslink
 
@@ -104,7 +104,7 @@ Anleitungen im [Benutzerhandbuch](Benutzerhandbuch).
   Mitglied. Eine offene Selbstregistrierung gibt es nicht.
 - Links sind zufällig, laufen ab und lassen sich zurückziehen; gespeichert wird
   nur ein Hash.
-- Details: [docs/domains/member-invites.md](https://github.com/damaurer/vereint/blob/develop/docs/domains/member-invites.md)
+- Details: [docs/domains/member-invites.md](domains/member-invites.md)
 
 ## Verwaltung
 

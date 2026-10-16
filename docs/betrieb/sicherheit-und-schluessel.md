@@ -21,7 +21,7 @@ Mitgliedern.
 
 > **Wichtig:** Diese zwei Werte aus dem SSM Parameter Store zusätzlich offline
 > aufbewahren, zum Beispiel im Passwort-Manager des Vorstands. Die Werte gehören
-> nie in dieses Wiki, ins Repository oder in einen Chat.
+> nie in die Dokumentation, ins Repository oder in einen Chat.
 
 | Parameter | Ohne ihn … |
 | :--- | :--- |
@@ -102,6 +102,6 @@ Alte Inhalte bleiben mit dem vorherigen Schlüssel lesbar.
 - GitHub Actions sind auf Commit-SHAs gepinnt, Images auf Digests; Dependabot
   hält beides aktuell.
 
-Mehr: [deploy/README.md](https://github.com/damaurer/vereint/blob/develop/deploy/README.md#sicherheit),
-[infra/aws/README.md](https://github.com/damaurer/vereint/blob/develop/infra/aws/README.md#sicherheit),
-[docs/architecture/security-and-auth.md](https://github.com/damaurer/vereint/blob/develop/docs/architecture/security-and-auth.md)
+Mehr: [deploy/README.md](../../deploy/README.md#sicherheit),
+[infra/aws/README.md](../../infra/aws/README.md#sicherheit),
+[docs/architecture/security-and-auth.md](../architecture/security-and-auth.md)

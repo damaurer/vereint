@@ -37,7 +37,7 @@ Schutz der Backups selbst:
 | :--- | :--- |
 | Daten versehentlich gelöscht oder Datenbank kaputt | `sudo /srv/vereint/app/bin/restore.sh vereint` (oder `keycloak`), optional mit dem S3-Key eines älteren Backups |
 | Deployment hat die Daten beschädigt | dasselbe; ohne Angabe nimmt `restore.sh` das neueste Backup, also das von direkt vor dem Deployment |
-| Datenvolume verloren | Aus dem Snapshot ein neues Volume erstellen und mit `terraform import aws_ebs_volume.data <vol-id>` übernehmen ([infra/aws/README.md](https://github.com/damaurer/vereint/blob/develop/infra/aws/README.md#betrieb)) |
+| Datenvolume verloren | Aus dem Snapshot ein neues Volume erstellen und mit `terraform import aws_ebs_volume.data <vol-id>` übernehmen ([infra/aws/README.md](../../infra/aws/README.md#betrieb)) |
 | Server komplett verloren | `terraform apply` legt ihn neu an, das Datenvolume bleibt erhalten |
 
 `restore.sh` fragt vor dem Überschreiben den Datenbanknamen zur Bestätigung ab
@@ -46,6 +46,6 @@ und stoppt den betroffenen Dienst währenddessen.
 > Ohne `BACKUP_ENCRYPTION_KEY` lässt sich kein S3-Backup lesen, ohne
 > `DATA_ENCRYPTION_KEY` bleiben Nachrichten, Bilder und Videos auch nach einem Restore
 > unlesbar. Beide offline sichern, siehe
-> [Sicherheit und Verschlüsselung](Sicherheit-und-Verschluesselung#schlüssel-die-offline-gesichert-sein-müssen).
+> [Sicherheit und Verschlüsselung](sicherheit-und-schluessel.md#schlüssel-die-offline-gesichert-sein-müssen).
 
-Mehr: [deploy/README.md](https://github.com/damaurer/vereint/blob/develop/deploy/README.md#backups)
+Mehr: [deploy/README.md](../../deploy/README.md#backups)

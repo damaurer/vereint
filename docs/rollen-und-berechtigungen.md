@@ -16,7 +16,7 @@ Zusätzlich gibt es Vorstandsfunktionen als Kennzeichnung: `chair` (Vorsitz),
 
 Wichtige Regeln:
 
-- Wer sich über einen [Einladungslink](Funktionen#mitglieder-per-einladungslink)
+- Wer sich über einen [Einladungslink](funktionen.md#mitglieder-per-einladungslink)
   registriert, bekommt **nur** `member`. Weitere Rollen vergibt die
   Administration.
 - Mitglieder können ihr eigenes Guthaben nicht aufladen und sehen diese Option
@@ -24,5 +24,5 @@ Wichtige Regeln:
 - Der Vorstand darf IDs sehen, arbeitet in Formularen aber mit Namen.
 
 Rechtematrix und technische Umsetzung:
-[docs/architecture/security-and-auth.md](https://github.com/damaurer/vereint/blob/develop/docs/architecture/security-and-auth.md),
-[docs/baseservice/03-security-and-authorization.md](https://github.com/damaurer/vereint/blob/develop/docs/baseservice/03-security-and-authorization.md)
+[docs/architecture/security-and-auth.md](architecture/security-and-auth.md),
+[docs/baseservice/03-security-and-authorization.md](baseservice/03-security-and-authorization.md)

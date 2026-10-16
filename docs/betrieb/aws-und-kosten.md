@@ -1,7 +1,7 @@
 # AWS-Infrastruktur und Kosten
 
 Die gesamte Infrastruktur ist Terraform-Code in
-[`infra/aws/`](https://github.com/damaurer/vereint/tree/develop/infra/aws).
+[`infra/aws/`](../../infra/aws/).
 Ziel: günstig, sicher und ohne Datenverlust.
 
 ## Was angelegt wird
@@ -43,7 +43,7 @@ Zu beachten:
 
 ## Einrichtung
 
-Kurzfassung (Details in [infra/aws/README.md](https://github.com/damaurer/vereint/blob/develop/infra/aws/README.md)):
+Kurzfassung (Details in [infra/aws/README.md](../../infra/aws/README.md)):
 
 ```bash
 cd infra/aws/bootstrap && terraform init && terraform apply   # einmalig: State-Bucket
@@ -55,7 +55,7 @@ terraform plan
 terraform apply
 ```
 
-Was danach von Hand folgt, steht in der [Go-Live-Checkliste](Go-Live-Checkliste).
+Was danach von Hand folgt, steht in der [Go-Live-Checkliste](go-live-checkliste.md).
 
 ## Betrieb
 
@@ -67,4 +67,4 @@ Was danach von Hand folgt, steht in der [Go-Live-Checkliste](Go-Live-Checkliste)
   Schutz wieder einschalten. Das Datenvolume bleibt erhalten und wird wieder
   eingehängt.
 - **Keycloak-Admin-Konsole** nur per Tunnel, siehe
-  [Deployment und Rollback](Deployment-und-Rollback#keycloak-verwaltung).
+  [Deployment und Rollback](deployment-und-rollback.md#keycloak-verwaltung).

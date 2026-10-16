@@ -1,7 +1,7 @@
 # Deployment und Rollback
 
 Auf dem Server liegt der Inhalt von
-[`deploy/`](https://github.com/damaurer/vereint/tree/develop/deploy) unter
+[`deploy/`](../../deploy/) unter
 `/srv/vereint/app`: Docker Compose mit Caddy, Keycloak, webservice, baseservice
 und PostgreSQL.
 
@@ -13,7 +13,7 @@ Internet ──443──▶ Caddy ──┬─ /kc/*  ──▶ Keycloak
 ## Automatisch bei jedem Merge nach `main`
 
 Workflow `Deployment (Produktion)`
-([.github/workflows/deploy.yml](https://github.com/damaurer/vereint/blob/develop/.github/workflows/deploy.yml)):
+([.github/workflows/deploy.yml](../../.github/workflows/deploy.yml)):
 
 1. Wartet, bis die Image-Builds auf `main` fertig sind, und bindet die Images an
    ihren Digest (`images.env`).
@@ -48,11 +48,11 @@ Liquibase-Migrationen so geschrieben sein, dass auch der vorherige Stand mit dem
 neuen Schema läuft (Spalten erst hinzufügen, später entfernen). Ist doch einmal
 die Datenbank das Problem: `sudo /srv/vereint/app/bin/restore.sh vereint` nimmt
 das Backup von direkt vor dem Deployment (siehe
-[Backups und Wiederherstellung](Backups-und-Wiederherstellung)).
+[Backups und Wiederherstellung](backups-und-wiederherstellung.md)).
 
 ## Erstes Deployment
 
-Voraussetzungen aus der [Go-Live-Checkliste](Go-Live-Checkliste). Gibt es auf
+Voraussetzungen aus der [Go-Live-Checkliste](go-live-checkliste.md). Gibt es auf
 `main` noch keine Images, unter *Actions* die Workflows `baseservice CI/CD`,
 `webservice CI/CD` und `keycloak CI/CD` je einmal mit *Run workflow* auf `main`
 starten; danach rollt das Deployment von selbst aus. Der Produktions-Realm hat
@@ -84,4 +84,4 @@ systemctl start vereint-backup.service         # Backup sofort
 journalctl -u vereint-backup.service           # Backup-Protokoll
 ```
 
-Mehr: [deploy/README.md](https://github.com/damaurer/vereint/blob/develop/deploy/README.md)
+Mehr: [deploy/README.md](../../deploy/README.md)

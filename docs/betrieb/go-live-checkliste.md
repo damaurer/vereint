@@ -17,7 +17,7 @@ Reihenfolge**.
       setzen, **bevor** ausgerollt wird. Ohne DNS bekommt Caddy kein Zertifikat,
       und die Anmeldung scheitert.
 
-Details: [AWS-Infrastruktur und Kosten](AWS-Infrastruktur-und-Kosten#einrichtung)
+Details: [AWS-Infrastruktur und Kosten](aws-und-kosten.md#einrichtung)
 
 ## 2. Alarme bestätigen
 
@@ -43,7 +43,7 @@ Details: [AWS-Infrastruktur und Kosten](AWS-Infrastruktur-und-Kosten#einrichtung
       dem Parameter Store auslesen und offline aufbewahren (Passwort-Manager).
       Ohne den Daten-Schlüssel sind Chat, Bilder und Videos auch aus intakten
       Backups nicht lesbar. Siehe
-      [Sicherheit und Verschlüsselung](Sicherheit-und-Verschluesselung#schlüssel-die-offline-gesichert-sein-müssen).
+      [Sicherheit und Verschlüsselung](sicherheit-und-schluessel.md#schlüssel-die-offline-gesichert-sein-müssen).
 
 ## 5. Ausrollen
 
@@ -57,7 +57,7 @@ Details: [AWS-Infrastruktur und Kosten](AWS-Infrastruktur-und-Kosten#einrichtung
       `webservice CI/CD` und `keycloak CI/CD` einmal mit *Run workflow* starten.
 - [ ] Den **ersten Administrator** anlegen. Der Produktions-Realm hat keine
       Benutzer; die Anleitung steht nach #27 in
-      [deploy/README.md](https://github.com/damaurer/vereint/blob/develop/deploy/README.md).
+      [deploy/README.md](../../deploy/README.md).
 
 Der Keycloak-Handgriff für Einladungslinks entfällt, weil der Realm beim ersten
 Start frisch importiert wird.
@@ -66,7 +66,7 @@ Start frisch importiert wird.
 
 - [ ] Anmelden, Rollen vergeben, einen Einladungslink testen.
 - [ ] Barcode-Kamera und Web Push am Handy testen; beides geht erst unter echtem
-      HTTPS ([PWA und Push](PWA-und-Push)).
+      HTTPS ([PWA und Push](../frontend/angular-ssr-and-pwa.md)).
 - [ ] Zwei-Faktor-Anmeldung einmal einrichten. Die OTP-Seiten kommen aus
       Keycloak 26.8.1, der Rahmen des Login-Themes aus den 26.1.4-Vorlagen.
 - [ ] Ein kurzes Video in Moments hochladen.

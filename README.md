@@ -13,9 +13,9 @@ Thekenterminal im Kiosk-Modus, Getränke- und Speisenkatalog, Moments mit Fotos
 und kurzen Videos, Statistiken und Einladungen per Link. Sie läuft als
 installierbare Web-App (PWA) mit Web Push.
 
-**Einstieg und Betriebsüberblick: das [Projekt-Wiki](https://github.com/damaurer/vereint/wiki)**
-(gepflegt unter [`wiki/`](wiki/)). Anleitungen je Rolle mit Bildschirmfotos stehen
-im [Benutzerhandbuch](docs/handbuch/README.md).
+Einstieg: [Funktionen](docs/funktionen.md), [Rollen](docs/rollen-und-berechtigungen.md),
+[Betrieb](#-betrieb) und [offene Punkte](docs/offene-punkte.md). Anleitungen je Rolle mit
+Bildschirmfotos stehen im [Benutzerhandbuch](docs/handbuch/README.md).
 
 ---
 
@@ -41,8 +41,8 @@ Die App läuft dann unter `http://localhost:4200`. Der Entwicklungs-Realm legt d
 Konten `admin`, `board` und `member` an; ihre Passwörter stehen in der `.env`
 (`KEYCLOAK_SEED_*_PASSWORD`) und müssen beim ersten Login geändert werden.
 
-Details: [Wiki: Lokale Entwicklung](https://github.com/damaurer/vereint/wiki/Lokale-Entwicklung)
-und [docs/operations/local-setup-docker.md](docs/operations/local-setup-docker.md).
+Details: [docs/operations/local-setup-docker.md](docs/operations/local-setup-docker.md),
+E2E-Tests: [e2e/README.md](e2e/README.md).
 
 ---
 
@@ -80,7 +80,31 @@ Rollback aus.
 | `e2e/` | Playwright | Tests gegen den kompletten Produktions-Stack |
 | `scripts/handbook/` | Playwright | Bildschirmfotos für das Benutzerhandbuch |
 | `docs/` | Markdown | Technische und fachliche Dokumentation, Benutzerhandbuch |
-| `wiki/` | Markdown | Quelle des GitHub-Wikis |
+
+---
+
+## 🚢 Betrieb
+
+- Gearbeitet wird auf `develop`. Jeder Pull Request nach `develop`, `qs` oder `main`
+  muss Tests, Sicherheitsscans und E2E-Tests bestehen.
+- Jeder Merge nach `main` rollt automatisch auf einen einzelnen AWS-Server in
+  Frankfurt aus: Datenbank-Backup vorher, Health Check danach, automatischer
+  Rollback bei Fehlern.
+- Chat-Nachrichten, Mitteilungen, Bilder und Videos werden in der App mit
+  AES-256-GCM verschlüsselt, bevor sie in der Datenbank oder in S3 landen.
+- Backups laufen jede Nacht, werden vorher probeweise wiederhergestellt und
+  verschlüsselt abgelegt.
+- `BACKUP_ENCRYPTION_KEY` und `DATA_ENCRYPTION_KEY` müssen zusätzlich offline
+  aufbewahrt werden. Ohne sie sind Backups bzw. verschlüsselte Inhalte nicht mehr lesbar.
+
+| Thema | Dokument |
+| :--- | :--- |
+| Vor dem ersten Produktivbetrieb | [Go-Live-Checkliste](docs/betrieb/go-live-checkliste.md) |
+| Branches, CI, Images | [Branches und CI](docs/betrieb/branches-und-ci.md) |
+| AWS, Terraform, Kosten | [AWS und Kosten](docs/betrieb/aws-und-kosten.md) |
+| Ausrollen und Zurückrollen | [Deployment und Rollback](docs/betrieb/deployment-und-rollback.md) |
+| Backups und Restore | [Backups und Wiederherstellung](docs/betrieb/backups-und-wiederherstellung.md) |
+| Verschlüsselung, Schlüssel, Härtung | [Sicherheit und Schlüssel](docs/betrieb/sicherheit-und-schluessel.md) |
 
 ---
 
