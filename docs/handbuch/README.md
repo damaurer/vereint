@@ -33,3 +33,5 @@ Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mit
 ## Bilder neu erzeugen
 
 Die Bilder entstehen automatisch mit einem Skript, damit sie nach Änderungen an der Oberfläche schnell aktualisiert werden können. Anleitung: [`scripts/handbook/README.md`](../../scripts/handbook/README.md).
+
+Noch neu aufzunehmen: die Bilder zur Vorstandsübersicht und zum Menü *Mehr* (zeigen den Stand vor der Überarbeitung). Für Kiosk-Modus, Kiosk-Geräte und Moments mit Fotos und Videos gibt es bisher nur Text.

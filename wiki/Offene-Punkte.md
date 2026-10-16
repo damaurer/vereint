@@ -13,4 +13,5 @@ austragen.
 | Rollen & Berechtigungen | Die Tabelle in der Administration ist noch eine Vorschau; Änderungen dort werden nicht gespeichert. Rollen vergibt man über *Bearbeiten* beim Mitglied. |
 | BeerWithMe Status | Im Profil nur eine Vorschau, wird nicht an andere übertragen. |
 | Push für Chat-Nachrichten | Einzelne Chat-Nachrichten lösen keinen Push aus; neue Nachrichten zeigt der Ungelesen-Zähler am Chat. |
+| Bildschirmfotos im Handbuch | Die Bilder zur Vorstandsübersicht und zum Menü *Mehr* zeigen noch den Stand vor den letzten Änderungen. Für Kiosk-Modus, Kiosk-Geräte und Moments mit Fotos und Videos gibt es noch keine Bilder. Neu aufnehmen mit [`scripts/handbook`](https://github.com/damaurer/vereint/tree/develop/scripts/handbook). |
 | Arbeitsspeicher | Die Container-Grenzen summieren sich auf etwa 2,1 GB bei 2 GB RAM plus 2 GB Swap. Im Betrieb beobachten. |
