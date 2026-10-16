@@ -184,7 +184,7 @@ Ein **Moment** ist eine kurze gemeinsame Aktion während eines Events, zum Beisp
 
 - **Mehr → Moments** zeigt die Moments deiner aktiven Events. Aus einem Event kommst du über **Moments ansehen** direkt hierher.
 - Eine Karte zeigt Art, Titel, wer ihn gestartet hat, wie lange er noch läuft und wie viele schon reagiert haben.
-- **Neuen Moment starten** beginnt selbst einen Moment: Art wählen (z. B. Anstoßen), Titel und Nachricht eingeben, Dauer festlegen.
+- **Neuen Moment starten** beginnt selbst einen Moment: Art wählen (z. B. Anstoßen), Titel und Nachricht eingeben, Dauer festlegen. Welche Arten es gibt, legt der Vorstand fest.
 
 <br clear="right">
 
@@ -192,7 +192,9 @@ Ein **Moment** ist eine kurze gemeinsame Aktion während eines Events, zum Beisp
 
 **Reagieren**: Tippe auf **Reagieren** oder unter **Schnell reagieren** direkt auf eine Reaktion wie **Anstoßen**, **Jubel** oder **Daumen hoch**. Mit **+ Status & Text** schreibst du einen eigenen Satz dazu.
 
-Die **Timeline** zeigt alle Reaktionen. Wer beim Reagieren den Standort freigibt, erscheint zusätzlich auf der **Weltkarte**. Das ist freiwillig.
+**Fotos und Videos teilen**: Beim Starten unter **Fotos & Videos (optional)** oder später im Moment mit **Foto/Video teilen** hängst du bis zu vier Bilder oder Videos an. Videos dürfen höchstens 60 Sekunden lang und 100 MB groß sein (MP4 oder MOV); zu große Videos am besten in 720p aufnehmen. Standort und Gerätedaten werden vor dem Speichern aus den Dateien entfernt. Eigene Bilder und Videos kannst du mit **Entfernen** wieder löschen.
+
+Die **Timeline** zeigt alle Reaktionen, Bilder und Videos. Wer beim Reagieren den Standort freigibt, erscheint zusätzlich auf der **Weltkarte**. Das ist freiwillig.
 
 Ist ein Moment vorbei, landet er unter **Archivierte Moments & Rituale**.
 

@@ -57,6 +57,10 @@ Die Tabelle **Rollen & Berechtigungen** darunter ist eine Vorschau. Änderungen 
 
 1. Ein eigenes Konto für die Theke anlegen, z. B. „Theke Vereinsheim“: per Einladungslink registrieren und danach unter **Bearbeiten** die Rolle `tabletRecorder` geben.
 2. Am Tablet mit diesem Konto anmelden und **Angemeldet bleiben** anhaken.
-3. **Verwaltung → Thekenterminal** öffnen. Der Rest steht im [Leitfaden Thekenterminal](05-thekenterminal.md).
+3. **Verwaltung → Thekenterminal** öffnen und **Kiosk-Modus starten**, damit das Tablet auf der Strichliste bleibt. Der Rest steht im [Leitfaden Thekenterminal](05-thekenterminal.md).
 
 Ein eigenes Thekenkonto ist besser als ein persönliches: So erscheint auf dem Tablet kein privates Guthaben, und im Protokoll ist klar, welche Striche vom Tablet kamen.
+
+## Passwort vergessen
+
+Vereint verschickt keine E-Mails, deshalb gibt es keinen Link zum Zurücksetzen. Hat jemand sein Passwort vergessen, setzt die Administration in der Keycloak-Verwaltung (Realm `vereint` → *Users* → Person → *Credentials* → *Reset password*) ein neues Passwort mit **Temporary** an. Die Person muss es beim nächsten Anmelden ändern. Wie man die Keycloak-Verwaltung erreicht, steht in [`deploy/README.md`](../../deploy/README.md#keycloak-verwaltung).

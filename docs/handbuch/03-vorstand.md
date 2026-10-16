@@ -19,6 +19,8 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr → Verwaltung**, am Re
 | ein neues Mitglied einladen | **Vorstand** → **Mitglied einladen** (siehe [Leitfaden Administration](04-administration.md#neue-mitglieder-einladen)) |
 | allen eine Nachricht schicken | **Kommunikation** → Meldung verfassen → **Alle Mitglieder** |
 | einen Hinweis oben im Vereinschat anheften | **Kommunikation** → Infotafel → **Anpinnen** |
+| ein Thekenterminal ohne PIN entsperren | **Vorstand** → **Kiosk-Geräte** → **Entsperren** |
+| festlegen, welche Moments und Reaktionen es gibt | **Vorstand** → **Moments · Typen & Reaktionen** |
 
 ## Vorstandsübersicht
 
@@ -26,10 +28,10 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr → Verwaltung**, am Re
 
 **Vorstand** ist dein Einstieg:
 
-- **Rollenspezifische Verwaltung** führt zu **Kasse & Finanzen**, **Kommunikation** und **Mitglied einladen**.
+- **Rollenspezifische Verwaltung** führt zu **Kasse & Finanzen**, **Kommunikation**, **Moments · Typen & Reaktionen**, **Mitglied einladen** und **Kiosk-Geräte**.
 - Die Kennzahlen zeigen, wie viele Events du siehst und wie viele Aktionen zuletzt protokolliert wurden.
 - Unter **Gastgeber · Events** stehen alle Events mit **Moderieren**.
-- **Letzte Aktionen** ist das Protokoll: wer wann was gebucht, geändert oder versendet hat.
+- **Letzte Aktionen** ist das Protokoll: wer wann was gebucht, geändert oder versendet hat, mit den Namen der beteiligten Mitglieder, Events und Artikel.
 
 <br clear="right">
 
@@ -184,3 +186,21 @@ Hier verschickt der Schriftwart Rundbriefe und pflegt die Infotafel.
 Unter **Rundbriefe / Meldungen** steht, was zuletzt verschickt wurde.
 
 <br clear="right">
+
+## Kiosk-Geräte
+
+Ein Thekenterminal im Kiosk-Modus lässt sich am Gerät nur mit seiner PIN verlassen (siehe [Leitfaden Thekenterminal](05-thekenterminal.md#kiosk-modus)). Ist die PIN vergessen oder nach zu vielen Fehlversuchen gesperrt:
+
+1. **Vorstand** → **Kiosk-Geräte** öffnen. Dort stehen alle Geräte, auf denen gerade der Kiosk-Modus läuft, mit Gerätename, wer ihn wann gestartet hat und ob die PIN-Eingabe gerade gesperrt ist.
+2. Beim richtigen Gerät **Entsperren** tippen.
+
+Das Gerät verlässt den Kiosk-Modus innerhalb weniger Sekunden. Start, Fernentsperrung und PIN-Sperren stehen in **Letzte Aktionen**.
+
+## Moments: Typen & Reaktionen
+
+Unter **Vorstand** → **Moments · Typen & Reaktionen** legt ihr fest, welche Arten von Moments Mitglieder starten können (z. B. Anstoßen, Jubeln) und mit welchen Reaktionen sie antworten.
+
+- **Neuer Typ** bzw. **Neue Reaktion**: Emoji und Name eintragen, beim Typ optional eine Beschreibung. Beim Typ wählst du, ob **alle aktiven Reaktionen** erlaubt sind oder nur eine Auswahl.
+- **Bearbeiten** ändert einen Eintrag. Schaltest du **Mitglieder können diesen Typ starten** bzw. **… diese Reaktion verwenden** aus, ist der Eintrag ausgemustert: Für neue Moments ist er nicht mehr wählbar, bestehende Moments behalten ihn.
+
+Als Vorstand kannst du außerdem Bilder und Videos aus Beiträgen anderer entfernen, zum Beispiel wenn jemand etwas Unpassendes geteilt hat. Das steht ebenfalls in **Letzte Aktionen**.

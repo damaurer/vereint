@@ -28,7 +28,7 @@ Funktioniert der Link nicht, ist er abgelaufen, schon verwendet oder zurückgezo
 Weitere Möglichkeiten auf dieser Seite:
 
 - **Angemeldet bleiben**: Du musst dich auf diesem Gerät nicht jedes Mal neu anmelden. Nur auf deinem eigenen Gerät anhaken.
-- **Passwort vergessen?** führt dich durch das Zurücksetzen deines Passworts per E-Mail.
+- **Passwort vergessen?** Vereint verschickt keine E-Mails. Melde dich bei der Administration; sie setzt dir ein neues, vorläufiges Passwort, das du beim nächsten Anmelden änderst.
 - Oben kannst du die Sprache der Anmeldeseite wählen.
 
 Nach der Anmeldung landest du auf der Startseite.
@@ -76,6 +76,7 @@ Unter **Mehr → Profil** siehst du deine Kontodaten und deine Rollen.
 - **Anzeigename**: So sehen dich die anderen, etwa im Chat, in Teilnehmerlisten und am Thekenterminal. Ändern und **Speichern** tippen.
 - **Darstellung**: **System** folgt der Einstellung deines Geräts, **Hell** und **Dunkel** legen das Aussehen fest.
 - **Sprache**: **Deutsch** oder **English**. Die Wahl gilt sofort für die ganze App und auch für die Anmeldeseite. Hast du nichts gewählt, nimmt Vereint die Sprache deines Browsers.
+- **Sicherheit**: **Zwei-Faktor-Anmeldung einrichten** öffnet die Kontoverwaltung. Dort hinterlegst du eine Authenticator-App (z. B. Google Authenticator); danach fragt die Anmeldung nach Passwort und einem 6-stelligen Code. Das ist freiwillig, für Vorstand und Administration aber empfohlen.
 - **BeerWithMe Status** ist eine Vorschau und wird noch nicht an andere übertragen.
 
 <br clear="right">

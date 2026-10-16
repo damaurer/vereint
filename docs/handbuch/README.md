@@ -7,10 +7,10 @@ Dieses Handbuch erklärt Vereint aus Sicht der Menschen, die die App im Vereinsa
 | Ich bin … | Was ich mit Vereint mache | Leitfaden |
 | :--- | :--- | :--- |
 | **Alle** | Registrieren, anmelden, sich zurechtfinden, Profil, Sprache, App installieren, Push | [Erste Schritte](01-erste-schritte.md) |
-| **Mitglied** | Einladungen beantworten, Events planen, chatten, Getränke per Strichcode bezahlen, Guthaben und Käufe prüfen, Moments, Statistik | [Leitfaden Mitglied](02-mitglied.md) |
-| **Vorstand** (z. B. Kassenwart, Schriftwart) | Guthaben buchen, Events vorbereiten, Getränkekatalog pflegen, Rundbriefe und Infotafel, Mitglieder einladen | [Leitfaden Vorstand](03-vorstand.md) |
-| **Administrator** | Mitglieder einladen und verwalten, Rollen vergeben, Konten sperren | [Leitfaden Administration](04-administration.md) |
-| **Thekendienst** (Tablet an der Theke) | Striche erfassen, korrigieren, Runden ausgeben | [Leitfaden Thekenterminal](05-thekenterminal.md) |
+| **Mitglied** | Einladungen beantworten, Events planen, chatten, Getränke per Strichcode bezahlen, Guthaben und Käufe prüfen, Moments mit Fotos und Videos, Statistik | [Leitfaden Mitglied](02-mitglied.md) |
+| **Vorstand** (z. B. Kassenwart, Schriftwart) | Guthaben buchen, Events vorbereiten, Getränkekatalog pflegen, Rundbriefe und Infotafel, Mitglieder einladen, Moment-Typen festlegen, Kiosk-Geräte entsperren | [Leitfaden Vorstand](03-vorstand.md) |
+| **Administrator** | Mitglieder einladen und verwalten, Rollen vergeben, Konten sperren, Passwörter zurücksetzen | [Leitfaden Administration](04-administration.md) |
+| **Thekendienst** (Tablet an der Theke) | Kiosk-Modus starten, Striche erfassen, korrigieren, Runden ausgeben | [Leitfaden Thekenterminal](05-thekenterminal.md) |
 | **Gast** ohne Vereinskonto | Über einen Einladungslink am Event-Chat teilnehmen | [Leitfaden Gast](06-gast.md) |
 
 Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mitglieder und finden alles aus dem Mitglieder-Leitfaden auch bei sich. Was eine Person sieht, hängt allein von ihren Rollen ab. Menüpunkte, die jemand nicht nutzen darf, erscheinen gar nicht erst.
