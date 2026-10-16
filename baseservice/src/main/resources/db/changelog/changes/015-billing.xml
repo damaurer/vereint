@@ -105,4 +105,13 @@
         </update>
     </changeSet>
 
+    <!-- 183. Die App ist für jede Art von Gruppierung gedacht: Die Standardgruppe
+         aus 013 heißt "Meine Gruppe", sofern sie nicht schon umbenannt wurde. -->
+    <changeSet id="183-rename-default-group" author="claude">
+        <update tableName="stammtische">
+            <column name="name" value="Meine Gruppe"/>
+            <where>id = '00000000-0000-0000-0000-000000000001' AND name = 'Mein Stammtisch'</where>
+        </update>
+    </changeSet>
+
 </databaseChangeLog>

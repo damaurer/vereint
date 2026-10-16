@@ -51,7 +51,7 @@ describe('group picture helpers', () => {
   });
 
   it('derives up to two initials from the group name', () => {
-    expect(groupInitials('Mein Stammtisch')).toBe('MS');
+    expect(groupInitials('Meine Gruppe')).toBe('MG');
     expect(groupInitials('Kegelfreunde Nord e.V.')).toBe('KE');
     expect(groupInitials('eber')).toBe('E');
     expect(groupInitials('  ')).toBe('?');

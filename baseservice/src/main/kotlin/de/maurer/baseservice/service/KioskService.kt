@@ -61,7 +61,7 @@ class KioskService(
                 ErrorCode.KIOSK_PIN_INVALID_FORMAT
             )
         }
-        // Mehrere Thekenterminals gleichzeitig nur im Tarif Verein.
+        // Mehrere Thekenterminals gleichzeitig nur im Tarif Premium (Code verein).
         planLimits.requireKioskSlot()
         val label = rawLabel?.trim()?.take(MAX_LABEL_LENGTH)?.ifBlank { null }
             ?: access.user.displayName?.take(MAX_LABEL_LENGTH)?.ifBlank { null }

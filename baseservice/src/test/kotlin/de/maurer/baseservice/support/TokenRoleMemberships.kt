@@ -59,7 +59,7 @@ class TokenRoleMemberships(
         val roles = default?.roles.orEmpty() + tokenRoles
         val merged = MembershipView(
             stammtischId = DefaultStammtischExtension.DEFAULT_STAMMTISCH_ID,
-            stammtischName = default?.stammtischName ?: "Mein Stammtisch",
+            stammtischName = default?.stammtischName ?: "Meine Gruppe",
             roles = roles,
             permissions = default?.permissions.orEmpty() + RolePermissionMatrix.derivePermissions(roles) + token.permissions,
             boardRole = default?.boardRole ?: token.boardRole

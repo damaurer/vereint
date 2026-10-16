@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 import { stammtischImageUrl } from './stammtisch-api.service';
 
-/** Bis zu zwei Initialen aus dem Gruppennamen (`Mein Stammtisch` → `MS`). */
+/** Bis zu zwei Initialen aus dem Gruppennamen (`Meine Gruppe` → `MG`). */
 export function groupInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '?';

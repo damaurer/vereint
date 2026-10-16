@@ -66,7 +66,7 @@
       "greeting": {
         "morning": "Good morning, great to have you here.",
         "day": "Good to have you back.",
-        "evening": "Good evening. Who's at the regulars' table tonight?"
+        "evening": "Good evening. Who's joining tonight?"
       },
       "balanceHeading": "Your balance",
       "statementLink": "View statement",
@@ -335,7 +335,7 @@
   "auth": {
     "status": {
       "eyebrow": "Public",
-      "brandClaim": "Your club. Vereint.",
+      "brandClaim": "Your group. Vereint.",
       "brandSub": "Members, events, treasury and bar in one place – secure and on every device.",
       "loginFailed": "Sign-in failed",
       "loggedOutTitle": "Signed out",
@@ -719,7 +719,7 @@
     "topics": {
       "toast": {
         "label": "Joint toast",
-        "description": "For regulars’ tables & festivities"
+        "description": "For get-togethers & festivities"
       },
       "prayer": {
         "label": "Prayer & intercession",
@@ -990,7 +990,7 @@
       "editTitle": "Edit sublist",
       "createTitle": "Create new sublist",
       "name": "Sublist name *",
-      "namePlaceholder": "e.g. regular get-together",
+      "namePlaceholder": "e.g. standard selection",
       "description": "Description",
       "descriptionPlaceholder": "e.g. standard selection of beers and soft drinks for regular get-togethers",
       "nameRequired": "Please enter a name."
@@ -1211,7 +1211,7 @@
       "save": "Save changes",
       "permissions": {
         "credit": "Manage balances (top up / book)",
-        "events": "Create / plan events & regulars’ tables",
+        "events": "Create / plan events & get-togethers",
         "notify": "Send group notifications",
         "attendance": "Start attendance poll",
         "invite": "Invite new members",
@@ -1282,7 +1282,7 @@
       "title": "Eber leadership team",
       "intro": "Moderation, financial overviews and prepared announcements.",
       "infoTitle": "Board area",
-      "infoText": "Manage the beer kitty, send important announcements or plan the next regulars’ table meetings here.",
+      "infoText": "Manage the group kitty, send important announcements or plan the next get-togethers here.",
       "panelsTitle": "Role-specific management",
       "panelsNav": "Board areas",
       "treasuryTitle": "Treasurer · Kitty & finances",
@@ -1915,7 +1915,7 @@
       "plans": {
         "free": "Free",
         "stammtisch": "Standard",
-        "verein": "Club"
+        "verein": "Premium"
       },
       "status": {
         "active": "Active",

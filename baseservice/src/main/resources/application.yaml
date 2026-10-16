@@ -46,7 +46,7 @@ vereint:
     supported-locales: ${VEREINT_I18N_SUPPORTED_LOCALES:de,en}
     default-locale: de
   tenancy:
-    # Nur Entwicklung/E2E: Konten ohne Mitgliedschaft treten „Mein Stammtisch"
+    # Nur Entwicklung/E2E: Konten ohne Mitgliedschaft treten „Meine Gruppe"
     # mit ihren Keycloak-Realmrollen bei. In Produktion aus (nur per Einladung).
     bootstrap-realm-roles: ${TENANCY_BOOTSTRAP_REALM_ROLES:false}
   cors:

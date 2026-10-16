@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component
 /**
  * Nur für lokale Entwicklung und E2E-Tests (`vereint.tenancy.bootstrap-realm-roles`):
  * Konten ohne jede Mitgliedschaft treten beim ersten Aufruf dem Stammtisch
- * „Mein Stammtisch" bei, mit den Systemrollen aus ihren Keycloak-Realmrollen.
+ * „Meine Gruppe" bei, mit den Systemrollen aus ihren Keycloak-Realmrollen.
  * So funktionieren die Testbenutzer aus Keycloak ohne Einladungslinks.
  *
  * In Produktion aus: Dort kommt man nur per Einladungslink in einen Stammtisch.

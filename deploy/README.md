@@ -217,28 +217,28 @@ systemctl start vereint-backup.service    # Backup sofort ausführen
 journalctl -u vereint-backup.service      # Backup-Protokoll
 ```
 
-## Mehrere Stammtische
+## Mehrere Gruppen
 
-Mit mehreren Stammtischen (siehe `docs/domains/stammtische.md`) gilt:
+Mit mehreren Gruppen (siehe `docs/domains/stammtische.md`) gilt:
 
 - Wer in Keycloak die Realmrolle `admin` hat, ist **Plattform-Admin**: Er legt
-  unter `/plattform` Stammtische an und benennt oder archiviert sie.
+  unter `/plattform` Gruppen an und benennt oder archiviert sie.
 - Frische Installation: Der erste Plattform-Admin, der sich anmeldet, wird
-  automatisch Admin des noch nie genutzten Stammtischs „Mein Stammtisch" und
-  benennt ihn in der App unter *Stammtisch* um. Alle Weiteren kommen per
+  automatisch Admin der noch nie genutzten Gruppe „Meine Gruppe" und
+  benennt sie in der App unter *Gruppeneinstellungen* um. Alle Weiteren kommen per
   Einladungslink dazu.
-- Alle anderen Rollen vergibt jeder Stammtisch selbst in der App; Realmrollen
+- Alle anderen Rollen vergibt jede Gruppe selbst in der App; Realmrollen
   wie `board` oder `member` haben keine Wirkung mehr.
 - Die Trennung per Row-Level-Security setzt voraus, dass sich der baseservice
   als `vereint` verbindet (kein Superuser, Eigentümer der Tabellen), wie es
   `postgres/init-databases.sh` anlegt. Nicht auf `postgres` umstellen.
-- Bestehende Daten landen beim Update im Stammtisch „Mein Stammtisch".
+- Bestehende Daten landen beim Update in der Gruppe „Meine Gruppe".
 
 ### Abrechnung (Stripe)
 
-Tarife je Stammtisch und die Einrichtung von Stripe beschreibt
+Tarife je Gruppe und die Einrichtung von Stripe beschreibt
 `docs/domains/abrechnung.md`. Ohne Stripe-Werte bleibt die Online-Zahlung aus,
-„Mein Stammtisch" läuft kostenlos mit allen Funktionen weiter. Zum Einschalten
+„Meine Gruppe" läuft kostenlos mit allen Funktionen weiter. Zum Einschalten
 die Werte als SSM-Parameter anlegen und neu ausrollen, zum Beispiel:
 
 ```bash

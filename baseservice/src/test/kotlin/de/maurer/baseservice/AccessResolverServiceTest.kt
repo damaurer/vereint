@@ -59,7 +59,7 @@ class AccessResolverServiceTest {
         // Jede Person ist Mitglied des Standard-Stammtischs, in dem der Test läuft.
         val memberships = mock(StammtischMemberships::class.java)
         `when`(memberships.memberships(any(UUID::class.java) ?: UUID.randomUUID())).thenReturn(
-            listOf(MembershipView(DefaultStammtischExtension.DEFAULT_STAMMTISCH_ID, "Mein Stammtisch", emptySet(), emptySet(), null))
+            listOf(MembershipView(DefaultStammtischExtension.DEFAULT_STAMMTISCH_ID, "Meine Gruppe", emptySet(), emptySet(), null))
         )
 
         service = AccessResolverService(

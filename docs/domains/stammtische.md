@@ -1,7 +1,9 @@
 # Gruppen (mehrere Stammtische)
 
 In der App heißen sie **Gruppen**; im Code, in API-Pfaden und Tabellen heißen
-sie weiterhin `stammtisch`. Eine Vereint-Installation trägt beliebig viele
+sie weiterhin `stammtisch`. Eine Gruppe kann ein Stammtisch, ein Verein, ein
+Team oder jede andere Gemeinschaft sein, deshalb bleiben die Texte der App
+neutral („Gruppe“, „Treffen“). „Vereint“ ist nur der Produktname. Eine Vereint-Installation trägt beliebig viele
 Gruppen, ähnlich wie Server bei Discord. Eine Person hat ein Konto (Keycloak) und kann Mitglied in mehreren
 Stammtischen sein. Alles Fachliche gehört genau einem Stammtisch: Events, Chat,
 Direktnachrichten, Guthaben und Buchungen, Katalog und Sublisten, Moments,
@@ -99,7 +101,7 @@ Rolle „Kasse" mit `ledger.read` sieht so die Kasse, aber nicht den Adminbereic
 - **Verlassen:** unter **Gruppe → Gruppe verlassen**. Buchungen und
   Beiträge bleiben im Stammtisch erhalten.
 - **Erster Start:** Der erste Plattform-Admin ohne Mitgliedschaft wird
-  automatisch Admin von „Mein Stammtisch", solange dort noch nie jemand Mitglied
+  automatisch Admin von „Meine Gruppe", solange dort noch nie jemand Mitglied
   war (`PlatformService.claimUnclaimedStammtisch`).
 - **Eröffnen (Kunden):** Wer einen Stammtisch gründen will, registriert sich
   unter `/gruppe-eroeffnen` mit Stammtischname, Name, E-Mail und Passwort
@@ -132,7 +134,7 @@ keine Bilder**.
 
 ## Bestehende Daten
 
-Migration `013-stammtische.xml` legt den Stammtisch „Mein Stammtisch"
+Migration `013-stammtische.xml` legt den Stammtisch „Meine Gruppe"
 (`00000000-0000-0000-0000-000000000001`) an. Alle vorhandenen Daten, Konten,
 Rollen und Vorstandsämter gehören danach zu ihm; Theke-Konten erhalten die Rolle
 `tabletRecorder`. Der Name lässt sich danach unter **Stammtisch** ändern.
@@ -148,7 +150,7 @@ Rollen und Vorstandsämter gehören danach zu ihm; Theke-Konten erhalten die Rol
   ausgeschaltet; die Trennung in der Anwendung bleibt.
 - Backups laufen als `postgres` (Superuser) und enthalten alle Stammtische.
 - `TENANCY_BOOTSTRAP_REALM_ROLES=true` (nur lokal und in den E2E-Tests): Konten
-  ohne Mitgliedschaft treten beim ersten Aufruf „Mein Stammtisch" bei, mit den
+  ohne Mitgliedschaft treten beim ersten Aufruf „Meine Gruppe" bei, mit den
   Systemrollen aus ihren Keycloak-Realmrollen. In Produktion bleibt es aus.
 - `vereint.tenancy.row-level-security` schaltet das Setzen der Datenbank-Variablen
   ab (nur für H2-Tests).

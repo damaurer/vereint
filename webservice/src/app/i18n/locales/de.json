@@ -66,7 +66,7 @@
       "greeting": {
         "morning": "Guten Morgen, schön dass du da bist.",
         "day": "Schön, dass du wieder da bist.",
-        "evening": "Guten Abend. Wer ist heute am Stammtisch?"
+        "evening": "Guten Abend. Wer ist heute dabei?"
       },
       "balanceHeading": "Dein Guthaben",
       "statementLink": "Kontoauszug ansehen",
@@ -329,7 +329,7 @@
   "auth": {
     "status": {
       "eyebrow": "Öffentlich",
-      "brandClaim": "Dein Verein. Vereint.",
+      "brandClaim": "Deine Gruppe. Vereint.",
       "brandSub": "Mitglieder, Events, Kasse und Theke an einem Ort – sicher und auf jedem Gerät.",
       "loginFailed": "Anmeldung fehlgeschlagen",
       "loggedOutTitle": "Abgemeldet",
@@ -695,7 +695,7 @@
     "topics": {
       "toast": {
         "label": "Gemeinsames Anstoßen",
-        "description": "Für Stammtische & Feste"
+        "description": "Für Treffen & Feste"
       },
       "prayer": {
         "label": "Gebet & Fürbitte",
@@ -957,9 +957,9 @@
       "editTitle": "Sublist bearbeiten",
       "createTitle": "Neue Sublist erstellen",
       "name": "Name der Sublist *",
-      "namePlaceholder": "z. B. Standard-Stammtisch",
+      "namePlaceholder": "z. B. Standardauswahl",
       "description": "Beschreibung",
-      "descriptionPlaceholder": "z. B. Standardauswahl an Bieren und Softdrinks für reguläre Stammtische",
+      "descriptionPlaceholder": "z. B. Standardauswahl an Bieren und Softdrinks für reguläre Treffen",
       "nameRequired": "Bitte geben Sie einen Namen ein."
     },
     "detail": {
@@ -1178,7 +1178,7 @@
       "save": "Änderungen speichern",
       "permissions": {
         "credit": "Guthaben verwalten (Aufladen / Buchen)",
-        "events": "Events & Stammtische erstellen / planen",
+        "events": "Events & Treffen erstellen / planen",
         "notify": "Gruppen-Benachrichtigungen senden",
         "attendance": "Anwesenheitsabfrage starten",
         "invite": "Neue Mitglieder einladen",
@@ -1249,7 +1249,7 @@
       "title": "Eber-Führungsstab",
       "intro": "Moderation, Finanzübersichten und vorbereitete Mitteilungen.",
       "infoTitle": "Vorstandsbereich",
-      "infoText": "Verwalte hier die Bierkasse, versende wichtige Ankündigungen oder plane die nächsten Stammtisch-Sitzungen.",
+      "infoText": "Verwalte hier die Gruppenkasse, versende wichtige Ankündigungen oder plane die nächsten Treffen.",
       "panelsTitle": "Rollenspezifische Verwaltung",
       "panelsNav": "Vorstandsbereiche",
       "treasuryTitle": "Kassenwart · Kasse & Finanzen",
@@ -1882,7 +1882,7 @@
       "plans": {
         "free": "Kostenlos",
         "stammtisch": "Standard",
-        "verein": "Verein"
+        "verein": "Premium"
       },
       "status": {
         "active": "Aktiv",

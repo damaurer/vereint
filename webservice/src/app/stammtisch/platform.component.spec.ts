@@ -85,7 +85,7 @@ describe('PlatformComponent', () => {
     select.value = 'verein';
     select.dispatchEvent(new Event('change'));
     expect(api['platformUpdate']).toHaveBeenCalledWith('st-1', { plan: 'verein' });
-    expect(cmp.info()).toBe('„Eber“ hat jetzt den Tarif Verein.');
+    expect(cmp.info()).toBe('„Eber“ hat jetzt den Tarif Premium.');
   });
 
   it('ignores selecting the current plan', () => {

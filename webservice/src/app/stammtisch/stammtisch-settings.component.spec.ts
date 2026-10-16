@@ -306,7 +306,7 @@ describe('StammtischSettingsComponent', () => {
         billing({ plan: 'verein', status: 'comped', readOnly: true, limits: offers[2].limits, canManage: false }),
       );
       const text = fixture.nativeElement.textContent as string;
-      expect(text).toContain('Verein');
+      expect(text).toContain('Premium');
       expect(text).toContain('Kostenlos vergeben');
       expect(text).toContain('5 (unbegrenzt)');
       expect(text).toContain('nur noch lesbar');
@@ -349,7 +349,7 @@ describe('StammtischSettingsComponent', () => {
       const root = fixture.nativeElement as HTMLElement;
       expect(root.querySelector('.st-plan.st-current')?.textContent).toContain('Aktueller Tarif');
       expect(root.textContent).toContain('Verlängert sich am 16. November 2026.');
-      // Nur der Verein ist noch buchbar.
+      // Nur Premium ist noch buchbar.
       expect([...root.querySelectorAll('button')].filter((b) => b.textContent?.trim() === 'Buchen').length).toBe(1);
       buttonByText(root, 'Zahlung und Rechnungen')?.click();
       expect(api['billingPortal']).toHaveBeenCalled();

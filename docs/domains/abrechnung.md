@@ -1,12 +1,12 @@
 # Tarife und Abrechnung je Gruppe
 
-Jeder Stammtisch hat einen eigenen Tarif nach dem Finanzierungsmodell. Bezahlt
+Jede Gruppe hat einen eigenen Tarif nach dem Finanzierungsmodell. Bezahlt
 wird online über **Stripe**; die App speichert keine Zahlungsdaten, nur die
 Stripe-Kennungen von Kunde und Abo.
 
 ## Tarife
 
-| | Kostenlos | Standard (Code `stammtisch`) | Verein |
+| | Kostenlos (Code `free`) | Standard (Code `stammtisch`) | Premium (Code `verein`) |
 | :--- | :--- | :--- | :--- |
 | Preis | 0 € | 4 €/Monat oder 40 €/Jahr | 9 €/Monat oder 90 €/Jahr |
 | Mitglieder | bis 10 | bis 40 | unbegrenzt |
@@ -17,7 +17,7 @@ Stripe-Kennungen von Kunde und Abo.
 Die Grenzen stehen in `PlanLimits` (Fachservice). Geprüft wird nur beim
 Hinzufügen: Mitglied aufnehmen (`plan_limit_members`), Bild oder Video
 hochladen (`plan_limit_storage`, `plan_limit_videos`), Kiosk starten
-(`plan_limit_kiosk`). Liegt ein Stammtisch nach einem Wechsel in einen
+(`plan_limit_kiosk`). Liegt eine Gruppe nach einem Wechsel in einen
 kleineren Tarif darüber, bleibt alles erhalten; nur Neues ist gesperrt.
 
 Die angezeigten Preise kommen aus `vereint.billing.amounts` und müssen zu den
@@ -26,15 +26,15 @@ Preisen in Stripe passen; abgerechnet wird immer der Stripe-Preis.
 Optional gibt es einen **Förderbeitrag** (Standard 2 €/Monat), den jedes Mitglied
 für sich abschließen kann. Er ändert keinen Tarif.
 
-## Bestehende und neue Stammtische
+## Bestehende und neue Gruppen
 
-- „Mein Stammtisch" aus der Migration läuft als Tarif Verein mit Status
+- „Meine Gruppe" aus der Migration läuft als Tarif Premium mit Status
   `comped` (ohne Zahlung) weiter; am bestehenden Betrieb ändert sich nichts.
-- Neue Stammtische starten im kostenlosen Tarif, auch die, die Kunden selbst
+- Neue Gruppen starten im kostenlosen Tarif, auch die, die Kunden selbst
   eröffnen (siehe `stammtische.md`, „Eröffnen“).
 - Die Plattform-Administration kann unter `/plattform` jeden Tarif von Hand
   vergeben (`comped`) oder auf kostenlos zurücksetzen, z. B. ohne Stripe oder
-  für befreundete Vereine.
+  für befreundete Gruppen.
 
 ## Ablauf
 
@@ -54,15 +54,15 @@ für sich abschließen kann. Er ändert keinen Tarif.
 | `customer.subscription.deleted` | zurück in den kostenlosen Tarif, Daten bleiben |
 
 Jedes Ereignis wirkt genau einmal (`billing_events`). Jede Tarifänderung steht
-im Audit-Log des Stammtischs (`STAMMTISCH_PLAN_CHANGED`).
+im Audit-Log der Gruppe (`STAMMTISCH_PLAN_CHANGED`).
 
 ## Offene Zahlung
 
-- Nach einer fehlgeschlagenen Zahlung läuft der Stammtisch 30 Tage normal weiter
+- Nach einer fehlgeschlagenen Zahlung läuft die Gruppe 30 Tage normal weiter
   (`BILLING_GRACE_DAYS`).
 - Danach ist er **nur lesbar**: schreibende Anfragen erhalten
   `403 stammtisch_read_only`. Erlaubt bleiben Tarif und Zahlung, Datenexport,
-  Stammtisch verlassen, Kiosk beenden, eigenes Profil und Push-Geräte.
+  Gruppe verlassen, Kiosk beenden, eigenes Profil und Push-Geräte.
 - Gelöscht wird nichts. Mit der Zahlung (`invoice.paid`) ist alles wieder offen.
 
 ## Datenexport
@@ -77,7 +77,7 @@ nicht enthalten. Der Export funktioniert auch im Nur-Lesen-Zustand.
 Ohne Konfiguration ist die Online-Zahlung aus (`503 billing_unavailable`); die
 App zeigt die Tarife trotzdem an.
 
-1. In Stripe zwei Produkte (Standard, Verein) mit je einem Monats- und einem
+1. In Stripe zwei Produkte (Standard, Premium) mit je einem Monats- und einem
    Jahrespreis anlegen, optional ein Produkt „Förderbeitrag" mit Monatspreis.
 2. Kundenportal in Stripe aktivieren (Rechnungen, Zahlart, Kündigung,
    Tarifwechsel zwischen den vier Preisen).
@@ -93,7 +93,7 @@ App zeigt die Tarife trotzdem an.
 | `STRIPE_SECRET_KEY` | geheimer API-Schlüssel (`sk_live_...`) |
 | `STRIPE_WEBHOOK_SECRET` | Signatur-Secret des Webhooks (`whsec_...`) |
 | `STRIPE_PRICE_STAMMTISCH_MONTH`, `..._YEAR` | Preis-IDs Tarif Standard |
-| `STRIPE_PRICE_VEREIN_MONTH`, `..._YEAR` | Preis-IDs Tarif Verein |
+| `STRIPE_PRICE_VEREIN_MONTH`, `..._YEAR` | Preis-IDs Tarif Premium |
 | `STRIPE_PRICE_SUPPORTER` | Preis-ID Förderbeitrag (optional) |
 
 Lokal testen: `stripe listen --forward-to localhost:8081/api/v1/billing/stripe/webhook`
@@ -102,5 +102,5 @@ liefert ein Test-Webhook-Secret.
 ## Nicht in der App
 
 Gewerbeanmeldung, Impressum, AGB, Datenschutzerklärung, Auftragsverarbeitung
-(AVV) mit Stammtischen und die steuerliche Einordnung (z. B.
+(AVV) mit den Gruppen und die steuerliche Einordnung (z. B.
 Kleinunternehmerregelung) sind Aufgaben des Betreibers.
