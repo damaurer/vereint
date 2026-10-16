@@ -234,6 +234,10 @@ Mit mehreren Gruppen (siehe `docs/domains/stammtische.md`) gilt:
   `postgres/init-databases.sh` anlegt. Nicht auf `postgres` umstellen.
 - Bestehende Daten landen beim Update in der Gruppe „Meine Gruppe".
 
+- Kunden können unter `/gruppe-eroeffnen` selbst Gruppen eröffnen. Solange
+  Impressum, AGB und Datenschutz fehlen, den SSM-Parameter
+  `/vereint/SIGNUP_ENABLED` auf `false` setzen und neu ausrollen.
+
 ### Abrechnung (Stripe)
 
 Tarife je Gruppe und die Einrichtung von Stripe beschreibt

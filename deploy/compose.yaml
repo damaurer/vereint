@@ -159,6 +159,8 @@ services:
       # Tarife je Stammtisch (Stripe). Ohne Werte bleibt die Online-Zahlung aus;
       # Parameter in SSM unter /vereint anlegen (siehe README, Abrechnung).
       PUBLIC_BASE_URL: https://${PUBLIC_DOMAIN}
+      SIGNUP_ENABLED: ${SIGNUP_ENABLED:-true}
+      SIGNUP_MAX_OWNED: ${SIGNUP_MAX_OWNED:-3}
       STRIPE_ENABLED: ${STRIPE_ENABLED:-false}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
