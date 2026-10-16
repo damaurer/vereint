@@ -13,7 +13,7 @@ Neu im Verein? Dann bekommst du vom Vorstand einen **Einladungslink**.
 3. Ein **Passwort** mit mindestens 10 Zeichen wählen und wiederholen.
 4. **Konto anlegen** tippen, danach **Jetzt anmelden** und mit E-Mail-Adresse und Passwort anmelden.
 
-Funktioniert der Link nicht, ist er abgelaufen, schon verwendet oder zurückgezogen. Bitte den Vorstand um einen neuen. Gibt es für deine E-Mail-Adresse schon ein Konto, melde dich damit an oder setze dein Passwort zurück.
+Funktioniert der Link nicht, ist er abgelaufen, schon verwendet oder zurückgezogen. Bitte den Vorstand um einen neuen. Gibt es für deine E-Mail-Adresse schon ein Konto, melde dich damit an. Passwort vergessen? Die Administration setzt dir ein neues.
 
 <br clear="right">
 
