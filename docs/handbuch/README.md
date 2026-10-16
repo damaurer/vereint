@@ -27,8 +27,6 @@ Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mit
 
 ## Gut zu wissen: noch nicht fertige Bereiche
 
-- In der **Administration** ist die Tabelle „Rollen & Berechtigungen“ noch eine Vorschau. Die echte Rollenverwaltung steht in den **Gruppeneinstellungen**.
-- Eigene Rollen lassen sich anlegen und zuschneiden, aber noch keiner Person zuweisen. Unter **Administration → Bearbeiten** stehen nur die vier Systemrollen.
 - Push-Nachrichten kommen erst an, wenn der Betreiber Push auf dem Server eingerichtet hat. Bist du in mehreren Gruppen, zeigt eine Push-Nachricht aus einer anderen als der gerade offenen Gruppe manchmal nur „Du hast eine neue Mitteilung“.
 - Tarife buchen geht erst, wenn der Betreiber die Online-Zahlung über Stripe eingerichtet hat.
 - Die Seite **Plattform** (`/plattform`) ist nur für das Vereint-Team und wird hier nicht weiter beschrieben.

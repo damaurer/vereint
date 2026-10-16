@@ -36,7 +36,7 @@ Wer sich über den Link registriert oder mit einem bestehenden Konto beitritt, i
 
 Nach **Bearbeiten** erscheint unter der Liste der Bereich „… bearbeiten“ mit der Mitglieds-ID. Jede Einstellung speicherst du mit ihrem eigenen Knopf.
 
-**Rollen**, dann **Rollen speichern**. Hier stehen die vier Systemrollen der Gruppe:
+**Rollen**, dann **Rollen speichern**. Hier stehen die vier Systemrollen der Gruppe und alle eigenen Rollen, die in den [Gruppeneinstellungen](#rollen--berechtigungen) angelegt sind (Link **Rollen verwalten**). Die Systemrollen bedeuten:
 
 | Rolle | Bedeutung |
 | :--- | :--- |
@@ -54,7 +54,7 @@ Gut zu wissen:
 - Rollen gelten nur in dieser Gruppe. In einer anderen Gruppe kann dieselbe Person andere Rollen haben.
 - Die **Menüpunkte** für Vorstand und Administration richten sich nach den Rechten der Rollen in dieser Gruppe. Rollen im Anmeldesystem (Keycloak) spielen dafür keine Rolle mehr.
 - Deine eigenen Rollen kannst du nicht ändern. Das muss eine andere Person mit Verwaltungsrechten tun.
-- Die Tabelle **Rollen & Berechtigungen** weiter unten in der Administration ist noch eine Vorschau. Änderungen dort werden nicht gespeichert. Die echte Rollenverwaltung steht in den [Gruppeneinstellungen](#rollen--berechtigungen).
+- Rollen und ihre Berechtigungen legst du in den [Gruppeneinstellungen](#rollen--berechtigungen) an; Änderungen gelten sofort für die gewählte Gruppe.
 
 ## Gruppeneinstellungen
 
@@ -80,7 +80,7 @@ Ein Beispiel: Eine eigene Rolle „Kasse“ mit `ledger.read` sieht die Kasse, a
 
 **Schutz vor Aussperren**: Mindestens eine Person muss Mitglieder und Rollen verwalten können. Eine Änderung, die der letzten solchen Person diese Rechte nimmt, lehnt Vereint ab. Diese Person kann die Gruppe auch nicht verlassen. Gib die Rolle vorher jemand anderem.
 
-Gut zu wissen: Zuweisen lassen sich in der App bisher nur die vier Systemrollen (unter **Administration** → **Bearbeiten**, siehe oben). Eigene Rollen kannst du anlegen und zuschneiden, aber noch keiner Person geben.
+Zuweisen: Eigene Rollen gibst du einer Person unter **Administration** → **Bearbeiten** → **Rollen** (siehe oben). Sie erscheinen dort auch im Rollenfilter und in der Mitgliedertabelle.
 
 ## Tarif, Zahlung und Rechnungen
 
