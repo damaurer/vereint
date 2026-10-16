@@ -74,6 +74,7 @@ class MemberInviteService(
     private val auditService: AuditService,
     private val identityProvisioner: IdentityProvisioner,
     private val planLimits: PlanLimits,
+    private val termsConsent: TermsConsent,
     transactionManager: PlatformTransactionManager,
     private val clock: Clock = Clock.systemUTC()
 ) {
@@ -212,6 +213,7 @@ class MemberInviteService(
                 ErrorCode.INVALID_REQUEST
             )
         }
+        termsConsent.require(request.acceptTerms)
         val tokenHash = hashOf(request.token)
 
         var createdSubject: String? = null
@@ -236,7 +238,7 @@ class MemberInviteService(
                         displayName = "$firstName $lastName",
                         email = email,
                         disabled = false
-                    )
+                    ).also(termsConsent::record)
                 )
                 membershipService.addMember(user)
                 redemptionRepository.save(

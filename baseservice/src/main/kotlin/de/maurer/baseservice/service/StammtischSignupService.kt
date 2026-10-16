@@ -43,6 +43,7 @@ class StammtischSignupService(
     private val stammtischRepository: StammtischRepository,
     private val identityProvisioner: IdentityProvisioner,
     private val tenantTransactions: TenantTransactions,
+    private val termsConsent: TermsConsent,
     @Value("\${vereint.signup.enabled:true}") private val enabled: Boolean,
     @Value("\${vereint.signup.max-owned:3}") private val maxOwned: Long
 ) {
@@ -64,6 +65,7 @@ class StammtischSignupService(
         if (password.length < minLength || password.length > maxLength) {
             throw InvalidRequestException(Msg("error.memberInvite.passwordLength", minLength, maxLength), ErrorCode.INVALID_REQUEST)
         }
+        termsConsent.require(request.acceptTerms)
         if (tenantTransactions.readAsSystem { userRepository.existsByEmailIgnoreCase(email) }) {
             throw EmailAlreadyRegisteredException()
         }
@@ -79,7 +81,7 @@ class StammtischSignupService(
                         displayName = "$firstName $lastName",
                         email = email,
                         disabled = false
-                    )
+                    ).also(termsConsent::record)
                 )
             }
             val stammtisch = platformService.createStammtisch(stammtischName, user, user)
@@ -100,12 +102,15 @@ class StammtischSignupService(
     fun openOwn(request: OpenStammtischRequest, principal: UserPrincipal): StammtischMembershipDto {
         requireEnabled()
         val name = platformService.requireName(request.name)
+        termsConsent.require(request.acceptTerms)
         val user = TenantContext.runWithoutTenant { userService.getOrCreateUser(principal) }
         val owned = tenantTransactions.readAsSystem { stammtischRepository.countByCreatedByAndArchivedFalse(user.id) }
         if (owned >= maxOwned && !principal.platformAdmin) {
             throw ApiException(ErrorCode.STAMMTISCH_LIMIT, Msg("error.stammtisch.ownLimit", maxOwned), HttpStatus.CONFLICT)
         }
-        val stammtisch = platformService.createStammtisch(name, user, user)
+        termsConsent.record(user)
+        val consented = tenantTransactions.asSystem { userRepository.saveAndFlush(user) }
+        val stammtisch = platformService.createStammtisch(name, consented, consented)
         return StammtischMembershipDto(
             id = stammtisch.id.toString(),
             name = stammtisch.name,

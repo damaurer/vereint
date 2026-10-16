@@ -1,5 +1,6 @@
 package de.maurer.baseservice.dto
 
+import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
@@ -84,7 +85,10 @@ data class RegisterMemberRequest(
 
     @field:NotBlank(message = "password {validation.notBlank}")
     @field:Size(min = 10, max = 128, message = "password {validation.size.range}")
-    val password: String? = null
+    val password: String? = null,
+
+    @Schema(description = "Zustimmung zu den AGB; ohne `true` antwortet der Fachservice mit `terms_not_accepted`.")
+    val acceptTerms: Boolean? = null
 ) {
     /** Token und Passwort erscheinen nie in Logs. */
     override fun toString(): String = "RegisterMemberRequest(email=$email)"

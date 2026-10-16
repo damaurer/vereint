@@ -542,6 +542,14 @@
     "stammtischOpen": {
       "title": "Gruppe eröffnen",
       "description": "Eine eigene Gruppe anlegen und verwalten."
+    },
+    "imprint": {
+      "title": "Impressum",
+      "description": "Angaben zum Betreiber von Vereint."
+    },
+    "terms": {
+      "title": "AGB",
+      "description": "Allgemeine Geschäftsbedingungen von Vereint."
     }
   },
   "chat": {
@@ -1961,5 +1969,19 @@
         "selectFailed": "Die Gruppe ist eröffnet, konnte aber nicht geöffnet werden. Du findest sie in der Gruppenauswahl."
       }
     }
+  },
+  "legal": {
+    "nav": "Rechtliches",
+    "imprint": "Impressum",
+    "terms": "AGB",
+    "home": "Zur Startseite",
+    "placeholders": "Entwurf: Die Angaben zum Betreiber sind noch Platzhalter. Diese Seite ist erst gültig, wenn sie ausgefüllt sind.",
+    "germanOnly": "This text is available in German only. The German version is binding.",
+    "acceptPrefix": "Ich habe die",
+    "acceptLink": "AGB",
+    "acceptSuffix": " gelesen und stimme ihnen zu.",
+    "acceptRequired": "Bitte stimme den AGB zu.",
+    "paidNotice": "Für bezahlte Tarife und den Förderbeitrag gelten die AGB mit der Widerrufsbelehrung für Verbraucher.",
+    "withdrawal": "Widerrufsbelehrung"
   }
 }

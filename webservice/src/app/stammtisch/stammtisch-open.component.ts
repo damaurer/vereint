@@ -7,6 +7,8 @@ import { AuthService } from '../auth/auth.service';
 import { EMAIL_PATTERN } from '../auth/auth.types';
 import { TranslatePipe, translate } from '../i18n';
 import { describeInviteError } from '../invites/member-invites-api.service';
+import { LegalLinksComponent } from '../legal/legal-links.component';
+import { TermsConsentComponent } from '../legal/terms-consent.component';
 import { StammtischApiService, apiErrorText } from './stammtisch-api.service';
 
 type OpenState = 'checking' | 'signup' | 'create' | 'done';
@@ -31,7 +33,7 @@ const AFTER_OPEN_ROUTE = '/gruppe';
  */
 @Component({
   selector: 'app-stammtisch-open',
-  imports: [FormsModule, RouterLink, TranslatePipe],
+  imports: [FormsModule, RouterLink, TranslatePipe, TermsConsentComponent, LegalLinksComponent],
   styleUrl: '../auth/auth-status.component.css',
   template: `
     <div class="vereint-shell">
@@ -75,6 +77,8 @@ const AFTER_OPEN_ROUTE = '/gruppe';
                     <span>{{ 'stammtisch.open.name' | t }}</span>
                     <input name="stammtischName" required [attr.maxlength]="maxNameLength" [(ngModel)]="stammtischName" />
                   </label>
+
+                  <app-terms-consent [(accepted)]="acceptTerms" />
 
                   @if (error()) {
                     <div class="state-card state-error login-error" role="alert">
@@ -136,6 +140,8 @@ const AFTER_OPEN_ROUTE = '/gruppe';
                     />
                   </label>
 
+                  <app-terms-consent [(accepted)]="acceptTerms" />
+
                   @if (error()) {
                     <div class="state-card state-error login-error" role="alert">
                       <span>{{ error() }}</span>
@@ -166,6 +172,8 @@ const AFTER_OPEN_ROUTE = '/gruppe';
             }
           </div>
         </section>
+
+        <app-legal-links />
       </main>
     </div>
   `,
@@ -226,6 +234,7 @@ export class StammtischOpenComponent {
   protected email = '';
   protected password = '';
   protected passwordRepeat = '';
+  protected readonly acceptTerms = signal(false);
 
   constructor() {
     afterNextRender(() => void this.start());
@@ -264,10 +273,16 @@ export class StammtischOpenComponent {
       this.error.set(translate('auth.register.errors.passwordMismatch'));
       return;
     }
+    if (!this.acceptTerms()) {
+      this.error.set(translate('legal.acceptRequired'));
+      return;
+    }
 
     this.error.set(null);
     this.submitting.set(true);
-    this.api.signup({ stammtischName, firstName, lastName, email, password: this.password }).subscribe({
+    this.api
+      .signup({ stammtischName, firstName, lastName, email, password: this.password, acceptTerms: true })
+      .subscribe({
       next: (result) => {
         this.submitting.set(false);
         this.password = '';
@@ -289,6 +304,10 @@ export class StammtischOpenComponent {
     const name = this.stammtischName.trim();
     if (!name) {
       this.error.set(translate('stammtisch.open.errors.nameRequired'));
+      return;
+    }
+    if (!this.acceptTerms()) {
+      this.error.set(translate('legal.acceptRequired'));
       return;
     }
 
@@ -321,6 +340,7 @@ export class StammtischOpenComponent {
 
   private describe(err: unknown): string {
     const code = err instanceof ApiError ? err.code : '';
+    if (code === 'terms_not_accepted') return translate('legal.acceptRequired');
     if (code === 'validation_failed' || code === 'invalid_request') {
       return translate('stammtisch.open.errors.checkInput', { min: MIN_PASSWORD_LENGTH, max: MAX_STAMMTISCH_NAME_LENGTH });
     }

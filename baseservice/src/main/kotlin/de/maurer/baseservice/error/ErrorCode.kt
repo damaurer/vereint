@@ -13,6 +13,7 @@ object ErrorCode {
     const val EMAIL_ALREADY_REGISTERED = "email_already_registered"
     const val PASSWORD_REJECTED = "password_rejected"
     const val REGISTRATION_UNAVAILABLE = "registration_unavailable"
+    const val TERMS_NOT_ACCEPTED = "terms_not_accepted"
     const val EVENT_NOT_ACTIVE = "event_not_active"
     const val CONSENT_REQUIRED = "consent_required"
     const val PERMISSION_DENIED = "permission_denied"

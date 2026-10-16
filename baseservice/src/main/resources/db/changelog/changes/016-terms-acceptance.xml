@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 190. Zustimmung zu den AGB je Konto: welche Fassung (`vereint.legal.terms-version`)
+         und wann. Gesetzt bei Registrierung per Einladung, beim Eröffnen einer Gruppe
+         und beim Eröffnen einer weiteren Gruppe. Bestehende Konten bleiben leer. -->
+    <changeSet id="190-add-terms-acceptance" author="claude">
+        <addColumn tableName="users">
+            <column name="terms_version" type="VARCHAR(32)"/>
+            <column name="terms_accepted_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

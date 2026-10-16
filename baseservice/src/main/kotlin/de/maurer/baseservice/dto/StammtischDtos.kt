@@ -116,7 +116,10 @@ data class StammtischSignupRequest(
 
     @field:NotBlank(message = "password {validation.notBlank}")
     @field:Size(min = 10, max = 128, message = "password {validation.size.range}")
-    val password: String? = null
+    val password: String? = null,
+
+    @Schema(description = "Zustimmung zu den AGB; ohne `true` antwortet der Fachservice mit `terms_not_accepted`.")
+    val acceptTerms: Boolean? = null
 ) {
     /** Das Passwort erscheint nie in Logs. */
     override fun toString(): String = "StammtischSignupRequest(email=$email, stammtischName=$stammtischName)"
@@ -133,5 +136,8 @@ data class StammtischSignupResponse(
 data class OpenStammtischRequest(
     @field:NotBlank(message = "name {validation.notBlank}")
     @field:Size(max = 80, message = "name {validation.size.max}")
-    val name: String? = null
+    val name: String? = null,
+
+    @Schema(description = "Zustimmung zu den AGB; ohne `true` antwortet der Fachservice mit `terms_not_accepted`.")
+    val acceptTerms: Boolean? = null
 )

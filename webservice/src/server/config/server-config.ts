@@ -10,6 +10,9 @@ export const publicPaths = new Set([
   '/register',
   // Eigene Gruppe eröffnen, mit oder ohne Konto.
   '/gruppe-eroeffnen',
+  // Rechtstexte müssen ohne Anmeldung erreichbar sein.
+  '/impressum',
+  '/agb',
   '/403',
   '/404',
 ]);

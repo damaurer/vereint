@@ -37,6 +37,8 @@ export interface RegisterMemberPayload {
   lastName: string;
   email: string;
   password: string;
+  /** Zustimmung zu den AGB; der Fachservice speichert die gültige Fassung. */
+  acceptTerms: boolean;
 }
 
 /**

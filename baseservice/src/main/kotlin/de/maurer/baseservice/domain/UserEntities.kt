@@ -29,6 +29,13 @@ class UserEntity(
     @Column(name = "disabled", nullable = false)
     var disabled: Boolean = false,
 
+    /** Fassung der AGB, der das Konto zuletzt zugestimmt hat (siehe [de.maurer.baseservice.service.TermsConsent]). */
+    @Column(name = "terms_version", length = 32)
+    var termsVersion: String? = null,
+
+    @Column(name = "terms_accepted_at")
+    var termsAcceptedAt: Instant? = null,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),

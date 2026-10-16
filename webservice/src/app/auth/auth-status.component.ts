@@ -3,12 +3,13 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
 import { AuthService } from './auth.service';
+import { LegalLinksComponent } from '../legal/legal-links.component';
 
 export type AuthStatusMode = 'error' | 'loggedOut';
 
 @Component({
   selector: 'app-auth-status',
-  imports: [RouterLink, TranslatePipe],
+  imports: [RouterLink, TranslatePipe, LegalLinksComponent],
   templateUrl: './auth-status.component.html',
   styleUrl: './auth-status.component.css',
 })

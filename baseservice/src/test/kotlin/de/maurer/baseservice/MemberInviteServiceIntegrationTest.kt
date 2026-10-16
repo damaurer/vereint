@@ -80,7 +80,8 @@ class MemberInviteServiceIntegrationTest @Autowired constructor(
         firstName = "Anna",
         lastName = "Neumann",
         email = email,
-        password = "sehr-geheimes-passwort"
+        password = "sehr-geheimes-passwort",
+        acceptTerms = true
     )
 
     private fun newToken(maxUses: Int = 1): String =
@@ -130,6 +131,8 @@ class MemberInviteServiceIntegrationTest @Autowired constructor(
 
         val user = userRepository.findAll().single { it.email == email }
         assertFalse(user.disabled)
+        assertNotNull(user.termsVersion)
+        assertNotNull(user.termsAcceptedAt)
         assertEquals(listOf(UserRole.MEMBER), userRoleRepository.findByIdUserId(user.id).map { it.id.role })
 
         val invite = memberInviteRepository.findByTokenHash(SecureTokens.sha256Hex(token)).orElseThrow()
@@ -144,6 +147,19 @@ class MemberInviteServiceIntegrationTest @Autowired constructor(
         assertEquals(ErrorCode.INVITATION_USED_UP, again.errorCode)
         assertThrows(InvitationUsedUpException::class.java) { memberInviteService.preview(token) }
         verify(identityProvisioner, times(1)).createAccount(anyAccount())
+    }
+
+    @Test
+    fun `registration without accepting the terms keeps the link and creates no account`() {
+        val token = newToken()
+
+        val error = assertThrows(InvalidRequestException::class.java) {
+            memberInviteService.register(registerRequest(token).copy(acceptTerms = false))
+        }
+
+        assertEquals(ErrorCode.TERMS_NOT_ACCEPTED, error.errorCode)
+        assertEquals(0, memberInviteRepository.findByTokenHash(SecureTokens.sha256Hex(token)).orElseThrow().usesCount)
+        verify(identityProvisioner, never()).createAccount(anyAccount())
     }
 
     @Test

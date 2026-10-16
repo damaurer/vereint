@@ -3,7 +3,7 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
 import { MemberInvitesApiService } from '../invites/member-invites-api.service';
-import { Router } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { StammtischApiService } from '../stammtisch/stammtisch-api.service';
 import { AuthService } from './auth.service';
 import { RegisterComponent } from './register.component';
@@ -17,6 +17,7 @@ interface RegisterInternals {
   email: string;
   password: string;
   passwordRepeat: string;
+  acceptTerms: { set(value: boolean): void };
   start(hash: string): void;
   submit(): void;
   signedIn(): boolean;
@@ -55,6 +56,7 @@ describe('RegisterComponent', () => {
     TestBed.configureTestingModule({
       imports: [RegisterComponent],
       providers: [
+        provideRouter([]),
         { provide: MemberInvitesApiService, useValue: api },
         { provide: AuthService, useValue: auth },
         { provide: StammtischApiService, useValue: stammtische },
@@ -71,6 +73,7 @@ describe('RegisterComponent', () => {
     cmp.email = 'anna@example.org';
     cmp.password = 'sehr-geheimes-passwort';
     cmp.passwordRepeat = 'sehr-geheimes-passwort';
+    cmp.acceptTerms.set(true);
   };
 
   it('rejects a link without a token without calling the API', () => {
@@ -115,6 +118,16 @@ describe('RegisterComponent', () => {
     expect(api.register).not.toHaveBeenCalled();
   });
 
+  it('requires consent to the terms before registering', () => {
+    const { cmp } = create();
+    cmp.start(`#${TOKEN}`);
+    fill(cmp);
+    cmp.acceptTerms.set(false);
+    cmp.submit();
+    expect(cmp.error()).toContain('AGB');
+    expect(api.register).not.toHaveBeenCalled();
+  });
+
   it('registers with the token and offers the login', () => {
     const { cmp } = create();
     cmp.start(`#${TOKEN}`);
@@ -127,6 +140,7 @@ describe('RegisterComponent', () => {
       lastName: 'Neumann',
       email: 'anna@example.org',
       password: 'sehr-geheimes-passwort',
+      acceptTerms: true,
     });
     expect(cmp.state()).toBe('done');
     expect(cmp.registeredEmail()).toBe('anna@example.org');

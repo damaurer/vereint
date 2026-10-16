@@ -19,6 +19,7 @@ interface OpenInternals {
   email: string;
   password: string;
   passwordRepeat: string;
+  acceptTerms: { set(value: boolean): void };
   start(): Promise<void>;
   signup(): void;
   create(): void;
@@ -73,6 +74,7 @@ describe('StammtischOpenComponent', () => {
     cmp.email = 'anna@example.org';
     cmp.password = 'sehr-geheimes-passwort';
     cmp.passwordRepeat = 'sehr-geheimes-passwort';
+    cmp.acceptTerms.set(true);
   };
 
   it('shows the signup form with the free plan hint to visitors without a session', async () => {
@@ -105,6 +107,20 @@ describe('StammtischOpenComponent', () => {
     expect(api.signup).not.toHaveBeenCalled();
   });
 
+  it('requires consent to the terms before signing up or creating', async () => {
+    const { fixture, cmp } = await create();
+    expect((fixture.nativeElement as HTMLElement).querySelector('a[href="/agb"]')).not.toBeNull();
+    fill(cmp);
+    cmp.acceptTerms.set(false);
+    cmp.signup();
+    expect(cmp.error()).toContain('AGB');
+    expect(api.signup).not.toHaveBeenCalled();
+
+    cmp.create();
+    expect(cmp.error()).toContain('AGB');
+    expect(api.createOwn).not.toHaveBeenCalled();
+  });
+
   it('signs up, confirms and starts the login with /gruppe as target', async () => {
     const { fixture, cmp } = await create();
     fill(cmp);
@@ -116,6 +132,7 @@ describe('StammtischOpenComponent', () => {
       lastName: 'Neumann',
       email: 'anna@example.org',
       password: 'sehr-geheimes-passwort',
+      acceptTerms: true,
     });
     expect(cmp.state()).toBe('done');
     expect(cmp.password).toBe('');
@@ -164,6 +181,7 @@ describe('StammtischOpenComponent', () => {
     const { cmp } = await create({ uid: 'u', stammtisch: null });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     cmp.stammtischName = ' Eberstammtisch ';
+    cmp.acceptTerms.set(true);
     cmp.create();
 
     await vi.waitFor(() => expect(navigate).toHaveBeenCalledWith('/gruppe'));
@@ -177,6 +195,7 @@ describe('StammtischOpenComponent', () => {
     const { cmp } = await create({ uid: 'u', stammtisch: null });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     cmp.stammtischName = 'Eberstammtisch';
+    cmp.acceptTerms.set(true);
     cmp.create();
 
     await vi.waitFor(() => expect(cmp.error()).toContain('Gruppenauswahl'));
@@ -188,6 +207,7 @@ describe('StammtischOpenComponent', () => {
     api.createOwn.mockReturnValue(throwError(() => new ApiError(409, 'stammtisch_limit', 'Limit erreicht')));
     const { cmp } = await create({ uid: 'u', stammtisch: null });
     cmp.stammtischName = 'Vierter';
+    cmp.acceptTerms.set(true);
     cmp.create();
     expect(cmp.error()).toContain('drei eigene Gruppen');
     expect(auth.selectStammtisch).not.toHaveBeenCalled();

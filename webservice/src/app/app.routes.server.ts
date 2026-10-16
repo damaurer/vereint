@@ -19,6 +19,8 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'invite/accept', renderMode: RenderMode.Server },
   { path: 'register', renderMode: RenderMode.Server },
   { path: 'gruppe-eroeffnen', renderMode: RenderMode.Server },
+  { path: 'impressum', renderMode: RenderMode.Server },
+  { path: 'agb', renderMode: RenderMode.Server },
   { path: '403', renderMode: RenderMode.Server },
   { path: '404', renderMode: RenderMode.Server },
 

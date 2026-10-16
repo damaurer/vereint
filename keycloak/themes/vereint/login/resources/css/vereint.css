@@ -741,6 +741,18 @@ body.vereint-body {
   display: none;
 }
 
+.vereint-legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.vereint-legal-links a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 /* Tooltip aus keycloak.v2 innerhalb der Karte halten */
 .vereint-card .kc-login-tooltip .kc-tooltip-text {
   left: auto;
