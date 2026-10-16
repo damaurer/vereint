@@ -48,10 +48,8 @@ data class AdminUpdateUserRequest(
     )
     val boardRole: String? = null,
 
-    @field:AllowedValues(
-        values = ["member", "board", "admin", "tabletRecorder"],
-        message = "roles {validation.roles.allowed}"
-    )
+    @field:RoleCodes(message = "roles {validation.roles.allowed}")
+    @field:Size(max = 32, message = "roles {validation.size.maxEntries}")
     val roles: Set<String>? = null,
 
     @field:Size(max = 64, message = "permissions {validation.size.maxEntries}")
@@ -86,10 +84,8 @@ data class PagedResponse<T>(
 )
 
 data class AssignRolesRequest(
-    @field:AllowedValues(
-        values = ["member", "board", "admin", "tabletRecorder"],
-        message = "roles {validation.roles.allowed}"
-    )
+    @field:RoleCodes(message = "roles {validation.roles.allowed}")
+    @field:Size(max = 32, message = "roles {validation.size.maxEntries}")
     val roles: Set<String> = emptySet()
 )
 

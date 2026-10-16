@@ -1060,8 +1060,9 @@
   "admin": {
     "eyebrow": "Administration",
     "title": "Mitglieder & Gruppen",
-    "intro": "Mitglieder, Rollen und Einladungen der „Durstigen Eber“.",
-    "infoPanel": "Rollen und Berechtigungen werden serverseitig autorisiert; hier wird die Verwaltung nur vorbereitet.",
+    "intro": "Mitglieder, Rollen und Einladungen der Gruppe „{name}“.",
+    "introNoName": "Mitglieder, Rollen und Einladungen deiner Gruppe.",
+    "infoPanel": "Änderungen gelten sofort für die gewählte Gruppe; der Server prüft jede Berechtigung.",
     "loadingMessage": "Benutzer und Protokoll werden abgerufen.",
     "unavailable": "Administration nicht verfügbar",
     "roles": {
@@ -1072,7 +1073,7 @@
       "treasurer": "Kassenwart",
       "secretary": "Schriftwart",
       "assessor": "Beisitzer",
-      "host": "Gastgeber"
+      "tabletRecorder": "Thekenterminal"
     },
     "members": {
       "search": "Mitglieder suchen",
@@ -1113,7 +1114,9 @@
       "saveStatus": "Status speichern",
       "rolesSaved": "Rollen gespeichert.",
       "profileSaved": "Profil gespeichert.",
-      "statusSaved": "Status gespeichert."
+      "statusSaved": "Status gespeichert.",
+      "customRolesHint": "Eigene Rollen und ihre Berechtigungen legst du in den Gruppeneinstellungen an.",
+      "customRolesLink": "Rollen verwalten"
     },
     "audit": {
       "heading": "Audit-Protokoll ({count})",
@@ -1167,25 +1170,6 @@
         "emailTaken": "Für diese E-Mail-Adresse gibt es schon ein Konto. Melde dich damit an oder setze dein Passwort zurück.",
         "passwordRejected": "Das Passwort erfüllt die Vorgaben nicht. Bitte wähle ein längeres Passwort.",
         "unavailable": "Die Registrierung ist gerade nicht möglich. Bitte versuche es später noch einmal."
-      }
-    },
-    "matrix": {
-      "title": "Rollen & Berechtigungen",
-      "saved": "Berechtigungen gespeichert.",
-      "permission": "Berechtigung",
-      "hint": "Systemrechte sind global für Vereint geschützt.",
-      "discard": "Verwerfen",
-      "save": "Änderungen speichern",
-      "permissions": {
-        "credit": "Guthaben verwalten (Aufladen / Buchen)",
-        "events": "Events & Treffen erstellen / planen",
-        "notify": "Gruppen-Benachrichtigungen senden",
-        "attendance": "Anwesenheitsabfrage starten",
-        "invite": "Neue Mitglieder einladen",
-        "tally": "Strichliste aller Mitglieder editieren",
-        "stats": "Statistiken und Eber-Analytik einsehen",
-        "moderate": "Chat-Beiträge löschen / moderieren",
-        "pin": "Info Panels an Pinnwand heften"
       }
     }
   },

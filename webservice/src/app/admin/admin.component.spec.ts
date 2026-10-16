@@ -7,6 +7,22 @@ import type { PagedResponse, UserSummary } from '../auth/auth.types';
 import type { AuditLogEntry, MemberProfile } from '../api/api.types';
 import { AdminApiService } from './admin-api.service';
 import { AdminComponent } from './admin.component';
+import { StammtischApiService, type StammtischRolesDto } from '../stammtisch/stammtisch-api.service';
+
+function role(code: string, name: string, systemRole: boolean, sortOrder: number) {
+  return { id: `r-${code}`, code, name, description: null, permissions: [], systemRole, sortOrder, memberCount: 0 };
+}
+
+const groupRoles: StammtischRolesDto = {
+  roles: [
+    role('member', 'Mitglied', true, 0),
+    role('board', 'Vorstand', true, 1),
+    role('admin', 'Admin', true, 2),
+    role('tabletRecorder', 'Thekenterminal', true, 3),
+    role('kassenpruefung', 'Kassenprüfung', false, 10),
+  ],
+  knownPermissions: [],
+};
 
 function user(id: string, displayName: string, extra: Partial<UserSummary> = {}): UserSummary {
   return {
@@ -90,6 +106,7 @@ interface AdminInternals {
 }
 
 describe('AdminComponent', () => {
+  let groups: { current: ReturnType<typeof vi.fn>; roles: ReturnType<typeof vi.fn> };
   let api: {
     listUsers: ReturnType<typeof vi.fn>;
     listAuditLogs: ReturnType<typeof vi.fn>;
@@ -102,7 +119,11 @@ describe('AdminComponent', () => {
   const create = async () => {
     TestBed.configureTestingModule({
       imports: [AdminComponent],
-      providers: [provideRouter([]), { provide: AdminApiService, useValue: api }],
+      providers: [
+        provideRouter([]),
+        { provide: AdminApiService, useValue: api },
+        { provide: StammtischApiService, useValue: groups },
+      ],
     });
     const fixture = TestBed.createComponent(AdminComponent);
     fixture.detectChanges();
@@ -115,6 +136,10 @@ describe('AdminComponent', () => {
     (fixture.nativeElement as HTMLElement).textContent ?? '';
 
   beforeEach(() => {
+    groups = {
+      current: vi.fn(() => of({ id: 'st-1', name: 'Kegelclub Nord' })),
+      roles: vi.fn(() => of(groupRoles)),
+    };
     api = {
       listUsers: vi.fn(() => of(manyUsers)),
       listAuditLogs: vi.fn(() => of(audit)),
@@ -128,6 +153,10 @@ describe('AdminComponent', () => {
   it('renders the members table and the audit log', async () => {
     const fixture = await create();
     expect(html(fixture)).toContain('Mitglieder & Gruppen');
+    expect(html(fixture)).toContain('Kegelclub Nord');
+    expect(html(fixture)).not.toContain('Durstige');
+    // Die alte Vorschau-Tabelle ohne Speicherfunktion ist entfernt.
+    expect(html(fixture)).not.toContain('Rollen & Berechtigungen');
     expect(html(fixture)).toContain('Alice');
     expect(html(fixture)).toContain('user.roles.update');
     // Rollen-Chip nutzt die geteilten Primitive.
@@ -172,9 +201,42 @@ describe('AdminComponent', () => {
     fixture.detectChanges();
     expect(api.getUser).toHaveBeenCalledWith('u-1');
 
-    cmp.roleState = { member: true, board: true, admin: false, tabletRecorder: false };
+    cmp.roleState = { member: true, board: true, admin: false, tabletRecorder: false, kassenpruefung: false };
     cmp.saveRoles('u-1');
     expect(api.assignRoles).toHaveBeenCalledWith('u-1', { roles: ['member', 'board'] });
+  });
+
+  it('offers and saves the group\'s own roles', async () => {
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as AdminInternals;
+    cmp.selectUser('u-1');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(html(fixture)).toContain('Kassenprüfung');
+    expect(cmp.roleState).toEqual({
+      member: true,
+      board: false,
+      admin: false,
+      tabletRecorder: false,
+      kassenpruefung: false,
+    });
+
+    cmp.roleState['kassenpruefung'] = true;
+    cmp.saveRoles('u-1');
+    expect(api.assignRoles).toHaveBeenCalledWith('u-1', { roles: ['member', 'kassenpruefung'] });
+  });
+
+  it('falls back to the system roles and a neutral intro when group data is unavailable', async () => {
+    groups.current.mockReturnValue(throwError(() => new ApiError(403, 'permission_denied', '')));
+    groups.roles.mockReturnValue(throwError(() => new ApiError(403, 'permission_denied', '')));
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as AdminInternals;
+    expect(html(fixture)).toContain('deiner Gruppe');
+    expect(html(fixture)).toContain('Alice');
+    cmp.selectUser('u-1');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(Object.keys(cmp.roleState)).toEqual(['member', 'board', 'admin', 'tabletRecorder']);
   });
 
   it('opens and closes the invitation modal', async () => {

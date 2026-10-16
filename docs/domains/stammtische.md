@@ -60,8 +60,10 @@ die Trennung.
 Jeder Stammtisch hat eigene Rollen (`stammtisch_roles`). Beim Anlegen erhält er
 vier Systemrollen mit den bisherigen Rechten: Mitglied (`member`), Vorstand
 (`board`), Admin (`admin`) und Theke (`tabletRecorder`). Wer `roles.manage` hat,
-kann unter **Stammtisch** eigene Rollen anlegen, Rechte zuschneiden und Rollen
-zuweisen. Systemrollen lassen sich anpassen, aber nicht löschen.
+kann in den **Gruppeneinstellungen** eigene Rollen anlegen und Rechte zuschneiden.
+Zugewiesen werden System- und eigene Rollen in der **Administration** beim
+jeweiligen Mitglied (`PUT /api/v1/users/{id}/roles`; der Fachservice prüft, dass
+es die Rolle in der Gruppe gibt). Systemrollen lassen sich anpassen, aber nicht löschen.
 
 Neue Rechte für die Verwaltung je Stammtisch:
 
