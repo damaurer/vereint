@@ -32,5 +32,6 @@
     <include file="db/changelog/changes/013-stammtische.xml"/>
     <include file="db/changelog/changes/014-drink-library.xml"/>
     <include file="db/changelog/changes/015-billing.xml"/>
+    <include file="db/changelog/changes/016-terms-acceptance.xml"/>
 
 </databaseChangeLog>

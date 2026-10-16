@@ -62,7 +62,8 @@ class MemberInviteControllerTest {
         firstName = "Anna",
         lastName = "Neumann",
         email = "anna@example.org",
-        password = "sehr-geheimes-passwort"
+        password = "sehr-geheimes-passwort",
+        acceptTerms = true
     )
 
     @Test

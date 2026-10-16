@@ -548,6 +548,14 @@
     "stammtischOpen": {
       "title": "Open a group",
       "description": "Create and run your own group."
+    },
+    "imprint": {
+      "title": "Legal notice",
+      "description": "Details about the operator of Vereint."
+    },
+    "terms": {
+      "title": "Terms",
+      "description": "Terms and conditions of Vereint."
     }
   },
   "chat": {
@@ -1978,5 +1986,19 @@
         "selectFailed": "The group has been created but could not be opened. You will find it in the group selection."
       }
     }
+  },
+  "legal": {
+    "nav": "Legal",
+    "imprint": "Legal notice",
+    "terms": "Terms",
+    "home": "To the start page",
+    "placeholders": "Draft: the operator details are still placeholders. This page is only valid once they are filled in.",
+    "germanOnly": "This text is available in German only. The German version is binding.",
+    "acceptPrefix": "I have read and accept the",
+    "acceptLink": "terms and conditions",
+    "acceptSuffix": ".",
+    "acceptRequired": "Please accept the terms and conditions.",
+    "paidNotice": "Paid plans and the supporter fee are subject to the terms and conditions, including the consumer right of withdrawal.",
+    "withdrawal": "Right of withdrawal"
   }
 }

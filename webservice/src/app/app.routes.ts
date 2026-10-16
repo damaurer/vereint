@@ -80,6 +80,17 @@ export const routes: Routes = [
     loadComponent: () => import('./stammtisch/platform.component').then((m) => m.PlatformComponent),
   },
   {
+    // Rechtstexte: ohne Anmeldung und auch im Kiosk-Modus erreichbar.
+    path: 'impressum',
+    data: { title: 'routes.imprint.title', description: 'routes.imprint.description', access: 'routes.access.public' },
+    loadComponent: () => import('./legal/impressum.component').then((m) => m.ImpressumComponent),
+  },
+  {
+    path: 'agb',
+    data: { title: 'routes.terms.title', description: 'routes.terms.description', access: 'routes.access.public' },
+    loadComponent: () => import('./legal/agb.component').then((m) => m.AgbComponent),
+  },
+  {
     path: '403',
     data: { title: 'routes.forbidden.title', description: 'routes.forbidden.description', access: 'routes.access.denied' },
     loadComponent: () => import('./errors/forbidden.component').then((m) => m.ForbiddenComponent),

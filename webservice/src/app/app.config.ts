@@ -5,7 +5,7 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideOptimus } from '@openng/optimus-ui/config';
@@ -17,7 +17,8 @@ import { readOnlyInterceptor } from './stammtisch/billing-status';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    // Sprungmarken (`fragment`) etwa im Inhaltsverzeichnis der AGB.
+    provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled' })),
     provideClientHydration(),
     // `withFetch`: same-origin-Aufrufe an den Express-Auslieferungs-Proxy
     // (`/api/v1`) senden die HttpOnly-Session automatisch mit.

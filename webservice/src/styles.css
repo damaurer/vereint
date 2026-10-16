@@ -967,6 +967,16 @@ a:focus-visible {
   cursor: pointer;
 }
 
+/* Impressum und AGB: unten in der Seitenleiste und im „Mehr“-Sheet */
+.shell-legal {
+  display: block;
+  padding-top: var(--space-1);
+}
+
+.shell-sidebar .shell-legal {
+  margin-top: auto;
+}
+
 /* --- Gast-Shell (reduziert) --- */
 .shell-guest-bar {
   display: flex;

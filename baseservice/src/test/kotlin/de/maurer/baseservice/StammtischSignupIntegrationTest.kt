@@ -6,6 +6,7 @@ import de.maurer.baseservice.dto.StammtischSignupRequest
 import de.maurer.baseservice.error.ApiException
 import de.maurer.baseservice.error.EmailAlreadyRegisteredException
 import de.maurer.baseservice.error.ErrorCode
+import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.identity.IdentityProvisioner
 import de.maurer.baseservice.identity.NewAccount
 import de.maurer.baseservice.repository.StammtischSubscriptionRepository
@@ -13,15 +14,18 @@ import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.service.GroupImageService
 import de.maurer.baseservice.service.StammtischSignupService
+import de.maurer.baseservice.service.TermsConsent
 import de.maurer.baseservice.tenancy.StammtischMemberships
 import de.maurer.baseservice.tenancy.TenantContext
 import de.maurer.baseservice.tenancy.TenantTransactions
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,7 +49,8 @@ class StammtischSignupIntegrationTest @Autowired constructor(
     private val userRepository: UserRepository,
     private val subscriptionRepository: StammtischSubscriptionRepository,
     private val tenantTransactions: TenantTransactions,
-    private val groupImageService: GroupImageService
+    private val groupImageService: GroupImageService,
+    private val termsConsent: TermsConsent
 ) {
 
     @MockitoBean
@@ -56,7 +61,8 @@ class StammtischSignupIntegrationTest @Autowired constructor(
         firstName = "Kim",
         lastName = "Kunde",
         email = email,
-        password = "ein-langes-passwort"
+        password = "ein-langes-passwort",
+        acceptTerms = true
     )
 
     @Test
@@ -74,6 +80,32 @@ class StammtischSignupIntegrationTest @Autowired constructor(
             subscriptionRepository.findById(membership.stammtischId).map { it.plan }.orElse(BillingPlan.free)
         }
         assertEquals(BillingPlan.free, plan)
+        assertEquals(termsConsent.termsVersion, user.termsVersion)
+        assertNotNull(user.termsAcceptedAt)
+    }
+
+    @Test
+    fun `signup without accepting the terms is rejected before Keycloak is called`() {
+        val error = assertThrows(InvalidRequestException::class.java) {
+            signupService.signup(request().copy(acceptTerms = null))
+        }
+        assertEquals(ErrorCode.TERMS_NOT_ACCEPTED, error.errorCode)
+        verify(identityProvisioner, never()).createAccount(any(NewAccount::class.java) ?: NewAccount("", "", "", ""))
+    }
+
+    @Test
+    fun `opening another group records the consent and requires it`() {
+        val principal = UserPrincipal(subject = "kc-agb-${UUID.randomUUID()}", displayName = "Zustimmung")
+        val error = assertThrows(InvalidRequestException::class.java) {
+            signupService.openOwn(OpenStammtischRequest(name = "Ohne AGB", acceptTerms = false), principal)
+        }
+        assertEquals(ErrorCode.TERMS_NOT_ACCEPTED, error.errorCode)
+
+        signupService.openOwn(OpenStammtischRequest(name = "Mit AGB", acceptTerms = true), principal)
+
+        val user = tenantTransactions.readAsSystem { userRepository.findByKeycloakSubject(principal.subject).orElseThrow() }
+        assertEquals(termsConsent.termsVersion, user.termsVersion)
+        assertNotNull(user.termsAcceptedAt)
     }
 
     @Test
@@ -90,9 +122,9 @@ class StammtischSignupIntegrationTest @Autowired constructor(
     @Test
     fun `a person opens at most three own Stammtische`() {
         val principal = UserPrincipal(subject = "kc-owner-${UUID.randomUUID()}", displayName = "Eigner")
-        repeat(3) { signupService.openOwn(OpenStammtischRequest(name = "Eigener $it"), principal) }
+        repeat(3) { signupService.openOwn(OpenStammtischRequest(name = "Eigener $it", acceptTerms = true), principal) }
         val error = assertThrows(ApiException::class.java) {
-            signupService.openOwn(OpenStammtischRequest(name = "Zu viel"), principal)
+            signupService.openOwn(OpenStammtischRequest(name = "Zu viel", acceptTerms = true), principal)
         }
         assertEquals(ErrorCode.STAMMTISCH_LIMIT, error.errorCode)
     }
@@ -100,7 +132,7 @@ class StammtischSignupIntegrationTest @Autowired constructor(
     @Test
     fun `the group admin sets a picture that only members of the group can see`() {
         val owner = UserPrincipal(subject = "kc-bild-${UUID.randomUUID()}", displayName = "Bild")
-        val group = UUID.fromString(signupService.openOwn(OpenStammtischRequest(name = "Bildgruppe"), owner).id)
+        val group = UUID.fromString(signupService.openOwn(OpenStammtischRequest(name = "Bildgruppe", acceptTerms = true), owner).id)
         val png = ByteArrayOutputStream().also { ImageIO.write(BufferedImage(4, 4, BufferedImage.TYPE_INT_RGB), "png", it) }.toByteArray()
 
         val adminInGroup = owner.copy(roles = setOf("admin", "member"), stammtischId = group.toString())

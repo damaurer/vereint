@@ -235,8 +235,9 @@ Mit mehreren Gruppen (siehe `docs/domains/stammtische.md`) gilt:
 - Bestehende Daten landen beim Update in der Gruppe „Meine Gruppe".
 
 - Kunden können unter `/gruppe-eroeffnen` selbst Gruppen eröffnen. Solange
-  Impressum, AGB und Datenschutz fehlen, den SSM-Parameter
-  `/vereint/SIGNUP_ENABLED` auf `false` setzen und neu ausrollen.
+  Impressum und AGB Platzhalter enthalten (`webservice/src/app/legal/legal-operator.ts`,
+  siehe `docs/domains/rechtliches.md`) und die Datenschutzerklärung fehlt, den
+  SSM-Parameter `/vereint/SIGNUP_ENABLED` auf `false` setzen und neu ausrollen.
 
 ### Abrechnung (Stripe)
 

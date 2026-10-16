@@ -8,6 +8,8 @@ import { AuthService } from './auth.service';
 import { EMAIL_PATTERN } from './auth.types';
 import { TranslatePipe, translate } from '../i18n';
 import { StammtischApiService } from '../stammtisch/stammtisch-api.service';
+import { LegalLinksComponent } from '../legal/legal-links.component';
+import { TermsConsentComponent } from '../legal/terms-consent.component';
 
 type RegisterState = 'checking' | 'invalid' | 'form' | 'done';
 
@@ -28,7 +30,7 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
  */
 @Component({
   selector: 'app-register',
-  imports: [FormsModule, TranslatePipe],
+  imports: [FormsModule, TranslatePipe, TermsConsentComponent, LegalLinksComponent],
   styleUrl: './auth-status.component.css',
   template: `
     <div class="vereint-shell">
@@ -130,6 +132,8 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
                     />
                   </label>
 
+                  <app-terms-consent [(accepted)]="acceptTerms" />
+
                   @if (error()) {
                     <div class="state-card state-error login-error" role="alert">
                       <span>{{ error() }}</span>
@@ -155,6 +159,8 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,256}$/;
             }
           </div>
         </section>
+
+        <app-legal-links />
       </main>
     </div>
   `,
@@ -190,6 +196,7 @@ export class RegisterComponent {
   protected email = '';
   protected password = '';
   protected passwordRepeat = '';
+  protected readonly acceptTerms = signal(false);
 
   private token = '';
 
@@ -244,11 +251,15 @@ export class RegisterComponent {
       this.error.set(translate('auth.register.errors.passwordMismatch'));
       return;
     }
+    if (!this.acceptTerms()) {
+      this.error.set(translate('legal.acceptRequired'));
+      return;
+    }
 
     this.error.set(null);
     this.submitting.set(true);
     this.invites
-      .register({ token: this.token, firstName, lastName, email, password: this.password })
+      .register({ token: this.token, firstName, lastName, email, password: this.password, acceptTerms: true })
       .subscribe({
         next: (result) => {
           this.submitting.set(false);

@@ -100,6 +100,10 @@ vereint:
     enabled: ${SIGNUP_ENABLED:true}
     # Höchstzahl aktiver Stammtische, die eine Person selbst eröffnet.
     max-owned: ${SIGNUP_MAX_OWNED:3}
+  legal:
+    # Gültige Fassung der AGB (Datum wie `TERMS_VERSION` im Frontend). Wer ein
+    # Konto anlegt oder eine Gruppe eröffnet, stimmt dieser Fassung zu.
+    terms-version: ${TERMS_VERSION:2026-10-16}
   billing:
     # Tarife je Stammtisch über Stripe (Checkout, Kundenportal, Webhooks).
     # Ohne STRIPE_ENABLED=true, Secret-Key und Webhook-Secret antworten Buchung

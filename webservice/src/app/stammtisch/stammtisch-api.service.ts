@@ -159,6 +159,8 @@ export interface SignupRequest {
   lastName: string;
   email: string;
   password: string;
+  /** Zustimmung zu den AGB; der Fachservice speichert die gültige Fassung. */
+  acceptTerms: boolean;
 }
 
 export interface SignupResult {
@@ -188,9 +190,9 @@ export class StammtischApiService {
     return this.api.get<StammtischMembershipDto[]>('/stammtische');
   }
 
-  /** Eigenen Stammtisch eröffnen (angemeldet); höchstens drei je Person. */
+  /** Eigenen Stammtisch eröffnen (angemeldet, AGB zugestimmt); höchstens drei je Person. */
   createOwn(name: string): Observable<CreatedStammtischDto> {
-    return this.api.post<CreatedStammtischDto>('/stammtische', { name });
+    return this.api.post<CreatedStammtischDto>('/stammtische', { name, acceptTerms: true });
   }
 
   /** Stammtisch samt Konto eröffnen, ohne Anmeldung. Danach normal anmelden. */

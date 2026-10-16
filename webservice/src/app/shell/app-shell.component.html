@@ -52,6 +52,7 @@
             }
           </nav>
         }
+        <app-legal-links class="shell-legal" />
       </aside>
     } @else if (viewport() === 'tablet') {
       <aside class="shell-rail">
@@ -255,6 +256,7 @@
         <button type="button" class="shell-more-logout" (click)="logout()">
           <vereint-icon name="logout" /> {{ 'shell.logout' | t }}
         </button>
+        <app-legal-links class="shell-legal" />
       </div>
     </vereint-bottom-sheet>
   </div>

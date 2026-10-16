@@ -296,6 +296,12 @@ const BILLING_ACTIVATION_DELAY_MS = 4000;
                   </button>
                 </div>
               }
+
+              <p class="member-hint member-muted">
+                {{ 'legal.paidNotice' | t }}
+                <a routerLink="/agb">{{ 'legal.terms' | t }}</a> ·
+                <a routerLink="/agb" fragment="widerruf">{{ 'legal.withdrawal' | t }}</a>
+              </p>
             } @else if (billingError(); as message) {
               <p class="st-error" role="alert">{{ message }}</p>
             }

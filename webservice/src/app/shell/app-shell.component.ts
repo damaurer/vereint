@@ -1,3 +1,4 @@
+import { LegalLinksComponent } from '../legal/legal-links.component';
 import { isPlatformBrowser } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -86,6 +87,7 @@ function titleOf(root: ActivatedRouteSnapshot): string {
     IconComponent,
     BottomSheetComponent,
     GroupAvatarComponent,
+    LegalLinksComponent,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

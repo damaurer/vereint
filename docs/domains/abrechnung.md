@@ -101,6 +101,8 @@ liefert ein Test-Webhook-Secret.
 
 ## Nicht in der App
 
-Gewerbeanmeldung, Impressum, AGB, Datenschutzerklärung, Auftragsverarbeitung
-(AVV) mit den Gruppen und die steuerliche Einordnung (z. B.
-Kleinunternehmerregelung) sind Aufgaben des Betreibers.
+Impressum und AGB (Entwurf mit Platzhaltern) stehen unter `/impressum` und
+`/agb`, siehe [rechtliches.md](rechtliches.md). Gewerbeanmeldung, Prüfung und
+Ausfüllen dieser Texte, Datenschutzerklärung, Auftragsverarbeitung (AVV) mit
+den Gruppen, der Kündigungsbutton nach § 312k BGB und die steuerliche
+Einordnung (z. B. Kleinunternehmerregelung) sind Aufgaben des Betreibers.

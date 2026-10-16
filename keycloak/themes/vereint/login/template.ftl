@@ -258,6 +258,12 @@
 
     <footer class="vereint-footer">
       <@loginFooter.content/>
+      <#-- Keycloak liegt unter /kc auf derselben Domain wie die App. -->
+      <nav class="vereint-legal-links" aria-label="${msg("vereintLegalNav")}">
+        <a href="/impressum">${msg("vereintImprint")}</a>
+        <span aria-hidden="true">·</span>
+        <a href="/agb">${msg("vereintTerms")}</a>
+      </nav>
     </footer>
   </main>
 </div>

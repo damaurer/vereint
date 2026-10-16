@@ -19,6 +19,8 @@ const PUBLIC_SERVER_PATHS: readonly string[] = [
   'invite/accept',
   'register',
   'gruppe-eroeffnen',
+  'impressum',
+  'agb',
   '403',
   '404',
 ];
