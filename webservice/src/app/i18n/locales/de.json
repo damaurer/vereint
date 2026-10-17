@@ -9,7 +9,7 @@
   },
   "errors": {
     "api": {
-      "network": "Der Fachservice ist nicht erreichbar.",
+      "network": "Vereint ist gerade nicht erreichbar. Bitte versuche es gleich noch einmal.",
       "unavailable": "Der Dienst ist gerade nicht erreichbar. Bitte später erneut versuchen.",
       "sessionExpired": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
       "permissionDenied": "Für diese Aktion fehlen die erforderlichen Rechte.",
@@ -1068,7 +1068,7 @@
       "scope": "Umfang",
       "oneRound": "Eine Runde",
       "recipients": "Empfänger",
-      "hint": "Gültig, bis alle ein Getränk genommen haben. Doppelte Klicks werden über den Idempotency-Key nicht doppelt gebucht.",
+      "hint": "Gültig, bis alle ein Getränk genommen haben. Tippt jemand versehentlich doppelt, wird trotzdem nur einmal gebucht.",
       "confirmEvening": "Abend stiften",
       "confirmRound": "Runde ausgeben"
     },
@@ -1390,7 +1390,7 @@
       "title": "Bierkasse verwalten",
       "intro": "Guthaben aller Mitglieder, Kassenbuchungen und Eventabrechnungen.",
       "infoTitle": "Bierkasse",
-      "infoText": "Buchungen sind idempotent. Preis, Modus und Freigabe bestimmt ausschließlich der Fachservice.",
+      "infoText": "Jede Buchung zählt nur einmal, auch wenn sie versehentlich doppelt abgeschickt wird.",
       "eventsLoading": "Events werden abgerufen.",
       "unavailable": "Kasse nicht verfügbar",
       "statEvents": "Events mit Abrechnung",

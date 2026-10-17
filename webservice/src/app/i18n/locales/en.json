@@ -9,7 +9,7 @@
   },
   "errors": {
     "api": {
-      "network": "The service cannot be reached.",
+      "network": "Vereint cannot be reached right now. Please try again in a moment.",
       "unavailable": "The service is currently unavailable. Please try again later.",
       "sessionExpired": "Your session has expired. Please sign in again.",
       "permissionDenied": "You do not have permission for this action.",
@@ -1101,7 +1101,7 @@
       "scope": "Scope",
       "oneRound": "One round",
       "recipients": "Recipients",
-      "hint": "Valid until everyone has taken a drink. Thanks to the idempotency key, double clicks are not booked twice.",
+      "hint": "Valid until everyone has taken a drink. If someone accidentally taps twice, it is still only booked once.",
       "confirmEvening": "Sponsor evening",
       "confirmRound": "Buy round"
     },
@@ -1423,7 +1423,7 @@
       "title": "Manage beer kitty",
       "intro": "Member balances, cash bookings and event settlements.",
       "infoTitle": "Beer kitty",
-      "infoText": "Bookings are idempotent. Price, mode and approval are determined solely by the back-end service.",
+      "infoText": "Each booking only counts once, even if it is accidentally sent twice.",
       "eventsLoading": "Loading events.",
       "unavailable": "Kitty unavailable",
       "statEvents": "Events with settlement",
