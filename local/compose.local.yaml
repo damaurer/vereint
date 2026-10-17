@@ -1,0 +1,113 @@
+# Lokale Variante des Produktions-Stacks (deploy/compose.yaml).
+#
+# Wird ausschliesslich zusammen mit deploy/compose.yaml genutzt, siehe
+# local/vereint.mjs. Es laeuft dieselbe Konfiguration wie in Produktion
+# (Caddy-Routing inkl. /kc, Keycloak-Image mit Produktions-Realm, eigene
+# Images, Verschluesselung an), nur mit diesen Abweichungen:
+#   - Die App laeuft unter http://localhost:4200 ohne TLS. Caddy teilt sich
+#     den Netzwerk-Namensraum mit dem webservice; dadurch erreicht das BFF
+#     Keycloak unter derselben Adresse localhost:4200/kc wie der Browser.
+#   - Images werden lokal aus den Dockerfiles gebaut (vereint-local/*, Namen in local/.env.local).
+#   - Daten liegen in Docker-Volumes statt unter /srv, S3Mock ersetzt AWS S3.
+#   - Testkonten ohne Mitgliedschaft treten automatisch „Meine Gruppe" bei.
+#   - Der Dienst `seed` (Profil seed) legt einmalig Demo-Daten an.
+# Alle Ports lauschen nur auf 127.0.0.1.
+
+services:
+  caddy:
+    environment:
+      PUBLIC_DOMAIN: http://localhost:4200
+    # Die Ports veroeffentlicht der webservice, dessen Netz Caddy mitnutzt.
+    network_mode: service:webservice
+    ports: !reset []
+    networks: !reset {}
+    volumes: !override
+      - ../deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+
+  postgres:
+    ports:
+      # Nur fuer den Blick in die Datenbank (Benutzer postgres, Passwort in local/.env.local).
+      - "127.0.0.1:5434:5432"
+    volumes: !override
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/10-init-databases.sh:ro
+
+  keycloak:
+    build: ../keycloak
+    environment:
+      KC_HOSTNAME: http://localhost:4200/kc
+      # Admin-Konsole direkt unter http://localhost:8090/kc/admin.
+      KC_HOSTNAME_ADMIN: http://localhost:8090/kc
+      PUBLIC_BASE_URL: http://localhost:4200
+    ports: !override
+      - "127.0.0.1:8090:8080"
+
+  baseservice:
+    build: ../baseservice
+    environment:
+      KEYCLOAK_ISSUER_URI: http://localhost:4200/kc/realms/vereint
+      VEREIN_CORS_ALLOWED_ORIGINS: http://localhost:4200
+      PUBLIC_BASE_URL: http://localhost:4200
+      S3_ENDPOINT: http://object-storage:9090
+      S3_PATH_STYLE_ACCESS: "true"
+      TENANCY_BOOTSTRAP_REALM_ROLES: "true"
+    depends_on:
+      object-storage:
+        condition: service_healthy
+
+  webservice:
+    build: ../webservice
+    environment:
+      PUBLIC_BASE_URL: http://localhost:4200
+      KEYCLOAK_ISSUER_URI: http://localhost:4200/kc/realms/vereint
+      # Browser behandeln http://localhost als sicheren Kontext und nehmen
+      # Secure-Cookies an (Chrome, Edge, Firefox; Safari nicht).
+      SESSION_COOKIE_SECURE: "true"
+    ports:
+      - "127.0.0.1:4200:4200"
+
+  # S3-kompatibler Testspeicher (prueft keine Signaturen). Der Bucket wird beim
+  # Start angelegt.
+  object-storage:
+    image: adobe/s3mock:4.7.0
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: ${S3_BUCKET}
+      COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT: "true"
+      COM_ADOBE_TESTING_S3MOCK_STORE_ROOT: /data
+    volumes:
+      - object-storage-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9090/"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+    restart: unless-stopped
+
+  # Einmalige Demo-Daten (local/seed.mjs). Laeuft im Netz des webservice, damit
+  # der Browser die App wie ein Mensch unter http://localhost:4200 aufruft.
+  seed:
+    profiles: ["seed"]
+    image: mcr.microsoft.com/playwright:v1.56.1-noble
+    network_mode: service:webservice
+    working_dir: /work/local
+    command: ["sh", "-c", "npm install --no-audit --no-fund --no-update-notifier --loglevel=error && node seed.mjs"]
+    environment:
+      HANDBOOK_APP_URL: http://localhost:4200
+      HANDBOOK_KEYCLOAK_URL: http://keycloak:8080/kc
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+      KEYCLOAK_SEED_BOARD_PASSWORD: ${SEED_BOARD_PASSWORD}
+      KEYCLOAK_SEED_MEMBER_PASSWORD: ${SEED_MEMBER_PASSWORD}
+    volumes:
+      - ../local/seed.mjs:/work/local/seed.mjs:ro
+      - ../local/seed.package.json:/work/local/package.json:ro
+      - ../scripts/handbook/seed.mjs:/work/scripts/handbook/seed.mjs:ro
+      - seed-node-modules:/work/local/node_modules
+
+volumes:
+  caddy-data:
+  postgres-data:
+  object-storage-data:
+  seed-node-modules:

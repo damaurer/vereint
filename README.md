@@ -24,7 +24,13 @@ Bildschirmfotos stehen im [Benutzerhandbuch](docs/handbuch/README.md).
 
 ## 🚀 Lokale Entwicklung
 
-Voraussetzungen: Docker mit Compose, Java 25, Node.js ≥ 22.22.3 und npm 11.
+Am schnellsten: `node local/vereint.mjs up` startet die komplette App mit
+Demo-Daten unter `http://localhost:4200`, `node local/vereint.mjs test` führt
+alle Tests aus (Backend, Frontend, E2E). Dafür reichen Docker und Node.js;
+Details in [local/README.md](local/README.md).
+
+Zum Entwickeln mit automatischem Neuladen laufen baseservice und webservice
+direkt auf dem Rechner. Voraussetzungen: Docker mit Compose, Java 25, Node.js ≥ 22.22.3 und npm 11.
 
 ```bash
 # 1. Umgebungsvariablen anlegen; PUBLIC_BASE_URL auf http://localhost:4200 setzen
