@@ -88,6 +88,7 @@ Backup, Health Check und automatischem Rollback aus.
 | `infra/aws/` | Terraform | AWS-Server, Buckets, Secrets, Alarme, GitHub-OIDC |
 | `e2e/` | Playwright | Tests gegen den kompletten Produktions-Stack |
 | `scripts/handbook/` | Playwright | Bildschirmfotos für das Benutzerhandbuch |
+| `website/` | HTML, CSS | Öffentliche Website mit Funktionen und Tarifen, ausgeliefert von Caddy ([docs/website.md](docs/website.md)) |
 | `docs/` | Markdown | Technische und fachliche Dokumentation, Benutzerhandbuch |
 
 ---
@@ -96,7 +97,7 @@ Backup, Health Check und automatischem Rollback aus.
 
 - Gearbeitet wird auf `develop`. Jeder Pull Request nach `develop`, `qs` oder `main`
   muss Tests, Sicherheitsscans und E2E-Tests bestehen.
-- Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` rollt
+- Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` oder `website/` rollt
   automatisch auf einen einzelnen AWS-Server in Frankfurt aus: Datenbank-Backup vorher, Health Check danach, automatischer
   Rollback bei Fehlern.
 - Chat-Nachrichten, Mitteilungen, Bilder und Videos werden in der App mit
@@ -124,5 +125,6 @@ Backup, Health Check und automatischem Rollback aus.
 - [docs/domains/stammtische.md](docs/domains/stammtische.md) – Mehrere Gruppen, Trennung der Daten, Rollen je Gruppe
 - [docs/domains/abrechnung.md](docs/domains/abrechnung.md) – Tarife (Kostenlos, Standard, Premium) mit Stripe
 - [deploy/README.md](deploy/README.md) – Produktionsbetrieb, Backups, Deployments
+- [docs/website.md](docs/website.md) – Öffentliche Website, Domain, Bildschirmfotos
 - [infra/aws/README.md](infra/aws/README.md) – AWS mit Terraform
 - [e2e/README.md](e2e/README.md) – E2E-Tests

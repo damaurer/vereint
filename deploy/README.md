@@ -5,14 +5,15 @@ Server selbst entsteht mit Terraform (`infra/aws`).
 
 ```text
 Internet ──443──▶ Caddy ──┬─ /kc/*  ──▶ Keycloak ─┐
- (HTTPS, HTTP/3)          └─ /*     ──▶ webservice ──▶ baseservice
+ (HTTPS, HTTP/3)          ├─ /*     ──▶ webservice ──▶ baseservice
+                          └─ Website-Domain ──▶ website/ (statisch)
                                                       │
                                      PostgreSQL ◀─────┘     S3 (Dateien)
 ```
 
 | Dienst | Image | Aufgabe |
 |---|---|---|
-| `caddy` | `caddy` | TLS-Zertifikat (Let's Encrypt, automatisch), HSTS, Weiterleitung |
+| `caddy` | `caddy` | TLS-Zertifikat (Let's Encrypt, automatisch), HSTS, Weiterleitung, statische Website unter `WEBSITE_DOMAIN` ([docs/website.md](../docs/website.md)) |
 | `keycloak` | `ghcr.io/damaurer/keycloak` | Login unter `https://<domain>/kc` |
 | `webservice` | `ghcr.io/damaurer/webservice` | Angular SSR und BFF |
 | `baseservice` | `ghcr.io/damaurer/baseservice` | Fachlogik und API |
@@ -141,13 +142,15 @@ Jeder Merge nach `main` rollt automatisch aus (`.github/workflows/deploy.yml`):
    bindet die Images `keycloak`, `baseservice` und `webservice` an ihren
    Digest.
 2. Der Job meldet sich per OIDC bei AWS an, legt diesen Ordner samt
-   `images.env` unter `deploy/` im Backup-Bucket ab und startet auf dem Server
+   `images.env` und der Website (`website/`) unter `deploy/` im Backup-Bucket ab und startet auf dem Server
    per Systems Manager `bin/deploy.sh`. SSH ist dafür nicht nötig.
 3. `deploy.sh` zieht die neuen Images, **sichert beide Datenbanken** (wie
    nachts, inklusive Probe-Wiederherstellung; ohne Backup kein Deployment),
    aktiviert den neuen Stand und wartet, bis alle Container gesund sind.
 4. Danach prüft es von außen über Caddy, ob `/api/v1/health`, der Login
-   (`/kc/realms/vereint/...`) und die Startseite antworten.
+   (`/kc/realms/vereint/...`) und die Startseite antworten, und ob die Website
+   im Caddy-Container liegt. Antwortet die Website-Domain noch nicht, gibt es
+   nur eine Warnung.
 5. **Schlägt Schritt 3 oder 4 fehl, startet automatisch wieder der vorherige
    Stand** und der Workflow wird rot. Der fehlgeschlagene Stand liegt zur
    Analyse unter `/srv/vereint/releases/failed`.

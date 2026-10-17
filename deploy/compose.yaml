@@ -37,8 +37,12 @@ services:
       - "443:443/udp"
     environment:
       PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?PUBLIC_DOMAIN fehlt}
+      # Optionale Domain(s) der statischen Website; ohne Wert ein Platzhalter,
+      # auf den nie jemand zugreift (siehe Caddyfile).
+      WEBSITE_DOMAIN: ${WEBSITE_DOMAIN:-http://website.invalid}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./website:/srv/website:ro
       - /srv/vereint/data/caddy:/data
     networks:
       default:
