@@ -1,0 +1,66 @@
+name: Website
+
+# Prueft die statische Website (website/) und die Caddy-Konfiguration, die sie
+# ausliefert. Ausgerollt wird die Website mit dem Deployment (deploy.yml).
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+      - qs
+    paths:
+      - 'website/**'
+      - 'scripts/website/**'
+      - 'deploy/Caddyfile'
+      - 'deploy/compose.yaml'
+      - '.github/workflows/website.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Website und Caddyfile pruefen
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Links, Bilder und CSP-Regeln pruefen
+        run: node scripts/website/check.mjs
+
+      - name: Caddyfile mit und ohne Website-Domain pruefen
+        run: |
+          image="$(sed -n 's/^ *image: \(caddy:[^ ]*\)$/\1/p' deploy/compose.yaml)"
+          for website in 'http://website.invalid' 'example.org, www.example.org'; do
+            docker run --rm \
+              -e PUBLIC_DOMAIN=app.example.org -e "WEBSITE_DOMAIN=$website" \
+              -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+              "$image" caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+          done
+
+      - name: Website ueber Caddy ausliefern
+        run: |
+          image="$(sed -n 's/^ *image: \(caddy:[^ ]*\)$/\1/p' deploy/compose.yaml)"
+          docker run -d --name caddy -p 8080:80 \
+            -e PUBLIC_DOMAIN=app.example.org -e WEBSITE_DOMAIN=http://website.invalid \
+            -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v "$PWD/website:/srv/website:ro" "$image"
+          get() { curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -H 'Host: website.invalid' "http://127.0.0.1:8080$1"; }
+          for _ in $(seq 1 20); do [ "$(get / | cut -d' ' -f1)" = 200 ] && break; sleep 1; done
+          check() {
+            actual="$(get "$1")"
+            echo "$1 -> $actual"
+            [ "$actual" = "$2" ] || { echo "::error::$1 erwartet '$2', bekommen '$actual'"; docker logs caddy; exit 1; }
+          }
+          check / '200 '
+          check /assets/site.css '200 '
+          check /gibt-es-nicht '404 '
+          check /app/gruppe-eroeffnen '302 https://app.example.org/gruppe-eroeffnen'
+          curl -s -H 'Host: website.invalid' http://127.0.0.1:8080/ | grep -q 'Deine Gruppe.'

@@ -15,6 +15,17 @@ variable "domain" {
   type        = string
 }
 
+variable "website_domain" {
+  description = "Optional: Domain(s) der statischen Website, mehrere durch Komma getrennt, z. B. \"example.de, www.example.de\". Jeweils einen A-Record auf die Server-IP anlegen. Leer = Website nicht veroeffentlicht."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = can(regex("^([a-z0-9.-]+(, ?[a-z0-9.-]+)*)?$", var.website_domain))
+    error_message = "Nur Domainnamen (Kleinbuchstaben), mehrere durch Komma getrennt."
+  }
+}
+
 variable "alert_email" {
   description = "E-Mail-Adresse fuer Budget-Warnungen."
   type        = string

@@ -21,6 +21,7 @@ docs/
 ├── funktionen.md                         # Was die App kann, Bereich für Bereich
 ├── rollen-und-berechtigungen.md          # Rollen je Gruppe, eigene Rollen, Plattform-Admin
 ├── offene-punkte.md                      # Bekannte Lücken und nächste Schritte
+├── website.md                            # Öffentliche Website (website/), Domain, Prüfung
 ├── handbuch/                             # Benutzerhandbuch je Rolle mit Bildschirmfotos
 │
 ├── betrieb/                              # Produktion: Go-Live, CI, AWS, Deployment, Backups, Schlüssel
