@@ -89,3 +89,4 @@ EOF
 - **Umsatzsteuer:** Der Hinweis nach § 19 UStG unter den Preisen gilt nur, solange
   der Betreiber Kleinunternehmer ist (`smallBusiness` in `legal-operator.ts`).
 - **Englische Fassung:** Bisher nur Deutsch.
+- **Bilder für Kalender und Freunde:** Das Handbuch hat dafür noch keine Bildschirmfotos; die Website beschreibt beides bisher nur im Text. Sobald es Aufnahmen gibt, als eigenes Feature mit Bild ergänzen.
