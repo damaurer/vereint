@@ -206,6 +206,17 @@ describe('AdminComponent', () => {
     expect(api.assignRoles).toHaveBeenCalledWith('u-1', { roles: ['member', 'board'] });
   });
 
+  it('shows readable board sub-role names instead of codes', async () => {
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as AdminInternals;
+    cmp.selectUser('u-1');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const select = (fixture.nativeElement as HTMLElement).querySelector('select[name="boardRole"]');
+    const labels = Array.from(select?.querySelectorAll('option') ?? []).map((o) => o.textContent?.trim());
+    expect(labels).toEqual(['keine', 'Vorsitz', 'Kassenwart', 'Schriftwart', 'Beisitzer']);
+  });
+
   it('offers and saves the group\'s own roles', async () => {
     const fixture = await create();
     const cmp = fixture.componentInstance as unknown as AdminInternals;
