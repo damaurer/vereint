@@ -54,7 +54,23 @@ Bereiche etwas aus einer Gruppe, in der er nicht selbst aktives Mitglied ist.
 - Ungelesene Direktnachrichten zählen im Badge am Chat-Eintrag mit, egal welche
   Gruppe gerade gewählt ist.
 - Nachrichten werden wie alle Chats mit AES-256-GCM verschlüsselt gespeichert.
-- Direktnachrichten lösen wie die übrigen Chats keinen Push aus.
+
+### Push-Benachrichtigungen
+
+- Eine neue Direktnachricht, eine neue Freundschaftsanfrage und eine
+  angenommene Anfrage lösen bei der jeweils anderen Person einen Web-Push aus,
+  egal welche Gruppe dort gerade gewählt ist. Gruppenchats bleiben ohne Push.
+- Wie alle Pushes tragen sie keinen Inhalt. Der Service Worker lädt
+  `/api/v1/notifications` (Mitteilungen der gewählten Gruppe) und
+  `/api/v1/personal-notifications` und zeigt die neueste ungelesene Mitteilung.
+- Die persönlichen Mitteilungen werden nicht gespeichert, sondern aus den Daten
+  berechnet: je Gespräch die neueste ungelesene Nachricht, jede offene Anfrage
+  an mich und für 15 Minuten jede eigene Anfrage, die angenommen wurde. Sie
+  erledigen sich, sobald das Gespräch gelesen bzw. die Anfrage beantwortet ist.
+  In der Glocke erscheinen sie nicht; dafür gibt es den Chat-Zähler und die
+  Freundesliste.
+- Direktnachrichten eines Gesprächs ersetzen auf dem Gerät einander, statt sich
+  zu stapeln.
 
 ---
 
@@ -90,13 +106,16 @@ der Schlüssel nicht an der Gruppe hängt.
   in denen die fragende Person selbst aktives Mitglied ist.
 - `FriendService` / `FriendController`: Freundesliste.
 - `DirectMessageService` / `DirectConversationController`: Direktnachrichten.
+- `PersonalAlertService` / `PersonalNotificationController`: persönliche
+  Mitteilungen für den Service Worker. `FriendService` und
+  `DirectMessageService` lösen den Push über den `PushDispatcher` aus.
 - `CalendarService` / `CalendarController`: Kalender. Liest je eigener Gruppe in
   einer eigenen, nur lesenden Transaktion im Kontext genau dieser Gruppe
   (`TenantTransactions.readInStammtisch`). Hibernate-Filter und
   Row-Level-Security greifen dabei wie bei jeder Anfrage in dieser Gruppe; die
   Rechte stammen aus der Mitgliedschaft in dieser Gruppe.
-- `StammtischContextFilter`: `/api/v1/calendar`, `/api/v1/friends` und
-  `/api/v1/direct-conversations` laufen ohne gewählte Gruppe und bleiben auch in
+- `StammtischContextFilter`: `/api/v1/calendar`, `/api/v1/friends`,
+  `/api/v1/direct-conversations` und `/api/v1/personal-notifications` laufen ohne gewählte Gruppe und bleiben auch in
   einer nur lesbaren Gruppe (Zahlung überfällig) nutzbar.
 
 ### Endpunkte
@@ -115,6 +134,7 @@ der Schlüssel nicht an der Gruppe hängt.
 | `GET` / `POST` | `/api/v1/direct-conversations/{id}/messages` | Nachrichten lesen bzw. senden |
 | `POST` | `/api/v1/direct-conversations/{id}/read` | Als gelesen markieren |
 | `POST` | `/api/v1/direct-conversations/{id}/messages/{messageId}/reactions` | Reaktion umschalten |
+| `GET` | `/api/v1/personal-notifications` | Persönliche Mitteilungen für Push (`NotificationDto`, neueste zuerst) |
 
 ### Tests
 
@@ -122,4 +142,5 @@ der Schlüssel nicht an der Gruppe hängt.
 Personen aus eigenen Gruppen, Freundschaft bleibt nach dem Verlassen einer
 Gruppe, ein Gespräch je Paar über Gruppen hinweg, Sperre neuer Nachrichten ohne
 Freundschaft und Gruppe, Kalender mit Einträgen beider Gruppen und ohne fremde
-Entwürfe oder Events ohne Einladung.
+Entwürfe oder Events ohne Einladung, Push und persönliche Mitteilungen für
+Direktnachrichten und Freundschaftsanfragen.

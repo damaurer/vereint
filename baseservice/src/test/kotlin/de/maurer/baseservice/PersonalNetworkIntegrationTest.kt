@@ -8,6 +8,8 @@ import de.maurer.baseservice.dto.StartMomentRequest
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.ResourceNotFoundException
+import de.maurer.baseservice.push.PushDispatcher
+import de.maurer.baseservice.push.PushMessage
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.CalendarService
@@ -17,6 +19,7 @@ import de.maurer.baseservice.service.EventService
 import de.maurer.baseservice.service.FriendService
 import de.maurer.baseservice.service.MemberInviteService
 import de.maurer.baseservice.service.MomentService
+import de.maurer.baseservice.service.PersonalAlertService
 import de.maurer.baseservice.service.PlatformService
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.DefaultStammtischExtension.Companion.DEFAULT_STAMMTISCH_ID
@@ -29,9 +32,11 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -54,8 +59,12 @@ class PersonalNetworkIntegrationTest @Autowired constructor(
     private val friendService: FriendService,
     private val directMessageService: DirectMessageService,
     private val conversationService: ConversationService,
-    private val calendarService: CalendarService
+    private val calendarService: CalendarService,
+    private val personalAlertService: PersonalAlertService
 ) {
+
+    @MockitoSpyBean
+    private lateinit var pushDispatcher: PushDispatcher
 
     private lateinit var platform: UserPrincipal
     private lateinit var adminB: UserPrincipal
@@ -234,5 +243,52 @@ class PersonalNetworkIntegrationTest @Autowired constructor(
         assertThrows<InvalidRequestException> {
             calendarService.calendar(Instant.now(), Instant.now().minus(1, ChronoUnit.DAYS), bob)
         }
+    }
+
+    /** Push-Typen, die seit dem letzten Aufruf an [userId] gingen. */
+    private fun pushTypesFor(userId: UUID): List<String> =
+        Mockito.mockingDetails(pushDispatcher).invocations
+            .filter { it.method.name == "dispatch" && (it.arguments[0] as Collection<*>).contains(userId) }
+            .map { (it.arguments[1] as PushMessage).type }
+
+    @Test
+    fun `direct messages and friend requests push and show up as personal notifications`() {
+        val alice = person("Alice")
+        val bob = person("Bob")
+        val aliceId = idOf(alice)
+        val bobId = idOf(bob)
+        Mockito.clearInvocations(pushDispatcher)
+
+        friendService.request(bobId.toString(), alice)
+        assertEquals(listOf(PersonalAlertService.TYPE_FRIEND_REQUEST), pushTypesFor(bobId))
+        val request = personalAlertService.alerts(bob).single()
+        assertEquals(PersonalAlertService.TYPE_FRIEND_REQUEST, request.type)
+        assertEquals("Alice möchte mit dir befreundet sein.", request.body)
+        assertEquals("/freunde", request.link)
+        // Eine wiederholte Anfrage löst keinen weiteren Push aus.
+        friendService.request(bobId.toString(), alice)
+        assertEquals(1, pushTypesFor(bobId).size)
+
+        friendService.accept(aliceId.toString(), bob)
+        assertEquals(listOf(PersonalAlertService.TYPE_FRIEND_ACCEPTED), pushTypesFor(aliceId))
+        assertEquals(PersonalAlertService.TYPE_FRIEND_ACCEPTED, personalAlertService.alerts(alice).single().type)
+        assertTrue(personalAlertService.alerts(bob).isEmpty())
+        // Die Annahme gilt nur kurz als neu.
+        assertTrue(personalAlertService.alerts(alice, Instant.now().plus(1, ChronoUnit.HOURS)).isEmpty())
+
+        val conversation = UUID.fromString(directMessageService.start(bobId.toString(), alice).id)
+        directMessageService.send(conversation, SendMessageRequest(message = "Erste"), alice)
+        directMessageService.send(conversation, SendMessageRequest(message = "Zweite"), alice)
+        assertEquals(2, pushTypesFor(bobId).count { it == PersonalAlertService.TYPE_DIRECT_MESSAGE })
+        // Je Gespräch nur die neueste ungelesene Nachricht, auch in einer anderen Gruppe.
+        joinB(bob)
+        val direct = asB { personalAlertService.alerts(bob) }.single()
+        assertEquals("Nachricht von Alice", direct.title)
+        assertEquals("Zweite", direct.body)
+        assertEquals("/direktnachrichten?id=$conversation", direct.link)
+        // Eigene Nachrichten und gelesene Gespräche erscheinen nicht.
+        assertTrue(personalAlertService.alerts(alice, Instant.now().plus(1, ChronoUnit.HOURS)).isEmpty())
+        directMessageService.markRead(conversation, bob)
+        assertTrue(personalAlertService.alerts(bob).isEmpty())
     }
 }

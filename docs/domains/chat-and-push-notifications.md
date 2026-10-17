@@ -18,7 +18,7 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
 
 ### 2. Mitteilungen & Push-Benachrichtigungen
 - **Mitteilungen** entstehen bei Event-Einladungen, Erinnerungen und Absagen, neuen Moments sowie Nachrichten des Vorstands. Sie gehören zur Gruppe, in der sie entstehen.
-- **Web Push**: Browserbasierte Benachrichtigungen (auch bei geschlossener App) für diese Mitteilungen. Einzelne Chat-Nachrichten lösen keinen Push aus; sie erscheinen über den Ungelesen-Zähler. Bei Event-Einladungen bietet die Benachrichtigung „Zusagen“ und „Absagen“ an.
+- **Web Push**: Browserbasierte Benachrichtigungen (auch bei geschlossener App) für diese Mitteilungen. Nachrichten in Gruppen- und Event-Chats lösen keinen Push aus; sie erscheinen über den Ungelesen-Zähler. Direktnachrichten und Freundschaftsanfragen lösen gruppenübergreifend einen Push aus (siehe [Kalender, Freunde und Direktnachrichten](kalender-freunde-direktnachrichten.md#push-benachrichtigungen)). Bei Event-Einladungen bietet die Benachrichtigung „Zusagen“ und „Absagen“ an.
 - **Nachrichten des Vorstands**: Wer `notifications.broadcast` hat, schickt eine Mitteilung an ein Mitglied (`SendNotificationRequest`) oder an ausgewählte bzw. alle Mitglieder der Gruppe (`BroadcastNotificationRequest`).
 
 ---

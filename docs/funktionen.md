@@ -85,6 +85,8 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 - Freundesliste (*Mehr → Freunde*) über alle Gruppen: Anfrage und Annahme, nur
   an Personen mit gemeinsamer Gruppe. Freundschaften bleiben, wenn jemand eine
   Gruppe verlässt.
+- Web-Push für neue Direktnachrichten, Freundschaftsanfragen und angenommene
+  Anfragen, unabhängig von der gewählten Gruppe.
 - Fachliche Details: [docs/domains/kalender-freunde-direktnachrichten.md](domains/kalender-freunde-direktnachrichten.md)
 
 ## Guthaben

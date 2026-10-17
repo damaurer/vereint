@@ -16,6 +16,8 @@ import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
+import de.maurer.baseservice.push.PushDispatcher
+import de.maurer.baseservice.push.PushMessage
 import de.maurer.baseservice.repository.DirectConversationRepository
 import de.maurer.baseservice.repository.DirectMessageRepository
 import de.maurer.baseservice.repository.DirectParticipantRepository
@@ -38,6 +40,8 @@ import java.util.UUID
  *   Personen, mit denen man eine Gruppe teilt. Fällt beides weg, bleibt der
  *   Verlauf lesbar, neue Nachrichten sind aber gesperrt (`canWrite = false`).
  * - Wer mit niemandem eine Beziehung hat, findet das Konto nicht (`404`).
+ * - Jede neue Nachricht löst beim Gegenüber einen Push aus; den Inhalt lädt der
+ *   Service Worker über [PersonalAlertService] nach.
  *
  * Die Endpunkte laufen ohne gewählte Gruppe; die Daten gehören keiner Gruppe.
  */
@@ -51,7 +55,8 @@ class DirectMessageService(
     private val userRepository: UserRepository,
     private val userService: UserService,
     private val friendService: FriendService,
-    private val sharedGroups: SharedGroups
+    private val sharedGroups: SharedGroups,
+    private val pushDispatcher: PushDispatcher
 ) {
 
     @Transactional(readOnly = true)
@@ -130,6 +135,10 @@ class DirectMessageService(
         )
         // Eigene Nachrichten gelten als gelesen.
         participant.lastReadAt = saved.createdAt
+        pushDispatcher.dispatch(
+            listOf(partner.id),
+            PushMessage(title = caller.displayName, body = "", type = PersonalAlertService.TYPE_DIRECT_MESSAGE)
+        )
         return toMessageDto(saved)
     }
 

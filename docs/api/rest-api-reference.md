@@ -190,6 +190,7 @@ Fachlich: [Einladungslinks](../domains/member-invites.md).
 | `POST` | `/api/v1/direct-conversations/{conversationId}/read` | Als gelesen markieren | Beteiligte |
 | `POST` | `/api/v1/direct-conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Beteiligte |
 | `GET` | `/api/v1/notifications` | Eigene Mitteilungen | Angemeldet |
+| `GET` | `/api/v1/personal-notifications` | Persönliche Mitteilungen für Push: ungelesene Direktnachrichten, Freundschaftsanfragen, frisch angenommene Anfragen (ohne Gruppe) | Angemeldet |
 | `GET` | `/api/v1/notifications/unread-count` | Anzahl ungelesener Mitteilungen | Angemeldet |
 | `POST` | `/api/v1/notifications/read-all` | Alle als gelesen markieren | Angemeldet |
 | `POST` | `/api/v1/notifications/{notificationId}/read` | Eine Mitteilung als gelesen markieren | Angemeldet |

@@ -108,6 +108,7 @@ Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vor
 - **Neue Nachricht**: Person wählen und losschreiben. Zur Auswahl stehen alle aus deinen Gruppen und deine Freunde. Unter dem Namen siehst du eure gemeinsamen Gruppen.
 - Bestehende Gespräche stehen unter **Konversationen**; mit dem Suchfeld findest du sie schnell.
 - Seid ihr weder befreundet noch in einer gemeinsamen Gruppe, bleibt das Gespräch lesbar, neue Nachrichten gehen aber nicht mehr.
+- Mit eingeschaltetem Push bekommst du neue Direktnachrichten aufs Handy, egal welche Gruppe gerade gewählt ist. Ein Tipp darauf öffnet das Gespräch.
 
 <br clear="right">
 
@@ -131,6 +132,7 @@ Unter **Mehr → Freunde** führst du deine Freundesliste. Sie gilt über alle G
 - **Nachricht** öffnet das Direktgespräch mit diesem Freund.
 - Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt. Ihr könnt euch dann weiter Direktnachrichten schreiben.
 - **Entfernen** und dann **Wirklich entfernen** beendet eine Freundschaft.
+- Mit eingeschaltetem Push erfährst du auf dem Handy, wenn dich jemand anfragt oder deine Anfrage annimmt.
 
 ## Guthaben
 
@@ -199,6 +201,7 @@ Die **Glocke** oben rechts (oder **Mehr → Mitteilungen**) sammelt alles, was d
 - Ungelesene Mitteilungen haben einen Punkt und einen farbigen Rand.
 - **Als gelesen markieren** gilt für eine Mitteilung, **Alle als gelesen markieren** für alle.
 - Oben kannst du unter **Mitteilungen auf diesem Gerät** Push einschalten, genauso wie im Profil (siehe [Erste Schritte](01-erste-schritte.md#mitteilungen-aufs-handy-push)).
+- Push kommt außerdem für neue Direktnachrichten, Freundschaftsanfragen und angenommene Anfragen. Diese stehen nicht in der Glocke, sondern im Chat bzw. unter **Freunde**.
 
 <br clear="right">
 
