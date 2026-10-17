@@ -422,6 +422,9 @@ const SHOTS = [
   { id: 'v-getraenkedatenbank', who: 'board', device: PHONE, run: async (page) => open(page, '/catalog/library') },
   { id: 'v-moments-verwalten', who: 'board', device: PHONE, run: async (page) => open(page, '/board/moments') },
 
+  { id: 'm-kalender', who: 'member', device: PHONE, run: async (page) => open(page, '/kalender') },
+  { id: 'm-freunde', who: 'member', device: PHONE, run: async (page) => open(page, '/freunde') },
+
   // Kiosk-Modus: zuletzt, weil das Terminal danach gesperrt bleibt.
   {
     id: 't-kiosk-start',
