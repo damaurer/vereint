@@ -1,69 +1,64 @@
-# UI-Komponentenbibliothek & Optimus Design-System
+# UI-Komponentenbibliothek & Design-System
 
-Die Benutzeroberfläche von **Vereint** basiert auf dem **Optimus Design System** – einem hochgradig konsistenten, barrierefreien und modularen Komponenten-Ökosystem in Angular 22.
+Die Benutzeroberfläche von **Vereint** nutzt die Bibliothek `@openng/optimus-ui` mit dem Theme Aura (`provideOptimus` in `app.config.ts`), Tailwind CSS 4 und eigene, schlanke Standalone-Komponenten unter `webservice/src/app/ui`.
 
 ---
 
-## 🎨 Optimus Design Tokens (`styles.css`)
+## 🎨 Design Tokens (`styles.css`)
 
-Das Design-System definiert CSS Custom Properties für ein einheitliches Erscheinungsbild und einfache Theme-Anpassbarkeit pro Installation:
+`styles.css` definiert CSS Custom Properties für ein einheitliches Erscheinungsbild, mit eigenen Werten für den Dunkelmodus:
 
 | Token-Kategorie | CSS Variable | Standardwert / Zweck |
 | :--- | :--- | :--- |
-| **Primärfarbe** | `--opt-color-primary` | Hauptfarbe (z. B. `#1e3a8a`) für Buttons, Header und aktive Navigationselemente. |
-| **Akzentfarbe** | `--opt-color-accent` | Hervorhebungen (z. B. `#d97706`) für Badges, Warnungen und Runden. |
-| **Erfolg & Guthaben** | `--opt-color-success` | `#16a34a` für positive Kassenstände, Buchungsbestätigungen und Zusagen. |
-| **Gefahr & Minusstand** | `--opt-color-danger` | `#dc2626` für negative Kassenstände, Stornos und Absagen. |
-| **Hintergründe** | `--opt-bg-canvas`, `--opt-bg-surface` | Neutrales Weiß/Grau bzw. Dark-Mode Surface Farbwerte. |
-| **Typografie** | `--opt-font-sans`, `--opt-font-mono` | System-Schriftarten mit optimaler Lesbarkeit auf Mobilgeräten. |
-| **Radien** | `--opt-radius-sm`, `--opt-radius-md`, `--opt-radius-lg` | `4px`, `8px`, `16px` für Cards, Badges und Modals. |
-| **Schatten** | `--opt-elevation-1` bis `--opt-elevation-4` | Tiefe- und Schattierungs-Ebenen für schwebende Overlays und Sheets. |
+| **Primärfarbe** | `--opt-color-primary`, `--opt-color-primary-light`, `--opt-color-primary-dark` | Hauptfarbe (`#1e3a8a`) für Buttons, Header und aktive Navigationselemente. |
+| **Akzentfarbe** | `--opt-color-accent`, `--opt-color-accent-light` | Hervorhebungen für Badges und Hinweise. |
+| **Erfolg** | `--opt-color-success`, `--opt-color-success-light` | Positive Kontostände, Bestätigungen und Zusagen. |
+| **Gefahr** | `--opt-color-danger`, `--opt-color-danger-light` | Negative Kontostände, Stornos und Absagen. |
+| **Hintergründe** | `--opt-bg-canvas`, `--opt-bg-surface`, `--opt-bg-surface-raised` | Seiten- und Kartenflächen. |
+| **Text & Rahmen** | `--opt-text-main`, `--opt-text-muted`, `--opt-border-color`, `--opt-border-dark` | Schrift- und Linienfarben. |
+| **Typografie** | `--opt-font-sans` | System-Schriftarten. |
+| **Radien** | `--opt-radius-sm`, `--opt-radius-md`, `--opt-radius-lg` | `4px`, `8px`, `12px`. |
 
 ---
 
 ## 🧩 Shared UI-Komponenten (`webservice/src/app/ui`)
 
-Alle UI-Komponenten sind als **Angular Standalone Components** ohne externe UI-Framework-Abhängigkeiten (kein Bootstrap, kein Material-Overhead) implementiert:
+Alle Komponenten sind **Angular Standalone Components** mit `OnPush`; Texte kommen über die `t`-Pipe aus `i18n/locales`.
 
 ### 1. `BalanceCardComponent` (`balance-card.component.ts`)
-- **Zweck**: Prominente Anzeige des aktuellen Kassenstands eines Mitglieds im Dashboard.
-- **Features**:
-  - Dynamische Farbgebung: Grün bei positivem Guthaben, Rot mit Warnhinweis bei negativem Kontostand.
-  - Direkte Aktionsbuttons für "Guthaben aufladen" und "Kontoauszug anzeigen".
+- **Zweck**: Anzeige eines Kontostands (`amount`), rot bei `negative`.
+- **Optional**: Knopf „Aufladen“ (`showTopup`, Ereignis `topup`).
 
 ### 2. `BottomSheetComponent` (`bottom-sheet.component.ts`)
-- **Zweck**: Mobile-First Interaktions-Drawer für Aktionen, Filter und Schnellauswahlen.
-- **Features**:
-  - Wisch-Geste (*Swipe down to dismiss*).
-  - Touch-optimierte Backdrop-Abschirmung mit Fokus-Sperre (*Focus Trap*).
+- **Zweck**: Von unten einfahrendes Blatt für Aktionen und Auswahlen auf dem Handy.
+- **Verhalten**: `role="dialog"`, schließt per `Escape` oder Klick auf den Hintergrund (abschaltbar mit `dismissible=false`), Ereignis `closed`.
 
 ### 3. `ModalComponent` (`modal.component.ts`)
-- **Zweck**: Zentrierte Dialoge für Bestätigungen, Vorschläge und Formulare auf Desktop und Tablet.
-- **Features**: Tastatur-Support (`Escape`-Taste), ARIA-Attribute (`role="dialog"`), anpassbare Footer-Aktionen.
+- **Zweck**: Zentrierte Dialoge für Bestätigungen und Formulare.
+- **Verhalten**: `role="dialog"`, `aria-modal`, Schließen-Knopf, `Escape`, Klick auf den Hintergrund (abschaltbar mit `dismissible=false`).
 
 ### 4. `StepperComponent` (`stepper.component.ts`)
-- **Zweck**: Geführte Mehrschritt-Assistenten (z. B. Event-Erstellung mit Sublisten-Auswahl und Einladungs-Setup).
-- **Features**: Schritt-Validierung, lineare oder freie Navigation, Fortschrittsbalken.
+- **Zweck**: Mengenwahl mit „−“ und „+“ (`value`, `min`, `max`, `step`), z. B. an der Theke.
+- **Ereignisse**: `valueChange`, `increased`, `decreased`; der Wert wird per `aria-live` angesagt.
 
 ### 5. `DataTableComponent` (`data-table.component.ts`)
-- **Zweck**: Wiederverwendbare, responsive Datentabelle für Mitgliederlisten, Getränkekataloge und Kassenjournale.
-- **Features**: Client-/Serverseitiges Sortieren, Volltextsuche, dynamische Spalten-Templates und Paginierung.
+- **Zweck**: Einfache Tabelle aus `columns` und `rows`, optional mit eigenem Zellen-Template.
+- **Mobil**: Jede Zelle trägt `data-label` mit dem Spaltentitel; ohne Zeilen erscheint ein Leertext.
 
 ### 6. `RoleChipComponent` (`role-chip.component.ts`)
-- **Zweck**: Kompakte Kennzeichnung von Benutzerrollen und Vorstandsämtern (`Admin`, `Vorstand`, `Kassier`, `Thekenschreiber`).
+- **Zweck**: Kompakter Chip mit einem Text (`label`), optional hervorgehoben (`tone="accent"`), etwa für Rollen.
 
 ### 7. `StatCardComponent` (`stat-card.component.ts`)
-- **Zweck**: Dashboard-KPI-Kachel für Kennzahlen (z. B. Umsatz, Anwesenheit, Liter Bier).
-- **Features**: Unterstützt Trendpfeile (`+14 %`), Sparklines und Vergleichswerte.
+- **Zweck**: Kachel mit Kennzahl (`label`, `value`), optional `hint` und Icon.
 
 ### 8. `StatusBadgeComponent` (`status-badge.component.ts`)
-- **Zweck**: Statusanzeige für Eventzustände (`draft`, `published`, `active`, `completed`) und RSVP-Stati.
+- **Zweck**: Farbiges Abzeichen mit Text und Ton (`tone`), z. B. für Event- und Zusagestatus.
 
 ### 9. `HeroGreetingComponent` (`hero-greeting.component.ts`)
-- **Zweck**: Personalisierte Begrüßung im Member-Dashboard ("Guten Abend, Max!") mit direktem Zugriff auf anstehende Events.
+- **Zweck**: Begrüßung im Dashboard mit Avatar, Name und optionalem Untertitel.
 
 ### 10. `AvatarBadgeComponent` (`avatar-badge.component.ts`)
-- **Zweck**: Rundes Profilbild mit Initialen-Fallback und Statuspunkt.
+- **Zweck**: Rundes Profilbild mit Initialen-Fallback (bis zu zwei Buchstaben).
 
 ### 11. `IconComponent` (`icon.component.ts`, `icons.ts`)
 - **Zweck**: Eigenes Vereint-Icon-Set statt Emojis für Navigation, Buttons, Statuskacheln und Hinweise.
@@ -77,19 +72,24 @@ Alle UI-Komponenten sind als **Angular Standalone Components** ohne externe UI-F
 - **Nutzung**: `<vereint-state kind="loading" title="Wird geladen …" message="…" />`, `kind="empty"` für leere Listen, `kind="error"` mit `[message]="load.errorMessage()"` und `(retry)="reload()"`. Der Knopf „Erneut versuchen“ erscheint nur, wenn `retry` gebunden ist.
 - **Barrierefreiheit**: Laden und Leer werden als `status` angesagt, Fehler als `alert`.
 
+### 13. Weitere Bausteine
+- `EventCardComponent` (`event-card.component.ts`): Karte für ein Event in Listen.
+- `InfoPanelComponent` (`info-panel.component.ts`): Hinweisfläche mit Text.
+- `resizeImageToJpeg` (`image-resize.ts`): verkleinert Bilder im Browser vor dem Upload.
+
 ## 🧭 Navigation (`webservice/src/app/shell`)
 
-`nav-model.ts` ist die einzige Quelle für alle Ziele, gruppiert in **Gruppe**, **Mein Konto**, **Theke** und **Verwaltung** (nur mit Rolle/Permission).
+`nav-model.ts` ist die einzige Quelle für alle Ziele, gruppiert in **Gruppe**, **Mein Konto**, **Theke** und **Verwaltung** (nur mit passender Permission in der gewählten Gruppe).
 
 | Gerät | Darstellung |
 | :--- | :--- |
-| Handy | Kopfzeile mit Seitentitel und Mitteilungen; unten Start, Events, Chat, Guthaben und **Mehr** (Sheet mit allen übrigen Seiten und Abmelden). |
-| Tablet | Beschriftete Icon-Leiste mit denselben vier Zielen plus **Mehr**; Kopfzeile mit Profil-Menü. |
-| Desktop | Gruppierte Seitenleiste mit allen Seiten; Kopfzeile mit Seitentitel, Mitteilungen und Profil-Menü (Profil, Guthaben, Abmelden). |
+| Handy (≤ 640px) | Kopfzeile mit Seitentitel und Mitteilungen; unten Start, Events, Chat, Guthaben und **Mehr** (Sheet mit allen übrigen Seiten und Abmelden). |
+| Tablet (641px bis 1024px) | Beschriftete Icon-Leiste mit denselben vier Zielen plus **Mehr**; Kopfzeile mit Profil-Menü. |
+| Desktop (> 1024px) | Gruppierte Seitenleiste mit allen Seiten; Kopfzeile mit Seitentitel, Mitteilungen und Profil-Menü (Profil, Guthaben, Abmelden). |
 
 Der Seitentitel in der Kopfzeile kommt aus `route.data.title`; Titel und Navigationslabel sollen gleich lauten.
 
-Die Glocke zeigt die Zahl ungelesener Mitteilungen (`GET /notifications/unread-count`). Der Wert liegt in `UnreadBadgeStore`, den auch die Mitteilungsseite beim Lesen aktualisiert.
+Die Glocke zeigt die Zahl ungelesener Mitteilungen (`GET /api/v1/notifications/unread-count`). Der Wert liegt in `UnreadBadgeStore`, den auch die Mitteilungsseite beim Lesen aktualisiert.
 
 ## 🌗 Hell- und Dunkelmodus
 

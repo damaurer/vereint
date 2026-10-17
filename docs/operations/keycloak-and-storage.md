@@ -9,8 +9,8 @@ Dieses Dokument beschreibt die Konfiguration des Identity Providers **Keycloak 2
 Keycloak ist der zentrale Identity & Access Provider (OIDC). Das Realm `vereint` wird beim ersten Start des Containers importiert; einen bestehenden Realm überschreibt der Import nicht.
 
 ### 1. Realm-Import & Speicherorte
-- **Entwicklungs-Export**: `keycloak/dev/realm-export-dev.json` (wird in `/opt/keycloak/data/import` gemountet), mit Seed-Benutzern und erlaubter Registrierungsseite.
-- **Produktions-Export**: `keycloak/realm-export.json`, ohne Seed-Benutzer und ohne offene Registrierung; im Produktions-Image eingebaut.
+- **Entwicklungs-Export**: `keycloak/dev/realm-export-dev.json` (wird in `/opt/keycloak/data/import` gemountet), mit Seed-Benutzern, Registrierungsseite und „Passwort vergessen“.
+- **Produktions-Export**: `keycloak/realm-export.json`, ohne Seed-Benutzer, ohne offene Registrierung und ohne „Passwort vergessen“ (`resetPasswordAllowed: false`); im Produktions-Image eingebaut. Neue Konten entstehen nur über die App (Einladungslink oder Gruppe eröffnen).
 - **Admin-Konsole lokal**: `http://localhost:8082/admin` (Zugang aus `KEYCLOAK_ADMIN` / `KEYCLOAK_ADMIN_PASSWORD` der `.env`).
 - **Admin-Konsole in Produktion**: von außen gesperrt, nur per SSM-Tunnel, siehe [deploy/README.md](../../deploy/README.md#keycloak-verwaltung).
 
@@ -18,21 +18,23 @@ Keycloak ist der zentrale Identity & Access Provider (OIDC). Das Realm `vereint`
 | Client ID | Flow | Zweck |
 | :--- | :--- | :--- |
 | `vereint-web` | Standard Flow mit **PKCE (S256)**, vertraulich | Login über den BFF (lokal `http://localhost:4200/api/auth/callback`) |
-| `vereint-service` | Service-Account | Zugriffe des Fachservice |
+| `vereint-service` | Bearer-only, kein Login und kein Service-Account | Ressourcen-Client des Fachservice |
 | `vereint-tablet` | Service-Account | Thekenterminal (Rolle `tabletRecorder`) |
-| `vereint-registration` | Service-Account, nur `realm-management/manage-users` | Kontoanlage über [Einladungslinks](../domains/member-invites.md) |
+| `vereint-registration` | Service-Account, nur `realm-management/manage-users` | Kontoanlage über [Einladungslinks](../domains/member-invites.md) und beim Eröffnen einer Gruppe |
 
 Die Secrets kommen beim Import aus Umgebungsvariablen (`keycloak/README.md`); in Produktion erzeugt Terraform sie im SSM Parameter Store.
 
 ### 3. Seed-Benutzer (nur Entwicklungs-Realm)
 
-| Benutzername | Rollen | Passwort |
+| Benutzername | Realm-Rollen | Passwort |
 | :--- | :--- | :--- |
 | `admin` | `admin`, `board`, `member` | `KEYCLOAK_SEED_ADMIN_PASSWORD` aus der `.env`, temporär |
 | `board` | `board`, `treasurer`, `member` | `KEYCLOAK_SEED_BOARD_PASSWORD`, temporär |
 | `member` | `member` | `KEYCLOAK_SEED_MEMBER_PASSWORD`, temporär |
 
-Im Produktions-Realm gibt es keine Benutzer; der erste Administrator wird nach dem ersten Deployment von Hand angelegt.
+Rollen und Berechtigungen gelten in Vereint je Gruppe und liegen in der Datenbank, nicht in Keycloak. Die Realm-Rollen der Seed-Benutzer wirken nur, wenn `TENANCY_BOOTSTRAP_REALM_ROLES=true` gesetzt ist (lokal und in E2E-Tests): Dann tritt ein Konto ohne Mitgliedschaft beim ersten Aufruf der Standardgruppe mit den passenden Systemrollen bei. Die Realm-Rolle `admin` macht ein Konto außerdem zur Plattform-Administration (alle Gruppen, Getränkedatenbank).
+
+Im Produktions-Realm gibt es außer den Service-Accounts keine Benutzer; die erste Plattform-Administration bekommt nach dem ersten Deployment von Hand die Realm-Rolle `admin`.
 
 ### 4. Sicherheitseinstellungen
 - Passwortregeln: 10 bis 128 Zeichen, nicht gleich Benutzername oder E-Mail, nicht eines der letzten drei.
@@ -44,14 +46,14 @@ Im Produktions-Realm gibt es keine Benutzer; der erste Administrator wird nach d
 ### 5. Login-Theme `vereint`
 - **Speicherort**: `keycloak/themes/vereint/login`, Basis `keycloak.v2` (PatternFly 5).
 - **Aktivierung**: Beide Realm-Exports setzen `loginTheme: "vereint"`, `defaultLocale: "de"` und `supportedLocales: ["de", "en"]`.
-- **Gestaltete Seiten**: Login, Passwort zurücksetzen und Registrierung. Alle weiteren Keycloak-Seiten (z. B. OTP) erben Rahmen und Branding.
+- **Gestaltete Seiten**: Login, Passwort zurücksetzen und Registrierung (die beiden letzten sind nur im Entwicklungs-Realm erreichbar). Alle weiteren Keycloak-Seiten (z. B. OTP) erben Rahmen und Branding.
 - **Dev-Cache**: `docker-compose.yml` schaltet den Theme-Cache ab, damit Änderungen sofort sichtbar sind. In Produktion bleibt der Cache aktiv. Details in `keycloak/README.md`.
 
 ---
 
 ## 🪣 S3-Objektspeicher
 
-Bilder sowie Fotos und Videos aus Moments liegen im Objektspeicher; in der Datenbank stehen nur die Metadaten (`image_assets`, Moment-Medien).
+Bilder, Gruppenbilder sowie Fotos und Videos aus Moments liegen im Objektspeicher; in der Datenbank stehen nur die Metadaten (`image_assets`, `moment_media`, Schlüssel des Gruppenbilds an `stammtische`).
 
 | Umgebung | Speicher |
 | :--- | :--- |
@@ -61,8 +63,9 @@ Bilder sowie Fotos und Videos aus Moments liegen im Objektspeicher; in der Daten
 
 ### Speicher-Schlüssel
 ```text
-{purpose}/{ziel_uuid}/{datei_uuid}.{png|jpg|gif}   # purpose: profile, event, drink, moment
-moment/{moment_uuid}/{datei_uuid}.bin              # Fotos und Videos aus Moments
+{purpose}/{ziel_oder_eigentümer_uuid}/{datei_uuid}.{png|jpg|gif}   # purpose: profile, event, drink, moment
+moment/{moment_uuid}/{datei_uuid}.bin                               # Fotos und Videos aus Moments
+group/{gruppen_uuid}/{datei_uuid}.bin                               # Bild der Gruppe
 ```
 
 ### Sicherheit

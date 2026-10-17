@@ -41,7 +41,7 @@ sequenceDiagram
 
 ## 🛡️ Rollen & Berechtigungen je Gruppe
 
-Rollen und Rechte einer Anfrage kommen nur aus der gewählten Gruppe (`stammtisch_roles`, `user_roles`, `user_permissions`), nicht aus den Keycloak-Realmrollen im Token. Die Realmrolle `admin` macht eine Person zusätzlich zum Plattform-Admin (`platformAdmin`, Autorität `ROLE_PLATFORM_ADMIN`); in einer Gruppe hat sie damit keine Rechte. Details: [Gruppen](../domains/stammtische.md#rollen-je-stammtisch).
+Rollen und Rechte einer Anfrage kommen nur aus der gewählten Gruppe (`stammtisch_roles`, `user_roles`, `user_permissions`), nicht aus den Keycloak-Realmrollen im Token. Die Realmrolle `admin` macht eine Person zusätzlich zum Plattform-Admin (`platformAdmin`, Autorität `ROLE_PLATFORM_ADMIN`); in einer Gruppe hat sie damit keine Rechte. Details: [Gruppen](../domains/stammtische.md#rollen-je-gruppe).
 
 `RolePermissionMatrix` (Version `4`) enthält nur noch die **Startwerte** der vier Systemrollen, die jede neue Gruppe erhält. Danach gelten ausschließlich die Werte in `stammtisch_roles`: Wer `roles.manage` hat, kann die Rechte der Rollen ändern, eigene Rollen anlegen und sie Mitgliedern im Bearbeiten-Formular zuweisen.
 

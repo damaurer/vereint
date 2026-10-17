@@ -115,7 +115,7 @@ class FoodSpecialEntity(
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet id="200-food-specials-create-table" author="baseservice">
+    <changeSet id="210-food-specials-create-table" author="baseservice">
         <createTable tableName="food_specials">
             <column name="id" type="UUID">
                 <constraints primaryKey="true" primaryKeyName="pk_food_specials" nullable="false"/>
@@ -149,7 +149,7 @@ class FoodSpecialEntity(
     </changeSet>
 
     <!-- Zweite Sicherung neben @TenantId, wie Changeset 165 in 013-stammtische.xml -->
-    <changeSet id="201-food-specials-rls" author="baseservice" dbms="postgresql">
+    <changeSet id="211-food-specials-rls" author="baseservice" dbms="postgresql">
         <sql splitStatements="false">
             ALTER TABLE food_specials ENABLE ROW LEVEL SECURITY;
             ALTER TABLE food_specials FORCE ROW LEVEL SECURITY;

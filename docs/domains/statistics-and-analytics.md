@@ -1,93 +1,76 @@
-# Fachdomäne: Statistiken, Eber-Analytics & Audit-Logs
+# Fachdomäne: Statistik & Audit-Protokoll
 
-Das Statistik- und Analysemodul in **Vereint** liefert visuelle Auswertungen über Getränkekonsum, beliebteste Artikel, Spenden-/Rundengeber, Anwesenheitsquoten und Finanztrends für Mitglieder und Vorstände. Ergänzend dokumentieren revisionssichere Audit-Logs alle kritischen Systemänderungen.
+Die Statistik in **Vereint** zeigt jeder angemeldeten Person Auswertungen ihrer Gruppe: Konsum, Ranglisten, Umsatzverlauf und Zusagequote. Das Audit-Protokoll hält privilegierte Aktionen von Vorstand und Administration fest.
 
 ---
 
 ## 🎯 Fachliche Sicht (Business Domain)
 
 ### 1. Auswertungsbereiche & Kennzahlen
-- **Getränkekonsum (Liter / Bierkonsum)**: Zeigt den summierten Konsum der Mitglieder im Betrachtungszeitraum als Rangliste an.
-- **Anwesenheitsquote (`attendancePercent`)**: Prozentualer Anteil besuchter Events basierend auf RSVPs und Thekenbuchungen.
-- **Ausgaben- & Finanztrend (`SpendingTrend`)**: Monatliche Ausgabenentwicklung, prozentuale Veränderung zum Vormonat und Sparkline-Trendkurve.
-- **Top-Rundengeber (`topRounds`)**: Auszeichnung besonders spendabler Mitglieder, die Runden für die Gemeinschaft ausgegeben haben.
-- **Getränke-Ranking (`drinkRanking`)**: Beliebteste Getränke nach Marktanteil in der Gruppe.
+Alle Werte beziehen sich auf die gerade gewählte Gruppe und die letzten **90 Tage**. Grundlage sind Käufe im Kassenbuch; stornierte Käufe zählen nicht.
 
-### 2. Revisionssicheres Audit-Logging
-- Alle administrativen und finanziellen Aktionen (Rollenänderungen, manuelle Guthabenkorrekturen, Account-Sperrungen) werden manipulationssicher mit Zeitstempel, Akteur-ID, Ziel-ID und Aktionsart in `audit_logs` protokolliert.
+- **Gesamtzahl und eigene Zahl der Käufe** (`totalItems`, `myItems`) und der **eigene Rang** (`myRank`).
+- **Top-Konsumenten** (`topConsumers`): die fünf Mitglieder mit den meisten Käufen.
+- **Zusagequote** (`attendancePercent`): Anteil der Zusagen an allen verschickten Einladungen zu Events im Zeitraum.
+- **Umsatz** (`spending`): Summe der letzten 30 Tage, Veränderung zu den 30 Tagen davor in Prozent und der Verlauf der letzten 8 Wochen.
+- **Beliebteste Artikel** (`itemRanking`): die fünf meistgekauften Getränke oder Speisen mit Anteil in Prozent.
+- **Events mit den meisten Käufen** (`topEvents`): die fünf stärksten Abende.
+
+Die Statistik sehen alle angemeldeten Mitglieder der Gruppe (Produktentscheidung 2026-10-14).
+
+### 2. Audit-Protokoll
+- Privilegierte Aktionen (z. B. Rollenänderungen, Guthabenbuchungen durch den Vorstand, Kiosk-Start und Fernentsperrung) landen mit Zeitstempel, Akteur, Ziel und Aktionsart in `audit_logs`.
+- Lesen darf, wer `audit.read` hat; `audit.read.all` zeigt zusätzlich alle Einträge. Im Handbuch heißt die Ansicht **Letzte Aktionen** bzw. **Audit-Protokoll**.
 
 ---
 
 ## ⚙️ Technische Sicht (Architecture & Implementation)
 
 ### 1. Relevante Komponenten & Klassen
-- **Frontend (Angular)**:
-  - `webservice/src/app/statistics/statistics.component.ts` – Dashboard mit Visualisierungskarten.
-  - `statistics-data.service.ts` – Aggregiert Kassen-, Event- und Konsumdaten clientseitig.
-  - Berechtigung: Geschützt über `permissionGuard` mit Berechtigung `statistics.view`.
 - **Backend**:
-  - `AuditLogController`: Endpunkte unter `/api/v1/audit-logs` (abgesichert für `board` und `admin`).
-  - `LedgerController`: Liefert historische Buchungen (`/api/v1/ledger/members/{id}/entries`) und Event-Zusammenfassungen (`/summary`).
-- **Aggregationsprinzip**:
-  - Statistiken sind dynamische Aggregate. Sie werden **nicht** im SSR-HTML vorgerendert (Vermeidung von Daten-Leaks), sondern ausschließlich im Browser nach erfolgreicher Authentifizierung frisch geladen.
+  - `StatisticsController`: `GET /api/v1/statistics` liefert `ClubStatisticsDto` für alle Angemeldeten.
+  - `StatisticsService.clubStatistics()`: rechnet die Kennzahlen serverseitig aus Kassenbuch und Event-Einladungen (Konstanten `PERIOD_DAYS = 90`, `WEEKS = 8`, `TOP = 5`). Durch die Mandantentrennung (Hibernate-Tenant und RLS) sieht die Abfrage nur Daten der aktuellen Gruppe.
+  - `AuditLogController`: `GET /api/v1/audit-logs` mit Filtern `targetEntity`, `action`, `actorId`, `targetId` und Seitenaufteilung.
+- **Frontend (Angular)**:
+  - Route `/statistik` mit `authGuard` (keine eigene Berechtigung nötig).
+  - `webservice/src/app/statistics/statistics-data.service.ts` lädt `GET /statistics` über den BFF; `statistics.component.ts` stellt die Karten dar.
+- **Kein Vorrendern**: Die Werte werden nicht ins SSR-HTML geschrieben, sondern erst im Browser nach der Anmeldung geladen.
 
 ---
 
-## 📋 Datenstrukturen & TypeScript Interfaces
+## 📋 Datenstrukturen (`StatisticsDtos.kt`)
 
-```typescript
-export interface MemberConsumption {
-  member: string;
-  liters: number;
-}
-
-export interface SpendingTrend {
-  total: string;
-  currency: string;
-  changePercent: number;
-  trend: number[];
-}
-
-export interface RoundGiver {
-  member: string;
-  rounds: number;
-}
-
-export interface DrinkRankingEntry {
-  drink: string;
-  sharePercent: number;
-}
-
-export interface StatisticsView {
-  consumption: MemberConsumption[];
-  attendancePercent: number;
-  spending: SpendingTrend;
-  topRounds: RoundGiver[];
-  drinkRanking: DrinkRankingEntry[];
-}
+```kotlin
+data class ClubStatisticsDto(
+    val periodDays: Int,
+    val totalItems: Int,
+    val myItems: Int,
+    val myRank: Int?,
+    val topConsumers: List<MemberCountDto>,   // memberId, displayName, count
+    val attendancePercent: Int?,
+    val spending: SpendingDto,                // total, currency, changePercent, weekly
+    val itemRanking: List<ItemShareDto>,      // name, count, sharePercent
+    val topEvents: List<EventCountDto>        // eventId, title, count
+)
 ```
 
 ---
 
-## 🔄 Sequenzablauf: Clientseitiges Laden der Statistiken
+## 🔄 Sequenzablauf: Statistik laden
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as Mitglied / Vorstand
+    actor User as Mitglied
     participant UI as StatisticsComponent
-    participant Service as StatisticsDataService
     participant BFF as Express BFF / API Proxy
-    participant Spring as Ledger & Audit API
+    participant Spring as StatisticsController
 
-    User->>UI: Navigiert zu /statistics
-    Note over UI: AuthGuard & PermissionGuard ('statistics.view') prüfen Zugriff
-    UI->>Service: loadStatistics()
-    Service->>BFF: GET /api/v1/ledger/members/me/entries & Event Summaries
-    BFF->>Spring: Proxy mit Bearer JWT
-    Spring-->>BFF: 200 OK (Transaktionshistorie & Events)
-    BFF-->>Service: 200 OK
-    Note over Service: Berechnet Liter, Ausgaben-Trend und Rankings
-    Service-->>UI: StatisticsView
-    UI->>User: Rendert Diagramme, Trendbalken und Ranglisten
+    User->>UI: Öffnet /statistik
+    UI->>BFF: GET /api/v1/statistics
+    BFF->>Spring: Proxy mit Bearer JWT und gewählter Gruppe
+    Note over Spring: StatisticsService rechnet 90-Tage-Kennzahlen der Gruppe
+    Spring-->>BFF: 200 OK (ClubStatisticsDto)
+    BFF-->>UI: 200 OK
+    UI->>User: Ranglisten, Umsatzverlauf und Zusagequote
 ```

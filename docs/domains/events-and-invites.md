@@ -1,6 +1,6 @@
 # Fachdomäne: Event-Management & Gast-Einladungen
 
-Das Event-Modul in **Vereint** verwaltet den gesamten Lebenszyklus von Veranstaltungen der Gruppe – von der Planung über die Teilnehmerverwaltung bis hin zu sicheren, tokenbasierten Einladungen für externe Gäste ohne vollwertiges Guthabenkonto.
+Das Event-Modul in **Vereint** verwaltet Veranstaltungen der Gruppe: von der Planung über Einladungen und Zusagen der Mitglieder bis zu tokenbasierten Einladungen für Gäste ohne Konto.
 
 ---
 
@@ -22,33 +22,38 @@ stateDiagram-v2
     archived --> [*]
 ```
 
-- **`draft`**: Entwurf (nur für Owner und Vorstand sichtbar).
-- **`published`**: Für alle Mitglieder sichtbar; Teilnehmer können sich anmelden.
-- **`active`**: Event läuft aktuell; Strichliste am Tablet-Recorder ist aktiv und Kassenbuchungen sind möglich.
+- **`draft`**: Entwurf.
+- **`published`**: Veröffentlicht; Eingeladene werden benachrichtigt (sofort oder zu `invitationNotifyAt`).
+- **`active`**: Event läuft aktuell; Strichliste am Tablet und Kassenbuchungen sind möglich.
 - **`completed`**: Event erfolgreich beendet und abgerechnet.
-- **`cancelled`**: Event wurde storniert.
+- **`cancelled`**: Event wurde abgesagt; Eingeladene erhalten eine Mitteilung.
 - **`archived`**: Archiviertes Event für Statistiken.
 
-Statusänderungen und Stammdatenaktualisierungen werden über `PUT /api/v1/events/{id}` (`UpdateEventRequest`) vorgenommen.
+Statusänderungen und Stammdatenaktualisierungen laufen über `PUT /api/v1/events/{id}` (`UpdateEventRequest`); das dürfen der Veranstalter (Owner) und wer `event.manage` hat. Der Fachservice erzwingt keine Reihenfolge der Zustände; das Diagramm zeigt die üblichen Übergänge der Oberfläche.
 
-### 2. Teilnehmerverwaltung (`EventParticipantDto`)
-- Mitglieder der Gruppe und Vorstände verwalten Teilnehmer über `/api/v1/events/{id}/participants`:
-  - `GET /api/v1/events/{id}/participants`: Liefert die Liste aller registrierten Teilnehmer.
-  - `POST /api/v1/events/{id}/participants`: Fügt einen Teilnehmer (`AddParticipantRequest`) mit einer Rolle (z. B. `participant`) hinzu.
-  - `DELETE /api/v1/events/{id}/participants/{userId}`: Entfernt einen Teilnehmer aus dem Event.
+**Sichtbarkeit:** Ein Mitglied sieht die Events, die es selbst veranstaltet oder zu denen es eingeladen ist. Wer `event.manage` hat (Startwert: Vorstand und Admin), sieht alle Events der Gruppe. Anlegen darf, wer `event.create` hat.
+
+### 2. Einladungen, Zusagen & Teilnehmer (`EventParticipantDto`)
+- **Mitglieder einladen**: Beim Anlegen (`inviteUserIds`, `inviteAllMembers`) oder später über `POST /api/v1/events/{id}/invitations` (`userIds` oder `allMembers`). Die Mitteilung geht bei Veröffentlichung raus oder zum Zeitpunkt `invitationNotifyAt`.
+- **Zusagen**: Eingeladene antworten mit `PUT /api/v1/events/{id}/rsvp` (`accepted`, `maybe`, `declined`), in der App oder direkt aus der Push-Benachrichtigung. Bei abgesagten, beendeten oder archivierten Events geht das nicht mehr. `EventDto` enthält die eigene Antwort (`myRsvp`) und die Zählung (`rsvpCounts`).
+- **Erinnerung**: `reminderHoursBefore` (1 bis 720 Stunden, `0` schaltet ab) erinnert Eingeladene vor Beginn.
+- **Teilnehmer** verwalten Veranstalter und wer `event.manage` hat:
+  - `GET /api/v1/events/{id}/participants`: Teilnehmerliste (für alle, die das Event sehen).
+  - `POST /api/v1/events/{id}/participants`: fügt ein Mitglied (`AddParticipantRequest`) mit einer Rolle (z. B. `participant`) hinzu.
+  - `DELETE /api/v1/events/{id}/participants/{userId}`: entfernt einen Teilnehmer.
 
 ### 3. Event-Verpflegungsangebot (Getränke & Speisen)
-- Neben Teilnehmern verwalten Event-Owner und Vorstände das gastronomische Angebot der Veranstaltung:
+- Veranstalter und wer `event.manage` hat verwalten das Angebot der Veranstaltung:
   - **Event-Getränke (`event_drinks`)**: Zuweisung über Sublisten oder Einzelauswahl (`EventDrinkController`) mit eventbezogener Preisanpassung (`price`, `costPrice`) und Freischaltung für Tablet-Strichliste (`tabletEnabled`).
   - **Event-Speisen (`event_food`)**: Zuweisung aus dem Katalog der Gruppe (`EventFoodController`) mit individuellen Verkaufspreisen, Wareneinsatz-Kosten (`costPrice`) und Kiosk-Steuerung (`tabletEnabled`).
 - Im Zustand `active` werden diese Artikel über die Kiosk-API (`/api/v1/tablet/events/{eventId}/items`) für das Thekenteam bereitgestellt.
 
 ### 4. Gast-Einladungen via Krypto-Token
-- Für externe Gäste können Veranstaltungs-Owner und Vorstände über `POST /api/v1/events/{eventId}/invites` Einladungslinks mit kryptografischen Tokens generieren.
+- Für Gäste ohne Konto erzeugen Veranstalter und wer `event.invites.manage` hat über `POST /api/v1/events/{eventId}/invites` Einladungslinks mit zufälligen Tokens.
 - **Sicherheitskonzept**:
   - Im Antwort-Payload (`CreateInviteResponse`) wird das einmalig einsehbare Klartext-Token (`token`) und der `acceptPath` übergeben.
   - In der Datenbank wird ausschließlich der kryptografische **SHA-256 Hash** (`token_hash`) gespeichert (`SecureTokens.kt`).
-  - Einladungen unterstützen Nutzungsbegrenzungen (`maxUses`) und Gültigkeitsdauer (`expiresInMinutes`).
+  - Einladungen unterstützen Nutzungsbegrenzungen (`maxUses`, 1 bis 10000) und Gültigkeitsdauer (`expiresInMinutes`, Standard 7 Tage, höchstens 90 Tage).
 - **Gast-Erlebnis**:
   - Der Gast löst die Einladung über `POST /api/v1/invites/accept` (`AcceptInviteRequest`) mit seinem Anzeigenamen ein.
   - Die Antwort (`AcceptInviteResponse`) enthält ein temporäres Gast-Session-Token (`guestToken`), das für nachfolgende Gast-Chat-Aufrufe (`X-Guest-Token`) genutzt wird.
@@ -59,9 +64,9 @@ Statusänderungen und Stammdatenaktualisierungen werden über `PUT /api/v1/event
 
 ### 1. Relevante Komponenten & Klassen
 - **Controller**:
-  - `EventController`: CRUD und Lifecycle (`/api/v1/events`, `PUT /api/v1/events/{id}`), Teilnehmerverwaltung (`/api/v1/events/{id}/participants`).
+  - `EventController`: Anlegen, Lesen und Ändern (`/api/v1/events`, `PUT /api/v1/events/{id}`), Teilnehmer (`/api/v1/events/{id}/participants`), Einladungen (`POST /{id}/invitations`), Zusagen (`PUT /{id}/rsvp`).
   - `InviteController`: Event-Einladungsverwaltung (`/api/v1/events/{eventId}/invites`), Einlösen von Gasttokens (`POST /api/v1/invites/accept`).
-- **Services**: `EventService`, `InviteService`.
+- **Services**: `EventService`, `EventInvitationService` (Einladungs-, Erinnerungs- und Absage-Mitteilungen), `InviteService`.
 - **Sicherheit & Krypto**: `SecureTokens.kt` (Generierung von 256-Bit Zufalls-Tokens und SHA-256 Hashing).
 - **Entitäten**: `EventEntity`, `EventParticipantEntity`, `EventInviteEntity`, `EventGuestEntity`.
 
@@ -75,21 +80,31 @@ data class EventDto(
     val title: String,
     val description: String?,
     val location: String?,
-    val ownerId: String,
     val startsAt: Instant,
     val endsAt: Instant?,
     val status: String,
+    val ownerId: String,
+    val ownerDisplayName: String,
+    val participantCount: Int,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    val invitationNotifyAt: Instant? = null,
+    val reminderHoursBefore: Int? = null,
+    val myRsvp: String? = null,
+    val rsvpCounts: RsvpCountsDto = RsvpCountsDto(),
+    val canManage: Boolean = false
 )
 
 data class UpdateEventRequest(
-    @field:Size(min = 1, max = 255) val title: String? = null,
-    @field:Size(max = 4000) val description: String? = null,
-    @field:Size(max = 255) val location: String? = null,
-    val status: EventStatus? = null,
+    val title: String? = null,
+    val description: String? = null,
+    val location: String? = null,
     val startsAt: Instant? = null,
-    val endsAt: Instant? = null
+    val endsAt: Instant? = null,
+    val status: String? = null,              // draft, published, active, completed, cancelled, archived
+    val invitationNotifyAt: Instant? = null,
+    val inviteOnPublish: Boolean? = null,
+    @field:Min(0) @field:Max(720) val reminderHoursBefore: Int? = null
 )
 
 data class CreateInviteRequest(
@@ -99,8 +114,8 @@ data class CreateInviteRequest(
 )
 
 data class AcceptInviteRequest(
-    @field:NotBlank val token: String,
-    @field:Size(max = 255) val displayName: String
+    val token: String? = null,
+    val displayName: String? = null
 )
 
 data class AcceptInviteResponse(
@@ -120,8 +135,8 @@ data class AcceptInviteResponse(
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Board as Event-Owner / Vorstand
-    actor Guest as Externer Gast
+    actor Board as Veranstalter / Vorstand
+    actor Guest as Gast
     participant Spring as InviteController / Service
     participant DB as PostgreSQL (event_invites / event_guests)
 
