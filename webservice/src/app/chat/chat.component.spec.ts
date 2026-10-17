@@ -70,8 +70,8 @@ describe('ChatComponent', () => {
     expect(text).toContain('Gruppenchat');
     expect(text).toContain('Wer kommt heute?');
     expect(text).toContain('Infotafel von Lisa');
-    expect(api['messages']).toHaveBeenCalledWith('c-club');
-    expect(api['markRead']).toHaveBeenCalledWith('c-club');
+    expect(api['messages']).toHaveBeenCalledWith('c-club', 'club');
+    expect(api['markRead']).toHaveBeenCalledWith('c-club', 'club');
   });
 
   it('lists event chats with unread counts but no direct chats', async () => {
@@ -92,8 +92,8 @@ describe('ChatComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
-    expect(api['messages']).toHaveBeenCalledWith('c-event');
-    expect(api['markRead']).toHaveBeenCalledWith('c-event');
+    expect(api['messages']).toHaveBeenCalledWith('c-event', 'event');
+    expect(api['markRead']).toHaveBeenCalledWith('c-event', 'event');
     expect(el(fixture).textContent).toContain('Ich bringe Kohle.');
     expect(el(fixture).querySelector('a[href="/events/e-1"]')).toBeTruthy();
     expect(el(fixture).querySelector('.chat-unread')).toBeNull();

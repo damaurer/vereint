@@ -69,11 +69,23 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 
 ## Chat und Mitteilungen
 
-- Gruppenchat, Direktnachrichten zwischen Mitgliedern und Event-Chats, mit Zähler für ungelesene Nachrichten am Chat-Eintrag.
+- Gruppenchat, Event-Chats und Direktnachrichten, mit Zähler für ungelesene Nachrichten am Chat-Eintrag.
+- Direktnachrichten sind gruppenübergreifend: ein Gespräch je Person, schreiben
+  darf man Freunden und Personen aus den eigenen Gruppen.
 - Mitteilungen (Glocke oben) und Rundbriefe des Vorstands, auf Wunsch als
   Web-Push aufs Handy (siehe [PWA und Push](frontend/angular-ssr-and-pwa.md)).
 - Nachrichten und Mitteilungen werden verschlüsselt gespeichert (siehe
   [Sicherheit und Verschlüsselung](betrieb/sicherheit-und-schluessel.md)).
+
+## Kalender und Freunde
+
+- Persönlicher Kalender (*Mehr → Kalender*): vergangene und kommende Events
+  sowie Moments aus allen eigenen Gruppen, je Monat, mit Gruppenfilter. Jeder
+  Eintrag zeigt seine Gruppe; Events und Moments bleiben Teil ihrer Gruppe.
+- Freundesliste (*Mehr → Freunde*) über alle Gruppen: Anfrage und Annahme, nur
+  an Personen mit gemeinsamer Gruppe. Freundschaften bleiben, wenn jemand eine
+  Gruppe verlässt.
+- Fachliche Details: [docs/domains/kalender-freunde-direktnachrichten.md](domains/kalender-freunde-direktnachrichten.md)
 
 ## Guthaben
 

@@ -7,6 +7,19 @@ import { ChatApiService } from './chat-api.service';
 import { ChatUnreadStore } from './chat-unread.store';
 import { DirectMessagesComponent } from './direct-messages.component';
 import { chatMessage, summary } from './chat-test-data';
+import type { FriendContact } from '../api/api.types';
+
+function contact(userId: string, displayName: string, extra: Partial<FriendContact> = {}): FriendContact {
+  return {
+    userId,
+    displayName,
+    friendStatus: 'none',
+    since: null,
+    sharedGroups: [{ id: 'g-1', name: 'Meine Gruppe' }],
+    canMessage: true,
+    ...extra,
+  };
+}
 
 function direct(id: string, name: string, extra: Partial<ReturnType<typeof summary>> = {}) {
   return summary({ id, type: 'direct', title: name, partnerId: `u-${id}`, partnerName: name, ...extra });
@@ -42,9 +55,8 @@ describe('DirectMessagesComponent', () => {
   beforeEach(() => {
     api = {
       me: vi.fn(() => of({ id: 'u-me' })),
-      conversations: vi.fn(() =>
+      directConversations: vi.fn(() =>
         of([
-          summary(),
           direct('dm-ben', 'Ben Probe', {
             unreadCount: 2,
             lastMessage: { senderName: 'Ben Probe', message: 'Bringst du Karten mit?', createdAt: '2026-10-14T18:00:00Z' },
@@ -59,11 +71,13 @@ describe('DirectMessagesComponent', () => {
       markRead: vi.fn((id: string) => of(summary({ id, type: 'direct', unreadCount: 0 }))),
       send: vi.fn(),
       toggleReaction: vi.fn(),
-      directory: vi.fn(() =>
+      contacts: vi.fn(() =>
         of([
-          { id: 'u-me', displayName: 'Ich Selbst', boardRole: null, roles: ['member'] },
-          { id: 'u-dora', displayName: 'Dora Neu', boardRole: null, roles: ['member'] },
-          { id: 'u-dm-ben', displayName: 'Ben Probe', boardRole: null, roles: ['member'] },
+          contact('u-me', 'Ich Selbst'),
+          contact('u-dora', 'Dora Neu', { sharedGroups: [{ id: 'g-1', name: 'Kegelclub' }] }),
+          contact('u-dm-ben', 'Ben Probe'),
+          contact('u-ede', 'Ede Fern', { friendStatus: 'friend', sharedGroups: [] }),
+          contact('u-fritz', 'Fritz Weg', { canMessage: false, sharedGroups: [] }),
         ]),
       ),
       startDirect: vi.fn((userId: string) =>
@@ -72,7 +86,7 @@ describe('DirectMessagesComponent', () => {
     };
   });
 
-  it('lists only direct chats with partner name, preview and unread badge', async () => {
+  it('lists the direct chats across groups with partner name, preview and unread badge', async () => {
     const fixture = await create();
     const list = el(fixture).querySelector('.chat-aside')!;
     expect(list.textContent).toContain('Ben Probe');
@@ -87,8 +101,8 @@ describe('DirectMessagesComponent', () => {
 
   it('opens the newest conversation and marks it read', async () => {
     const fixture = await create();
-    expect(api['messages']).toHaveBeenCalledWith('dm-ben');
-    expect(api['markRead']).toHaveBeenCalledWith('dm-ben');
+    expect(api['messages']).toHaveBeenCalledWith('dm-ben', 'direct');
+    expect(api['markRead']).toHaveBeenCalledWith('dm-ben', 'direct');
     expect(el(fixture).textContent).toContain('Verlauf dm-ben');
     const ben = el(fixture).querySelector('.dm-item.is-active');
     expect(ben?.textContent).toContain('Ben Probe');
@@ -113,12 +127,16 @@ describe('DirectMessagesComponent', () => {
     expect(el(fixture).textContent).toContain('Keine Konversationen');
   });
 
-  it('picks a member from the directory (without oneself) and starts the chat', async () => {
+  it('picks a contact from groups or friends (without oneself) and starts the chat', async () => {
     const fixture = await create();
     el(fixture).querySelector<HTMLButtonElement>('.dm-new')!.click();
     await settle(fixture);
     const sheet = document.querySelector('.ui-sheet') ?? el(fixture).querySelector('.ui-sheet');
     expect(sheet?.textContent).toContain('Dora Neu');
+    expect(sheet?.textContent).toContain('Kegelclub');
+    // Freunde ohne gemeinsame Gruppe erscheinen, wer weder Freund noch Gruppe ist, nicht.
+    expect(sheet?.textContent).toContain('Ede Fern');
+    expect(sheet?.textContent).not.toContain('Fritz Weg');
     expect(sheet?.textContent).not.toContain('Ich Selbst');
 
     const component = fixture.componentInstance as unknown as { memberTerm: { set: (value: string) => void } };
@@ -132,11 +150,11 @@ describe('DirectMessagesComponent', () => {
     expect(api['startDirect']).toHaveBeenCalledWith('u-dora');
     expect(el(fixture).querySelector('.ui-sheet')).toBeNull();
     expect(el(fixture).querySelector('.dm-list')?.textContent).toContain('Dora Neu');
-    expect(api['messages']).toHaveBeenCalledWith('dm-dora');
+    expect(api['messages']).toHaveBeenCalledWith('dm-dora', 'direct');
   });
 
   it('shows a retry state on load error', async () => {
-    api['conversations'].mockReturnValue(throwError(() => new Error('boom')));
+    api['directConversations'].mockReturnValue(throwError(() => new Error('boom')));
     const fixture = await create();
     expect(el(fixture).textContent).toContain('nicht verfügbar');
   });

@@ -68,6 +68,7 @@ docs/
 │   ├── events-and-invites.md             # Event-Lebenszyklus, RSVPs & Gast-Einladungstoken
 │   ├── tablet-strichliste-recorder.md    # Kiosk-Strichliste, 1-Tap-Buchung & Abendabrechnung
 │   ├── chat-and-push-notifications.md    # Gruppenchat, Direktnachrichten & VAPID Web Push
+│   ├── kalender-freunde-direktnachrichten.md # Persönlicher Kalender, Freunde & DMs über alle Gruppen
 │   └── statistics-and-analytics.md       # Verbrauchs- & Eber-Statistiken, Auswertungen
 │
 ├── frontend/                             # Client-Architektur & UI-Bibliothek

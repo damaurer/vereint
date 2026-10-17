@@ -82,6 +82,10 @@ interface StammtischMemberRepository : JpaRepository<StammtischMemberEntity, UUI
 
     /** Im System-Kontext: alle aktiven Mitgliedschaften einer Person über alle Stammtische. */
     fun findByUserIdAndActiveTrue(userId: UUID): List<StammtischMemberEntity>
+
+    /** Im System-Kontext: aktive Mitglieder der genannten Stammtische (gemeinsame Gruppen). */
+    @EntityGraph(attributePaths = ["user"])
+    fun findByStammtischIdInAndActiveTrue(stammtischIds: Collection<UUID>): List<StammtischMemberEntity>
 }
 
 @Repository
@@ -389,6 +393,7 @@ interface MomentSessionRepository : JpaRepository<MomentSessionEntity, UUID> {
     fun findByEventIdAndActiveTrue(eventId: UUID): List<MomentSessionEntity>
     fun findByEventIdAndCreatorIdAndActiveTrue(eventId: UUID, creatorId: UUID): List<MomentSessionEntity>
     fun findByEventIdOrderByCreatedAtDesc(eventId: UUID): List<MomentSessionEntity>
+    fun findByEventIdIn(eventIds: Collection<UUID>): List<MomentSessionEntity>
 }
 
 @Repository
@@ -502,3 +507,64 @@ interface StammtischSubscriptionRepository : JpaRepository<StammtischSubscriptio
 
 @Repository
 interface BillingEventRepository : JpaRepository<BillingEventEntity, String>
+
+// --- Persönliche, gruppenübergreifende Daten (keine Gruppe, keine Row-Level-Security) ---
+
+@Repository
+interface FriendshipRepository : JpaRepository<FriendshipEntity, UUID> {
+    fun findByPairKey(pairKey: String): Optional<FriendshipEntity>
+
+    @Query(
+        """
+        select f from FriendshipEntity f join fetch f.requester join fetch f.addressee
+        where f.requester.id = :userId or f.addressee.id = :userId
+        """
+    )
+    fun findInvolving(@Param("userId") userId: UUID): List<FriendshipEntity>
+}
+
+@Repository
+interface DirectConversationRepository : JpaRepository<DirectConversationEntity, UUID> {
+    fun findByPairKey(pairKey: String): Optional<DirectConversationEntity>
+}
+
+@Repository
+interface DirectParticipantRepository : JpaRepository<DirectParticipantEntity, UUID> {
+    @EntityGraph(attributePaths = ["conversation"])
+    fun findByUserId(userId: UUID): List<DirectParticipantEntity>
+
+    @EntityGraph(attributePaths = ["user"])
+    fun findByConversationId(conversationId: UUID): List<DirectParticipantEntity>
+
+    fun findByConversationIdAndUserId(conversationId: UUID, userId: UUID): Optional<DirectParticipantEntity>
+}
+
+@Repository
+interface DirectMessageRepository : JpaRepository<DirectMessageEntity, UUID> {
+    @EntityGraph(attributePaths = ["sender"])
+    fun findByConversationIdOrderByCreatedAtAsc(conversationId: UUID): List<DirectMessageEntity>
+
+    @EntityGraph(attributePaths = ["sender"])
+    fun findFirstByConversationIdOrderByCreatedAtDesc(conversationId: UUID): Optional<DirectMessageEntity>
+
+    /** Ungelesene Nachrichten der anderen Person seit `after`. */
+    @Query(
+        """
+        select count(m) from DirectMessageEntity m left join m.sender s
+        where m.conversation.id = :conversationId
+          and m.createdAt > :after
+          and (s is null or s.id <> :userId)
+        """
+    )
+    fun countUnread(
+        @Param("conversationId") conversationId: UUID,
+        @Param("userId") userId: UUID,
+        @Param("after") after: Instant
+    ): Long
+}
+
+@Repository
+interface DirectReactionRepository : JpaRepository<DirectReactionEntity, UUID> {
+    fun findByMessageIdIn(messageIds: Collection<UUID>): List<DirectReactionEntity>
+    fun findByMessageIdAndUserIdAndEmoji(messageId: UUID, userId: UUID, emoji: String): Optional<DirectReactionEntity>
+}

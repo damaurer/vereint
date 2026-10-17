@@ -24,7 +24,8 @@ baseservice/src/main/resources/db/changelog/
     ├── 013-stammtische.xml               # Gruppen, Mitgliedschaften, Rollen je Gruppe, Row-Level-Security
     ├── 014-drink-library.xml             # Gemeinsame Getränkedatenbank
     ├── 015-billing.xml                   # Tarife und Stripe
-    └── 016-terms-acceptance.xml          # Zustimmung zu den AGB je Konto
+    ├── 016-terms-acceptance.xml          # Zustimmung zu den AGB je Konto
+    └── 017-friends-and-direct-messages.xml # Freundesliste und gruppenübergreifende Direktnachrichten
 ```
 
 Die Nummer `006` ist nicht vergeben.
@@ -50,6 +51,7 @@ Die Nummer `006` ist nicht vergeben.
 | `170` | `014-drink-library.xml` | Gemeinsame Getränkedatenbank `drink_library` mit Barcodes | ✅ |
 | `180-183` | `015-billing.xml` | Tarife je Gruppe (`stammtisch_subscriptions`), Stripe-Ereignisse (`billing_events`), Ersteller und Bild der Gruppe, Recht `billing.manage`, Name der Standardgruppe | teilweise (181, 183 ohne) |
 | `190` | `016-terms-acceptance.xml` | `users.terms_version` und `users.terms_accepted_at` | ✅ (automatisch) |
+| `210-212` | `017-friends-and-direct-messages.xml` | `friendships`, `direct_conversations`, `direct_participants`, `direct_messages`, `direct_reactions` (ohne Gruppe, ohne Row-Level-Security); 212 zieht bestehende Direktchats aus `conversations` um und führt Verläufe eines Paars aus mehreren Gruppen zusammen (nur PostgreSQL) | teilweise (212 ohne) |
 
 ---
 

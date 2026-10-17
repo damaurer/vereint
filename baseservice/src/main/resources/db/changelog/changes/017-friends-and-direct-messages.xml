@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+    <property name="text.type" value="TEXT" dbms="postgresql"/>
+    <property name="text.type" value="VARCHAR(65535)" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 210. Freundesliste. Freundschaften gehören wie `users` zu den Konten und
+         keiner Gruppe: Sie bleiben, wenn jemand eine Gruppe verlässt. Darum gibt
+         es hier keine stammtisch_id und keine Row-Level-Security; der
+         FriendService gibt jede Zeile nur an die beiden Beteiligten heraus.
+         `pair_key` sind die sortierten Konto-IDs: je Paar genau eine Zeile. -->
+    <changeSet id="210-create-friendships" author="claude">
+        <createTable tableName="friendships">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="pair_key" type="VARCHAR(80)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_friendships_pair_key"/>
+            </column>
+            <column name="requester_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_friendships_requester" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="addressee_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_friendships_addressee" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="status" type="VARCHAR(16)" defaultValue="pending">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="accepted_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="friendships" indexName="idx_friendships_requester">
+            <column name="requester_id"/>
+        </createIndex>
+        <createIndex tableName="friendships" indexName="idx_friendships_addressee">
+            <column name="addressee_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="friendships"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 211. Direktnachrichten gruppenübergreifend: genau ein Gespräch je
+         Personenpaar, unabhängig von der Gruppe. Wie die Freundschaften gehören
+         sie den beiden Konten und keiner Gruppe (keine stammtisch_id, keine
+         Row-Level-Security); der DirectMessageService lässt nur die beiden
+         Beteiligten lesen und schreiben. Nachrichten bleiben verschlüsselt. -->
+    <changeSet id="211-create-direct-messages" author="claude">
+        <createTable tableName="direct_conversations">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="pair_key" type="VARCHAR(80)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_direct_conversations_pair_key"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="direct_participants">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="conversation_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_direct_participants_conversation"
+                             references="direct_conversations(id)" deleteCascade="true"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_direct_participants_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="joined_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_read_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+        <addUniqueConstraint tableName="direct_participants" columnNames="conversation_id, user_id"
+                             constraintName="uk_direct_participants_conversation_user"/>
+        <createIndex tableName="direct_participants" indexName="idx_direct_participants_user">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createTable tableName="direct_messages">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="conversation_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_direct_messages_conversation"
+                             references="direct_conversations(id)" deleteCascade="true"/>
+            </column>
+            <column name="sender_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_direct_messages_sender" references="users(id)"/>
+            </column>
+            <column name="message" type="${text.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_url" type="VARCHAR(512)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="direct_messages" indexName="idx_direct_messages_conversation_created">
+            <column name="conversation_id"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <createTable tableName="direct_reactions">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="message_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_direct_reactions_message"
+                             references="direct_messages(id)" deleteCascade="true"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_direct_reactions_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="emoji" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="direct_reactions" columnNames="message_id, user_id, emoji"
+                             constraintName="uk_direct_reactions_message_user_emoji"/>
+        <rollback>
+            <dropTable tableName="direct_reactions"/>
+            <dropTable tableName="direct_messages"/>
+            <dropTable tableName="direct_participants"/>
+            <dropTable tableName="direct_conversations"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 212. Bisherige Direktnachrichten (je Gruppe in `conversations` mit
+         type = 'direct') ziehen in die neuen Tabellen um. Hatte ein Paar in
+         mehreren Gruppen schon einen Direktchat, werden die Verläufe zu einem
+         Gespräch zusammengeführt. Die Schlüssel sind gleich aufgebaut (sortierte
+         Konto-IDs mit ':'), die Nachrichten bleiben unverändert verschlüsselt
+         (der Schlüssel hängt nicht an der Gruppe). Alles läuft in einer
+         Transaktion: erst kopieren, dann die alten Zeilen löschen. Die alten
+         Tabellen haben Row-Level-Security, daher der Bypass. -->
+    <changeSet id="212-move-direct-messages" author="claude" dbms="postgresql">
+        <sql splitStatements="true">
+            SET LOCAL vereint.rls_bypass = 'on';
+
+            INSERT INTO direct_conversations (id, pair_key, created_at, version)
+            SELECT DISTINCT ON (c.direct_key) c.id, c.direct_key, c.created_at, 0
+            FROM conversations c
+            WHERE c.type = 'direct' AND c.direct_key IS NOT NULL
+            ORDER BY c.direct_key, c.created_at, c.id;
+
+            INSERT INTO direct_participants (id, conversation_id, user_id, joined_at, last_read_at)
+            SELECT gen_random_uuid(), d.id, m.user_id, MIN(m.joined_at), MAX(m.last_read_at)
+            FROM conversation_members m
+            JOIN conversations c ON c.id = m.conversation_id AND c.type = 'direct'
+            JOIN direct_conversations d ON d.pair_key = c.direct_key
+            WHERE m.user_id IS NOT NULL
+            GROUP BY d.id, m.user_id;
+
+            INSERT INTO direct_messages (id, conversation_id, sender_id, message, image_url, created_at)
+            SELECT msg.id, d.id, msg.sender_id, msg.message, msg.image_url, msg.created_at
+            FROM chat_messages msg
+            JOIN conversations c ON c.id = msg.conversation_id AND c.type = 'direct'
+            JOIN direct_conversations d ON d.pair_key = c.direct_key;
+
+            INSERT INTO direct_reactions (id, message_id, user_id, emoji, created_at)
+            SELECT r.id, r.message_id, r.user_id, r.emoji, r.created_at
+            FROM chat_reactions r
+            JOIN direct_messages dm ON dm.id = r.message_id;
+
+            DELETE FROM chat_reactions r
+            USING chat_messages msg, conversations c
+            WHERE r.message_id = msg.id AND msg.conversation_id = c.id AND c.type = 'direct';
+
+            DELETE FROM chat_messages msg
+            USING conversations c
+            WHERE msg.conversation_id = c.id AND c.type = 'direct';
+
+            DELETE FROM conversation_members m
+            USING conversations c
+            WHERE m.conversation_id = c.id AND c.type = 'direct';
+
+            DELETE FROM conversations WHERE type = 'direct';
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -70,7 +70,7 @@ Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, w
 **Am Handy** steht unten eine Leiste mit den vier wichtigsten Bereichen: **Start**, **Events**, **Chat** und **Guthaben**. Alles andere findest du unter **Mehr**, sortiert nach:
 
 - **Gruppe**: Moments, Direktnachrichten
-- **Mein Konto**: Bezahlen, Käufe, Mitteilungen, Profil, Gruppeneinstellungen
+- **Mein Konto**: Kalender, Freunde, Bezahlen, Käufe, Mitteilungen, Profil, Gruppeneinstellungen
 - **Theke**: Getränkekatalog, Getränkelisten, Statistik
 - **Verwaltung**: nur für Vorstand, Administration und Theke
 

@@ -11,13 +11,13 @@ import { isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin, map, type Subscription } from 'rxjs';
-import type { ConversationSummary, DirectoryMember } from '../api/api.types';
+import type { ConversationSummary, FriendContact } from '../api/api.types';
 import { describeApiError } from '../api/api-client.service';
 import { AsyncState } from '../member/async-state';
 import { formatDateTime } from '../member/member-format';
 import { AvatarBadgeComponent, BottomSheetComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
-import { TranslatePipe } from '../i18n';
+import { TranslatePipe, translate } from '../i18n';
 import { CHAT_LIST_REFRESH_MS, ChatApiService } from './chat-api.service';
 import { CHAT_LAYOUT_STYLES } from './chat-styles';
 import { ChatThreadComponent } from './chat-thread.component';
@@ -30,10 +30,12 @@ interface DirectPageData {
 /**
  * Direktnachrichten (`/direktnachrichten`).
  *
- * Listet die eigenen Einzelgespräche (Name, letzte Nachricht, Ungelesen-Badge)
- * mit Suchfeld, öffnet den Verlauf daneben bzw. mobil als eigene Ansicht und
- * startet über „Neue Nachricht“ ein Gespräch mit einem Mitglied aus dem
- * Verzeichnis (`POST /conversations/direct` liefert bestehende Chats zurück).
+ * Direktnachrichten sind gruppenübergreifend: genau ein Gespräch je Person,
+ * egal aus welcher Gruppe. Listet die eigenen Einzelgespräche (Name, letzte
+ * Nachricht, Ungelesen-Badge) mit Suchfeld, öffnet den Verlauf daneben bzw.
+ * mobil als eigene Ansicht und startet über „Neue Nachricht“ ein Gespräch mit
+ * einer Person aus den eigenen Gruppen oder der Freundesliste
+ * (`POST /direct-conversations` liefert bestehende Gespräche zurück).
  *
  * Lädt und rendert ausschließlich im Browser; im SSR-HTML erscheinen keine
  * privaten Konversationen und es wird nichts gecacht (siehe `AGENTS.md`).
@@ -57,7 +59,10 @@ interface DirectPageData {
             <span class="eyebrow">{{ 'chat.direct.eyebrow' | t }}</span>
             <h1 id="dm-title">{{ 'chat.direct.title' | t }}</h1>
           </div>
-          <a class="member-back" routerLink="/chat">{{ 'chat.direct.toGroupChat' | t }}</a>
+          <div class="dm-links">
+            <a class="member-back" routerLink="/freunde">{{ 'chat.direct.toFriends' | t }}</a>
+            <a class="member-back" routerLink="/chat">{{ 'chat.direct.toGroupChat' | t }}</a>
+          </div>
         </div>
 
         @if (isBusy()) {
@@ -207,7 +212,7 @@ interface DirectPageData {
             />
           } @else {
             <ul class="dm-members">
-              @for (member of members(); track member.id) {
+              @for (member of members(); track member.userId) {
                 <li>
                   <button
                     type="button"
@@ -216,8 +221,11 @@ interface DirectPageData {
                     (click)="startWith(member)"
                   >
                     <vereint-avatar-badge [name]="member.displayName" />
-                    <span class="dm-member-name">{{ member.displayName }}</span>
-                    @if (starting() === member.id) {
+                    <span class="dm-member-text">
+                      <span class="dm-member-name">{{ member.displayName }}</span>
+                      <span class="dm-member-groups">{{ contactHint(member) }}</span>
+                    </span>
+                    @if (starting() === member.userId) {
                       <span class="dm-member-hint">{{ 'chat.direct.pickerStarting' | t }}</span>
                     }
                   </button>
@@ -279,10 +287,25 @@ interface DirectPageData {
         text-align: left;
         cursor: pointer;
       }
-      .dm-member-name {
+      .dm-member-text {
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .dm-member-name {
         font-weight: 700;
         overflow-wrap: anywhere;
+      }
+      .dm-member-groups {
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+        overflow-wrap: anywhere;
+      }
+      .dm-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--space-3);
       }
       .dm-member-hint {
         color: var(--color-text-muted);
@@ -297,7 +320,7 @@ export class DirectMessagesComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
 
   protected readonly load = new AsyncState<DirectPageData>();
-  protected readonly directory = new AsyncState<DirectoryMember[]>();
+  protected readonly directory = new AsyncState<FriendContact[]>();
   protected readonly data = signal<DirectPageData | null>(null);
   protected readonly selectedId = signal<string | null>(null);
   protected readonly mobileView = signal<'list' | 'thread'>('list');
@@ -332,12 +355,12 @@ export class DirectMessagesComponent implements OnInit, OnDestroy {
     return this.directs().find((conversation) => conversation.id === id) ?? null;
   });
 
-  /** Mitglieder für die Auswahl: ohne mich selbst, nach Name gefiltert und sortiert. */
-  protected readonly members = computed<DirectoryMember[]>(() => {
+  /** Personen für die Auswahl: wem ich schreiben darf, nach Name gefiltert und sortiert. */
+  protected readonly members = computed<FriendContact[]>(() => {
     const myId = this.data()?.myId;
     const needle = this.memberTerm().trim().toLowerCase();
     return (this.directory.data() ?? [])
-      .filter((member) => member.id !== myId)
+      .filter((member) => member.userId !== myId && member.canMessage)
       .filter((member) => !needle || member.displayName.toLowerCase().includes(needle))
       .sort((a, b) => a.displayName.localeCompare(b.displayName, 'de'));
   });
@@ -360,7 +383,7 @@ export class DirectMessagesComponent implements OnInit, OnDestroy {
   }
 
   protected reload(): void {
-    const source = forkJoin({ me: this.api.me(), conversations: this.api.conversations() }).pipe(
+    const source = forkJoin({ me: this.api.me(), conversations: this.api.directConversations() }).pipe(
       map(({ me, conversations }) => ({ myId: me.id, conversations })),
     );
     this.load.run(source, (page) => {
@@ -417,15 +440,24 @@ export class DirectMessagesComponent implements OnInit, OnDestroy {
   }
 
   protected loadDirectory(): void {
-    this.directory.run(this.api.directory());
+    this.directory.run(this.api.contacts());
   }
 
-  /** Startet bzw. öffnet den Direktchat mit diesem Mitglied. */
-  protected startWith(member: DirectoryMember): void {
+  /** Gemeinsame Gruppen bzw. „Freund“ unter dem Namen in der Auswahl. */
+  protected contactHint(member: FriendContact): string {
+    const groups = member.sharedGroups.map((group) => group.name).join(', ');
+    if (member.friendStatus === 'friend') {
+      return groups ? `${translate('chat.direct.friend')} · ${groups}` : translate('chat.direct.friend');
+    }
+    return groups;
+  }
+
+  /** Startet bzw. öffnet den Direktchat mit dieser Person. */
+  protected startWith(member: FriendContact): void {
     if (this.starting() !== null) return;
-    this.starting.set(member.id);
+    this.starting.set(member.userId);
     this.startError.set(null);
-    this.api.startDirect(member.id).subscribe({
+    this.api.startDirect(member.userId).subscribe({
       next: (conversation) => {
         this.starting.set(null);
         this.pickerOpen.set(false);
@@ -448,7 +480,7 @@ export class DirectMessagesComponent implements OnInit, OnDestroy {
   protected refreshList(): void {
     if (this.data() === null) return;
     this.listSub?.unsubscribe();
-    this.listSub = this.api.conversations().subscribe({
+    this.listSub = this.api.directConversations().subscribe({
       next: (conversations) => {
         const current = this.data();
         if (!current) return;

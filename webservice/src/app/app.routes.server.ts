@@ -40,6 +40,8 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'sublists', renderMode: RenderMode.Client },
   { path: 'chat', renderMode: RenderMode.Client },
   { path: 'direktnachrichten', renderMode: RenderMode.Client },
+  { path: 'kalender', renderMode: RenderMode.Client },
+  { path: 'freunde', renderMode: RenderMode.Client },
   { path: 'notifications', renderMode: RenderMode.Client },
   { path: 'moments', renderMode: RenderMode.Client },
   { path: 'events/:eventId/moments', renderMode: RenderMode.Client },

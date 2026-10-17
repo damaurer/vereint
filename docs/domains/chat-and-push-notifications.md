@@ -9,10 +9,10 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
 ### 1. Gruppenchat & Konversationsarten
 - **Gruppenchat**: Zentraler Raum für alle Mitglieder der Gruppe (im Code `club`). Wer `chat.moderate` oder `event.manage` hat, setzt dort eine **Infotafel** (angeheftete Notiz).
 - **Event-Chats**: Jedes Event hat einen eigenen Chat für Veranstalter, Eingeladene und autorisierte Gäste. Mit `chat.moderate` oder `event.manage` lassen sich alle Event-Chats öffnen. Beendete oder abgesagte Events nehmen keine neuen Nachrichten an.
-- **Direktnachrichten**: 1:1-Gespräche zwischen zwei Mitgliedern derselben Gruppe (`/direktnachrichten`).
+- **Direktnachrichten**: 1:1-Gespräche, gruppenübergreifend: genau ein Gespräch je Personenpaar, schreiben darf man Freunden und Personen aus den eigenen Gruppen (`/direktnachrichten`). Details in [Kalender, Freunde und Direktnachrichten](kalender-freunde-direktnachrichten.md).
 - **Gast-Chat**: Gäste mit gültigem Einladungstoken lesen und schreiben im Chat ihres Events, ohne Benutzerkonto.
 - **Reaktionen**: Emoji-Reaktionen auf einzelne Nachrichten.
-- **Ungelesen-Zähler**: Je Mitglied und Unterhaltung wird der Lesestand gespeichert (`conversation_members.last_read_at`); die App zeigt die Zahl ungelesener Nachrichten als Badge am Chat-Eintrag der Navigation.
+- **Ungelesen-Zähler**: Je Mitglied und Unterhaltung wird der Lesestand gespeichert (`conversation_members.last_read_at`, bei Direktnachrichten `direct_participants.last_read_at`); die App zeigt die Zahl ungelesener Nachrichten der gewählten Gruppe plus aller Direktnachrichten als Badge am Chat-Eintrag der Navigation.
 - **Aktualisierung**: Die App fragt neue Nachrichten regelmäßig ab (Polling, alle 10 Sekunden); einen WebSocket-Kanal gibt es nicht.
 - **Verschlüsselung**: Nachrichten werden vor dem Speichern mit AES-256-GCM verschlüsselt (`DATA_ENCRYPTION_KEY`).
 
@@ -32,12 +32,12 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
     - `GET /messages`, `POST /messages`: Nachrichten lesen bzw. als Mitglied senden (`SendMessageRequest`)
     - `GET /conversations/{conversationId}`, `GET|POST /conversations/{conversationId}/messages`: einzelne Unterhaltung des Events
     - `GET /guest/messages`, `POST /guest/messages`: als Gast lesen bzw. senden (Header `X-Guest-Token`)
-  - `ConversationController`: Gruppenchat und Direktnachrichten unter `/api/v1/conversations`
-    - `GET /`: eigene Unterhaltungen; `GET /unread-count`: ungelesene Nachrichten
+  - `ConversationController`: Gruppenchat und Event-Chats unter `/api/v1/conversations`
+    - `GET /`: eigene Unterhaltungen der Gruppe; `GET /unread-count`: ungelesene Nachrichten (inklusive Direktnachrichten)
     - `GET /club`: Gruppenchat; `PUT /club/pin`: Infotafel setzen (`PinNoteRequest`)
-    - `POST /direct`: Direktnachricht beginnen (`StartDirectConversationRequest`)
     - `GET|POST /{conversationId}/messages`, `POST /{conversationId}/read`
     - `POST /{conversationId}/messages/{messageId}/reactions`: Reaktion umschalten (`ToggleReactionRequest`)
+  - `DirectConversationController`: Direktnachrichten unter `/api/v1/direct-conversations`, ohne gewählte Gruppe (siehe [Kalender, Freunde und Direktnachrichten](kalender-freunde-direktnachrichten.md))
   - `NotificationController`: Endpunkte unter `/api/v1/notifications`
     - `GET /`: eigene Mitteilungen (`List<NotificationDto>`); `GET /unread-count` (`UnreadCountDto`)
     - `POST /read-all`, `POST /{notificationId}/read`: als gelesen markieren
@@ -46,7 +46,8 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
     - `POST /`: Mitteilung an ein Mitglied (`SendNotificationRequest`); `POST /broadcast`: an mehrere oder alle (`BroadcastNotificationRequest`)
 - **Services**:
   - `ChatService`: Event-Chat, Gast-Chat und Zugriffsprüfung (Veranstalter, Eingeladene, `chat.moderate`, `event.manage`).
-  - `ConversationService`: Gruppenchat, Direktnachrichten, Lesestand und Reaktionen.
+  - `ConversationService`: Gruppenchat, Lesestand und Reaktionen.
+  - `DirectMessageService`: gruppenübergreifende Direktnachrichten.
   - `NotificationService`: Mitteilungen anlegen und den Push-Versand auslösen.
   - `EventInvitationService`: Einladungen, Erinnerungen und Absagen zu Events.
   - `PushDispatcher`: Stellt nach dem Commit im Hintergrund zu und entfernt ungültige Abos (`404`/`410`).

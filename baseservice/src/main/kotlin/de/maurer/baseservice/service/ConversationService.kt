@@ -26,7 +26,6 @@ import de.maurer.baseservice.repository.ConversationRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.security.UserPrincipal
-import de.maurer.baseservice.tenancy.StammtischMembers
 import de.maurer.baseservice.tenancy.TenantContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -40,8 +39,8 @@ import kotlin.jvm.optionals.getOrNull
  * - Der Vereinschat (`club`) gehört allen aktiven Mitgliedern; er wird beim
  *   ersten Zugriff angelegt. Die Infotafel darüber pflegen Vorstand und
  *   Administration.
- * - Direktnachrichten (`direct`) gibt es genau einmal je Paar (`direct_key`);
- *   nur die beiden Beteiligten lesen und schreiben.
+ * - Direktnachrichten sind gruppenübergreifend und liegen im
+ *   [DirectMessageService]; hier zählen sie nur beim Ungelesen-Zähler mit.
  * - Event-Chats (`event`) erscheinen in der Übersicht für Owner und
  *   Eingeladene; die Rechte prüft weiterhin [ChatService].
  *
@@ -57,20 +56,17 @@ class ConversationService(
     private val chatReactionRepository: ChatReactionRepository,
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
-    private val members: StammtischMembers,
     private val userService: UserService,
-    private val chatService: ChatService
+    private val chatService: ChatService,
+    private val directMessageService: DirectMessageService
 ) {
 
     fun listConversations(principal: UserPrincipal): List<ConversationSummaryDto> {
         val caller = userService.getOrCreateUser(principal)
         val club = clubConversation()
-        val memberships = conversationMemberRepository.findByUserId(caller.id)
-            .mapNotNull { it.conversation }
-            .filter { it.type == TYPE_DIRECT }
         val events = eventConversations(caller)
 
-        val summaries = listOf(club) + memberships + events
+        val summaries = listOf(club) + events
         return summaries
             .distinctBy { it.id }
             .map { toSummary(it, caller, principal) }
@@ -80,28 +76,11 @@ class ConversationService(
             )
     }
 
-    fun unreadCount(principal: UserPrincipal): ChatUnreadCountDto =
-        ChatUnreadCountDto(unread = listConversations(principal).sumOf { it.unreadCount })
-
-    fun startDirect(userIdValue: String?, principal: UserPrincipal): ConversationSummaryDto {
+    /** Ungelesen in Gruppen- und Event-Chats dieser Gruppe plus alle Direktnachrichten. */
+    fun unreadCount(principal: UserPrincipal): ChatUnreadCountDto {
         val caller = userService.getOrCreateUser(principal)
-        val partnerId = parseUuid(userIdValue, "userId")
-        if (partnerId == caller.id) {
-            throw InvalidRequestException(Msg("error.chat.directSelf"), ErrorCode.INVALID_REQUEST)
-        }
-        // Direktnachrichten nur an Mitglieder desselben Stammtischs.
-        val partner = members.requireKnownUser(partnerId)
-        if (partner.disabled || !members.isActiveMember(partner.id)) {
-            throw InvalidRequestException(Msg("error.chat.partnerDisabled"), ErrorCode.INVALID_REQUEST)
-        }
-        val key = listOf(caller.id, partner.id).map { it.toString() }.sorted().joinToString(":")
-        val conversation = conversationRepository.findByDirectKey(key).orElseGet {
-            val created = conversationRepository.save(ConversationEntity(type = TYPE_DIRECT, directKey = key))
-            conversationMemberRepository.save(ConversationMemberEntity(conversation = created, user = caller))
-            conversationMemberRepository.save(ConversationMemberEntity(conversation = created, user = partner))
-            created
-        }
-        return toSummary(conversation, caller, principal)
+        val groupChats = listConversations(principal).sumOf { it.unreadCount }
+        return ChatUnreadCountDto(unread = groupChats + directMessageService.unreadTotal(caller))
     }
 
     fun listMessages(conversationId: UUID, principal: UserPrincipal): List<ChatMessageDto> {
@@ -201,9 +180,8 @@ class ConversationService(
         val conversation = chatService.requireActiveConversation(conversationId)
         when (conversation.type) {
             TYPE_CLUB -> Unit
-            TYPE_DIRECT -> if (conversationMemberRepository.findByConversationIdAndUserId(conversation.id, caller.id).isEmpty) {
-                throw AccessDeniedException(Msg("error.chat.directDenied"), ErrorCode.ACCESS_DENIED)
-            }
+            // Direktnachrichten laufen über /api/v1/direct-conversations.
+            TYPE_DIRECT -> throw AccessDeniedException(Msg("error.chat.directDenied"), ErrorCode.ACCESS_DENIED)
             else -> {
                 val event = conversation.event
                     ?: throw ResourceNotFoundException(Msg("error.chat.eventNotFound"), ErrorCode.NOT_FOUND)

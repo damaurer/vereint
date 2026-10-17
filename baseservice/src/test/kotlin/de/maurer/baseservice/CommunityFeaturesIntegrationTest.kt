@@ -6,11 +6,13 @@ import de.maurer.baseservice.dto.PinNoteRequest
 import de.maurer.baseservice.dto.RsvpRequest
 import de.maurer.baseservice.dto.SendMessageRequest
 import de.maurer.baseservice.error.AccessDeniedException
+import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.NotificationRepository
 import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.ConversationService
+import de.maurer.baseservice.service.DirectMessageService
 import de.maurer.baseservice.service.EventInvitationService
 import de.maurer.baseservice.service.EventService
 import de.maurer.baseservice.service.LedgerService
@@ -38,6 +40,7 @@ import java.util.UUID
 @ActiveProfiles("test")
 class CommunityFeaturesIntegrationTest @Autowired constructor(
     private val conversationService: ConversationService,
+    private val directMessageService: DirectMessageService,
     private val eventService: EventService,
     private val eventInvitationService: EventInvitationService,
     private val notificationService: NotificationService,
@@ -85,18 +88,18 @@ class CommunityFeaturesIntegrationTest @Autowired constructor(
         val alice = member("Alice")
         val bob = member("Bob")
         val carol = member("Carol")
-        val aliceToBob = conversationService.startDirect(idOf(bob).toString(), alice)
-        val bobToAlice = conversationService.startDirect(idOf(alice).toString(), bob)
+        val aliceToBob = directMessageService.start(idOf(bob).toString(), alice)
+        val bobToAlice = directMessageService.start(idOf(alice).toString(), bob)
         assertEquals(aliceToBob.id, bobToAlice.id)
         assertEquals("Bob", aliceToBob.partnerName)
 
-        conversationService.sendMessage(UUID.fromString(aliceToBob.id), SendMessageRequest(message = "Psst"), alice)
-        assertEquals(1, conversationService.listConversations(bob).first { it.id == aliceToBob.id }.unreadCount)
-        assertThrows<AccessDeniedException> {
-            conversationService.listMessages(UUID.fromString(aliceToBob.id), carol)
+        directMessageService.send(UUID.fromString(aliceToBob.id), SendMessageRequest(message = "Psst"), alice)
+        assertEquals(1, directMessageService.list(bob).first { it.id == aliceToBob.id }.unreadCount)
+        assertThrows<ResourceNotFoundException> {
+            directMessageService.messages(UUID.fromString(aliceToBob.id), carol)
         }
         idOf(carol)
-        assertTrue(conversationService.listConversations(carol).none { it.id == aliceToBob.id })
+        assertTrue(directMessageService.list(carol).none { it.id == aliceToBob.id })
     }
 
     @Test
