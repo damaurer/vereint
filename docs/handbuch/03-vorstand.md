@@ -155,7 +155,7 @@ Vereint warnt, wenn ein Name oder Strichcode schon vergeben ist. **Speichern** �
 
 <img src="bilder/v-getraenkedatenbank.png" alt="Getränkedatenbank" width="300" align="right">
 
-**Getränkedatenbank**: Alle Gruppen teilen sich eine gemeinsame Getränkedatenbank. Sie enthält Name, Sorte, Beschreibung und Strichcodes, aber keine Preise und keine Bilder. Von Anfang an stehen dort rund 100 bekannte Getränke, von Krombacher über Club-Mate bis Jägermeister.
+**Getränkedatenbank**: Alle Gruppen teilen sich eine gemeinsame Getränkedatenbank. Sie enthält Name, Sorte, Beschreibung und Strichcodes, aber keine Preise und keine Bilder. Von Anfang an stehen dort über 1.200 Getränke, darunter die Sortimente von mehr als 130 deutschen Brauereien, von Krombacher über Club-Mate bis Jägermeister.
 
 1. Im **Getränkekatalog** auf **Aus der Getränkedatenbank** tippen.
 2. Nach **Name oder Sorte** oder nach dem **Strichcode (EAN)** suchen.

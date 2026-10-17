@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 211. Zweiter Bestand der gemeinsamen Getränkedatenbank: das ganze bei
+         Open Food Facts (ODbL 1.0) erfasste Sortiment von über 100 deutschen
+         Brauereien, alles von Rapp's und der Brauerei Rapp sowie in Bayern
+         viel getrunkene Wässer und Limonaden (Adelholzener, Almdudler). Daten in
+         data/drink-library-seed-2*.csv. Gleiche Regeln wie 210: Getränke, deren
+         Name oder Barcode schon eingetragen ist, werden übersprungen. -->
+    <changeSet id="211-seed-drink-library-breweries" author="claude">
+        <createTable tableName="drink_library_seed">
+            <column name="id" type="VARCHAR(36)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="category" type="VARCHAR(64)"/>
+            <column name="description" type="VARCHAR(1000)"/>
+        </createTable>
+        <createTable tableName="drink_library_seed_barcodes">
+            <column name="id" type="VARCHAR(36)"/>
+            <column name="drink_id" type="VARCHAR(36)"/>
+            <column name="barcode" type="VARCHAR(128)"/>
+        </createTable>
+
+        <loadData tableName="drink_library_seed" file="../data/drink-library-seed-2.csv"
+                  relativeToChangelogFile="true" encoding="UTF-8" separator="," quotchar="&quot;"
+                  usePreparedStatements="true">
+            <column name="id" type="STRING"/>
+            <column name="name" type="STRING"/>
+            <column name="category" type="STRING"/>
+            <column name="description" type="STRING"/>
+        </loadData>
+        <loadData tableName="drink_library_seed_barcodes" file="../data/drink-library-seed-2-barcodes.csv"
+                  relativeToChangelogFile="true" encoding="UTF-8" separator="," quotchar="&quot;"
+                  usePreparedStatements="true">
+            <column name="id" type="STRING"/>
+            <column name="drink_id" type="STRING"/>
+            <column name="barcode" type="STRING"/>
+        </loadData>
+
+        <sql>
+            INSERT INTO drink_library (id, name, description, category)
+            SELECT CAST(s.id AS UUID), s.name, s.description, s.category
+            FROM drink_library_seed s
+            WHERE NOT EXISTS (
+                SELECT 1 FROM drink_library d
+                WHERE d.id = CAST(s.id AS UUID) OR LOWER(d.name) = LOWER(s.name)
+            )
+            AND NOT EXISTS (
+                SELECT 1 FROM drink_library_seed_barcodes sb
+                JOIN drink_library_barcodes b ON b.barcode = sb.barcode
+                WHERE sb.drink_id = s.id
+            );
+
+            INSERT INTO drink_library_barcodes (id, library_drink_id, barcode)
+            SELECT CAST(sb.id AS UUID), d.id, sb.barcode
+            FROM drink_library_seed_barcodes sb
+            JOIN drink_library d ON d.id = CAST(sb.drink_id AS UUID)
+            WHERE NOT EXISTS (SELECT 1 FROM drink_library_barcodes b WHERE b.barcode = sb.barcode);
+        </sql>
+
+        <dropTable tableName="drink_library_seed_barcodes"/>
+        <dropTable tableName="drink_library_seed"/>
+        <rollback>
+            <createTable tableName="drink_library_seed">
+                <column name="id" type="VARCHAR(36)"/>
+                <column name="name" type="VARCHAR(255)"/>
+                <column name="category" type="VARCHAR(64)"/>
+                <column name="description" type="VARCHAR(1000)"/>
+            </createTable>
+            <loadData tableName="drink_library_seed" file="../data/drink-library-seed-2.csv"
+                      relativeToChangelogFile="true" encoding="UTF-8" separator="," quotchar="&quot;"
+                      usePreparedStatements="true">
+                <column name="id" type="STRING"/>
+                <column name="name" type="STRING"/>
+                <column name="category" type="STRING"/>
+                <column name="description" type="STRING"/>
+            </loadData>
+            <sql>DELETE FROM drink_library WHERE CAST(id AS VARCHAR(36)) IN (SELECT id FROM drink_library_seed)</sql>
+            <dropTable tableName="drink_library_seed"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

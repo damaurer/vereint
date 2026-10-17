@@ -548,7 +548,7 @@ class LiquibaseSchemaTest @Autowired constructor(
     @Test
     fun `seeds the shared drink library with real drinks and their barcodes`() {
         val drinks = jdbcTemplate.queryForObject("select count(*) from drink_library", Int::class.java)!!
-        assertTrue(drinks >= 90, "Startbestand der Getränkedatenbank fehlt: $drinks")
+        assertTrue(drinks >= 1200, "Startbestand der Getränkedatenbank fehlt: $drinks")
         val name = jdbcTemplate.queryForObject(
             """
             select d.name from drink_library d
