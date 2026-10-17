@@ -24,7 +24,8 @@ baseservice/src/main/resources/db/changelog/
     ├── 013-stammtische.xml               # Gruppen, Mitgliedschaften, Rollen je Gruppe, Row-Level-Security
     ├── 014-drink-library.xml             # Gemeinsame Getränkedatenbank
     ├── 015-billing.xml                   # Tarife und Stripe
-    └── 016-terms-acceptance.xml          # Zustimmung zu den AGB je Konto
+    ├── 016-terms-acceptance.xml          # Zustimmung zu den AGB je Konto
+    └── 017-drink-library-seed.xml        # Startbestand der Getränkedatenbank (CSV in data/)
 ```
 
 Die Nummer `006` ist nicht vergeben.
@@ -50,12 +51,13 @@ Die Nummer `006` ist nicht vergeben.
 | `170` | `014-drink-library.xml` | Gemeinsame Getränkedatenbank `drink_library` mit Barcodes | ✅ |
 | `180-183` | `015-billing.xml` | Tarife je Gruppe (`stammtisch_subscriptions`), Stripe-Ereignisse (`billing_events`), Ersteller und Bild der Gruppe, Recht `billing.manage`, Name der Standardgruppe | teilweise (181, 183 ohne) |
 | `190` | `016-terms-acceptance.xml` | `users.terms_version` und `users.terms_accepted_at` | ✅ (automatisch) |
+| `210` | `017-drink-library-seed.xml` | Startbestand der Getränkedatenbank: 95 bekannte Getränke mit 101 Barcodes aus Open Food Facts (`data/drink-library-seed*.csv`); überspringt Getränke, deren Name oder Barcode schon eingetragen ist | ✅ (löscht die Startgetränke) |
 
 ---
 
 ## ✍️ Richtlinien für neue Migrationsskripte
 
-1. **Neue Datei**: nächste freie Nummer ist `017-…xml`, eingetragen in `db.changelog-master.xml`. Changeset-IDs fortlaufend und noch nicht vergeben wählen (belegt sind u. a. `201-202` und `301-302`).
+1. **Neue Datei**: nächste freie Nummer ist `018-…xml`, eingetragen in `db.changelog-master.xml`. Changeset-IDs fortlaufend und noch nicht vergeben wählen (belegt sind u. a. `201-202`, `210` und `301-302`).
 2. **DBMS-Kompatibilität**:
    - Die Zieldatenbank ist **PostgreSQL 17**.
    - H2 ist ausschließlich für die schnellen Spring-Context-Tests zugelassen.

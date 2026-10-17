@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 210. Startbestand der gemeinsamen Getränkedatenbank: in Deutschland frei
+         erhältliche, bekannte Getränke mit Barcodes (EAN) aus Open Food Facts
+         (ODbL 1.0). Die Daten stehen in data/drink-library-seed*.csv und werden
+         über Hilfstabellen eingespielt. Vorhandene Einträge bleiben unverändert:
+         Ein Getränk wird übersprungen, wenn es schon einen Eintrag mit gleichem
+         Namen oder einem seiner Barcodes gibt. Neue Getränke kommen in einem
+         eigenen Changeset mit neuen CSV-Dateien dazu, weil Liquibase Änderungen
+         an bereits ausgeführten Dateien ablehnt. -->
+    <changeSet id="210-seed-drink-library" author="claude">
+        <createTable tableName="drink_library_seed">
+            <column name="id" type="VARCHAR(36)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="category" type="VARCHAR(64)"/>
+            <column name="description" type="VARCHAR(1000)"/>
+        </createTable>
+        <createTable tableName="drink_library_seed_barcodes">
+            <column name="id" type="VARCHAR(36)"/>
+            <column name="drink_id" type="VARCHAR(36)"/>
+            <column name="barcode" type="VARCHAR(128)"/>
+        </createTable>
+
+        <loadData tableName="drink_library_seed" file="../data/drink-library-seed.csv"
+                  relativeToChangelogFile="true" encoding="UTF-8" separator="," quotchar="&quot;"
+                  usePreparedStatements="true">
+            <column name="id" type="STRING"/>
+            <column name="name" type="STRING"/>
+            <column name="category" type="STRING"/>
+            <column name="description" type="STRING"/>
+        </loadData>
+        <loadData tableName="drink_library_seed_barcodes" file="../data/drink-library-seed-barcodes.csv"
+                  relativeToChangelogFile="true" encoding="UTF-8" separator="," quotchar="&quot;"
+                  usePreparedStatements="true">
+            <column name="id" type="STRING"/>
+            <column name="drink_id" type="STRING"/>
+            <column name="barcode" type="STRING"/>
+        </loadData>
+
+        <sql>
+            INSERT INTO drink_library (id, name, description, category)
+            SELECT CAST(s.id AS UUID), s.name, s.description, s.category
+            FROM drink_library_seed s
+            WHERE NOT EXISTS (
+                SELECT 1 FROM drink_library d
+                WHERE d.id = CAST(s.id AS UUID) OR LOWER(d.name) = LOWER(s.name)
+            )
+            AND NOT EXISTS (
+                SELECT 1 FROM drink_library_seed_barcodes sb
+                JOIN drink_library_barcodes b ON b.barcode = sb.barcode
+                WHERE sb.drink_id = s.id
+            );
+
+            INSERT INTO drink_library_barcodes (id, library_drink_id, barcode)
+            SELECT CAST(sb.id AS UUID), d.id, sb.barcode
+            FROM drink_library_seed_barcodes sb
+            JOIN drink_library d ON d.id = CAST(sb.drink_id AS UUID)
+            WHERE NOT EXISTS (SELECT 1 FROM drink_library_barcodes b WHERE b.barcode = sb.barcode);
+        </sql>
+
+        <dropTable tableName="drink_library_seed_barcodes"/>
+        <dropTable tableName="drink_library_seed"/>
+        <rollback>
+            <sql>
+                DELETE FROM drink_library
+                WHERE CAST(id AS VARCHAR(36)) IN (
+                    '7bcabe95-e269-5f8c-a34b-10a7f9cba70c',
+                    '17f83427-7475-5024-bcce-ff09675ad4f3',
+                    '33148ca8-6b66-5f98-908c-abc72a706689',
+                    'dfc542c2-3f1b-54f1-ac20-57c794f61e9d',
+                    '44688a7e-9e4e-592e-bd13-b23de9fa0449',
+                    '2761d7a4-a7d1-5f53-9974-91202390d2c5',
+                    '63708e7a-c6d5-5c19-a4a6-7149f80c2214',
+                    'e4d4732a-ecab-5e39-98f5-280048ed9ba2',
+                    'ad069ff2-0cbb-5f47-ba28-7eeb4acb61de',
+                    '4b0c89be-ab5f-5a4d-861f-ef3197bd7a69',
+                    '5740ebc7-1d03-55cb-a471-5aede58c45b1',
+                    '415bf57a-fec7-510c-b593-300b1e76ace4',
+                    '0ef11e17-7002-5d7a-b2be-e6e9727c5ee9',
+                    '83a4c6af-99eb-58bf-abbd-18771e22ad8e',
+                    '85f5b38c-3de4-577f-b992-2d5d859bbcca',
+                    '841539a2-4145-5884-8990-a48f6ff79860',
+                    'eb4da6f6-2f18-53d8-b9be-0e7a228620b1',
+                    'f3254690-c04f-5f3b-a0ef-fb56d79dad21',
+                    '2aa7f901-1fa2-58b1-9091-583c92e6bbdc',
+                    'aa643abd-1675-5892-b2ea-64b60153ff90',
+                    'd75b9916-77a6-5260-a9ad-c52cc927e1ab',
+                    '8f323f28-c0ff-5d27-a72e-864550223f1b',
+                    '9062c196-db85-5dce-89e3-4a7f24fdac8d',
+                    '4bd465f8-74bb-5a91-8519-75371d938c4d',
+                    'db6f49a9-fce7-515c-84a1-b96cf36ea1f2',
+                    '243b567a-f6d8-50c0-ae5a-4b612ce350b5',
+                    '60153ddc-1a21-5120-bf51-3c6532b6cc6d',
+                    '4894fb9c-7186-57d7-ba60-34b2efebadac',
+                    '3d12a47b-fff4-52b0-8d26-1f50cd467b66',
+                    '5977362f-c410-5f90-bfba-c3cf97395882',
+                    '5b2cca08-efe5-5cd3-9ae7-575f1f18d0b0',
+                    'f307d5c7-9943-5b33-8388-a6e73e5940ce',
+                    'cdb199c8-46d8-5782-afb7-cc4e38c49df4',
+                    'b2872b7f-7115-571a-9c1a-49c5ca472be0',
+                    '0626b627-eb7e-59f9-8c73-9d7e960e3f1d',
+                    'e5cdab16-ec70-5884-a9a4-eaa5774e34b8',
+                    '3043862e-9273-587f-80c8-92e2da7c79b1',
+                    'f415da6d-4627-53b3-b9a9-b2ae71d9cc21',
+                    '5ad90bbf-2316-58fe-af33-fe26dc7e1bec',
+                    '93c85224-d7e6-56be-ac66-777993e1bad1',
+                    '6c749f76-6fa4-5c19-af84-9ada126a0037',
+                    '997c9035-82e5-5394-a938-032c054d5eee',
+                    '0ec2d224-629d-5808-aee7-1f972aa19f9a',
+                    'b30a4578-5b4e-54fd-b52a-813d41062e9e',
+                    '9359f84a-68d2-5a02-90d4-2d3ef95df4b4',
+                    '13d274b6-9073-59d3-a5eb-bd4a1281c37d',
+                    '226769b5-5bba-506a-9a36-49f5b9549711',
+                    '26d339d0-dc22-5254-9a9a-11b8bb860b30',
+                    'aaaadc9b-a261-5b3b-b959-deb6598909e3',
+                    'c376703a-caec-548c-a9c7-b6ac122da50f',
+                    'fb0cd921-5d58-565f-8853-09b9de807a47',
+                    'be6c1f8b-037a-5518-86d3-3f3297c1a13c',
+                    'af8674a6-0dd6-5a5f-bf3b-c393fb2016b3',
+                    '0d217e03-629e-53c7-a44b-68214859183b',
+                    'eb7fffd5-4f83-5b5b-97cd-2405f4bf4bcd',
+                    'e2af9c6b-1316-5450-ac1e-68171e754d87',
+                    'b35528dd-005e-58e4-9435-27849383839a',
+                    'd2370883-2d66-581a-bba3-1569ebffece2',
+                    '6799020b-ed82-5abe-b89b-50dca2c6477a',
+                    '591b52ec-ea6d-56b7-b44f-f22cdbbe3507',
+                    'd50450ee-5e5d-5755-b811-2ab06cbf28f5',
+                    'a45a526c-06d7-57dd-9595-23c9fd8f9e32',
+                    'aecb742f-143a-5917-b908-16f6e25408e8',
+                    '349e4b96-988d-5b1b-8761-aeed197734bf',
+                    '7e7eb036-8e94-5682-9f79-34116e1bd38e',
+                    'eba7c81c-42e7-5a9f-b5c0-84172cf2a00a',
+                    'cfc73bec-730a-5ee4-96dc-522bdb1faf45',
+                    '44d1d654-9e4f-56ee-a727-b549d3ca238e',
+                    'ad1df7f0-595f-5e14-bf6b-38bdfe9ec025',
+                    '1c17b02f-b905-56d2-ac73-fa46b4010d49',
+                    'cb6670ff-44cc-5711-be10-b30553da796f',
+                    '3babb366-8219-5fb1-b49f-4d28190f8db1',
+                    'a773687c-9a8d-54a4-8d55-a453d34106e6',
+                    '1e433c8e-4b99-546a-98ce-4c16cca0e198',
+                    '3a2a39bb-5f05-51c1-89c6-b2d422ba14fb',
+                    '07558f6e-ae66-55e8-92f8-dfc1ba170a9f',
+                    '78a2f97e-f263-537b-b828-0af5855325d2',
+                    '8847445c-181b-5f7b-ac83-a40d9ab7c59d',
+                    'e509002c-a440-5cef-9cea-d4eef35859cc',
+                    'c930b27a-c628-57cc-bc28-e6e5fa21d0dd',
+                    '33e6ad2f-9768-5154-a759-2f2d053e351c',
+                    'd6d7be75-3ee4-53a2-91dc-1759a4c8d919',
+                    '7203c241-03f9-59fb-b5e4-80ea88b51b52',
+                    '7e881262-df51-5104-9e5c-d7a7ee77c033',
+                    'a8523ef7-fe86-5d90-b64c-140be1ce89e3',
+                    'ad0d910c-b9e0-56af-822b-32807358b569',
+                    '38b84de6-d56d-5494-ace9-e40c93e9d609',
+                    '66f14fb3-75fd-5823-83f3-ba7bd6fc52bc',
+                    '23b1f0a2-325b-541b-8b84-3d031f77db9b',
+                    '26ffaa6d-94e9-53c5-bbee-626b8833d717',
+                    '34ba0f7a-d6c3-5e86-8675-ce7eb7cea2a4',
+                    '0a517074-74ad-590c-ac78-c5337ff3f153',
+                    'b794d9ea-1b9a-5677-9fb0-a2f7c259cd92',
+                    'baa0b943-951d-5be6-8eb8-a25a9505b966',
+                    '20af888e-dc6d-5743-8eea-c752dc2808cd'
+                )
+            </sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

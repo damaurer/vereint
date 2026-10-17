@@ -92,7 +92,7 @@ Die vollständige Liste aller Changesets mit Beschreibung steht im [Datenmodell]
 6. **`007-food-and-cost-prices.xml`**: `food_catalog`, `event_food`, Einkaufspreise und Beleg-Snapshots mit `item_type`, `food_name`, `cost_price`, `profit`.
 7. **`008`** bis **`012`**: verschlüsselte Benachrichtigungstitel, Chat und Zusagen, Einladungslinks, Kiosk-Sitzungen, Moment-Typen und Medien.
 8. **`013-stammtische.xml`**: Gruppen, Mitgliedschaften, Rollen je Gruppe, `stammtisch_id` an allen fachlichen Tabellen, Eindeutigkeit je Gruppe, Row Level Security.
-9. **`014`** bis **`016`**: gemeinsame Getränkedatenbank, Tarife und Stripe-Ereignisse, AGB-Zustimmung.
+9. **`014`** bis **`017`**: gemeinsame Getränkedatenbank, Tarife und Stripe-Ereignisse, AGB-Zustimmung, Startbestand der Getränkedatenbank (Daten aus Open Food Facts, ODbL).
 
 ### 2. Liquibase-Kontexte (`contexts`)
 - **`prod`**: Standardkontext für Produktiv- und Compose-Umgebungen (`EV_LIQUIBASE_CONTEXTS: prod`).
