@@ -76,7 +76,7 @@ describe('StatisticsComponent', () => {
     const root = fixture.nativeElement as HTMLElement;
     const text = html(fixture);
 
-    expect(text).toContain('Eber-Analytik');
+    expect(text).toContain('Gruppenstatistik');
     expect(text).toContain('letzten 90 Tage');
     expect(text).toContain('Max Mustermann');
     expect(text).toContain('18 Striche');

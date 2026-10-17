@@ -515,7 +515,7 @@
     },
     "statistics": {
       "title": "Statistics",
-      "description": "Consumption, attendance, spending history and rankings from Eber analytics."
+      "description": "Consumption, attendance, spending history and rankings for your group."
     },
     "eventCreate": {
       "title": "Create event",
@@ -867,7 +867,7 @@
     "propose": {
       "title": "Propose drink",
       "name": "Drink name *",
-      "namePlaceholder": "e.g. Eber-Bräu Zwickl",
+      "namePlaceholder": "e.g. Kellerbier 0.5 l",
       "categoryPlaceholder": "e.g. lager, wheat beer, alcohol-free",
       "pricePlaceholder": "e.g. 2.50",
       "descriptionPlaceholder": "Special features, brewery, etc.",
@@ -1271,7 +1271,7 @@
     },
     "overview": {
       "eyebrow": "Board",
-      "title": "Eber leadership team",
+      "title": "Board overview",
       "intro": "Moderation, financial overviews and prepared announcements.",
       "infoTitle": "Board area",
       "infoText": "Manage the group kitty, send important announcements or plan the next get-togethers here.",
@@ -1594,9 +1594,9 @@
     }
   },
   "statistics": {
-    "ariaLabel": "Statistics and Eber analytics",
+    "ariaLabel": "Group statistics",
     "eyebrow": "Statistics",
-    "title": "Eber analytics",
+    "title": "Group statistics",
     "ssr": {
       "title": "Charts load in the browser",
       "message": "Aggregated reports appear once the page has loaded in the browser."
