@@ -251,6 +251,9 @@ p { margin: 0 0 1em; }
 }
 .feature-reverse .feature-text { order: 2; }
 .feature-shot { width: min(300px, 80%); justify-self: center; }
+.feature-pair { display: flex; gap: 1.2rem; justify-content: center; align-items: flex-start; }
+.feature-pair .phone { width: min(240px, 46%); }
+.feature-pair .phone:last-child { margin-top: 2.5rem; }
 .feature-tag {
   display: inline-block; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em;
   padding: 0.3rem 0.75rem; border-radius: 999px; margin-bottom: 1rem;
