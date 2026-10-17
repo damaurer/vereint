@@ -132,6 +132,19 @@ Rolle „Kasse“ mit `ledger.read` sieht so die Kasse, aber nicht den Adminbere
 enthalten Name, Beschreibung, Kategorie und Barcodes, aber **keine Preise und
 keine Bilder**.
 
+Migration `017-drink-library-seed.xml` legt einen Startbestand von 95 in
+Deutschland bekannten Getränken an (Bier, alkoholfreies Bier, Biermix,
+Softdrinks, Energydrinks, Wasser, Saft und Schorle, Sekt, Spirituosen).
+`018-drink-library-seed-breweries.xml` ergänzt 1.127 Getränke: alles, was
+Open Food Facts von 138 deutschen Brauereien kennt, dazu Rapp's (Kelterei),
+die Brauerei Rapp sowie Adelholzener und Almdudler als in Bayern viel
+getrunkene Wässer und Limonaden. Erzeugt werden die Daten mit
+`scripts/drink-library/` aus dem Export von Open Food Facts. Die
+Barcodes stammen aus [Open Food Facts](https://world.openfoodfacts.org) unter
+der ODbL 1.0, Quellenangabe in
+`baseservice/src/main/resources/db/changelog/data/README.md`. Vorhandene
+Einträge mit gleichem Namen oder Barcode bleiben unberührt.
+
 - Unter **Katalog → Aus der Getränkedatenbank** (`/catalog/library`) sucht man
   nach Name oder Barcode und übernimmt ein Getränk in den eigenen Katalog; Preis
   und Einkaufspreis setzt jede Gruppe selbst. Der Katalogeintrag merkt sich die

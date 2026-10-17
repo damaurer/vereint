@@ -544,4 +544,26 @@ class LiquibaseSchemaTest @Autowired constructor(
     companion object {
         private val DEFAULT_STAMMTISCH: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
     }
+
+    @Test
+    fun `seeds the shared drink library with real drinks and their barcodes`() {
+        val drinks = jdbcTemplate.queryForObject("select count(*) from drink_library", Int::class.java)!!
+        assertTrue(drinks >= 1200, "Startbestand der Getränkedatenbank fehlt: $drinks")
+        val name = jdbcTemplate.queryForObject(
+            """
+            select d.name from drink_library d
+            join drink_library_barcodes b on b.library_drink_id = d.id
+            where b.barcode = '4008287054026'
+            """.trimIndent(),
+            String::class.java
+        )
+        assertEquals("Krombacher Pils 0,5 l", name)
+        assertEquals(
+            0,
+            jdbcTemplate.queryForObject(
+                "select count(*) from information_schema.tables where lower(table_name) like 'drink_library_seed%'",
+                Int::class.java
+            )
+        )
+    }
 }
