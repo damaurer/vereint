@@ -646,6 +646,59 @@ export interface ConversationSummary {
   canWrite: boolean;
 }
 
+// --- Freunde (`/api/v1/friends`, gruppenübergreifend) ---
+
+export type FriendStatus = 'friend' | 'incoming' | 'outgoing' | 'none';
+
+/** Gemeinsame Gruppe; nur Gruppen, in denen man selbst Mitglied ist. */
+export interface SharedGroup {
+  id: string;
+  name: string;
+}
+
+/** Person in Freundesliste oder Kontakten. */
+export interface FriendContact {
+  userId: string;
+  displayName: string;
+  friendStatus: FriendStatus;
+  since: string | null;
+  sharedGroups: SharedGroup[];
+  /** Darf man der Person schreiben (Freunde oder gemeinsame Gruppe)? */
+  canMessage: boolean;
+}
+
+export interface FriendsOverview {
+  friends: FriendContact[];
+  incoming: FriendContact[];
+  outgoing: FriendContact[];
+}
+
+// --- Persönlicher Kalender (`GET /api/v1/calendar`, alle eigenen Gruppen) ---
+
+export interface CalendarEntry {
+  kind: 'event' | 'moment';
+  id: string;
+  eventId: string;
+  title: string;
+  startsAt: string;
+  endsAt: string | null;
+  /** Ort des Events; bei Moments der Titel des Events. */
+  location: string | null;
+  status: string;
+  myRsvp: string | null;
+  emoji: string | null;
+  topicName: string | null;
+  active: boolean;
+  stammtischId: string;
+  stammtischName: string;
+}
+
+export interface CalendarResponse {
+  from: string;
+  to: string;
+  entries: CalendarEntry[];
+}
+
 // --- Statistik (`GET /api/v1/statistics`, alle Angemeldeten) ---
 
 export interface ClubStatistics {

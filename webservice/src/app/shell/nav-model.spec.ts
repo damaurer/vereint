@@ -38,6 +38,8 @@ describe('nav-model', () => {
     expect(ids(items)).toContain('profil');
     expect(ids(items)).toContain('notifications');
     expect(ids(items)).toContain('statistik');
+    expect(ids(items)).toContain('calendar');
+    expect(ids(items)).toContain('friends');
   });
 
   it('hides the tablet terminal without its permission (deny by default)', () => {

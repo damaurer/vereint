@@ -6,8 +6,10 @@
  *   einer Fehlerseite des Browsers `/offline.html` zeigen.
  * - Web Push: Der Server sendet Pushes ohne Nutzlast. Der Worker lädt die
  *   eigentliche Mitteilung autorisiert über `/api/v1/notifications` nach und
- *   zeigt sie als Systembenachrichtigung an. Einladungen zu Events tragen die
- *   Aktionen „Zusagen“/„Absagen“, die direkt `PUT /api/v1/events/{id}/rsvp` aufrufen.
+ *   zeigt sie als Systembenachrichtigung an. Persönliche Mitteilungen
+ *   (Direktnachrichten, Freundschaftsanfragen) kommen gruppenübergreifend aus
+ *   `/api/v1/personal-notifications`; angezeigt wird die neueste. Einladungen
+ *   zu Events tragen die Aktionen „Zusagen“/„Absagen“, die direkt `PUT /api/v1/events/{id}/rsvp` aufrufen.
  *
  * Cache-Regeln (deny by default) spiegeln `src/app/pwa/service-worker-cache-policy.ts`;
  * beide Dateien synchron halten. Niemals gecacht werden `/api/`, Nicht-GET,
@@ -145,6 +147,23 @@ self.addEventListener('push', (event) => {
   event.waitUntil(showLatestNotification());
 });
 
+const NOTIFICATION_SOURCES = ['/api/v1/notifications', '/api/v1/personal-notifications'];
+
+async function loadUnread(path) {
+  try {
+    const response = await fetch(path, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { accept: 'application/json' },
+    });
+    if (!response.ok) return [];
+    const items = await response.json();
+    return Array.isArray(items) ? items.filter((item) => !item.read) : [];
+  } catch {
+    return [];
+  }
+}
+
 async function showLatestNotification() {
   let title = 'Vereint';
   let body = 'Du hast eine neue Mitteilung.';
@@ -153,28 +172,28 @@ async function showLatestNotification() {
   let actions;
 
   try {
-    const response = await fetch('/api/v1/notifications', {
-      credentials: 'same-origin',
-      cache: 'no-store',
-      headers: { accept: 'application/json' },
-    });
-    if (response.ok) {
-      const unread = (await response.json()).filter((item) => !item.read);
-      await updateAppBadge(unread.length);
-      const latest = unread[0];
-      if (latest) {
-        title = latest.title;
-        body = truncate(latest.body, 180);
-        tag = `vereint-${latest.id}`;
-        if (isAppLink(latest.link)) data = { url: latest.link };
-        const eventId = eventIdFromLink(latest.link);
-        if (latest.type === 'event_invitation' && eventId) {
-          data = { ...data, eventId, notificationId: latest.id };
-          actions = [
-            { action: 'accept', title: 'Zusagen' },
-            { action: 'decline', title: 'Absagen' },
-          ];
-        }
+    // Mitteilungen der gewählten Gruppe und persönliche Mitteilungen
+    // (Direktnachrichten, Freunde) laufen getrennt; ein Fehler bei einer der
+    // beiden Quellen verhindert die Anzeige der anderen nicht.
+    const lists = await Promise.all(NOTIFICATION_SOURCES.map(loadUnread));
+    const unread = lists
+      .flat()
+      .sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0));
+    await updateAppBadge(unread.length);
+    const latest = unread[0];
+    if (latest) {
+      title = latest.title;
+      body = truncate(latest.body, 180);
+      // Direktnachrichten je Gespräch unter einem Tag: neue ersetzen ältere.
+      tag = `vereint-${latest.type === 'direct_message' ? latest.link : latest.id}`;
+      if (isAppLink(latest.link)) data = { url: latest.link };
+      const eventId = eventIdFromLink(latest.link);
+      if (latest.type === 'event_invitation' && eventId) {
+        data = { ...data, eventId, notificationId: latest.id };
+        actions = [
+          { action: 'accept', title: 'Zusagen' },
+          { action: 'decline', title: 'Absagen' },
+        ];
       }
     }
   } catch {
@@ -221,7 +240,9 @@ self.addEventListener('notificationclick', (event) => {
   const data = event.notification.data || {};
   const target = new URL(data.url || '/notifications', self.location.origin);
   if ((event.action === 'accept' || event.action === 'decline') && data.eventId) {
-    event.waitUntil(answerInvitation(data, event.action === 'accept' ? 'accepted' : 'declined', target.href));
+    event.waitUntil(
+      answerInvitation(data, event.action === 'accept' ? 'accepted' : 'declined', target.href),
+    );
     return;
   }
   event.waitUntil(openOrFocus(target.href));

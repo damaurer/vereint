@@ -52,7 +52,7 @@ Die Progressive Web App (`pwa/`, Service Worker `public/vereint-sw.js`, Regeln g
 
 ### 2. VAPID Web Push im Service Worker
 - Der Service Worker registriert einen `push`-Event-Listener.
-- Der Server sendet Pushes **ohne Nutzlast**; beim Push-Dienst (Google, Mozilla, Apple) landen also keine Inhalte. Der Service Worker lädt die neueste ungelesene Mitteilung über `/api/v1/notifications` mit der Sitzung nach und zeigt sie als Systembenachrichtigung. Ohne gültige Sitzung erscheint nur „Du hast eine neue Mitteilung.“
+- Der Server sendet Pushes **ohne Nutzlast**; beim Push-Dienst (Google, Mozilla, Apple) landen also keine Inhalte. Der Service Worker lädt mit der Sitzung `/api/v1/notifications` (Mitteilungen der gewählten Gruppe) und `/api/v1/personal-notifications` (Direktnachrichten und Freundschaftsanfragen über alle Gruppen) nach, nimmt die neueste ungelesene Mitteilung und zeigt sie als Systembenachrichtigung. Ohne gültige Sitzung erscheint nur „Du hast eine neue Mitteilung.“
 - Bei Event-Einladungen bietet die Benachrichtigung die Aktionen „Zusagen“ und „Absagen“, die direkt `PUT /api/v1/events/{id}/rsvp` aufrufen.
 - Ein Klick öffnet den Link der Mitteilung (z. B. das Event), sonst `/notifications`.
 - Die Mitteilungen gehören zu einer Gruppe; der Service Worker lädt sie über den API-Proxy und damit für die im Browser gewählte Gruppe. Die Zahl ungelesener Mitteilungen erscheint als App-Badge, wo das Betriebssystem es unterstützt.

@@ -5,7 +5,6 @@ import de.maurer.baseservice.dto.ChatUnreadCountDto
 import de.maurer.baseservice.dto.ConversationSummaryDto
 import de.maurer.baseservice.dto.PinNoteRequest
 import de.maurer.baseservice.dto.SendMessageRequest
-import de.maurer.baseservice.dto.StartDirectConversationRequest
 import de.maurer.baseservice.dto.ToggleReactionRequest
 import de.maurer.baseservice.security.AuthContext
 import de.maurer.baseservice.service.ConversationService
@@ -24,8 +23,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * Chat-Übersicht für Mitglieder: Vereinschat, Direktnachrichten und die
- * Event-Chats, zu denen man eingeladen ist. Rechte prüft der
+ * Chat-Übersicht für Mitglieder: Gruppenchat und die Event-Chats, zu denen man
+ * eingeladen ist. Direktnachrichten sind gruppenübergreifend und liegen im
+ * [DirectConversationController]. Rechte prüft der
  * [ConversationService] (`deny by default`).
  */
 @RestController
@@ -58,11 +58,6 @@ class ConversationController(
     @Operation(summary = "Infotafel setzen", description = "Setzt oder entfernt die Infotafel des Vereinschats (Vorstand/Administration)")
     fun pin(@Valid @RequestBody request: PinNoteRequest): ResponseEntity<ConversationSummaryDto> =
         ResponseEntity.ok(conversationService.pinClubNote(request, authContext.getRequiredPrincipal()))
-
-    @PostMapping("/direct")
-    @Operation(summary = "Direktnachricht beginnen", description = "Liefert den Direktchat mit einem Mitglied und legt ihn bei Bedarf an")
-    fun startDirect(@Valid @RequestBody request: StartDirectConversationRequest): ResponseEntity<ConversationSummaryDto> =
-        ResponseEntity.ok(conversationService.startDirect(request.userId, authContext.getRequiredPrincipal()))
 
     @GetMapping("/{conversationId}/messages")
     @Operation(summary = "Nachrichten lesen", description = "Nachrichten einer Konversation mit Reaktionen")

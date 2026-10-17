@@ -164,13 +164,18 @@ class StammtischContextFilter(
     companion object {
         const val HEADER = "X-Stammtisch-Id"
 
-        /** Endpunkte, die ohne gewählten Stammtisch funktionieren (Konto, Plattform, Push-Geräte). */
+        /** Endpunkte, die ohne gewählten Stammtisch funktionieren (Konto, Plattform, Push-Geräte, persönliche Bereiche). */
         private val STAMMTISCH_FREE_PREFIXES = listOf(
             "/api/v1/auth/",
             "/api/v1/stammtische",
             "/api/v1/signup",
             "/api/v1/platform/",
             "/api/v1/drink-library",
+            // Gruppenübergreifend: Kalender, Freundesliste, Direktnachrichten und deren Push-Mitteilungen.
+            "/api/v1/calendar",
+            "/api/v1/friends",
+            "/api/v1/direct-conversations",
+            "/api/v1/personal-notifications",
             "/api/v1/member-invites/preview",
             "/api/v1/member-invites/register",
             "/api/v1/member-invites/join",

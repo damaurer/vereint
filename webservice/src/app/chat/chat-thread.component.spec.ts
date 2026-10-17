@@ -73,7 +73,7 @@ describe('ChatThreadComponent', () => {
 
   it('marks the conversation read when opened and refreshes the chat badge', async () => {
     const fixture = await create();
-    expect(api.markRead).toHaveBeenCalledWith('c-club');
+    expect(api.markRead).toHaveBeenCalledWith('c-club', 'club');
     expect(store.refresh).toHaveBeenCalled();
     expect(fixture.componentInstance).toBeTruthy();
   });
@@ -94,7 +94,7 @@ describe('ChatThreadComponent', () => {
     expect(reaction?.textContent).toContain('2');
     reaction!.click();
     fixture.detectChanges();
-    expect(api.toggleReaction).toHaveBeenCalledWith('c-club', 'm-1', '🍺');
+    expect(api.toggleReaction).toHaveBeenCalledWith('c-club', 'm-1', '🍺', 'club');
     expect(root(fixture).querySelector('.chat-reaction')?.textContent).toContain('3');
     expect(root(fixture).querySelector('.chat-reaction.is-active')).toBeTruthy();
   });
@@ -107,7 +107,7 @@ describe('ChatThreadComponent', () => {
       (button) => button.textContent?.includes('🍺'),
     );
     beer!.click();
-    expect(api.toggleReaction).toHaveBeenCalledWith('c-club', 'm-1', '🍺');
+    expect(api.toggleReaction).toHaveBeenCalledWith('c-club', 'm-1', '🍺', 'club');
   });
 
   it('sends a message and clears the draft', async () => {
@@ -116,7 +116,7 @@ describe('ChatThreadComponent', () => {
     component.draft = 'Prost!';
     component.send();
     fixture.detectChanges();
-    expect(api.send).toHaveBeenCalledWith('c-club', 'Prost!');
+    expect(api.send).toHaveBeenCalledWith('c-club', 'Prost!', 'club');
     expect(component.draft).toBe('');
     expect(root(fixture).textContent).toContain('Prost!');
   });

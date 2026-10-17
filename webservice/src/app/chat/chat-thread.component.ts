@@ -198,7 +198,9 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
           </button>
         </form>
       } @else {
-        <p class="chat-readonly" role="status">{{ 'chat.composer.readOnly' | t }}</p>
+        <p class="chat-readonly" role="status">
+          {{ (conversation.type === 'direct' ? 'chat.composer.readOnlyDirect' : 'chat.composer.readOnly') | t }}
+        </p>
       }
     </div>
   `,
@@ -479,7 +481,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     const id = this.conversation.id;
     const before = this.messages();
     this.loadSub?.unsubscribe();
-    this.loadSub = this.api.messages(id).subscribe({
+    this.loadSub = this.api.messages(id, this.conversation.type).subscribe({
       next: (messages) => {
         if (id !== this.conversation.id) return;
         const isFirst = before === null;
@@ -510,7 +512,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
 
     this.sending.set(true);
     this.actionError.set(null);
-    this.api.send(id, text).subscribe({
+    this.api.send(id, text, this.conversation.type).subscribe({
       next: (message) => {
         this.sending.set(false);
         this.draft = '';
@@ -543,7 +545,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     if (this.reacting()) return;
     this.reacting.set(true);
     this.actionError.set(null);
-    this.api.toggleReaction(id, message.id, emoji).subscribe({
+    this.api.toggleReaction(id, message.id, emoji, this.conversation.type).subscribe({
       next: (updated) => {
         this.reacting.set(false);
         this.pickerFor.set(null);
@@ -561,7 +563,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
 
   private markRead(): void {
     const id = this.conversation.id;
-    this.api.markRead(id).subscribe({
+    this.api.markRead(id, this.conversation.type).subscribe({
       next: (summary) => {
         this.read.emit(summary);
         this.unreadStore.refresh();

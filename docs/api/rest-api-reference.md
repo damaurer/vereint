@@ -176,15 +176,21 @@ Fachlich: [Einladungslinks](../domains/member-invites.md).
 | `GET` | `/api/v1/events/{eventId}/chat/conversations/{conversationId}` | Einzelne Unterhaltung des Events | wie oben |
 | `GET` / `POST` | `/api/v1/events/{eventId}/chat/conversations/{conversationId}/messages` | Nachrichten dieser Unterhaltung | wie oben |
 | `GET` / `POST` | `/api/v1/events/{eventId}/chat/guest/messages` | Nachrichten als Gast lesen bzw. senden | Gast (`X-Guest-Token`) |
-| `GET` | `/api/v1/conversations` | Eigene Unterhaltungen (Gruppenchat, Direktnachrichten, Event-Chats) | Mitglied |
-| `GET` | `/api/v1/conversations/unread-count` | Ungelesene Nachrichten | Mitglied |
+| `GET` | `/api/v1/conversations` | Eigene Unterhaltungen der Gruppe (Gruppenchat, Event-Chats) | Mitglied |
+| `GET` | `/api/v1/conversations/unread-count` | Ungelesene Nachrichten der Gruppe plus aller Direktnachrichten | Mitglied |
 | `GET` | `/api/v1/conversations/club` | Gruppenchat | Mitglied |
 | `PUT` | `/api/v1/conversations/club/pin` | Infotafel im Gruppenchat setzen (`PinNoteRequest`) | `chat.moderate` oder `event.manage` |
-| `POST` | `/api/v1/conversations/direct` | Direktnachricht beginnen (`StartDirectConversationRequest`) | Mitglied |
 | `GET` / `POST` | `/api/v1/conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/read` | Als gelesen markieren | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Mitglied der Unterhaltung |
+| `GET` | `/api/v1/direct-conversations` | Eigene Direktnachrichten über alle Gruppen | Angemeldet |
+| `GET` | `/api/v1/direct-conversations/unread-count` | Ungelesene Direktnachrichten | Angemeldet |
+| `POST` | `/api/v1/direct-conversations` | Gespräch beginnen oder bestehendes liefern (`StartDirectConversationRequest`) | Freunde oder gemeinsame Gruppe |
+| `GET` / `POST` | `/api/v1/direct-conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden (senden nur mit Freundschaft oder gemeinsamer Gruppe) | Beteiligte |
+| `POST` | `/api/v1/direct-conversations/{conversationId}/read` | Als gelesen markieren | Beteiligte |
+| `POST` | `/api/v1/direct-conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Beteiligte |
 | `GET` | `/api/v1/notifications` | Eigene Mitteilungen | Angemeldet |
+| `GET` | `/api/v1/personal-notifications` | Persönliche Mitteilungen für Push: ungelesene Direktnachrichten, Freundschaftsanfragen, frisch angenommene Anfragen (ohne Gruppe) | Angemeldet |
 | `GET` | `/api/v1/notifications/unread-count` | Anzahl ungelesener Mitteilungen | Angemeldet |
 | `POST` | `/api/v1/notifications/read-all` | Alle als gelesen markieren | Angemeldet |
 | `POST` | `/api/v1/notifications/{notificationId}/read` | Eine Mitteilung als gelesen markieren | Angemeldet |
@@ -196,6 +202,18 @@ Fachlich: [Einladungslinks](../domains/member-invites.md).
 
 Neue Nachrichten holt die App per Polling; einen WebSocket-Endpunkt gibt es nicht.
 
+
+### 7a. Kalender und Freunde (`CalendarController`, `FriendController`)
+Gruppenübergreifend und ohne gewählte Gruppe, siehe [Kalender, Freunde und Direktnachrichten](../domains/kalender-freunde-direktnachrichten.md).
+
+| Methode | Pfad | Beschreibung | Berechtigung |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/calendar?from=…&to=…` | Sichtbare Events und Moments aller eigenen Gruppen (`CalendarDto`), höchstens 400 Tage | Angemeldet |
+| `GET` | `/api/v1/friends` | Freunde und offene Anfragen (`FriendsOverviewDto`) | Angemeldet |
+| `GET` | `/api/v1/friends/contacts` | Personen aus den eigenen Gruppen und Freunde (`FriendContactDto`) | Angemeldet |
+| `POST` | `/api/v1/friends/requests` | Freundschaftsanfrage senden (`FriendRequestRequest`) | gemeinsame Gruppe |
+| `POST` | `/api/v1/friends/requests/{userId}/accept` | Anfrage annehmen | Angefragte Person |
+| `DELETE` | `/api/v1/friends/{userId}` | Anfrage ablehnen oder zurückziehen, Freundschaft beenden | Beteiligte |
 ### 8. Bilder, Statistik & Audit-Logs (`ImageController`, `StatisticsController`, `AuditLogController`)
 | Methode | Pfad | Beschreibung | Berechtigung |
 | :--- | :--- | :--- | :--- |

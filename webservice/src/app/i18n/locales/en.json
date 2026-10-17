@@ -306,7 +306,9 @@
       "admin": "Administration",
       "tablet": "Bar terminal",
       "scan": "Pay",
-      "stammtisch": "Group settings"
+      "stammtisch": "Group settings",
+      "calendar": "Calendar",
+      "friends": "Friends"
     },
     "sections": {
       "club": "Group",
@@ -556,6 +558,14 @@
     "terms": {
       "title": "Terms",
       "description": "Terms and conditions of Vereint."
+    },
+    "calendar": {
+      "title": "Calendar",
+      "description": "Events and moments from all your groups."
+    },
+    "friends": {
+      "title": "Friends",
+      "description": "Your friends list across all groups."
     }
   },
   "chat": {
@@ -605,7 +615,8 @@
       "send": "Send",
       "sendFailed": "Message could not be sent. Please try again.",
       "attachUnavailable": "Attachments are currently unavailable.",
-      "readOnly": "You can no longer write in this chat."
+      "readOnly": "You can no longer write in this chat.",
+      "readOnlyDirect": "You are neither friends nor share a group. The history stays readable, but you cannot send new messages."
     },
     "direct": {
       "eyebrow": "Direct messages",
@@ -613,8 +624,8 @@
       "badge": "DMs",
       "toGroupChat": "← To the group chat",
       "unavailable": "Direct messages unavailable",
-      "searchLabel": "Search members",
-      "searchPlaceholder": "Search members…",
+      "searchLabel": "Search conversations",
+      "searchPlaceholder": "Search conversations…",
       "conversations": "Conversations ({count})",
       "emptyTitle": "No conversations",
       "emptyMessage": "There are no matching one-to-one chats.",
@@ -622,14 +633,70 @@
       "noneSelectedTitle": "No conversation selected",
       "noneSelectedMessage": "Pick a conversation on the left or start a new one.",
       "pickerTitle": "New message",
-      "pickerSearchLabel": "Search member",
+      "pickerSearchLabel": "Find a person",
       "pickerSearchPlaceholder": "Type a name…",
-      "pickerLoading": "Loading members.",
-      "pickerUnavailable": "Members unavailable",
-      "pickerEmptyTitle": "No members found",
-      "pickerEmptyMessage": "No member matches your search.",
-      "pickerStarting": "Opening…"
+      "pickerLoading": "Loading your contacts.",
+      "pickerUnavailable": "Contacts unavailable",
+      "pickerEmptyTitle": "Nobody found",
+      "pickerEmptyMessage": "You can write to friends and people from your groups.",
+      "pickerStarting": "Opening…",
+      "toFriends": "Friends",
+      "friend": "Friend"
     }
+  },
+  "calendar": {
+    "eyebrow": "Across all groups",
+    "title": "My calendar",
+    "intro": "See past and upcoming events and moments from all your groups. Each entry shows which group it belongs to.",
+    "navLabel": "Choose month",
+    "previous": "Previous month",
+    "next": "Next month",
+    "today": "Today",
+    "groupFilter": "Group",
+    "allGroups": "All groups",
+    "unavailable": "Calendar unavailable",
+    "loadingMessage": "Loading your dates.",
+    "emptyTitle": "No entries",
+    "emptyMonth": "There are no events or moments this month.",
+    "emptyDay": "There are no events or moments on this day.",
+    "showMonth": "Show whole month",
+    "monthAgenda": "Everything in {month}",
+    "kindEvent": "Event",
+    "kindMoment": "Moment",
+    "location": "Location: {name}",
+    "atEvent": "At the event “{name}”",
+    "momentActive": "Happening now",
+    "opening": "Opening…",
+    "entries": "{count} entries",
+    "switchFailed": "Could not switch to the group “{name}”."
+  },
+  "friends": {
+    "eyebrow": "Across all groups",
+    "title": "Friends",
+    "toDirect": "To direct messages",
+    "intro": "Add people from your groups as friends. Friends stay even if you no longer share a group, and you can keep sending each other direct messages.",
+    "unavailable": "Friends list unavailable",
+    "loadingMessage": "Loading your friends.",
+    "incoming": "Requests to you ({count})",
+    "friends": "Your friends ({count})",
+    "outgoing": "Your requests ({count})",
+    "accept": "Accept",
+    "decline": "Decline",
+    "withdraw": "Withdraw",
+    "message": "Message",
+    "remove": "Remove",
+    "confirmRemove": "Really remove",
+    "waiting": "Waiting for an answer",
+    "noSharedGroup": "No shared group anymore",
+    "emptyTitle": "No friends yet",
+    "emptyMessage": "Add people from your groups below.",
+    "addTitle": "Add friends",
+    "addHint": "You can only send requests to people you share a group with.",
+    "searchLabel": "Find a person",
+    "searchPlaceholder": "Type a name…",
+    "add": "Send request",
+    "noCandidatesTitle": "Nobody to add",
+    "noCandidatesMessage": "Everyone from your groups is already a friend or has a request, or nobody matches your search."
   },
   "moments": {
     "eyebrow": "Community moments & rituals",
