@@ -230,6 +230,8 @@ FOR EACH ROW EXECUTE FUNCTION vereint_reject_ledger_mutation();
 | `014` | `014-drink-library.xml` | Gemeinsame Getränkedatenbank (`drink_library`, `drink_library_barcodes`) ohne Preise. |
 | `015` | `015-billing.xml` | Tarife je Gruppe (`stammtisch_subscriptions`) und verarbeitete Stripe-Ereignisse (`billing_events`). |
 | `016` | `016-terms-acceptance.xml` | Zugestimmte AGB-Fassung je Konto (`users.terms_version`, `users.terms_accepted_at`). |
-| `017` | `017-friends-and-direct-messages.xml` | Freundesliste und gruppenübergreifende Direktnachrichten; Umzug bestehender Direktchats. |
+| `017` | `017-drink-library-seed.xml` | Startbestand der Getränkedatenbank. |
+| `018` | `018-drink-library-seed-breweries.xml` | Weitere Getränke aus Brauerei-Sortimenten. |
+| `019` | `019-friends-and-direct-messages.xml` | Freundesliste und gruppenübergreifende Direktnachrichten; Umzug bestehender Direktchats. |
 
 Die Nummer `006` ist nicht vergeben.

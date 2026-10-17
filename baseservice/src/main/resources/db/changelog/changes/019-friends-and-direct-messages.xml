@@ -17,12 +17,12 @@
         </or>
     </preConditions>
 
-    <!-- 210. Freundesliste. Freundschaften gehören wie `users` zu den Konten und
+    <!-- 220. Freundesliste. Freundschaften gehören wie `users` zu den Konten und
          keiner Gruppe: Sie bleiben, wenn jemand eine Gruppe verlässt. Darum gibt
          es hier keine stammtisch_id und keine Row-Level-Security; der
          FriendService gibt jede Zeile nur an die beiden Beteiligten heraus.
          `pair_key` sind die sortierten Konto-IDs: je Paar genau eine Zeile. -->
-    <changeSet id="210-create-friendships" author="claude">
+    <changeSet id="220-create-friendships" author="claude">
         <createTable tableName="friendships">
             <column name="id" type="${uuid.type}">
                 <constraints primaryKey="true" nullable="false"/>
@@ -58,12 +58,12 @@
         </rollback>
     </changeSet>
 
-    <!-- 211. Direktnachrichten gruppenübergreifend: genau ein Gespräch je
+    <!-- 221. Direktnachrichten gruppenübergreifend: genau ein Gespräch je
          Personenpaar, unabhängig von der Gruppe. Wie die Freundschaften gehören
          sie den beiden Konten und keiner Gruppe (keine stammtisch_id, keine
          Row-Level-Security); der DirectMessageService lässt nur die beiden
          Beteiligten lesen und schreiben. Nachrichten bleiben verschlüsselt. -->
-    <changeSet id="211-create-direct-messages" author="claude">
+    <changeSet id="221-create-direct-messages" author="claude">
         <createTable tableName="direct_conversations">
             <column name="id" type="${uuid.type}">
                 <constraints primaryKey="true" nullable="false"/>
@@ -153,7 +153,7 @@
         </rollback>
     </changeSet>
 
-    <!-- 212. Bisherige Direktnachrichten (je Gruppe in `conversations` mit
+    <!-- 222. Bisherige Direktnachrichten (je Gruppe in `conversations` mit
          type = 'direct') ziehen in die neuen Tabellen um. Hatte ein Paar in
          mehreren Gruppen schon einen Direktchat, werden die Verläufe zu einem
          Gespräch zusammengeführt. Die Schlüssel sind gleich aufgebaut (sortierte
@@ -161,7 +161,7 @@
          (der Schlüssel hängt nicht an der Gruppe). Alles läuft in einer
          Transaktion: erst kopieren, dann die alten Zeilen löschen. Die alten
          Tabellen haben Row-Level-Security, daher der Bypass. -->
-    <changeSet id="212-move-direct-messages" author="claude" dbms="postgresql">
+    <changeSet id="222-move-direct-messages" author="claude" dbms="postgresql">
         <sql splitStatements="true">
             SET LOCAL vereint.rls_bypass = 'on';
 

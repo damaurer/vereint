@@ -33,6 +33,8 @@
     <include file="db/changelog/changes/014-drink-library.xml"/>
     <include file="db/changelog/changes/015-billing.xml"/>
     <include file="db/changelog/changes/016-terms-acceptance.xml"/>
-    <include file="db/changelog/changes/017-friends-and-direct-messages.xml"/>
+    <include file="db/changelog/changes/017-drink-library-seed.xml"/>
+    <include file="db/changelog/changes/018-drink-library-seed-breweries.xml"/>
+    <include file="db/changelog/changes/019-friends-and-direct-messages.xml"/>
 
 </databaseChangeLog>

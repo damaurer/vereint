@@ -1,0 +1,138 @@
+krombacher|Krombacher
+warsteiner|Warsteiner
+stortebe(c)?ker|Störtebeker
+bitburger|Bitburger
+schofferhofer|Schöfferhofer
+paulaner|Paulaner
+flensburger|Flensburger
+veltins|Veltins
+grevensteiner|Grevensteiner
+oettinger|Oettinger
+^becks?$|^beck-s$|Beck's
+monchshof|Mönchshof
+lammsbrau|Neumarkter Lammsbräu
+erdinger|Erdinger
+karlsberg|Karlsberg
+holsten|Holsten
+licher|Licher
+hacker-pschorr|Hacker-Pschorr
+schwaben-brau|Schwaben Bräu
+jever|Jever
+tegernsee|Tegernseer
+berliner-kindl|Berliner Kindl
+lubzer|Lübzer
+ayinger|Ayinger
+schneider-weisse|Schneider Weisse
+waldhaus|Waldhaus
+eichbaum|Eichbaum
+franziskaner|Franziskaner
+astra$|Astra
+rothaus|Rothaus
+gaffel|Gaffel
+dithmarscher|Dithmarscher
+kostritzer|Köstritzer
+flotzinger|Flötzinger
+alpirsbacher|Alpirsbacher
+spaten|Spaten
+allgauer-brauhaus|Allgäuer Brauhaus
+einbecker|Einbecker
+tucher|Tucher
+schonbuch|Schönbuch
+radeberger|Radeberger
+pinkus|Pinkus
+riedenburger|Riedenburger
+ratsherrn|Ratsherrn
+braufactum|BraufactuM
+stuttgarter-hofbrau|Stuttgarter Hofbräu
+^finne$|Finne
+lowenbrau|Löwenbräu
+giesinger|Giesinger
+^brlo$|BRLO
+bolten|Bolten
+stauder|Stauder
+^fruh|Früh
+arcobrau|Arcobräu
+furstenberg|Fürstenberg
+freiberger|Freiberger
+hasseroder|Hasseröder
+maisel|Maisel
+^abk$|ABK
+pott-s|Pott's
+^gutmann|Gutmann
+lang-brau|Lang-Bräu
+schimpf|Schimpf
+benediktiner|Benediktiner
+^binding|Binding
+wolters|Wolters
+wulle|Wulle
+paderborner|Paderborner
+moritz-fiege|Moritz Fiege
+weihenstephan|Weihenstephaner
+^faust|Faust
+meinel-brau|Meinel-Bräu
+insel-brauerei|Insel-Brauerei Rügen
+^camba|Camba Bavaria
+krug-brau|Krug-Bräu
+hochdorfer|Hochdorfer
+hirsch-brauerei|^hirsch$|Hirsch-Brauerei Honer
+pfungstadter|Pfungstädter
+konig-ludwig|König Ludwig
+schultheiss|Schultheiss
+berliner-pilsner|Berliner Pilsner
+^hutt|Hütt
+hasen-brau|Hasen-Bräu
+auerbrau|Auerbräu
+ho(e)?pfner|Hoepfner
+weltenburger|Weltenburger
+kuchlbauer|Kuchlbauer
+vogelsberger|Vogelsberger Landbrauereien
+andechs|Andechser
+reissdorf|Reissdorf
+mauritius-brauerei|Mauritius
+stralsunder|Stralsunder
+darguner|Darguner
+wernesgruner|Wernesgrüner
+leikeim|Leikeim
+altenburger|Altenburger
+bayreuther|Bayreuther
+kloster-scheyern|Kloster Scheyern
+gessner|Gessner
+schaffler|Schäffler
+wiesener|Wiesener
+asgaard|Asgaard
+zotler|Zötler
+schonram|Schönramer
+grunbach|Grünbacher
+^welde|Welde
+distelhausen|Distelhausen
+^gruner|Grüner
+zirndorfer|Zirndorfer
+kulmbacher|Kulmbacher
+gold-ochsen|Gold Ochsen
+^sunner|Sünner
+herrnbrau|Herrnbräu
+meckatzer|Meckatzer
+braustolz|Braustolz
+krostitzer|Ur-Krostitzer
+neunspringe|Neunspringe
+maxlrain|Maxlrainer
+sternquell|Sternquell
+schanzenbrau|Schanzenbräu
+kitzmann|Kitzmann
+olchinger|Olchinger Braumanufaktur
+kraftpaule|Kraftpaule
+hacklberg|Hacklberg
+wieninger|Wieninger
+unertl|Unertl
+riegele|^spezi$|Riegele
+bischofshof|Bischofshof
+aldersbacher|Aldersbacher
+ettaler|Ettaler
+hofmuhl|Hofmühl
+hofbrauhaus-freising|Hofbrauhaus Freising
+kapuziner|Kapuziner
+sternburg|Sternburg
+clausthaler|Clausthaler
+diebels|Diebels
+hofbrau-munchen|^hb-|Hofbräu München
+augustiner|Augustiner

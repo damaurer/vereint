@@ -78,7 +78,7 @@ Bereiche etwas aus einer Gruppe, in der er nicht selbst aktives Mitglied ist.
 
 ### Daten
 
-Migration `017-friends-and-direct-messages.xml`:
+Migration `019-friends-and-direct-messages.xml`:
 
 | Tabelle | Inhalt |
 | :--- | :--- |
@@ -93,7 +93,7 @@ deshalb keine Spalte `stammtisch_id`, erben nicht von `StammtischScoped` und
 haben keine Row-Level-Security. Den Zugriff prüfen allein die Fachservices: Jede
 Zeile geht nur an die beiden beteiligten Personen.
 
-Changeset 212 zieht die bisherigen Direktnachrichten (je Gruppe in
+Changeset 222 zieht die bisherigen Direktnachrichten (je Gruppe in
 `conversations` mit `type = 'direct'`) in die neuen Tabellen um. Hatte ein Paar
 in mehreren Gruppen schon einen Direktchat, werden die Verläufe zu einem
 Gespräch zusammengeführt. Die Nachrichten bleiben unverändert verschlüsselt, da
