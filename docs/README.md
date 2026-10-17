@@ -68,7 +68,7 @@ docs/
 │   ├── events-and-invites.md             # Event-Lebenszyklus, RSVPs & Gast-Einladungstoken
 │   ├── tablet-strichliste-recorder.md    # Kiosk-Strichliste, 1-Tap-Buchung & Abendabrechnung
 │   ├── chat-and-push-notifications.md    # Gruppenchat, Direktnachrichten & VAPID Web Push
-│   └── statistics-and-analytics.md       # Verbrauchs- & Eber-Statistiken, Auswertungen
+│   └── statistics-and-analytics.md       # Gruppenstatistik und Audit-Protokoll
 │
 ├── frontend/                             # Client-Architektur & UI-Bibliothek
 │   ├── angular-ssr-and-pwa.md            # Angular 22 SSR, Express BFF & PWA-Caching
