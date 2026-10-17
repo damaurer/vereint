@@ -1,2 +1,6 @@
 .env
 /.junie/plans
+
+# Lokaler Stack (local/vereint.mjs)
+/local/.env.local
+/local/test-results/
