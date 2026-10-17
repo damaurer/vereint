@@ -31,7 +31,7 @@ Um einen neuen Endpunkt (z. B. für Webhooks oder Systemstatus) zu registrieren:
 ---
 
 ### 2. Neue öffentliche Seite registrieren
-Öffentliche Seiten (z. B. `/impressum`, `/datenschutz`) müssen ohne Login-Zwang aufrufbar sein:
+Öffentliche Seiten (z. B. eine Seite `/datenschutz`) müssen ohne Login-Zwang aufrufbar sein:
 
 1. **`publicPaths` ergänzen** in `webservice/src/server/config/server-config.ts`:
    ```typescript
@@ -39,7 +39,10 @@ Um einen neuen Endpunkt (z. B. für Webhooks oder Systemstatus) zu registrieren:
      '/auth/error',
      '/auth/logged-out',
      '/invite/accept',
-     '/impressum',    // <-- Hinzugefügt
+     '/register',
+     '/gruppe-eroeffnen',
+     '/impressum',
+     '/agb',
      '/datenschutz',  // <-- Hinzugefügt
      '/403',
      '/404',
@@ -49,7 +52,6 @@ Um einen neuen Endpunkt (z. B. für Webhooks oder Systemstatus) zu registrieren:
    ```typescript
    export const KNOWN_APP_PREFIXES: readonly string[] = [
      // ...
-     '/impressum',
      '/datenschutz',
    ];
    ```
@@ -85,7 +87,7 @@ Wenn ein neuer geschützter Bereich entsteht (z. B. ein eigenes Kassenprüfer-Mo
    ```
 3. **Login-Ziel & Fallback festlegen**:
    - In `webservice/src/server/auth/redirect.ts`: `CONTEXT_DEFAULT_PATHS` für den Standard-Rücksprungpfad nach dem Login ergänzen.
-4. **Backend-Matrix abstimmen**: Im Spring-Boot-Backend (`baseservice/.../security/RolePermissionMatrix.kt`) die Rollen und Berechtigungen für den neuen `AppContext` freigeben.
+4. **Backend abstimmen**: Im Spring-Boot-Backend die Konstante in `AppContext` (`security/SecurityContracts.kt`) ergänzen und in `AccessResolverService.computeAllowedAppContexts` festlegen, welche Permission der Gruppe den Kontext öffnet.
 
 ---
 
@@ -158,7 +160,6 @@ import {
   uninstallTestKeySet,
   signTokenPair,
 } from './testing/token-fixtures';
-import { resetTestEnvironmentOverrides } from '../config/environment';
 
 describe('Mein Auth-Test', () => {
   beforeEach(async () => {
@@ -168,7 +169,6 @@ describe('Mein Auth-Test', () => {
 
   afterEach(() => {
     uninstallTestKeySet();
-    resetTestEnvironmentOverrides();
   });
 
   it('sollte ein gültiges Keycloak-Tokenpaar signieren', async () => {
@@ -194,6 +194,7 @@ describe('Mein Auth-Test', () => {
 | `401 oidc_session_expired` bei API-Aufrufen | Session-Cookie abgelaufen oder Token-Refresh fehlgeschlagen (Keycloak nicht erreichbar). | Keycloak-Container prüfen (`docker compose ps`) und neu einloggen. |
 | `503 service_unavailable` bei Seitenaufrufen | Spring Boot Fachservice antwortet nicht innerhalb des 800-ms-Timeouts. | Spring-Logs prüfen; Verbindung über `SPRING_API_BASE_URL` prüfen. |
 | Browser meldet `Cookie too large` | Session-Token überschreitet `MAX_SESSION_COOKIE_BYTES` (18 KB). | Rollen und Scopes in Keycloak minimieren. |
+| Seiten leiten immer auf `/gruppen` | Die Session hat Mitgliedschaften, aber keine gewählte Gruppe (Cookie `vereint.stammtisch` fehlt oder ist ungültig). | Gruppe in der Oberfläche wählen (`POST /api/auth/stammtisch`). |
 | Angular Hydration Mismatch | TransferState wurde durch `sanitizeTransferState` bereinigt, Client erwartet jedoch ein gefiltertes Feld. | Prüfen, ob das Feld vertraulich ist. Falls unkritisch, in `TRANSFER_STATE_ALLOWLIST` aufnehmen. |
 
 ---

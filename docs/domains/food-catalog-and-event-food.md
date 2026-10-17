@@ -1,12 +1,12 @@
 # Fachdomäne: Speisenkatalog & Eventspeisen
 
-Die Speisenverwaltung in **Vereint** ermöglicht die strukturierte Verwaltung von Verzehrangeboten – vom zentralen Speisenkatalog der Gruppe bis hin zum veranstaltungsspezifischen Speisenangebot mit individueller Preisanpassung und Kiosk-Steuerung.
+Die Speisenverwaltung in **Vereint** ermöglicht die strukturierte Verwaltung von Verzehrangeboten – vom Speisenkatalog der Gruppe bis hin zum veranstaltungsspezifischen Speisenangebot mit individueller Preisanpassung und Kiosk-Steuerung.
 
 ---
 
 ## 🎯 Fachliche Sicht (Business Domain)
 
-### 1. Globaler Speisenkatalog (`food_catalog`)
+### 1. Speisenkatalog der Gruppe (`food_catalog`)
 - **Stammdatenverwaltung**: Zentrales Sortiment aller in der Gruppe zubereiteten oder angebotenen Speisen (z. B. Grillgut, Kuchen, Brezeln, Snacks, vegetarische/vegane Optionen).
 - **Attribute**:
   - Name, Beschreibung und Kategorie (z. B. `Grill`, `Kuchen`, `Snacks`).
@@ -15,20 +15,20 @@ Die Speisenverwaltung in **Vereint** ermöglicht die strukturierte Verwaltung vo
   - Status (`active: Boolean`) zur Deaktivierung saisonaler oder nicht mehr angebotener Speisen.
   - Ersteller-Referenz (`created_by`) für Revisions- und Audit-Zwecke.
 - **Berechtigungen**:
-  - Speisenkatalog ansehen: Alle aktiven Mitglieder sehen aktive Speisen; inaktive Speisen sind Vorständen (`board`) und Administratoren (`admin`) vorbehalten.
-  - Speisen anlegen & bearbeiten: Nur Vorstand und Administration (`board`, `admin`).
+  - Speisenkatalog ansehen: Alle Mitglieder der Gruppe sehen aktive Speisen; inaktive sieht nur, wer `catalog.approve` hat (Startwert: Vorstand und Admin).
+  - Speisen anlegen & bearbeiten: nur mit `catalog.approve`.
 
 ### 2. Eventspezifische Speisen (`event_food`)
-- **Veranstaltungsbezogenes Angebot**: Jedes Event kann eine maßgeschneiderte Auswahl an Speisen aus dem Gesamtkatalog zusammenstellen.
+- **Veranstaltungsbezogenes Angebot**: Jedes Event stellt eine eigene Auswahl an Speisen aus dem Katalog der Gruppe zusammen; jede Speise höchstens einmal je Event.
 - **Preis- & Margen-Flexibilität**:
   - **Verkaufspreis (`price` / `effectivePrice`)**: Kann pro Event individuell festgelegt werden (z. B. Sonderpreise für Sommerfest). Bleibt `price` leer (`null`), greift automatisch der `defaultPrice` des Katalogs.
   - **Einkaufspreis (`costPrice` / `effectiveCostPrice`)**: Kann eventbezogen angepasst werden (z. B. bei tagesaktuellen Metzgereipreisen). Bleibt `costPrice` leer, gilt der Katalogwert.
 - **Kanal- und Kiosk-Steuerung**:
   - `tabletEnabled: Boolean`: Steuert die Anzeige auf dem Tablet Strichlisten-Recorder an der Theke/Küche.
-  - `selfServiceEnabled: Boolean`: Steuert die Verfügbarkeit für künftige Self-Service- und PWA-Buchungen.
+  - `selfServiceEnabled: Boolean`: wird gespeichert; Barcode-Käufe in der App betreffen derzeit nur Getränke.
 - **Berechtigungen**:
-  - Eventspeisen verwalten (`POST`, `PUT`, `DELETE`): Event-Owner sowie Vorstände/Administratoren (`event.manage`).
-  - Eventspeisen abrufen (`GET`): Event-Teilnehmer und berechtigte Kiosk-Recorder (`event.read`).
+  - Eventspeisen verwalten (`POST`, `PUT`, `DELETE`): Veranstalter und wer `event.manage` hat.
+  - Eventspeisen abrufen (`GET /api/v1/events/{eventId}/food`): Veranstalter, Eingeladene und wer `event.manage` hat; die Theke liest sie über `/api/v1/tablet/events/{eventId}/food` bzw. `/items` (`purchase.tablet`).
 
 ---
 
@@ -39,8 +39,8 @@ Die Speisenverwaltung in **Vereint** ermöglicht die strukturierte Verwaltung vo
   - `FoodCatalogController`: Endpunkte unter `/api/v1/food` für Stammdatenverwaltung.
   - `EventFoodController`: Endpunkte unter `/api/v1/events/{eventId}/food` für veranstaltungsbezogene Speisen.
 - **Services**:
-  - `FoodCatalogService`: Validiert Namensregeln, Preise, Dezimalstellen und Rollenberechtigungen.
-  - `EventFoodService`: Prüft Event-Existenz, Berechtigungen (`event.manage`), Dubletten-Schutz (`uk_event_food_event_food`) und berechnet effektive Preise (`effectivePrice`, `effectiveCostPrice`).
+  - `FoodCatalogService`: Validiert Namensregeln, Preise, Dezimalstellen und Berechtigungen (`catalog.approve`).
+  - `EventFoodService`: Prüft Event-Existenz, Berechtigungen (Veranstalter oder `event.manage`), Dubletten-Schutz (`uk_event_food_event_food`) und berechnet effektive Preise (`effectivePrice`, `effectiveCostPrice`).
 - **Repositories**: `FoodCatalogRepository`, `EventFoodRepository`.
 - **Entitäten**: `FoodCatalogEntity`, `EventFoodEntity` (in `FoodEntities.kt`).
 
@@ -125,12 +125,12 @@ data class EventFoodDto(
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Owner as Event-Owner / Vorstand
+    actor Owner as Veranstalter / Vorstand
     participant Spring as EventFoodController / Service
     participant DB as PostgreSQL (event_food)
 
     Owner->>Spring: POST /api/v1/events/{eventId}/food (foodId: "...", price: 3.50, costPrice: 1.20)
-    Note over Spring: Prüft Event-Status, Rechte ('event.manage') & Food-Aktivität
+    Note over Spring: Prüft Rechte (Veranstalter oder event.manage), Speise und Dubletten
     Spring->>DB: INSERT INTO event_food (event_id, food_id, price, cost_price, tablet_enabled = true)
     DB-->>Spring: Committed
     Spring-->>Owner: 201 Created (EventFoodDto: effectivePrice = 3.50, effectiveCostPrice = 1.20)

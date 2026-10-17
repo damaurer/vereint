@@ -8,11 +8,13 @@ Voraussetzung: Das Tablet ist mit dem Thekenkonto angemeldet (siehe [Thekentable
 
 <img src="bilder/t-event-waehlen.png" alt="Aktive Events am Terminal" width="720">
 
-Öffne **Verwaltung → Thekenterminal**. Unter **Aktive Events** stehen alle Abende, die gerade laufen. Tippe beim richtigen Abend auf **Auswählen**.
+Öffne **Thekenterminal** (am Handy unter **Mehr**, Abschnitt **Verwaltung**; am Rechner links unter **Verwaltung**). Unter **Aktive Events** stehen alle Abende, die gerade laufen. Tippe beim richtigen Abend auf **Auswählen**.
 
 Erscheint kein Event, ist der Abend noch nicht auf **Aktiv** gestellt. Bitte den Vorstand oder Gastgeber darum.
 
 ## Kiosk-Modus
+
+<img src="bilder/t-kiosk-start.png" alt="Kiosk-Modus starten" width="720">
 
 Im **Kiosk-Modus** bleibt das Tablet auf der Strichliste: Menü, Mitteilungen und Abmelden sind ausgeblendet, und auch nach Neuladen oder Schließen und Öffnen der App landet es wieder hier, beim zuletzt gewählten Abend.
 
@@ -20,7 +22,9 @@ Im **Kiosk-Modus** bleibt das Tablet auf der Strichliste: Menü, Mitteilungen un
 2. Optional einen **Gerätenamen** eintragen, z. B. „Theke links“.
 3. Eine **PIN** aus 4 bis 8 Ziffern vergeben und wiederholen, dann **Starten**.
 
-In den Tarifen Kostenlos und Standard läuft je Gruppe nur ein Thekenterminal gleichzeitig. Ein zweites Gerät meldet dann „Der aktuelle Tarif erlaubt nur ein aktives Thekenterminal.“
+In den Tarifen Kostenlos und Standard läuft je Gruppe nur ein Thekenterminal gleichzeitig. Ein zweites Gerät meldet dann „Im aktuellen Tarif läuft nur ein Thekenterminal gleichzeitig. Beende das andere oder wähle den Tarif Premium.“
+
+<img src="bilder/t-kiosk-entsperren.png" alt="Kiosk-Modus mit PIN verlassen" width="720">
 
 Zum Verlassen oben rechts auf das Schloss (**Kiosk entsperren**) oder auf **Kiosk-Modus verlassen** tippen und die PIN eingeben. Nach 5 falschen Eingaben ist die PIN-Eingabe eine Weile gesperrt. PIN vergessen? Vorstand oder Administration entsperren das Gerät unter **Vorstand → Kiosk-Geräte** (siehe [Leitfaden Vorstand](03-vorstand.md#kiosk-geräte)).
 

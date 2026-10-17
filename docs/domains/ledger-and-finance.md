@@ -1,6 +1,6 @@
 # Fachdomäne: Kassenbuch & Finanzwesen (Ledger)
 
-Das Kassenbuch in **Vereint** bildet das finanzielle Herzstück für Guthabenverwaltung, Getränke- und Speisenabrechnungen, Event-Umsätze und Deckungsbeitragsanalysen. Es folgt strengen Buchhaltungsprinzipien (*Double-Entry Journal*, *Append-Only Revisionssicherheit*, *Idempotenz*).
+Das Kassenbuch in **Vereint** bildet das finanzielle Herzstück für Guthabenverwaltung, Getränke- und Speisenabrechnungen, Event-Umsätze und Deckungsbeitragsanalysen. Es folgt festen Prinzipien: Buchungen werden nur angehängt, nie geändert oder gelöscht (*Append-Only*), und jede Buchung trägt einen Idempotenzschlüssel. Jede Gruppe hat ihr eigenes Kassenbuch.
 
 ---
 
@@ -10,18 +10,19 @@ Das Kassenbuch in **Vereint** bildet das finanzielle Herzstück für Guthabenver
 Das System unterscheidet vier elementare Buchungstypen (`entryType`):
 
 1. **Guthaben-Aufladung (`topup`)**:
-   - Einzahlung eines Mitglieds (z. B. Bargeld an den Kassier oder Überweisung).
+   - Einzahlung eines Mitglieds (z. B. Bargeld an die Kasse oder Überweisung).
    - Erhöht das persönliche Guthaben (`creditBalance`).
 2. **Getränke- & Speisenkauf (`purchase`)**:
    - Abbuchung für konsumierte Getränke (`drink_id`) oder Speisen (`food_id`) am Theken-Tablet oder via PWA-Barcodescan.
    - Verringert das Guthaben im Modus `credit` oder wird als Bareinnahme im Modus `revenueOnly` verbucht.
    - Erzeugt einen unveränderlichen Beleg-Snapshot (`PurchaseSnapshot`) mit Verkaufs- und Einkaufspreis zur exakten Deckungsbeitragsermittlung.
 3. **Guthaben-Auszahlung (`payout`)**:
-   - Rückzahlung von verbleibendem Restguthaben beim Verlassen der Gruppe.
+   - Rückzahlung von Guthaben, z. B. beim Verlassen der Gruppe.
    - Verringert das Guthaben.
 4. **Korrekturbuchung / Stornierung (`correction`)**:
    - Revisionssichere Gegenbuchung zu einer früheren Fehlbuchung.
-   - Da Einträge niemals gelöscht werden dürfen (*Append-Only*), hebt ein Storno den Ursprungsbetrag über einen referenzierten Gegeneintrag auf.
+   - Da Einträge niemals gelöscht werden dürfen (*Append-Only*), hebt ein Storno den Ursprungsbetrag über einen referenzierten Gegeneintrag auf (`reverses_entry_id`). Eine Buchung lässt sich nur einmal stornieren (`409 ledger_already_corrected`).
+   - **Rückgängig**: Eigene Barcode-Käufe und Tablet-Buchungen lassen sich innerhalb von 10 Minuten selbst zurücknehmen; auch das ist eine Korrekturbuchung.
 
 ### Abrechnungsmodi (`accountingMode`)
 - **`credit`**: Der Kaufbetrag wird direkt dem persönlichen Guthabenkonto des Mitglieds belastet.
@@ -33,17 +34,19 @@ Das System unterscheidet vier elementare Buchungstypen (`entryType`):
 
 ### 1. Relevante Komponenten & Klassen
 - **Controller**: `de.maurer.baseservice.controller.LedgerController`
-  - `GET /api/v1/ledger/members/{memberId}/balance` – Aktueller Kontostand (`MemberBalanceDto`)
-  - `GET /api/v1/ledger/members/{memberId}/entries` – Revisionssicherer Kontoauszug
-  - `GET /api/v1/ledger/events/{eventId}/summary` – Gesamtabrechnung eines Events inkl. Umsatz, Wareneinsatz & Gewinn (`EventLedgerSummaryDto`)
-  - `POST /api/v1/ledger/purchases` – PWA Barcode-Kauf (`PurchaseRequest`, erfordert `Idempotency-Key`)
-  - `POST /api/v1/ledger/topups` – Guthabenaufladung (nur Vorstand/Admin)
-  - `POST /api/v1/ledger/payouts` – Guthabenauszahlung (nur Vorstand/Admin)
-  - `POST /api/v1/ledger/corrections` – Gegenbuchung/Storno (`CorrectionRequest`)
+  - `GET /api/v1/ledger/balances`: Guthaben aller Mitglieder (`ledger.read`)
+  - `GET /api/v1/ledger/members/{memberId}/balance`: Kontostand (`MemberBalanceDto`; eigenes Konto oder `ledger.read`)
+  - `GET /api/v1/ledger/members/{memberId}/entries`: Kontoauszug (eigenes Konto oder `ledger.read`)
+  - `GET /api/v1/ledger/events/{eventId}/summary`: Abrechnung eines Events inkl. Umsatz, Wareneinsatz & Gewinn (`EventLedgerSummaryDto`; `ledger.read` oder `event.manage`)
+  - `POST /api/v1/ledger/purchases/preview`: Preis und Event zu einem Barcode vorab (`purchase.self`)
+  - `POST /api/v1/ledger/purchases`: Barcode-Kauf in der App (`PurchaseRequest`, `purchase.self`)
+  - `POST /api/v1/ledger/purchases/{entryId}/undo`: eigenen Barcode-Kauf zurücknehmen (`purchase.self`)
+  - `POST /api/v1/ledger/topups`, `POST /api/v1/ledger/payouts`, `POST /api/v1/ledger/corrections`: Aufladung, Auszahlung, Gegenbuchung (`ledger.correct`, Startwert: Vorstand und Admin)
+  - Alle schreibenden Aufrufe verlangen den Header `Idempotency-Key`.
 - **Service**: `LedgerService`
-  - Berechnet Salden und Deckungsbeiträge über aggregierte SQL-Summenabfragen.
+  - Berechnet Salden aus den Buchungen eines Mitglieds und Event-Summen aus den Buchungen des Events.
   - Speichert `PurchaseSnapshot`-Objekte mit fixem Verkaufs- und Einkaufspreis (`unitPrice`, `costPrice`, `profit = unitPrice - costPrice`) zum Kaufzeitpunkt.
-  - Prüft und persistiert Idempotenzschlüssel in `idempotency_records`.
+  - Erkennt Wiederholungen am Idempotenzschlüssel der Buchung (`ledger_entries.idempotency_key`, eindeutig je Gruppe) und vermerkt Scope und Schlüssel in `idempotency_records`; siehe [Idempotenz](../api/error-handling-and-idempotency.md#-idempotenz-muster--header-spezifikation).
 - **Datenbank & Entitäten**:
   - `LedgerEntry`, `PurchaseSnapshot`, `IdempotencyRecord` (in `LedgerEntities.kt`).
   - PostgreSQL Append-Only Trigger `trg_ledger_entries_append_only` und `trg_purchase_snapshots_append_only`.
@@ -57,11 +60,11 @@ Das System unterscheidet vier elementare Buchungstypen (`entryType`):
 creditBalance = topupTotal - payoutTotal - (creditPurchases) ± (correctionTotal)
 ```
 
-Jeder Buchungsdatensatz speichert den Betrag als `DECIMAL(10,2)` (`amount: BigDecimal`):
-- `topup`: Positiv (`+amount`)
-- `payout`: Negativ (`-amount`)
-- `purchase` (im Modus `credit`): Negativ (`-amount`)
-- `correction`: Hebt den Betrag der Originalbuchung umgekehrt auf (`-original.amount`)
+Jeder Buchungsdatensatz speichert den Betrag positiv als `DECIMAL(10,2)` (`amount: BigDecimal`); die Wirkung auf das Guthaben ergibt sich aus der Buchungsart:
+- `topup`: erhöht (`+amount`)
+- `payout`: verringert (`-amount`)
+- `purchase` im Modus `credit`: verringert (`-amount`); im Modus `revenueOnly` keine Wirkung
+- `correction`: hebt die Wirkung der Originalbuchung auf
 
 ### 2. Deckungsbeitrag & Event-Gewinnermittlung
 Für jeden getätigten Kauf (Getränk oder Speise) wird im Beleg-Snapshot der Reingewinn/Deckungsbeitrag fixiert:
@@ -132,20 +135,22 @@ sequenceDiagram
     autonumber
     actor Member as Mitglied (PWA)
     participant Spring as LedgerController / LedgerService
-    participant IdemRepo as IdempotencyRepository
-    participant DB as LedgerRepository (PostgreSQL)
+    participant DB as PostgreSQL (ledger_entries, purchase_snapshots, idempotency_records)
 
     Member->>Spring: POST /api/v1/ledger/purchases<br/>Header: Idempotency-Key: 7b8e2f...<br/>Body: { eventId, barcode: "4001686301234" }
-    Spring->>IdemRepo: findByScopeAndKey("ledger:purchase", "7b8e2f...")
+    Spring->>DB: Buchung mit idempotency_key = "7b8e2f..." suchen
     alt Schlüssel bereits vorhanden (Retry-Fall)
-        IdemRepo-->>Spring: IdempotencyRecord (Vorherige Response)
-        Spring-->>Member: 201 Created (Gleiche LedgerEntryDto wie zuvor)
+        alt Art, Mitglied, Betrag und Währung gleich
+            Spring-->>Member: 201 Created (dieselbe Buchung wie zuvor)
+        else Daten weichen ab
+            Spring-->>Member: 409 idempotency_conflict
+        end
     else Neuer Request
-        Spring->>DB: Finde EventDrink & DrinkSnapshot zum Barcode
-        Spring->>DB: INSERT INTO ledger_entries (id, member_id, amount = -2.50, currency = 'EUR', entry_type = 'purchase', ...)
+        Spring->>DB: Eventgetränk zum Barcode finden (Selbstbuchung erlaubt?)
+        Spring->>DB: INSERT INTO ledger_entries (member_id, amount = 2.50, currency = 'EUR', entry_type = 'purchase', idempotency_key, ...)
         Spring->>DB: INSERT INTO purchase_snapshots (ledger_entry_id, item_type = 'DRINK', drink_name = "Club Mate", unit_price = 2.50, cost_price = 1.00, profit = 1.50)
-        Spring->>IdemRepo: INSERT INTO idempotency_records (scope, key, response_body)
+        Spring->>DB: INSERT INTO idempotency_records (scope = 'ledger-purchase', idempotency_key, expires_at)
         DB-->>Spring: Transaction Committed
-        Spring-->>Member: 201 Created (Neuer LedgerEntryDto)
+        Spring-->>Member: 201 Created (neuer LedgerEntryDto)
     end
 ```

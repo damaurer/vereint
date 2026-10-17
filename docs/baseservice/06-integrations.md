@@ -1,6 +1,6 @@
 # 🔌 Integrationen, Objektspeicher & Push-Dienste
 
-In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: S3-kompatibler Objektspeicher (AWS S3 in Produktion, MinIO lokal), Web-Push-Zustellung über das VAPID-Protokoll, WebSocket-Echtzeit-Chat sowie die zugehörigen Feature-Toggles.
+In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: S3-kompatibler Objektspeicher (AWS S3 in Produktion, MinIO lokal), Web-Push-Zustellung über das VAPID-Protokoll, Kontoanlage in Keycloak, Stripe sowie die zugehörigen Feature-Toggles.
 
 ---
 
@@ -40,7 +40,7 @@ interface ObjectStorage {
 
 ### 2. Implementierungen & Konfiguration (`StorageConfig.kt`)
 - **`S3ObjectStorage`**: Aktiviert, wenn `vereint.storage.enabled=true` (`S3_ENABLED=true`). Spricht die S3-REST-API mit selbst signierten Anfragen (SigV4) an, lokal gegen MinIO mit Path-Style-Access (`/bucket/key`), in Produktion gegen AWS S3 mit dem IAM-Benutzer `vereint-app-storage`.
-- **`InMemoryObjectStorage`**: Fallback für lokale Entwicklung und Tests (`S3_ENABLED=false`). Hält Binärdaten in einer Concurrent-Map und erzeugt lokale Data-URIs.
+- **`InMemoryObjectStorage`**: Fallback für lokale Entwicklung und Tests (`S3_ENABLED=false`). Hält Binärdaten im Prozessspeicher; `presignedGetUrl` liefert eine Pseudo-URL mit derselben Vertragsform.
 - **Sicherheitsgarantie**: S3-Credentials gelangen **niemals** an den Client. Der Browser lädt Bilder nie direkt aus S3, sondern nur über `GET /api/v1/images/{id}/content`: Der `ImageService` prüft die Berechtigung bei jedem Abruf, liest den Chiffretext und liefert die entschlüsselten Daten mit `Cache-Control: private, no-store` aus. Presigned URLs nutzt der Service nur noch intern für den eigenen Zugriff auf S3 (Lebensdauer `S3_URL_TTL_SECONDS`).
 
 ### 3. Anwendungsverschlüsselung (`crypto/DataEncryptor.kt`)
@@ -55,7 +55,7 @@ Bilddateien, Fotos und Videos aus Moments (in 64-KiB-Blöcken, damit Videos gest
 
 ## 📲 Web-Push-Zustellung (`PushSender.kt`)
 
-Benachrichtigungen (z. B. Chat-Pings, Event-Erinnerungen oder Kassen-Aufladungen) werden über das standardisierte Web-Push-Protokoll (VAPID / RFC 8292) an Browser und PWA-Clients zugestellt.
+Benachrichtigungen (z. B. Event-Einladungen und Erinnerungen, Rundnachrichten) werden über das standardisierte Web-Push-Protokoll (VAPID / RFC 8292) an Browser und PWA-Clients zugestellt. Der Push trägt **keine Nutzlast**: Er weckt nur den Service Worker, die Inhalte lädt der Client berechtigt aus `notifications` nach. Push-Abonnements gehören zum Konto, nicht zu einer Gruppe.
 
 ```mermaid
 sequenceDiagram
@@ -67,9 +67,9 @@ sequenceDiagram
 
   User->>Base: POST /api/v1/notifications/subscriptions (Endpoint, p256dh, auth)
   Note over Base: Speichert PushSubscriptionEntity in PostgreSQL
-  Note over Base: Ein Ereignis tritt ein (z. B. Event-Start)
+  Note over Base: Ein Ereignis tritt ein (z. B. Event-Einladung)
   Base->>Push: send(target, message)
-  Push->>Gateway: POST <endpoint> (VAPID JWT Header + Payload)
+  Push->>Gateway: POST <endpoint> (VAPID JWT Header, ohne Nutzlast)
   alt Zustellung erfolgreich
     Gateway-->>Push: 201 Created
     Push-->>Base: PushDeliveryResult(success=true)
@@ -81,21 +81,31 @@ sequenceDiagram
 ```
 
 ### 1. Schnittstelle `PushSender` & Konfiguration (`PushConfig.kt`)
-- **`VapidPushSender`**: Aktiviert, wenn `vereint.push.enabled=true` (`VAPID_ENABLED=true`). Signiert Nachrichten mit dem VAPID Private Key.
+- **`VapidPushSender`**: Aktiviert, wenn `vereint.push.enabled=true` (`VAPID_ENABLED=true`). Authentifiziert sich beim Push-Dienst mit einem ES256-signierten VAPID-Token.
 - **`NoOpPushSender`**: Fallback bei `VAPID_ENABLED=false`. Benachrichtigungen werden weiterhin in der Tabelle `notifications` persistiert, der externe HTTP-Versand wird jedoch stumm übersprungen.
 - **Subscription-Bereinigung**: Meldet ein Push-Gateway HTTP `404` oder `410 Gone`, markiert der `PushSender` das Ergebnis mit `gone = true`, und der `NotificationService` bereinigt den Eintrag automatisch aus der Datenbank.
 
 ---
 
-## 💬 WebSocket & Echtzeit-Chat (`ChatService.kt`, `ChatController.kt`)
+## 💬 Chat (`ChatService.kt`, `ConversationService.kt`)
 
-Für den Gruppen- und Event-Chat bietet der `baseservice` sowohl REST-Endpunkte zur Nachrichtenabfrage als auch WebSocket-Kanäle für den verzögerungsfreien Empfang:
+Chats laufen ausschließlich über REST; es gibt keine WebSocket-Endpunkte. Die Oberfläche fragt geöffnete Chats regelmäßig neu ab (`CHAT_POLL_INTERVAL_MS`, 10 Sekunden).
 
-- **WebSocket-Endpunkt**: `/ws/chat`
-- **Kanäle**:
-  - `/topic/chat/general`: Allgemeiner Gruppenchat (autorisiert für Rollen `member`, `board`, `admin`).
-  - `/topic/events/{eventId}/chat`: Veranstaltungschat (autorisiert für Teilnehmer und registrierte Gäste).
-- **Gast-Chat-Besonderheit**: Externe Gäste mit gültigem `X-Guest-Token` können ohne Keycloak-Login am Chat ihres spezifischen Events teilnehmen (`/api/v1/events/*/chat/guest/**`).
+- **Gruppenchat und Direktchats**: `/api/v1/conversations` (Lesestand, Reaktionen, Infotafel).
+- **Event-Chat**: `/api/v1/events/{eventId}/chat` für Owner, Teilnehmer sowie Personen mit `chat.moderate` oder `event.manage`.
+- **Gast-Chat-Besonderheit**: Externe Gäste mit gültigem `X-Guest-Token` können ohne Keycloak-Login am Chat ihres Events teilnehmen (`/api/v1/events/*/chat/guest/**`).
+
+---
+
+## 🪪 Kontoanlage in Keycloak (`identity/`)
+
+Für Einladungslinks und das Eröffnen einer Gruppe legt der `baseservice` Konten über die Keycloak-Admin-API an (`KeycloakIdentityProvisioner`). Er meldet sich dafür mit dem vertraulichen Client `vereint-registration` an, der nur `manage-users` hat. Ohne `REGISTRATION_ENABLED=true` und `KEYCLOAK_REGISTRATION_CLIENT_SECRET` antworten diese Wege mit `503 registration_unavailable`.
+
+---
+
+## 💳 Stripe (`billing/`)
+
+Tarife je Gruppe werden optional über Stripe abgerechnet: `StripeClient` erzeugt Checkout- und Kundenportal-Sitzungen, `StripeWebhookService` prüft die Signatur eingehender Webhooks (`/api/v1/billing/stripe/webhook`) und merkt sich verarbeitete Ereignisse in `billing_events`. Ohne `STRIPE_ENABLED=true`, Secret-Key und Webhook-Secret antworten Buchung und Portal mit `503 billing_unavailable`; Tarife setzt dann die Plattform-Administration. Details: [Abrechnung](../domains/abrechnung.md).
 
 ---
 
@@ -106,6 +116,11 @@ Für den Gruppen- und Event-Chat bietet der `baseservice` sowohl REST-Endpunkte 
 | **`S3_ENABLED`** | `false` | Verwendet S3 (lokal MinIO) für Bilder und Moment-Medien | `InMemoryObjectStorage` (In-Memory Data URIs) |
 | **`VAPID_ENABLED`** | `false` | Sendet echte Web-Push-Nachrichten via VAPID | `NoOpPushSender` (Persistenz ohne Versand) |
 | **`EV_LIQUIBASE_ENABLED`** | `true` | Führt Schema-Migrationen beim Start aus | Migrationen deaktiviert (z. B. für externe Tools) |
+| **`DATA_ENCRYPTION_ENABLED`** | `false` | Verschlüsselt Chat, Benachrichtigungen und Dateien | Klartext (nur lokal) |
+| **`REGISTRATION_ENABLED`** | `false` | Kontoanlage über Keycloak | Registrierung antwortet mit `503` |
+| **`SIGNUP_ENABLED`** | `true` | Öffentliches Eröffnen von Gruppen | Nur Einladungslinks und Plattform-Administration |
+| **`STRIPE_ENABLED`** | `false` | Online-Zahlung über Stripe | Tarife nur durch die Plattform-Administration |
+| **`API_DOCS_ENABLED`** | `false` | OpenAPI und Swagger UI | abgeschaltet |
 
 Durch diese Toggles kann der gesamte `baseservice` lokal ohne Objektspeicher oder Push-Infrastruktur voll funktionsfähig betrieben und getestet werden.
 

@@ -1,6 +1,6 @@
 # Tarife und Abrechnung je Gruppe
 
-Jede Gruppe hat einen eigenen Tarif nach dem Finanzierungsmodell. Bezahlt
+Jede Gruppe hat einen eigenen Tarif. Bezahlt
 wird online über **Stripe**; die App speichert keine Zahlungsdaten, nur die
 Stripe-Kennungen von Kunde und Abo.
 
@@ -10,17 +10,17 @@ Stripe-Kennungen von Kunde und Abo.
 | :--- | :--- | :--- | :--- |
 | Preis | 0 € | 4 €/Monat oder 40 €/Jahr | 9 €/Monat oder 90 €/Jahr |
 | Mitglieder | bis 10 | bis 40 | unbegrenzt |
-| Speicher (Bilder, Videos) | 1 GB | 10 GB | 50 GB |
+| Speicher (Bilder, Videos) | 1 GiB | 10 GiB | 50 GiB |
 | Videos in Moments | nein | ja | ja |
-| Thekenterminals gleichzeitig | 1 | 1 | mehrere |
+| Kiosk-Geräte gleichzeitig | 1 | 1 | mehrere |
 
 Die Grenzen stehen in `PlanLimits` (Fachservice). Geprüft wird nur beim
-Hinzufügen: Mitglied aufnehmen (`plan_limit_members`), Bild oder Video
+Hinzufügen (Antwort jeweils `409`): Mitglied aufnehmen (`plan_limit_members`), Bild oder Video
 hochladen (`plan_limit_storage`, `plan_limit_videos`), Kiosk starten
 (`plan_limit_kiosk`). Liegt eine Gruppe nach einem Wechsel in einen
 kleineren Tarif darüber, bleibt alles erhalten; nur Neues ist gesperrt.
 
-Die angezeigten Preise kommen aus `vereint.billing.amounts` und müssen zu den
+Die angezeigten Preise kommen aus `vereint.billing.amounts` (`BillingProperties`, Beträge in Cent) und müssen zu den
 Preisen in Stripe passen; abgerechnet wird immer der Stripe-Preis.
 
 Optional gibt es einen **Förderbeitrag** (Standard 2 €/Monat), den jedes Mitglied
@@ -28,10 +28,10 @@ für sich abschließen kann. Er ändert keinen Tarif.
 
 ## Bestehende und neue Gruppen
 
-- „Meine Gruppe" aus der Migration läuft als Tarif Premium mit Status
-  `comped` (ohne Zahlung) weiter; am bestehenden Betrieb ändert sich nichts.
+- „Meine Gruppe“ aus der Migration läuft als Tarif Premium mit Status
+  `comped` (ohne Zahlung).
 - Neue Gruppen starten im kostenlosen Tarif, auch die, die Kunden selbst
-  eröffnen (siehe `stammtische.md`, „Eröffnen“).
+  eröffnen (siehe [Gruppen](stammtische.md#beitreten-verlassen-anlegen)).
 - Die Plattform-Administration kann unter `/plattform` jeden Tarif von Hand
   vergeben (`comped`) oder auf kostenlos zurücksetzen, z. B. ohne Stripe oder
   für befreundete Gruppen.
@@ -60,9 +60,10 @@ im Audit-Log der Gruppe (`STAMMTISCH_PLAN_CHANGED`).
 
 - Nach einer fehlgeschlagenen Zahlung läuft die Gruppe 30 Tage normal weiter
   (`BILLING_GRACE_DAYS`).
-- Danach ist er **nur lesbar**: schreibende Anfragen erhalten
+- Danach ist sie **nur lesbar**: schreibende Anfragen erhalten
   `403 stammtisch_read_only`. Erlaubt bleiben Tarif und Zahlung, Datenexport,
-  Gruppe verlassen, Kiosk beenden, eigenes Profil und Push-Geräte.
+  Gruppe verlassen, Kiosk, eigenes Profil, Push-Geräte sowie alles ohne
+  Gruppenbezug (z. B. Gruppe wechseln, Einladungslinks).
 - Gelöscht wird nichts. Mit der Zahlung (`invoice.paid`) ist alles wieder offen.
 
 ## Datenexport
@@ -78,7 +79,7 @@ Ohne Konfiguration ist die Online-Zahlung aus (`503 billing_unavailable`); die
 App zeigt die Tarife trotzdem an.
 
 1. In Stripe zwei Produkte (Standard, Premium) mit je einem Monats- und einem
-   Jahrespreis anlegen, optional ein Produkt „Förderbeitrag" mit Monatspreis.
+   Jahrespreis anlegen, optional ein Produkt „Förderbeitrag“ mit Monatspreis.
 2. Kundenportal in Stripe aktivieren (Rechnungen, Zahlart, Kündigung,
    Tarifwechsel zwischen den vier Preisen).
 3. Webhook-Endpunkt `https://<domain>/api/v1/billing/stripe/webhook` mit den

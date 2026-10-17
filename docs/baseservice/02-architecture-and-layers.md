@@ -16,6 +16,7 @@ graph TD
     ReqId[RequestIdFilter - X-Request-Id]
     SecFilter[Spring SecurityFilterChain]
     Conv[JwtAuthConverter & ClaimExtractor]
+    Tenant[StammtischContextFilter - Gruppe, Rollen, TenantContext]
   end
 
   subgraph RestLayer["2. Controller-Schicht (REST API)"]
@@ -26,19 +27,19 @@ graph TD
 
   subgraph ServiceLayer["3. Service-Schicht (Geschäftslogik)"]
     Svc["Fach-Services @Service @Transactional"]
-    SecMatrix["Rollenprüfung & RolePermissionMatrix"]
+    SecMatrix["Rechteprüfung über StammtischAccess"]
     Mapping["DTO <-> Entity Mapping"]
   end
 
   subgraph DataLayer["4. Persistenz- & Integrations-Schicht"]
     Repo[Spring Data JPA Repositories]
-    Entities["JPA Entities (@Version, Auditing)"]
+    Entities["JPA Entities (@Version, Auditing, @TenantId)"]
     ExtStorage[ObjectStorage S3 / In-Memory]
     ExtPush[PushSender VAPID / NoOp]
   end
 
   subgraph InfraLayer["5. Infrastruktur"]
-    DB[(PostgreSQL)]
+    DB[(PostgreSQL mit Row Level Security)]
     S3Store[(S3: AWS / lokal MinIO)]
     PushGw[(Web Push Gateway)]
   end
@@ -71,16 +72,17 @@ sequenceDiagram
   Note over Filter: Generiert oder übernimmt X-Request-Id
   Filter->>Sec: Weiterleitung mit MDC / Trace-ID
   Note over Sec: JwtAuthConverter validiert JWT & baut UserPrincipal
+  Note over Sec: StammtischContextFilter wählt die Gruppe (X-Stammtisch-Id),<br/>setzt Rollen/Rechte der Gruppe und den TenantContext
   Sec->>Ctrl: createFood(@Valid request)
   Note over Ctrl: Prüft Validierung, liest Principal via AuthContext
   Ctrl->>Svc: createFood(request, principal)
-  Note over Svc: @Transactional Start<br/>Rollenprüfung (Board/Admin)<br/>Normalisierung & Validierung
+  Note over Svc: @Transactional Start<br/>Rechteprüfung (catalog.approve)<br/>Normalisierung & Validierung
   alt Validierung oder Berechtigung fehlgeschlagen
     Svc-->>Err: wirft ApiException (z. B. 403 ACCESS_DENIED)
     Err-->>Client: 403 ProblemDetail (code, traceId, message)
   else Erfolgsfall
     Svc->>Repo: save(FoodCatalogEntity)
-    Repo->>DB: INSERT INTO food_catalog ...
+    Repo->>DB: INSERT INTO food_catalog (stammtisch_id, ...) ...
     DB-->>Repo: Gespeicherte Zeile (ID, Version)
     Repo-->>Svc: FoodCatalogEntity
     Note over Svc: Mapping Entity -> FoodDto<br/>@Transactional Commit
@@ -107,7 +109,7 @@ Controller sind zustandslos, schlank und enthalten **keine Fachlogik**:
 ```kotlin
 @RestController
 @RequestMapping("/api/v1/food")
-@Tag(name = "Speisenkatalog", description = "Globaler Speisenkatalog des Vereins")
+@Tag(name = "Speisenkatalog", description = "Globaler Speisenkatalog des Vereins und Stammdatenpflege")
 class FoodCatalogController(
     private val foodCatalogService: FoodCatalogService,
     private val authContext: AuthContext
@@ -125,7 +127,7 @@ class FoodCatalogController(
 ### 2. Transaktionale Fach-Services (`FoodCatalogService.kt`)
 Services kapseln die vollständige Business-Logik:
 - **Transaktionsklammer**: Klassen-Annotation `@Service @Transactional`. Leseoperationen werden mit `@Transactional(readOnly = true)` optimiert.
-- **Berechtigungsprüfung**: Prüfung von Rollen und Rechten im Service-Code (z. B. `isBoardOrAdmin(caller, principal)`).
+- **Berechtigungsprüfung**: Prüfung der Rechte in der aktuellen Gruppe im Service-Code (z. B. `isBoardOrAdmin(caller, principal)`, das intern `StammtischAccess` fragt).
 - **Normalisierung & Guard Clauses**: String-Bereinigung (`normalizeName`), Trimmen und Whitelist-Checks.
 - **Fachliche Fehler**: Auslösen von typsicheren `ApiException`-Subklassen (`InvalidRequestException`, `AccessDeniedException`, `ResourceNotFoundException`) mit definierten `ErrorCode`-Konstanten.
 - **Entity-DTO-Mapping**: Private Mapping-Funktionen (`toFoodDto`, `toSummaryDto`), sodass Entities die Service-Schicht niemals verlassen.
@@ -137,6 +139,7 @@ Services kapseln die vollständige Business-Logik:
 
 ### 4. JPA-Entities & Repositories (`FoodEntities.kt`, `Repositories.kt`)
 - **Primärschlüssel**: UUIDs mit Default `UUID.randomUUID()`.
+- **Gruppenzugehörigkeit**: Fachliche Entities erben von `StammtischScoped` (`@TenantId stammtischId`); Hibernate setzt die Gruppe beim Anlegen und filtert jede Abfrage danach.
 - **Auditing**: `@EntityListeners(AuditingEntityListener::class)` mit `@CreatedDate` und `@LastModifiedDate` (UTC `Instant`).
 - **Optimistic Locking**: `@Version var version: Long = 0` verhindert unbeabsichtigtes Überschreiben bei parallelem Zugriff.
 - **Spring Data Repository**: Interfaces erweitern `JpaRepository<Entity, UUID>` mit sprechenden Abfragemethoden (`findByActiveTrueOrderByNameAsc()`).
@@ -152,43 +155,56 @@ Unter `de.maurer.baseservice` sind alle Controller und Services modular organisi
 | Controller | Endpunkt-Basis | Zweck & Fachdomäne | Querverweis |
 | :--- | :--- | :--- | :--- |
 | `AccessResolverController` | `/api/v1/auth/access` | Berechnete AppContexts & Berechtigungen für BFF & Gast | [03. Security](03-security-and-authorization.md) |
-| `ApiInfoController` | `/api/v1/info` | Öffentliche Versions-, Umgebungs- und Feature-Informationen | [05. Observability](05-error-handling-and-observability.md) |
-| `AuditLogController` | `/api/v1/audit` | Revisionssichere Audit-Log-Abfragen für Vorstände | [docs/domains/ledger-and-finance.md](../domains/ledger-and-finance.md) |
-| `AuthController` | `/api/v1/auth` | Benutzer-Provisionierung und Session-Kontext | [03. Security](03-security-and-authorization.md) |
-| `ChatController` | `/api/v1/chat`, `/api/v1/events/{id}/chat` | Gruppen- und Event-Chat, Gast-Chat-Nachrichten | [docs/domains/chat-and-push-notifications.md](../domains/chat-and-push-notifications.md) |
-| `DrinkCatalogController` | `/api/v1/drinks` | Globaler Getränkekatalog & Genehmigungsworkflow | [docs/domains/drink-catalog-and-sublists.md](../domains/drink-catalog-and-sublists.md) |
-| `DrinkSublistController` | `/api/v1/drinks/sublists` | Freigeschaltete Getränke-Sublisten für Veranstaltungen | [docs/domains/drink-catalog-and-sublists.md](../domains/drink-catalog-and-sublists.md) |
-| `EventController` | `/api/v1/events` | Veranstaltungs-Lebenszyklus, RSVPs und Strichlisten | [docs/domains/events-and-invites.md](../domains/events-and-invites.md) |
-| `EventDrinkController` | `/api/v1/events/{id}/drinks` | Eventbezogene Getränkepreise und Kioskeinstellungen | [docs/domains/drink-catalog-and-sublists.md](../domains/drink-catalog-and-sublists.md) |
-| `EventFoodController` | `/api/v1/events/{id}/food` | Eventbezogene Speisenauswahl & Kioskfreigabe | [docs/domains/food-catalog-and-event-food.md](../domains/food-catalog-and-event-food.md) |
-| `FoodCatalogController` | `/api/v1/food` | Globaler Speisenkatalog, Preise und Einkaufspreise | [docs/domains/food-catalog-and-event-food.md](../domains/food-catalog-and-event-food.md) |
-| `HealthController` | `/api/v1/health` | Öffentlicher Health-Check für Load Balancer | [05. Observability](05-error-handling-and-observability.md) |
-| `ImageController` | `/api/v1/images` | Upload und Download signierter URLs für Bilder | [06. Integrationen](06-integrations.md) |
-| `InviteController` | `/api/v1/invites` | Erstellung, Einlösung und Widerruf von Gast-Einladungstokens | [docs/domains/events-and-invites.md](../domains/events-and-invites.md) |
-| `LedgerController` | `/api/v1/ledger` | Kassenbuch-Transaktionen, Aufladung, Buchung, Korrektur | [docs/domains/ledger-and-finance.md](../domains/ledger-and-finance.md) |
-| `MomentController` | `/api/v1/moments` | Moments & Rituale, Statusmeldungen und Reaktionen | [docs/domains/moments-and-rituals.md](../domains/moments-and-rituals.md) |
-| `NotificationController` | `/api/v1/notifications` | Push-Abonnements & Benachrichtigungszustellung | [06. Integrationen](06-integrations.md) |
-| `TabletRecorderController`| `/api/v1/tablet` | Kiosk-Strichlisten-Erfassung & Abendabrechnung | [docs/domains/tablet-strichliste-recorder.md](../domains/tablet-strichliste-recorder.md) |
-| `UserController` | `/api/v1/users` | Benutzerprofile, Rollenverwaltung & Deaktivierung | [docs/domains/auth-and-user-management.md](../domains/auth-and-user-management.md) |
+| `ApiInfoController` | `/api/v1/info` | Öffentliche Versions- und Feature-Informationen | [05. Observability](05-error-handling-and-observability.md) |
+| `AuditLogController` | `/api/v1/audit-logs` | Audit-Log-Abfragen für Vorstand und Admin | [Kassenbuch](../domains/ledger-and-finance.md) |
+| `AuthController` | `/api/v1/auth` | Session-Kontext des angemeldeten Kontos (`/me`) | [03. Security](03-security-and-authorization.md) |
+| `BillingController` | `/api/v1/stammtisch/billing`, `/api/v1/stammtisch/export`, `/api/v1/billing/stripe/webhook` | Tarif, Stripe-Checkout und Kundenportal, Datenexport, Webhook | [Abrechnung](../domains/abrechnung.md) |
+| `ChatController` | `/api/v1/events/{eventId}/chat` | Event-Chat und Gast-Chat | [Chat & Push](../domains/chat-and-push-notifications.md) |
+| `ConversationController` | `/api/v1/conversations` | Gruppenchat, Direktchats, Lesestand, Reaktionen, Infotafel | [Chat & Push](../domains/chat-and-push-notifications.md) |
+| `DrinkCatalogController` | `/api/v1/drinks` | Getränkekatalog der Gruppe & Freigabe-Workflow | [Getränkekatalog](../domains/drink-catalog-and-sublists.md) |
+| `DrinkLibraryController` | `/api/v1/drink-library` | Gemeinsame Getränkedatenbank (Pflege durch Plattform-Admin) | [Getränkekatalog](../domains/drink-catalog-and-sublists.md) |
+| `DrinkSublistController` | `/api/v1/sublists` | Getränke-Sublisten für Veranstaltungen | [Getränkekatalog](../domains/drink-catalog-and-sublists.md) |
+| `EventController` | `/api/v1/events` | Veranstaltungs-Lebenszyklus, Teilnehmer, Einladungen, Zusagen | [Events](../domains/events-and-invites.md) |
+| `EventDrinkController` | `/api/v1/events/{eventId}/drinks` | Eventbezogene Getränkepreise und Freigaben | [Getränkekatalog](../domains/drink-catalog-and-sublists.md) |
+| `EventFoodController` | `/api/v1/events/{eventId}/food` | Eventbezogene Speisenauswahl & Freigaben | [Speisen](../domains/food-catalog-and-event-food.md) |
+| `FoodCatalogController` | `/api/v1/food` | Speisenkatalog, Preise und Einkaufspreise | [Speisen](../domains/food-catalog-and-event-food.md) |
+| `HealthController` | `/api/v1/health` | Öffentlicher Health-Check | [05. Observability](05-error-handling-and-observability.md) |
+| `ImageController` | `/api/v1/images` | Upload und berechtigte Auslieferung von Bildern | [06. Integrationen](06-integrations.md) |
+| `InviteController` | `/api/v1/events/{eventId}/invites`, `/api/v1/invites/accept` | Gast-Einladungen zu Events | [Events](../domains/events-and-invites.md) |
+| `KioskController` | `/api/v1/kiosk/sessions` | Kiosk-Modus mit PIN am Thekenterminal | [Thekenterminal](../domains/tablet-strichliste-recorder.md) |
+| `LedgerController` | `/api/v1/ledger` | Salden, Käufe, Einzahlung, Auszahlung, Korrektur, Storno | [Kassenbuch](../domains/ledger-and-finance.md) |
+| `MemberInviteController` | `/api/v1/member-invites` | Einladungslinks, Registrierung und Beitritt mit bestehendem Konto | [Einladungslinks](../domains/member-invites.md) |
+| `MomentConfigController` | `/api/v1/moment-config` | Moment-Typen und Reaktionen der Gruppe | [Moments](../domains/moments-and-rituals.md) |
+| `MomentController` | `/api/v1/events/{eventId}/moments` | Moments, Antworten, Karte, Fotos und Videos | [Moments](../domains/moments-and-rituals.md) |
+| `NotificationController` | `/api/v1/notifications` | Benachrichtigungen, Push-Abonnements, Rundnachricht | [Chat & Push](../domains/chat-and-push-notifications.md) |
+| `StammtischController` | `/api/v1/stammtische`, `/api/v1/stammtisch`, `/api/v1/signup`, `/api/v1/platform/stammtische` | Gruppen eröffnen, wählen, verwalten und verlassen, Rollen der Gruppe, Plattform-Administration | [Gruppen](../domains/stammtische.md) |
+| `StatisticsController` | `/api/v1/statistics` | Kennzahlen und Auswertungen | [Statistik](../domains/statistics-and-analytics.md) |
+| `TabletRecorderController`| `/api/v1/tablet` | Strichlisten-Erfassung am Thekenterminal & Abendabrechnung | [Thekenterminal](../domains/tablet-strichliste-recorder.md) |
+| `UserController` | `/api/v1/users` | Profile, Mitgliederverzeichnis, Rollen und Rechte zuweisen, Sperren | [Benutzer](../domains/auth-and-user-management.md) |
 
 ---
 
-### Service-Übersicht (`de.maurer.baseservice.service`)
+### Service-Übersicht (`de.maurer.baseservice.service`, `billing`, `tenancy`)
 
-- **`AccessResolverService`**: Berechnet dynamisch zugreifbare Rollen, Berechtigungen und AppContexts für das BFF.
-- **`AuditService` / `AuditLogService`**: Asynchrone Erfassung und Filterung von sicherheits- und finanzrelevanten Ereignissen.
-- **`ChatService`**: Versand, Speicherung und Historisierung von Gruppen-, Event- und Gast-Chatnachrichten.
-- **`DrinkCatalogService` & `DrinkSublistService`**: Verwaltung des Getränkekatalogs und veranstaltungsspezifischer Sortimente.
-- **`EventService`, `EventDrinkService` & `EventFoodService`**: Event-Lebenszyklus, Teilnehmer-Zusagen (RSVP) und Kiosksortimente.
-- **`FoodCatalogService`**: Verwaltung des globalen Speisenkatalogs inklusive Einkaufspreisen und Deckungsbeitrag.
-- **`ImageService`**: Validierung, Skalierung und Verwaltung von Bild-Metadaten und S3-Schlüsseln.
-- **`InviteService`**: Kryptografische Generierung, Validierung und Einlösung von Event-Gast-Tokens.
-- **`LedgerService`**: Unveränderliches Transaktionsjournal nach dem Double-Entry-Prinzip mit Idempotenz-Schutz.
-- **`MomentService`**: Echtzeit-Rituale, 24h-Moments-Sessions und Geolokations-Checkins.
-- **`NotificationService`**: Speicherung von Web-Push-Abonnements und Auslösung von Benachrichtigungen.
-- **`TabletRecorderService`**: 1-Tap-Kiosk-Strichlisten-Buchungen und aggregierte Abendabrechnungen.
-- **`UserProvisioningService` & `UserService`**: Automatische Synchronisation von Keycloak-Konten in die PostgreSQL-Datenbank.
-- **`UserPermissionCache`**: In-Memory-Cache zur Beschleunigung von Berechtigungsprüfungen.
+- **`AccessResolverService`**: Berechnet zugreifbare Rollen, Berechtigungen und AppContexts für das BFF.
+- **`AuditService` / `AuditLogService`**: Erfassung und Abfrage sicherheits- und finanzrelevanter Ereignisse.
+- **`ChatService` & `ConversationService`**: Event-, Gast-, Gruppen- und Direktchats.
+- **`DrinkCatalogService`, `DrinkSublistService` & `DrinkLibraryService`**: Getränkekatalog der Gruppe, Sublisten und gemeinsame Getränkedatenbank.
+- **`EventService`, `EventInvitationService`, `EventDrinkService` & `EventFoodService`**: Event-Lebenszyklus, Einladungen und Erinnerungen, Zusagen, Angebot je Event.
+- **`FoodCatalogService`**: Speisenkatalog inklusive Einkaufspreisen.
+- **`ImageService` & `GroupImageService`**: Bilder (Metadaten entfernen, verschlüsselt speichern) und Gruppenbild.
+- **`InviteService`**: Gast-Einladungstokens für Events.
+- **`MemberInviteService`**: Einladungslinks in eine Gruppe.
+- **`KioskService`**: Kiosk-Sitzungen mit PIN.
+- **`LedgerService`**: Unveränderliches Buchungsjournal mit Idempotenz-Schutz.
+- **`MomentService`, `MomentConfigService` & `MomentMediaService`**: Moments, Typen und Reaktionen, Fotos und Videos.
+- **`NotificationService`**: Benachrichtigungen und Web-Push-Abonnements.
+- **`StammtischService`, `StammtischSignupService`, `MembershipService` & `PlatformService`**: Gruppen, Selbstregistrierung, Mitgliedschaften und Rollen, Plattform-Administration.
+- **`StatisticsService`**: Kennzahlen.
+- **`TabletRecorderService`**: Buchungen am Thekenterminal, Runden und Abendabrechnung.
+- **`UserProvisioningService` & `UserService`**: Anlage lokaler Konten aus dem Keycloak-Token, Profile und Mitgliederverwaltung.
+- **`BillingService`, `StripeClient`, `StripeWebhookService` & `StammtischExportService`** (Paket `billing`): Tarife, Stripe-Anbindung, Datenexport.
+- **`StammtischContextFilter`, `StammtischAccess`, `StammtischMemberships`** (Paket `tenancy`): Gruppenkontext, Rechteprüfung, Mitgliedschaften je Konto.
 
 ---
 
@@ -197,4 +213,4 @@ Unter `de.maurer.baseservice` sind alle Controller und Services modular organisi
 - Weiter zu [03. Sicherheit & Autorisierung](03-security-and-authorization.md)
 - Zurück zu [01. Übersicht & Setup](01-overview-and-setup.md)
 - [BFF Request-Pipeline](../backend-for-frontend/02-request-pipeline.md)
-- [Fachdomänen Übersicht](../README.md#📖-glossar--fachbegriffe-domain-glossary)
+- [Dokumentationsübersicht](../README.md)

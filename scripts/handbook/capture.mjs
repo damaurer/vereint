@@ -137,7 +137,7 @@ const SHOTS = [
   },
   { id: 'm-chat', who: 'member', device: PHONE, run: async (page) => open(page, '/chat') },
   {
-    id: 'm-vereinschat',
+    id: 'm-gruppenchat',
     who: 'member',
     device: PHONE,
     run: async (page) => {
@@ -395,6 +395,68 @@ const SHOTS = [
       await page.goto(`${APP_URL}${data.inviteAcceptPath}`);
       await page.waitForURL(/\/guest\//);
       await settle(page);
+    },
+  },
+
+  // Gruppen, Tarif und Getränkedatenbank
+  { id: 'g-gruppe-eroeffnen', who: null, device: PHONE, run: async (page) => open(page, '/gruppe-eroeffnen') },
+  { id: 'a-gruppe', who: 'admin', device: DESKTOP, run: async (page) => open(page, '/gruppe') },
+  {
+    id: 'a-rollen',
+    who: 'admin',
+    device: DESKTOP,
+    run: async (page) => {
+      await open(page, '/gruppe');
+      await scrollToHeading(page, 'Rollen & Berechtigungen', 90);
+    },
+  },
+  {
+    id: 'a-tarif',
+    who: 'admin',
+    device: DESKTOP,
+    run: async (page) => {
+      await open(page, '/gruppe');
+      await scrollToHeading(page, 'Tarif', 90);
+    },
+  },
+  { id: 'v-getraenkedatenbank', who: 'board', device: PHONE, run: async (page) => open(page, '/catalog/library') },
+  { id: 'v-moments-verwalten', who: 'board', device: PHONE, run: async (page) => open(page, '/board/moments') },
+
+  // Kiosk-Modus: zuletzt, weil das Terminal danach gesperrt bleibt.
+  {
+    id: 't-kiosk-start',
+    who: 'theke',
+    device: TABLET,
+    run: async (page) => {
+      await openTerminal(page);
+      await page.getByRole('button', { name: 'Kiosk-Modus starten' }).click();
+      await page.waitForTimeout(400);
+      const fields = page.locator('.kiosk-start-form input');
+      await fields.nth(0).fill('Theke Vereinsheim');
+      await fields.nth(1).fill('2468');
+      await fields.nth(2).fill('2468');
+      await page.waitForTimeout(300);
+    },
+  },
+  {
+    id: 't-kiosk-entsperren',
+    who: 'theke',
+    device: TABLET,
+    run: async (page) => {
+      await page.locator('.kiosk-start-form').getByRole('button', { name: /starten/i }).last().click();
+      await settle(page);
+      await page.getByRole('button', { name: 'Kiosk-Modus verlassen' }).click().catch(() => {});
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    id: 'v-kiosk-geraete',
+    who: 'board',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/board');
+      await page.getByRole('button', { name: /Kiosk-Geräte/ }).click();
+      await page.waitForTimeout(800);
     },
   },
 ];

@@ -1,6 +1,6 @@
 # Fehlerbehandlung & Idempotenz-Standards
 
-Die **Vereint**-Plattform setzt auf strikte Fehlerstandards nach **RFC 7807 (Problem Details for HTTP APIs)** und garantiert durchgängige Transaktionssicherheit über serverseitig geprüfte **Idempotenzschlüssel**.
+Die **Vereint**-Plattform setzt auf strikte Fehlerstandards nach **RFC 7807 (Problem Details for HTTP APIs)** und schützt Buchungen über serverseitig geprüfte **Idempotenzschlüssel** vor doppelter Ausführung.
 
 ---
 
@@ -13,81 +13,93 @@ Jede fehlerhafte Antwort des Backends wird im standardisierten JSON-Format `appl
   "type": "https://vereint.example/problems/account_disabled",
   "title": "Forbidden",
   "status": 403,
-  "detail": "Benutzerkonto ist gesperrt und kann keine Kassenbuchungen ausführen",
+  "detail": "Das Konto ist deaktiviert",
   "instance": "/api/v1/ledger/purchases",
   "code": "account_disabled",
   "traceId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "timestamp": "2026-09-15T06:45:00.123Z",
-  "details": [
-    "Wenden Sie sich an den Vorstand der Gruppe zur Klärung des Status."
-  ]
+  "timestamp": "2026-09-15T06:45:00.123Z"
 }
 ```
 
-### Problem Detail Erweiterungsfelder
+### Felder
+- **`type`**: `https://vereint.example/problems/<code>`; **`title`** ist der Name des HTTP-Status.
+- **`detail`**: Text in der Sprache aus `Accept-Language` (Deutsch oder Englisch).
 - **`code`**: Stabiler, sprachneutraler Fehlerbezeichner aus `ErrorCode.kt` zur clientseitigen Programmlogik.
 - **`traceId`**: Eindeutige Korrelations-ID (identisch mit dem HTTP-Response-Header `X-Request-Id`) zur Nachverfolgung in Server-Logs.
 - **`timestamp`**: ISO-8601-Zeitstempel des Fehlereintritts.
-- **`details`**: Optionale Liste von Validierungsfehlern (z. B. fehlerhafte Formularfelder).
+- **`details`**: Nur bei Validierungsfehlern, als Liste `feld: meldung`.
 
 ---
 
 ## 📖 Katalog der Fehlercodes (`ErrorCode.kt`)
 
+Die Zuordnung zu den Exceptions beschreibt [Fehlerbehandlung im Fachservice](../baseservice/05-error-handling-and-observability.md).
+
 | Fehlercode (`code`) | HTTP-Status | Beschreibung & Ursache |
 | :--- | :---: | :--- |
-| `oidc_login_failed` | `401 Unauthorized` | OIDC Login oder Token-Austausch fehlgeschlagen. |
-| `oidc_session_expired` | `401 Unauthorized` | OIDC Sitzung oder Refresh-Token ist abgelaufen. |
-| `account_disabled` | `403 Forbidden` | Benutzer wurde durch Administration gesperrt (`disabled = true`). |
-| `access_denied` | `403 Forbidden` | Fehlende Berechtigung für die angeforderte Ressource. |
-| `permission_denied` | `403 Forbidden` | Spezifische Berechtigung (z. B. `purchase.tablet`) fehlt. |
-| `role_not_assigned` | `403 Forbidden` | Erforderliche Benutzerrolle ist dem Benutzer nicht zugewiesen. |
-| `consent_required` | `403 Forbidden` | Fehlende explizite Zustimmung (z. B. Standortfreigabe bei Moments). |
-| `self_service_disabled` | `403 Forbidden` | Self-Service Barcode-Kauf ist für dieses Benutzerkonto deaktiviert. |
-| `self_privilege_change_denied` | `403 Forbidden` | Administratoren dürfen sich eigene Privilegien nicht selbst entziehen. |
-| `last_admin_protected` | `403 Forbidden` | Der letzte verbleibende Administrator kann nicht degradiert werden. |
-| `not_found` | `404 Not Found` | Angefragte Ressource (User, Event, Drink, Sublist) existiert nicht. |
-| `profile_not_found` | `404 Not Found` | Kein lokaler Benutzerdatensatz für den OIDC-Subject vorhanden. |
-| `invitation_expired` | `410 Gone` | Gast-Einladungstoken ist zeitlich abgelaufen. |
-| `invitation_revoked` | `410 Gone` | Einladungslink wurde manuell storniert oder Limit erreicht. |
-| `event_not_active` | `409 Conflict` | Event ist nicht im Status `active` (Thekenbuchung nicht erlaubt). |
-| `drink_not_in_event` | `409 Conflict` | Getränk ist nicht für dieses Event in der Subliste freigeschaltet. |
-| `ledger_already_corrected` | `409 Conflict` | Buchung wurde bereits durch eine Gegenbuchung storniert. |
-| `idempotency_conflict` | `409 Conflict` | Idempotenzschlüssel wurde mit abweichenden Parametern wiederverwendet. |
-| `concurrent_modification` | `409 Conflict` | Optimistic Lock Fehler (`version` Konflikt bei paralleler Bearbeitung). |
-| `data_integrity_violation` | `409 Conflict` | Datenbankintegritätsverletzung (z. B. Unique Constraint oder Fremdschlüssel). |
-| `idempotency_key_required` | `400 Bad Request` | Pflicht-Header `Idempotency-Key` fehlt bei Kassenbuchung. |
-| `invalid_request` | `400 Bad Request` | Ungültiges Anfrageformat oder Parameterkonflikt. |
-| `validation_failed` | `400 / 422` | Bean-Validierungsfehler (z. B. ungültige E-Mail, negativer Preis). |
-| `internal_error` | `500 Server Error` | Unerwarteter interner Serverfehler. |
+| `invalid_request` | `400` | Ungültige Parameter, leere Pflichtfelder oder ungültiges Format. |
+| `validation_failed` | `400` | Bean-Validation-Fehler; Feldfehler stehen in `details`. |
+| `consent_required` | `400` | Erforderliche Zustimmung fehlt (z. B. Standortfreigabe bei Moments). |
+| `event_not_active` | `400` | Buchung oder Chat bei einem nicht aktiven, beendeten oder abgesagten Event. |
+| `idempotency_key_required` | `400` | Header `Idempotency-Key` fehlt bei einer Buchung. |
+| `drink_not_in_event` | `400` | Getränk gehört nicht zum Angebot des Events. |
+| `password_rejected` | `400` | Keycloak lehnt das Passwort ab (Passwortregeln). |
+| `terms_not_accepted` | `400` | Den AGB wurde bei Registrierung oder Eröffnung nicht zugestimmt. |
+| `kiosk_pin_invalid_format` | `400` | Die Kiosk-PIN hat nicht 4 bis 8 Ziffern. |
+| `video_too_long` | `400` | Video in Moments ist zu lang. |
+| `access_denied` | `401` / `403` | Ohne gültiges Token `401`; sonst fehlende Berechtigung (`403`). |
+| `oidc_login_failed`, `oidc_session_expired` | `401` | Anmeldung fehlgeschlagen bzw. Sitzung abgelaufen (vom BFF). |
+| `permission_denied` | `403` | Zugriff von Spring Security verweigert. |
+| `account_disabled` | `403` | Das Konto ist gesperrt. |
+| `role_not_assigned`, `profile_not_found` | `403` | Rolle bzw. Benutzerprofil fehlt. |
+| `self_service_disabled` | `403` | Selbstbuchung für diesen Artikel oder dieses Event abgeschaltet. |
+| `self_privilege_change_denied` | `403` | Eigene Rollen, Berechtigungen oder den eigenen Status darf man nicht ändern. |
+| `last_role_manager_protected` | `403` | Die Änderung nähme der Gruppe die letzte Person mit `members.manage` oder `roles.manage`. |
+| `last_admin_protected` | `403` | Konstante vorhanden, derzeit ohne Auslöser. |
+| `stammtisch_access_denied` | `403` | Kein aktives Mitglied der gewählten Gruppe. |
+| `stammtisch_read_only` | `403` | Zahlung über die Kulanzfrist hinaus offen; die Gruppe ist nur lesbar. |
+| `not_found` | `404` | Ressource existiert nicht (oder gehört zu einer anderen Gruppe). |
+| `concurrent_modification` | `409` | Parallele Bearbeitung (`@Version`). |
+| `data_integrity_violation` | `409` | Unique Constraint oder Fremdschlüssel verletzt. |
+| `idempotency_conflict` | `409` | Gleicher `Idempotency-Key` mit anderen Buchungsdaten. |
+| `ledger_already_corrected` | `409` | Buchung wurde bereits durch eine Gegenbuchung storniert. |
+| `email_already_registered` | `409` | Für die E-Mail-Adresse gibt es schon ein Konto. |
+| `stammtisch_required` | `409` | Fachlicher Endpunkt ohne gewählte Gruppe bei mehreren Mitgliedschaften. |
+| `stammtisch_limit` | `409` | Höchstzahl selbst eröffneter Gruppen erreicht (`SIGNUP_MAX_OWNED`). |
+| `plan_limit_members`, `plan_limit_storage`, `plan_limit_videos`, `plan_limit_kiosk` | `409` | Grenze des Tarifs erreicht. |
+| `billing_no_customer` | `409` | Kundenportal ohne bestehendes Stripe-Kundenkonto. |
+| `invitation_expired`, `invitation_revoked`, `invitation_used_up` | `410` | Einladung abgelaufen, widerrufen bzw. ausgeschöpft. |
+| `media_too_large` | `413` | Foto oder Video in Moments ist zu groß. |
+| `internal_error` | `500` | Unerwarteter Serverfehler. |
+| `registration_unavailable`, `billing_unavailable` | `503` | Kontoanlage über Keycloak bzw. Stripe ist nicht eingerichtet. |
 
 ---
 
 ## 🔑 Idempotenz-Muster & Header-Spezifikation
 
-Bei Netzwerkabbrüchen (z. B. Funkloch an der Theke oder Reload) sendet der Client dieselbe Buchungsanfrage erneut. Der Server garantiert, dass der Buchungsvorgang exakt einmal ausgeführt wird (*Exactly-Once Semantik*).
+Bei Netzwerkabbrüchen (z. B. Funkloch an der Theke oder Reload) sendet der Client dieselbe Buchung erneut. Der Server bucht sie trotzdem nur einmal.
 
-### 1. HTTP-Header-Vorgabe
+### 1. HTTP-Header
 ```http
 POST /api/v1/ledger/purchases HTTP/1.1
-Host: api.vereint.local
-Authorization: Bearer <JWT>
 Idempotency-Key: e4b0f98e-4a67-4f92-959c-1c88d87a4192
 Content-Type: application/json
 ```
 
-### 2. Idempotenz-Scopes
-| Scope | Endpunkt | Zweck |
-| :--- | :--- | :--- |
-| `ledger:purchase` | `POST /api/v1/ledger/purchases` | PWA Barcode-Kauf |
-| `ledger:topup` | `POST /api/v1/ledger/topups` | Guthabenaufladung |
-| `ledger:payout` | `POST /api/v1/ledger/payouts` | Guthabenauszahlung |
-| `ledger:correction` | `POST /api/v1/ledger/corrections` | Stornobuchung |
-| `tablet:purchase` | `POST /api/v1/tablet/events/{id}/purchases` | Kiosk 1-Tap Touch-Kauf |
-| `tablet:round` | `POST /api/v1/tablet/events/{id}/rounds` | Kiosk Rundenbuchung |
-| `tablet:evening` | `POST /api/v1/tablet/events/{id}/evening` | Kiosk Abendabrechnung |
+Der Schlüssel ist bei allen Buchungen Pflicht (`400 idempotency_key_required`) und höchstens 128 Zeichen lang. Der Client erzeugt ihn einmal je Buchung (z. B. eine UUID) und schickt ihn bei Wiederholungen unverändert mit.
 
-### 3. Server-Ablauf & Speicherung in `idempotency_records`
-1. Der Server prüft in PostgreSQL: `SELECT response_body, response_code FROM idempotency_records WHERE scope = :scope AND idempotency_key = :key`.
-2. **Treffer**: Der Server überspringt die Geschäftslogik und liefert unmittelbar die zuvor gespeicherte HTTP-Antwort mit unverändertem Statuscode (z. B. `201 Created`).
-3. **Neu**: Der Server führt die Buchung in einer Transaktion aus, persistiert das Ergebnis im Ledger und speichert die Antwort im selben Commit in `idempotency_records`.
+### 2. Endpunkte und Scopes
+| Scope | Endpunkte |
+| :--- | :--- |
+| `ledger-purchase` | `POST /api/v1/ledger/purchases`, `POST /api/v1/tablet/events/{id}/purchases`, `.../rounds`, `.../evening` |
+| `ledger-topup` | `POST /api/v1/ledger/topups` |
+| `ledger-payout` | `POST /api/v1/ledger/payouts` |
+| `ledger-correction` | `POST /api/v1/ledger/corrections`, `POST /api/v1/ledger/purchases/{entryId}/undo`, `POST /api/v1/tablet/events/{id}/purchases/{entryId}/undo` |
+
+Runde und Abend buchen mehrere Einträge auf einmal. Ihr Schlüssel darf höchstens 80 Zeichen haben; der Server leitet daraus je Mitglied und Artikel einen eigenen Schlüssel ab (`<schlüssel>#<quelle>#<mitglied>`).
+
+### 3. Ablauf im Server
+1. Der Schlüssel steht an der Buchung selbst (`ledger_entries.idempotency_key`).
+2. **Gibt es schon eine Buchung mit diesem Schlüssel** und stimmen Art, Mitglied, Betrag und Währung überein, liefert der Server diese Buchung erneut, ohne neu zu buchen.
+3. **Weichen die Daten ab**, antwortet er mit `409 idempotency_conflict`.
+4. **Sonst** legt er die Buchung an und vermerkt Scope und Schlüssel in derselben Transaktion in `idempotency_records` (gültig 30 Tage). Die Spalten `request_hash`, `response_status` und `response_payload` sind vorhanden, werden derzeit aber nicht befüllt.

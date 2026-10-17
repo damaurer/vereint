@@ -48,7 +48,8 @@ Details: [AWS-Infrastruktur und Kosten](aws-und-kosten.md#einrichtung)
 ## 5. Gruppen und Abrechnung festlegen
 
 - [ ] Eröffnen eigener Gruppen über `/gruppe-eroeffnen` ist ab Werk an. Solange
-      Impressum, AGB und Datenschutzerklärung fehlen, den SSM-Parameter
+      Impressum und AGB nur Entwürfe mit Platzhaltern sind und die
+      Datenschutzerklärung fehlt ([rechtliches.md](../domains/rechtliches.md)), den SSM-Parameter
       `/vereint/SIGNUP_ENABLED` mit dem Wert `false` anlegen. Einladungslinks
       funktionieren weiter.
 - [ ] Stripe ist optional. Ohne Stripe-Werte bleibt die Online-Zahlung aus und

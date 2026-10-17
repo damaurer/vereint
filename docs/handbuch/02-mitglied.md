@@ -89,7 +89,7 @@ Unter **Chat** (untere Leiste) stehen oben der **Gruppenchat** für alle Mitglie
 
 <br clear="right">
 
-<img src="bilder/m-vereinschat.png" alt="Gruppenchat" width="300" align="right">
+<img src="bilder/m-gruppenchat.png" alt="Gruppenchat" width="300" align="right">
 
 Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vorstand eine **Infotafel** anheften, etwa einen wichtigen Termin.
 

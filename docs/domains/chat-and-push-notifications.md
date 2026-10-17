@@ -1,22 +1,25 @@
 # Fachdomäne: Kommunikation & Push-Benachrichtigungen
 
-Das Kommunikationsmodul in **Vereint** ermöglicht den interaktiven Austausch zwischen Mitgliedern der Gruppe sowie die zuverlässige Zustellung zeitkritischer Informationen über Web Push (VAPID).
+Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgliedern der Gruppe sowie die Zustellung von Mitteilungen über Web Push (VAPID).
 
 ---
 
 ## 🎯 Fachliche Sicht (Business Domain)
 
 ### 1. Gruppenchat & Konversationsarten
-- **Hauptkanal (Club Channel)**: Zentraler Raum für alle Mitglieder der Gruppe zum Austausch allgemeiner Neuigkeiten.
-- **Event-Chaträume**: Jeder Veranstaltung kann ein eigener temporärer Chatraum zugeordnet werden, in dem Teilnehmer und autorisierte Gäste Fragen zu Treffpunkt, Mitbringseln oder Ablauf stellen können.
-- **Direktnachrichten (Direct Messages)**: 1:1-Gespräche zwischen zwei Mitgliedern.
-- **Gast-Chat**: Externe Gäste mit gültigem Einladungstoken können im jeweiligen Event-Chatraum mitlesen und schreiben, ohne ein Benutzerkonto zu besitzen.
-- **Ungelesen-Zähler**: Je Mitglied und Konversation wird der Lesestand gespeichert (`conversation_members.last_read_at`); die App zeigt die Zahl ungelesener Nachrichten als Badge am Chat-Eintrag der Navigation.
+- **Gruppenchat**: Zentraler Raum für alle Mitglieder der Gruppe (im Code `club`). Wer `chat.moderate` oder `event.manage` hat, setzt dort eine **Infotafel** (angeheftete Notiz).
+- **Event-Chats**: Jedes Event hat einen eigenen Chat für Veranstalter, Eingeladene und autorisierte Gäste. Mit `chat.moderate` oder `event.manage` lassen sich alle Event-Chats öffnen. Beendete oder abgesagte Events nehmen keine neuen Nachrichten an.
+- **Direktnachrichten**: 1:1-Gespräche zwischen zwei Mitgliedern derselben Gruppe (`/direktnachrichten`).
+- **Gast-Chat**: Gäste mit gültigem Einladungstoken lesen und schreiben im Chat ihres Events, ohne Benutzerkonto.
+- **Reaktionen**: Emoji-Reaktionen auf einzelne Nachrichten.
+- **Ungelesen-Zähler**: Je Mitglied und Unterhaltung wird der Lesestand gespeichert (`conversation_members.last_read_at`); die App zeigt die Zahl ungelesener Nachrichten als Badge am Chat-Eintrag der Navigation.
+- **Aktualisierung**: Die App fragt neue Nachrichten regelmäßig ab (Polling, alle 10 Sekunden); einen WebSocket-Kanal gibt es nicht.
 - **Verschlüsselung**: Nachrichten werden vor dem Speichern mit AES-256-GCM verschlüsselt (`DATA_ENCRYPTION_KEY`).
 
-### 2. Push-Benachrichtigungen & Board-Broadcasts
-- **Web Push Notifications**: Browserbasierte Benachrichtigungen (auch bei geschlossener App auf Smartphone oder Desktop) für Mitteilungen: Event-Einladungen und Erinnerungen, neue Moments sowie Rundbriefe und Nachrichten des Vorstands. Einzelne Chat-Nachrichten lösen keinen Push aus; sie erscheinen über den Ungelesen-Zähler.
-- **Vorstands-Broadcasts**: Vorstände und Administratoren können wichtige Ankündigungen an alle Mitglieder oder gezielte Personen senden (`SendNotificationRequest`).
+### 2. Mitteilungen & Push-Benachrichtigungen
+- **Mitteilungen** entstehen bei Event-Einladungen, Erinnerungen und Absagen, neuen Moments sowie Nachrichten des Vorstands. Sie gehören zur Gruppe, in der sie entstehen.
+- **Web Push**: Browserbasierte Benachrichtigungen (auch bei geschlossener App) für diese Mitteilungen. Einzelne Chat-Nachrichten lösen keinen Push aus; sie erscheinen über den Ungelesen-Zähler. Bei Event-Einladungen bietet die Benachrichtigung „Zusagen“ und „Absagen“ an.
+- **Nachrichten des Vorstands**: Wer `notifications.broadcast` hat, schickt eine Mitteilung an ein Mitglied (`SendNotificationRequest`) oder an ausgewählte bzw. alle Mitglieder der Gruppe (`BroadcastNotificationRequest`).
 
 ---
 
@@ -24,26 +27,31 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den interaktiven Austausch zw
 
 ### 1. Relevante Komponenten & Klassen
 - **Controller**:
-  - `ChatController`: Endpunkte unter `/api/v1/events/{eventId}/chat`
-    - `GET /` – Konversationsmetadaten für das Event laden
-    - `GET /messages` – Nachrichten des Event-Chats abrufen
-    - `POST /messages` – Nachricht als authentifiziertes Mitglied senden (`SendMessageRequest`)
-    - `GET /guest/messages` – Nachrichten als Gast abrufen (Header `X-Guest-Token`)
-    - `POST /guest/messages` – Nachricht als Gast senden (`SendMessageRequest` + `X-Guest-Token`)
+  - `ChatController`: Event-Chat unter `/api/v1/events/{eventId}/chat`
+    - `GET /`: Unterhaltung des Events laden
+    - `GET /messages`, `POST /messages`: Nachrichten lesen bzw. als Mitglied senden (`SendMessageRequest`)
+    - `GET /conversations/{conversationId}`, `GET|POST /conversations/{conversationId}/messages`: einzelne Unterhaltung des Events
+    - `GET /guest/messages`, `POST /guest/messages`: als Gast lesen bzw. senden (Header `X-Guest-Token`)
+  - `ConversationController`: Gruppenchat und Direktnachrichten unter `/api/v1/conversations`
+    - `GET /`: eigene Unterhaltungen; `GET /unread-count`: ungelesene Nachrichten
+    - `GET /club`: Gruppenchat; `PUT /club/pin`: Infotafel setzen (`PinNoteRequest`)
+    - `POST /direct`: Direktnachricht beginnen (`StartDirectConversationRequest`)
+    - `GET|POST /{conversationId}/messages`, `POST /{conversationId}/read`
+    - `POST /{conversationId}/messages/{messageId}/reactions`: Reaktion umschalten (`ToggleReactionRequest`)
   - `NotificationController`: Endpunkte unter `/api/v1/notifications`
-    - `GET /` – Eigene Benachrichtigungen laden (`List<NotificationDto>`)
-    - `GET /unread-count` – Anzahl ungelesener Nachrichten (`UnreadCountDto`)
-    - `POST /read-all` – Alle Benachrichtigungen als gelesen markieren
-    - `POST /{id}/read` – Einzelne Benachrichtigung als gelesen markieren
-    - `GET /vapid-public-key` – Öffentlichen VAPID-Schlüssel abfragen (`VapidPublicKeyDto`)
-    - `POST /subscriptions` – Web-Push-Abonnement registrieren (`PushSubscriptionCreateRequest`)
-    - `POST /` – Benachrichtigung / Broadcast an Benutzer senden (`SendNotificationRequest`)
+    - `GET /`: eigene Mitteilungen (`List<NotificationDto>`); `GET /unread-count` (`UnreadCountDto`)
+    - `POST /read-all`, `POST /{notificationId}/read`: als gelesen markieren
+    - `GET /vapid-public-key`: öffentlicher VAPID-Schlüssel (`VapidPublicKeyDto`)
+    - `GET|POST /subscriptions`, `DELETE /subscriptions/{subscriptionId}`: eigene Web-Push-Abos (`RegisterPushSubscriptionRequest`)
+    - `POST /`: Mitteilung an ein Mitglied (`SendNotificationRequest`); `POST /broadcast`: an mehrere oder alle (`BroadcastNotificationRequest`)
 - **Services**:
-  - `ChatService`: Nachrichtenverwaltung und Berechtigungsprüfung (`chat.member`, `chat.event`).
-  - `NotificationService`: Erstellung von In-App-Notifications und Auslösen des Push-Versands.
+  - `ChatService`: Event-Chat, Gast-Chat und Zugriffsprüfung (Veranstalter, Eingeladene, `chat.moderate`, `event.manage`).
+  - `ConversationService`: Gruppenchat, Direktnachrichten, Lesestand und Reaktionen.
+  - `NotificationService`: Mitteilungen anlegen und den Push-Versand auslösen.
+  - `EventInvitationService`: Einladungen, Erinnerungen und Absagen zu Events.
   - `PushDispatcher`: Stellt nach dem Commit im Hintergrund zu und entfernt ungültige Abos (`404`/`410`).
   - `VapidPushSender`: Erzeugt RFC-8292-konforme VAPID-Header und sendet Pushes ohne Nutzlast; der Service Worker lädt den Inhalt autorisiert nach.
-  - `NoOpPushSender`: Fallback für lokale Tests ohne konfigurierte VAPID-Keys.
+  - `NoOpPushSender`: Fallback ohne konfigurierte VAPID-Keys.
 - **Entitäten**: `ConversationEntity`, `ConversationMemberEntity`, `ChatMessageEntity`, `NotificationEntity`, `PushSubscriptionEntity`.
 
 ---
@@ -54,58 +62,43 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den interaktiven Austausch zw
 data class ChatMessageDto(
     val id: String,
     val conversationId: String,
-    val senderUserId: String?,
-    val senderDisplayName: String,
-    val senderRole: String?,
-    val guestId: String?,
+    val senderType: String,
+    val senderId: String?,
+    val senderName: String,
     val message: String,
     val imageUrl: String?,
-    val isGuest: Boolean,
-    val createdAt: Instant
+    val createdAt: Instant,
+    val reactions: List<ChatReactionDto> = emptyList()
 )
 
 data class SendMessageRequest(
-    @field:NotBlank(message = "message darf nicht leer sein")
-    @field:Size(max = 2000, message = "message darf höchstens 2000 Zeichen lang sein")
-    val message: String? = null,
-
-    @field:Size(max = 512, message = "imageUrl darf höchstens 512 Zeichen lang sein")
-    val imageUrl: String? = null
+    @field:NotBlank @field:Size(max = 4000) val message: String? = null,
+    @field:Size(max = 512) val imageUrl: String? = null
 )
 
-data class PushSubscriptionCreateRequest(
-    @field:NotBlank(message = "endpoint darf nicht leer sein")
-    @field:Size(max = 1024, message = "endpoint darf höchstens 1024 Zeichen lang sein")
-    val endpoint: String? = null,
-
-    @field:NotBlank(message = "p256dh darf nicht leer sein")
-    @field:Size(max = 255, message = "p256dh darf höchstens 255 Zeichen lang sein")
-    val p256dh: String? = null,
-
-    @field:NotBlank(message = "auth darf nicht leer sein")
-    @field:Size(max = 255, message = "auth darf höchstens 255 Zeichen lang sein")
-    val auth: String? = null,
-
-    @field:Size(max = 512, message = "userAgent darf höchstens 512 Zeichen lang sein")
-    val userAgent: String? = null
+data class RegisterPushSubscriptionRequest(
+    @field:Size(max = 2048) val endpoint: String? = null,
+    @field:Size(max = 255) val p256dh: String? = null,
+    @field:Size(max = 255) val auth: String? = null,
+    @field:Size(max = 512) val userAgent: String? = null
 )
 
 data class SendNotificationRequest(
-    @field:NotBlank(message = "userId darf nicht leer sein")
     val userId: String? = null,
-
-    @field:NotBlank(message = "title darf nicht leer sein")
-    @field:Size(max = 255, message = "title darf höchstens 255 Zeichen lang sein")
     val title: String? = null,
-
-    @field:NotBlank(message = "body darf nicht leer sein")
-    @field:Size(max = 4000, message = "body darf höchstens 4000 Zeichen lang sein")
     val body: String? = null,
-
-    @field:Size(max = 64, message = "type darf höchstens 64 Zeichen lang sein")
     val type: String? = null
 )
+
+data class BroadcastNotificationRequest(
+    val userIds: List<String>? = null,
+    val allMembers: Boolean? = null,
+    val title: String? = null,
+    val body: String? = null
+)
 ```
+
+Die Meldungen der Validierung kommen aus den Sprachdateien (`{validation.…}`), siehe [Fachservice-i18n](../baseservice/i18n.md).
 
 ---
 
@@ -121,14 +114,14 @@ sequenceDiagram
     actor Member as Empfänger (Service Worker)
 
     Board->>Spring: POST /api/v1/notifications (userId, title, body, type)
-    Spring->>DB: INSERT INTO notifications (user_id, title, body, type, read = false)
-    Spring->>DB: SELECT * FROM push_subscriptions WHERE user_id = :userId
+    Spring->>DB: INSERT INTO notifications (verschlüsselter Titel und Text, read = false)
+    Spring->>DB: Push-Abos des Kontos laden
     loop Für jedes aktive Abonnement
         Note over Spring: Nach dem Commit, im Hintergrund:<br/>signiert VAPID JWT mit privatem Server-Key
         Spring->>PushService: POST <endpoint> (ohne Nutzlast, Authorization: vapid t=...)
         PushService-->>Spring: 201 Created
         PushService->>Member: Push Event an Service Worker
-        Member->>Spring: GET /api/v1/notifications (Sitzung)
+        Member->>Spring: GET /api/v1/notifications (Sitzung, gewählte Gruppe)
         Member->>Member: Zeigt neueste ungelesene Mitteilung als System-Notification
     end
 ```

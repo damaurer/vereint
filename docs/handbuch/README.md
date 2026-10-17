@@ -30,9 +30,10 @@ Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mit
 - Push-Nachrichten kommen erst an, wenn der Betreiber Push auf dem Server eingerichtet hat. Bist du in mehreren Gruppen, zeigt eine Push-Nachricht aus einer anderen als der gerade offenen Gruppe manchmal nur „Du hast eine neue Mitteilung“.
 - Tarife buchen geht erst, wenn der Betreiber die Online-Zahlung über Stripe eingerichtet hat.
 - Die Seite **Plattform** (`/plattform`) ist nur für das Vereint-Team und wird hier nicht weiter beschrieben.
+- **Impressum** und **AGB** zeigen oben den Hinweis „Entwurf“, solange der Betreiber seine Angaben noch nicht eingetragen hat.
 
 ## Bilder neu erzeugen
 
 Die Bilder entstehen automatisch mit einem Skript, damit sie nach Änderungen an der Oberfläche schnell aktualisiert werden können. Anleitung: [`scripts/handbook/README.md`](../../scripts/handbook/README.md).
 
-Noch neu aufzunehmen: die Bilder zur Vorstandsübersicht und zum Menü *Mehr* (zeigen den Stand vor der Überarbeitung). Für Kiosk-Modus, Kiosk-Geräte und Moments mit Fotos und Videos gibt es bisher nur Text. Ebenso noch ohne Bilder: Gruppe wählen, Gruppe eröffnen, Beitritt mit bestehendem Konto, Gruppeneinstellungen mit Rollen, Tarife und Getränkedatenbank. Einige ältere Bilder zeigen außerdem noch die frühere Bezeichnung „Vereinschat“ statt „Gruppenchat“.
+Alle Bilder zeigen den aktuellen Stand der App mit Demo-Daten. Für Moments mit Fotos und Videos, die Seite **Gruppe wählen** und den Beitritt mit bestehendem Konto gibt es noch keine Bilder; dort beschreibt nur der Text den Ablauf.

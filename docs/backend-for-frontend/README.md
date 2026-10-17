@@ -21,7 +21,7 @@ graph TD
 2. **[02. Request-Pipeline & Header](02-request-pipeline.md)**: `server.ts` Zeile für Zeile, Middleware-Reihenfolge, Helmet/CSP, Cache-Strategien und SSR-Transfer-State-Schutz.
 3. **[03. Authentifizierung & Session](03-authentication-and-session.md)**: OIDC Authorization Code Flow mit PKCE, Cookie-Verschlüsselung (AES-256-GCM + HKDF), Token-Refresh und Logout.
 4. **[04. Autorisierung & Kontexte](04-authorization.md)**: AppContexts, 5-Stufen-Entscheidungsbaum von `authorizePages`, LRU-Cache, Stale-Grace-Resilienz und Fehlerformate.
-5. **[05. API-Proxy & Einladungen](05-api-proxy-and-invites.md)**: Same-Origin `/api/v1/*` Weiterleitung mit automatischem Bearer-Token-Anhang und Einladungscode-Validierung.
+5. **[05. API-Proxy & Einladungen](05-api-proxy-and-invites.md)**: Same-Origin `/api/v1/*` Weiterleitung mit automatischem Bearer-Token-Anhang, gewählter Gruppe (`X-Stammtisch-Id`), Medien-Streaming und Einladungscode-Validierung.
 6. **[06. Server erweitern & How-Tos](06-extending-the-server.md)**: Schritt-für-Schritt-Rezepte (neue Route, neuer Kontext, neue Env-Variable), Testen mit Vitest, Debugging und Checklisten.
 
 ---
@@ -36,8 +36,8 @@ graph LR
     B[Browser / PWA]
   end
 
-  subgraph BFF["Express 5 BFF (Port 4300)"]
-    S[Delivery & Security Headers]
+  subgraph BFF["Express 5 BFF (Produktion Port 8080, lokal 4200)"]
+    S[Delivery & Security Headers, Cross-Site-Schutz, Rate-Limits]
     I[attachIdentity]
     A[authRoutes]
     P[apiProxy]
@@ -60,7 +60,7 @@ graph LR
   Z -->|HTML Rendering| SSR
 
   A <-->|OIDC / PKCE / Tokens| K
-  P <-->|Bearer Token Forwarding| SP
+  P <-->|Bearer Token & X-Stammtisch-Id| SP
   Z <-->|GET /api/v1/auth/access| SP
   SSR -->|Sanitized HTML| B
 ```
@@ -79,6 +79,7 @@ graph LR
 | **Fail Closed** | Ist ein Upstream-Dienst (Keycloak oder Spring Boot) nicht erreichbar oder antwortet zu langsam, wird der Zugriff blockiert (`503 Service Unavailable`) statt unberechtigt freigegeben. |
 | **Transfer-State Sanitization** | Filterung des vom Angular SSR generierten `ng-state` auf eine explizite Positivliste unkritischer Felder vor Auslieferung des HTML an den Browser. |
 | **Cookie Chunking** | Aufteilung großer verschlüsselter Sitzungszustände auf bis zu 6 Teil-Cookies (`vereint_session`, `vereint_session.1` ...), um Browsergrenzen (4 KB) sicher einzuhalten. |
+| **Gruppen-Cookie** | HttpOnly-Cookie `vereint.stammtisch` mit der gewählten Gruppe; der Proxy setzt daraus den Header `X-Stammtisch-Id`. Er gewährt nichts, der Fachservice prüft die Mitgliedschaft. |
 | **Stale Grace Period** | 60-sekündige Übergangsfrist, in der bei kurzzeitigem Spring-Ausfall eine abgelaufene Zugriffsentscheidung weiterverwendet werden darf, um Ladeabbrüche zu minimieren. |
 
 ---

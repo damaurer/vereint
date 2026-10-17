@@ -19,7 +19,7 @@ Die Dokumentation ist modular in diese Bereiche unterteilt:
 ```text
 docs/
 ├── funktionen.md                         # Was die App kann, Bereich für Bereich
-├── rollen-und-berechtigungen.md          # Mitglied, Vorstand, Administration, Terminal
+├── rollen-und-berechtigungen.md          # Rollen je Gruppe, eigene Rollen, Plattform-Admin
 ├── offene-punkte.md                      # Bekannte Lücken und nächste Schritte
 ├── handbuch/                             # Benutzerhandbuch je Rolle mit Bildschirmfotos
 │
@@ -59,6 +59,7 @@ docs/
 ├── domains/                              # Fachliche & Technische Spezifikationen der Kernmodule
 │   ├── stammtische.md                    # Mehrere Gruppen, Trennung (RLS), Rollen je Gruppe, Getränkedatenbank
 │   ├── abrechnung.md                     # Tarife je Gruppe, Stripe, Kulanzfrist, Datenexport
+│   ├── rechtliches.md                    # Impressum, AGB, Zustimmung, Betreiberangaben
 │   ├── auth-and-user-management.md       # Profile, Rollen, Deaktivierung & Provisionierung
 │   ├── ledger-and-finance.md             # Kassenbuch, Buchungslogik, Einkaufspreise & Deckungsbeitrag
 │   ├── drink-catalog-and-sublists.md     # Getränkekatalog & Event-Sublisten
@@ -100,7 +101,7 @@ docs/
 | **Kassenbuch / Ledger** | `LedgerEntry`, `LedgerService` | Unveränderliches Transaktionsjournal (Double-Entry Prinzip) für `topup`, `purchase`, `payout` und `correction`. |
 | **Guthaben (Balance)** | `MemberBalanceDto.creditBalance` | Aktueller Kontostand eines Mitglieds als `BigDecimal` (in EUR). |
 | **Idempotenzschlüssel** | `Idempotency-Key` (UUIDv4) | Eindeutiger HTTP-Header zur Vermeidung von Doppelbuchungen bei Verbindungsabbrüchen. |
-| **Subliste (Sublist)** | `DrinkSublistEntity`, `DrinkSublistItemEntity` | Eine für ein Event freigeschaltete Untermenge des globalen Getränkekatalogs. |
+| **Subliste (Sublist)** | `DrinkSublistEntity`, `DrinkSublistItemEntity` | Eine für ein Event freigeschaltete Untermenge des Getränkekatalogs der Gruppe. |
 | **Speisenkatalog (Food Catalog)** | `FoodCatalogEntity`, `FoodCatalogService` | Katalog der Gruppe für Speisen und Verzehrartikel mit Standard- und Einkaufspreisen. |
 | **Eventspeisen (Event Food)** | `EventFoodEntity`, `EventFoodService` | Veranstaltungsbezogenes Speisenangebot mit individueller Preisanpassung und Kiosk-Steuerung. |
 | **Einkaufspreis & Deckungsbeitrag** | `costPrice`, `profit = unitPrice - costPrice` | Erfassung des Wareneinsatzes zur automatischen Ermittlung der Gewinnmarge im Beleg-Snapshot und Kassenbuch. |

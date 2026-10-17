@@ -75,7 +75,9 @@ Alte Inhalte bleiben mit dem vorherigen Schlüssel lesbar.
   Administration empfohlen, Pflicht für niemanden.
 - Passwörter mit 10 bis 128 Zeichen, nicht gleich Benutzername oder E-Mail,
   nicht eines der letzten drei. Nach 5 Fehlversuchen wachsende Sperre.
-- Keine offene Selbstregistrierung, keine Wildcard-Redirects, keine Direct
+- Keine offene Selbstregistrierung in Keycloak (Konten entstehen nur über
+  Einladungslinks oder „Gruppe eröffnen“, abschaltbar mit `SIGNUP_ENABLED`),
+  kein „Passwort vergessen“ ohne Mailserver, keine Wildcard-Redirects, keine Direct
   Access Grants, Refresh-Token-Rotation. Login- und Admin-Ereignisse werden 90
   Tage gespeichert.
 - Einladungslinks: 32 zufällige Byte, nur der Hash gespeichert, das Token steht
@@ -85,7 +87,7 @@ Alte Inhalte bleiben mit dem vorherigen Schlüssel lesbar.
 
 - Fremde Seiten können nichts auslösen: Der webservice lehnt schreibende
   Anfragen ab, die nicht von der eigenen Seite kommen.
-- Rate-Limits: Einladungs- und Gast-Token-Endpunkte 30 Versuche je IP in
+- Rate-Limits: Einladungs-, Gast-Token- und Registrierungs-Endpunkte 30 Versuche je IP in
   15 Minuten, Login-Start 120 je IP in 5 Minuten, übrige API 600 Anfragen je
   Sitzung und Minute.
 - Der webservice reicht nur `/api/v1` weiter; die API-Beschreibung (Swagger) ist

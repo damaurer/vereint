@@ -17,12 +17,12 @@ sequenceDiagram
 
   Browser->>Proxy: POST /api/v1/ledger/purchases<br/>Cookie: vereint_session=...
   
-  Note over Proxy: 1. Liest Access-Token aus entschlüsselter Session<br/>2. Header-Sanitization (Cookie & Auth strippen)<br/>3. Authorization: Bearer <accessToken> injizieren<br/>4. X-Request-Id & Accept: application/json setzen
+  Note over Proxy: 1. Liest Access-Token aus entschlüsselter Session<br/>2. Header-Sanitization (Cookie, Auth, X-Stammtisch-Id strippen)<br/>3. Authorization: Bearer <accessToken> und X-Stammtisch-Id aus Cookie vereint.stammtisch<br/>4. X-Request-Id & Accept: application/json setzen
   
-  alt Keine gültige Session / Access-Token fehlt
+  alt Keine gültige Session / Access-Token fehlt (außer öffentliche Pfade und Gast-Token)
     Proxy-->>Browser: 401 Unauthorized (Problem Details: oidc_session_expired)
   else Session gültig
-    Proxy->>Spring: POST http://localhost:8081/api/v1/ledger/purchases<br/>Authorization: Bearer <token><br/>X-Request-Id: <uuid>
+    Proxy->>Spring: POST http://localhost:8081/api/v1/ledger/purchases<br/>Authorization: Bearer <token><br/>X-Stammtisch-Id: <gruppe><br/>X-Request-Id: <uuid>
     
     alt Spring antwortet innerhalb von 8 Sekunden
       Spring-->>Proxy: 200 / 201 / 400 / 403 / 409
@@ -48,9 +48,11 @@ Um Header-Kollisionen und Sicherheitslecks zu verhindern, entfernt der Proxy fol
 - `authorization` (überschrieben durch das serverseitige Keycloak-Token)
 - `content-length`
 - `accept-encoding`
+- `x-stammtisch-id` (die Gruppe kommt ausschließlich aus dem Cookie des BFF)
 
 ### 2. Header-Injektion (Request)
 - `Authorization`: `Bearer <accessToken>` aus der Session.
+- `X-Stammtisch-Id`: gewählte Gruppe aus dem HttpOnly-Cookie `vereint.stammtisch` (nur mit Session). Der Fachservice prüft die Mitgliedschaft selbst.
 - `X-Request-Id`: Vorhandene `X-Request-Id` (falls `^[\w.-]{1,128}$`) oder neu generierte UUIDv4 (`requestId`).
 - `Accept`: Standardmäßig `application/json`, falls vom Client nicht gesetzt.
 
@@ -62,7 +64,17 @@ Vom Fachservice zurückgelieferte Antworten werden gefiltert:
   - `Vary: Cookie`
   - `X-Request-Id: <traceId>`
 
-### 4. Timeout-Parameter
+### 4. Pfade ohne Session
+Ohne Session reicht der Proxy nur Anfragen mit Header `X-Guest-Token` sowie `/api/v1/invites/accept`, `/api/v1/member-invites/preview`, `/api/v1/member-invites/register`, `/api/v1/signup`, `/api/v1/auth/access/guest`, `/api/v1/health` und `/api/v1/info` weiter.
+
+### 5. Pfad-Prüfung (`resolveTargetUrl`)
+Pfade mit `..`, `.`, Backslashes oder kodierten Schrägstrichen und Punkten werden verworfen; das Ziel muss unter `/api/v1/` des Fachservice liegen.
+
+### 6. Uploads und Medien-Streaming
+- Multipart-Uploads (Bilder, Gruppenbild) puffert der Proxy bis `API_PROXY_MAX_UPLOAD` (`6mb`).
+- Fotos und Videos in Moments (`MOMENT_MEDIA_PATH`: `/api/v1/events/{id}/moments/{id}/media` und `.../media/{id}/content`) laufen über `mediaStreamProxy`: ungepuffert, mit `Content-Length` und `Range`-Unterstützung (`206`). Größen- und Dauergrenzen prüft Spring, Caddy begrenzt den Körper auf 110 MB.
+
+### 7. Timeout-Parameter
 - **`API_PROXY_TIMEOUT_MS`**: `8000 ms` (8 Sekunden).
 - Antwortet Spring Boot nicht innerhalb von 8 Sekunden, bricht der Request via `AbortController` ab und liefert einen `503 Service Unavailable`-Fehler.
 
@@ -120,4 +132,5 @@ export async function validateInvite(code: string): Promise<ValidatedInvite | un
 
 ### Sicherheitsprinzip (*Express ist keine Sicherheitsgrenze*):
 1. Die Express-Prüfung prüft ausschließlich, ob der Code wohlgeformt ist (16 bis 256 alphanumerische Zeichen inkl. `-` und `_`), um offensichtlich unbrauchbare Eingaben frühzeitig mit `404 { error: 'invite-not-found' }` abzuweisen.
-2. **Die verbindliche Einlösung, kryptografische Verifikation und Berechtigungszuweisung erfolgt ausschließlich in Spring Boot** über `POST /api/v1/invites/accept` (`deny by default`).
+2. **Die verbindliche Einlösung, kryptografische Verifikation und Berechtigungszuweisung erfolgt ausschließlich in Spring Boot** (`deny by default`): Einladungslinks in eine Gruppe über `POST /api/v1/member-invites/preview`, `/register` (neues Konto) bzw. `/join` (bestehendes Konto), Gast-Einladungen zu Events über `POST /api/v1/invites/accept`.
+3. Der BFF nutzt `validateInvite` außerdem für die alte Form `/register/<code>`, die er auf `/register#<code>` umleitet.

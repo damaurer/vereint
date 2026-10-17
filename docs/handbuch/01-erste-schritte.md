@@ -11,9 +11,10 @@ Neu in einer Gruppe? Dann bekommst du vom Vorstand einen **Einladungslink**.
 1. Den Link öffnen. Vereint prüft ihn und zeigt, bis wann er gilt.
 2. **Vorname**, **Nachname** und **E-Mail-Adresse** eintragen.
 3. Ein **Passwort** mit mindestens 10 Zeichen wählen und wiederholen.
-4. **Konto anlegen** tippen, danach **Jetzt anmelden** und mit E-Mail-Adresse und Passwort anmelden.
+4. Den Haken bei „Ich habe die **AGB** gelesen und stimme ihnen zu.“ setzen. Ohne Zustimmung legt Vereint kein Konto an.
+5. **Konto anlegen** tippen, danach **Jetzt anmelden** und mit E-Mail-Adresse und Passwort anmelden.
 
-Funktioniert der Link nicht, ist er abgelaufen, schon verwendet oder zurückgezogen. Bitte den Vorstand um einen neuen. Gibt es für deine E-Mail-Adresse schon ein Konto, melde dich damit an und öffne den Link danach noch einmal (siehe unten). Passwort vergessen? Siehe unten.
+Funktioniert der Link nicht, ist er abgelaufen, schon verwendet oder zurückgezogen. Bitte den Vorstand um einen neuen. Gibt es für deine E-Mail-Adresse schon ein Konto, melde dich damit an und öffne den Link danach noch einmal (siehe unten). Passwort vergessen? Siehe [Anmelden](#anmelden).
 
 <br clear="right">
 
@@ -25,25 +26,25 @@ Du hast schon ein Konto, etwa weil du in einer anderen Gruppe bist? Dann brauchs
 2. Öffne den Einladungslink. Vereint zeigt **Gruppe beitreten**.
 3. Tippe auf **Dieser Gruppe beitreten**.
 
-Du bist sofort Mitglied und landest auf der Startseite der neuen Gruppe. Dein Konto, dein Name und deine Einstellungen bleiben gleich.
+Du bist sofort Mitglied und landest auf der Startseite der neuen Gruppe. Dein Konto, dein Name und deine Einstellungen bleiben gleich. Erlaubt der Tarif der Gruppe keine weiteren Mitglieder, ist kein Beitritt möglich; dann hilft nur der Vorstand der Gruppe.
 
 ## Anmelden
 
 <img src="bilder/login.png" alt="Anmeldeseite" width="300" align="right">
 
 1. Öffne die Adresse von Vereint im Browser, am Handy oder am Rechner.
-2. Gib deinen **Benutzernamen oder deine E-Mail-Adresse** und dein **Passwort** ein.
+2. Unter **Benutzername oder E-Mail** deinen Benutzernamen oder deine E-Mail-Adresse eintragen, dazu dein **Passwort**.
 3. Tippe auf **Anmelden**.
 
 Weitere Möglichkeiten auf dieser Seite:
 
 - **Angemeldet bleiben**: Du musst dich auf diesem Gerät nicht jedes Mal neu anmelden. Nur auf deinem eigenen Gerät anhaken.
-- **Passwort vergessen?** Vereint verschickt keine E-Mails. Melde dich beim Admin deiner Gruppe. Ein neues, vorläufiges Passwort setzt, wer Zugang zur Keycloak-Verwaltung hat (meist der Betreiber von Vereint); du änderst es beim nächsten Anmelden.
+- Einen Link „Passwort vergessen?“ gibt es nicht, weil Vereint keine E-Mails verschickt. Hast du dein Passwort vergessen, melde dich beim Admin deiner Gruppe. Ein neues, vorläufiges Passwort setzt, wer Zugang zur Keycloak-Verwaltung hat (meist der Betreiber von Vereint); du änderst es beim nächsten Anmelden.
 - Oben kannst du die Sprache der Anmeldeseite wählen.
 
 Nach der Anmeldung landest du auf der Startseite. Bist du in mehreren Gruppen, wählst du vorher eine aus (siehe [Gruppe wählen und wechseln](#gruppe-wählen-und-wechseln)).
 
-Unter der Anmeldung steht außerdem **Noch keine Gruppe? Eigene Gruppe eröffnen** (siehe [Eine eigene Gruppe eröffnen](#eine-eigene-gruppe-eröffnen)).
+Unter der Anmeldung steht außerdem „Noch keine Gruppe? **Eigene Gruppe eröffnen**“ (siehe [Eine eigene Gruppe eröffnen](#eine-eigene-gruppe-eröffnen)). Ganz unten führen **Impressum** und **AGB** zu den Rechtstexten.
 
 <br clear="right">
 
@@ -73,9 +74,9 @@ Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, w
 - **Theke**: Getränkekatalog, Getränkelisten, Statistik
 - **Verwaltung**: nur für Vorstand, Administration und Theke
 
-Ganz unten im Mehr-Menü meldest du dich mit **Abmelden** ab.
+Ganz unten im Mehr-Menü meldest du dich mit **Abmelden** ab. Darunter stehen **Impressum** und **AGB**.
 
-**Am Tablet und am Rechner** stehen dieselben Bereiche in einer Seitenleiste links (siehe Bilder im [Leitfaden Administration](04-administration.md)). Abmelden geht dort über deinen Namen oben rechts.
+**Am Tablet** steht links eine schmale Leiste mit denselben vier Bereichen und **Mehr**. **Am Rechner** stehen alle Bereiche in einer Seitenleiste links, unten mit **Impressum** und **AGB** (siehe Bilder im [Leitfaden Administration](04-administration.md)). Auf beiden öffnet dein Name oben rechts ein Menü mit **Profil**, **Guthaben** und **Abmelden**.
 
 <br clear="right">
 
@@ -93,17 +94,20 @@ Wie du eine Gruppe verlässt, steht im [Leitfaden Mitglied](02-mitglied.md#eine-
 
 ## Eine eigene Gruppe eröffnen
 
+<img src="bilder/g-gruppe-eroeffnen.png" alt="Eine eigene Gruppe eröffnen" width="300" align="right">
+
 Jede Person kann selbst eine Gruppe gründen und ist dann ihr Admin. Den Weg dorthin findest du auf der Anmeldeseite unter **Eigene Gruppe eröffnen**, auf der Seite **Gruppe wählen** oder direkt unter `/gruppe-eroeffnen`.
 
-**Ohne Konto**: **Name der Gruppe**, **Vorname**, **Nachname**, **E-Mail-Adresse** und ein **Passwort** eintragen und **Gruppe eröffnen** tippen. Vereint legt Konto und Gruppe in einem Schritt an. Danach mit **Jetzt anmelden** anmelden.
+**Ohne Konto**: **Name der Gruppe**, **Vorname**, **Nachname**, **E-Mail-Adresse** und ein **Passwort** eintragen, den AGB zustimmen und **Gruppe eröffnen** tippen. Vereint legt Konto und Gruppe in einem Schritt an. Danach mit **Jetzt anmelden** anmelden. Hast du schon ein Konto, tippe auf **Erst anmelden, dann eröffnen**.
 
-**Mit Konto**: Bist du schon angemeldet, reicht der **Name der Gruppe**. Nach **Gruppe eröffnen** öffnet sich die neue Gruppe gleich.
+**Mit Konto**: Bist du schon angemeldet, reicht der **Name der Gruppe** und der Haken bei den AGB. Nach **Gruppe eröffnen** öffnet sich die neue Gruppe gleich.
 
 In beiden Fällen gilt:
 
 - Die Gruppe startet im Tarif **Kostenlos** mit bis zu 10 Mitgliedern. Einen größeren Tarif kannst du später buchen (siehe [Leitfaden Administration](04-administration.md#tarif-zahlung-und-rechnungen)).
 - Nach der Anmeldung landest du in den **Gruppeneinstellungen**. Dort wählst du den Tarif. Mitglieder lädst du per Einladungslink ein (siehe [Neue Mitglieder einladen](04-administration.md#neue-mitglieder-einladen)).
 - Pro Person sind höchstens drei eigene Gruppen möglich.
+- Hat der Betreiber das Eröffnen abgeschaltet, meldet Vereint „Die Registrierung ist gerade nicht möglich“. In eine bestehende Gruppe kommst du dann weiter per Einladungslink.
 
 ## Profil, Darstellung und Sprache
 

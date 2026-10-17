@@ -16,6 +16,8 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 - Eigene Gruppe eröffnen unter *Eigene Gruppe eröffnen* (`/gruppe-eroeffnen`):
   Gruppenname und Konto in einem Schritt, die Person wird Admin, die Gruppe
   startet im Tarif *Kostenlos*. Höchstens drei eigene Gruppen pro Person.
+  Der Betreiber kann das Eröffnen abschalten (`SIGNUP_ENABLED`); Einladungslinks
+  funktionieren dann weiter.
 - *Gruppeneinstellungen*: Name und Bild der Gruppe, Rollen und Berechtigungen,
   Tarif, Datenexport, Gruppe verlassen.
 - Die Plattform-Administration (Vereint-Team) legt unter `/plattform` Gruppen an,
@@ -38,6 +40,9 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
   danach ist sie nur lesbar, bis bezahlt ist. Gelöscht wird nichts.
 - Ohne Stripe-Einrichtung ist die Online-Zahlung aus; „Meine Gruppe“ aus der
   Migration läuft mit allen Funktionen weiter.
+- Ist ein Förderbeitrag eingerichtet, kann jedes Mitglied unter *Vereint
+  unterstützen* freiwillig einen persönlichen Monatsbeitrag zahlen. Am Tarif
+  der Gruppe ändert das nichts.
 - Details: [docs/domains/abrechnung.md](domains/abrechnung.md)
 
 ## Start und Navigation
@@ -45,7 +50,8 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 - Dashboard mit Guthaben, nächsten Events (direkt zu- oder absagen) und neuen
   Mitteilungen.
 - Auf dem Handy eine Leiste unten mit *Start*, *Events*, *Chat*, *Guthaben* und
-  *Mehr*; auf größeren Bildschirmen eine Seitennavigation.
+  *Mehr*, am Tablet dieselben Einträge in einer schmalen Leiste links, am
+  Rechner eine Seitenleiste mit allen Bereichen.
 - Hell, Dunkel oder Systemeinstellung im Profil; Sprache Deutsch oder Englisch.
 - Freiwillige Zwei-Faktor-Anmeldung mit einer Authenticator-App, im Profil unter *Sicherheit*.
 
@@ -148,13 +154,27 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
   nur ein Hash.
 - Details: [docs/domains/member-invites.md](domains/member-invites.md)
 
+## Rechtliches
+
+- Impressum (`/impressum`) und AGB mit Widerrufsbelehrung (`/agb`) sind
+  öffentliche Seiten ohne Anmeldung. Links stehen auf der Anmeldeseite, auf den
+  öffentlichen Seiten, unten in der Seitenleiste und im Menü *Mehr*.
+- Wer sich per Einladungslink registriert oder eine Gruppe eröffnet, stimmt
+  den AGB per Häkchen zu; Fassung und Zeitpunkt werden am Konto gespeichert.
+- Die Betreiberangaben sind noch Platzhalter; solange zeigen beide Seiten den
+  Hinweis „Entwurf“. Datenschutzerklärung und Auftragsverarbeitung fehlen noch.
+- Details: [docs/domains/rechtliches.md](domains/rechtliches.md)
+
 ## Verwaltung
 
 - Vorstand: Events, Kasse, Kommunikation (Rundbriefe, Infotafel), Einladungen,
   Moment-Typen und Reaktionen, Kiosk-Geräte. Die Übersicht zeigt unter
   *Letzte Aktionen* das Protokoll mit Namen.
-- Administration: Mitglieder, Konten deaktivieren, Audit-Protokoll. Rollen
-  vergibt und gestaltet man unter *Gruppeneinstellungen*.
+- Administration: Mitglieder, Konten deaktivieren, Audit-Protokoll. Rollen,
+  auch eigene, weist man unter *Administration → Bearbeiten → Rollen* zu;
+  anlegen und zuschneiden lassen sie sich unter *Gruppeneinstellungen →
+  Rollen & Berechtigungen*.
 - In Formularen und Protokollen wird mit Namen gearbeitet, nicht mit rohen IDs.
-- Passwort vergessen: Vereint verschickt keine E-Mails. Die Administration setzt
-  in der Keycloak-Verwaltung ein vorläufiges Passwort.
+- Passwort vergessen: Vereint verschickt keine E-Mails, die Anmeldeseite zeigt
+  deshalb keinen Link dafür. Wer Zugang zur Keycloak-Verwaltung hat (meist der
+  Betreiber), setzt ein vorläufiges Passwort.

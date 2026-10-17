@@ -35,7 +35,7 @@ class FoodCatalogService(...) {
     fun createSpecial(request: CreateFoodSpecialRequest, principal: UserPrincipal): FoodSpecialDto {
         val caller = userService.getOrCreateUser(principal)
         if (!isBoardOrAdmin(caller, principal)) {
-            throw AccessDeniedException("Nur Vorstand/Admin darf Specials anlegen", ErrorCode.ACCESS_DENIED)
+            throw AccessDeniedException(Msg("error.food.specialDenied"), ErrorCode.ACCESS_DENIED)
         }
         val entity = FoodSpecialEntity(
             name = request.name.trim(),
@@ -77,6 +77,7 @@ class FoodCatalogController(
 @Table(name = "food_specials")
 @EntityListeners(AuditingEntityListener::class)
 class FoodSpecialEntity(
+    // erbt `stammtischId` (@TenantId) von StammtischScoped
     @Id
     @Column(name = "id", nullable = false)
     var id: UUID = UUID.randomUUID(),
@@ -102,10 +103,10 @@ class FoodSpecialEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) : StammtischScoped()
 ```
 
-#### 2. Liquibase-Changeset schreiben (`src/main/resources/db/changelog/changes/008-food-specials.xml`)
+#### 2. Liquibase-Changeset schreiben (`src/main/resources/db/changelog/changes/017-food-specials.xml`)
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
@@ -114,7 +115,7 @@ class FoodSpecialEntity(
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-    <changeSet id="008-food-specials-create-table" author="baseservice">
+    <changeSet id="210-food-specials-create-table" author="baseservice">
         <createTable tableName="food_specials">
             <column name="id" type="UUID">
                 <constraints primaryKey="true" primaryKeyName="pk_food_specials" nullable="false"/>
@@ -124,6 +125,9 @@ class FoodSpecialEntity(
             </column>
             <column name="price" type="NUMERIC(10, 2)">
                 <constraints nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_food_specials_stammtisch" references="stammtische(id)"/>
             </column>
             <column name="created_by" type="UUID">
                 <constraints nullable="false" foreignKeyName="fk_food_specials_user" references="users(id)"/>
@@ -143,35 +147,51 @@ class FoodSpecialEntity(
             <dropTable tableName="food_specials"/>
         </rollback>
     </changeSet>
+
+    <!-- Zweite Sicherung neben @TenantId, wie Changeset 165 in 013-stammtische.xml -->
+    <changeSet id="211-food-specials-rls" author="baseservice" dbms="postgresql">
+        <sql splitStatements="false">
+            ALTER TABLE food_specials ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE food_specials FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON food_specials
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+    </changeSet>
 </databaseChangeLog>
 ```
 
 #### 3. In Master-Changelog einbinden (`db.changelog-master.xml`)
 ```xml
-<include file="db/changelog/changes/008-food-specials.xml"/>
+<include file="db/changelog/changes/017-food-specials.xml"/>
 ```
 
 ---
 
-### Rezept 3: Neue Permission oder Rolle einführen
+### Rezept 3: Neue Permission einführen
 
-1. **Permission-Konstante ergänzen** in `security/SecurityContracts.kt`:
+Rollen und ihre Rechte stehen je Gruppe in `stammtisch_roles`. Eine neue Permission braucht deshalb drei Stellen:
+
+1. **Permission-Konstante ergänzen** in `security/SecurityContracts.kt` und in `Permission.ALL` aufnehmen (sonst lehnt die Rollenverwaltung sie ab):
    ```kotlin
    object Permission {
        const val SPECIALS_MANAGE = "specials.manage"
    }
    ```
-2. **Matrix aktualisieren & `VERSION` erhöhen** in `security/RolePermissionMatrix.kt`:
+2. **Startwerte aktualisieren & `VERSION` erhöhen** in `security/RolePermissionMatrix.kt`. Das wirkt nur für neu angelegte Gruppen:
    ```kotlin
    object RolePermissionMatrix {
-       const val VERSION = 3 // Erhöhen!
-       private val BOARD_PERMISSIONS = setOf(
+       const val VERSION = 5 // Erhöhen!
+       private val BOARD_PERMISSIONS = MEMBER_PERMISSIONS + setOf(
            ...,
            Permission.SPECIALS_MANAGE
        )
    }
    ```
-3. **BFF abgleichen**: Synchronisiere die Änderung in `webservice/src/server/auth/role-matrix.ts`, damit der BFF-Cache und die TypeScript-Typen synchron bleiben.
+3. **Bestehende Gruppen per Migration nachziehen**: ein Changeset, das die Permission in `stammtisch_roles.permissions` der passenden Systemrollen ergänzt (vorher `SET LOCAL vereint.rls_bypass = 'on'`, Beispiel in `015-billing.xml`).
+4. **Oberfläche**: Die Rollenverwaltung gruppiert Rechte nach ihrem Präfix; für ein neues Präfix einen Text unter `stammtisch.permissionGroups.<präfix>` in `webservice/src/app/i18n/locales/*.json` anlegen. Der BFF liest die Matrix über `GET /api/v1/auth/access/matrix` und braucht keinen eigenen Abgleich.
 
 ---
 
@@ -186,10 +206,11 @@ class FoodSpecialEntity(
 2. **Exception definieren** in `error/Exceptions.kt`:
    ```kotlin
    class SpecialExpiredException(
-       message: String = "Das Tages-Special ist abgelaufen",
+       msg: Msg = Msg("error.food.specialExpired"),
        errorCode: String = ErrorCode.SPECIAL_EXPIRED
-   ) : ApiException(errorCode, message, HttpStatus.GONE)
+   ) : ApiException(errorCode, msg, HttpStatus.GONE)
    ```
+   Den Text unter dem Schlüssel in `i18n/messages.properties` und `messages_en.properties` eintragen (siehe [i18n](i18n.md)).
 3. *Hinweis*: Da `SpecialExpiredException` von `ApiException` erbt, greift automatisch `GlobalExceptionHandler.handleApiException` – kein weiterer Code im Exception-Handler nötig!
 
 ---
@@ -226,10 +247,11 @@ Soll ein Endpunkt ausnahmsweise ohne JWT erreichbar sein (z. B. ein öffentliche
        ...
    ).permitAll()
    ```
-2. **Risiko-Absicherung**:
+2. **Ohne Gruppe erreichbar?** Fachliche Pfade verlangen eine gewählte Gruppe. Soll der Endpunkt ohne Gruppenkontext laufen, den Pfad zusätzlich in `StammtischContextFilter.isStammtischFree` aufnehmen.
+3. **Risiko-Absicherung**:
    - Stelle sicher, dass im Controller keine sensiblen Benutzerdaten oder unveröffentlichten Entitäten zurückgegeben werden.
    - Der Endpunkt darf **nicht** `authContext.getRequiredPrincipal()` aufrufen (wirft sonst 401).
-3. **Test in `SecurityDenyByDefaultTest.kt` anpassen / erweitern**.
+4. **Test in `SecurityDenyByDefaultTest.kt` anpassen / erweitern**.
 
 ---
 
@@ -281,7 +303,8 @@ class FoodCatalogControllerTest {
 | **Controller Slice-Test** | `@SpringBootTest`, `@ActiveProfiles("test")` | H2 InMemory (`application-test.yaml`), Services gemockt via `@MockitoBean` | Testet HTTP-Routing, Bean-Validation, Security-Filter und Statuscodes. |
 | **Service Unit-Test** | Reines JUnit 5 mit Mockito (`@ExtendWith(MockitoExtension::class)`) | Keine DB (Mocks für Repositories) | Testet Berechnungslogik, Rollenprüfung, Guard Clauses und Exceptions. |
 | **Liquibase Schema-Test** | `@SpringBootTest`, `@ActiveProfiles("test")` (`LiquibaseSchemaTest`) | H2 InMemory | Validiert die syntaktische Korrektheit aller XML-Migrationen. |
-| **PostgreSQL Integrationstest** | `@SpringBootTest` mit `@Testcontainers` (`PostgresMigrationIntegrationTest`) | Echtes PostgreSQL im Docker-Container | Prüft PostgreSQL-spezifische SQL-Syntax, Indizes, Trigger und Fremdschlüssel. |
+| **PostgreSQL Integrationstest** | `@SpringBootTest` mit `@Testcontainers` (`PostgresMigrationIntegrationTest`, `RowLevelSecurityIntegrationTest`) | Echtes PostgreSQL im Docker-Container | Prüft PostgreSQL-spezifische SQL-Syntax, Indizes, Trigger, Fremdschlüssel und Row Level Security. |
+| **Gruppentrennung** | `StammtischSeparationIntegrationTest` | H2 InMemory | Prüft, dass Daten einer Gruppe in einer anderen nicht sichtbar sind. |
 
 ---
 
@@ -290,10 +313,12 @@ class FoodCatalogControllerTest {
 | Symptom / Fehler | Ursache | Lösung |
 | :--- | :--- | :--- |
 | **HTTP `401 Unauthorized`** (`code: "access_denied"`) | Kein `Authorization: Bearer <Token>` Header mitgesendet oder Token abgelaufen. | Gültiges JWT über Keycloak oder BFF anfordern; im Test `.with(jwt())` verwenden. |
-| **HTTP `403 Forbidden`** (`code: "permission_denied"`) | Dem Benutzer fehlt die erforderliche Rolle (`board`/`admin`) oder Permission. | Token-Claims in Keycloak prüfen oder Matrix in `RolePermissionMatrix.kt` erweitern. |
+| **HTTP `403 Forbidden`** (`code: "access_denied"` / `"permission_denied"`) | Der Person fehlt die Permission in der gewählten Gruppe. | Rollen der Person und `stammtisch_roles` der Gruppe prüfen; Keycloak-Realmrollen zählen nicht. |
+| **HTTP `409 Conflict`** (`code: "stammtisch_required"`) | Person ist in mehreren Gruppen, die Anfrage trägt keinen Header `X-Stammtisch-Id`. | Gruppe wählen (BFF: `POST /api/auth/stammtisch`) oder im Test den Header setzen. |
+| **Abfrage liefert nichts / Insert scheitert an RLS** | Code läuft ohne `TenantContext` (z. B. in einem Job). | Über `TenantTransactions.inStammtisch` bzw. `StammtischJobs` je Gruppe ausführen. |
 | **HTTP `409 Conflict`** (`code: "concurrent_modification"`) | Parallele Modifikation einer Entity (Optimistic Locking `@Version`). | Client muss die Ressource neu abrufen (`GET`) und die Änderung wiederholen. |
 | **Liquibase Checksum Error** (`ValidationFailedException`) | Ein bereits ausgeführtes Changeset wurde nachträglich im XML verändert. | Changesets niemals nachträglich editieren! Stattdessen ein neues Changeset (`00X-fix.xml`) anlegen. |
-| **PostgreSQL Connection Refused** (`Connection to localhost:5432 refused`) | Lokale PostgreSQL-Instanz läuft nicht. | `docker compose up -d postgres` im Projekt-Hauptverzeichnis ausführen. |
+| **PostgreSQL Connection Refused** (`Connection to localhost:5432 refused`) | Lokale PostgreSQL-Instanz läuft nicht. | `docker compose up -d vereint-db` im Projekt-Hauptverzeichnis ausführen. |
 | **Bean Validation ignoriert Validierungsfehler** | `@Valid` vor `@RequestBody` im Controller-Parameter vergessen. | `@Valid` hinzufügen und DTO-Felder mit `@field:NotBlank` / `@field:NotNull` annotieren. |
 
 ---
@@ -304,13 +329,14 @@ Vor dem Einreichen eines Pull Requests für den `baseservice` bitte prüfen:
 
 - [ ] **Tests erfolgreich**: `./gradlew test` bzw. `.\gradlew.bat test` läuft fehlerfrei durch.
 - [ ] **Deny by Default**: Neue Endpunkte erfordern Authentifizierung oder sind begründet in `SecurityConfig.kt` freigegeben.
-- [ ] **Rollen- & Rechteprüfung**: Fachlogik im Service prüft `principal` und Berechtigungen über `RolePermissionMatrix`.
+- [ ] **Rollen- & Rechteprüfung**: Fachlogik im Service prüft Berechtigungen der Gruppe über `StammtischAccess`.
+- [ ] **Gruppentrennung**: Neue fachliche Entities erben von `StammtischScoped`; die Tabelle hat `stammtisch_id` und eine RLS-Policy.
 - [ ] **Validierung**: Alle Request-DTOs nutzen Jakarta Bean Validation (`@field:NotBlank`, `@field:Min` etc.).
 - [ ] **Liquibase**: Schemaänderungen liegen in einem neuen nummerierten Changeset mit `<rollback>` und Eintrag in `db.changelog-master.xml`.
 - [ ] **Optimistic Locking**: Neue Entities besitzen `@Version var version: Long = 0`.
 - [ ] **OpenAPI**: Controller und Methoden sind mit `@Tag` und `@Operation` dokumentiert.
 - [ ] **Kein Secret-Leakage**: Passwörter, VAPID Private Keys oder S3 Secret Keys werden niemals in Logs oder DTOs ausgegeben.
-- [ ] **BFF-Abgleich**: Wurden Rollen, Permissions oder `ErrorCode`s geändert, wurden die TypeScript-Gegenstücke im BFF angepasst.
+- [ ] **Frontend-Abgleich**: Wurden Permissions oder `ErrorCode`s geändert, sind Texte und Typen im `webservice` angepasst (z. B. `api.types.ts`, `i18n/locales`).
 
 ---
 
