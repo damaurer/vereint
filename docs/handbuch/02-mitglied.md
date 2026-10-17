@@ -10,6 +10,8 @@ Für alle Mitglieder einer Gruppe. Anmeldung, Navigation und Profil stehen in de
 | selbst ein Event planen | **Events** → **Event anlegen** |
 | mit allen in der Gruppe schreiben | **Chat** → **Gruppenchat** |
 | jemandem persönlich schreiben | **Mehr → Direktnachrichten** → **Neue Nachricht** |
+| alle Termine aus allen meinen Gruppen sehen | **Mehr → Kalender** |
+| jemanden als Freund hinzufügen | **Mehr → Freunde** → **Anfragen** |
 | sehen, wer am meisten Striche hat | **Mehr → Statistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
 | ein Getränk selbst bezahlen | **Mehr → Bezahlen** (oder **Getränk bezahlen** auf der Startseite) → Strichcode scannen |
@@ -101,12 +103,36 @@ Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vor
 
 <img src="bilder/m-direkt.png" alt="Direktnachrichten" width="300" align="right">
 
-**Direktnachrichten** (über **Mehr** oder oben im Chat) sind Gespräche zu zweit, die nur ihr beide seht.
+**Direktnachrichten** (über **Mehr** oder oben im Chat) sind Gespräche zu zweit, die nur ihr beide seht. Sie gelten über alle Gruppen: Mit jeder Person gibt es genau ein Gespräch, egal in welcher Gruppe du gerade bist.
 
-- **Neue Nachricht** oder **Mitglieder durchsuchen**: Person wählen und losschreiben.
-- Bestehende Gespräche stehen unter **Konversationen**.
+- **Neue Nachricht**: Person wählen und losschreiben. Zur Auswahl stehen alle aus deinen Gruppen und deine Freunde. Unter dem Namen siehst du eure gemeinsamen Gruppen.
+- Bestehende Gespräche stehen unter **Konversationen**; mit dem Suchfeld findest du sie schnell.
+- Seid ihr weder befreundet noch in einer gemeinsamen Gruppe, bleibt das Gespräch lesbar, neue Nachrichten gehen aber nicht mehr.
+- Mit eingeschaltetem Push bekommst du neue Direktnachrichten aufs Handy, egal welche Gruppe gerade gewählt ist. Ein Tipp darauf öffnet das Gespräch.
 
 <br clear="right">
+
+## Kalender
+
+Unter **Mehr → Kalender** siehst du alle Termine aus allen deinen Gruppen an einem Ort: vergangene und kommende Events sowie die Moments dazu.
+
+- Mit **‹** und **›** blätterst du durch die Monate, **Heute** springt zurück.
+- Punkte in einem Tag zeigen Einträge an. Tippe auf den Tag, um nur diesen Tag zu sehen; **Ganzen Monat zeigen** hebt das wieder auf.
+- Jeder Eintrag nennt seine Gruppe. Bist du in mehreren Gruppen, filterst du oben mit **Gruppe**.
+- Ein Tipp auf einen Eintrag öffnet das Event bzw. seine Moments. Gehört er zu einer anderen Gruppe, wechselt die App vorher in diese Gruppe.
+
+Du siehst dieselben Events wie auf der Event-Seite der jeweiligen Gruppe: deine eigenen und die, zu denen du eingeladen bist.
+
+## Freunde
+
+Unter **Mehr → Freunde** führst du deine Freundesliste. Sie gilt über alle Gruppen.
+
+- **Freunde hinzufügen**: Person aus einer deiner Gruppen suchen und **Anfragen** tippen. Du kannst nur Personen anfragen, mit denen du eine Gruppe teilst.
+- **Anfragen an dich** nimmst du mit **Annehmen** an oder mit **Ablehnen** ab. Eigene Anfragen ziehst du mit **Zurückziehen** zurück.
+- **Nachricht** öffnet das Direktgespräch mit diesem Freund.
+- Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt. Ihr könnt euch dann weiter Direktnachrichten schreiben.
+- **Entfernen** und dann **Wirklich entfernen** beendet eine Freundschaft.
+- Mit eingeschaltetem Push erfährst du auf dem Handy, wenn dich jemand anfragt oder deine Anfrage annimmt.
 
 ## Guthaben
 
@@ -175,6 +201,7 @@ Die **Glocke** oben rechts (oder **Mehr → Mitteilungen**) sammelt alles, was d
 - Ungelesene Mitteilungen haben einen Punkt und einen farbigen Rand.
 - **Als gelesen markieren** gilt für eine Mitteilung, **Alle als gelesen markieren** für alle.
 - Oben kannst du unter **Mitteilungen auf diesem Gerät** Push einschalten, genauso wie im Profil (siehe [Erste Schritte](01-erste-schritte.md#mitteilungen-aufs-handy-push)).
+- Push kommt außerdem für neue Direktnachrichten, Freundschaftsanfragen und angenommene Anfragen. Diese stehen nicht in der Glocke, sondern im Chat bzw. unter **Freunde**.
 
 <br clear="right">
 

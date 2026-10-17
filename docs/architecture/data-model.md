@@ -158,7 +158,7 @@ erDiagram
 - **`member_invite_redemptions`**: `id` (`UUID`, PK), `invite_id` (FK `member_invites.id`), `user_id` (FK `users.id`), `redeemed_at`; Unique (`stammtisch_id`, `user_id`)
 
 ### 5. Chat, Push, Moments & Benachrichtigungen
-- **`conversations`**: `id` (`UUID`, PK), `type` (`VARCHAR(32)`, default `'event'`), `title` (`VARCHAR(255)`), `event_id` (FK `events.id`), `direct_key` (`VARCHAR(80)`, Unique je Gruppe, für Direktchats), `pinned_text`, `pinned_by`, `pinned_at`, `expires_at`
+- **`conversations`**: `id` (`UUID`, PK), `type` (`VARCHAR(32)`, default `'event'`), `title` (`VARCHAR(255)`), `event_id` (FK `events.id`), `direct_key` (`VARCHAR(80)`, Unique je Gruppe: `club` bzw. `event:{id}`; Direktchats liegen seit `017` in `direct_conversations`), `pinned_text`, `pinned_by`, `pinned_at`, `expires_at`
 - **`conversation_members`**: `id` (`UUID`, PK), `conversation_id` (FK `conversations.id`), `user_id` (FK `users.id`), `guest_id` (FK `event_guests.id`), `joined_at`, `last_read_at`
 - **`chat_messages`**: `id` (`UUID`, PK), `conversation_id` (FK `conversations.id`), `sender_id` (FK `users.id`), `guest_id` (FK `event_guests.id`), `message` (`TEXT`, verschlüsselt), `image_url` (`VARCHAR(512)`), `created_at` (`TIMESTAMPTZ`)
 - **`chat_reactions`**: `id` (`UUID`, PK), `message_id` (FK `chat_messages.id`), `user_id` (FK `users.id`), `emoji` (`VARCHAR(16)`), `created_at`
@@ -171,6 +171,14 @@ erDiagram
 - **`image_assets`**: `id` (`UUID`, PK), `owner_id` (FK `users.id`), `purpose` (`VARCHAR(32)`, Check: `profile`, `event`, `drink`, `moment`), `target_id` (`UUID`), `storage_key` (`VARCHAR(512)`), `content_type` (`VARCHAR(128)`), `size_bytes` (`BIGINT`), `width`, `height`, `image_version`, `original_filename`, `status` (`VARCHAR(32)`, Check: `active`, `deleted`)
 - **`kiosk_sessions`**: `id` (`UUID`, PK), `label` (`VARCHAR(60)`), `pin_hash` (`VARCHAR(100)`, BCrypt), `started_by`, `started_at`, `failed_attempts`, `lockout_count`, `locked_until`, `ended_at`, `ended_by`, `end_reason` (`VARCHAR(16)`)
 - **`audit_logs`**: `id` (`UUID`, PK), `actor_id` (FK `users.id`), `action` (`VARCHAR(128)`), `target_entity` (`VARCHAR(64)`), `target_id` (`VARCHAR(128)`), `details` (`TEXT`), `ip_address` (`VARCHAR(64)`), `created_at` (`TIMESTAMPTZ`)
+
+### 5a. Freunde & Direktnachrichten (gruppenübergreifend, je Konto)
+Ohne `stammtisch_id` und ohne Row-Level-Security; den Zugriff prüfen `FriendService` und `DirectMessageService` (nur die beiden Beteiligten).
+- **`friendships`**: `id` (`UUID`, PK), `pair_key` (`VARCHAR(80)`, Unique, sortierte Konto-IDs), `requester_id`, `addressee_id` (FK `users.id`), `status` (`pending`, `accepted`), `created_at`, `accepted_at`, `version`
+- **`direct_conversations`**: `id` (`UUID`, PK), `pair_key` (`VARCHAR(80)`, Unique), `created_at`, `version`
+- **`direct_participants`**: `id` (`UUID`, PK), `conversation_id` (FK `direct_conversations.id`), `user_id` (FK `users.id`), `joined_at`, `last_read_at`; Unique (`conversation_id`, `user_id`)
+- **`direct_messages`**: `id` (`UUID`, PK), `conversation_id` (FK), `sender_id` (FK `users.id`), `message` (`TEXT`, verschlüsselt), `image_url`, `created_at`
+- **`direct_reactions`**: `id` (`UUID`, PK), `message_id` (FK `direct_messages.id`), `user_id` (FK `users.id`), `emoji`, `created_at`; Unique (`message_id`, `user_id`, `emoji`)
 
 ### 6. Tarife
 - **`stammtisch_subscriptions`**: PK `stammtisch_id`, `plan` (`free`, `stammtisch`, `verein`), `billing_interval` (`month`, `year`), `status` (`none`, `active`, `past_due`, `canceled`, `comped`), `stripe_customer_id`, `stripe_subscription_id`, `current_period_end`, `grace_until`, `updated_at`, `version`
@@ -222,5 +230,8 @@ FOR EACH ROW EXECUTE FUNCTION vereint_reject_ledger_mutation();
 | `014` | `014-drink-library.xml` | Gemeinsame Getränkedatenbank (`drink_library`, `drink_library_barcodes`) ohne Preise. |
 | `015` | `015-billing.xml` | Tarife je Gruppe (`stammtisch_subscriptions`) und verarbeitete Stripe-Ereignisse (`billing_events`). |
 | `016` | `016-terms-acceptance.xml` | Zugestimmte AGB-Fassung je Konto (`users.terms_version`, `users.terms_accepted_at`). |
+| `017` | `017-drink-library-seed.xml` | Startbestand der Getränkedatenbank. |
+| `018` | `018-drink-library-seed-breweries.xml` | Weitere Getränke aus Brauerei-Sortimenten. |
+| `019` | `019-friends-and-direct-messages.xml` | Freundesliste und gruppenübergreifende Direktnachrichten; Umzug bestehender Direktchats. |
 
 Die Nummer `006` ist nicht vergeben.

@@ -7,14 +7,19 @@ neutral („Gruppe“, „Treffen“). „Vereint“ ist nur der Produktname. Ei
 Vereint-Installation trägt beliebig viele Gruppen, ähnlich wie Server bei
 Discord. Eine Person hat ein Konto (Keycloak) und kann Mitglied in mehreren
 Gruppen sein. Alles Fachliche gehört genau einer Gruppe: Events, Chat,
-Direktnachrichten, Guthaben und Buchungen, Katalog und Sublisten, Moments,
-Mitteilungen, Einladungen, Kiosk-Geräte, Audit-Log und Statistik.
+Guthaben und Buchungen, Katalog und Sublisten, Moments, Mitteilungen,
+Einladungen, Kiosk-Geräte, Audit-Log und Statistik.
 
 Übergreifend sind nur:
 
 - das Konto selbst (Name, E-Mail, AGB-Zustimmung, Push-Abos),
 - die Liste der Gruppen und die Mitgliedschaften,
-- die gemeinsame **Getränkedatenbank** (Stammdaten ohne Preise).
+- die gemeinsame **Getränkedatenbank** (Stammdaten ohne Preise),
+- die **Freundesliste** und die **Direktnachrichten** (je Personenpaar ein
+  Gespräch, gehören den beiden Konten),
+- der **persönliche Kalender**. Er speichert nichts selbst, sondern liest Events
+  und Moments je eigener Gruppe im Kontext dieser Gruppe (siehe
+  [Kalender, Freunde und Direktnachrichten](kalender-freunde-direktnachrichten.md)).
 
 ## Trennung
 

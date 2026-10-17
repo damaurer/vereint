@@ -72,7 +72,7 @@ test.describe('Gruppenchat und Direktnachrichten', () => {
     const { page } = member;
     await page.goto('/direktnachrichten');
     await page.getByRole('button', { name: /Neue Nachricht/ }).click();
-    await page.getByLabel('Mitglied suchen').fill('Max');
+    await page.getByLabel('Person suchen').fill('Max');
     await page.locator('.dm-members').getByRole('button', { name: /Max Mitglied/ }).click();
     await page.getByPlaceholder('Schreibe eine Nachricht…').fill(text);
     await page.getByRole('button', { name: 'Senden' }).click();
@@ -90,12 +90,12 @@ test.describe('Gruppenchat und Direktnachrichten', () => {
     await expect(thread(page).getByText(answer)).toBeVisible();
 
     // Der Vorstand sieht das Gespraech weder in seiner Liste noch per API.
-    const conversations = await board.api.get<{ id: string; type: string; partnerName?: string }[]>('/conversations');
-    const own = await member.api.get<{ id: string; type: string; partnerName?: string }[]>('/conversations');
+    const conversations = await board.api.get<{ id: string; type: string; partnerName?: string }[]>('/direct-conversations');
+    const own = await member.api.get<{ id: string; type: string; partnerName?: string }[]>('/direct-conversations');
     const direct = own.find((c) => c.type === 'direct' && c.partnerName === 'Max Mitglied')!;
     expect(direct).toBeTruthy();
     expect(conversations.map((c) => c.id)).not.toContain(direct.id);
-    const denied = await board.api.raw.get(`/api/v1/conversations/${direct.id}/messages`);
+    const denied = await board.api.raw.get(`/api/v1/direct-conversations/${direct.id}/messages`);
     expect([403, 404]).toContain(denied.status());
   });
 

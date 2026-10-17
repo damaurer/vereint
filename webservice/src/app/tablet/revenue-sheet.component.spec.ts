@@ -28,11 +28,13 @@ describe('RevenueSheetComponent', () => {
     expect(root(fixture).querySelector('.sheet-list')).toBeFalsy();
   });
 
-  it('renders the beneficiaries and an idempotency hint while open', () => {
+  it('renders the beneficiaries and a double-tap hint without technical terms while open', () => {
     const fixture = create(true);
     expect(root(fixture).textContent).toContain('Alice');
     expect(root(fixture).textContent).toContain('Bob');
-    expect(root(fixture).textContent).toContain('Idempotency');
+    const text = root(fixture).textContent ?? '';
+    expect(text).toContain('nur einmal gebucht');
+    expect(text).not.toContain('Idempotency');
   });
 
   it('reflects the checkbox state from the selection', () => {

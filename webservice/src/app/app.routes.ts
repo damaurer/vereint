@@ -196,6 +196,20 @@ export const routes: Routes = [
       import('./chat/direct-messages.component').then((m) => m.DirectMessagesComponent),
   },
   {
+    // Persönlicher Kalender über alle eigenen Gruppen.
+    path: 'kalender',
+    canActivate: [authGuard],
+    data: { title: 'routes.calendar.title', description: 'routes.calendar.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./personal/calendar.component').then((m) => m.CalendarComponent),
+  },
+  {
+    // Freundesliste über alle Gruppen.
+    path: 'freunde',
+    canActivate: [authGuard],
+    data: { title: 'routes.friends.title', description: 'routes.friends.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./personal/friends.component').then((m) => m.FriendsComponent),
+  },
+  {
     path: 'notifications',
     canActivate: [authGuard],
     data: { title: 'routes.notifications.title', description: 'routes.notifications.description', access: 'routes.access.protected' },

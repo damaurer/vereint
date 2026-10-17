@@ -39,15 +39,33 @@ describe('ChatApiService', () => {
     expect(reaction.request.body).toEqual({ emoji: '🍺' });
     reaction.flush({});
 
-    service.startDirect('u-1').subscribe();
-    const direct = http.expectOne({ method: 'POST', url: '/api/v1/conversations/direct' });
-    expect(direct.request.body).toEqual({ userId: 'u-1' });
-    direct.flush({});
-
-    service.directory().subscribe();
-    http.expectOne({ method: 'GET', url: '/api/v1/users/directory' }).flush([]);
 
     service.me().subscribe();
     http.expectOne({ method: 'GET', url: '/api/v1/users/me' }).flush({});
+  });
+
+  it('routes direct messages to the cross-group endpoints', () => {
+    service.directConversations().subscribe();
+    http.expectOne({ method: 'GET', url: '/api/v1/direct-conversations' }).flush([]);
+
+    service.startDirect('u-1').subscribe();
+    const direct = http.expectOne({ method: 'POST', url: '/api/v1/direct-conversations' });
+    expect(direct.request.body).toEqual({ userId: 'u-1' });
+    direct.flush({});
+
+    service.messages('d1', 'direct').subscribe();
+    http.expectOne({ method: 'GET', url: '/api/v1/direct-conversations/d1/messages' }).flush([]);
+
+    service.send('d1', 'Hi', 'direct').subscribe();
+    http.expectOne({ method: 'POST', url: '/api/v1/direct-conversations/d1/messages' }).flush({});
+
+    service.markRead('d1', 'direct').subscribe();
+    http.expectOne({ method: 'POST', url: '/api/v1/direct-conversations/d1/read' }).flush({});
+
+    service.toggleReaction('d1', 'm1', '🍺', 'direct').subscribe();
+    http.expectOne({ method: 'POST', url: '/api/v1/direct-conversations/d1/messages/m1/reactions' }).flush({});
+
+    service.contacts().subscribe();
+    http.expectOne({ method: 'GET', url: '/api/v1/friends/contacts' }).flush([]);
   });
 });

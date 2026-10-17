@@ -9,7 +9,7 @@
   },
   "errors": {
     "api": {
-      "network": "Der Fachservice ist nicht erreichbar.",
+      "network": "Vereint ist gerade nicht erreichbar. Bitte versuche es gleich noch einmal.",
       "unavailable": "Der Dienst ist gerade nicht erreichbar. Bitte später erneut versuchen.",
       "sessionExpired": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
       "permissionDenied": "Für diese Aktion fehlen die erforderlichen Rechte.",
@@ -300,7 +300,9 @@
       "admin": "Administration",
       "tablet": "Thekenterminal",
       "scan": "Bezahlen",
-      "stammtisch": "Gruppeneinstellungen"
+      "stammtisch": "Gruppeneinstellungen",
+      "calendar": "Kalender",
+      "friends": "Freunde"
     },
     "sections": {
       "club": "Gruppe",
@@ -550,6 +552,14 @@
     "terms": {
       "title": "AGB",
       "description": "Allgemeine Geschäftsbedingungen von Vereint."
+    },
+    "calendar": {
+      "title": "Kalender",
+      "description": "Events und Moments aus allen deinen Gruppen."
+    },
+    "friends": {
+      "title": "Freunde",
+      "description": "Deine Freundesliste über alle Gruppen."
     }
   },
   "chat": {
@@ -593,7 +603,8 @@
       "send": "Senden",
       "sendFailed": "Nachricht konnte nicht gesendet werden. Bitte erneut versuchen.",
       "attachUnavailable": "Anhänge sind derzeit nicht verfügbar.",
-      "readOnly": "In diesem Chat kannst du nicht mehr schreiben."
+      "readOnly": "In diesem Chat kannst du nicht mehr schreiben.",
+      "readOnlyDirect": "Ihr seid weder befreundet noch in einer gemeinsamen Gruppe. Der Verlauf bleibt lesbar, neue Nachrichten gehen nicht."
     },
     "direct": {
       "eyebrow": "Direktnachrichten",
@@ -601,8 +612,8 @@
       "badge": "DMs",
       "toGroupChat": "← Zum Gruppenchat",
       "unavailable": "Direktnachrichten nicht verfügbar",
-      "searchLabel": "Mitglieder durchsuchen",
-      "searchPlaceholder": "Mitglieder durchsuchen…",
+      "searchLabel": "Gespräche durchsuchen",
+      "searchPlaceholder": "Gespräche durchsuchen…",
       "conversations": "Konversationen ({count})",
       "emptyTitle": "Keine Konversationen",
       "emptyMessage": "Es gibt keine passenden Einzelgespräche.",
@@ -610,14 +621,70 @@
       "noneSelectedTitle": "Kein Gespräch ausgewählt",
       "noneSelectedMessage": "Wähle links ein Gespräch oder starte ein neues.",
       "pickerTitle": "Neue Nachricht",
-      "pickerSearchLabel": "Mitglied suchen",
+      "pickerSearchLabel": "Person suchen",
       "pickerSearchPlaceholder": "Name eingeben…",
-      "pickerLoading": "Die Mitglieder werden abgerufen.",
-      "pickerUnavailable": "Mitglieder nicht verfügbar",
-      "pickerEmptyTitle": "Keine Mitglieder gefunden",
-      "pickerEmptyMessage": "Kein Mitglied passt zu deiner Suche.",
-      "pickerStarting": "Wird geöffnet…"
+      "pickerLoading": "Deine Kontakte werden abgerufen.",
+      "pickerUnavailable": "Kontakte nicht verfügbar",
+      "pickerEmptyTitle": "Niemand gefunden",
+      "pickerEmptyMessage": "Schreiben kannst du Freunden und Personen aus deinen Gruppen.",
+      "pickerStarting": "Wird geöffnet…",
+      "toFriends": "Freunde",
+      "friend": "Freund"
     }
+  },
+  "calendar": {
+    "eyebrow": "Über alle Gruppen",
+    "title": "Mein Kalender",
+    "intro": "Hier siehst du vergangene und kommende Events sowie Moments aus allen deinen Gruppen. Jeder Eintrag zeigt, zu welcher Gruppe er gehört.",
+    "navLabel": "Monat wählen",
+    "previous": "Voriger Monat",
+    "next": "Nächster Monat",
+    "today": "Heute",
+    "groupFilter": "Gruppe",
+    "allGroups": "Alle Gruppen",
+    "unavailable": "Kalender nicht verfügbar",
+    "loadingMessage": "Die Termine werden abgerufen.",
+    "emptyTitle": "Keine Einträge",
+    "emptyMonth": "In diesem Monat gibt es keine Events oder Moments.",
+    "emptyDay": "An diesem Tag gibt es keine Events oder Moments.",
+    "showMonth": "Ganzen Monat zeigen",
+    "monthAgenda": "Alles im {month}",
+    "kindEvent": "Event",
+    "kindMoment": "Moment",
+    "location": "Ort: {name}",
+    "atEvent": "Beim Event „{name}“",
+    "momentActive": "Läuft gerade",
+    "opening": "Wird geöffnet…",
+    "entries": "{count} Einträge",
+    "switchFailed": "Wechsel in die Gruppe „{name}“ hat nicht geklappt."
+  },
+  "friends": {
+    "eyebrow": "Über alle Gruppen",
+    "title": "Freunde",
+    "toDirect": "Zu den Direktnachrichten",
+    "intro": "Füge Personen aus deinen Gruppen als Freunde hinzu. Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt, und ihr könnt euch weiter Direktnachrichten schreiben.",
+    "unavailable": "Freundesliste nicht verfügbar",
+    "loadingMessage": "Deine Freunde werden abgerufen.",
+    "incoming": "Anfragen an dich ({count})",
+    "friends": "Deine Freunde ({count})",
+    "outgoing": "Deine Anfragen ({count})",
+    "accept": "Annehmen",
+    "decline": "Ablehnen",
+    "withdraw": "Zurückziehen",
+    "message": "Nachricht",
+    "remove": "Entfernen",
+    "confirmRemove": "Wirklich entfernen",
+    "waiting": "Wartet auf Antwort",
+    "noSharedGroup": "Keine gemeinsame Gruppe mehr",
+    "emptyTitle": "Noch keine Freunde",
+    "emptyMessage": "Füge unten Personen aus deinen Gruppen hinzu.",
+    "addTitle": "Freunde hinzufügen",
+    "addHint": "Du kannst nur Personen anfragen, mit denen du eine Gruppe teilst.",
+    "searchLabel": "Person suchen",
+    "searchPlaceholder": "Name eingeben…",
+    "add": "Anfragen",
+    "noCandidatesTitle": "Niemand zum Hinzufügen",
+    "noCandidatesMessage": "Alle aus deinen Gruppen sind schon Freunde oder angefragt, oder niemand passt zur Suche."
   },
   "moments": {
     "eyebrow": "Gemeinschaftsmomente & Rituale",
@@ -1001,7 +1068,7 @@
       "scope": "Umfang",
       "oneRound": "Eine Runde",
       "recipients": "Empfänger",
-      "hint": "Gültig, bis alle ein Getränk genommen haben. Doppelte Klicks werden über den Idempotency-Key nicht doppelt gebucht.",
+      "hint": "Gültig, bis alle ein Getränk genommen haben. Tippt jemand versehentlich doppelt, wird trotzdem nur einmal gebucht.",
       "confirmEvening": "Abend stiften",
       "confirmRound": "Runde ausgeben"
     },
@@ -1323,7 +1390,7 @@
       "title": "Bierkasse verwalten",
       "intro": "Guthaben aller Mitglieder, Kassenbuchungen und Eventabrechnungen.",
       "infoTitle": "Bierkasse",
-      "infoText": "Buchungen sind idempotent. Preis, Modus und Freigabe bestimmt ausschließlich der Fachservice.",
+      "infoText": "Jede Buchung zählt nur einmal, auch wenn sie versehentlich doppelt abgeschickt wird.",
       "eventsLoading": "Events werden abgerufen.",
       "unavailable": "Kasse nicht verfügbar",
       "statEvents": "Events mit Abrechnung",
