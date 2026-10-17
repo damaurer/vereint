@@ -114,6 +114,8 @@ Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vor
 
 ## Kalender
 
+<img src="bilder/m-kalender.png" alt="Kalender über alle Gruppen" width="300" align="right">
+
 Unter **Mehr → Kalender** siehst du alle Termine aus allen deinen Gruppen an einem Ort: vergangene und kommende Events sowie die Moments dazu.
 
 - Mit **‹** und **›** blätterst du durch die Monate, **Heute** springt zurück.
@@ -123,7 +125,11 @@ Unter **Mehr → Kalender** siehst du alle Termine aus allen deinen Gruppen an e
 
 Du siehst dieselben Events wie auf der Event-Seite der jeweiligen Gruppe: deine eigenen und die, zu denen du eingeladen bist.
 
+<br clear="right">
+
 ## Freunde
+
+<img src="bilder/m-freunde.png" alt="Freunde und Anfragen" width="300" align="right">
 
 Unter **Mehr → Freunde** führst du deine Freundesliste. Sie gilt über alle Gruppen.
 
@@ -133,6 +139,8 @@ Unter **Mehr → Freunde** führst du deine Freundesliste. Sie gilt über alle G
 - Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt. Ihr könnt euch dann weiter Direktnachrichten schreiben.
 - **Entfernen** und dann **Wirklich entfernen** beendet eine Freundschaft.
 - Mit eingeschaltetem Push erfährst du auf dem Handy, wenn dich jemand anfragt oder deine Anfrage annimmt.
+
+<br clear="right">
 
 ## Guthaben
 

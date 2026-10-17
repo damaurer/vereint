@@ -48,7 +48,7 @@ Nach **Bearbeiten** erscheint unter der Liste der Bereich „… bearbeiten“ m
 | **Admin** (`admin`) | Alles vom Vorstand, dazu Mitglieder und Rollen verwalten, Gruppe, Tarif und das Thekenterminal |
 | **Thekenterminal** (`tabletRecorder`) | Striche für alle Mitglieder erfassen |
 
-**Vorstands-Unterrolle** und **Drink Recorder**, dann **Profil speichern**. Die Auswahl zeigt die Kürzel `chair` (Vorsitz), `treasurer` (Kassenwart), `secretary` (Schriftwart) und `assessor` (Beisitzer); sie sind eine Kennzeichnung und geben keine eigenen Rechte. Drink Recorder schaltet das Thekenterminal für dieses Mitglied frei, etwa für den Thekendienst am eigenen Handy. Das ist dasselbe wie die Rolle **Thekenterminal** unter **Rollen**.
+**Vorstands-Unterrolle** und **Drink Recorder**, dann **Profil speichern**. Zur Auswahl stehen **Vorsitz**, **Kassenwart**, **Schriftwart** und **Beisitzer**; sie sind eine Kennzeichnung und geben keine eigenen Rechte. Drink Recorder schaltet das Thekenterminal für dieses Mitglied frei, etwa für den Thekendienst am eigenen Handy. Das ist dasselbe wie die Rolle **Thekenterminal** unter **Rollen**.
 
 **Deaktiviert**, dann **Status speichern**: beendet die Mitgliedschaft in dieser Gruppe. Die Person sieht die Gruppe nicht mehr, ihre Rollen hier entfallen, ihre Buchungen bleiben erhalten. Ihr Konto und ihre anderen Gruppen bleiben unberührt. Zum Entsperren den Haken wieder entfernen. Die Person ist dann wieder Mitglied mit der Rolle `member`; weitere Rollen vergibst du neu.
 

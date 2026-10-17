@@ -158,8 +158,6 @@ export async function seedAppData(sessions) {
     const drink = await api.board.post('/drinks', { name, category, defaultPrice: price, costPrice: cost });
     if (drink.status !== 'approved') await api.board.post(`/drinks/${drink.id}/approve`);
     await api.board.post(`/drinks/${drink.id}/barcodes`, { barcode });
-    // In die gemeinsame Getränkedatenbank stellen, damit die Ansicht nicht leer ist.
-    await api.board.post(`/drinks/${drink.id}/share-to-library`);
     drinks.push(drink);
   }
   // Ein offener Vorschlag eines Mitglieds für die Freigabe-Ansicht.
@@ -301,8 +299,8 @@ export async function seedAppData(sessions) {
     for (const [key, message] of clubMessages) await api[key].post(`/conversations/${clubChat.id}/messages`, { message });
   }
   const direct = async (from, to, lines) => {
-    const conversation = await api[from].post('/conversations/direct', { userId: ids[to] });
-    for (const [key, message] of lines) await api[key].post(`/conversations/${conversation.id}/messages`, { message });
+    const conversation = await api[from].post('/direct-conversations', { userId: ids[to] });
+    for (const [key, message] of lines) await api[key].post(`/direct-conversations/${conversation.id}/messages`, { message });
   };
   await direct('member', 'jonas', [
     ['jonas', 'Hast du am Samstag noch einen Platz im Auto frei?'],
@@ -335,6 +333,16 @@ export async function seedAppData(sessions) {
   await api.board.put('/conversations/club/pin', {
     text: 'Mitgliederversammlung am 15. November um 19 Uhr im Vereinsheim.',
   });
+
+  // Freunde: eine Freundschaft, eine Anfrage an Lena und eine eigene offene Anfrage.
+  try {
+    await api.jonas.post('/friends/requests', { userId: ids.member });
+    await api.member.post(`/friends/requests/${ids.jonas}/accept`);
+    await api.mia.post('/friends/requests', { userId: ids.member });
+    await api.member.post('/friends/requests', { userId: ids.felix });
+  } catch (error) {
+    console.warn(`Freunde konnten nicht angelegt werden: ${error.message}`);
+  }
 
   // Gast-Einladung für den Stammtisch (Link für die Gast-Anleitung).
   const invite = await api.board.post(`/events/${stammtisch.id}/invites`, { maxUses: 5, expiresInMinutes: 7 * 24 * 60, role: 'guest' });
