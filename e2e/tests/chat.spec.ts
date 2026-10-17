@@ -104,8 +104,8 @@ test.describe('Gruppenchat und Direktnachrichten', () => {
     await member.page.goto('/dashboard');
     await member.page.getByRole('link', { name: 'Statistik' }).first().click();
     await expect(member.page).toHaveURL(/\/statistik$/);
-    await expect(member.page.getByRole('heading', { level: 1, name: 'Eber-Analytik' })).toBeVisible();
+    await expect(member.page.getByRole('heading', { level: 1, name: 'Gruppenstatistik' })).toBeVisible();
     await member.page.reload();
-    await expect(member.page.getByRole('heading', { level: 1, name: 'Eber-Analytik' })).toBeVisible();
+    await expect(member.page.getByRole('heading', { level: 1, name: 'Gruppenstatistik' })).toBeVisible();
   });
 });

@@ -294,7 +294,7 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
                 <span>{{ 'admin.user.boardRole' | t }}</span>
                 <select name="boardRole" [(ngModel)]="boardRole">
                   @for (value of boardRoles; track value) {
-                    <option [value]="value">{{ value || ('admin.user.noBoardRole' | t) }}</option>
+                    <option [value]="value">{{ (value ? 'admin.roles.' + value : 'admin.user.noBoardRole') | t }}</option>
                   }
                 </select>
               </label>

@@ -36,7 +36,8 @@ describe('Keycloak Realm Configuration', () => {
     expect(realmConfig.realm).toBe('vereint');
     expect(realmConfig.enabled).toBe(true);
     expect(realmConfig.rememberMe).toBe(true);
-    expect(realmConfig.resetPasswordAllowed).toBe(true);
+    // Ohne Mailversand bleibt "Passwort vergessen" in Produktion aus (#27).
+    expect(realmConfig.resetPasswordAllowed).toBe(false);
   });
 
   it('requires TLS at least for external requests', () => {

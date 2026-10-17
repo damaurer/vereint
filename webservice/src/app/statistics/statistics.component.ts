@@ -17,7 +17,7 @@ import { TranslatePipe } from '../i18n';
 import { activeLocale, translate } from '../i18n/i18n.service';
 
 /**
- * Statistik- und Eber-Analytik-Oberfläche.
+ * Statistik-Oberfläche der gewählten Gruppe.
  *
  * Zeigt die Vereinsstatistik aus `GET /statistics` als responsives Karten-Grid:
  * Rangliste nach Strichen (eigener Platz hervorgehoben), Zusagequote-Ring,

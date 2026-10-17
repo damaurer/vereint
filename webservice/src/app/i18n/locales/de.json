@@ -509,7 +509,7 @@
     },
     "statistics": {
       "title": "Statistik",
-      "description": "Konsum, Anwesenheit, Ausgaben-Verlauf und Rankings der Eber-Analytik."
+      "description": "Konsum, Anwesenheit, Ausgaben-Verlauf und Ranglisten deiner Gruppe."
     },
     "eventCreate": {
       "title": "Event anlegen",
@@ -834,7 +834,7 @@
     "propose": {
       "title": "Getränk vorschlagen",
       "name": "Name des Getränks *",
-      "namePlaceholder": "z. B. Eber-Bräu Zwickl",
+      "namePlaceholder": "z. B. Kellerbier 0,5 l",
       "categoryPlaceholder": "z. B. Helles, Weizen, Alkoholfrei",
       "pricePlaceholder": "z. B. 2.50",
       "descriptionPlaceholder": "Besonderheiten, Brauerei, etc.",
@@ -1238,7 +1238,7 @@
     },
     "overview": {
       "eyebrow": "Vorstand",
-      "title": "Eber-Führungsstab",
+      "title": "Vorstandsübersicht",
       "intro": "Moderation, Finanzübersichten und vorbereitete Mitteilungen.",
       "infoTitle": "Vorstandsbereich",
       "infoText": "Verwalte hier die Gruppenkasse, versende wichtige Ankündigungen oder plane die nächsten Treffen.",
@@ -1561,9 +1561,9 @@
     }
   },
   "statistics": {
-    "ariaLabel": "Statistiken und Eber-Analytik",
+    "ariaLabel": "Statistiken der Gruppe",
     "eyebrow": "Statistiken",
-    "title": "Eber-Analytik",
+    "title": "Gruppenstatistik",
     "ssr": {
       "title": "Diagramme werden im Browser geladen",
       "message": "Aggregierte Auswertungen erscheinen erst nach dem Laden im Browser."
