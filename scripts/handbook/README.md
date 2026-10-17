@@ -3,7 +3,7 @@
 `capture.mjs` erzeugt alle Bilder in `docs/handbuch/bilder` neu. Es legt in einer
 frischen lokalen Umgebung Demo-Daten an (`seed.mjs`: Mitglieder, Getränke,
 Events mit Zusagen, Guthaben, Striche, Gruppen-, Event- und Direktchats, Moments,
-Rundbrief und Infotafel, eine Gasteinladung, Einträge in der Getränkedatenbank) und
+Rundbrief und Infotafel, eine Gasteinladung) und
 fotografiert jede Ansicht als die Person, die sie im Alltag nutzt: Handy
 (390 × 844), Thekentablet quer (1180 × 820) oder Rechner (1280 × 860).
 

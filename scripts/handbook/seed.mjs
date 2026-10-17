@@ -158,8 +158,6 @@ export async function seedAppData(sessions) {
     const drink = await api.board.post('/drinks', { name, category, defaultPrice: price, costPrice: cost });
     if (drink.status !== 'approved') await api.board.post(`/drinks/${drink.id}/approve`);
     await api.board.post(`/drinks/${drink.id}/barcodes`, { barcode });
-    // In die gemeinsame Getränkedatenbank stellen, damit die Ansicht nicht leer ist.
-    await api.board.post(`/drinks/${drink.id}/share-to-library`);
     drinks.push(drink);
   }
   // Ein offener Vorschlag eines Mitglieds für die Freigabe-Ansicht.
