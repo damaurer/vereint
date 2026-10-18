@@ -83,7 +83,7 @@ docs/
 │
 └── operations/                           # Lokaler Betrieb, Keycloak, Speicher & Migrationen
     ├── local-setup-docker.md             # Lokale Entwicklung & Docker Compose Topology
-    ├── keycloak-and-storage.md           # Keycloak Realms & S3-Objektspeicher (AWS, lokal MinIO)
+    ├── keycloak-and-storage.md           # Keycloak Realms & S3-Objektspeicher (AWS, lokal S3Mock)
     └── database-migrations.md            # Liquibase Migrationen & Schema-Verwaltung
 ```
 

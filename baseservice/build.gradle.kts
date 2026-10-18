@@ -79,3 +79,20 @@ tasks.withType<Test> {
         showStackTraces = true
     }
 }
+
+// Lokale Entwicklung: `./gradlew bootRun` übernimmt die Werte aus der `.env`
+// im Repo-Wurzelverzeichnis (Vorlage `.env.example`). Bereits gesetzte
+// Umgebungsvariablen haben Vorrang. Builds, Tests und Images bleiben unberührt.
+tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
+    val envFile = rootDir.resolve("../.env")
+    if (envFile.isFile) {
+        envFile.readLines()
+            .map { it.trim() }
+            .filter { it.isNotEmpty() && !it.startsWith("#") && it.contains("=") }
+            .forEach { line ->
+                val key = line.substringBefore("=").trim()
+                val value = line.substringAfter("=").trim().removeSurrounding("\"")
+                if (System.getenv(key) == null) environment(key, value)
+            }
+    }
+}

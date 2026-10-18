@@ -33,10 +33,10 @@ Zum Entwickeln mit automatischem Neuladen laufen baseservice und webservice
 direkt auf dem Rechner. Voraussetzungen: Docker mit Compose, Java 25, Node.js ≥ 22.22.3 und npm 11.
 
 ```bash
-# 1. Umgebungsvariablen anlegen; PUBLIC_BASE_URL auf http://localhost:4200 setzen
+# 1. Umgebungsvariablen anlegen; die Vorlage funktioniert ohne Änderungen
 cp .env.example .env
 
-# 2. PostgreSQL (2x), Keycloak und MinIO (lokaler S3-Ersatz) starten
+# 2. PostgreSQL (2x), Keycloak und S3Mock (lokaler S3-Ersatz) starten
 docker compose up -d
 
 # 3. Fachservice, Port 8081
@@ -47,8 +47,9 @@ cd webservice && npm install && npm start
 ```
 
 Die App läuft dann unter `http://localhost:4200`. Der Entwicklungs-Realm legt die
-Konten `admin`, `board` und `member` an; ihre Passwörter stehen in der `.env`
-(`KEYCLOAK_SEED_*_PASSWORD`) und müssen beim ersten Login geändert werden.
+Konten `admin`, `board` und `member` an, mit den Startpasswörtern `admin-demo-2026`,
+`board-demo-2026` und `member-demo-2026` (aus der `.env`); Keycloak verlangt beim
+ersten Login ein neues Passwort.
 
 Details: [docs/operations/local-setup-docker.md](docs/operations/local-setup-docker.md),
 E2E-Tests: [e2e/README.md](e2e/README.md).

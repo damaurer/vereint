@@ -1,6 +1,6 @@
 # Betriebshandbuch: Keycloak IAM & S3-Objektspeicher
 
-Dieses Dokument beschreibt die Konfiguration des Identity Providers **Keycloak 26.8.1** und des Objektspeichers (**AWS S3** in Produktion, **MinIO** lokal). Den Produktionsbetrieb beschreibt [deploy/README.md](../../deploy/README.md).
+Dieses Dokument beschreibt die Konfiguration des Identity Providers **Keycloak 26.8.1** und des Objektspeichers (**AWS S3** in Produktion, **S3Mock** lokal). Den Produktionsbetrieb beschreibt [deploy/README.md](../../deploy/README.md).
 
 ---
 
@@ -58,7 +58,7 @@ Bilder, Gruppenbilder sowie Fotos und Videos aus Moments liegen im Objektspeiche
 | Umgebung | Speicher |
 | :--- | :--- |
 | Produktion | Privater AWS-S3-Bucket `vereint-app-<account>`, von Terraform angelegt, serverseitig verschlüsselt, nur per TLS erreichbar |
-| Lokal | MinIO aus `docker-compose.yml`: API `http://localhost:9000`, Console `http://localhost:9001` (Zugang aus `S3_ACCESS_KEY` / `S3_SECRET_KEY` der `.env`), Bucket `vereint` |
+| Lokal | S3Mock aus `docker-compose.yml`: API `http://localhost:9090`, Bucket `vereint` (wird beim Start angelegt, Signaturen werden nicht geprüft) |
 | E2E-Tests | S3-Ersatz im Test-Stack |
 
 ### Speicher-Schlüssel

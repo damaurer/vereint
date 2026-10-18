@@ -181,7 +181,7 @@
       "protocol": "openid-connect",
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:8080/auth/logged-out##http://127.0.0.1:8080/auth/logged-out##http://localhost:4300/auth/logged-out##http://127.0.0.1:4300/auth/logged-out",
+        "post.logout.redirect.uris": "http://localhost:4200/auth/logged-out##http://127.0.0.1:4200/auth/logged-out##http://localhost:8080/auth/logged-out##http://127.0.0.1:8080/auth/logged-out##http://localhost:4300/auth/logged-out##http://127.0.0.1:4300/auth/logged-out",
         "standard.flow.enabled": "true",
         "direct.access.grants.enabled": "false"
       },
