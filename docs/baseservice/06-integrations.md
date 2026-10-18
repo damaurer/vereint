@@ -1,6 +1,6 @@
 # 🔌 Integrationen, Objektspeicher & Push-Dienste
 
-In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: S3-kompatibler Objektspeicher (AWS S3 in Produktion, MinIO lokal), Web-Push-Zustellung über das VAPID-Protokoll, Kontoanlage in Keycloak, Stripe sowie die zugehörigen Feature-Toggles.
+In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: S3-kompatibler Objektspeicher (AWS S3 in Produktion, S3Mock lokal), Web-Push-Zustellung über das VAPID-Protokoll, Kontoanlage in Keycloak, Stripe sowie die zugehörigen Feature-Toggles.
 
 ---
 
@@ -13,7 +13,7 @@ graph LR
   Client[Browser / PWA] -->|1. Multipart Upload| Ctrl[ImageController]
   Ctrl --> Svc[ImageService]
   Svc --> Store{S3_ENABLED?}
-  Store -- true --> S3[S3ObjectStorage - AWS S3 / MinIO]
+  Store -- true --> S3[S3ObjectStorage - AWS S3 / S3Mock]
   Store -- false --> Mem[InMemoryObjectStorage]
   Svc --> DB[(PostgreSQL: image_assets)]
 
@@ -39,7 +39,7 @@ interface ObjectStorage {
 ```
 
 ### 2. Implementierungen & Konfiguration (`StorageConfig.kt`)
-- **`S3ObjectStorage`**: Aktiviert, wenn `vereint.storage.enabled=true` (`S3_ENABLED=true`). Spricht die S3-REST-API mit selbst signierten Anfragen (SigV4) an, lokal gegen MinIO mit Path-Style-Access (`/bucket/key`), in Produktion gegen AWS S3 mit dem IAM-Benutzer `vereint-app-storage`.
+- **`S3ObjectStorage`**: Aktiviert, wenn `vereint.storage.enabled=true` (`S3_ENABLED=true`). Spricht die S3-REST-API mit selbst signierten Anfragen (SigV4) an, lokal gegen S3Mock mit Path-Style-Access (`/bucket/key`), in Produktion gegen AWS S3 mit dem IAM-Benutzer `vereint-app-storage`.
 - **`InMemoryObjectStorage`**: Fallback für lokale Entwicklung und Tests (`S3_ENABLED=false`). Hält Binärdaten im Prozessspeicher; `presignedGetUrl` liefert eine Pseudo-URL mit derselben Vertragsform.
 - **Sicherheitsgarantie**: S3-Credentials gelangen **niemals** an den Client. Der Browser lädt Bilder nie direkt aus S3, sondern nur über `GET /api/v1/images/{id}/content`: Der `ImageService` prüft die Berechtigung bei jedem Abruf, liest den Chiffretext und liefert die entschlüsselten Daten mit `Cache-Control: private, no-store` aus. Presigned URLs nutzt der Service nur noch intern für den eigenen Zugriff auf S3 (Lebensdauer `S3_URL_TTL_SECONDS`).
 
@@ -113,7 +113,7 @@ Tarife je Gruppe werden optional über Stripe abgerechnet: `StripeClient` erzeug
 
 | Toggle (Umgebungsvariable) | Default | Bei `true` | Bei `false` (Fallback) |
 | :--- | :---: | :--- | :--- |
-| **`S3_ENABLED`** | `false` | Verwendet S3 (lokal MinIO) für Bilder und Moment-Medien | `InMemoryObjectStorage` (In-Memory Data URIs) |
+| **`S3_ENABLED`** | `false` | Verwendet S3 (lokal S3Mock) für Bilder und Moment-Medien | `InMemoryObjectStorage` (In-Memory Data URIs) |
 | **`VAPID_ENABLED`** | `false` | Sendet echte Web-Push-Nachrichten via VAPID | `NoOpPushSender` (Persistenz ohne Versand) |
 | **`EV_LIQUIBASE_ENABLED`** | `true` | Führt Schema-Migrationen beim Start aus | Migrationen deaktiviert (z. B. für externe Tools) |
 | **`DATA_ENCRYPTION_ENABLED`** | `false` | Verschlüsselt Chat, Benachrichtigungen und Dateien | Klartext (nur lokal) |

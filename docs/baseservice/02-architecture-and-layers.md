@@ -40,7 +40,7 @@ graph TD
 
   subgraph InfraLayer["5. Infrastruktur"]
     DB[(PostgreSQL mit Row Level Security)]
-    S3Store[(S3: AWS / lokal MinIO)]
+    S3Store[(S3: AWS / lokal S3Mock)]
     PushGw[(Web Push Gateway)]
   end
 

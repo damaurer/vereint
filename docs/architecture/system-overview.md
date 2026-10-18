@@ -33,7 +33,7 @@ graph TD
     subgraph InfraLayer ["4. Infrastructure & Persistence"]
         PG["PostgreSQL 17 (vereint-db:5432)"]
         KC["Keycloak 26 (keycloak:8082)"]
-        S3["S3 Objektspeicher (Produktion AWS S3, lokal MinIO)"]
+        S3["S3 Objektspeicher (Produktion AWS S3, lokal S3Mock)"]
     end
 
     Browser -->|HTTP / Hydration / Static Assets| SSR
@@ -91,7 +91,7 @@ graph TD
 - **PostgreSQL 17**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.
 - **Liquibase**: Versionskontrollierte Datenbankmigrationen (`db.changelog-master.xml`).
 - **Keycloak 26.8.1**: Identity & Access Management (OIDC Provider). Lokal mit Testbenutzern (`keycloak/dev/realm-export-dev.json`), in Produktion ohne Seed-Benutzer (`keycloak/realm-export.json`).
-- **Objektspeicher**: In Produktion ein privater AWS-S3-Bucket (`vereint-app-<account>`), lokal MinIO (`docker-compose.yml`), in den E2E-Tests ein S3-Ersatz.
+- **Objektspeicher**: In Produktion ein privater AWS-S3-Bucket (`vereint-app-<account>`), lokal S3Mock (`docker-compose.yml`), in den E2E-Tests ein S3-Ersatz.
 - **Produktion**: Alle Dienste laufen per Docker Compose hinter Caddy auf einem AWS-Server, siehe [deploy/README.md](../../deploy/README.md) und [infra/aws/README.md](../../infra/aws/README.md).
 
 ---
@@ -129,7 +129,6 @@ sequenceDiagram
 | **Keycloak IAM** | Keycloak 26 Dev | `8082` | `8080` | HTTP / OIDC Provider & Admin-Console |
 | **Keycloak DB** | PostgreSQL 17 | `5433` | `5432` | PostgreSQL JDBC (Keycloak Realm DB) |
 | **Vereint DB** | PostgreSQL 17 | `5432` | `5432` | PostgreSQL JDBC (Hauptanwendung) |
-| **MinIO S3 API** | MinIO (nur lokal) | `9000` | `9000` | S3 REST API (Asset Storage) |
-| **MinIO Console** | MinIO (nur lokal) | `9001` | `9001` | HTTP / MinIO Management Console |
+| **S3-Ersatz** | S3Mock (nur lokal) | `9090` | `9090` | S3 REST API (Asset Storage) |
 
 In Produktion ist von außen nur Caddy auf Port 80/443 erreichbar; alle anderen Dienste sprechen nur im internen Container-Netz miteinander ([deploy/README.md](../../deploy/README.md)).

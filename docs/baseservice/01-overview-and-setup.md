@@ -85,7 +85,7 @@ baseservice/
 ## ⚡ Lokales Starten & Entwicklung
 
 ### 1. Infrastruktur mit Docker Compose starten
-Bevor der `baseservice` gestartet werden kann, müssen PostgreSQL und Keycloak (sowie optional MinIO als lokaler S3-Ersatz) laufen:
+Bevor der `baseservice` gestartet werden kann, müssen PostgreSQL und Keycloak (sowie S3Mock als lokaler S3-Ersatz) laufen:
 
 ```bash
 # Im Projekt-Hauptverzeichnis:
@@ -94,7 +94,7 @@ docker compose up -d vereint-db keycloak-db keycloak object-storage
 
 - **PostgreSQL**: `localhost:5432` (User: `vereint`, DB: `vereint`)
 - **Keycloak**: `http://localhost:8082` (Realm: `vereint`)
-- **MinIO**: `http://localhost:9000` (Console: `http://localhost:9001`)
+- **S3Mock**: `http://localhost:9090` (Bucket `vereint`, wird beim Start angelegt)
 
 ### 2. Service über Gradle starten
 Der Service kann direkt über den Gradle-Wrapper gestartet werden:
@@ -146,12 +146,12 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `TENANCY_BOOTSTRAP_REALM_ROLES` | `vereint.tenancy.bootstrap-realm-roles` | Boolean | `false` | Nur Entwicklung/E2E: Konten ohne Mitgliedschaft treten „Meine Gruppe“ mit ihren Keycloak-Realmrollen bei. In Produktion aus. |
 | `VEREIN_CORS_ALLOWED_ORIGINS` | `vereint.cors.allowed-origins` | String (CSV) | `http://localhost:4200` | Erlaubte CORS-Ursprünge (z. B. `http://localhost:4200,http://localhost:4300`). Wildcards (`*`) sind verboten. |
 | `S3_ENABLED` | `vereint.storage.enabled` | Boolean | `false` | Schaltet echten S3-Speicher frei. Bei `false` greift der `InMemoryObjectStorage`. |
-| `S3_ENDPOINT` | `vereint.storage.endpoint` | URL | `http://localhost:9000` | S3-kompatibler Endpunkt (MinIO oder AWS S3). |
+| `S3_ENDPOINT` | `vereint.storage.endpoint` | URL | `http://localhost:9000` | S3-kompatibler Endpunkt (lokal S3Mock, in Produktion AWS S3). |
 | `S3_BUCKET` | `vereint.storage.bucket` | String | `vereint` | Name des S3-Buckets für Bild-Uploads. |
 | `S3_REGION` | `vereint.storage.region` | String | `us-east-1` | S3-Region. |
 | `S3_ACCESS_KEY` | `vereint.storage.access-key` | String | *leer* | S3 Access Key ID (Geheimnis). |
 | `S3_SECRET_KEY` | `vereint.storage.secret-key` | String | *leer* | S3 Secret Access Key (Geheimnis). |
-| `S3_PATH_STYLE_ACCESS` | `vereint.storage.path-style-access` | Boolean | `true` | Verwendet Path-Style-URLs (`/bucket/key`), erforderlich für MinIO. |
+| `S3_PATH_STYLE_ACCESS` | `vereint.storage.path-style-access` | Boolean | `true` | Verwendet Path-Style-URLs (`/bucket/key`), erforderlich für S3Mock. |
 | `S3_URL_TTL_SECONDS` | `vereint.storage.url-ttl-seconds` | Long | `900` | Gültigkeitsdauer für signierte Download-URLs (15 Minuten). |
 | `VAPID_ENABLED` | `vereint.push.enabled` | Boolean | `false` | Schaltet Web-Push-Versand frei. Bei `false` greift der `NoOpPushSender`. |
 | `VAPID_SUBJECT` | `vereint.push.subject` | String | *leer* | VAPID-Subject (`mailto:admin@vereint.de`). |
