@@ -1,15 +1,23 @@
 :root {
   /* Optimus Farbschema Tokens (User Guide) */
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-surface-raised: #ffffff;
-  --color-border: #e2e8f0;
-  --color-border-dark: #cbd5e1;
-  --color-text: #0f172a;
-  --color-text-muted: #64748b;
+  /* Gedämpftes Hell: kein reines Weiß, etwas weicherer Text-Kontrast (blendet weniger). */
+  --color-bg: #e8ecf1;
+  --color-surface: #f4f6f9;
+  --color-surface-raised: #f9fafb;
+  --color-surface-subtle: #e6ebf1;
+  --color-surface-muted: #dfe5ec;
+  --color-surface-hover: #d8dfe8;
+  --color-border: #d3d9e2;
+  --color-border-dark: #b8c2cf;
+  --color-text: #1e293b;
+  --color-text-muted: #526075;
   --color-brand: #1e3a8a;
   --color-brand-strong: #172554;
-  --color-brand-soft: #eff6ff;
+  --color-brand-hover: #172554;
+  --color-brand-soft: #e1e9f7;
+  --color-on-brand: #ffffff;
+  --color-primary: var(--color-brand);
+  --color-on-primary: var(--color-on-brand);
   --color-accent: #d97706;
   --color-accent-light: #fef3c7;
   --color-success: #16a34a;
@@ -21,7 +29,7 @@
 
   /* Optimus Original Aliases */
   --opt-color-primary: #1e3a8a;
-  --opt-color-primary-light: #eff6ff;
+  --opt-color-primary-light: #e1e9f7;
   --opt-color-primary-dark: #172554;
   --opt-color-accent: #d97706;
   --opt-color-accent-light: #fef3c7;
@@ -29,13 +37,13 @@
   --opt-color-success-light: #dcfce7;
   --opt-color-danger: #dc2626;
   --opt-color-danger-light: #fee2e2;
-  --opt-bg-canvas: #f8fafc;
-  --opt-bg-surface: #ffffff;
-  --opt-bg-surface-raised: #ffffff;
-  --opt-border-color: #e2e8f0;
-  --opt-border-dark: #cbd5e1;
-  --opt-text-main: #0f172a;
-  --opt-text-muted: #64748b;
+  --opt-bg-canvas: #e8ecf1;
+  --opt-bg-surface: #f4f6f9;
+  --opt-bg-surface-raised: #f9fafb;
+  --opt-border-color: #d3d9e2;
+  --opt-border-dark: #b8c2cf;
+  --opt-text-main: #1e293b;
+  --opt-text-muted: #526075;
   --opt-radius-sm: 4px;
   --opt-radius-md: 8px;
   --opt-radius-lg: 12px;
@@ -1608,13 +1616,20 @@ html.pf-v5-theme-dark {
   --color-bg: #0f172a;
   --color-surface: #1e293b;
   --color-surface-raised: #0f172a;
+  --color-surface-subtle: #334155;
+  --color-surface-muted: rgba(148, 163, 184, 0.14);
+  --color-surface-hover: #475569;
   --color-border: #334155;
   --color-border-dark: #475569;
   --color-text: #f8fafc;
   --color-text-muted: #94a3b8;
   --color-brand: #3b82f6;
   --color-brand-strong: #2563eb;
+  --color-brand-hover: #2563eb;
   --color-brand-soft: rgba(59, 130, 246, 0.16);
+  --color-on-brand: #ffffff;
+  --color-primary: var(--color-brand);
+  --color-on-primary: var(--color-on-brand);
   --color-accent: #fbbf24;
   --color-accent-light: rgba(217, 119, 6, 0.18);
   --color-success: #4ade80;
@@ -1680,13 +1695,20 @@ html.pf-v5-theme-dark .vereint-eyebrow {
     --color-bg: #0f172a;
     --color-surface: #1e293b;
     --color-surface-raised: #0f172a;
+    --color-surface-subtle: #334155;
+    --color-surface-muted: rgba(148, 163, 184, 0.14);
+    --color-surface-hover: #475569;
     --color-border: #334155;
     --color-border-dark: #475569;
     --color-text: #f8fafc;
     --color-text-muted: #94a3b8;
     --color-brand: #3b82f6;
     --color-brand-strong: #2563eb;
+    --color-brand-hover: #2563eb;
     --color-brand-soft: rgba(59, 130, 246, 0.16);
+    --color-on-brand: #ffffff;
+    --color-primary: var(--color-brand);
+    --color-on-primary: var(--color-on-brand);
     --color-accent: #fbbf24;
     --color-accent-light: rgba(217, 119, 6, 0.18);
     --color-success: #4ade80;

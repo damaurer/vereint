@@ -12,12 +12,13 @@
   --violet: #8338ec;
   --gradient: linear-gradient(120deg, var(--teal) 0%, var(--blue) 50%, var(--violet) 100%);
 
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --tint: #eef2ff;
-  --text: #0f172a;
+  /* Gedämpftes Hell wie in der App: kein reines Weiß, blendet weniger. */
+  --bg: #e8ecf1;
+  --surface: #f4f6f9;
+  --tint: #e3e8f4;
+  --text: #1e293b;
   --muted: #475569;
-  --border: #e2e8f0;
+  --border: #d3d9e2;
   --shadow: 0 1px 2px rgb(15 23 42 / 0.06), 0 12px 32px -8px rgb(15 23 42 / 0.18);
   --shadow-lg: 0 2px 4px rgb(15 23 42 / 0.06), 0 30px 60px -20px rgb(15 23 42 / 0.35);
 
@@ -39,7 +40,7 @@
     --tint: #0f172a;
     --text: #e2e8f0;
     --muted: #94a3b8;
-    --border: #1e293b;
+    --border: #283449;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -8px rgb(0 0 0 / 0.6);
     --shadow-lg: 0 2px 4px rgb(0 0 0 / 0.4), 0 30px 60px -20px rgb(0 0 0 / 0.8);
   }
