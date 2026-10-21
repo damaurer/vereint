@@ -8,7 +8,7 @@
 :root {
   /* Optimus Original Aliases */
   --opt-color-primary: #1e3a8a;
-  --opt-color-primary-light: #eff6ff;
+  --opt-color-primary-light: #e1e9f7;
   --opt-color-primary-dark: #172554;
   --opt-color-accent: #d97706;
   --opt-color-accent-light: #fef3c7;
@@ -16,13 +16,13 @@
   --opt-color-success-light: #dcfce7;
   --opt-color-danger: #dc2626;
   --opt-color-danger-light: #fee2e2;
-  --opt-bg-canvas: #f8fafc;
-  --opt-bg-surface: #ffffff;
-  --opt-bg-surface-raised: #ffffff;
-  --opt-border-color: #e2e8f0;
-  --opt-border-dark: #cbd5e1;
-  --opt-text-main: #0f172a;
-  --opt-text-muted: #64748b;
+  --opt-bg-canvas: #e8ecf1;
+  --opt-bg-surface: #f4f6f9;
+  --opt-bg-surface-raised: #f9fafb;
+  --opt-border-color: #d3d9e2;
+  --opt-border-dark: #b8c2cf;
+  --opt-text-main: #1e293b;
+  --opt-text-muted: #526075;
   --opt-radius-sm: 4px;
   --opt-radius-md: 8px;
   --opt-radius-lg: 12px;
