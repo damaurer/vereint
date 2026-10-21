@@ -270,8 +270,6 @@ interface DirectPageData {
         padding: 0;
         display: grid;
         gap: var(--space-2);
-        max-height: 50vh;
-        overflow-y: auto;
       }
       .dm-member {
         width: 100%;

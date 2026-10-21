@@ -76,6 +76,8 @@ Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, w
 
 Ganz unten im Mehr-Menü meldest du dich mit **Abmelden** ab. Darunter stehen **Impressum** und **AGB**.
 
+Das Mehr-Menü schließt du, indem du es mit dem Finger nach unten wischst, daneben tippst oder einen Eintrag wählst. Fenster wie „Mitglied einladen“ füllen am Handy den ganzen Bildschirm; oben rechts schließt sie das **×**.
+
 **Am Tablet** steht links eine schmale Leiste mit denselben vier Bereichen und **Mehr**. **Am Rechner** stehen alle Bereiche in einer Seitenleiste links, unten mit **Impressum** und **AGB** (siehe Bilder im [Leitfaden Administration](04-administration.md)). Auf beiden öffnet dein Name oben rechts ein Menü mit **Profil**, **Guthaben** und **Abmelden**.
 
 <br clear="right">
