@@ -479,6 +479,11 @@ a:focus-visible {
   outline: none;
 }
 
+/* Platz für die feste Bottom-Bar, damit sie keinen Inhalt verdeckt. */
+.shell[data-viewport='mobile']:not([data-kiosk]) .shell-main {
+  padding-bottom: calc(var(--shell-bottom-height) + env(safe-area-inset-bottom));
+}
+
 .shell-skip-link {
   position: absolute;
   left: var(--space-3);
@@ -845,8 +850,11 @@ a:focus-visible {
 
 /* --- Bottom-Tab-Bar (Mobil) --- */
 .shell-bottom-bar {
-  position: sticky;
+  /* Fest am unteren Bildschirmrand, auch wenn der Inhalt den Bildschirm nicht füllt. */
+  position: fixed;
+  right: 0;
   bottom: 0;
+  left: 0;
   z-index: 20;
   display: grid;
   grid-auto-flow: column;
@@ -1325,9 +1333,11 @@ a:focus-visible {
 }
 
 .ui-modal {
+  display: flex;
+  flex-direction: column;
   width: min(100%, 32rem);
   max-height: 90dvh;
-  overflow: auto;
+  overflow: hidden;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background-color: var(--color-surface);
@@ -1349,15 +1359,41 @@ a:focus-visible {
   font-size: 1.1rem;
 }
 
+.ui-modal-head,
+.ui-sheet-head,
+.ui-sheet-grabber {
+  flex-shrink: 0;
+}
+
+/* Kopf bleibt stehen; gescrollt wird nur der Inhalt, und zwar nur vertikal. */
 .ui-modal-body,
 .ui-sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
   padding: var(--space-4);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: break-word;
+}
+
+.ui-modal-head {
+  gap: var(--space-2);
+}
+
+.ui-modal-title {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .ui-sheet {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-height: 85dvh;
-  overflow: auto;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
   border-top-left-radius: var(--radius-lg);
   border-top-right-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
@@ -1371,6 +1407,45 @@ a:focus-visible {
   margin: var(--space-2) auto 0;
   border-radius: 999px;
   background-color: var(--color-border-dark);
+}
+
+/* Griff und Kopf sind die Wischfläche zum Schließen; dort scrollt der Browser nicht. */
+.ui-sheet-grabber,
+.ui-sheet-head {
+  touch-action: none;
+}
+
+.ui-sheet-grabber {
+  /* Größere unsichtbare Trefferfläche für den Daumen. */
+  box-sizing: content-box;
+  padding: var(--space-1) var(--space-4);
+  background-clip: content-box;
+  margin-top: var(--space-1);
+}
+
+/* Mobil nimmt ein Modal den ganzen Bildschirm ein. */
+@media (max-width: 640px) {
+  .ui-overlay:not(.ui-overlay-bottom) {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .ui-modal {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .ui-modal-head {
+    padding-top: calc(var(--space-3) + env(safe-area-inset-top));
+  }
+
+  .ui-modal-body {
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  }
 }
 
 /* --- Responsive Content-Padding --- */
