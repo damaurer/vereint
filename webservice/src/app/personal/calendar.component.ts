@@ -322,14 +322,14 @@ import { PersonalApiService } from './personal-api.service';
         opacity: 0.45;
       }
       .cal-day.is-today .cal-day-number {
-        background-color: var(--color-primary);
-        color: var(--color-on-primary, #fff);
+        background-color: var(--color-brand);
+        color: #ffffff;
         border-radius: 999px;
         padding: 0 0.4rem;
       }
       .cal-day.is-selected {
-        border-color: var(--color-primary);
-        box-shadow: inset 0 0 0 1px var(--color-primary);
+        border-color: var(--color-brand);
+        box-shadow: inset 0 0 0 1px var(--color-brand);
       }
       .cal-day-number {
         font-weight: 700;
@@ -344,7 +344,7 @@ import { PersonalApiService } from './personal-api.service';
         width: 0.45rem;
         height: 0.45rem;
         border-radius: 999px;
-        background-color: var(--color-primary);
+        background-color: var(--color-brand);
       }
       .cal-mark.is-moment {
         background-color: var(--color-accent, var(--color-warning));
@@ -403,7 +403,7 @@ import { PersonalApiService } from './personal-api.service';
         font-size: 1.3rem;
         display: inline-flex;
         justify-content: center;
-        color: var(--color-primary);
+        color: var(--color-brand);
       }
       .cal-entry-body {
         flex: 1;
