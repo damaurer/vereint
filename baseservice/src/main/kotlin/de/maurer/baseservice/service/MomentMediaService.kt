@@ -66,7 +66,6 @@ class MomentMediaService(
      * sichtbar.
      */
     fun upload(
-        eventId: UUID,
         momentId: UUID,
         contentTypeHeader: String?,
         contentLength: Long,
@@ -95,7 +94,7 @@ class MomentMediaService(
         }
 
         val ownerId = tx.execute {
-            val access = momentService.requireMomentAccess(eventId, momentId, principal, requireActive = true)
+            val access = momentService.requireMomentAccess(momentId, principal, requireActive = true)
             if (kind == MomentMediaKind.video) planLimits.requireVideos()
             planLimits.requireStorage(contentLength)
             val count = momentMediaRepository.countByMomentIdAndOwnerId(momentId, access.caller.id)
@@ -117,7 +116,7 @@ class MomentMediaService(
 
         return try {
             tx.execute {
-                val access = momentService.requireMomentAccess(eventId, momentId, principal, requireActive = false)
+                val access = momentService.requireMomentAccess(momentId, principal, requireActive = false)
                 val entity = momentMediaRepository.save(
                     MomentMediaEntity(
                         moment = access.session,
@@ -132,7 +131,7 @@ class MomentMediaService(
                         durationMs = stored.durationMs
                     )
                 )
-                MomentService.toMediaDto(entity, eventId, access.caller, access.canModerate)
+                MomentService.toMediaDto(entity, access.caller, access.canModerate)
             }!!
         } catch (e: RuntimeException) {
             objectStorage.delete(storageKey)
@@ -141,9 +140,9 @@ class MomentMediaService(
     }
 
     /** Prüft die Berechtigung und liefert, was zum Ausliefern der Datei nötig ist. */
-    fun prepareContent(eventId: UUID, momentId: UUID, mediaId: UUID, principal: UserPrincipal): MediaContent =
+    fun prepareContent(momentId: UUID, mediaId: UUID, principal: UserPrincipal): MediaContent =
         tx.execute {
-            val access = momentService.requireMomentAccess(eventId, momentId, principal, requireActive = false)
+            val access = momentService.requireMomentAccess(momentId, principal, requireActive = false)
             val media = requireMedia(mediaId, momentId)
             // Noch nicht abgesendete Uploads sieht nur der Eigentümer (Vorschau).
             if (media.response == null && media.owner?.id != access.caller.id) {
@@ -178,9 +177,9 @@ class MomentMediaService(
     }
 
     /** Entfernt eine Datei (Eigentümer, Event-Owner, Vorstand/Admin). */
-    fun delete(eventId: UUID, momentId: UUID, mediaId: UUID, principal: UserPrincipal) {
+    fun delete(momentId: UUID, mediaId: UUID, principal: UserPrincipal) {
         val storageKey = tx.execute {
-            val access = momentService.requireMomentAccess(eventId, momentId, principal, requireActive = false)
+            val access = momentService.requireMomentAccess(momentId, principal, requireActive = false)
             val media = requireMedia(mediaId, momentId)
             val own = media.owner?.id == access.caller.id
             if (!own && !(access.canModerate && media.response != null)) {
@@ -350,13 +349,15 @@ class MomentMediaService(
         val IMAGE_TYPES = listOf("image/jpeg", "image/png", "image/gif")
         val VIDEO_TYPES = listOf("video/mp4", "video/quicktime")
 
-        fun limits() = MomentMediaLimitsDto(
+        /** Ohne Videos im Tarif ([videosAllowed] = false) bietet die App nur Fotos an. */
+        fun limits(videosAllowed: Boolean = true) = MomentMediaLimitsDto(
             maxImageBytes = MAX_IMAGE_BYTES,
             maxVideoBytes = MAX_VIDEO_BYTES,
             maxVideoSeconds = MAX_VIDEO_SECONDS,
             maxMediaPerResponse = MAX_MEDIA_PER_RESPONSE,
             imageTypes = IMAGE_TYPES,
-            videoTypes = VIDEO_TYPES
+            videoTypes = if (videosAllowed) VIDEO_TYPES else emptyList(),
+            videosAllowed = videosAllowed
         )
     }
 }

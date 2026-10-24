@@ -1,27 +1,97 @@
-import { Component, computed, input, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  InjectionToken,
+  PLATFORM_ID,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import type * as Leaflet from 'leaflet';
 import { IconComponent } from '../ui/icon.component';
-import type { GeoJsonFeatureDto, MomentMapGeoJsonDto } from '../api/api.types';
+import type { GeoJsonFeatureDto, MomentMapGeoJsonDto, MomentReactionDto } from '../api/api.types';
 import { formatDateTime } from '../member/member-format';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
 
-interface MapPin {
+/** Lädt Leaflet erst im Browser (SSR kennt kein `window`); in Tests ersetzbar. */
+export const LEAFLET_LOADER = new InjectionToken<() => Promise<typeof Leaflet>>('LEAFLET_LOADER', {
+  providedIn: 'root',
+  // Leaflet ist ein CommonJS-Paket: je nach Bundler liegt es unter `default`.
+  factory: () => () =>
+    import('leaflet').then(
+      (module) => (module as typeof Leaflet & { default?: typeof Leaflet }).default ?? module,
+    ),
+});
+
+/**
+ * Leaflet-Stylesheet als eigenes Bundle (`angular.json`, `inject: false`):
+ * Es wird erst geladen, wenn jemand eine Karte öffnet.
+ */
+export const LEAFLET_STYLESHEET = 'leaflet.css';
+
+/** Hängt das Leaflet-Stylesheet einmalig in den Dokumentkopf. */
+function ensureLeafletStylesheet(doc: Document): void {
+  if (doc.querySelector('link[data-leaflet]')) return;
+  const link = doc.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = LEAFLET_STYLESHEET;
+  link.dataset['leaflet'] = '';
+  doc.head.append(link);
+}
+
+/** Kachelserver der Karte; muss in der Content-Security-Policy (`img-src`) stehen. */
+export const MAP_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+/** Engster Zoom, damit eng beieinander liegende Pins nicht auf Hausnummer-Ebene landen. */
+export const MAX_FIT_ZOOM = 15;
+/** Zoom für genau einen geteilten Standort (Stadtteil). */
+export const SINGLE_PIN_ZOOM = 14;
+
+export interface MapPin {
   id: string;
   name: string;
-  reaction: string;
+  /** `session_initiator` (Starter des Moments) oder `response`. */
+  kind: string;
+  reaction: string | null;
   statusText?: string;
   createdAt?: string;
   latitude: number;
   longitude: number;
-  x: number;
-  y: number;
 }
 
 /**
- * Interaktive Weltkarte / Kartenvisualisierung für Gemeinschaftsmomente (RFC 7946 GeoJSON).
+ * Ausschnitt, der alle Pins zeigt: bei einem Pin ein fester Zoom um ihn
+ * herum, sonst die Begrenzung aller Pins (Leaflet `fitBounds`).
+ */
+export function mapViewFor(
+  pins: readonly Pick<MapPin, 'latitude' | 'longitude'>[],
+):
+  | { kind: 'none' }
+  | { kind: 'point'; center: [number, number]; zoom: number }
+  | { kind: 'bounds'; southWest: [number, number]; northEast: [number, number] } {
+  if (pins.length === 0) return { kind: 'none' };
+  const lats = pins.map((pin) => pin.latitude);
+  const lngs = pins.map((pin) => pin.longitude);
+  const southWest: [number, number] = [Math.min(...lats), Math.min(...lngs)];
+  const northEast: [number, number] = [Math.max(...lats), Math.max(...lngs)];
+  if (southWest[0] === northEast[0] && southWest[1] === northEast[1]) {
+    return { kind: 'point', center: southWest, zoom: SINGLE_PIN_ZOOM };
+  }
+  return { kind: 'bounds', southWest, northEast };
+}
+
+/**
+ * Karte der geteilten Standorte eines Moments (RFC 7946 GeoJSON).
  *
- * Rendert Positions-Pins für alle Teilnehmer, die der Standortfreigabe (Opt-in)
- * zugestimmt haben, auf einer responsiven SVG-Kartenprojektion.
+ * Zeigt OpenStreetMap-Kacheln über Leaflet und zoomt immer auf den Bereich,
+ * in dem alle Teilnehmer mit Standortfreigabe (Opt-in) liegen, statt die
+ * ganze Welt zu zeigen.
  */
 @Component({
   selector: 'app-moment-map',
@@ -31,9 +101,7 @@ interface MapPin {
       <div class="map-header">
         <div>
           <h3 class="map-title">{{ 'moments.map.title' | t }}</h3>
-          <p class="map-subtitle">
-            {{ 'moments.map.subtitle' | t }}
-          </p>
+          <p class="map-subtitle">{{ 'moments.map.subtitle' | t }}</p>
         </div>
         <span class="map-badge">{{ 'moments.map.count' | t: { count: pins().length } }}</span>
       </div>
@@ -42,152 +110,42 @@ interface MapPin {
         <div class="map-empty" role="status">
           <vereint-icon class="map-empty-icon" name="location" />
           <strong>{{ 'moments.map.emptyTitle' | t }}</strong>
-          <p>
-            {{ 'moments.map.emptyMessage' | t }}
-          </p>
+          <p>{{ 'moments.map.emptyMessage' | t }}</p>
         </div>
       } @else {
-        <div class="map-container">
-          <svg
-            class="world-map-svg"
-            viewBox="0 0 800 450"
-            role="img"
-            [attr.aria-label]="'moments.map.svgLabel' | t"
-          >
-            <defs>
-              <pattern id="grid-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
-              </pattern>
-              <radialGradient id="ocean-grad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#181816" />
-                <stop offset="100%" stop-color="#0E0E0C" />
-              </radialGradient>
-              <filter id="pin-glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            <!-- Hintergrund Ozean & Koordinatennetz -->
-            <rect width="800" height="450" fill="url(#ocean-grad)" rx="12" />
-            <rect width="800" height="450" fill="url(#grid-pattern)" rx="12" />
-
-            <!-- Äquator & Nullmeridian -->
-            <line x1="0" y1="225" x2="800" y2="225" stroke="rgba(242, 182, 0, 0.2)" stroke-dasharray="4,4" />
-            <line x1="400" y1="0" x2="400" y2="450" stroke="rgba(242, 182, 0, 0.2)" stroke-dasharray="4,4" />
-
-            <!-- Kontinent-Silhouetten (schematische Weltkarte) -->
-            <g class="landmasses" fill="var(--color-surface-raised)" stroke="var(--color-border)" stroke-width="1.2">
-              <!-- Nordamerika -->
-              <path d="M 120 70 Q 180 50 250 80 Q 280 120 250 170 Q 180 190 140 140 Z" />
-              <!-- Südamerika -->
-              <path d="M 230 210 Q 290 230 280 320 Q 240 370 210 330 Q 200 250 230 210 Z" />
-              <!-- Europa -->
-              <path d="M 370 80 Q 450 70 470 120 Q 420 150 380 130 Z" />
-              <!-- Afrika -->
-              <path d="M 370 150 Q 480 160 460 270 Q 420 330 380 290 Q 350 210 370 150 Z" />
-              <!-- Asien -->
-              <path d="M 470 70 Q 650 60 700 140 Q 640 220 540 180 Q 480 140 470 70 Z" />
-              <!-- Australien & Ozeanien -->
-              <path d="M 620 260 Q 720 270 700 340 Q 630 350 620 290 Z" />
-            </g>
-
-            <!-- Teilnehmer Pins -->
-            @for (pin of pins(); track pin.id) {
-              <g
-                class="map-pin-group"
-                [class.is-selected]="selectedPin()?.id === pin.id"
-                (click)="selectPin(pin)"
-                tabindex="0"
-                role="button"
-                [attr.aria-label]="pin.name + ' (' + pin.reaction + ')'"
-                (keydown.enter)="selectPin(pin)"
-                (keydown.space)="selectPin(pin)"
-              >
-                <!-- Pulsierender Kreis -->
-                <circle
-                  [attr.cx]="pin.x"
-                  [attr.cy]="pin.y"
-                  r="12"
-                  class="pin-pulse"
-                />
-                <!-- Pin Kern -->
-                <circle
-                  [attr.cx]="pin.x"
-                  [attr.cy]="pin.y"
-                  r="6"
-                  class="pin-core"
-                  filter="url(#pin-glow)"
-                />
-                <!-- Pin Emoji / Text -->
-                <text
-                  [attr.x]="pin.x"
-                  [attr.y]="pin.y - 12"
-                  text-anchor="middle"
-                  class="pin-label"
-                >
-                  {{ getEmoji(pin.reaction) }} {{ pin.name }}
-                </text>
-              </g>
-            }
-          </svg>
-
-          <!-- Detailkarte für ausgewählten Pin -->
-          @if (selectedPin(); as active) {
-            <div class="pin-popup" role="dialog" [attr.aria-label]="'moments.map.pinDetails' | t">
-              <div class="pin-popup-head">
-                <span class="pin-popup-title">
-                  {{ getEmoji(active.reaction) }} {{ active.name }}
-                </span>
-                <button
-                  type="button"
-                  class="pin-popup-close"
-                  [attr.aria-label]="'common.close' | t"
-                  (click)="clearSelection()"
-                >
-                  <vereint-icon name="close" />
-                </button>
-              </div>
-
-              @if (active.statusText) {
-                <p class="pin-popup-text">{{ 'moments.quote' | t: { text: active.statusText } }}</p>
-              }
-
-              <div class="pin-popup-meta">
-                <span class="pin-coords">
-                  <vereint-icon name="location" /> {{ active.latitude.toFixed(4) }}°, {{ active.longitude.toFixed(4) }}°
-                </span>
-                @if (active.createdAt) {
-                  <span class="pin-time">{{ formatTime(active.createdAt) }}</span>
-                }
-              </div>
-            </div>
-          }
-        </div>
+        <div
+          #mapHost
+          class="map-canvas"
+          role="application"
+          [attr.aria-label]="'moments.map.ariaLabel' | t"
+        ></div>
 
         <!-- Standorte Liste -->
         <div class="pin-list-container">
           <h4 class="pin-list-title">{{ 'moments.map.listTitle' | t }}</h4>
           <ul class="pin-list">
             @for (pin of pins(); track pin.id) {
-              <li
-                class="pin-list-item"
-                [class.is-active]="selectedPin()?.id === pin.id"
-                (click)="selectPin(pin)"
-              >
-                <span class="pin-list-icon">{{ getEmoji(pin.reaction) }}</span>
-                <div class="pin-list-info">
-                  <span class="pin-list-name">{{ pin.name }}</span>
-                  <span class="pin-list-coords">
-                    {{ pin.latitude.toFixed(2) }}° N, {{ pin.longitude.toFixed(2) }}° E
+              <li>
+                <button
+                  type="button"
+                  class="pin-list-item"
+                  [class.is-active]="selectedPinId() === pin.id"
+                  (click)="focusPin(pin)"
+                >
+                  <span
+                    class="pin-list-icon"
+                    [class.is-initiator]="pin.kind === 'session_initiator'"
+                  >
+                    {{ emojiFor(pin) }}
                   </span>
-                </div>
-                @if (pin.statusText) {
-                  <span class="pin-list-snippet">{{ pin.statusText }}</span>
-                }
+                  <span class="pin-list-info">
+                    <span class="pin-list-name">{{ pin.name }}</span>
+                    <span class="pin-list-coords">{{ formatCoordinates(pin) }}</span>
+                  </span>
+                  @if (pin.statusText) {
+                    <span class="pin-list-snippet">{{ pin.statusText }}</span>
+                  }
+                </button>
               </li>
             }
           </ul>
@@ -227,8 +185,7 @@ interface MapPin {
         padding: 0.2rem 0.6rem;
         border-radius: 999px;
         background-color: var(--color-brand-soft);
-        color: var(--color-brand);
-        border: 1px solid var(--color-brand);
+        color: var(--color-brand-strong);
         white-space: nowrap;
       }
       .map-empty {
@@ -245,6 +202,7 @@ interface MapPin {
       }
       .map-empty-icon {
         font-size: 2.5rem;
+        color: var(--color-brand);
       }
       .map-empty strong {
         color: var(--color-text);
@@ -256,110 +214,16 @@ interface MapPin {
         max-width: 32rem;
         color: var(--color-text-muted);
       }
-      .map-container {
-        position: relative;
+      .map-canvas {
         width: 100%;
+        height: clamp(16rem, 55vh, 28rem);
         border-radius: var(--radius-md);
-        overflow: hidden;
         border: 1px solid var(--color-border);
-        background-color: var(--color-surface);
-      }
-      .world-map-svg {
-        display: block;
-        width: 100%;
-        height: auto;
-        aspect-ratio: 800 / 450;
-      }
-      .landmasses path {
-        transition: fill 0.2s ease;
-      }
-      .map-pin-group {
-        cursor: pointer;
-        outline: none;
-      }
-      .pin-pulse {
-        fill: rgba(242, 182, 0, 0.25);
-        animation: pin-pulse-anim 2s infinite ease-out;
-      }
-      .pin-core {
-        fill: var(--color-brand);
-        stroke: #fff;
-        stroke-width: 1.5;
-        transition: transform 0.2s ease, fill 0.2s ease;
-      }
-      .map-pin-group:hover .pin-core,
-      .map-pin-group.is-selected .pin-core {
-        fill: var(--color-brand-strong);
-        transform: scale(1.3);
-        transform-origin: center;
-      }
-      .pin-label {
-        font-size: 11px;
-        font-weight: 700;
-        fill: var(--color-text);
-        paint-order: stroke;
-        stroke: #000;
-        stroke-width: 3px;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        pointer-events: none;
-      }
-      @keyframes pin-pulse-anim {
-        0% {
-          r: 6;
-          opacity: 1;
-        }
-        100% {
-          r: 20;
-          opacity: 0;
-        }
-      }
-      .pin-popup {
-        position: absolute;
-        bottom: 1rem;
-        left: 1rem;
-        right: 1rem;
-        padding: 0.75rem 1rem;
-        border-radius: var(--radius-md);
-        background-color: rgba(20, 20, 18, 0.95);
-        backdrop-filter: blur(8px);
-        border: 1px solid var(--color-brand);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-      }
-      .pin-popup-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .pin-popup-title {
-        font-weight: 700;
-        font-size: 0.95rem;
-        color: var(--color-text);
-      }
-      .pin-popup-close {
-        border: none;
-        background: transparent;
-        color: var(--color-text-muted);
-        cursor: pointer;
-        font-size: 1rem;
-        padding: 0.2rem;
-      }
-      .pin-popup-text {
-        margin: 0;
-        font-size: 0.85rem;
-        color: var(--color-text);
-        font-style: italic;
-      }
-      .pin-popup-meta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-size: 0.75rem;
-        color: var(--color-text-muted);
-        font-family: monospace;
+        overflow: hidden;
+        background-color: var(--color-surface-raised);
+        /* Leaflet-Ebenen bleiben unter Dialogen und der App-Navigation. */
+        position: relative;
+        z-index: 0;
       }
       .pin-list-container {
         display: flex;
@@ -368,7 +232,7 @@ interface MapPin {
       }
       .pin-list-title {
         margin: 0;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         font-weight: 700;
         color: var(--color-text);
       }
@@ -376,27 +240,42 @@ interface MapPin {
         list-style: none;
         margin: 0;
         padding: 0;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-        gap: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
       }
       .pin-list-item {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.75rem;
+        width: 100%;
         padding: 0.5rem 0.75rem;
-        border-radius: var(--radius-md);
-        background-color: var(--color-surface-raised);
+        border-radius: var(--radius-sm);
         border: 1px solid var(--color-border);
+        background-color: var(--color-surface-raised);
+        color: inherit;
+        font: inherit;
+        text-align: left;
         cursor: pointer;
-        transition: border-color 0.2s ease;
       }
       .pin-list-item:hover,
       .pin-list-item.is-active {
         border-color: var(--color-brand);
+        background-color: var(--color-brand-soft);
       }
       .pin-list-icon {
-        font-size: 1.2rem;
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background-color: var(--color-surface);
+        border: 2px solid var(--color-brand);
+        font-size: 1rem;
+      }
+      .pin-list-icon.is-initiator {
+        border-color: var(--color-accent);
       }
       .pin-list-info {
         display: flex;
@@ -405,16 +284,12 @@ interface MapPin {
       }
       .pin-list-name {
         font-size: 0.85rem;
-        font-weight: 700;
+        font-weight: 600;
         color: var(--color-text);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
       }
       .pin-list-coords {
         font-size: 0.75rem;
         color: var(--color-text-muted);
-        font-family: monospace;
       }
       .pin-list-snippet {
         margin-left: auto;
@@ -424,7 +299,45 @@ interface MapPin {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        max-width: 5rem;
+        max-width: 40%;
+      }
+
+      /* Leaflet erzeugt Marker und Popups außerhalb der Komponentenvorlage. */
+      :host ::ng-deep .moment-pin {
+        display: grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        background-color: var(--color-surface);
+        border: 3px solid var(--color-brand);
+        box-shadow: var(--vereint-shadow);
+        font-size: 1.1rem;
+        line-height: 1;
+      }
+      :host ::ng-deep .moment-pin.is-initiator {
+        border-color: var(--color-accent);
+        width: 2.6rem;
+        height: 2.6rem;
+        font-size: 1.3rem;
+      }
+      :host ::ng-deep .moment-pin.is-active {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 4px var(--color-brand-soft);
+      }
+      :host ::ng-deep .moment-popup strong {
+        display: block;
+        font-size: 0.85rem;
+      }
+      :host ::ng-deep .moment-popup p {
+        margin: 0.2rem 0 0;
+        font-size: 0.8rem;
+      }
+      :host ::ng-deep .moment-popup small {
+        display: block;
+        margin-top: 0.25rem;
+        color: #6b7280;
+        font-size: 0.72rem;
       }
     `,
   ],
@@ -432,10 +345,24 @@ interface MapPin {
 export class MomentMapComponent {
   readonly mapData = input<MomentMapGeoJsonDto | null>(null);
   readonly sessionTitle = input<string>('');
+  /** Vom Vorstand gepflegte Reaktionen, für die Emojis der Pins. */
+  readonly reactions = input<MomentReactionDto[]>([]);
 
-  protected readonly selectedPin = signal<MapPin | null>(null);
+  private readonly loadLeaflet = inject(LEAFLET_LOADER);
+  private readonly document = inject(DOCUMENT);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly mapHost = viewChild<ElementRef<HTMLDivElement>>('mapHost');
 
-  /** Berechnet die projizierten Karten-Pins aus den GeoJSON Features. */
+  private leaflet: typeof Leaflet | null = null;
+  private map: Leaflet.Map | null = null;
+  private mapElement: HTMLElement | null = null;
+  private markers = new Map<string, Leaflet.Marker>();
+  /** Verwirft veraltete Läufe, wenn sich die Daten während des Ladens ändern. */
+  private renderRun = 0;
+
+  protected readonly selectedPinId = signal<string | null>(null);
+
+  /** Pins aus den GeoJSON-Features. */
   protected readonly pins = computed<MapPin[]>(() => {
     const data = this.mapData();
     if (!data?.features) return [];
@@ -444,62 +371,161 @@ export class MomentMapComponent {
       .filter((f): f is GeoJsonFeatureDto => Array.isArray(f?.geometry?.coordinates))
       .map((f, idx) => {
         const [lon, lat] = f.geometry.coordinates;
-        // Equirectangular Projection: x: -180..180 -> 0..800, y: 90..-90 -> 0..450
-        const x = Math.max(10, Math.min(790, ((lon + 180) / 360) * 800));
-        const y = Math.max(10, Math.min(440, ((90 - lat) / 180) * 450));
-
         const props = f.properties || {};
-        const name = (props['userName'] || props['name'] || translate('moments.map.fallbackName', { number: idx + 1 })) as string;
-        const reaction = (props['reaction'] || 'TOAST') as string;
-        const statusText = props['statusText'] as string | undefined;
-        const createdAt = props['createdAt'] as string | undefined;
-
+        const name = (props['userName'] ||
+          props['name'] ||
+          translate('moments.map.fallbackName', { number: idx + 1 })) as string;
         return {
-          id: `pin-${idx}-${lon}-${lat}`,
+          id: String(props['id'] ?? `pin-${idx}-${lon}-${lat}`),
           name,
-          reaction,
-          statusText,
-          createdAt,
+          kind: String(props['type'] ?? 'response'),
+          reaction: (props['reaction'] as string | null | undefined) ?? null,
+          statusText: (props['statusText'] as string | undefined) ?? undefined,
+          createdAt: props['createdAt'] as string | undefined,
           latitude: lat,
           longitude: lon,
-          x,
-          y,
         };
       });
   });
 
-  protected selectPin(pin: MapPin): void {
-    this.selectedPin.set(pin);
+  constructor() {
+    effect(() => {
+      const pins = this.pins();
+      const host = this.mapHost()?.nativeElement ?? null;
+      // Abhängigkeit für die Emojis der Pins.
+      this.reactions();
+      if (!this.isBrowser) return;
+      void this.render(pins, host);
+    });
+    inject(DestroyRef).onDestroy(() => this.destroyMap());
   }
 
-  protected clearSelection(): void {
-    this.selectedPin.set(null);
+  /** Springt in der Karte zum Pin und öffnet dessen Popup. */
+  protected focusPin(pin: MapPin): void {
+    this.selectedPinId.set(pin.id);
+    const marker = this.markers.get(pin.id);
+    if (!this.map || !marker) return;
+    this.map.setView(marker.getLatLng(), Math.max(this.map.getZoom(), SINGLE_PIN_ZOOM));
+    marker.openPopup();
+    this.highlightMarker(pin.id);
   }
 
-  protected formatTime(iso: string): string {
-    return formatDateTime(iso);
-  }
-
-  protected getEmoji(reaction: string): string {
-    const r = reaction.toUpperCase();
-    switch (r) {
-      case 'TOAST':
-      case 'CHEERS':
-        return '🍻';
-      case 'PRAYER':
-        return '🙏';
-      case 'CHEER':
-        return '📣';
-      case 'THUMBS_UP':
-        return '👍';
-      case 'CELEBRATE':
-        return '🎉';
-      case 'HEART':
-        return '❤️';
-      case 'CHECKIN':
-        return '📍';
-      default:
-        return '✨';
+  protected emojiFor(pin: MapPin): string {
+    if (pin.reaction) {
+      const configured = this.reactions().find((r) => r.code === pin.reaction);
+      if (configured) return configured.emoji;
     }
+    return pin.kind === 'session_initiator' ? '⭐' : '📍';
+  }
+
+  protected formatCoordinates(pin: MapPin): string {
+    const lat = `${Math.abs(pin.latitude).toFixed(2)}° ${translate(pin.latitude >= 0 ? 'moments.map.north' : 'moments.map.south')}`;
+    const lng = `${Math.abs(pin.longitude).toFixed(2)}° ${translate(pin.longitude >= 0 ? 'moments.map.east' : 'moments.map.west')}`;
+    return `${lat}, ${lng}`;
+  }
+
+  private async render(pins: MapPin[], host: HTMLElement | null): Promise<void> {
+    const run = ++this.renderRun;
+    if (!host || pins.length === 0) {
+      this.destroyMap();
+      return;
+    }
+    ensureLeafletStylesheet(this.document);
+    const L = this.leaflet ?? (this.leaflet = await this.loadLeaflet());
+    if (run !== this.renderRun) return;
+
+    if (this.map && this.mapElement !== host) this.destroyMap();
+    if (!this.map) {
+      this.map = L.map(host, { scrollWheelZoom: false, worldCopyJump: true });
+      this.mapElement = host;
+      L.tileLayer(MAP_TILE_URL, {
+        maxZoom: 19,
+        attribution: `&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>`,
+      }).addTo(this.map);
+    }
+    const map = this.map;
+
+    this.markers.forEach((marker) => marker.remove());
+    this.markers.clear();
+    for (const pin of pins) {
+      const marker = L.marker([pin.latitude, pin.longitude], {
+        icon: L.divIcon({
+          className: '',
+          html: this.markerHtml(pin),
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
+          popupAnchor: [0, -18],
+        }),
+        title: pin.name,
+        keyboard: true,
+      })
+        .bindPopup(this.popupContent(pin))
+        .on('click', () => {
+          this.selectedPinId.set(pin.id);
+          this.highlightMarker(pin.id);
+        })
+        .addTo(map);
+      this.markers.set(pin.id, marker);
+    }
+
+    const view = mapViewFor(pins);
+    if (view.kind === 'point') {
+      map.setView(view.center, view.zoom);
+    } else if (view.kind === 'bounds') {
+      map.fitBounds(L.latLngBounds(view.southWest, view.northEast), {
+        padding: [36, 36],
+        maxZoom: MAX_FIT_ZOOM,
+      });
+    }
+    // Der Container kann gerade erst sichtbar geworden sein (Tab-Wechsel).
+    setTimeout(() => map.invalidateSize());
+  }
+
+  /** Nur Emoji und feste Klassen; Namen und Texte stehen im Popup als Textknoten. */
+  private markerHtml(pin: MapPin): string {
+    const classes = ['moment-pin'];
+    if (pin.kind === 'session_initiator') classes.push('is-initiator');
+    const emoji = document.createElement('span');
+    emoji.textContent = this.emojiFor(pin);
+    return `<span class="${classes.join(' ')}" data-pin="${encodeURIComponent(pin.id)}">${emoji.innerHTML}</span>`;
+  }
+
+  private popupContent(pin: MapPin): HTMLElement {
+    const root = document.createElement('div');
+    root.className = 'moment-popup';
+    const name = document.createElement('strong');
+    name.textContent =
+      pin.kind === 'session_initiator'
+        ? `${pin.name} · ${translate('moments.map.initiator')}`
+        : pin.name;
+    root.append(name);
+    const text = pin.kind === 'session_initiator' ? this.sessionTitle() : pin.statusText;
+    if (text) {
+      const p = document.createElement('p');
+      p.textContent = text;
+      root.append(p);
+    }
+    if (pin.createdAt) {
+      const time = document.createElement('small');
+      time.textContent = formatDateTime(pin.createdAt);
+      root.append(time);
+    }
+    return root;
+  }
+
+  private highlightMarker(pinId: string): void {
+    this.markers.forEach((marker, id) => {
+      marker
+        .getElement()
+        ?.querySelector('.moment-pin')
+        ?.classList.toggle('is-active', id === pinId);
+    });
+  }
+
+  private destroyMap(): void {
+    this.markers.clear();
+    this.map?.remove();
+    this.map = null;
+    this.mapElement = null;
   }
 }

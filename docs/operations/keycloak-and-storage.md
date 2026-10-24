@@ -71,5 +71,5 @@ group/{gruppen_uuid}/{datei_uuid}.bin                               # Bild der G
 ### Sicherheit
 - Jede Datei wird vor dem Hochladen mit `DATA_ENCRYPTION_KEY` (AES-256-GCM) verschlüsselt; Moment-Medien in 64-KiB-Blöcken, damit auch Videos gestreamt statt ganz im Speicher gehalten werden.
 - Bilder werden vor dem Verschlüsseln von EXIF/XMP-Metadaten (z. B. GPS) befreit, Videos von Orts- und Geräteangaben.
-- Der Browser lädt Dateien nie direkt aus S3, sondern nur über berechtigungsgeprüfte Endpunkte des baseservice (`/api/v1/images/{id}/content`, `/api/v1/events/{eventId}/moments/{momentId}/media/{mediaId}/content` mit HTTP-Range für Videos).
+- Der Browser lädt Dateien nie direkt aus S3, sondern nur über berechtigungsgeprüfte Endpunkte des baseservice (`/api/v1/images/{id}/content`, `/api/v1/moments/{momentId}/media/{mediaId}/content` mit HTTP-Range für Videos).
 - Nur der baseservice spricht mit S3 (`S3ObjectStorage.kt`); er signiert seine Anfragen selbst (SigV4, `S3_URL_TTL_SECONDS`) und gibt keine Links an Clients heraus.

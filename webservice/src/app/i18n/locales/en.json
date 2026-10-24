@@ -5,7 +5,8 @@
     "saving": "Saving …",
     "cancel": "Cancel",
     "close": "Close",
-    "retry": "Try again"
+    "retry": "Try again",
+    "optional": "optional"
   },
   "errors": {
     "api": {
@@ -528,8 +529,8 @@
       "description": "Scan a barcode and pay with your credit."
     },
     "boardMoments": {
-      "title": "Moment types & reactions",
-      "description": "Define types and reactions for moments."
+      "title": "Moment topics & reactions",
+      "description": "Define topics and reactions for moments."
     },
     "stammtische": {
       "title": "Choose group",
@@ -701,13 +702,8 @@
   "moments": {
     "eyebrow": "Community moments & rituals",
     "backToEvent": "← To event",
-    "allEvents": "← All events",
     "loadingMessage": "Fetching moments and ritual feeds.",
     "unavailable": "Unavailable",
-    "picker": {
-      "label": "Select active event:",
-      "placeholder": "-- Please choose an event --"
-    },
     "push": {
       "title": "New moment started: “{title}”",
       "message": "Would you like to join and share a reaction or status?",
@@ -715,7 +711,7 @@
       "dismiss": "Dismiss"
     },
     "actions": {
-      "start": "+ Start new moment",
+      "start": "Start a new moment",
       "activeCount": {
         "one": "{count} active moment",
         "other": "{count} active moments"
@@ -723,7 +719,7 @@
     },
     "empty": {
       "title": "No active moment",
-      "message": "No ritual or community moment is running for this event. Start a joint toast, a prayer or a fan cheer now!",
+      "message": "No moment is running right now. Start a toast, a prayer or a cheer – with or without an event.",
       "initiate": "Initiate moment"
     },
     "session": {
@@ -735,7 +731,8 @@
       "react": "+ React",
       "chat": "24h chat",
       "complete": "Complete",
-      "completeTitle": "Complete the moment and archive it in the event history"
+      "completeTitle": "Complete the moment and move it to the history",
+      "eventOnly": "Event participants only"
     },
     "detail": {
       "eyebrow": "Selected moment",
@@ -759,33 +756,46 @@
       "view": "View"
     },
     "start": {
-      "title": "Initiate new moment",
-      "titleLabel": "Title of the ritual / moment *",
-      "titlePlaceholder": "e.g. Joint toast, evening prayer, cheering wave",
-      "topicLabel": "Topic / ritual type *",
-      "messageLabel": "Message / prompt (optional)",
+      "title": "New moment",
+      "titleLabel": "Custom title",
+      "titlePlaceholder": "Otherwise the topic name is used",
+      "topicLabel": "Topic",
+      "messageLabel": "Message",
       "messagePlaceholder": "e.g. Here’s to our group! Who’s raising a glass from afar?",
       "durationLabel": "Duration of the moment",
       "duration": {
-        "m15": "15 minutes (short prompt)",
-        "m30": "30 minutes",
-        "h1": "1 hour (default)",
-        "h2": "2 hours",
-        "h24": "24 hours (daily ritual)"
+        "m15": "15 min",
+        "m30": "30 min",
+        "h1": "1 h",
+        "h2": "2 h",
+        "h24": "24 h"
       },
-      "consent": "Share my location for the world map (GDPR opt-in)",
-      "submit": "Start moment now",
+      "consent": "Shown on the moment map (voluntary).",
+      "submit": "Start moment",
       "submitting": "Starting …",
       "error": "Error starting the moment.",
       "failed": "The moment could not be started.",
-      "noTypes": "The board has not enabled any moment type yet."
+      "noTypes": "The board has not released a topic yet.",
+      "intro": "Pick a topic and go. Everything else is optional.",
+      "eventLabel": "Link to an event",
+      "noEvent": "No event – for the whole group",
+      "visibilityLabel": "Who sees the moment?",
+      "visibility": {
+        "group": "Whole group",
+        "event": "Participants only",
+        "groupHint": "All group members see the moment and can join in.",
+        "eventHint": "Only event participants see the moment and its chat.",
+        "noEventHint": "Without an event, every group member sees the moment."
+      },
+      "consentTitle": "Share location",
+      "manageTypes": "Create topics"
     },
     "respond": {
-      "title": "Share status & reaction",
-      "reactionLabel": "Reaction (optional)",
-      "statusLabel": "Personal status (optional)",
+      "title": "Share a post",
+      "reactionLabel": "Reaction",
+      "statusLabel": "Status",
       "statusPlaceholder": "e.g. Greetings from Hamburg! 🍺",
-      "consent": "Share my current location for this post on the world map",
+      "consent": "Shown on the map with this post (voluntary).",
       "submit": "Submit post",
       "submitting": "Sending …",
       "error": "Error submitting.",
@@ -838,8 +848,8 @@
       }
     },
     "map": {
-      "ariaLabel": "World map of participants",
-      "title": "Interactive participant map",
+      "ariaLabel": "Map of shared locations",
+      "title": "Participant map",
       "subtitle": "Locations of participants who have opted in to location sharing.",
       "count": {
         "one": "{count} location",
@@ -850,7 +860,13 @@
       "svgLabel": "World map with participant pins",
       "pinDetails": "Pin details",
       "listTitle": "Shared locations",
-      "fallbackName": "Participant {number}"
+      "fallbackName": "Participant {number}",
+      "attribution": "Map data © OpenStreetMap contributors",
+      "initiator": "Started",
+      "north": "N",
+      "south": "S",
+      "east": "E",
+      "west": "W"
     },
     "timeline": {
       "title": "Status timeline",
@@ -864,7 +880,7 @@
     "quote": "“{text}”",
     "manageLink": "Manage types & reactions",
     "media": {
-      "label": "Photos & videos (optional)",
+      "label": "Photos & videos",
       "add": "Add photo or video",
       "hint": "Up to {count} files. Videos at most {seconds} seconds and {mb} MB.",
       "remove": "Remove",
@@ -882,8 +898,15 @@
         "tooLargeServer": "The file is too large.",
         "uploadFailed": "Upload failed. Please try again.",
         "aborted": "Upload cancelled."
-      }
-    }
+      },
+      "takePhoto": "Take photo",
+      "takeVideo": "Record video",
+      "fromGallery": "From gallery",
+      "hintPhotos": "Up to {count} photos.",
+      "videosNotInPlan": "Videos are not included in the group’s current plan."
+    },
+    "allMoments": "All moments",
+    "eventFilter": "Moments for the event “{title}”"
   },
   "catalog": {
     "header": {
@@ -1361,7 +1384,7 @@
       "inviteDesc": "Create an invite link for registration",
       "kioskDevicesTitle": "Kiosk devices",
       "kioskDevicesDesc": "See running bar terminals and unlock them remotely",
-      "momentConfigTitle": "Moments · types & reactions",
+      "momentConfigTitle": "Moments · topics & reactions",
       "momentConfigDesc": "Decide which moments and reactions exist"
     },
     "comms": {
@@ -1502,13 +1525,13 @@
     },
     "momentConfig": {
       "back": "← Back to board",
-      "title": "Moments: types & reactions",
-      "intro": "Decide which kinds of moments members can start and which reactions they can respond with. Retired entries disappear for new moments; existing moments keep them.",
+      "title": "Moments: topics & reactions",
+      "intro": "Set the topics members choose from when starting a moment, and the reactions they can reply with. Retired entries disappear for new moments; old moments keep them.",
       "unavailable": "Moment settings unavailable",
-      "typesTitle": "Moment types",
+      "typesTitle": "Topics",
       "reactionsTitle": "Reactions",
-      "newType": "New type",
-      "editType": "Edit type",
+      "newType": "New topic",
+      "editType": "Edit topic",
       "newReaction": "New reaction",
       "editReaction": "Edit reaction",
       "edit": "Edit",
@@ -1520,9 +1543,9 @@
       "allReactions": "Allow all active reactions",
       "allReactionsShort": "All reactions",
       "someReactions": "Reactions: {list}",
-      "activeType": "Members can start this type",
+      "activeType": "Members can choose this topic",
       "activeReaction": "Members can use this reaction",
-      "retireTypeHint": "Retired: no new moments of this type, existing ones stay.",
+      "retireTypeHint": "Retired: new moments with this topic are no longer possible; existing ones remain.",
       "retireReactionHint": "Retired: the reaction can no longer be chosen, earlier contributions keep it.",
       "saveFailed": "Saving failed."
     }

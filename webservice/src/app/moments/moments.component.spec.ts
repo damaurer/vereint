@@ -13,6 +13,9 @@ import type {
 import { AuthService } from '../auth/auth.service';
 import { MemberApiService } from '../member/member-api.service';
 import { MomentMediaUploader } from './moment-media';
+import { By } from '@angular/platform-browser';
+import { MomentRespondDialogComponent } from './moment-respond-dialog.component';
+import { MomentStartDialogComponent } from './moment-start-dialog.component';
 import { MomentsComponent } from './moments.component';
 
 const uploader = {
@@ -23,7 +26,7 @@ const uploader = {
     previewUrl: `blob:${file.name}`,
     name: file.name,
   })),
-  upload: vi.fn((_e: string, _m: string, media: { name: string }, _lang: string, onProgress: (f: number) => void) => {
+  upload: vi.fn((_m: string, media: { name: string }, _lang: string, onProgress: (f: number) => void) => {
     onProgress(1);
     return { result: Promise.resolve({ id: `media-${media.name}` }), abort: () => undefined };
   }),
@@ -78,6 +81,7 @@ const mockConfig: MomentConfigDto = {
     maxMediaPerResponse: 4,
     imageTypes: ['image/jpeg', 'image/png', 'image/gif'],
     videoTypes: ['video/mp4', 'video/quicktime'],
+    videosAllowed: true,
   },
 };
 
@@ -96,6 +100,8 @@ const mockEvents: EventSummary[] = [
 const mockSession: MomentSessionDto = {
   id: 'm-1',
   eventId: 'e-1',
+  eventTitle: 'Vereinsstammtisch',
+  visibility: 'group',
   creatorId: 'u-1',
   creatorName: 'Max Mustermann',
   conversationId: 'conv-123',
@@ -146,6 +152,8 @@ const mockDetail: MomentDetailDto = {
 const mockHistory: MomentSummaryDto[] = [
   {
     momentId: 'm-archived',
+    eventId: null,
+    eventTitle: null,
     title: 'Früheres Gebet',
     topicType: 'prayer',
     topicName: 'Gebet & Fürbitte',
@@ -199,6 +207,11 @@ describe('MomentsComponent', () => {
   };
 
   const html = (fixture: { nativeElement: HTMLElement }) => fixture.nativeElement.textContent ?? '';
+  type Fixture = Awaited<ReturnType<typeof createComponent>>;
+  const startDialog = (fixture: Fixture) =>
+    fixture.debugElement.query(By.directive(MomentStartDialogComponent)).componentInstance as any;
+  const respondDialog = (fixture: Fixture) =>
+    fixture.debugElement.query(By.directive(MomentRespondDialogComponent)).componentInstance as any;
 
   beforeEach(() => {
     api = {
@@ -225,6 +238,8 @@ describe('MomentsComponent', () => {
       completeMoment: vi.fn(() =>
         of({
           momentId: 'm-1',
+          eventId: 'e-1',
+          eventTitle: 'Vereinsstammtisch',
           title: 'Stammtisch Anstoßen',
           topicType: 'toast',
           topicName: 'Gemeinsames Anstoßen',
@@ -242,11 +257,12 @@ describe('MomentsComponent', () => {
     roles = ['member'];
   });
 
-  it('loads events and active moments', async () => {
+  it('loads all moments of the group without an event', async () => {
     const fixture = await createComponent();
     expect(api.listEvents).toHaveBeenCalled();
-    expect(api.listMoments).toHaveBeenCalledWith('e-1');
-    expect(api.getMomentDetail).toHaveBeenCalledWith('e-1', 'm-1');
+    expect(api.listMoments).toHaveBeenCalledWith(null);
+    expect(api.listMomentHistory).toHaveBeenCalledWith(null);
+    expect(api.getMomentDetail).toHaveBeenCalledWith('m-1');
 
     const text = html(fixture);
     expect(text).toContain('Stammtisch Anstoßen');
@@ -254,12 +270,21 @@ describe('MomentsComponent', () => {
     expect(text).toContain('Prost Freunde!');
     expect(text).toContain('24h-Chat');
     expect(text).toContain('Früheres Gebet');
+    expect(text).toContain('Vereinsstammtisch');
   });
 
   it('handles route with direct eventId parameter', async () => {
     const fixture = await createComponent('e-1');
     expect(api.listMoments).toHaveBeenCalledWith('e-1');
+    expect(api.listMomentHistory).toHaveBeenCalledWith('e-1');
     expect(html(fixture)).toContain('Stammtisch Anstoßen');
+    expect(html(fixture)).toContain('Moments zum Event „Vereinsstammtisch“');
+  });
+
+  it('marks moments that only event participants can see', async () => {
+    api.listMoments.mockReturnValue(of([{ ...mockSession, visibility: 'event' }]));
+    const fixture = await createComponent();
+    expect(html(fixture)).toContain('Nur Event-Teilnehmer');
   });
 
   it('shows push notification alert banner when deep-linked with momentId query param', async () => {
@@ -268,21 +293,47 @@ describe('MomentsComponent', () => {
     expect(html(fixture)).toContain('Jetzt Beitreten');
   });
 
-  it('allows starting a new moment via modal', async () => {
+  it('starts a moment without event and title for the whole group', async () => {
+    const fixture = await createComponent();
+    const comp = fixture.componentInstance as any;
+
+    comp.openStartModal();
+    fixture.detectChanges();
+    const dialog = startDialog(fixture);
+    expect(dialog.eventId).toBe('');
+
+    dialog.topicType = 'prayer';
+    dialog.submit();
+    expect(api.startMoment).toHaveBeenCalledWith({
+      title: undefined,
+      topicType: 'prayer',
+      message: undefined,
+      durationMinutes: 60,
+      consent: false,
+      latitude: undefined,
+      longitude: undefined,
+      eventId: undefined,
+      visibility: 'group',
+    });
+  });
+
+  it('starts an event moment limited to the participants', async () => {
     const fixture = await createComponent('e-1');
     const comp = fixture.componentInstance as any;
 
     comp.openStartModal();
     fixture.detectChanges();
+    const dialog = startDialog(fixture);
+    expect(dialog.eventId).toBe('e-1');
 
-    comp.newTitle = 'Abendgebet';
-    comp.newTopicType = 'prayer';
-    comp.newMessage = 'Gemeinsame Fürbitte';
-    comp.newDurationMinutes = 30;
-    comp.newConsent = false;
+    dialog.title = 'Abendgebet';
+    dialog.topicType = 'prayer';
+    dialog.message = 'Gemeinsame Fürbitte';
+    dialog.durationMinutes = 30;
+    dialog.visibility = 'event';
 
-    comp.submitStartMoment();
-    expect(api.startMoment).toHaveBeenCalledWith('e-1', {
+    dialog.submit();
+    expect(api.startMoment).toHaveBeenCalledWith({
       title: 'Abendgebet',
       topicType: 'prayer',
       message: 'Gemeinsame Fürbitte',
@@ -290,6 +341,8 @@ describe('MomentsComponent', () => {
       consent: false,
       latitude: undefined,
       longitude: undefined,
+      eventId: 'e-1',
+      visibility: 'event',
     });
   });
 
@@ -299,19 +352,20 @@ describe('MomentsComponent', () => {
 
     // Quick reaction submission
     comp.submitQuickReaction('m-1', 'CHEERS');
-    expect(api.submitMomentResponse).toHaveBeenCalledWith('e-1', 'm-1', {
+    expect(api.submitMomentResponse).toHaveBeenCalledWith('m-1', {
       reaction: 'CHEERS',
       consent: false,
     });
 
     // Custom response form submission
     comp.openRespondModal('m-1');
-    comp.respondReaction = 'PRAYER';
-    comp.respondStatusText = 'Segenswünsche aus Hamburg';
-    comp.respondConsent = false;
+    fixture.detectChanges();
+    const dialog = respondDialog(fixture);
+    dialog.reaction = 'PRAYER';
+    dialog.statusText = 'Segenswünsche aus Hamburg';
 
-    await comp.submitResponseForm();
-    expect(api.submitMomentResponse).toHaveBeenCalledWith('e-1', 'm-1', {
+    await dialog.submit();
+    expect(api.submitMomentResponse).toHaveBeenCalledWith('m-1', {
       reaction: 'PRAYER',
       statusText: 'Segenswünsche aus Hamburg',
       consent: false,
@@ -339,7 +393,7 @@ describe('MomentsComponent', () => {
     const text = html(fixture);
     expect(text).toContain('Gebet & Fürbitte');
     expect(text).not.toContain('Alter Typ');
-    expect(comp.newTopicType).toBe('toast');
+    expect(startDialog(fixture).topicType).toBe('toast');
   });
 
   it('shows the management link only to board and admin', async () => {
@@ -357,6 +411,8 @@ describe('MomentsComponent', () => {
     const comp = fixture.componentInstance as any;
 
     comp.openRespondModal('m-1');
+    fixture.detectChanges();
+    const dialog = respondDialog(fixture);
     const input = document.createElement('input');
     Object.defineProperty(input, 'files', {
       value: [
@@ -364,12 +420,12 @@ describe('MomentsComponent', () => {
         new File(['b'], 'clip.mp4', { type: 'video/mp4' }),
       ],
     });
-    await comp.onMediaSelected({ target: input } as unknown as Event);
-    expect(comp.pendingMedia().length).toBe(2);
-    expect(comp.canSubmitResponse()).toBe(true);
+    await dialog.onMediaSelected({ target: input } as unknown as Event);
+    expect(dialog.pendingMedia().length).toBe(2);
+    expect(dialog.canSubmit()).toBe(true);
 
-    await comp.submitResponseForm();
-    expect(api.submitMomentResponse).toHaveBeenCalledWith('e-1', 'm-1', {
+    await dialog.submit();
+    expect(api.submitMomentResponse).toHaveBeenCalledWith('m-1', {
       reaction: undefined,
       statusText: undefined,
       consent: false,
@@ -379,13 +435,44 @@ describe('MomentsComponent', () => {
     });
   });
 
+  it('offers camera capture for photos and videos when the plan allows videos', async () => {
+    const fixture = await createComponent();
+    const comp = fixture.componentInstance as any;
+    comp.openRespondModal('m-1');
+    fixture.detectChanges();
+
+    const photo = document.querySelector<HTMLInputElement>('[data-testid="capture-photo"]');
+    const video = document.querySelector<HTMLInputElement>('[data-testid="capture-video"]');
+    expect(photo?.getAttribute('capture')).toBe('environment');
+    expect(photo?.accept).toBe('image/*');
+    expect(video?.accept).toBe('video/*');
+    expect(document.querySelector('[data-testid="videos-not-in-plan"]')).toBeNull();
+  });
+
+  it('hides video capture when the group plan has no videos', async () => {
+    api.getMomentConfig.mockReturnValue(
+      of({ ...mockConfig, mediaLimits: { ...mockConfig.mediaLimits, videoTypes: [], videosAllowed: false } }),
+    );
+    const fixture = await createComponent();
+    const comp = fixture.componentInstance as any;
+    comp.openRespondModal('m-1');
+    fixture.detectChanges();
+
+    expect(document.querySelector('[data-testid="capture-photo"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="capture-video"]')).toBeNull();
+    expect(document.querySelector<HTMLInputElement>('[data-testid="pick-gallery"]')?.accept).toBe('image/*');
+    expect(document.querySelector('[data-testid="videos-not-in-plan"]')?.textContent).toContain(
+      'Videos sind im aktuellen Tarif',
+    );
+  });
+
   it('removes a photo or video after confirmation and reloads the moment', async () => {
     const fixture = await createComponent('e-1');
     const comp = fixture.componentInstance as any;
     vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     comp.removeMedia('m-1', { id: 'media-1' });
-    expect(api.deleteMomentMedia).toHaveBeenCalledWith('e-1', 'm-1', 'media-1');
+    expect(api.deleteMomentMedia).toHaveBeenCalledWith('m-1', 'media-1');
   });
 
   it('allows completing and archiving an active moment', async () => {
@@ -393,7 +480,7 @@ describe('MomentsComponent', () => {
     const comp = fixture.componentInstance as any;
 
     comp.completeMoment('m-1');
-    expect(api.completeMoment).toHaveBeenCalledWith('e-1', 'm-1');
+    expect(api.completeMoment).toHaveBeenCalledWith('m-1');
   });
 
   it('shows error state when moments API fails', async () => {

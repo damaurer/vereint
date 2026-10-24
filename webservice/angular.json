@@ -17,6 +17,7 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
+            "allowedCommonJsDependencies": ["leaflet"],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
@@ -25,6 +26,11 @@
               }
             ],
             "styles": [
+              {
+                "input": "node_modules/leaflet/dist/leaflet.css",
+                "bundleName": "leaflet",
+                "inject": false
+              },
               "src/styles.css"
             ],
             "server": "src/main.server.ts",

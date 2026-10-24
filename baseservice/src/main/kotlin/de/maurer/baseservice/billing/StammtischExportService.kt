@@ -159,6 +159,7 @@ class StammtischExportService(
                     mapOf(
                         "id" to it.id,
                         "eventId" to it.event?.id,
+                        "visibility" to it.visibility.name,
                         "creatorId" to it.creator?.id,
                         "title" to it.title,
                         "type" to it.topicType,

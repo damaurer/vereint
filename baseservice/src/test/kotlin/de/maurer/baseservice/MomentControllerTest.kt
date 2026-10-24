@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.isNull
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -94,7 +95,7 @@ class MomentControllerTest {
             createdAt = Instant.now()
         )
 
-        `when`(momentService.startMoment(anyUuid(), anyStartRequest(), anyPrincipal())).thenReturn(sessionDto)
+        `when`(momentService.startMoment(anyStartRequest(), anyPrincipal())).thenReturn(sessionDto)
 
         val request = StartMomentRequest(
             title = "Gemeinsames Anstoßen",
@@ -107,7 +108,7 @@ class MomentControllerTest {
         )
 
         mockMvc.perform(
-            post("/api/v1/events/$eventId/moments")
+            post("/api/v1/moments")
                 .with(jwt().jwt { it.subject("sub-user") })
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
@@ -140,10 +141,10 @@ class MomentControllerTest {
             createdAt = Instant.now()
         )
 
-        `when`(momentService.listActiveMoments(anyUuid(), anyPrincipal())).thenReturn(listOf(sessionDto))
+        `when`(momentService.listActiveMoments(anyPrincipal(), isNull())).thenReturn(listOf(sessionDto))
 
         mockMvc.perform(
-            get("/api/v1/events/$eventId/moments")
+            get("/api/v1/moments")
                 .with(jwt().jwt { it.subject("sub-user") })
         )
             .andExpect(status().isOk)
@@ -200,10 +201,10 @@ class MomentControllerTest {
             mapGeoJson = geoJson
         )
 
-        `when`(momentService.getMomentDetail(anyUuid(), anyUuid(), anyPrincipal())).thenReturn(detailDto)
+        `when`(momentService.getMomentDetail(anyUuid(), anyPrincipal())).thenReturn(detailDto)
 
         mockMvc.perform(
-            get("/api/v1/events/$eventId/moments/$momentId")
+            get("/api/v1/moments/$momentId")
                 .with(jwt().jwt { it.subject("sub-user") })
         )
             .andExpect(status().isOk)
@@ -228,7 +229,7 @@ class MomentControllerTest {
             createdAt = Instant.now()
         )
 
-        `when`(momentService.submitResponse(anyUuid(), anyUuid(), anyResponseRequest(), anyPrincipal())).thenReturn(responseDto)
+        `when`(momentService.submitResponse(anyUuid(), anyResponseRequest(), anyPrincipal())).thenReturn(responseDto)
 
         val request = SubmitMomentResponseRequest(
             reaction = "TOAST",
@@ -239,7 +240,7 @@ class MomentControllerTest {
         )
 
         mockMvc.perform(
-            post("/api/v1/events/$eventId/moments/$momentId/responses")
+            post("/api/v1/moments/$momentId/responses")
                 .with(jwt().jwt { it.subject("sub-user") })
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
@@ -262,10 +263,10 @@ class MomentControllerTest {
             )
         )
 
-        `when`(momentService.getMomentMapGeoJson(anyUuid(), anyUuid(), anyPrincipal())).thenReturn(geoJson)
+        `when`(momentService.getMomentMapGeoJson(anyUuid(), anyPrincipal())).thenReturn(geoJson)
 
         mockMvc.perform(
-            get("/api/v1/events/$eventId/moments/$momentId/map")
+            get("/api/v1/moments/$momentId/map")
                 .with(jwt().jwt { it.subject("sub-user") })
         )
             .andExpect(status().isOk)
@@ -287,10 +288,10 @@ class MomentControllerTest {
             completedAt = Instant.now()
         )
 
-        `when`(momentService.completeMoment(anyUuid(), anyUuid(), anyPrincipal())).thenReturn(summaryDto)
+        `when`(momentService.completeMoment(anyUuid(), anyPrincipal())).thenReturn(summaryDto)
 
         mockMvc.perform(
-            post("/api/v1/events/$eventId/moments/$momentId/complete")
+            post("/api/v1/moments/$momentId/complete")
                 .with(jwt().jwt { it.subject("sub-user") })
         )
             .andExpect(status().isOk)
@@ -313,10 +314,10 @@ class MomentControllerTest {
             completedAt = Instant.now()
         )
 
-        `when`(momentService.listMomentHistory(anyUuid(), anyPrincipal())).thenReturn(listOf(summaryDto))
+        `when`(momentService.listMomentHistory(anyPrincipal(), isNull())).thenReturn(listOf(summaryDto))
 
         mockMvc.perform(
-            get("/api/v1/events/$eventId/moments/history")
+            get("/api/v1/moments/history")
                 .with(jwt().jwt { it.subject("sub-user") })
         )
             .andExpect(status().isOk)
@@ -327,7 +328,7 @@ class MomentControllerTest {
     @Test
     fun `invalid UUID path parameters reject with 400 and problem detail`() {
         mockMvc.perform(
-            get("/api/v1/events/invalid-uuid/moments")
+            get("/api/v1/moments/invalid-uuid")
                 .with(jwt().jwt { it.subject("sub-user") })
         )
             .andExpect(status().isBadRequest)
@@ -337,12 +338,11 @@ class MomentControllerTest {
     @Test
     fun `invalid request body rejected with 400`() {
         val badRequest = StartMomentRequest(
-            title = "", // Blank not allowed
-            topicType = "toast"
+            topicType = "" // Thema ist Pflicht
         )
 
         mockMvc.perform(
-            post("/api/v1/events/$eventId/moments")
+            post("/api/v1/moments")
                 .with(jwt().jwt { it.subject("sub-user") })
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(badRequest))

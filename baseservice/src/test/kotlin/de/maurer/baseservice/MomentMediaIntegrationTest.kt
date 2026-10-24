@@ -78,15 +78,18 @@ class MomentMediaIntegrationTest @Autowired constructor(
             board
         )
         val eventId = UUID.fromString(event.id)
-        val moment = momentService.startMoment(eventId, StartMomentRequest(title = "Prost", topicType = topicType), member)
+        val moment = momentService.startMoment(
+            StartMomentRequest(title = "Prost", topicType = topicType, eventId = event.id, visibility = "event"),
+            member
+        )
         return Setup(board, member, outsider, eventId, UUID.fromString(moment.id))
     }
 
     private fun upload(s: Setup, type: String, data: ByteArray, who: UserPrincipal = s.member) =
-        momentMediaService.upload(s.eventId, s.momentId, type, data.size.toLong(), ByteArrayInputStream(data), who)
+        momentMediaService.upload(s.momentId, type, data.size.toLong(), ByteArrayInputStream(data), who)
 
     private fun readAll(s: Setup, mediaId: String, who: UserPrincipal = s.member): ByteArray {
-        val content = momentMediaService.prepareContent(s.eventId, s.momentId, UUID.fromString(mediaId), who)
+        val content = momentMediaService.prepareContent(s.momentId, UUID.fromString(mediaId), who)
         return momentMediaService.openRange(content, 0, content.sizeBytes - 1).use { it.readAllBytes() }
     }
 
@@ -123,10 +126,10 @@ class MomentMediaIntegrationTest @Autowired constructor(
         assertEquals(listOf(goal.code), type.allowedReactionCodes)
 
         val s = setup(topicType = type.code)
-        val response = momentService.submitResponse(s.eventId, s.momentId, SubmitMomentResponseRequest(reaction = goal.code), s.member)
+        val response = momentService.submitResponse(s.momentId, SubmitMomentResponseRequest(reaction = goal.code), s.member)
         assertEquals("⚽", response.reactionEmoji)
         assertThrows<InvalidRequestException> {
-            momentService.submitResponse(s.eventId, s.momentId, SubmitMomentResponseRequest(reaction = "TOAST"), s.member)
+            momentService.submitResponse(s.momentId, SubmitMomentResponseRequest(reaction = "TOAST"), s.member)
         }
 
         // Ausmustern: keine neuen Moments, bestehende bleiben lesbar.
@@ -136,9 +139,9 @@ class MomentMediaIntegrationTest @Autowired constructor(
             board
         )
         assertThrows<InvalidRequestException> {
-            momentService.startMoment(s.eventId, StartMomentRequest(title = "Nochmal", topicType = type.code), s.member)
+            momentService.startMoment(StartMomentRequest(title = "Nochmal", topicType = type.code, eventId = s.eventId.toString()), s.member)
         }
-        val detail = momentService.getMomentDetail(s.eventId, s.momentId, s.member)
+        val detail = momentService.getMomentDetail(s.momentId, s.member)
         assertEquals(type.name, detail.session.topicName)
     }
 
@@ -166,17 +169,16 @@ class MomentMediaIntegrationTest @Autowired constructor(
         assertArrayEquals(video.copyOfRange(mdatStart, video.size), served.copyOfRange(mdatStart, served.size))
 
         // Bereich über eine Blockgrenze des Stromformats hinweg.
-        val content = momentMediaService.prepareContent(s.eventId, s.momentId, UUID.fromString(media.id), s.member)
+        val content = momentMediaService.prepareContent(s.momentId, UUID.fromString(media.id), s.member)
         val slice = momentMediaService.openRange(content, 65_000, 140_000).use { it.readAllBytes() }
         assertArrayEquals(served.copyOfRange(65_000, 140_001), slice)
 
         // Vor dem Absenden sieht nur der Eigentümer die Datei.
         assertThrows<ResourceNotFoundException> {
-            momentMediaService.prepareContent(s.eventId, s.momentId, UUID.fromString(media.id), s.board)
+            momentMediaService.prepareContent(s.momentId, UUID.fromString(media.id), s.board)
         }
 
         val response = momentService.submitResponse(
-            s.eventId,
             s.momentId,
             SubmitMomentResponseRequest(statusText = "Seht euch das an", mediaIds = listOf(media.id)),
             s.member
@@ -185,13 +187,43 @@ class MomentMediaIntegrationTest @Autowired constructor(
         assertEquals(1, response.media.size)
         assertArrayEquals(served, readAll(s, media.id, s.board))
 
-        val detail = momentService.getMomentDetail(s.eventId, s.momentId, s.board)
+        val detail = momentService.getMomentDetail(s.momentId, s.board)
         assertEquals(media.id, detail.responses.single().media.single().id)
         assertTrue(detail.responses.single().media.single().canDelete)
 
         assertThrows<AccessDeniedException> {
-            momentMediaService.prepareContent(s.eventId, s.momentId, UUID.fromString(media.id), s.outsider)
+            momentMediaService.prepareContent(s.momentId, UUID.fromString(media.id), s.outsider)
         }
+    }
+
+    @Test
+    fun `moments without an event belong to the whole group`() {
+        val starter = principal("Starter", UserRole.MEMBER)
+        val other = principal("Andere", UserRole.MEMBER)
+        userService.getOrCreateUser(other)
+
+        val moment = momentService.startMoment(StartMomentRequest(topicType = "toast"), starter)
+        assertNull(moment.eventId)
+        assertEquals("group", moment.visibility)
+        assertEquals("Gemeinsames Anstoßen", moment.title, "Ohne Titel gilt der Name des Themas")
+
+        val momentId = UUID.fromString(moment.id)
+        assertTrue(momentService.listActiveMoments(other).any { it.id == moment.id })
+        val media = momentMediaService.upload(momentId, "video/mp4", mp4(5, 10_000).size.toLong(), ByteArrayInputStream(mp4(5, 10_000)), other)
+        momentService.submitResponse(momentId, SubmitMomentResponseRequest(mediaIds = listOf(media.id)), other)
+        assertEquals(1, momentService.getMomentDetail(momentId, starter).responses.size)
+
+        assertThrows<InvalidRequestException> {
+            momentService.startMoment(StartMomentRequest(topicType = "toast", visibility = "event"), starter)
+        }
+    }
+
+    @Test
+    fun `event-only moments stay hidden from other group members`() {
+        val s = setup()
+        assertFalse(momentService.listActiveMoments(s.outsider).any { it.id == s.momentId.toString() })
+        assertThrows<AccessDeniedException> { momentService.getMomentDetail(s.momentId, s.outsider) }
+        assertTrue(momentService.listActiveMoments(s.member, s.eventId).any { it.id == s.momentId.toString() })
     }
 
     @Test
@@ -207,7 +239,7 @@ class MomentMediaIntegrationTest @Autowired constructor(
 
         val tooLarge = assertThrows<ApiException> {
             momentMediaService.upload(
-                s.eventId, s.momentId, "video/mp4", MomentMediaService.MAX_VIDEO_BYTES + 1, ByteArrayInputStream(ByteArray(0)), s.member
+                s.momentId, "video/mp4", MomentMediaService.MAX_VIDEO_BYTES + 1, ByteArrayInputStream(ByteArray(0)), s.member
             )
         }
         assertEquals(ErrorCode.MEDIA_TOO_LARGE, tooLarge.errorCode)
@@ -225,15 +257,15 @@ class MomentMediaIntegrationTest @Autowired constructor(
         assertEquals("image", media.kind)
         assertEquals(40, media.width)
         assertEquals(30, media.height)
-        momentService.submitResponse(s.eventId, s.momentId, SubmitMomentResponseRequest(mediaIds = listOf(media.id)), s.member)
+        momentService.submitResponse(s.momentId, SubmitMomentResponseRequest(mediaIds = listOf(media.id)), s.member)
         assertArrayEquals(png, readAll(s, media.id))
 
         val otherMember = principal("Gast", UserRole.MEMBER)
         assertThrows<AccessDeniedException> {
-            momentMediaService.delete(s.eventId, s.momentId, UUID.fromString(media.id), otherMember)
+            momentMediaService.delete(s.momentId, UUID.fromString(media.id), otherMember)
         }
         val key = momentMediaRepository.findById(UUID.fromString(media.id)).orElseThrow().storageKey
-        momentMediaService.delete(s.eventId, s.momentId, UUID.fromString(media.id), s.board)
+        momentMediaService.delete(s.momentId, UUID.fromString(media.id), s.board)
         assertFalse(momentMediaRepository.existsById(UUID.fromString(media.id)))
         assertNull(objectStorage.read(key))
     }
@@ -242,7 +274,7 @@ class MomentMediaIntegrationTest @Autowired constructor(
     fun `contributions need a reaction, a text or media`() {
         val s = setup()
         assertThrows<InvalidRequestException> {
-            momentService.submitResponse(s.eventId, s.momentId, SubmitMomentResponseRequest(), s.member)
+            momentService.submitResponse(s.momentId, SubmitMomentResponseRequest(), s.member)
         }
     }
 

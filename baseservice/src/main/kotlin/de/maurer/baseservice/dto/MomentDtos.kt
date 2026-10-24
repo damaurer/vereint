@@ -15,9 +15,9 @@ import java.time.Instant
  * `true` sein, sonst werden Koordinaten verworfen.
  */
 data class StartMomentRequest(
-    @field:NotBlank(message = "title {validation.notBlank}")
+    /** Optional; leer übernimmt der Moment den Namen des Themas. */
     @field:Size(max = 255, message = "title {validation.size.max}")
-    val title: String,
+    val title: String? = null,
 
     @field:NotBlank(message = "topicType {validation.notBlank}")
     @field:Size(max = 64, message = "topicType {validation.size.max}")
@@ -38,7 +38,14 @@ data class StartMomentRequest(
 
     @field:Min(value = 1, message = "durationMinutes {validation.min.amount}")
     @field:Max(value = 1440, message = "durationMinutes {validation.max.amount}")
-    val durationMinutes: Int = 60
+    val durationMinutes: Int = 60,
+
+    /** Optionales Event, an das der Moment geknüpft wird. */
+    val eventId: String? = null,
+
+    /** `group` (Standard) oder `event`; `event` setzt [eventId] voraus. */
+    @field:Size(max = 16, message = "visibility {validation.size.max}")
+    val visibility: String? = null
 )
 
 /**
@@ -73,7 +80,10 @@ data class SubmitMomentResponseRequest(
  */
 data class MomentSessionDto(
     val id: String,
-    val eventId: String,
+    val eventId: String?,
+    val eventTitle: String? = null,
+    /** `group` oder `event`. */
+    val visibility: String = "group",
     val creatorId: String,
     val creatorName: String,
     val conversationId: String?,
@@ -166,6 +176,8 @@ data class MomentDetailDto(
  */
 data class MomentSummaryDto(
     val momentId: String,
+    val eventId: String? = null,
+    val eventTitle: String? = null,
     val title: String,
     val topicType: String,
     val topicName: String = topicType,
@@ -207,7 +219,9 @@ data class MomentMediaLimitsDto(
     val maxVideoSeconds: Int,
     val maxMediaPerResponse: Int,
     val imageTypes: List<String>,
-    val videoTypes: List<String>
+    val videoTypes: List<String>,
+    /** Erlaubt der Tarif der Gruppe Videos? Ohne Videos ist [videoTypes] leer. */
+    val videosAllowed: Boolean = true
 )
 
 /** Typen, Reaktionen (auch ausgemusterte, für alte Moments) und Upload-Grenzen. */

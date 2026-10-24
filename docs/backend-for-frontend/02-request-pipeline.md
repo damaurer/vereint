@@ -151,7 +151,7 @@ contentSecurityPolicy: {
     'form-action': ["'self'"],
     'script-src': ["'self'", (_req, res) => `'nonce-${cspNonceOf(res as Response)}'`],
     'style-src': ["'self'", "'unsafe-inline'"], // unsafe-inline für Angular Komponentenstile erforderlich
-    'img-src': ["'self'", 'data:', 'blob:'],
+    'img-src': ["'self'", 'data:', 'blob:', 'https://tile.openstreetmap.org'],
     'font-src': ["'self'", 'data:'],
     'connect-src': ["'self'"],
     'worker-src': ["'self'"],

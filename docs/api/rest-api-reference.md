@@ -125,18 +125,22 @@ Für die eigene Person lehnt der Fachservice Rollen-, Berechtigungs- und Status�
 ### 5.3. Moments & Rituale (`MomentController`, `MomentConfigController`)
 | Methode | Pfad | Beschreibung | Berechtigung |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/events/{eventId}/moments` | Laufende Moments des Events | Teilnehmende, Veranstalter, `event.manage` |
-| `POST` | `/api/v1/events/{eventId}/moments` | Moment starten (`StartMomentRequest`) | wie oben |
-| `GET` | `/api/v1/events/{eventId}/moments/{momentId}` | Moment mit Antworten | wie oben |
-| `POST` | `/api/v1/events/{eventId}/moments/{momentId}/responses` | Antwort oder Reaktion abgeben (`SubmitMomentResponseRequest`) | wie oben |
-| `GET` | `/api/v1/events/{eventId}/moments/{momentId}/map` | GeoJSON FeatureCollection mit freigegebenen Standorten (RFC 7946) | wie oben |
-| `POST` | `/api/v1/events/{eventId}/moments/{momentId}/complete` | Moment abschließen | Ersteller, Veranstalter, `event.manage` |
-| `GET` | `/api/v1/events/{eventId}/moments/history` | Abgeschlossene Moments | Teilnehmende, Veranstalter, `event.manage` |
-| `POST` | `/api/v1/events/{eventId}/moments/{momentId}/media` | Foto (JPEG/PNG/GIF, bis 10 MB) oder Video (MP4/MOV, bis 60 s, bis 100 MB) als rohen Request-Körper hochladen (`Content-Type`, `Content-Length` Pflicht); Videos nur in Tarifen mit Videos | wie oben |
-| `GET` | `/api/v1/events/{eventId}/moments/{momentId}/media/{mediaId}/content` | Datei entschlüsselt abrufen, mit HTTP-Range (`206`) | wie oben |
-| `DELETE` | `/api/v1/events/{eventId}/moments/{momentId}/media/{mediaId}` | Datei entfernen | Eigentümer; fremde Beiträge Veranstalter oder `event.manage` |
-| `GET` | `/api/v1/moment-config` | Typen, Reaktionen (inkl. ausgemusterter) und Upload-Grenzen | Mitglied |
-| `POST` / `PUT` | `/api/v1/moment-config/types`, `/types/{id}` | Moment-Typ anlegen bzw. ändern oder ausmustern | `moments.manage` |
+Wer einen Moment sieht: Sichtbarkeit `group` (Standard, ohne Event immer) alle Mitglieder der Gruppe; `event` nur Teilnehmende und Veranstalter des verknüpften Events. `event.manage` sieht alle Moments.
+
+| Methode | Pfad | Beschreibung | Berechtigung |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/moments` | Laufende Moments; `?eventId=` nur die eines Events | Mitglied; Liste nach Sichtbarkeit gefiltert |
+| `POST` | `/api/v1/moments` | Moment starten (`StartMomentRequest`: `topicType` Pflicht, `title` optional, optional `eventId` und `visibility`) | Mitglied; mit Event: Teilnehmende, Veranstalter, `event.manage` |
+| `GET` | `/api/v1/moments/{momentId}` | Moment mit Antworten | sieht den Moment |
+| `POST` | `/api/v1/moments/{momentId}/responses` | Antwort oder Reaktion abgeben (`SubmitMomentResponseRequest`) | wie oben |
+| `GET` | `/api/v1/moments/{momentId}/map` | GeoJSON FeatureCollection mit freigegebenen Standorten (RFC 7946) | wie oben |
+| `POST` | `/api/v1/moments/{momentId}/complete` | Moment abschließen | Ersteller, Veranstalter des Events, `event.manage` |
+| `GET` | `/api/v1/moments/history` | Abgeschlossene Moments; `?eventId=` nur die eines Events | Mitglied; Liste nach Sichtbarkeit gefiltert |
+| `POST` | `/api/v1/moments/{momentId}/media` | Foto (JPEG/PNG/GIF, bis 10 MB) oder Video (MP4/MOV, bis 60 s, bis 100 MB) als rohen Request-Körper hochladen (`Content-Type`, `Content-Length` Pflicht); Videos nur in Tarifen mit Videos | sieht den Moment |
+| `GET` | `/api/v1/moments/{momentId}/media/{mediaId}/content` | Datei entschlüsselt abrufen, mit HTTP-Range (`206`) | wie oben |
+| `DELETE` | `/api/v1/moments/{momentId}/media/{mediaId}` | Datei entfernen | Eigentümer; fremde Beiträge Veranstalter oder `event.manage` |
+| `GET` | `/api/v1/moment-config` | Themen, Reaktionen (inkl. ausgemusterter) und Upload-Grenzen; `mediaLimits.videosAllowed` sagt, ob der Tarif Videos erlaubt | Mitglied |
+| `POST` / `PUT` | `/api/v1/moment-config/types`, `/types/{id}` | Thema (Moment-Typ) anlegen bzw. ändern oder ausmustern | `moments.manage` |
 | `POST` / `PUT` | `/api/v1/moment-config/reactions`, `/reactions/{id}` | Reaktion anlegen bzw. ändern oder ausmustern | `moments.manage` |
 
 ### 6. Events & Gast-Einladungen (`EventController`, `InviteController`)

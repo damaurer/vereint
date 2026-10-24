@@ -105,7 +105,8 @@ export const securityHeaders: RequestHandler = helmet({
       'form-action': ["'self'"],
       'script-src': ["'self'", (_req, res) => `'nonce-${cspNonceOf(res as Response)}'`],
       'style-src': ["'self'", "'unsafe-inline'"],
-      'img-src': ["'self'", 'data:', 'blob:'],
+      // Kartenkacheln der Moment-Karte (OpenStreetMap, siehe moment-map.component.ts).
+      'img-src': ["'self'", 'data:', 'blob:', 'https://tile.openstreetmap.org'],
       'font-src': ["'self'", 'data:'],
       'connect-src': ["'self'"],
       'worker-src': ["'self'"],

@@ -45,7 +45,7 @@ describe('MomentTimelineComponent', () => {
             width: 800,
             height: 600,
             durationSeconds: null,
-            url: '/api/v1/events/e-1/moments/m-1/media/media-1/content',
+            url: '/api/v1/moments/m-1/media/media-1/content',
             canDelete: true,
           },
           {
@@ -56,7 +56,7 @@ describe('MomentTimelineComponent', () => {
             width: null,
             height: null,
             durationSeconds: 12.5,
-            url: '/api/v1/events/e-1/moments/m-1/media/media-2/content',
+            url: '/api/v1/moments/m-1/media/media-2/content',
             canDelete: false,
           },
         ],
@@ -106,9 +106,9 @@ describe('MomentTimelineComponent', () => {
 
     const root: HTMLElement = fixture.nativeElement;
     const image = root.querySelector('img.media-image') as HTMLImageElement;
-    expect(image.getAttribute('src')).toBe('/api/v1/events/e-1/moments/m-1/media/media-1/content');
+    expect(image.getAttribute('src')).toBe('/api/v1/moments/m-1/media/media-1/content');
     const video = root.querySelector('video.media-video') as HTMLVideoElement;
-    expect(video.getAttribute('src')).toBe('/api/v1/events/e-1/moments/m-1/media/media-2/content#t=0.1');
+    expect(video.getAttribute('src')).toBe('/api/v1/moments/m-1/media/media-2/content#t=0.1');
     // Nur eigene bzw. moderierbare Dateien zeigen den Entfernen-Knopf.
     expect(root.querySelectorAll('.media-remove').length).toBe(1);
   });

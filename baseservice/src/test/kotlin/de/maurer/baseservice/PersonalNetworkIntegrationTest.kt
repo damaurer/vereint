@@ -218,7 +218,7 @@ class PersonalNetworkIntegrationTest @Autowired constructor(
         }
         asB { eventService.createEvent(CreateEventRequest(title = "Entwurf in B", startsAt = Instant.now(), status = "draft"), adminB) }
         val moment = asB {
-            momentService.startMoment(UUID.fromString(inB.id), StartMomentRequest(title = "Anstoßen", topicType = "toast"), adminB)
+            momentService.startMoment(StartMomentRequest(title = "Anstoßen", topicType = "toast", eventId = inB.id), adminB)
         }
 
         val bobs = calendarService.calendar(null, null, bob).entries

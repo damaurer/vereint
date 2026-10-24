@@ -221,7 +221,7 @@ export const apiProxy: RequestHandler = (req, res, next) => {
  * Videos weder im Speicher des Webservice gepuffert noch nach 8 Sekunden
  * abgebrochen werden dürfen.
  */
-export const MOMENT_MEDIA_PATH = /^\/api\/v1\/events\/[^/]+\/moments\/[^/]+\/media(?:\/[^/]+\/content)?$/;
+export const MOMENT_MEDIA_PATH = /^\/api\/v1\/moments\/[^/]+\/media(?:\/[^/]+\/content)?$/;
 
 /** Ohne Datenfluss in diesem Zeitraum wird ein Upload oder Abruf abgebrochen. */
 export const MEDIA_STREAM_IDLE_TIMEOUT_MS = 60_000;

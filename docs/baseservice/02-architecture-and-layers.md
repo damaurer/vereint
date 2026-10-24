@@ -174,8 +174,8 @@ Unter `de.maurer.baseservice` sind alle Controller und Services modular organisi
 | `KioskController` | `/api/v1/kiosk/sessions` | Kiosk-Modus mit PIN am Thekenterminal | [Thekenterminal](../domains/tablet-strichliste-recorder.md) |
 | `LedgerController` | `/api/v1/ledger` | Salden, Käufe, Einzahlung, Auszahlung, Korrektur, Storno | [Kassenbuch](../domains/ledger-and-finance.md) |
 | `MemberInviteController` | `/api/v1/member-invites` | Einladungslinks, Registrierung und Beitritt mit bestehendem Konto | [Einladungslinks](../domains/member-invites.md) |
-| `MomentConfigController` | `/api/v1/moment-config` | Moment-Typen und Reaktionen der Gruppe | [Moments](../domains/moments-and-rituals.md) |
-| `MomentController` | `/api/v1/events/{eventId}/moments` | Moments, Antworten, Karte, Fotos und Videos | [Moments](../domains/moments-and-rituals.md) |
+| `MomentConfigController` | `/api/v1/moment-config` | Moment-Themen und Reaktionen der Gruppe | [Moments](../domains/moments-and-rituals.md) |
+| `MomentController` | `/api/v1/moments` | Moments, Antworten, Karte, Fotos und Videos | [Moments](../domains/moments-and-rituals.md) |
 | `NotificationController` | `/api/v1/notifications` | Benachrichtigungen, Push-Abonnements, Rundnachricht | [Chat & Push](../domains/chat-and-push-notifications.md) |
 | `StammtischController` | `/api/v1/stammtische`, `/api/v1/stammtisch`, `/api/v1/signup`, `/api/v1/platform/stammtische` | Gruppen eröffnen, wählen, verwalten und verlassen, Rollen der Gruppe, Plattform-Administration | [Gruppen](../domains/stammtische.md) |
 | `StatisticsController` | `/api/v1/statistics` | Kennzahlen und Auswertungen | [Statistik](../domains/statistics-and-analytics.md) |

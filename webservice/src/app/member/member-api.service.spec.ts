@@ -107,30 +107,37 @@ describe('MemberApiService', () => {
   });
 
   it('manages moment endpoints (list, detail, start, submit response, map, complete, history)', () => {
+    service.listMoments().subscribe();
+    const reqAll = httpMock.expectOne('/api/v1/moments');
+    expect(reqAll.request.method).toBe('GET');
+    reqAll.flush([]);
+
     service.listMoments('e-1').subscribe();
-    const reqList = httpMock.expectOne('/api/v1/events/e-1/moments');
+    const reqList = httpMock.expectOne('/api/v1/moments?eventId=e-1');
     expect(reqList.request.method).toBe('GET');
     reqList.flush([]);
 
-    service.getMomentDetail('e-1', 'm-1').subscribe();
-    const reqDetail = httpMock.expectOne('/api/v1/events/e-1/moments/m-1');
+    service.getMomentDetail('m-1').subscribe();
+    const reqDetail = httpMock.expectOne('/api/v1/moments/m-1');
     expect(reqDetail.request.method).toBe('GET');
     reqDetail.flush({});
 
     service
-      .startMoment('e-1', {
+      .startMoment({
+        eventId: 'e-1',
         title: 'Anstoßen',
         topicType: 'toast',
         consent: false,
         durationMinutes: 60,
       })
       .subscribe();
-    const reqStart = httpMock.expectOne('/api/v1/events/e-1/moments');
+    const reqStart = httpMock.expectOne('/api/v1/moments');
+    expect(reqStart.request.body.eventId).toBe('e-1');
     expect(reqStart.request.method).toBe('POST');
     reqStart.flush({});
 
     service
-      .submitMomentResponse('e-1', 'm-1', {
+      .submitMomentResponse('m-1', {
         reaction: 'CHEERS',
         statusText: 'Prost!',
         consent: true,
@@ -138,22 +145,22 @@ describe('MemberApiService', () => {
         longitude: 11.58,
       })
       .subscribe();
-    const reqSubmit = httpMock.expectOne('/api/v1/events/e-1/moments/m-1/responses');
+    const reqSubmit = httpMock.expectOne('/api/v1/moments/m-1/responses');
     expect(reqSubmit.request.method).toBe('POST');
     reqSubmit.flush({});
 
-    service.getMomentMapGeoJson('e-1', 'm-1').subscribe();
-    const reqMap = httpMock.expectOne('/api/v1/events/e-1/moments/m-1/map');
+    service.getMomentMapGeoJson('m-1').subscribe();
+    const reqMap = httpMock.expectOne('/api/v1/moments/m-1/map');
     expect(reqMap.request.method).toBe('GET');
     reqMap.flush({ type: 'FeatureCollection', features: [] });
 
-    service.completeMoment('e-1', 'm-1').subscribe();
-    const reqComplete = httpMock.expectOne('/api/v1/events/e-1/moments/m-1/complete');
+    service.completeMoment('m-1').subscribe();
+    const reqComplete = httpMock.expectOne('/api/v1/moments/m-1/complete');
     expect(reqComplete.request.method).toBe('POST');
     reqComplete.flush({});
 
     service.listMomentHistory('e-1').subscribe();
-    const reqHistory = httpMock.expectOne('/api/v1/events/e-1/moments/history');
+    const reqHistory = httpMock.expectOne('/api/v1/moments/history?eventId=e-1');
     expect(reqHistory.request.method).toBe('GET');
     reqHistory.flush([]);
   });

@@ -72,7 +72,7 @@ Pfade mit `..`, `.`, Backslashes oder kodierten Schrägstrichen und Punkten werd
 
 ### 6. Uploads und Medien-Streaming
 - Multipart-Uploads (Bilder, Gruppenbild) puffert der Proxy bis `API_PROXY_MAX_UPLOAD` (`6mb`).
-- Fotos und Videos in Moments (`MOMENT_MEDIA_PATH`: `/api/v1/events/{id}/moments/{id}/media` und `.../media/{id}/content`) laufen über `mediaStreamProxy`: ungepuffert, mit `Content-Length` und `Range`-Unterstützung (`206`). Größen- und Dauergrenzen prüft Spring, Caddy begrenzt den Körper auf 110 MB.
+- Fotos und Videos in Moments (`MOMENT_MEDIA_PATH`: `/api/v1/moments/{id}/media` und `.../media/{id}/content`) laufen über `mediaStreamProxy`: ungepuffert, mit `Content-Length` und `Range`-Unterstützung (`206`). Größen- und Dauergrenzen prüft Spring, Caddy begrenzt den Körper auf 110 MB.
 
 ### 7. Timeout-Parameter
 - **`API_PROXY_TIMEOUT_MS`**: `8000 ms` (8 Sekunden).

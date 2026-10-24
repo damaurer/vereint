@@ -30,7 +30,7 @@ const ids = (items: { id: string }[]): string[] => items.map((item) => item.id);
 describe('nav-model', () => {
   it('puts the four most frequent destinations into the primary navigation', () => {
     const items = buildPrimaryNav(session({ roles: ['member'], permissions: [] }));
-    expect(ids(items)).toEqual(['home', 'events', 'chat', 'wallet']);
+    expect(ids(items)).toEqual(['home', 'events', 'chat', 'moments']);
   });
 
   it('shows the member pages, including statistics, without extra permissions', () => {
@@ -104,7 +104,7 @@ describe('nav-model', () => {
 
   it('renders only unrestricted entries without a session (deny by default)', () => {
     const primary = buildPrimaryNav(null);
-    expect(ids(primary)).toEqual(['home', 'events', 'chat', 'wallet']);
+    expect(ids(primary)).toEqual(['home', 'events', 'chat', 'moments']);
     expect(ids(buildMoreNav(null))).not.toContain('tablet');
     expect(buildPanelNav(null)).toEqual([]);
   });

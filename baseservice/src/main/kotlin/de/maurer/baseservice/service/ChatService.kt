@@ -25,6 +25,7 @@ import de.maurer.baseservice.repository.ConversationRepository
 import de.maurer.baseservice.repository.EventGuestRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
+import de.maurer.baseservice.repository.MomentSessionRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.SecureTokens
@@ -58,7 +59,9 @@ class ChatService(
     private val chatMessageRepository: ChatMessageRepository,
     private val eventGuestRepository: EventGuestRepository,
     private val access: StammtischAccess,
-    private val userService: UserService
+    private val userService: UserService,
+    private val momentSessionRepository: MomentSessionRepository,
+    private val momentAccessPolicy: MomentAccessPolicy
 ) {
 
     // --- Mitglieder (authentifiziert per JWT) ---
@@ -129,7 +132,7 @@ class ChatService(
     /**
      * Erstellt eine temporäre Konversation für einen Gemeinschaftsmoment mit 24h Gültigkeit.
      */
-    fun createMomentConversation(event: EventEntity, title: String): ConversationEntity {
+    fun createMomentConversation(event: EventEntity?, title: String): ConversationEntity {
         val now = Instant.now()
         val conversation = ConversationEntity(
             type = CONVERSATION_TYPE_MOMENT,
@@ -148,8 +151,7 @@ class ChatService(
     fun getConversationById(conversationId: UUID, principal: UserPrincipal): ConversationDto {
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireActiveConversation(conversationId)
-        val event = conversation.event ?: throw ResourceNotFoundException(Msg("error.chat.eventNotFound"), ErrorCode.NOT_FOUND)
-        requireMemberAccess(caller, principal, event)
+        requireConversationAccess(conversation, caller, principal)
         return toConversationDto(conversation)
     }
 
@@ -159,8 +161,7 @@ class ChatService(
     fun listConversationMessages(conversationId: UUID, principal: UserPrincipal): List<ChatMessageDto> {
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireActiveConversation(conversationId)
-        val event = conversation.event ?: throw ResourceNotFoundException(Msg("error.chat.eventNotFound"), ErrorCode.NOT_FOUND)
-        requireMemberAccess(caller, principal, event)
+        requireConversationAccess(conversation, caller, principal)
         ensureMember(conversation, caller)
         return messagesOf(conversation)
     }
@@ -175,9 +176,7 @@ class ChatService(
     ): ChatMessageDto {
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireActiveConversation(conversationId)
-        val event = conversation.event ?: throw ResourceNotFoundException(Msg("error.chat.eventNotFound"), ErrorCode.NOT_FOUND)
-        requireMemberAccess(caller, principal, event)
-        requireEventOpenForChat(event)
+        requireConversationAccess(conversation, caller, principal)?.let { requireEventOpenForChat(it) }
         ensureMember(conversation, caller)
 
         val message = ChatMessageEntity(
@@ -188,6 +187,29 @@ class ChatService(
             imageUrl = normalizeImageUrl(request.imageUrl)
         )
         return toMessageDto(chatMessageRepository.save(message))
+    }
+
+    /**
+     * Moment-Chats folgen der Sichtbarkeit des Moments ([MomentAccessPolicy]),
+     * Event-Chats dem Event. Liefert das verknüpfte Event, falls vorhanden.
+     */
+    private fun requireConversationAccess(
+        conversation: ConversationEntity,
+        caller: UserEntity,
+        principal: UserPrincipal
+    ): EventEntity? {
+        if (conversation.type == CONVERSATION_TYPE_MOMENT) {
+            val session = momentSessionRepository.findByConversationId(conversation.id).orElseThrow {
+                ResourceNotFoundException(Msg("error.chat.notFound", conversation.id), ErrorCode.NOT_FOUND)
+            }
+            if (!momentAccessPolicy.canView(caller, principal, session)) {
+                throw AccessDeniedException(Msg("error.chat.accessDenied"), ErrorCode.ACCESS_DENIED)
+            }
+            return session.event
+        }
+        val event = conversation.event ?: throw ResourceNotFoundException(Msg("error.chat.eventNotFound"), ErrorCode.NOT_FOUND)
+        requireMemberAccess(caller, principal, event)
+        return event
     }
 
     /** Prüft, ob eine Konversation existiert und noch nicht abgelaufen / archiviert ist. */

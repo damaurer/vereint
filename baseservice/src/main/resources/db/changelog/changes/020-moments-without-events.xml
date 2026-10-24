@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 230. Moments brauchen kein Event mehr. Ohne Event gehört ein Moment der
+         ganzen Gruppe; mit Event entscheidet `visibility`, ob die ganze Gruppe
+         (`group`) oder nur die Event-Teilnehmer (`event`) ihn sehen. Bestehende
+         Moments waren bisher nur für Event-Teilnehmer sichtbar und bleiben es. -->
+    <changeSet id="230-moments-optional-event" author="claude">
+        <dropNotNullConstraint tableName="moment_sessions" columnName="event_id" columnDataType="${uuid.type}"/>
+        <addColumn tableName="moment_sessions">
+            <column name="visibility" type="VARCHAR(16)" defaultValue="group">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <update tableName="moment_sessions">
+            <column name="visibility" value="event"/>
+        </update>
+        <sql>
+            ALTER TABLE moment_sessions
+            ADD CONSTRAINT ck_moment_sessions_visibility
+            CHECK (visibility IN ('group', 'event') AND (visibility = 'group' OR event_id IS NOT NULL))
+        </sql>
+        <createIndex tableName="moment_sessions" indexName="idx_moment_sessions_stammtisch_active">
+            <column name="stammtisch_id"/>
+            <column name="active"/>
+            <column name="created_at"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="moment_sessions" indexName="idx_moment_sessions_stammtisch_active"/>
+            <sql>ALTER TABLE moment_sessions DROP CONSTRAINT ck_moment_sessions_visibility</sql>
+            <dropColumn tableName="moment_sessions" columnName="visibility"/>
+            <addNotNullConstraint tableName="moment_sessions" columnName="event_id" columnDataType="${uuid.type}"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

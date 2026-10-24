@@ -150,64 +150,45 @@ export class MemberApiService {
     );
   }
 
-  /** Aktive Moments eines Events (`GET /api/v1/events/{eventId}/moments`). */
-  listMoments(eventId: string): Observable<MomentSessionDto[]> {
-    return this.api.get<MomentSessionDto[]>(`/events/${encodeURIComponent(eventId)}/moments`);
+  /** Laufende Moments, die das Mitglied sehen darf; mit `eventId` nur die eines Events (`GET /api/v1/moments`). */
+  listMoments(eventId?: string | null): Observable<MomentSessionDto[]> {
+    return this.api.get<MomentSessionDto[]>(`/moments${eventQuery(eventId)}`);
   }
 
-  /** Details und Timeline-Beiträge eines Moments (`GET /api/v1/events/{eventId}/moments/{momentId}`). */
-  getMomentDetail(eventId: string, momentId: string): Observable<MomentDetailDto> {
-    return this.api.get<MomentDetailDto>(
-      `/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}`,
-    );
+  /** Details und Timeline-Beiträge eines Moments (`GET /api/v1/moments/{momentId}`). */
+  getMomentDetail(momentId: string): Observable<MomentDetailDto> {
+    return this.api.get<MomentDetailDto>(`/moments/${encodeURIComponent(momentId)}`);
   }
 
-  /** Startet einen neuen Gemeinschaftsmoment (`POST /api/v1/events/{eventId}/moments`). */
-  startMoment(eventId: string, payload: StartMomentRequest): Observable<MomentSessionDto> {
-    return this.api.post<MomentSessionDto>(
-      `/events/${encodeURIComponent(eventId)}/moments`,
-      payload,
-    );
+  /** Startet einen neuen Gemeinschaftsmoment, optional mit Event (`POST /api/v1/moments`). */
+  startMoment(payload: StartMomentRequest): Observable<MomentSessionDto> {
+    return this.api.post<MomentSessionDto>('/moments', payload);
   }
 
-  /** Reicht einen Statusbeitrag/eine Reaktion zu einem Moment ein (`POST /api/v1/events/{eventId}/moments/{momentId}/responses`). */
-  submitMomentResponse(
-    eventId: string,
-    momentId: string,
-    payload: SubmitMomentResponseRequest,
-  ): Observable<MomentResponseDto> {
-    return this.api.post<MomentResponseDto>(
-      `/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}/responses`,
-      payload,
-    );
+  /** Reicht einen Statusbeitrag/eine Reaktion zu einem Moment ein (`POST /api/v1/moments/{momentId}/responses`). */
+  submitMomentResponse(momentId: string, payload: SubmitMomentResponseRequest): Observable<MomentResponseDto> {
+    return this.api.post<MomentResponseDto>(`/moments/${encodeURIComponent(momentId)}/responses`, payload);
   }
 
-  /** GeoJSON Map FeatureCollection für Kartenansicht (`GET /api/v1/events/{eventId}/moments/{momentId}/map`). */
-  getMomentMapGeoJson(eventId: string, momentId: string): Observable<MomentMapGeoJsonDto> {
-    return this.api.get<MomentMapGeoJsonDto>(
-      `/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}/map`,
-    );
+  /** GeoJSON Map FeatureCollection für Kartenansicht (`GET /api/v1/moments/{momentId}/map`). */
+  getMomentMapGeoJson(momentId: string): Observable<MomentMapGeoJsonDto> {
+    return this.api.get<MomentMapGeoJsonDto>(`/moments/${encodeURIComponent(momentId)}/map`);
   }
 
-  /** Schließt einen aktiven Moment ab (`POST /api/v1/events/{eventId}/moments/{momentId}/complete`). */
-  completeMoment(eventId: string, momentId: string): Observable<MomentSummaryDto> {
-    return this.api.post<MomentSummaryDto>(
-      `/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}/complete`,
-      {},
-    );
+  /** Schließt einen aktiven Moment ab (`POST /api/v1/moments/{momentId}/complete`). */
+  completeMoment(momentId: string): Observable<MomentSummaryDto> {
+    return this.api.post<MomentSummaryDto>(`/moments/${encodeURIComponent(momentId)}/complete`, {});
   }
 
-  /** Archivierte/abgeschlossene Moments eines Events (`GET /api/v1/events/{eventId}/moments/history`). */
-  listMomentHistory(eventId: string): Observable<MomentSummaryDto[]> {
-    return this.api.get<MomentSummaryDto[]>(
-      `/events/${encodeURIComponent(eventId)}/moments/history`,
-    );
+  /** Abgeschlossene Moments; mit `eventId` nur die eines Events (`GET /api/v1/moments/history`). */
+  listMomentHistory(eventId?: string | null): Observable<MomentSummaryDto[]> {
+    return this.api.get<MomentSummaryDto[]>(`/moments/history${eventQuery(eventId)}`);
   }
 
-  /** Entfernt ein Bild oder Video (`DELETE …/moments/{momentId}/media/{mediaId}`). */
-  deleteMomentMedia(eventId: string, momentId: string, mediaId: string): Observable<null> {
+  /** Entfernt ein Bild oder Video (`DELETE /api/v1/moments/{momentId}/media/{mediaId}`). */
+  deleteMomentMedia(momentId: string, mediaId: string): Observable<null> {
     return this.api.delete<null>(
-      `/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}/media/${encodeURIComponent(mediaId)}`,
+      `/moments/${encodeURIComponent(momentId)}/media/${encodeURIComponent(mediaId)}`,
     );
   }
 
@@ -229,6 +210,11 @@ export class MemberApiService {
       ? this.api.put<MomentReactionDto>(`/moment-config/reactions/${encodeURIComponent(id)}`, payload)
       : this.api.post<MomentReactionDto>('/moment-config/reactions', payload);
   }
+}
+
+/** `?eventId=…` für Moment-Listen, die auf ein Event gefiltert werden. */
+function eventQuery(eventId?: string | null): string {
+  return eventId ? `?eventId=${encodeURIComponent(eventId)}` : '';
 }
 
 /** Antwort, die ein Eingeladener selbst geben kann. */

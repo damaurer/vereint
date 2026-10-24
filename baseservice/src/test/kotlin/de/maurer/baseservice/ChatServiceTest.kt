@@ -8,6 +8,8 @@ import de.maurer.baseservice.domain.EventGuestEntity
 import de.maurer.baseservice.domain.EventParticipantEntity
 import de.maurer.baseservice.domain.EventStatus
 import de.maurer.baseservice.domain.GuestStatus
+import de.maurer.baseservice.domain.MomentSessionEntity
+import de.maurer.baseservice.domain.MomentVisibility
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.SendMessageRequest
 import de.maurer.baseservice.error.AccessDeniedException
@@ -23,10 +25,12 @@ import de.maurer.baseservice.repository.ConversationRepository
 import de.maurer.baseservice.repository.EventGuestRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
+import de.maurer.baseservice.repository.MomentSessionRepository
 import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.ChatService
+import de.maurer.baseservice.service.MomentAccessPolicy
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.SecureTokens
 import de.maurer.baseservice.support.StammtischTestSupport
@@ -71,6 +75,9 @@ class ChatServiceTest {
     @Mock
     private lateinit var userService: UserService
 
+    @Mock
+    private lateinit var momentSessionRepository: MomentSessionRepository
+
     private lateinit var chatService: ChatService
 
     private val ownerId: UUID = UUID.randomUUID()
@@ -89,7 +96,9 @@ class ChatServiceTest {
             chatMessageRepository,
             eventGuestRepository,
             StammtischTestSupport.access(userRoleRepository),
-            userService
+            userService,
+            momentSessionRepository,
+            MomentAccessPolicy(eventParticipantRepository, StammtischTestSupport.access(userRoleRepository))
         )
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: ownerId)).thenReturn(emptyList())
         `when`(conversationMemberRepository.countByConversationId(any(UUID::class.java) ?: conversationId)).thenReturn(0L)
@@ -333,6 +342,8 @@ class ChatServiceTest {
 
         `when`(userService.getOrCreateUser(principal)).thenReturn(owner)
         `when`(conversationRepository.findById(conversationId)).thenReturn(Optional.of(conversation))
+        `when`(momentSessionRepository.findByConversationId(conversationId))
+            .thenReturn(Optional.of(MomentSessionEntity(event = ev, creator = owner, conversation = conversation, visibility = MomentVisibility.event)))
 
         val dto = chatService.getConversationById(conversationId, principal)
 

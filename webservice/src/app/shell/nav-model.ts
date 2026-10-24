@@ -44,7 +44,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
   { id: 'home', labelKey: 'nav.items.home', icon: 'home', route: '/dashboard' },
   { id: 'events', labelKey: 'nav.items.events', icon: 'events', route: '/events' },
   { id: 'chat', labelKey: 'nav.items.chat', icon: 'chat', route: '/chat' },
-  { id: 'wallet', labelKey: 'nav.items.wallet', icon: 'wallet', route: '/wallet' },
+  { id: 'moments', labelKey: 'nav.items.moments', icon: 'moments', route: '/moments' },
 ];
 
 /**
@@ -52,7 +52,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
  * erscheinen in der Seitenleiste und im „Mehr“-Sheet.
  */
 export const SECONDARY_NAV: readonly NavItem[] = [
-  { id: 'moments', labelKey: 'nav.items.moments', icon: 'moments', route: '/moments' },
+  { id: 'wallet', labelKey: 'nav.items.wallet', icon: 'wallet', route: '/wallet' },
   { id: 'direct', labelKey: 'nav.items.direct', icon: 'direct-message', route: '/direktnachrichten' },
   { id: 'calendar', labelKey: 'nav.items.calendar', icon: 'calendar', route: '/kalender' },
   { id: 'friends', labelKey: 'nav.items.friends', icon: 'friends', route: '/freunde' },

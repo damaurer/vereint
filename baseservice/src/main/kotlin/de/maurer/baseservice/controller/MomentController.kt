@@ -18,12 +18,15 @@ import org.springframework.web.bind.annotation.*
 /**
  * REST-Schnittstelle für Gemeinschaftsmomente & Rituale (TICKET-021 / Moments).
  *
+ * Moments gehören zur Gruppe; ein Event ist optional (`eventId` beim Start,
+ * `?eventId=` filtert Listen auf ein Event).
+ *
  * Ermöglicht das Starten von Momenten (Anstoßen, Gebet, Jubel, Check-in), das Absenden
  * von (mehrfachen) Status- und Stimmungs-Rückmeldungen, die Einsicht in Live-Timeline und
  * GeoJSON-Weltkarte sowie die Archivierung in die Event-Historie.
  */
 @RestController
-@RequestMapping("/api/v1/events/{eventId}/moments")
+@RequestMapping("/api/v1/moments")
 @Tag(name = "Moments", description = "Gemeinschaftsmomente & Rituale (Moments)")
 class MomentController(
     private val momentService: MomentService,
@@ -36,78 +39,73 @@ class MomentController(
     private fun mediaId(id: String) = Identifiers.parseUuid(id, "mediaId")
 
     @PostMapping
-    @Operation(summary = "Moment starten", description = "Startet einen neuen Gemeinschaftsmoment im Kontext eines Events")
+    @Operation(summary = "Moment starten", description = "Startet einen neuen Gemeinschaftsmoment, optional verknüpft mit einem Event")
     fun startMoment(
-        @PathVariable("eventId") eventIdValue: String,
         @Valid @RequestBody request: StartMomentRequest
     ): ResponseEntity<MomentSessionDto> {
         val principal = authContext.getRequiredPrincipal()
-        val session = momentService.startMoment(eventId(eventIdValue), request, principal)
+        val session = momentService.startMoment(request, principal)
         return ResponseEntity.status(HttpStatus.CREATED).body(session)
     }
 
     @GetMapping
-    @Operation(summary = "Aktive Momente auflisten", description = "Listet alle aktiven Momente eines Events für berechtigte Mitglieder")
+    @Operation(summary = "Aktive Momente auflisten", description = "Listet alle laufenden Momente, die das Mitglied sehen darf; optional nur die eines Events")
     fun listActiveMoments(
-        @PathVariable("eventId") eventIdValue: String
+        @RequestParam("eventId", required = false) eventIdValue: String?
     ): ResponseEntity<List<MomentSessionDto>> {
         val principal = authContext.getRequiredPrincipal()
-        val moments = momentService.listActiveMoments(eventId(eventIdValue), principal)
+        val moments = momentService.listActiveMoments(principal, eventIdValue?.let { eventId(it) })
         return ResponseEntity.ok(moments)
     }
 
     @GetMapping("/{momentId}")
     @Operation(summary = "Moment-Details abrufen", description = "Liefert die Detailansicht eines Moments inklusive Timeline aller Statusbeiträge und GeoJSON")
     fun getMomentDetail(
-        @PathVariable("eventId") eventIdValue: String,
         @PathVariable("momentId") momentIdValue: String
     ): ResponseEntity<MomentDetailDto> {
         val principal = authContext.getRequiredPrincipal()
-        val detail = momentService.getMomentDetail(eventId(eventIdValue), momentId(momentIdValue), principal)
+        val detail = momentService.getMomentDetail(momentId(momentIdValue), principal)
         return ResponseEntity.ok(detail)
     }
 
     @PostMapping("/{momentId}/responses")
     @Operation(summary = "Reaktion / Status absenden", description = "Sendet ein Status-Update bzw. eine Reaktion zu einem aktiven Moment ab")
     fun submitResponse(
-        @PathVariable("eventId") eventIdValue: String,
         @PathVariable("momentId") momentIdValue: String,
         @Valid @RequestBody request: SubmitMomentResponseRequest
     ): ResponseEntity<MomentResponseDto> {
         val principal = authContext.getRequiredPrincipal()
-        val response = momentService.submitResponse(eventId(eventIdValue), momentId(momentIdValue), request, principal)
+        val response = momentService.submitResponse(momentId(momentIdValue), request, principal)
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 
     @GetMapping("/{momentId}/map")
     @Operation(summary = "GeoJSON-Kartenansicht", description = "Liefert eine RFC 7946 GeoJSON FeatureCollection aller freigegebenen Teilnehmer-Pins")
     fun getMomentMap(
-        @PathVariable("eventId") eventIdValue: String,
         @PathVariable("momentId") momentIdValue: String
     ): ResponseEntity<MomentMapGeoJsonDto> {
         val principal = authContext.getRequiredPrincipal()
-        val geoJson = momentService.getMomentMapGeoJson(eventId(eventIdValue), momentId(momentIdValue), principal)
+        val geoJson = momentService.getMomentMapGeoJson(momentId(momentIdValue), principal)
         return ResponseEntity.ok(geoJson)
     }
 
     @PostMapping("/{momentId}/complete")
     @Operation(summary = "Moment abschließen", description = "Beendet einen Moment manuell und archiviert die Zusammenfassung für die Event-Historie")
     fun completeMoment(
-        @PathVariable("eventId") eventIdValue: String,
         @PathVariable("momentId") momentIdValue: String
     ): ResponseEntity<MomentSummaryDto> {
         val principal = authContext.getRequiredPrincipal()
-        val summary = momentService.completeMoment(eventId(eventIdValue), momentId(momentIdValue), principal)
+        val summary = momentService.completeMoment(momentId(momentIdValue), principal)
         return ResponseEntity.ok(summary)
     }
 
     @GetMapping("/history")
-    @Operation(summary = "Moment-Historie auflisten", description = "Listet alle abgeschlossenen und historischen Momente eines Events")
+    @Operation(summary = "Moment-Historie auflisten", description = "Listet alle abgeschlossenen Momente, die das Mitglied sehen darf; optional nur die eines Events")
     fun listMomentHistory(
-        @PathVariable("eventId") eventIdValue: String
+        @RequestParam("eventId", required = false) eventIdValue: String?
     ): ResponseEntity<List<MomentSummaryDto>> {
         val principal = authContext.getRequiredPrincipal()
-        val history = momentService.listMomentHistory(eventId(eventIdValue), principal)
+        val history = momentService.listMomentHistory(principal, eventIdValue?.let { eventId(it) })
         return ResponseEntity.ok(history)
     }
 
@@ -122,13 +120,11 @@ class MomentController(
         description = "Lädt ein Bild (JPEG/PNG/GIF) oder ein kurzes Video (MP4/MOV, bis 60 s) für einen eigenen Beitrag hoch"
     )
     fun uploadMedia(
-        @PathVariable("eventId") eventIdValue: String,
         @PathVariable("momentId") momentIdValue: String,
         request: HttpServletRequest
     ): ResponseEntity<MomentMediaDto> {
         val principal = authContext.getRequiredPrincipal()
         val media = momentMediaService.upload(
-            eventId(eventIdValue),
             momentId(momentIdValue),
             request.contentType,
             request.contentLengthLong,
@@ -145,7 +141,6 @@ class MomentController(
     @GetMapping("/{momentId}/media/{mediaId}/content")
     @Operation(summary = "Bild oder Video abrufen", description = "Liefert eine Moment-Datei für berechtigte Mitglieder; Videos mit HTTP-Range")
     fun getMediaContent(
-        @PathVariable("eventId") eventIdValue: String,
         @PathVariable("momentId") momentIdValue: String,
         @PathVariable("mediaId") mediaIdValue: String,
         @RequestHeader(HttpHeaders.RANGE, required = false) rangeHeader: String?,
@@ -153,7 +148,6 @@ class MomentController(
     ) {
         val principal = authContext.getRequiredPrincipal()
         val content = momentMediaService.prepareContent(
-            eventId(eventIdValue),
             momentId(momentIdValue),
             mediaId(mediaIdValue),
             principal
@@ -181,12 +175,11 @@ class MomentController(
     @DeleteMapping("/{momentId}/media/{mediaId}")
     @Operation(summary = "Bild oder Video entfernen", description = "Eigentümer, Event-Owner sowie Vorstand/Admin können eine Moment-Datei entfernen")
     fun deleteMedia(
-        @PathVariable("eventId") eventIdValue: String,
         @PathVariable("momentId") momentIdValue: String,
         @PathVariable("mediaId") mediaIdValue: String
     ): ResponseEntity<Void> {
         val principal = authContext.getRequiredPrincipal()
-        momentMediaService.delete(eventId(eventIdValue), momentId(momentIdValue), mediaId(mediaIdValue), principal)
+        momentMediaService.delete(momentId(momentIdValue), mediaId(mediaIdValue), principal)
         return ResponseEntity.noContent().build()
     }
 

@@ -49,6 +49,9 @@ function megabytes(bytes: number): string {
 export async function prepareMedia(file: File, limits: MomentMediaLimitsDto): Promise<PreparedMedia> {
   const type = mediaType(file);
   if (type.startsWith('video/')) {
+    if (limits.videosAllowed === false) {
+      throw new MediaPrepareError(translate('moments.media.videosNotInPlan'));
+    }
     if (!limits.videoTypes.includes(type)) {
       throw new MediaPrepareError(translate('moments.media.errors.videoType'));
     }
@@ -125,13 +128,12 @@ export interface MediaUpload {
 
 /**
  * Lädt eine vorbereitete Datei als rohen Körper hoch
- * (`POST /api/v1/events/{eventId}/moments/{momentId}/media`).
+ * (`POST /api/v1/moments/{momentId}/media`).
  *
  * Bewusst `XMLHttpRequest`: Der `fetch`-basierte HttpClient der App meldet
  * keinen Upload-Fortschritt, und bei Videos will man den sehen.
  */
 export function uploadMomentMedia(
-  eventId: string,
   momentId: string,
   media: PreparedMedia,
   language: string,
@@ -139,10 +141,7 @@ export function uploadMomentMedia(
 ): MediaUpload {
   const xhr = new XMLHttpRequest();
   const result = new Promise<MomentMediaDto>((resolve, reject) => {
-    xhr.open(
-      'POST',
-      `${API_BASE_PATH}/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}/media`,
-    );
+    xhr.open('POST', `${API_BASE_PATH}/moments/${encodeURIComponent(momentId)}/media`);
     xhr.setRequestHeader('Content-Type', media.contentType);
     xhr.setRequestHeader('Accept', 'application/json');
     xhr.setRequestHeader('Accept-Language', language);
@@ -185,12 +184,11 @@ export class MomentMediaUploader {
   }
 
   upload(
-    eventId: string,
     momentId: string,
     media: PreparedMedia,
     language: string,
     onProgress: (fraction: number) => void,
   ): MediaUpload {
-    return uploadMomentMedia(eventId, momentId, media, language, onProgress);
+    return uploadMomentMedia(momentId, media, language, onProgress);
   }
 }

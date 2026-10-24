@@ -4,10 +4,8 @@ import de.maurer.baseservice.domain.*
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.*
 import de.maurer.baseservice.repository.*
-import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.Identifiers
-import de.maurer.baseservice.tenancy.StammtischAccess
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
@@ -17,16 +15,19 @@ import java.util.UUID
 /**
  * Fachlicher Slice für Gemeinschaftsmomente & Rituale (Moments).
  *
- * Moments ermöglichen interaktive Aktionen während eines Events (gemeinsames Anstoßen,
- * Gebetskreise, Jubeln/Anfeuern, Check-ins).
+ * Moments sind kurze, gemeinsame Aktionen der Gruppe (gemeinsames Anstoßen,
+ * Gebetskreise, Jubeln/Anfeuern, Check-ins). Das Thema wählt das Mitglied aus
+ * den vom Vorstand gepflegten Typen; ein Event ist optional.
  *
  * Sicherheits- und Datenschutzregeln (deny by default):
- * - Nur Event-Owner, teilnehmende Mitglieder sowie Vorstand/Admin haben Zugriff auf Momente.
+ * - Sichtbarkeit `group`: alle Mitglieder der Gruppe; `event`: nur Event-Owner
+ *   und Teilnehmer des verknüpften Events. Vorstand/Admin sehen alles
+ *   ([MomentAccessPolicy]).
  * - Standortübermittlung erfolgt ausschließlich opt-in mit expliziter Einwilligung (consent=true).
  * - Beim Start eines Moments wird automatisch eine verknüpfte 24h-Chat-Konversation angelegt
- *   und eine Push-/In-App-Benachrichtigung an alle Event-Teilnehmer versendet.
+ *   und eine Push-/In-App-Benachrichtigung an alle versendet, die den Moment sehen.
  * - Teilnehmer können mehrfach während der Laufzeit Statusbeiträge und Stimmungen übermitteln.
- * - Nach Ablauf oder manuellem Abschluss wird der Moment in die Event-Historie archiviert.
+ * - Nach Ablauf oder manuellem Abschluss wandert der Moment in die Historie.
  */
 @Service
 @Transactional
@@ -35,7 +36,8 @@ class MomentService(
     private val momentResponseRepository: MomentResponseRepository,
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
-    private val access: StammtischAccess,
+    private val stammtischMemberRepository: StammtischMemberRepository,
+    private val policy: MomentAccessPolicy,
     private val userService: UserService,
     private val chatService: ChatService,
     private val notificationService: NotificationService,
@@ -45,23 +47,31 @@ class MomentService(
 ) {
 
     /**
-     * Startet einen neuen Gemeinschaftsmoment im Kontext eines Events.
+     * Startet einen neuen Gemeinschaftsmoment, optional verknüpft mit einem Event.
      */
-    fun startMoment(eventId: UUID, request: StartMomentRequest, principal: UserPrincipal): MomentSessionDto {
+    fun startMoment(request: StartMomentRequest, principal: UserPrincipal): MomentSessionDto {
         val caller = userService.getOrCreateUser(principal)
-        val event = requireEvent(eventId)
-        requireMemberAccess(caller, principal, event)
-        requireEventOpen(event)
-
-        val title = request.title.trim()
-        if (title.isBlank()) {
-            throw InvalidRequestException(Msg("error.field.blank", "title"), ErrorCode.INVALID_REQUEST)
+        val event = request.eventId?.trim()?.ifBlank { null }
+            ?.let { requireEvent(Identifiers.parseUuid(it, "eventId")) }
+        val visibility = parseVisibility(request.visibility)
+        if (event != null) {
+            requireEventAccess(caller, principal, event)
+            requireEventOpen(event)
+        } else {
+            if (visibility == MomentVisibility.event) {
+                throw InvalidRequestException(Msg("error.moment.visibilityRequiresEvent"), ErrorCode.INVALID_REQUEST)
+            }
+            if (!policy.isGroupMember(caller, principal)) {
+                throw AccessDeniedException(Msg("error.moment.accessDenied"), ErrorCode.ACCESS_DENIED)
+            }
         }
+
         val topicType = request.topicType.trim()
         if (topicType.isBlank()) {
             throw InvalidRequestException(Msg("error.field.blank", "topicType"), ErrorCode.INVALID_REQUEST)
         }
-        momentConfigService.requireActiveType(topicType)
+        val type = momentConfigService.requireActiveType(topicType)
+        val title = request.title?.trim()?.ifBlank { null } ?: type.name
 
         validateCoordinatesAndConsent(request.latitude, request.longitude, request.consent)
 
@@ -74,6 +84,7 @@ class MomentService(
             event = event,
             creator = caller,
             conversation = conversation,
+            visibility = visibility,
             title = title,
             topicType = topicType,
             message = request.message?.trim()?.ifBlank { null },
@@ -84,10 +95,8 @@ class MomentService(
         )
         val saved = momentSessionRepository.save(session)
 
-        // Benachrichtigung & Web-Push an alle Teilnehmer des Events versenden
-        val participantUsers = eventParticipantRepository.findByEventId(event.id).mapNotNull { it.user }
-        val eventOwner = event.owner
-        val recipients = (participantUsers + listOfNotNull(eventOwner))
+        // Benachrichtigung & Web-Push an alle, die den Moment sehen dürfen
+        val recipients = audience(saved)
             .distinctBy { it.id }
             .filter { it.id != caller.id }
 
@@ -101,10 +110,20 @@ class MomentService(
             actor = caller,
             action = AuditService.ACTION_MOMENT_STARTED,
             momentId = saved.id,
-            details = "title=${saved.title}; topic=${saved.topicType}; durationMinutes=$durationMinutes"
+            details = "title=${saved.title}; topic=${saved.topicType}; durationMinutes=$durationMinutes; " +
+                "event=${event?.id}; visibility=${visibility.name}"
         )
 
         return toSessionDto(saved, 0, momentConfigService.labels())
+    }
+
+    /** Ohne Event bzw. bei `group` die ganze Gruppe, sonst Event-Teilnehmer und Owner. */
+    private fun audience(session: MomentSessionEntity): List<UserEntity> {
+        val event = session.event
+        if (event == null || session.visibility == MomentVisibility.group) {
+            return stammtischMemberRepository.findByActiveTrue().mapNotNull { it.user }
+        }
+        return eventParticipantRepository.findByEventId(event.id).mapNotNull { it.user } + listOfNotNull(event.owner)
     }
 
     /**
@@ -112,27 +131,13 @@ class MomentService(
      * Mehrfache Abgaben desselben Nutzers während der Session sind ausdrücklich zulässig.
      */
     fun submitResponse(
-        eventId: UUID,
         momentId: UUID,
         request: SubmitMomentResponseRequest,
         principal: UserPrincipal
     ): MomentResponseDto {
-        val caller = userService.getOrCreateUser(principal)
-        val event = requireEvent(eventId)
-        requireMemberAccess(caller, principal, event)
-        requireEventOpen(event)
-
-        val session = requireMomentSession(momentId)
-        if (session.event?.id != event.id) {
-            throw ResourceNotFoundException(Msg("error.moment.wrongEvent", momentId, eventId), ErrorCode.NOT_FOUND)
-        }
-
-        if (!session.active || session.expiresAt.isBefore(Instant.now())) {
-            if (session.active) {
-                completeMomentInternal(session)
-            }
-            throw InvalidRequestException(Msg("error.moment.notActive"), ErrorCode.INVALID_REQUEST)
-        }
+        val access = requireMomentAccess(momentId, principal, requireActive = true)
+        val session = access.session
+        val caller = access.caller
 
         val reaction = request.reaction?.trim()?.ifBlank { null }
         val statusText = request.statusText?.trim()?.ifBlank { null }
@@ -159,32 +164,28 @@ class MomentService(
             it.response = saved
             momentMediaRepository.save(it)
         }
-        val canModerate = canModerateMedia(caller, principal, event)
-        return toResponseDto(saved, momentConfigService.labels(), media.map { toMediaDto(it, event.id, caller, canModerate) })
+        return toResponseDto(saved, momentConfigService.labels(), media.map { toMediaDto(it, caller, access.canModerate) })
     }
 
     /**
-     * Prüft Zugriff auf einen Moment eines Events (Mitglied des Events,
-     * Event-Owner oder Vorstand/Admin). Mit [requireActive] muss der Moment noch
-     * laufen und das Event offen sein.
+     * Prüft Zugriff auf einen Moment ([MomentAccessPolicy]). Mit [requireActive]
+     * muss der Moment noch laufen und ein verknüpftes Event offen sein.
      */
     @Transactional
-    fun requireMomentAccess(eventId: UUID, momentId: UUID, principal: UserPrincipal, requireActive: Boolean): MomentAccess {
+    fun requireMomentAccess(momentId: UUID, principal: UserPrincipal, requireActive: Boolean): MomentAccess {
         val caller = userService.getOrCreateUser(principal)
-        val event = requireEvent(eventId)
-        requireMemberAccess(caller, principal, event)
         val session = requireMomentSession(momentId)
-        if (session.event?.id != event.id) {
-            throw ResourceNotFoundException(Msg("error.moment.wrongEvent", momentId, eventId), ErrorCode.NOT_FOUND)
+        if (!policy.canView(caller, principal, session)) {
+            throw AccessDeniedException(Msg("error.moment.accessDenied"), ErrorCode.ACCESS_DENIED)
         }
         if (requireActive) {
-            requireEventOpen(event)
+            session.event?.let { requireEventOpen(it) }
             if (!session.active || session.expiresAt.isBefore(Instant.now())) {
                 if (session.active) completeMomentInternal(session)
                 throw InvalidRequestException(Msg("error.moment.notActive"), ErrorCode.INVALID_REQUEST)
             }
         }
-        return MomentAccess(caller, event, session, canModerateMedia(caller, principal, event))
+        return MomentAccess(caller, session, canModerateMedia(caller, principal, session))
     }
 
     /** Eigene, noch nicht verwendete Uploads dieses Moments. */
@@ -206,15 +207,19 @@ class MomentService(
     }
 
     /**
-     * Listet alle aktiven Momente eines Events auf.
+     * Listet alle laufenden Momente, die der Aufrufer sehen darf; mit [eventId]
+     * nur die dieses Events.
      */
     @Transactional
-    fun listActiveMoments(eventId: UUID, principal: UserPrincipal): List<MomentSessionDto> {
+    fun listActiveMoments(principal: UserPrincipal, eventId: UUID? = null): List<MomentSessionDto> {
         val caller = userService.getOrCreateUser(principal)
-        val event = requireEvent(eventId)
-        requireMemberAccess(caller, principal, event)
-
-        val sessions = momentSessionRepository.findByEventIdAndActiveTrue(event.id)
+        val sessions = if (eventId != null) {
+            requireEventAccess(caller, principal, requireEvent(eventId))
+            momentSessionRepository.findByEventIdAndActiveTrue(eventId)
+        } else {
+            momentSessionRepository.findByActiveTrueOrderByCreatedAtDesc()
+        }
+        val canView = policy.viewFilter(caller, principal)
         val labels = momentConfigService.labels()
         val now = Instant.now()
         val activeDtos = mutableListOf<MomentSessionDto>()
@@ -222,7 +227,7 @@ class MomentService(
         for (session in sessions) {
             if (session.expiresAt.isBefore(now)) {
                 completeMomentInternal(session)
-            } else {
+            } else if (canView(session)) {
                 val count = momentResponseRepository.countByMomentId(session.id).toInt()
                 activeDtos.add(toSessionDto(session, count, labels))
             }
@@ -235,15 +240,9 @@ class MomentService(
      * Ruft die Detailansicht eines Moments ab (inklusive Antwort-Stream und GeoJSON-Karte).
      */
     @Transactional
-    fun getMomentDetail(eventId: UUID, momentId: UUID, principal: UserPrincipal): MomentDetailDto {
-        val caller = userService.getOrCreateUser(principal)
-        val event = requireEvent(eventId)
-        requireMemberAccess(caller, principal, event)
-
-        val session = requireMomentSession(momentId)
-        if (session.event?.id != event.id) {
-            throw ResourceNotFoundException(Msg("error.moment.wrongEvent", momentId, eventId), ErrorCode.NOT_FOUND)
-        }
+    fun getMomentDetail(momentId: UUID, principal: UserPrincipal): MomentDetailDto {
+        val access = requireMomentAccess(momentId, principal, requireActive = false)
+        val session = access.session
 
         if (session.active && session.expiresAt.isBefore(Instant.now())) {
             completeMomentInternal(session)
@@ -251,7 +250,6 @@ class MomentService(
 
         val responses = momentResponseRepository.findByMomentIdOrderByCreatedAtAsc(session.id)
         val labels = momentConfigService.labels()
-        val canModerate = canModerateMedia(caller, principal, event)
         val mediaByResponse = if (responses.isEmpty()) {
             emptyMap()
         } else {
@@ -260,7 +258,7 @@ class MomentService(
                 .groupBy { it.response?.id }
         }
         val responseDtos = responses.map { response ->
-            val media = mediaByResponse[response.id].orEmpty().map { toMediaDto(it, event.id, caller, canModerate) }
+            val media = mediaByResponse[response.id].orEmpty().map { toMediaDto(it, access.caller, access.canModerate) }
             toResponseDto(response, labels, media)
         }
         val mapGeoJson = buildGeoJson(session, responses)
@@ -275,64 +273,55 @@ class MomentService(
     /**
      * Liefert die GeoJSON FeatureCollection aller freigegebenen Teilnehmer-Standorte.
      */
-    @Transactional(readOnly = true)
-    fun getMomentMapGeoJson(eventId: UUID, momentId: UUID, principal: UserPrincipal): MomentMapGeoJsonDto {
-        val caller = userService.getOrCreateUser(principal)
-        val event = requireEvent(eventId)
-        requireMemberAccess(caller, principal, event)
-
-        val session = requireMomentSession(momentId)
-        if (session.event?.id != event.id) {
-            throw ResourceNotFoundException(Msg("error.moment.wrongEvent", momentId, eventId), ErrorCode.NOT_FOUND)
-        }
-
+    @Transactional
+    fun getMomentMapGeoJson(momentId: UUID, principal: UserPrincipal): MomentMapGeoJsonDto {
+        val session = requireMomentAccess(momentId, principal, requireActive = false).session
         val responses = momentResponseRepository.findByMomentIdOrderByCreatedAtAsc(session.id)
         return buildGeoJson(session, responses)
     }
 
     /**
-     * Schließt einen Moment vorzeitig oder regulär ab und erzeugt die Zusammenfassung für die Event-Historie.
+     * Schließt einen Moment vorzeitig oder regulär ab und erzeugt die Zusammenfassung für die Historie.
      */
-    fun completeMoment(eventId: UUID, momentId: UUID, principal: UserPrincipal): MomentSummaryDto {
-        val caller = userService.getOrCreateUser(principal)
-        val event = requireEvent(eventId)
-        requireMemberAccess(caller, principal, event)
-
-        val session = requireMomentSession(momentId)
-        if (session.event?.id != event.id) {
-            throw ResourceNotFoundException(Msg("error.moment.wrongEvent", momentId, eventId), ErrorCode.NOT_FOUND)
-        }
-
-        if (!canManageMoment(caller, principal, event, session)) {
+    fun completeMoment(momentId: UUID, principal: UserPrincipal): MomentSummaryDto {
+        val access = requireMomentAccess(momentId, principal, requireActive = false)
+        if (!canManageMoment(access.caller, principal, access.session)) {
             throw AccessDeniedException(
                 Msg("error.moment.closeDenied"),
                 ErrorCode.ACCESS_DENIED
             )
         }
-
-        return completeMomentInternal(session)
+        return completeMomentInternal(access.session)
     }
 
     /**
-     * Listet alle vergangenen / archivierten Momente eines Events für die Kalender- und Event-Historie auf.
+     * Listet alle abgeschlossenen Momente, die der Aufrufer sehen darf; mit
+     * [eventId] nur die dieses Events (Event- und Kalender-Historie).
      */
     @Transactional
-    fun listMomentHistory(eventId: UUID, principal: UserPrincipal): List<MomentSummaryDto> {
+    fun listMomentHistory(principal: UserPrincipal, eventId: UUID? = null): List<MomentSummaryDto> {
         val caller = userService.getOrCreateUser(principal)
-        val event = requireEvent(eventId)
-        requireMemberAccess(caller, principal, event)
-
-        val sessions = momentSessionRepository.findByEventIdOrderByCreatedAtDesc(event.id)
         val now = Instant.now()
+        val sessions = if (eventId != null) {
+            requireEventAccess(caller, principal, requireEvent(eventId))
+            momentSessionRepository.findByEventIdOrderByCreatedAtDesc(eventId)
+        } else {
+            // Abgelaufene, aber noch offene Moments erst abschließen, damit sie mitkommen.
+            momentSessionRepository.findByActiveTrueOrderByCreatedAtDesc()
+                .filter { it.expiresAt.isBefore(now) }
+                .forEach { completeMomentInternal(it) }
+            momentSessionRepository.findByActiveFalseOrderByCreatedAtDesc()
+        }
         sessions.forEach { s ->
             if (s.active && s.expiresAt.isBefore(now)) {
                 completeMomentInternal(s)
             }
         }
 
-        // Nur abgeschlossene Momente gehören in die Historie; laufende zeigt die Event-Seite separat.
+        // Nur abgeschlossene Momente gehören in die Historie; laufende zeigt die Seite separat.
+        val canView = policy.viewFilter(caller, principal)
         val labels = momentConfigService.labels()
-        return sessions.filterNot { it.active }.map { toSummaryDto(it, labels) }
+        return sessions.filter { !it.active && canView(it) }.map { toSummaryDto(it, labels) }
     }
 
     private fun completeMomentInternal(session: MomentSessionEntity): MomentSummaryDto {
@@ -434,41 +423,40 @@ class MomentService(
             ResourceNotFoundException(Msg("error.moment.notFound", id), ErrorCode.NOT_FOUND)
         }
 
+    private fun parseVisibility(raw: String?): MomentVisibility {
+        val value = raw?.trim()?.ifBlank { null } ?: return MomentVisibility.group
+        return MomentVisibility.entries.firstOrNull { it.name == value }
+            ?: throw InvalidRequestException(Msg("error.moment.invalidVisibility"), ErrorCode.INVALID_REQUEST)
+    }
+
     private fun requireEventOpen(event: EventEntity) {
         if (event.status == EventStatus.cancelled || event.status == EventStatus.archived) {
             throw EventNotActiveException(Msg("error.event.notActive"), ErrorCode.EVENT_NOT_ACTIVE)
         }
     }
 
-    private fun requireMemberAccess(caller: UserEntity, principal: UserPrincipal, event: EventEntity) {
-        if (!canViewEvent(caller, principal, event)) {
+    private fun requireEventAccess(caller: UserEntity, principal: UserPrincipal, event: EventEntity) {
+        if (!policy.canViewEvent(caller, principal, event)) {
             throw AccessDeniedException(Msg("error.event.accessDenied"), ErrorCode.ACCESS_DENIED)
         }
     }
 
-    private fun canViewEvent(caller: UserEntity, principal: UserPrincipal, event: EventEntity): Boolean {
-        if (isBoardOrAdmin(caller, principal)) return true
-        if (event.owner?.id == caller.id) return true
-        return eventParticipantRepository.findByEventIdAndUserId(event.id, caller.id).isPresent
-    }
-
-    private fun canManageMoment(caller: UserEntity, principal: UserPrincipal, event: EventEntity, session: MomentSessionEntity): Boolean {
-        if (isBoardOrAdmin(caller, principal)) return true
-        if (event.owner?.id == caller.id) return true
+    private fun canManageMoment(caller: UserEntity, principal: UserPrincipal, session: MomentSessionEntity): Boolean {
+        if (policy.isBoardOrAdmin(caller, principal)) return true
+        if (session.event?.owner?.id == caller.id) return true
         return session.creator?.id == caller.id
     }
 
     /** Bilder/Videos anderer entfernen dürfen Event-Owner sowie Vorstand/Admin. */
-    private fun canModerateMedia(caller: UserEntity, principal: UserPrincipal, event: EventEntity): Boolean =
-        isBoardOrAdmin(caller, principal) || event.owner?.id == caller.id
-
-    private fun isBoardOrAdmin(caller: UserEntity, principal: UserPrincipal): Boolean =
-        access.has(principal, caller, Permission.EVENT_MANAGE)
+    private fun canModerateMedia(caller: UserEntity, principal: UserPrincipal, session: MomentSessionEntity): Boolean =
+        policy.isBoardOrAdmin(caller, principal) || session.event?.owner?.id == caller.id
 
     private fun toSessionDto(session: MomentSessionEntity, responsesCount: Int, labels: MomentLabels): MomentSessionDto {
         return MomentSessionDto(
             id = session.id.toString(),
-            eventId = session.event?.id?.toString().orEmpty(),
+            eventId = session.event?.id?.toString(),
+            eventTitle = session.event?.title,
+            visibility = session.visibility.name,
             creatorId = session.creator?.id?.toString().orEmpty(),
             creatorName = session.creator?.displayName.orEmpty(),
             conversationId = session.conversation?.id?.toString(),
@@ -514,6 +502,8 @@ class MomentService(
         val uniqueCount = (participantIds + listOfNotNull(session.creator?.id)).distinct().size
         return MomentSummaryDto(
             momentId = session.id.toString(),
+            eventId = session.event?.id?.toString(),
+            eventTitle = session.event?.title,
             title = session.title,
             topicType = session.topicType,
             topicName = labels.typeName(session.topicType),
@@ -529,7 +519,7 @@ class MomentService(
     companion object {
         const val NOTIFICATION_TYPE_MOMENT = "moment"
 
-        fun toMediaDto(media: MomentMediaEntity, eventId: UUID, caller: UserEntity, canModerate: Boolean) = MomentMediaDto(
+        fun toMediaDto(media: MomentMediaEntity, caller: UserEntity, canModerate: Boolean) = MomentMediaDto(
             id = media.id.toString(),
             kind = media.kind.name,
             contentType = media.contentType,
@@ -537,7 +527,7 @@ class MomentService(
             width = media.width,
             height = media.height,
             durationSeconds = media.durationMs?.let { it / 1000.0 },
-            url = "/api/v1/events/$eventId/moments/${media.moment?.id}/media/${media.id}/content",
+            url = "/api/v1/moments/${media.moment?.id}/media/${media.id}/content",
             canDelete = canModerate || media.owner?.id == caller.id
         )
     }
@@ -546,7 +536,6 @@ class MomentService(
 /** Ergebnis der Zugriffsprüfung auf einen Moment. */
 class MomentAccess(
     val caller: UserEntity,
-    val event: EventEntity,
     val session: MomentSessionEntity,
     /** Event-Owner oder Vorstand/Admin: darf Bilder/Videos anderer entfernen. */
     val canModerate: Boolean

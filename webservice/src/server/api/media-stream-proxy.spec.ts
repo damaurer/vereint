@@ -86,12 +86,12 @@ describe('mediaStreamProxy', () => {
     lastUpstream = null;
   });
 
-  const mediaPath = '/api/v1/events/e-1/moments/m-1/media';
+  const mediaPath = '/api/v1/moments/m-1/media';
 
   it('matches only the upload and content paths of moment media', () => {
     expect(MOMENT_MEDIA_PATH.test(mediaPath)).toBe(true);
     expect(MOMENT_MEDIA_PATH.test(`${mediaPath}/abc/content`)).toBe(true);
-    expect(MOMENT_MEDIA_PATH.test('/api/v1/events/e-1/moments/m-1/responses')).toBe(false);
+    expect(MOMENT_MEDIA_PATH.test('/api/v1/moments/m-1/responses')).toBe(false);
     expect(MOMENT_MEDIA_PATH.test(`${mediaPath}/abc`)).toBe(false);
   });
 
@@ -140,7 +140,7 @@ describe('mediaStreamProxy', () => {
   });
 
   it('leaves other API paths to the regular proxy', async () => {
-    const response = await fetch(`${baseUrl}/api/v1/events/e-1/moments/m-1/responses`, { method: 'POST' });
+    const response = await fetch(`${baseUrl}/api/v1/moments/m-1/responses`, { method: 'POST' });
     expect(response.status).toBe(299);
   });
 });

@@ -47,6 +47,8 @@ const mockMoments: MomentSessionDto[] = [
   {
     id: 'm-1',
     eventId: 'e-1',
+    eventTitle: 'Sommerfest',
+    visibility: 'group',
     creatorId: 'u-1',
     creatorName: 'Alice',
     conversationId: 'c-1',
@@ -68,6 +70,8 @@ const mockMoments: MomentSessionDto[] = [
 const mockHistory: MomentSummaryDto[] = [
   {
     momentId: 'm-old',
+    eventId: 'e-1',
+    eventTitle: 'Sommerfest',
     title: 'Früheres Gebet',
     topicType: 'prayer',
     topicName: 'Gebet & Fürbitte',

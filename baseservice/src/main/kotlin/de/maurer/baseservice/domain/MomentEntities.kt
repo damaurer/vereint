@@ -110,6 +110,12 @@ class MomentReactionEntity(
 enum class MomentMediaKind { image, video }
 
 /**
+ * Wer einen Moment sieht: die ganze Gruppe oder nur die Teilnehmer des
+ * verknüpften Events. `event` setzt ein Event voraus.
+ */
+enum class MomentVisibility { group, event }
+
+/**
  * Bild oder kurzes Video in einem Moment. Die Datei liegt verschlüsselt im
  * Objektspeicher (Stromformat des DataEncryptor) und wird nur über den
  * berechtigungsgeprüften Content-Endpunkt ausgeliefert.

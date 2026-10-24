@@ -36,5 +36,6 @@
     <include file="db/changelog/changes/017-drink-library-seed.xml"/>
     <include file="db/changelog/changes/018-drink-library-seed-breweries.xml"/>
     <include file="db/changelog/changes/019-friends-and-direct-messages.xml"/>
+    <include file="db/changelog/changes/020-moments-without-events.xml"/>
 
 </databaseChangeLog>

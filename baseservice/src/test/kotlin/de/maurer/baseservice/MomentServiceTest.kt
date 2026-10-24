@@ -9,6 +9,7 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.AuditService
 import de.maurer.baseservice.service.ChatService
+import de.maurer.baseservice.service.MomentAccessPolicy
 import de.maurer.baseservice.service.MomentConfigService
 import de.maurer.baseservice.service.MomentLabels
 import de.maurer.baseservice.service.MomentService
@@ -51,6 +52,9 @@ class MomentServiceTest {
 
     @Mock
     private lateinit var userService: UserService
+
+    @Mock
+    private lateinit var stammtischMemberRepository: StammtischMemberRepository
 
     @Mock
     private lateinit var chatService: ChatService
@@ -98,7 +102,8 @@ class MomentServiceTest {
             momentResponseRepository = momentResponseRepository,
             eventRepository = eventRepository,
             eventParticipantRepository = eventParticipantRepository,
-            access = StammtischTestSupport.access(userRoleRepository),
+            stammtischMemberRepository = stammtischMemberRepository,
+            policy = MomentAccessPolicy(eventParticipantRepository, StammtischTestSupport.access(userRoleRepository)),
             userService = userService,
             chatService = chatService,
             notificationService = notificationService,
@@ -153,10 +158,11 @@ class MomentServiceTest {
             consent = true,
             latitude = 48.137,
             longitude = 11.575,
-            durationMinutes = 60
+            durationMinutes = 60,
+            visibility = "event"
         )
 
-        val result = momentService.startMoment(eventId, request, participantPrincipal)
+        val result = momentService.startMoment(request.copy(eventId = eventId.toString()), participantPrincipal)
 
         assertNotNull(result)
         assertEquals("Gemeinsames Anstoßen", result.title)
@@ -187,7 +193,7 @@ class MomentServiceTest {
         val request = StartMomentRequest(title = "Gebetskreis", topicType = "prayer")
 
         val ex = assertThrows(AccessDeniedException::class.java) {
-            momentService.startMoment(eventId, request, otherPrincipal)
+            momentService.startMoment(request.copy(eventId = eventId.toString()), otherPrincipal)
         }
         assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
     }
@@ -202,7 +208,7 @@ class MomentServiceTest {
         val request = StartMomentRequest(title = "Anfeuern", topicType = "cheer")
 
         val ex = assertThrows(EventNotActiveException::class.java) {
-            momentService.startMoment(eventId, request, participantPrincipal)
+            momentService.startMoment(request.copy(eventId = eventId.toString()), participantPrincipal)
         }
         assertEquals(ErrorCode.EVENT_NOT_ACTIVE, ex.errorCode)
     }
@@ -223,7 +229,7 @@ class MomentServiceTest {
         )
 
         val ex = assertThrows(ConsentRequiredException::class.java) {
-            momentService.startMoment(eventId, request, participantPrincipal)
+            momentService.startMoment(request.copy(eventId = eventId.toString()), participantPrincipal)
         }
         assertEquals(ErrorCode.CONSENT_REQUIRED, ex.errorCode)
     }
@@ -244,7 +250,7 @@ class MomentServiceTest {
         )
 
         val ex = assertThrows(InvalidRequestException::class.java) {
-            momentService.startMoment(eventId, request, participantPrincipal)
+            momentService.startMoment(request.copy(eventId = eventId.toString()), participantPrincipal)
         }
         assertEquals(ErrorCode.INVALID_REQUEST, ex.errorCode)
     }
@@ -275,7 +281,7 @@ class MomentServiceTest {
             latitude = 48.13,
             longitude = 11.57
         )
-        val firstResp = momentService.submitResponse(eventId, momentId, firstReq, participantPrincipal)
+        val firstResp = momentService.submitResponse(momentId, firstReq, participantPrincipal)
         assertEquals("CHEERS", firstResp.reaction)
         assertEquals("Prost zusammen!", firstResp.statusText)
         assertEquals(48.13, firstResp.latitude)
@@ -285,7 +291,7 @@ class MomentServiceTest {
             statusText = "Noch eine Runde!",
             consent = false
         )
-        val secondResp = momentService.submitResponse(eventId, momentId, secondReq, participantPrincipal)
+        val secondResp = momentService.submitResponse(momentId, secondReq, participantPrincipal)
         assertEquals("CHEERS", secondResp.reaction)
         assertEquals("Noch eine Runde!", secondResp.statusText)
         assertNull(secondResp.latitude)
@@ -316,7 +322,7 @@ class MomentServiceTest {
         val req = SubmitMomentResponseRequest(reaction = "AMEN")
 
         val ex = assertThrows(InvalidRequestException::class.java) {
-            momentService.submitResponse(eventId, momentId, req, participantPrincipal)
+            momentService.submitResponse(momentId, req, participantPrincipal)
         }
         assertEquals(ErrorCode.INVALID_REQUEST, ex.errorCode)
         assertFalse(session.active)
@@ -366,7 +372,7 @@ class MomentServiceTest {
         `when`(momentResponseRepository.findByMomentIdOrderByCreatedAtAsc(momentId))
             .thenReturn(listOf(response1, response2))
 
-        val detail = momentService.getMomentDetail(eventId, momentId, participantPrincipal)
+        val detail = momentService.getMomentDetail(momentId, participantPrincipal)
 
         assertEquals("Torjubel", detail.session.title)
         assertEquals(2, detail.session.responsesCount)
@@ -406,7 +412,7 @@ class MomentServiceTest {
         `when`(momentResponseRepository.findByMomentIdOrderByCreatedAtAsc(momentId)).thenReturn(listOf(r1, r2))
         `when`(momentResponseRepository.findByMomentId(momentId)).thenReturn(listOf(r1, r2))
 
-        val summary = momentService.completeMoment(eventId, momentId, participantPrincipal)
+        val summary = momentService.completeMoment(momentId, participantPrincipal)
 
         assertNotNull(summary)
         assertEquals(momentId.toString(), summary.momentId)
@@ -445,7 +451,7 @@ class MomentServiceTest {
         `when`(momentSessionRepository.findById(momentId)).thenReturn(Optional.of(session))
 
         val ex = assertThrows(AccessDeniedException::class.java) {
-            momentService.completeMoment(eventId, momentId, participantPrincipal)
+            momentService.completeMoment(momentId, participantPrincipal)
         }
         assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
     }
@@ -467,7 +473,7 @@ class MomentServiceTest {
         `when`(momentSessionRepository.findByEventIdOrderByCreatedAtDesc(eventId)).thenReturn(listOf(running, legacy))
         `when`(momentResponseRepository.findByMomentId(any(UUID::class.java) ?: momentId)).thenReturn(emptyList())
 
-        val history = momentService.listMomentHistory(eventId, ownerPrincipal)
+        val history = momentService.listMomentHistory(ownerPrincipal, eventId)
 
         assertEquals(listOf(momentId.toString()), history.map { it.momentId })
         assertEquals(expiresAt, history.single().completedAt)
@@ -501,7 +507,7 @@ class MomentServiceTest {
             .thenThrow(InvalidRequestException(Msg("error.momentType.notAvailable"), ErrorCode.INVALID_REQUEST))
 
         assertThrows(InvalidRequestException::class.java) {
-            momentService.startMoment(eventId, StartMomentRequest(title = "Alt", topicType = "retired"), participantPrincipal)
+            momentService.startMoment(StartMomentRequest(title = "Alt", topicType = "retired", eventId = eventId.toString()), participantPrincipal)
         }
         verify(momentSessionRepository, never()).save(any(MomentSessionEntity::class.java))
     }
@@ -512,7 +518,7 @@ class MomentServiceTest {
         `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(ev))
         `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, participantId))
             .thenReturn(Optional.of(EventParticipantEntity(event = ev, user = participantUser)))
-        val result = momentService.startMoment(eventId, StartMomentRequest(title = "Prost", topicType = "toast"), participantPrincipal)
+        val result = momentService.startMoment(StartMomentRequest(title = "Prost", topicType = "toast", eventId = eventId.toString()), participantPrincipal)
 
         verify(momentConfigService).requireActiveType("toast")
         assertEquals("Gemeinsames Anstoßen", result.topicName)
@@ -526,7 +532,7 @@ class MomentServiceTest {
             .thenThrow(InvalidRequestException(Msg("error.momentReaction.notAllowedForType"), ErrorCode.INVALID_REQUEST))
 
         assertThrows(InvalidRequestException::class.java) {
-            momentService.submitResponse(eventId, momentId, SubmitMomentResponseRequest(reaction = "CHEERS"), participantPrincipal)
+            momentService.submitResponse(momentId, SubmitMomentResponseRequest(reaction = "CHEERS"), participantPrincipal)
         }
         verify(momentResponseRepository, never()).save(any(MomentResponseEntity::class.java))
     }
@@ -536,7 +542,7 @@ class MomentServiceTest {
         participantCanAccess(activeSession(participantUser))
 
         val ex = assertThrows(InvalidRequestException::class.java) {
-            momentService.submitResponse(eventId, momentId, SubmitMomentResponseRequest(statusText = "  "), participantPrincipal)
+            momentService.submitResponse(momentId, SubmitMomentResponseRequest(statusText = "  "), participantPrincipal)
         }
         assertEquals("error.moment.emptyResponse", ex.messageKey)
     }
@@ -557,7 +563,6 @@ class MomentServiceTest {
         `when`(momentMediaRepository.findAllById(listOf(media.id))).thenReturn(listOf(media))
 
         val result = momentService.submitResponse(
-            eventId,
             momentId,
             SubmitMomentResponseRequest(mediaIds = listOf(media.id.toString())),
             participantPrincipal
@@ -567,7 +572,7 @@ class MomentServiceTest {
         assertEquals(1, result.media.size)
         assertEquals("video", result.media[0].kind)
         assertEquals(12.0, result.media[0].durationSeconds)
-        assertEquals("/api/v1/events/$eventId/moments/$momentId/media/${media.id}/content", result.media[0].url)
+        assertEquals("/api/v1/moments/$momentId/media/${media.id}/content", result.media[0].url)
         assertTrue(result.media[0].canDelete)
         assertNotNull(media.response)
         verify(momentMediaRepository).save(media)
@@ -589,7 +594,6 @@ class MomentServiceTest {
 
         val ex = assertThrows(InvalidRequestException::class.java) {
             momentService.submitResponse(
-                eventId,
                 momentId,
                 SubmitMomentResponseRequest(reaction = "CHEERS", mediaIds = listOf(foreign.id.toString())),
                 participantPrincipal
@@ -597,5 +601,45 @@ class MomentServiceTest {
         }
         assertEquals("error.momentMedia.notUsable", ex.messageKey)
         assertNull(foreign.response)
+    }
+    @Test
+    fun `startMoment without an event notifies the whole group and takes the topic name as title`() {
+        `when`(momentConfigService.requireActiveType("toast"))
+            .thenReturn(MomentTypeEntity(code = "toast", name = "Gemeinsames Anstoßen", emoji = "🍻"))
+        `when`(stammtischMemberRepository.findByActiveTrue()).thenReturn(
+            listOf(participantUser, otherUser, ownerUser).map { StammtischMemberEntity(user = it) }
+        )
+
+        val result = momentService.startMoment(StartMomentRequest(topicType = "toast"), participantPrincipal)
+
+        assertNull(result.eventId)
+        assertEquals("group", result.visibility)
+        assertEquals("Gemeinsames Anstoßen", result.title)
+        verify(chatService).createMomentConversation(isNull(), eq("Gemeinsames Anstoßen") ?: "")
+        verify(notificationService).notifyUsers(
+            eq(listOf(otherUser, ownerUser)) ?: emptyList(), anyString(), anyString(), eq("moment") ?: "moment", isNull()
+        )
+    }
+
+    @Test
+    fun `startMoment limited to event participants needs an event`() {
+        val ex = assertThrows(InvalidRequestException::class.java) {
+            momentService.startMoment(StartMomentRequest(topicType = "toast", visibility = "event"), participantPrincipal)
+        }
+        assertEquals("error.moment.visibilityRequiresEvent", ex.messageKey)
+    }
+
+    @Test
+    fun `group moments of an event are visible to every member, event-only moments only to participants`() {
+        val groupMoment = activeSession(ownerUser)
+        `when`(momentSessionRepository.findById(momentId)).thenReturn(Optional.of(groupMoment))
+        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, otherUserId)).thenReturn(Optional.empty())
+
+        assertEquals(momentId.toString(), momentService.getMomentDetail(momentId, otherPrincipal).session.id)
+
+        groupMoment.visibility = MomentVisibility.event
+        assertThrows(AccessDeniedException::class.java) {
+            momentService.getMomentDetail(momentId, otherPrincipal)
+        }
     }
 }

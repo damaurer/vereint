@@ -447,15 +447,22 @@ export interface UserListQuery {
   size?: number;
 }
 
-/** Gemeinschaftsmomente & Rituale DTOs (`/api/v1/events/{eventId}/moments`). */
+/** Wer einen Moment sieht: die ganze Gruppe oder nur die Teilnehmer des verknüpften Events. */
+export type MomentVisibility = 'group' | 'event';
+
+/** Gemeinschaftsmomente & Rituale DTOs (`/api/v1/moments`). */
 export interface StartMomentRequest {
-  title: string;
+  /** Optional; leer übernimmt der Moment den Namen des Themas. */
+  title?: string;
   topicType: string;
   message?: string;
   consent: boolean;
   latitude?: number;
   longitude?: number;
   durationMinutes?: number;
+  /** Optionales Event, an das der Moment geknüpft wird. */
+  eventId?: string;
+  visibility?: MomentVisibility;
 }
 
 export interface SubmitMomentResponseRequest {
@@ -471,7 +478,9 @@ export interface SubmitMomentResponseRequest {
 
 export interface MomentSessionDto {
   id: string;
-  eventId: string;
+  eventId: string | null;
+  eventTitle: string | null;
+  visibility: MomentVisibility;
   creatorId: string;
   creatorName: string;
   conversationId: string | null;
@@ -546,6 +555,8 @@ export interface MomentMediaLimitsDto {
   maxMediaPerResponse: number;
   imageTypes: string[];
   videoTypes: string[];
+  /** Erlaubt der Tarif der Gruppe Videos? */
+  videosAllowed: boolean;
 }
 
 export interface MomentConfigDto {
@@ -593,6 +604,8 @@ export interface MomentDetailDto {
 
 export interface MomentSummaryDto {
   momentId: string;
+  eventId: string | null;
+  eventTitle: string | null;
   title: string;
   topicType: string;
   topicName: string;

@@ -394,6 +394,9 @@ interface MomentSessionRepository : JpaRepository<MomentSessionEntity, UUID> {
     fun findByEventIdAndCreatorIdAndActiveTrue(eventId: UUID, creatorId: UUID): List<MomentSessionEntity>
     fun findByEventIdOrderByCreatedAtDesc(eventId: UUID): List<MomentSessionEntity>
     fun findByEventIdIn(eventIds: Collection<UUID>): List<MomentSessionEntity>
+    fun findByActiveTrueOrderByCreatedAtDesc(): List<MomentSessionEntity>
+    fun findByActiveFalseOrderByCreatedAtDesc(): List<MomentSessionEntity>
+    fun findByConversationId(conversationId: UUID): Optional<MomentSessionEntity>
 }
 
 @Repository

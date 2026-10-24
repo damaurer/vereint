@@ -5,7 +5,8 @@
     "saving": "Wird gespeichert …",
     "cancel": "Abbrechen",
     "close": "Schließen",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "optional": "optional"
   },
   "errors": {
     "api": {
@@ -522,8 +523,8 @@
       "description": "Strichcode scannen und mit Guthaben bezahlen."
     },
     "boardMoments": {
-      "title": "Moment-Typen & Reaktionen",
-      "description": "Typen und Reaktionen für Moments festlegen."
+      "title": "Moment-Themen & Reaktionen",
+      "description": "Themen und Reaktionen für Moments festlegen."
     },
     "stammtische": {
       "title": "Gruppe wählen",
@@ -689,13 +690,8 @@
   "moments": {
     "eyebrow": "Gemeinschaftsmomente & Rituale",
     "backToEvent": "← Zum Event",
-    "allEvents": "← Alle Events",
     "loadingMessage": "Moments und Ritual-Feeds werden abgerufen.",
     "unavailable": "Nicht verfügbar",
-    "picker": {
-      "label": "Aktives Event auswählen:",
-      "placeholder": "-- Bitte Event wählen --"
-    },
     "push": {
       "title": "Neuer Moment gestartet: „{title}“",
       "message": "Möchtest du beitreten und eine Reaktion oder einen Status teilen?",
@@ -703,12 +699,12 @@
       "dismiss": "Ausblenden"
     },
     "actions": {
-      "start": "+ Neuen Moment starten",
+      "start": "Neuen Moment starten",
       "activeCount": "{count} aktiver Moment"
     },
     "empty": {
       "title": "Kein aktiver Moment",
-      "message": "Aktuell läuft kein Ritual oder Gemeinschaftsmoment für dieses Event. Starte jetzt ein gemeinsames Anstoßen, ein Gebet oder einen Fan-Jubel!",
+      "message": "Gerade läuft kein Moment. Starte ein gemeinsames Anstoßen, ein Gebet oder einen Jubel – mit oder ohne Event.",
       "initiate": "Moment initiieren"
     },
     "session": {
@@ -717,7 +713,8 @@
       "react": "+ Reagieren",
       "chat": "24h-Chat",
       "complete": "Abschließen",
-      "completeTitle": "Moment abschließen und im Event-Verlauf archivieren"
+      "completeTitle": "Moment abschließen und in den Verlauf verschieben",
+      "eventOnly": "Nur Event-Teilnehmer"
     },
     "detail": {
       "eyebrow": "Ausgewählter Moment",
@@ -735,33 +732,46 @@
       "view": "Ansehen"
     },
     "start": {
-      "title": "Neuen Moment initiieren",
-      "titleLabel": "Titel des Rituals / Moments *",
-      "titlePlaceholder": "z. B. Gemeinsames Anstoßen, Abendgebet, Jubelwelle",
-      "topicLabel": "Thema / Ritualtyp *",
-      "messageLabel": "Nachricht / Impuls (optional)",
+      "title": "Neuer Moment",
+      "titleLabel": "Eigener Titel",
+      "titlePlaceholder": "Sonst gilt der Name des Themas",
+      "topicLabel": "Thema",
+      "messageLabel": "Nachricht",
       "messagePlaceholder": "z. B. Ein Hoch auf unsere Gruppe! Wer stößt aus der Ferne mit an?",
       "durationLabel": "Dauer des Moments",
       "duration": {
-        "m15": "15 Minuten (Kurzer Impuls)",
-        "m30": "30 Minuten",
-        "h1": "1 Stunde (Standard)",
-        "h2": "2 Stunden",
-        "h24": "24 Stunden (Tagesritual)"
+        "m15": "15 Min.",
+        "m30": "30 Min.",
+        "h1": "1 Std.",
+        "h2": "2 Std.",
+        "h24": "24 Std."
       },
-      "consent": "Meinen Standort für die Weltkarte freigeben (DSGVO Opt-in)",
-      "submit": "Moment jetzt starten",
+      "consent": "Erscheint auf der Karte des Moments (freiwillig).",
+      "submit": "Moment starten",
       "submitting": "Wird gestartet …",
       "error": "Fehler beim Starten des Moments.",
       "failed": "Moment konnte nicht gestartet werden.",
-      "noTypes": "Der Vorstand hat noch keinen Moment-Typ freigegeben."
+      "noTypes": "Der Vorstand hat noch kein Thema freigegeben.",
+      "intro": "Wähle ein Thema und leg los. Alles andere ist optional.",
+      "eventLabel": "Mit Event verknüpfen",
+      "noEvent": "Kein Event – für die ganze Gruppe",
+      "visibilityLabel": "Wer sieht den Moment?",
+      "visibility": {
+        "group": "Ganze Gruppe",
+        "event": "Nur Teilnehmer",
+        "groupHint": "Alle Mitglieder der Gruppe sehen den Moment und können mitmachen.",
+        "eventHint": "Nur Teilnehmer des Events sehen den Moment und seinen Chat.",
+        "noEventHint": "Ohne Event sehen alle Mitglieder der Gruppe den Moment."
+      },
+      "consentTitle": "Standort teilen",
+      "manageTypes": "Themen anlegen"
     },
     "respond": {
-      "title": "Status & Reaktion teilen",
-      "reactionLabel": "Reaktion (optional)",
-      "statusLabel": "Persönlicher Status (optional)",
+      "title": "Beitrag teilen",
+      "reactionLabel": "Reaktion",
+      "statusLabel": "Status",
       "statusPlaceholder": "z. B. Schöne Grüße aus Hamburg! 🍺",
-      "consent": "Aktuellen Standort für diesen Beitrag auf der Weltkarte teilen",
+      "consent": "Erscheint mit diesem Beitrag auf der Karte (freiwillig).",
       "submit": "Beitrag absenden",
       "submitting": "Wird gesendet …",
       "error": "Fehler beim Absenden.",
@@ -811,8 +821,8 @@
       "hours": "noch {count} Std aktiv"
     },
     "map": {
-      "ariaLabel": "Weltkarte der Teilnehmer",
-      "title": "Interaktive Teilnehmerkarte",
+      "ariaLabel": "Karte der geteilten Standorte",
+      "title": "Teilnehmerkarte",
       "subtitle": "Standorte von Teilnehmern mit aktiver Standortfreigabe (Opt-in).",
       "count": "{count} Standorte",
       "emptyTitle": "Keine Standorte geteilt",
@@ -820,7 +830,13 @@
       "svgLabel": "Weltkarte mit Teilnehmer-Pins",
       "pinDetails": "Pin Details",
       "listTitle": "Geteilte Standorte",
-      "fallbackName": "Teilnehmer {number}"
+      "fallbackName": "Teilnehmer {number}",
+      "attribution": "Kartendaten © OpenStreetMap-Mitwirkende",
+      "initiator": "Gestartet",
+      "north": "N",
+      "south": "S",
+      "east": "O",
+      "west": "W"
     },
     "timeline": {
       "title": "Status-Timeline",
@@ -831,7 +847,7 @@
     "quote": "„{text}“",
     "manageLink": "Typen & Reaktionen verwalten",
     "media": {
-      "label": "Fotos & Videos (optional)",
+      "label": "Fotos & Videos",
       "add": "Foto oder Video hinzufügen",
       "hint": "Bis zu {count} Dateien. Videos höchstens {seconds} Sekunden und {mb} MB.",
       "remove": "Entfernen",
@@ -849,8 +865,15 @@
         "tooLargeServer": "Die Datei ist zu groß.",
         "uploadFailed": "Hochladen fehlgeschlagen. Bitte erneut versuchen.",
         "aborted": "Hochladen abgebrochen."
-      }
-    }
+      },
+      "takePhoto": "Foto aufnehmen",
+      "takeVideo": "Video aufnehmen",
+      "fromGallery": "Aus Galerie",
+      "hintPhotos": "Bis zu {count} Fotos.",
+      "videosNotInPlan": "Videos sind im aktuellen Tarif der Gruppe nicht enthalten."
+    },
+    "allMoments": "Alle Moments",
+    "eventFilter": "Moments zum Event „{title}“"
   },
   "catalog": {
     "header": {
@@ -1328,7 +1351,7 @@
       "inviteDesc": "Einladungslink zur Registrierung erstellen",
       "kioskDevicesTitle": "Kiosk-Geräte",
       "kioskDevicesDesc": "Laufende Thekenterminals sehen und aus der Ferne entsperren",
-      "momentConfigTitle": "Moments · Typen & Reaktionen",
+      "momentConfigTitle": "Moments · Themen & Reaktionen",
       "momentConfigDesc": "Festlegen, welche Moments und Reaktionen es gibt"
     },
     "comms": {
@@ -1469,13 +1492,13 @@
     },
     "momentConfig": {
       "back": "← Zum Vorstandsbereich",
-      "title": "Moments: Typen & Reaktionen",
-      "intro": "Hier legt ihr fest, welche Arten von Moments Mitglieder starten können und mit welchen Reaktionen sie antworten. Ausgemusterte Einträge verschwinden für neue Moments, alte Moments behalten sie.",
+      "title": "Moments: Themen & Reaktionen",
+      "intro": "Hier legt ihr die Themen fest, aus denen Mitglieder beim Starten eines Moments wählen, und mit welchen Reaktionen sie antworten. Ausgemusterte Einträge verschwinden für neue Moments, alte Moments behalten sie.",
       "unavailable": "Moment-Einstellungen nicht verfügbar",
-      "typesTitle": "Moment-Typen",
+      "typesTitle": "Themen",
       "reactionsTitle": "Reaktionen",
-      "newType": "Neuer Typ",
-      "editType": "Typ bearbeiten",
+      "newType": "Neues Thema",
+      "editType": "Thema bearbeiten",
       "newReaction": "Neue Reaktion",
       "editReaction": "Reaktion bearbeiten",
       "edit": "Bearbeiten",
@@ -1487,9 +1510,9 @@
       "allReactions": "Alle aktiven Reaktionen erlauben",
       "allReactionsShort": "Alle Reaktionen",
       "someReactions": "Reaktionen: {list}",
-      "activeType": "Mitglieder können diesen Typ starten",
+      "activeType": "Mitglieder können dieses Thema wählen",
       "activeReaction": "Mitglieder können diese Reaktion verwenden",
-      "retireTypeHint": "Ausgemustert: Neue Moments dieses Typs sind nicht mehr möglich, bestehende bleiben erhalten.",
+      "retireTypeHint": "Ausgemustert: Neue Moments mit diesem Thema sind nicht mehr möglich, bestehende bleiben erhalten.",
       "retireReactionHint": "Ausgemustert: Die Reaktion ist nicht mehr wählbar, bisherige Beiträge behalten sie.",
       "saveFailed": "Speichern fehlgeschlagen."
     }

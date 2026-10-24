@@ -7,12 +7,22 @@
 ## 🎯 Fachliche Sicht (Business Domain)
 
 ### 1. Moments-Konzept & Anwendungsfälle
-**Moments** ist ein **ereignisgesteuertes, zeitlich begrenzte Kollaborationsmerkmal**, das Mitglieder der Gruppe nutzen können, um spontane Momente gemeinsamer Aktivität zu initiieren:
+**Moments** ist ein **zeitlich begrenztes Kollaborationsmerkmal**, das Mitglieder der Gruppe nutzen können, um spontane Momente gemeinsamer Aktivität zu initiieren – mit oder ohne Event:
 
 - **Soziale & Stammtisch-Clubs**: Gemeinsames Anstoßen ("Gemeinsames Anstoßen 🍻")
 - **Glaubensgemeinschaften & Kirchen**: Gemeinsame Gebetskreise ("Gemeinsames Beten & Fürbitten 🙏")
 - **Sport- & Fan-Clubs**: Kollektives Jubeln oder Anfeuern ("Jubeln / Anfeuern 📣")
 - **Allgemeine Vereinigungen**: Spontane Check-ins, Reflexionsmomente oder Treffpunkt-Bestätigungen ("Check-in 📍")
+
+### 1a. Thema, Event und Sichtbarkeit
+- **Thema (Pflicht)**: Das Mitglied wählt eines der Themen, die der Vorstand pflegt (siehe [Typen & Reaktionen verwalten](#7-typen--reaktionen-verwalten)). Ein eigener Titel ist optional; ohne Titel trägt der Moment den Namen des Themas.
+- **Event (optional)**: Ein Moment kann an ein offenes Event geknüpft werden, muss aber nicht.
+- **Sichtbarkeit** (`moment_sessions.visibility`):
+  - `group` (Standard): alle Mitglieder der Gruppe sehen den Moment, auch wenn er an einem Event hängt und sie nicht teilnehmen.
+  - `event`: nur Veranstalter und Teilnehmende des verknüpften Events. Geht nur mit Event.
+  - Vorstand und Administration (`event.manage`) sehen alle Moments.
+- **Benachrichtigung** beim Start: alle, die den Moment sehen dürfen (außer dem Starter).
+- Moments von vor der Umstellung (Migration `020-moments-without-events.xml`) stehen auf `event` und bleiben damit wie bisher nur für Event-Teilnehmende sichtbar.
 
 ### 2. Moment-Lebenszyklus
 Ein Moment durchläuft folgende Zustände:
@@ -34,17 +44,19 @@ Wenn ein Moment gestartet wird, wird automatisch eine `ConversationEntity` vom T
 
 - **Zweck**: Gibt Mitgliedern einen reibungslosen Raum zum Austausch während und nach dem Moment.
 - **Lebensdauer**: Automatische Archivierung 24 Stunden nach Erstellung.
-- **Teilnehmer**: Alle Event-Mitglieder können beitreten und Nachrichten senden.
+- **Teilnehmer**: Alle, die den Moment sehen dürfen (siehe Sichtbarkeit), können beitreten und Nachrichten senden. Der Zugriff auf den Chat folgt der Sichtbarkeit des Moments.
 
-### 5. Welt-Karte & GeoJSON-Visualisierung
-Ein Moment bietet eine interaktive Welt-Karte, die Geolokalisierungsmarker für Teilnehmer visualisiert, die sich für die Standortfreigabe entschieden haben:
+### 5. Karte & GeoJSON-Visualisierung
+Ein Moment bietet eine Karte mit den Standorten der Teilnehmer, die sich für die Standortfreigabe entschieden haben:
 
-- **Endpunkt**: `GET /api/v1/events/{eventId}/moments/{momentId}/map`
+- **Endpunkt**: `GET /api/v1/moments/{momentId}/map`
+- **Darstellung**: Leaflet mit OpenStreetMap-Kacheln (`tile.openstreetmap.org`, in der CSP unter `img-src` freigegeben). Die Karte zeigt nur den Bereich, in dem alle geteilten Standorte liegen (`fitBounds`, höchstens Zoom 15; ein einzelner Standort mit Zoom 14), nicht die ganze Welt.
+- **Datenschutz-Hinweis**: Beim Anzeigen der Karte lädt der Browser Kartenkacheln von OpenStreetMap; dabei sieht der Kachelserver die IP-Adresse und den groben Kartenausschnitt. Die Koordinaten der Teilnehmer verlassen den Server dabei nicht.
 - **Format**: RFC 7946 GeoJSON FeatureCollection mit Point-Geometrien
 - **Datenschutz**: Nur Antworten mit `consent = true` und gültigen Koordinaten werden einbezogen.
 
 ### 6. Kalender-/Event-Verlauf-Archivierung
-Wenn ein Moment abläuft oder fertiggestellt wird, wird die Session abgeschlossen und über `listMomentHistory` in der Moment-Historie des Events bereitgestellt. Der Abschluss wird zusätzlich über `AuditService` protokolliert:
+Wenn ein Moment abläuft oder fertiggestellt wird, wird die Session abgeschlossen und über `listMomentHistory` in der Moment-Historie bereitgestellt (alle sichtbaren Moments der Gruppe, mit `?eventId=` nur die eines Events). Im Kalender erscheinen weiterhin nur Moments mit Event. Der Abschluss wird zusätzlich über `AuditService` protokolliert:
 
 - **Zusammenfassung**: Die Moment-Historie liefert `momentId`, `title`, `topicType`, `totalResponses`, `uniqueParticipants`, `summary` und das nullable Feld `completedAt`.
 - **Beispiel-Zusammenfassung**: "5 Teilnehmer haben 8 Statusbeiträge zum Moment 'Stammtisch Anstoßen' (toast) geteilt."
@@ -63,6 +75,8 @@ Vorstand und Administration legen unter *Vorstand → Moments · Typen & Reaktio
 Zu einem Beitrag lassen sich bis zu **4 Fotos oder Videos** anhängen (höchstens 40 je Mitglied und Moment):
 
 - **Fotos**: JPEG, PNG oder GIF bis 10 MB. Der Browser verkleinert sie vor dem Hochladen; der Server entfernt EXIF/XMP-Metadaten (GPS, Gerät, Aufnahmezeit).
+- **Aufnehmen**: Im Beitragsdialog gibt es „Foto aufnehmen“ und „Video aufnehmen“ (`<input capture="environment">`, öffnet auf Handys direkt die Kamera) sowie „Aus Galerie“.
+- **Tarif**: Videos nur in Tarifen mit Videos (`PlanLimits.videos`). Die App blendet den Video-Button sonst aus (`mediaLimits.videosAllowed`); der Server prüft beim Upload zusätzlich (`PLAN_LIMIT_VIDEOS`).
 - **Videos**: MP4 oder MOV, höchstens **60 Sekunden** und **100 MB**. Der Server entfernt ohne Transkodierung die Metadaten-Boxen (`udta`, `meta`, XMP) mit Ort und Gerät.
 - **Speicherung**: AES-256-GCM-verschlüsselt in 64-KiB-Blöcken im Objektspeicher, gestreamt statt ganz im Speicher gehalten.
 - **Auslieferung**: nur über den berechtigungsgeprüften Endpunkt mit HTTP-Range, damit Videos abspielbar und spulbar sind.
@@ -76,11 +90,12 @@ Zu einem Beitrag lassen sich bis zu **4 Fotos oder Videos** anhängen (höchsten
 
 #### Backend (Spring Boot / Kotlin)
 - **Controller**:
-  - `MomentController`: Verwaltet Moment-Sessions, Antworten, GeoJSON-Kartendaten, Fertigstellungs-Trigger und Medien (`/api/v1/events/{eventId}/moments`).
+  - `MomentController`: Verwaltet Moment-Sessions, Antworten, GeoJSON-Kartendaten, Fertigstellungs-Trigger und Medien (`/api/v1/moments`).
+  - `MomentAccessPolicy`: Gemeinsame Sichtbarkeitsregel für Moments und ihre Chats.
   - `MomentConfigController`: Typen und Reaktionen (`/api/v1/moment-config`; Lesen für alle Angemeldeten, Schreiben nur Vorstand/Admin).
 - **Services**:
   - `MomentService`: Kerngeschäftslogik für Session-Orchestrierung, Multi-Status-Antworten, Push-Benachrichtigungsverteilung via `NotificationService` / `PushSender`, Chat-Erstellung via `ChatService` und Bereitstellung der Moment-Historie.
-  - `NotificationService` & `PushSender`: Verteilt Web-Push- und In-App-Benachrichtigungen an alle Event-Mitglieder bei Moment-Initiierung.
+  - `NotificationService` & `PushSender`: Verteilt Web-Push- und In-App-Benachrichtigungen bei Moment-Initiierung an alle, die den Moment sehen dürfen.
   - `ChatService`: Aktualisiert zur Unterstützung temporärer Moment-Konversationen mit 24-Stunden-Ablauf.
   - `MomentConfigService`: Typen, Reaktionen und erlaubte Kombinationen.
   - `MomentMediaService` & `Mp4Sanitizer`: Upload, Bereinigung, Verschlüsselung und Range-Auslieferung von Fotos und Videos.
@@ -104,7 +119,8 @@ Zu einem Beitrag lassen sich bis zu **4 Fotos oder Videos** anhängen (höchsten
 ```sql
 CREATE TABLE moment_sessions (
     id UUID PRIMARY KEY,
-    event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    event_id UUID REFERENCES events(id) ON DELETE CASCADE,          -- optional
+    visibility VARCHAR(16) NOT NULL DEFAULT 'group',                 -- 'group' | 'event' (nur mit Event)
     creator_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     conversation_id UUID REFERENCES conversations(id) ON DELETE SET NULL,
     title VARCHAR(255) NOT NULL,
@@ -269,7 +285,7 @@ sequenceDiagram
 - **Snapshot-basiert**: Geolokalisierung ist snapshot-basiert bei Status-Einreichung, nicht kontinuierliches GPS-Tracking.
 
 ### Zugriffskontrolle (Deny-by-Default)
-- Nur Event-Besitzer, beigetretene Teilnehmer und Board/Admin können auf Moments eines Events zugreifen.
+- `group`: alle Mitglieder der Gruppe; `event`: nur Event-Besitzer und beigetretene Teilnehmer; Board/Admin immer (`MomentAccessPolicy`).
 - Nicht-Teilnehmer erhalten `403 Forbidden` (`ErrorCode.ACCESS_DENIED`).
 
 ---
@@ -284,7 +300,7 @@ sequenceDiagram
 5. Wähle Dauer (15–1440 Minuten, Standard 60)
 6. Aktiviere Standortfreigabe (optional, mit Browser-GPS)
 7. Klicke "Moment starten"
-8. Alle Event-Mitglieder erhalten Web-Push-Benachrichtigung
+8. Alle, die den Moment sehen dürfen, erhalten Web-Push-Benachrichtigung
 
 ### 2. Moment beitreten & Antworten (Teilnehmer)
 1. Erhalte Web-Push-Benachrichtigung oder navigiere zu `/events/:eventId/moments`

@@ -226,7 +226,7 @@ class MomentSessionEntity(
     var id: UUID = UUID.randomUUID(),
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id", nullable = false)
+    @JoinColumn(name = "event_id")
     var event: EventEntity? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -236,6 +236,10 @@ class MomentSessionEntity(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "conversation_id")
     var conversation: ConversationEntity? = null,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "visibility", length = 16, nullable = false)
+    var visibility: MomentVisibility = MomentVisibility.group,
 
     @Column(name = "title", length = 255, nullable = false)
     var title: String = "",
