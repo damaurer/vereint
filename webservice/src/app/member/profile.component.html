@@ -28,21 +28,6 @@
         }
       </div>
 
-      <div class="profile-toggle">
-        <div class="profile-toggle-text">
-          <span class="profile-toggle-title"><vereint-icon name="beer" /> {{ 'profile.beerWithMe.title' | t }}</span>
-          <span class="member-muted">{{ 'profile.beerWithMe.hint' | t }}</span>
-        </div>
-        <input
-          id="beerWithMe"
-          type="checkbox"
-          role="switch"
-          [checked]="beerWithMe()"
-          [attr.aria-checked]="beerWithMe()"
-          (change)="toggleBeerWithMe()"
-        />
-      </div>
-
       <div class="profile-theme">
         <span class="profile-toggle-title" id="theme-label">{{ 'profile.theme.title' | t }}</span>
         <div class="profile-theme-options" role="radiogroup" aria-labelledby="theme-label">

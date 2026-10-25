@@ -211,10 +211,6 @@
     "loadingMessage": "Loading your profile.",
     "unavailable": "Profile not available",
     "noRoles": "no roles",
-    "beerWithMe": {
-      "title": "BeerWithMe status",
-      "hint": "Up for a spontaneous beer nearby."
-    },
     "theme": {
       "title": "Appearance",
       "system": "System",

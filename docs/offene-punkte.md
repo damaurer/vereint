@@ -1,6 +1,6 @@
 # Offene Punkte
 
-Bekannte Lücken und nächste Schritte, Stand 16.10.2026. Erledigtes bitte hier
+Bekannte Lücken und nächste Schritte, Stand 25.10.2026. Erledigtes bitte hier
 austragen.
 
 | Punkt | Stand |
@@ -13,7 +13,7 @@ austragen.
 | Website | Die öffentliche Website ([website.md](website.md)) gibt es nur auf Deutsch. Sie verlinkt Impressum und AGB der App; eine Datenschutzerklärung fehlt auch hier. Solange `SIGNUP_ENABLED` aus ist, endet „Gruppe kostenlos eröffnen“ mit einer Fehlermeldung; `website_domain` deshalb erst setzen, wenn die Registrierung freigeschaltet ist. |
 | Online-Zahlung | Stripe ist noch nicht eingerichtet; ohne Stripe bleibt die Online-Zahlung aus, Tarife vergibt die Plattform-Administration von Hand ([abrechnung.md](domains/abrechnung.md#einrichtung)). |
 | Push aus einer anderen Gruppe | Kommt eine Mitteilung aus einer anderen als der gerade gewählten Gruppe, zeigt das Gerät nur die neueste Mitteilung der gewählten Gruppe oder „Du hast eine neue Mitteilung“. |
-| BeerWithMe Status | Im Profil nur eine Vorschau, wird nicht an andere übertragen. |
-| Push für Chat-Nachrichten | Einzelne Chat-Nachrichten lösen keinen Push aus; neue Nachrichten zeigt der Ungelesen-Zähler am Chat. |
-| Bildschirmfotos im Handbuch | Für Moments mit Fotos und Videos, die Seite *Gruppe wählen* und den Beitritt mit bestehendem Konto gibt es noch keine Bilder. Aufnehmen mit [`scripts/handbook`](../scripts/handbook/). |
+| Push für Chat-Nachrichten | Direktnachrichten und Freundschaftsanfragen lösen einen Push aus, Nachrichten im Gruppen- und Event-Chat nicht; dort zeigt nur der Ungelesen-Zähler am Chat neue Nachrichten. |
+| Bildschirmfotos im Handbuch | Das Profil (`profil.png`) zeigt noch den entfernten BeerWithMe-Schalter. Für Moments mit Fotos und Videos, die Seite *Gruppe wählen* und den Beitritt mit bestehendem Konto gibt es noch keine Bilder. Aufnehmen mit [`scripts/handbook`](../scripts/handbook/). |
+| Kartenserver für Moments | Die Moment-Karte lädt Kacheln direkt von `tile.openstreetmap.org` (`webservice/src/app/moments/moment-map.component.ts`). Dabei gehen die IP-Adressen der Nutzer an die OpenStreetMap Foundation; das gehört in die Datenschutzerklärung. Die Nutzungsregeln der OSM-Kachelserver sind für eine produktive App eng, auf Dauer einen eigenen oder kommerziellen Kachelanbieter einplanen. |
 | Arbeitsspeicher | Die Container-Grenzen summieren sich auf etwa 2,1 GB bei 2 GB RAM plus 2 GB Swap. Im Betrieb beobachten. |

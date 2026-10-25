@@ -5,7 +5,6 @@ import { MemberApiService } from './member-api.service';
 import { formatDateTime } from './member-format';
 import type { MemberProfile, UpdateProfilePayload } from '../api/api.types';
 import { HeroGreetingComponent, RoleChipComponent } from '../ui';
-import { IconComponent } from '../ui/icon.component';
 import { StateComponent } from '../ui/state.component';
 import { ThemeService, type ThemePreference } from '../shell/theme.service';
 import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
@@ -18,15 +17,12 @@ import { I18nService, TranslatePipe } from '../i18n';
  * persönliche Angaben) über die geteilten UI-Primitive und erlaubt die Pflege
  * von Anzeigename und E-Mail. Rollen, Status und Berechtigungen sind reine
  * Anzeige; ihre Vergabe erfolgt ausschließlich administrativ im Fachservice.
- * Der `BeerWithMe`-Schalter (Standortfreigabe) ist rein clientseitig und löst
- * keine serverseitige Mutation aus.
  */
 @Component({
   selector: 'app-member-profile',
   imports: [
     HeroGreetingComponent,
     RoleChipComponent,
-    IconComponent,
     StateComponent,
     TranslatePipe,
     PwaSettingsComponent,
@@ -39,22 +35,6 @@ import { I18nService, TranslatePipe } from '../i18n';
         flex-wrap: wrap;
         gap: var(--space-2);
         margin: 0.25rem 0 var(--space-3);
-      }
-
-      .profile-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--space-3);
-        padding: var(--space-3);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--color-border);
-        background-color: var(--color-surface-raised);
-      }
-
-      .profile-toggle-text {
-        display: grid;
-        gap: 0.2rem;
       }
 
       .profile-toggle-title {
@@ -103,12 +83,6 @@ import { I18nService, TranslatePipe } from '../i18n';
         color: var(--color-brand);
         box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
       }
-
-      .profile-toggle input {
-        width: 1.25rem;
-        height: 1.25rem;
-        accent-color: var(--color-brand);
-      }
     `,
   ],
 })
@@ -123,7 +97,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly saved = signal(false);
-  protected readonly beerWithMe = signal(false);
   protected readonly formatDateTime = formatDateTime;
   protected readonly themePreference = this.theme.preference;
   protected readonly themeOptions: readonly { value: ThemePreference; labelKey: string }[] = [
@@ -150,15 +123,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.reload();
-  }
-
-  /**
-   * Schaltet die `BeerWithMe`-Standortfreigabe rein clientseitig um. Der
-   * eigentliche Geolocation-Zugriff erfolgt ausschließlich im Browser; es wird
-   * kein Serverzustand verändert.
-   */
-  protected toggleBeerWithMe(): void {
-    this.beerWithMe.update((active) => !active);
   }
 
   ngOnDestroy(): void {

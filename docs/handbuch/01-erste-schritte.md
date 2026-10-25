@@ -121,7 +121,6 @@ Unter **Mehr → Profil** siehst du deine Kontodaten und deine Rollen.
 - **Darstellung**: **System** folgt der Einstellung deines Geräts, **Hell** und **Dunkel** legen das Aussehen fest.
 - **Sprache**: **Deutsch** oder **English**. Die Wahl gilt sofort für die ganze App und auch für die Anmeldeseite. Hast du nichts gewählt, nimmt Vereint die Sprache deines Browsers.
 - **Sicherheit**: **Zwei-Faktor-Anmeldung einrichten** öffnet die Kontoverwaltung. Dort hinterlegst du eine Authenticator-App (z. B. Google Authenticator); danach fragt die Anmeldung nach Passwort und einem 6-stelligen Code. Das ist freiwillig, für Vorstand und Administration aber empfohlen.
-- **BeerWithMe Status** ist eine Vorschau und wird noch nicht an andere übertragen.
 
 <br clear="right">
 

@@ -62,20 +62,6 @@ describe('ProfileComponent', () => {
     expect(root.querySelector('vereint-hero-greeting')).toBeTruthy();
   });
 
-  it('toggles the client-only BeerWithMe switch without calling the api', async () => {
-    const fixture = await create();
-    const root = fixture.nativeElement as HTMLElement;
-
-    const toggle = root.querySelector<HTMLInputElement>('#beerWithMe')!;
-    expect(toggle.getAttribute('aria-checked')).toBe('false');
-
-    toggle.dispatchEvent(new Event('change'));
-    fixture.detectChanges();
-
-    expect(toggle.getAttribute('aria-checked')).toBe('true');
-    expect(api.updateProfile).not.toHaveBeenCalled();
-  });
-
   it('switches the theme from the profile', async () => {
     const fixture = await create();
     const root = fixture.nativeElement as HTMLElement;

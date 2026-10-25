@@ -205,10 +205,6 @@
     "loadingMessage": "Das Profil wird abgerufen.",
     "unavailable": "Profil nicht verfügbar",
     "noRoles": "keine Rollen",
-    "beerWithMe": {
-      "title": "BeerWithMe Status",
-      "hint": "Verfügbar für ein spontanes Bier in der Nähe."
-    },
     "theme": {
       "title": "Darstellung",
       "system": "System",
