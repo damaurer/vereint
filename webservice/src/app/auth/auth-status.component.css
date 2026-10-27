@@ -11,7 +11,7 @@
   border: 0;
   border-radius: var(--vereint-control-radius, 0.5rem);
   background-color: var(--color-brand, #1e3a8a);
-  color: #ffffff;
+  color: var(--color-on-brand);
   font-family: var(--opt-font-sans, inherit);
   font-size: 1rem;
   font-weight: 700;

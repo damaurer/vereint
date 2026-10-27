@@ -20,7 +20,7 @@
   --color-on-primary: var(--color-on-brand);
   --color-accent: #d97706;
   --color-accent-light: #fef3c7;
-  --color-success: #16a34a;
+  --color-success: #137638;
   --color-success-light: #dcfce7;
   --color-warning: #d97706;
   --color-warning-light: #fef3c7;
@@ -33,7 +33,7 @@
   --opt-color-primary-dark: #172554;
   --opt-color-accent: #d97706;
   --opt-color-accent-light: #fef3c7;
-  --opt-color-success: #16a34a;
+  --opt-color-success: #137638;
   --opt-color-success-light: #dcfce7;
   --opt-color-danger: #dc2626;
   --opt-color-danger-light: #fee2e2;
@@ -269,7 +269,7 @@ a:focus-visible {
   border-radius: 0.5rem;
   border: none;
   background-color: var(--color-brand);
-  color: #ffffff;
+  color: var(--color-on-brand);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -1057,7 +1057,7 @@ a:focus-visible {
   border-radius: var(--radius-sm);
   border: none;
   background-color: var(--color-brand);
-  color: #ffffff;
+  color: var(--color-on-brand);
   font-weight: 700;
   cursor: pointer;
 }
@@ -1090,7 +1090,7 @@ a:focus-visible {
   display: grid;
   place-items: center;
   background-color: var(--color-brand);
-  color: #ffffff;
+  color: var(--color-on-brand);
   font-weight: 800;
 }
 
@@ -1290,7 +1290,7 @@ a:focus-visible {
 .tally-row .ui-stepper-btn:last-child {
   border-color: var(--color-brand);
   background-color: var(--color-brand);
-  color: #ffffff;
+  color: var(--color-on-brand);
 }
 
 .tally-row .ui-stepper-btn:last-child:disabled {
@@ -1698,11 +1698,11 @@ html.pf-v5-theme-dark {
   --color-border-dark: #475569;
   --color-text: #f8fafc;
   --color-text-muted: #94a3b8;
-  --color-brand: #3b82f6;
-  --color-brand-strong: #2563eb;
-  --color-brand-hover: #2563eb;
-  --color-brand-soft: rgba(59, 130, 246, 0.16);
-  --color-on-brand: #ffffff;
+  --color-brand: #5592f7;
+  --color-brand-strong: #3b82f6;
+  --color-brand-hover: #3b82f6;
+  --color-brand-soft: #16284b;
+  --color-on-brand: #0f172a;
   --color-primary: var(--color-brand);
   --color-on-primary: var(--color-on-brand);
   --color-accent: #fbbf24;
@@ -1714,9 +1714,9 @@ html.pf-v5-theme-dark {
   --color-danger: #f87171;
   --color-danger-light: rgba(220, 38, 38, 0.18);
 
-  --opt-color-primary: #3b82f6;
-  --opt-color-primary-light: rgba(59, 130, 246, 0.16);
-  --opt-color-primary-dark: #2563eb;
+  --opt-color-primary: #5592f7;
+  --opt-color-primary-light: #16284b;
+  --opt-color-primary-dark: #3b82f6;
   --opt-color-accent: #fbbf24;
   --opt-color-accent-light: rgba(217, 119, 6, 0.18);
   --opt-color-success: #4ade80;
@@ -1763,6 +1763,22 @@ html.pf-v5-theme-dark .vereint-eyebrow {
   color: #93c5fd;
 }
 
+/* Badge-Text im Dunkelmodus: die hellen Textfarben (#92400e, #991b1b) sind auf
+   den transparenten Hintergründen kaum lesbar (1,6:1). */
+:root[data-theme='dark'] .ui-badge-warning,
+[data-theme='dark'] .ui-badge-warning,
+.theme-dark .ui-badge-warning,
+html.pf-v5-theme-dark .ui-badge-warning {
+  color: var(--color-warning);
+}
+
+:root[data-theme='dark'] .ui-badge-danger,
+[data-theme='dark'] .ui-badge-danger,
+.theme-dark .ui-badge-danger,
+html.pf-v5-theme-dark .ui-badge-danger {
+  color: var(--color-danger);
+}
+
 /* Fallback via prefers-color-scheme Media-Query */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
@@ -1777,11 +1793,11 @@ html.pf-v5-theme-dark .vereint-eyebrow {
     --color-border-dark: #475569;
     --color-text: #f8fafc;
     --color-text-muted: #94a3b8;
-    --color-brand: #3b82f6;
-    --color-brand-strong: #2563eb;
-    --color-brand-hover: #2563eb;
-    --color-brand-soft: rgba(59, 130, 246, 0.16);
-    --color-on-brand: #ffffff;
+    --color-brand: #5592f7;
+    --color-brand-strong: #3b82f6;
+    --color-brand-hover: #3b82f6;
+    --color-brand-soft: #16284b;
+    --color-on-brand: #0f172a;
     --color-primary: var(--color-brand);
     --color-on-primary: var(--color-on-brand);
     --color-accent: #fbbf24;
@@ -1793,9 +1809,9 @@ html.pf-v5-theme-dark .vereint-eyebrow {
     --color-danger: #f87171;
     --color-danger-light: rgba(220, 38, 38, 0.18);
 
-    --opt-color-primary: #3b82f6;
-    --opt-color-primary-light: rgba(59, 130, 246, 0.16);
-    --opt-color-primary-dark: #2563eb;
+    --opt-color-primary: #5592f7;
+    --opt-color-primary-light: #16284b;
+    --opt-color-primary-dark: #3b82f6;
     --opt-color-accent: #fbbf24;
     --opt-color-accent-light: rgba(217, 119, 6, 0.18);
     --opt-color-success: #4ade80;
@@ -1828,6 +1844,14 @@ html.pf-v5-theme-dark .vereint-eyebrow {
 
   :root:not([data-theme='light']) .vereint-eyebrow {
     color: #93c5fd;
+  }
+
+  :root:not([data-theme='light']) .ui-badge-warning {
+    color: var(--color-warning);
+  }
+
+  :root:not([data-theme='light']) .ui-badge-danger {
+    color: var(--color-danger);
   }
 }
 

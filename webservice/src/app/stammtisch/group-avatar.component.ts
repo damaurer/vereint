@@ -51,7 +51,7 @@ export function groupInitials(name: string): string {
         width: 100%;
         height: 100%;
         background-color: var(--color-brand);
-        color: #ffffff;
+        color: var(--color-on-brand);
         font-weight: 800;
         font-size: calc(var(--group-avatar-size) * 0.4);
         line-height: 1;
