@@ -110,7 +110,8 @@ Backup, Health Check und automatischem Rollback aus.
 
 | Thema | Dokument |
 | :--- | :--- |
-| Vor dem ersten Produktivbetrieb | [Go-Live-Checkliste](docs/betrieb/go-live-checkliste.md) |
+| Betrieb auf Strato (eigener Server), Go-Live-Checkliste | [Betrieb auf einem Strato VPS](docs/betrieb/strato.md) |
+| Vor dem ersten Produktivbetrieb auf AWS | [Go-Live-Checkliste](docs/betrieb/go-live-checkliste.md) |
 | Branches, CI, Images | [Branches und CI](docs/betrieb/branches-und-ci.md) |
 | AWS, Terraform, Kosten | [AWS und Kosten](docs/betrieb/aws-und-kosten.md) |
 | Ausrollen und Zurückrollen | [Deployment und Rollback](docs/betrieb/deployment-und-rollback.md) |

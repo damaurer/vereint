@@ -31,7 +31,8 @@ geprüft (`STRIPE_WEBHOOK_SECRET`).
 
 ## Schlüssel, die offline gesichert sein müssen
 
-> **Wichtig:** Diese zwei Werte aus dem SSM Parameter Store zusätzlich offline
+> **Wichtig:** Diese zwei Werte (auf einem eigenen Server aus
+> `/srv/vereint/secrets.env`, bei AWS aus dem SSM Parameter Store) zusätzlich offline
 > aufbewahren, zum Beispiel im Passwort-Manager des Vorstands. Die Werte gehören
 > nie in die Dokumentation, ins Repository oder in einen Chat.
 
@@ -40,7 +41,13 @@ geprüft (`STRIPE_WEBHOOK_SECRET`).
 | `/vereint/BACKUP_ENCRYPTION_KEY` | … sind die Backups in S3 nicht lesbar. |
 | `/vereint/DATA_ENCRYPTION_KEY` | … sind Chat-Nachrichten, Benachrichtigungen, Bilder und Videos **auch aus einem intakten Backup** nicht mehr lesbar. |
 
-Auslesen (mit AWS-Admin-Login):
+Auslesen auf einem eigenen Server (Strato) als root:
+
+```bash
+grep -E '^(DATA|BACKUP)_ENCRYPTION_KEY=' /srv/vereint/secrets.env
+```
+
+Bei AWS (mit AWS-Admin-Login):
 
 ```bash
 aws ssm get-parameter --name /vereint/BACKUP_ENCRYPTION_KEY --with-decryption
@@ -48,11 +55,29 @@ aws ssm get-parameter --name /vereint/DATA_ENCRYPTION_KEY --with-decryption
 ```
 
 **`DATA_ENCRYPTION_KEY` rotieren:** den bisherigen Wert zusätzlich als
-`/vereint/DATA_ENCRYPTION_KEY_PREVIOUS` anlegen, dann
-`terraform apply -replace=random_bytes.data_encryption_key` und neu ausrollen.
-Alte Inhalte bleiben mit dem vorherigen Schlüssel lesbar.
+`DATA_ENCRYPTION_KEY_PREVIOUS` anlegen, dann einen neuen Schlüssel setzen und
+neu ausrollen. Auf einem eigenen Server beides in `secrets.env` (neuer Wert:
+`openssl rand -base64 32`), bei AWS als `/vereint/DATA_ENCRYPTION_KEY_PREVIOUS`
+und `terraform apply -replace=random_bytes.data_encryption_key`. Alte Inhalte
+bleiben mit dem vorherigen Schlüssel lesbar.
 
 ## Secrets
+
+Eigener Server ([Strato](strato.md)):
+
+- `bin/server-setup.sh` erzeugt alle Secrets zufällig in
+  `/srv/vereint/secrets.env` (root, Rechte 600). `bin/fetch-env.sh` verweigert
+  das Deployment, wenn die Datei anderen Rechte hat oder Pflichtwerte fehlen.
+- In GitHub liegen nur der private Deploy-Schlüssel (`DEPLOY_SSH_KEY`) und der
+  Fingerabdruck des Servers. Der Schlüssel darf auf dem Server ausschließlich
+  `deploy` und `rollback` auslösen: erzwungener Befehl in `authorized_keys`,
+  keine Shell, keine Port-Weiterleitung, `sudo` nur für genau diese zwei
+  Aufrufe. Wer `main` ändern kann, kann damit ausrollen; deshalb nur `main`
+  im Environment `production` erlauben.
+- SSH nur mit Schlüssel, Firewall nur 22/80/443, fail2ban, automatische
+  Sicherheitsupdates.
+
+AWS:
 
 - Alle Secrets erzeugt Terraform zufällig und legt sie als `SecureString` unter
   `/vereint/*` im Parameter Store ab. Im Repository und in GitHub stehen sie nie.

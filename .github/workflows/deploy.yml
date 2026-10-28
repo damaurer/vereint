@@ -7,12 +7,16 @@ name: Deployment (Produktion)
 #   - bei Aenderungen an deploy/ oder website/ auf `main`,
 #   - von Hand (Actions -> Deployment -> Run workflow), auch als Rollback.
 #
-# Der Job meldet sich per OIDC bei AWS an (keine dauerhaften Schluessel in
-# GitHub) und laeuft nur im Environment `production`. Er bindet alle drei
-# Images an ihren Digest, legt das Bundle in S3 ab und startet auf dem Server
-# per AWS Systems Manager `bin/deploy.sh`. Das Skript sichert vorher die
-# Datenbanken, prueft danach die Gesundheit und kehrt bei einem Fehler
-# automatisch zum vorherigen Stand zurueck.
+# Der Job laeuft nur im Environment `production` und bindet alle drei Images an
+# ihren Digest. Zwei Ziele sind moeglich:
+#   - Eigener Server (z. B. Strato VPS, docs/betrieb/strato.md): ist die
+#     Variable DEPLOY_HOST gesetzt, geht das Bundle per SSH an den Server. Der
+#     Schluessel darf dort nur `deploy` und `rollback` ausloesen.
+#   - AWS (infra/aws): sonst meldet sich der Job per OIDC bei AWS an, legt das
+#     Bundle in S3 ab und startet es per AWS Systems Manager.
+# Auf dem Server sichert `bin/deploy.sh` vorher die Datenbanken, prueft danach
+# die Gesundheit und kehrt bei einem Fehler automatisch zum vorherigen Stand
+# zurueck.
 on:
   workflow_run:
     workflows:
@@ -28,6 +32,7 @@ on:
       - 'website/**'
       - '.github/workflows/deploy.yml'
       - '.github/scripts/ssm-run.sh'
+      - '.github/scripts/ssh-run.sh'
   workflow_dispatch:
     inputs:
       action:
@@ -61,6 +66,11 @@ jobs:
       id-token: write
 
     env:
+      TARGET: ${{ vars.DEPLOY_HOST != '' && 'ssh' || 'aws' }}
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER || 'deploy' }}
+      DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+      DEPLOY_SSH_KNOWN_HOSTS: ${{ vars.DEPLOY_SSH_KNOWN_HOSTS }}
       AWS_REGION: ${{ vars.AWS_REGION || 'eu-central-1' }}
       INSTANCE_ID: ${{ vars.VEREINT_INSTANCE_ID }}
       DEPLOY_BUCKET: ${{ vars.VEREINT_DEPLOY_BUCKET }}
@@ -70,15 +80,24 @@ jobs:
       - name: Konfiguration pruefen
         env:
           ROLE: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
           missing=""
-          [ -n "$ROLE" ] || missing="$missing Secret:AWS_DEPLOY_ROLE_ARN"
-          [ -n "$INSTANCE_ID" ] || missing="$missing Variable:VEREINT_INSTANCE_ID"
-          [ -n "$DEPLOY_BUCKET" ] || missing="$missing Variable:VEREINT_DEPLOY_BUCKET"
+          if [ "$TARGET" = ssh ]; then
+            [ -n "$SSH_KEY" ] || missing="$missing Secret:DEPLOY_SSH_KEY"
+            [ -n "$DEPLOY_SSH_KNOWN_HOSTS" ] || missing="$missing Variable:DEPLOY_SSH_KNOWN_HOSTS"
+            doc=docs/betrieb/strato.md
+          else
+            [ -n "$ROLE" ] || missing="$missing Secret:AWS_DEPLOY_ROLE_ARN"
+            [ -n "$INSTANCE_ID" ] || missing="$missing Variable:VEREINT_INSTANCE_ID"
+            [ -n "$DEPLOY_BUCKET" ] || missing="$missing Variable:VEREINT_DEPLOY_BUCKET"
+            doc=infra/aws/README.md
+          fi
           if [ -n "$missing" ]; then
-            echo "::error::Im Environment production fehlt:$missing (siehe infra/aws/README.md)"
+            echo "::error::Im Environment production fehlt:$missing (siehe $doc)"
             exit 1
           fi
+          echo "Ziel: $TARGET"
 
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -104,6 +123,7 @@ jobs:
           done
 
       - name: Bei AWS anmelden (OIDC)
+        if: env.TARGET == 'aws'
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
@@ -136,7 +156,7 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Bundle nach S3 hochladen
+      - name: Bundle packen
         if: env.ACTION == 'deploy'
         run: |
           bundle="$RUNNER_TEMP/bundle"
@@ -145,13 +165,25 @@ jobs:
           # Statische Website; Caddy liefert sie aus dem Bundle aus.
           cp -r website "$bundle/website"
           cp images.env "$bundle/images.env"
-          tar -czf "$RUNNER_TEMP/bundle.tgz" -C "$bundle" .
+
+      - name: Bundle nach S3 hochladen
+        if: env.ACTION == 'deploy' && env.TARGET == 'aws'
+        run: |
+          tar -czf "$RUNNER_TEMP/bundle.tgz" -C "$RUNNER_TEMP/bundle" .
           key="deploy/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tgz"
           aws s3 cp "$RUNNER_TEMP/bundle.tgz" "s3://$DEPLOY_BUCKET/$key" --sse AES256 --only-show-errors
           echo "BUNDLE_KEY=$key" >> "$GITHUB_ENV"
 
-      - name: Auf dem Server ausfuehren
+      - name: Auf dem Server ausfuehren (AWS Systems Manager)
+        if: env.TARGET == 'aws'
         env:
           # Kurzlebig: GitHub widerruft das Token, sobald dieser Job endet.
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/ssm-run.sh
+
+      - name: Auf dem Server ausfuehren (SSH)
+        if: env.TARGET == 'ssh'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: .github/scripts/ssh-run.sh

@@ -1,5 +1,9 @@
 # Go-Live-Checkliste
 
+> **Betrieb auf Strato oder einem anderen eigenen Server:** Die vollständige
+> Checkliste dafür steht in [Betrieb auf einem Strato VPS](strato.md#checkliste-für-den-go-live).
+> Diese Seite beschreibt den Weg über AWS.
+
 Stand 16.10.2026: Der Code auf `develop` ist bereit für das erste
 Produktions-Deployment; alle Workflows sind grün. Auf `main` wurde noch nie
 ausgerollt, und in AWS ist noch nichts angelegt. Diese Schritte muss eine Person

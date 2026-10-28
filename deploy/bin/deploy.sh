@@ -1,6 +1,7 @@
 #!/bin/bash
 # Rollt einen neuen Stand aus oder kehrt zum vorherigen zurueck. Wird von
-# GitHub Actions ueber AWS Systems Manager als root aufgerufen (siehe
+# GitHub Actions als root aufgerufen, auf einem eigenen Server per SSH ueber
+# bin/remote.sh, bei AWS ueber Systems Manager (siehe
 # .github/workflows/deploy.yml); von Hand geht es genauso.
 #
 #   deploy.sh deploy <bundle-verzeichnis>   neuen Stand ausrollen

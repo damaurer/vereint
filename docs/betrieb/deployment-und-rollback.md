@@ -22,9 +22,13 @@ sobald einer der Workflows `baseservice CI/CD`, `webservice CI/CD` oder
 
 1. Wartet, bis die Image-Builds auf `main` fertig sind, und bindet die Images an
    ihren Digest (`images.env`).
-2. Meldet sich per **OIDC** bei AWS an (keine gespeicherten AWS-Schlüssel), legt
-   das Bundle im Backup-Bucket ab und startet auf dem Server über **Systems
-   Manager** `bin/deploy.sh`. SSH ist nicht nötig.
+2. Bringt das Bundle auf den Server und startet dort `bin/deploy.sh`:
+   - **Eigener Server** ([Strato](strato.md)), wenn die Variable `DEPLOY_HOST`
+     gesetzt ist: per **SSH** mit einem Schlüssel, der auf dem Server nur
+     `deploy` und `rollback` auslösen darf. Der Server wird nur mit dem
+     Fingerabdruck aus `DEPLOY_SSH_KNOWN_HOSTS` akzeptiert.
+   - **AWS** sonst: Anmeldung per **OIDC** (keine gespeicherten AWS-Schlüssel),
+     Bundle im Backup-Bucket, Start über **Systems Manager**.
 3. `deploy.sh` zieht die neuen Images und **sichert vorher beide Datenbanken**,
    inklusive Probe-Wiederherstellung. Ohne Backup kein Deployment. Nur beim
    allerersten Deployment entfällt das Backup, weil es noch keine Datenbank gibt.
@@ -74,7 +78,16 @@ melden, den es nicht gab.
 
 Die Admin-Konsole ist von außen gesperrt (404). Zugriff per Tunnel vom eigenen
 Rechner, danach `http://localhost:8082/kc/admin` öffnen (Benutzer `admin`,
-Passwort aus dem Parameter `/vereint/KEYCLOAK_ADMIN_PASSWORD`):
+Passwort `KEYCLOAK_ADMIN_PASSWORD` aus `/srv/vereint/secrets.env` bzw. dem
+Parameter `/vereint/KEYCLOAK_ADMIN_PASSWORD`).
+
+Eigener Server:
+
+```bash
+ssh -L 8082:127.0.0.1:8082 root@<server-ip>
+```
+
+AWS:
 
 ```bash
 aws ssm start-session --target <instance-id> \

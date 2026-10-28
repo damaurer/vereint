@@ -53,9 +53,13 @@ vereint:
     # Ausschließlich explizite Ursprünge; Wildcards werden verworfen
     allowed-origins: ${VEREIN_CORS_ALLOWED_ORIGINS:http://localhost:4200}
   storage:
-    # S3-kompatibler Bildspeicher (TICKET-014). Ist enabled=false, greift der
-    # In-Memory-Speicher; die Secrets stammen ausschließlich aus S3_* und
+    # Speicher für Bilder und Videos (TICKET-014). STORAGE_BACKEND wählt
+    # s3 (S3-kompatibel), filesystem (Verzeichnis STORAGE_DIRECTORY, z. B. auf
+    # einem eigenen Server) oder memory. Ohne Angabe: S3_ENABLED=true heißt s3,
+    # sonst memory. Die S3-Secrets stammen ausschließlich aus S3_* und
     # gelangen nie in Browser oder SSR-HTML.
+    backend: ${STORAGE_BACKEND:}
+    directory: ${STORAGE_DIRECTORY:}
     enabled: ${S3_ENABLED:false}
     endpoint: ${S3_ENDPOINT:http://localhost:9000}
     bucket: ${S3_BUCKET:vereint}
