@@ -116,6 +116,7 @@ Backup, Health Check und automatischem Rollback aus.
 | Ausrollen und Zurückrollen | [Deployment und Rollback](docs/betrieb/deployment-und-rollback.md) |
 | Backups und Restore | [Backups und Wiederherstellung](docs/betrieb/backups-und-wiederherstellung.md) |
 | Verschlüsselung, Schlüssel, Härtung | [Sicherheit und Schlüssel](docs/betrieb/sicherheit-und-schluessel.md) |
+| Lizenz, Öffentlichschalten, Selbstbetrieb | [Open Source](docs/betrieb/open-source.md) |
 
 ---
 
@@ -129,3 +130,13 @@ Backup, Health Check und automatischem Rollback aus.
 - [docs/website.md](docs/website.md) – Öffentliche Website, Domain, Bildschirmfotos
 - [infra/aws/README.md](infra/aws/README.md) – AWS mit Terraform
 - [e2e/README.md](e2e/README.md) – E2E-Tests
+
+---
+
+## 🤝 Mitmachen und Lizenz
+
+Vereint ist ein Open-Source-Hobbyprojekt unter der
+[GNU Affero General Public License v3.0](LICENSE). Beiträge sind willkommen,
+siehe [CONTRIBUTING.md](CONTRIBUTING.md); Sicherheitslücken bitte vertraulich
+melden, siehe [SECURITY.md](SECURITY.md). Der Startbestand der
+Getränkedatenbank stammt aus Open Food Facts (ODbL 1.0).

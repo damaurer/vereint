@@ -30,7 +30,8 @@ docs/
 │   ├── aws-und-kosten.md                 # Terraform, Server, Budget, monatliche Kosten
 │   ├── deployment-und-rollback.md        # Automatisches Ausrollen, Health Check, Zurückrollen
 │   ├── backups-und-wiederherstellung.md  # Nächtliche Backups, Snapshots, Restore
-│   └── sicherheit-und-schluessel.md      # Verschlüsselung, Secrets, Offline-Schlüssel, Härtung
+│   ├── sicherheit-und-schluessel.md      # Verschlüsselung, Secrets, Offline-Schlüssel, Härtung
+│   └── open-source.md                    # Lizenz (AGPL-3.0), Öffentlichschalten, Selbstbetrieb
 │
 ├── architecture/                         # Systemarchitektur, Sicherheit & Datenmodelle
 │   ├── system-overview.md                # Multi-Tier Systemarchitektur & Tech-Stack

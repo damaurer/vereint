@@ -17,3 +17,4 @@ austragen.
 | Push für Chat-Nachrichten | Einzelne Chat-Nachrichten lösen keinen Push aus; neue Nachrichten zeigt der Ungelesen-Zähler am Chat. |
 | Bildschirmfotos im Handbuch | Für Moments mit Fotos und Videos, die Seite *Gruppe wählen* und den Beitritt mit bestehendem Konto gibt es noch keine Bilder. Aufnehmen mit [`scripts/handbook`](../scripts/handbook/). |
 | Arbeitsspeicher | Die Container-Grenzen summieren sich auf etwa 2,1 GB bei 2 GB RAM plus 2 GB Swap. Im Betrieb beobachten. |
+| Selbst betreiben ohne AWS | Der Produktionsbetrieb in `deploy/` setzt AWS voraus (SSM, S3). Für einen eigenen Server ohne AWS fehlen eine Anleitung und ein S3-kompatibler Speicher wie MinIO ([open-source.md](betrieb/open-source.md#selbst-betreiben)). |

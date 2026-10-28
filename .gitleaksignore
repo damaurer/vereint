@@ -10,3 +10,7 @@
 af3673512b469ff7f475d163c1924c1c827112ed:docs/api/error-handling-and-idempotency.md:generic-api-key:68
 # Test-Fixture fuer die Session-Signatur
 ee8222f150d6e5c386abb133b554ef96861ab16e:webservice/src/server/auth/testing/token-fixtures.ts:generic-api-key:18
+# Fester Einladungs-Token im Komponententest
+e7534961d297698a24cc31a831bba6e0f8355268:webservice/src/app/auth/register.component.spec.ts:generic-api-key:22
+# PEM-Rahmen um einen im Test frisch erzeugten Schluessel
+25bd2d8f6cb3570a6fed316980fee7b9c7a10407:baseservice/src/test/kotlin/de/maurer/baseservice/VapidPushSenderTest.kt:private-key:135
