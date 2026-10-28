@@ -16,8 +16,7 @@
 #      Schlaegt es fehl, wird nicht deployt.
 #   3. Bisherigen Stand nach releases/previous verschieben, neuen aktivieren
 #   4. Starten und warten, bis alle Container gesund sind
-#   5. Pruefen, dass Anwendung, API und Login von aussen antworten und die
-#      statische Website im Caddy-Container liegt
+#   5. Pruefen, dass Anwendung, API und Login von aussen antworten
 # Scheitert Schritt 4 oder 5, wird automatisch der vorherige Stand gestartet.
 set -euo pipefail
 
@@ -72,30 +71,6 @@ smoke_test() {
     log "Keine gesunde Antwort von $path"
     return 1
   done
-  smoke_test_website "$dir"
-}
-
-# Die statische Website muss im Caddy-Container liegen. Ihre Domain wird nur
-# gemeldet, nicht erzwungen: DNS-Eintrag und Zertifikat koennen beim ersten
-# Mal noch fehlen, und daran soll kein Deployment der App scheitern.
-smoke_test_website() {
-  local dir="$1" domains host
-  [ -d "$dir/website" ] || return 0  # aelterer Stand ohne Website (Rollback)
-  if ! compose "$dir" exec -T caddy test -f /srv/website/index.html; then
-    log "Website fehlt im Caddy-Container"
-    return 1
-  fi
-  log "OK Website-Dateien"
-  domains="$(sed -n "s/^WEBSITE_DOMAIN='\(.*\)'$/\1/p" "$dir/.env")"
-  [ -n "$domains" ] || return 0
-  host="${domains%%,*}"
-  host="${host// /}"
-  host="${host#https://}"
-  if curl -fsS -k --noproxy "*" -o /dev/null --max-time 10 --resolve "$host:443:127.0.0.1" "https://$host/"; then
-    log "OK Website https://$host/"
-  else
-    log "WARNUNG: Website https://$host/ antwortet nicht (DNS-Eintrag und Zertifikat pruefen)"
-  fi
 }
 
 start() {

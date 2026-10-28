@@ -1,4 +1,4 @@
-package de.maurer.baseservice.billing
+package de.maurer.baseservice.service
 
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.PermissionDeniedException
@@ -43,7 +43,6 @@ class StammtischExportService(
     private val conversationRepository: ConversationRepository,
     private val chatMessageRepository: ChatMessageRepository,
     private val momentSessionRepository: MomentSessionRepository,
-    private val planLimits: PlanLimits,
     private val tenantTransactions: TenantTransactions,
     private val clock: Clock = Clock.systemUTC()
 ) {
@@ -51,13 +50,12 @@ class StammtischExportService(
     data class Export(val fileName: String, val content: Map<String, Any?>)
 
     fun export(principal: UserPrincipal): Export {
-        if (!principal.hasPermission(Permission.STAMMTISCH_MANAGE) && !principal.hasPermission(Permission.BILLING_MANAGE)) {
+        if (!principal.hasPermission(Permission.STAMMTISCH_MANAGE)) {
             throw PermissionDeniedException(Msg("error.stammtisch.manageDenied"))
         }
         val stammtischId = TenantContext.requireStammtischId()
         return tenantTransactions.readInStammtisch(stammtischId) {
             val stammtisch = stammtischRepository.findById(stammtischId).orElseThrow()
-            val subscription = planLimits.subscription(stammtischId)
             val rolesByUser = userRoleRepository.findAll().groupBy({ it.id.userId }, { it.id.role })
             val participantsByEvent = participantRepository.findAll().groupBy { it.event?.id }
             val messagesByConversation = chatMessageRepository.findAll().groupBy { it.conversation?.id }
@@ -70,9 +68,7 @@ class StammtischExportService(
                 "stammtisch" to mapOf(
                     "id" to stammtisch.id,
                     "name" to stammtisch.name,
-                    "createdAt" to stammtisch.createdAt,
-                    "plan" to (subscription?.plan?.name ?: "free"),
-                    "billingStatus" to (subscription?.status?.name ?: "none")
+                    "createdAt" to stammtisch.createdAt
                 ),
                 "roles" to roleRepository.findAll().sortedBy { it.sortOrder }.map {
                     mapOf(

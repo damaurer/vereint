@@ -35,7 +35,7 @@ export type AppContext =
 | `/events/:eventId/*` | `event` | `/api/auth/login?returnTo=/events/...` | Einzelansicht einer Veranstaltung für Mitglieder. |
 | `/app`, `/dashboard`, `/profile`, `/wallet`, `/purchases`, `/scan`, `/events`, `/events/new`, `/catalog`, `/sublists`, `/chat`, `/notifications`, `/moments` | `memberPwa` | `/api/auth/login?returnTo=...` | Reguläre PWA-Mitgliederansichten. |
 | `/auth/error`, `/auth/logged-out`, `/invite/accept`, `/register`, `/gruppe-eroeffnen`, `/impressum`, `/agb`, `/403`, `/404` | *(Öffentlich / `publicPaths`)* | *(Kein Login nötig)* | Öffentliche Seiten ohne Zugriffsbeschränkung. |
-| `/stammtische`, `/stammtisch`, `/eroeffnen` | *(Alte Adressen)* | `301` auf `/gruppen`, `/gruppe`, `/gruppe-eroeffnen` | `LEGACY_PAGE_REDIRECTS`, Query bleibt erhalten (z. B. Rückkehr von Stripe). |
+| `/stammtische`, `/stammtisch`, `/eroeffnen` | *(Alte Adressen)* | `301` auf `/gruppen`, `/gruppe`, `/gruppe-eroeffnen` | `LEGACY_PAGE_REDIRECTS`, Query bleibt erhalten. |
 | `/` | `memberPwa` *(über `homeGuard`)* | `/api/auth/login` *(ohne Session)* | Startseite: leitet unauthentifiziert direkt zum Login, authentifiziert auf die kontextabhängige Startseite. |
 | `/login`, `/web/login`, `/pwa/login`, `/password-reset` | *(Legacy)* | `302 /api/auth/login` | Alte Login- und Reset-URLs leiten per 302 auf den Keycloak-Login weiter (`returnUrl` wird zu `returnTo`). |
 | `/register/:inviteCode` | *(Alte Einladungsform)* | `302 /register#<code>` / `/404` | Gültiger Code wird ins URL-Fragment verschoben (nicht in Logs oder Referer), ungültiger führt zu `/404`. |

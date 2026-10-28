@@ -39,8 +39,7 @@ interface PendingMedia {
  *
  * Fotos und Videos lassen sich direkt mit der Kamera aufnehmen
  * (`capture="environment"` öffnet auf Handys die Systemkamera) oder aus der
- * Galerie wählen. Videos bietet der Dialog nur an, wenn der Tarif der Gruppe
- * sie erlaubt; der Server prüft das beim Upload ohnehin.
+ * Galerie wählen.
  */
 @Component({
   selector: 'app-moment-respond-dialog',
@@ -132,28 +131,26 @@ interface PendingMedia {
                     (change)="onMediaSelected($event)"
                   />
                 </label>
-                @if (videosAllowed()) {
-                  <label class="capture-btn" [class.is-disabled]="submitting()">
-                    <vereint-icon name="video" />
-                    <span>{{ 'moments.media.takeVideo' | t }}</span>
-                    <input
-                      type="file"
-                      class="visually-hidden"
-                      accept="video/*"
-                      capture="environment"
-                      data-testid="capture-video"
-                      [disabled]="submitting()"
-                      (change)="onMediaSelected($event)"
-                    />
-                  </label>
-                }
+                <label class="capture-btn" [class.is-disabled]="submitting()">
+                  <vereint-icon name="video" />
+                  <span>{{ 'moments.media.takeVideo' | t }}</span>
+                  <input
+                    type="file"
+                    class="visually-hidden"
+                    accept="video/*"
+                    capture="environment"
+                    data-testid="capture-video"
+                    [disabled]="submitting()"
+                    (change)="onMediaSelected($event)"
+                  />
+                </label>
                 <label class="capture-btn" [class.is-disabled]="submitting()">
                   <vereint-icon name="image" />
                   <span>{{ 'moments.media.fromGallery' | t }}</span>
                   <input
                     type="file"
                     class="visually-hidden"
-                    [accept]="galleryAccept()"
+                    [accept]="galleryAccept"
                     multiple
                     data-testid="pick-gallery"
                     [disabled]="submitting()"
@@ -163,25 +160,16 @@ interface PendingMedia {
               </div>
             }
             <small class="field-hint">
-              @if (videosAllowed()) {
-                {{
-                  'moments.media.hint'
-                    | t
-                      : {
-                          count: limits.maxMediaPerResponse,
-                          seconds: limits.maxVideoSeconds,
-                          mb: maxVideoMb(),
-                        }
-                }}
-              } @else {
-                {{ 'moments.media.hintPhotos' | t: { count: limits.maxMediaPerResponse } }}
-              }
+              {{
+                'moments.media.hint'
+                  | t
+                    : {
+                        count: limits.maxMediaPerResponse,
+                        seconds: limits.maxVideoSeconds,
+                        mb: maxVideoMb(),
+                      }
+              }}
             </small>
-            @if (!videosAllowed()) {
-              <p class="plan-note" data-testid="videos-not-in-plan">
-                <vereint-icon name="lock" /> {{ 'moments.media.videosNotInPlan' | t }}
-              </p>
-            }
           }
           @if (mediaError()) {
             <p class="form-error-msg" role="alert">{{ mediaError() }}</p>
@@ -293,16 +281,6 @@ interface PendingMedia {
         opacity: 0.5;
         pointer-events: none;
       }
-      .plan-note {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        margin: 0;
-        padding: 0.5rem 0.75rem;
-        border-radius: var(--radius-sm);
-        background-color: var(--color-warning-light);
-        font-size: 0.8rem;
-      }
       .pending-media {
         list-style: none;
         margin: 0;
@@ -381,11 +359,7 @@ export class MomentRespondDialogComponent implements OnDestroy {
   private readonly mediaSection = viewChild<ElementRef<HTMLElement>>('mediaSection');
   private readonly photoInput = viewChild<ElementRef<HTMLInputElement>>('photoInput');
 
-  /** Videos nur, wenn der Tarif der Gruppe sie erlaubt. */
-  protected readonly videosAllowed = computed(() => this.mediaLimits()?.videosAllowed !== false);
-  protected readonly galleryAccept = computed(() =>
-    this.videosAllowed() ? 'image/*,video/mp4,video/quicktime' : 'image/*',
-  );
+  protected readonly galleryAccept = 'image/*,video/mp4,video/quicktime';
   protected readonly maxVideoMb = computed(() =>
     Math.round((this.mediaLimits()?.maxVideoBytes ?? 0) / (1024 * 1024)),
   );

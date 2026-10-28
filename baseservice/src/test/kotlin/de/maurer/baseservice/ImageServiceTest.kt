@@ -1,6 +1,5 @@
 package de.maurer.baseservice
 
-import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.crypto.DataEncryptor
 import de.maurer.baseservice.crypto.EncryptionProperties
 import de.maurer.baseservice.domain.DrinkCatalogEntity
@@ -86,8 +85,7 @@ class ImageServiceTest {
             StammtischTestSupport.access(userRoleRepository),
             eventRepository,
             eventParticipantRepository,
-            drinkCatalogRepository,
-            StammtischTestSupport.lenientMock<PlanLimits>()
+            drinkCatalogRepository
         )
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: ownerId)).thenReturn(emptyList())
         `when`(imageAssetRepository.findMaxImageVersion(any() ?: ImagePurpose.profile, any()))

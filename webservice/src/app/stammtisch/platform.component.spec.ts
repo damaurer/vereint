@@ -10,7 +10,6 @@ interface PlatformInternals {
   adminEmail: string;
   create(): void;
   toggleArchived(item: PlatformStammtischDto): void;
-  setPlan(item: PlatformStammtischDto, plan: string): void;
   info(): string | null;
 }
 
@@ -20,9 +19,6 @@ const item: PlatformStammtischDto = {
   archived: false,
   memberCount: 12,
   createdAt: '2026-01-01T10:00:00Z',
-  plan: 'stammtisch',
-  billingStatus: 'past_due',
-  readOnly: true,
   storageBytes: 3 * 1024 ** 3,
 };
 
@@ -68,29 +64,11 @@ describe('PlatformComponent', () => {
     confirm.mockRestore();
   });
 
-  it('shows plan, payment status, storage and the read-only mark', () => {
+  it('shows the storage in use', () => {
     const { fixture } = create();
     const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('Tarif: Standard');
-    expect(text).toContain('Zahlung offen');
     expect(text).toContain('3 GB belegt');
-    expect(text).toContain('Nur lesbar');
-    expect((fixture.nativeElement.querySelector('select') as HTMLSelectElement).value).toBe('stammtisch');
-  });
-
-  it('sets a plan manually via the select', () => {
-    const { fixture, cmp } = create();
-    api['platformUpdate'].mockReturnValue(of({ ...item, plan: 'verein', billingStatus: 'comped', readOnly: false }));
-    const select = fixture.nativeElement.querySelector('select') as HTMLSelectElement;
-    select.value = 'verein';
-    select.dispatchEvent(new Event('change'));
-    expect(api['platformUpdate']).toHaveBeenCalledWith('st-1', { plan: 'verein' });
-    expect(cmp.info()).toBe('„Eber“ hat jetzt den Tarif Premium.');
-  });
-
-  it('ignores selecting the current plan', () => {
-    const { cmp } = create();
-    cmp.setPlan(item, 'stammtisch');
-    expect(api['platformUpdate']).not.toHaveBeenCalled();
+    expect(text).not.toContain('Tarif');
+    expect(fixture.nativeElement.querySelector('select')).toBeNull();
   });
 });

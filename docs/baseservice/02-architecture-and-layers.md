@@ -158,7 +158,7 @@ Unter `de.maurer.baseservice` sind alle Controller und Services modular organisi
 | `ApiInfoController` | `/api/v1/info` | Öffentliche Versions- und Feature-Informationen | [05. Observability](05-error-handling-and-observability.md) |
 | `AuditLogController` | `/api/v1/audit-logs` | Audit-Log-Abfragen für Vorstand und Admin | [Kassenbuch](../domains/ledger-and-finance.md) |
 | `AuthController` | `/api/v1/auth` | Session-Kontext des angemeldeten Kontos (`/me`) | [03. Security](03-security-and-authorization.md) |
-| `BillingController` | `/api/v1/stammtisch/billing`, `/api/v1/stammtisch/export`, `/api/v1/billing/stripe/webhook` | Tarif, Stripe-Checkout und Kundenportal, Datenexport, Webhook | [Abrechnung](../domains/abrechnung.md) |
+| `StammtischExportController` | `/api/v1/stammtisch/export` | Datenexport der gewählten Gruppe als JSON | [Gruppen](../domains/stammtische.md) |
 | `ChatController` | `/api/v1/events/{eventId}/chat` | Event-Chat und Gast-Chat | [Chat & Push](../domains/chat-and-push-notifications.md) |
 | `ConversationController` | `/api/v1/conversations` | Gruppenchat, Direktchats, Lesestand, Reaktionen, Infotafel | [Chat & Push](../domains/chat-and-push-notifications.md) |
 | `DrinkCatalogController` | `/api/v1/drinks` | Getränkekatalog der Gruppe & Freigabe-Workflow | [Getränkekatalog](../domains/drink-catalog-and-sublists.md) |
@@ -184,7 +184,7 @@ Unter `de.maurer.baseservice` sind alle Controller und Services modular organisi
 
 ---
 
-### Service-Übersicht (`de.maurer.baseservice.service`, `billing`, `tenancy`)
+### Service-Übersicht (`de.maurer.baseservice.service`, `tenancy`)
 
 - **`AccessResolverService`**: Berechnet zugreifbare Rollen, Berechtigungen und AppContexts für das BFF.
 - **`AuditService` / `AuditLogService`**: Erfassung und Abfrage sicherheits- und finanzrelevanter Ereignisse.
@@ -203,7 +203,7 @@ Unter `de.maurer.baseservice` sind alle Controller und Services modular organisi
 - **`StatisticsService`**: Kennzahlen.
 - **`TabletRecorderService`**: Buchungen am Thekenterminal, Runden und Abendabrechnung.
 - **`UserProvisioningService` & `UserService`**: Anlage lokaler Konten aus dem Keycloak-Token, Profile und Mitgliederverwaltung.
-- **`BillingService`, `StripeClient`, `StripeWebhookService` & `StammtischExportService`** (Paket `billing`): Tarife, Stripe-Anbindung, Datenexport.
+- **`StammtischExportService`**: Datenexport einer Gruppe als JSON.
 - **`StammtischContextFilter`, `StammtischAccess`, `StammtischMemberships`** (Paket `tenancy`): Gruppenkontext, Rechteprüfung, Mitgliedschaften je Konto.
 
 ---

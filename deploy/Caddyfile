@@ -42,60 +42,12 @@
 		respond 404
 	}
 
-	# Stripe-Webhooks gehen direkt an den Fachservice, der die Signatur prueft.
-	handle /api/v1/billing/stripe/webhook {
-		reverse_proxy baseservice:8081
-	}
-
 	handle /kc/* {
 		reverse_proxy keycloak:8080
 	}
 
 	handle {
 		reverse_proxy webservice:8080
-	}
-
-	log {
-		output stdout
-		format json
-	}
-}
-
-# Statische Website (Ordner website/ im Repository, siehe docs/website.md).
-# WEBSITE_DOMAIN kann mehrere Namen enthalten, z. B. "example.de, www.example.de".
-# Ist sie nicht gesetzt, setzt compose.yaml einen Namen ein, den niemand
-# aufruft (http://website.invalid); dann holt Caddy dafuer kein Zertifikat.
-{$WEBSITE_DOMAIN} {
-	encode zstd gzip
-
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		# Nur eigene Dateien, keine Inline-Skripte, keine fremden Dienste.
-		Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
-		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()"
-		Cross-Origin-Opener-Policy "same-origin"
-		-Server
-	}
-
-	# Links der Website in die App: /app/<pfad> fuehrt auf https://<App-Domain>/<pfad>.
-	redir /app /app/ 308
-	handle_path /app/* {
-		redir https://{$PUBLIC_DOMAIN}{uri} 302
-	}
-
-	handle {
-		root * /srv/website
-		@assets path /assets/* /bilder/*
-		header @assets Cache-Control "public, max-age=86400"
-		file_server
-	}
-
-	handle_errors 404 {
-		rewrite * /404.html
-		root * /srv/website
-		file_server
 	}
 
 	log {

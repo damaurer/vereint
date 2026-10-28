@@ -22,8 +22,6 @@ Im **Kiosk-Modus** bleibt das Tablet auf der Strichliste: Menü, Mitteilungen un
 2. Optional einen **Gerätenamen** eintragen, z. B. „Theke links“.
 3. Eine **PIN** aus 4 bis 8 Ziffern vergeben und wiederholen, dann **Starten**.
 
-In den Tarifen Kostenlos und Standard läuft je Gruppe nur ein Thekenterminal gleichzeitig. Ein zweites Gerät meldet dann „Im aktuellen Tarif läuft nur ein Thekenterminal gleichzeitig. Beende das andere oder wähle den Tarif Premium.“
-
 <img src="bilder/t-kiosk-entsperren.png" alt="Kiosk-Modus mit PIN verlassen" width="720">
 
 Zum Verlassen oben rechts auf das Schloss (**Kiosk entsperren**) oder auf **Kiosk-Modus verlassen** tippen und die PIN eingeben. Nach 5 falschen Eingaben ist die PIN-Eingabe eine Weile gesperrt. PIN vergessen? Vorstand oder Administration entsperren das Gerät unter **Vorstand → Kiosk-Geräte** (siehe [Leitfaden Vorstand](03-vorstand.md#kiosk-geräte)).

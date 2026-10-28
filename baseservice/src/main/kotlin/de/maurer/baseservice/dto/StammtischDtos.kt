@@ -67,10 +67,7 @@ data class PlatformStammtischDto(
     val archived: Boolean,
     val memberCount: Long,
     val createdAt: Instant,
-    /** Tarif und Zahlungsstand (`free`/`stammtisch`/`verein`, `none`/`active`/...). */
-    val plan: String = "free",
-    val billingStatus: String = "none",
-    val readOnly: Boolean = false,
+    /** Belegter Speicher für Bilder und Videos. */
     val storageBytes: Long = 0,
     val imageVersion: Int? = null
 )
@@ -90,9 +87,7 @@ data class CreateStammtischRequest(
 data class UpdatePlatformStammtischRequest(
     @field:Size(max = 80, message = "name {validation.size.max}")
     val name: String? = null,
-    val archived: Boolean? = null,
-    /** Tarif von Hand setzen (ohne Zahlung, Status `comped`; `free` setzt zurück). */
-    val plan: String? = null
+    val archived: Boolean? = null
 )
 
 /** Selbstregistrierung: Konto anlegen und eigenen Stammtisch eröffnen. */

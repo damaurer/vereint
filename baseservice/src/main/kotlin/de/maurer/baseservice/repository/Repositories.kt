@@ -425,7 +425,7 @@ interface ImageAssetRepository : JpaRepository<ImageAssetEntity, UUID> {
 
     fun findByOwnerIdAndStatus(ownerId: UUID, status: ImageStatus): List<ImageAssetEntity>
 
-    /** Belegter Speicher der aktuellen Bilder des Stammtischs (Tarifgrenze). */
+    /** Belegter Speicher der aktuellen Bilder des Stammtischs (Plattform-Übersicht). */
     @Query("select coalesce(sum(i.sizeBytes), 0) from ImageAssetEntity i where i.status = :status")
     fun sumSizeBytesByStatus(@Param("status") status: ImageStatus): Long
 
@@ -497,19 +497,11 @@ interface MomentMediaRepository : JpaRepository<MomentMediaEntity, UUID> {
     fun countByMomentIdAndOwnerId(momentId: UUID, ownerId: UUID): Long
     fun findByResponseIsNullAndCreatedAtBefore(cutoff: Instant): List<MomentMediaEntity>
 
-    /** Belegter Speicher aller Moment-Medien des Stammtischs (Tarifgrenze). */
+    /** Belegter Speicher aller Moment-Medien des Stammtischs. */
     @Query("select coalesce(sum(m.sizeBytes), 0) from MomentMediaEntity m")
     fun sumSizeBytes(): Long
 }
 
-@Repository
-interface StammtischSubscriptionRepository : JpaRepository<StammtischSubscriptionEntity, UUID> {
-    fun findByStripeSubscriptionId(stripeSubscriptionId: String): Optional<StammtischSubscriptionEntity>
-    fun findFirstByStripeCustomerId(stripeCustomerId: String): Optional<StammtischSubscriptionEntity>
-}
-
-@Repository
-interface BillingEventRepository : JpaRepository<BillingEventEntity, String>
 
 // --- Persönliche, gruppenübergreifende Daten (keine Gruppe, keine Row-Level-Security) ---
 

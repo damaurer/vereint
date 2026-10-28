@@ -57,7 +57,6 @@ Die Zuordnung zu den Exceptions beschreibt [Fehlerbehandlung im Fachservice](../
 | `last_role_manager_protected` | `403` | Die Änderung nähme der Gruppe die letzte Person mit `members.manage` oder `roles.manage`. |
 | `last_admin_protected` | `403` | Konstante vorhanden, derzeit ohne Auslöser. |
 | `stammtisch_access_denied` | `403` | Kein aktives Mitglied der gewählten Gruppe. |
-| `stammtisch_read_only` | `403` | Zahlung über die Kulanzfrist hinaus offen; die Gruppe ist nur lesbar. |
 | `not_found` | `404` | Ressource existiert nicht (oder gehört zu einer anderen Gruppe). |
 | `concurrent_modification` | `409` | Parallele Bearbeitung (`@Version`). |
 | `data_integrity_violation` | `409` | Unique Constraint oder Fremdschlüssel verletzt. |
@@ -66,12 +65,10 @@ Die Zuordnung zu den Exceptions beschreibt [Fehlerbehandlung im Fachservice](../
 | `email_already_registered` | `409` | Für die E-Mail-Adresse gibt es schon ein Konto. |
 | `stammtisch_required` | `409` | Fachlicher Endpunkt ohne gewählte Gruppe bei mehreren Mitgliedschaften. |
 | `stammtisch_limit` | `409` | Höchstzahl selbst eröffneter Gruppen erreicht (`SIGNUP_MAX_OWNED`). |
-| `plan_limit_members`, `plan_limit_storage`, `plan_limit_videos`, `plan_limit_kiosk` | `409` | Grenze des Tarifs erreicht. |
-| `billing_no_customer` | `409` | Kundenportal ohne bestehendes Stripe-Kundenkonto. |
 | `invitation_expired`, `invitation_revoked`, `invitation_used_up` | `410` | Einladung abgelaufen, widerrufen bzw. ausgeschöpft. |
 | `media_too_large` | `413` | Foto oder Video in Moments ist zu groß. |
 | `internal_error` | `500` | Unerwarteter Serverfehler. |
-| `registration_unavailable`, `billing_unavailable` | `503` | Kontoanlage über Keycloak bzw. Stripe ist nicht eingerichtet. |
+| `registration_unavailable` | `503` | Kontoanlage über Keycloak ist nicht eingerichtet. |
 
 ---
 

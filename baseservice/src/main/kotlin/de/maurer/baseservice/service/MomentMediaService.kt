@@ -1,6 +1,5 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.crypto.DataEncryptor
 import de.maurer.baseservice.domain.MomentMediaEntity
 import de.maurer.baseservice.domain.MomentMediaKind
@@ -53,7 +52,6 @@ class MomentMediaService(
     private val dataEncryptor: DataEncryptor,
     private val auditService: AuditService,
     private val stammtischJobs: StammtischJobs,
-    private val planLimits: PlanLimits,
     transactionManager: PlatformTransactionManager
 ) {
 
@@ -95,8 +93,6 @@ class MomentMediaService(
 
         val ownerId = tx.execute {
             val access = momentService.requireMomentAccess(momentId, principal, requireActive = true)
-            if (kind == MomentMediaKind.video) planLimits.requireVideos()
-            planLimits.requireStorage(contentLength)
             val count = momentMediaRepository.countByMomentIdAndOwnerId(momentId, access.caller.id)
             if (count >= MAX_MEDIA_PER_MEMBER_AND_MOMENT) {
                 throw InvalidRequestException(
@@ -349,15 +345,13 @@ class MomentMediaService(
         val IMAGE_TYPES = listOf("image/jpeg", "image/png", "image/gif")
         val VIDEO_TYPES = listOf("video/mp4", "video/quicktime")
 
-        /** Ohne Videos im Tarif ([videosAllowed] = false) bietet die App nur Fotos an. */
-        fun limits(videosAllowed: Boolean = true) = MomentMediaLimitsDto(
+        fun limits() = MomentMediaLimitsDto(
             maxImageBytes = MAX_IMAGE_BYTES,
             maxVideoBytes = MAX_VIDEO_BYTES,
             maxVideoSeconds = MAX_VIDEO_SECONDS,
             maxMediaPerResponse = MAX_MEDIA_PER_RESPONSE,
             imageTypes = IMAGE_TYPES,
-            videoTypes = if (videosAllowed) VIDEO_TYPES else emptyList(),
-            videosAllowed = videosAllowed
+            videoTypes = VIDEO_TYPES
         )
     }
 }

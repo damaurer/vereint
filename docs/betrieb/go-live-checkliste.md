@@ -16,9 +16,6 @@ Reihenfolge**.
 - [ ] Für die Subdomain einen `A`-Record auf `terraform output public_ip`
       setzen, **bevor** ausgerollt wird. Ohne DNS bekommt Caddy kein Zertifikat,
       und die Anmeldung scheitert.
-- [ ] Optional, für die öffentliche [Website](../website.md): `website_domain`
-      in `terraform.tfvars` setzen (z. B. `"example.de, www.example.de"`),
-      erneut `terraform apply` und je Domain einen `A`-Record auf dieselbe IP.
 
 Details: [AWS-Infrastruktur und Kosten](aws-und-kosten.md#einrichtung)
 
@@ -48,16 +45,13 @@ Details: [AWS-Infrastruktur und Kosten](aws-und-kosten.md#einrichtung)
       Backups nicht lesbar. Siehe
       [Sicherheit und Verschlüsselung](sicherheit-und-schluessel.md#schlüssel-die-offline-gesichert-sein-müssen).
 
-## 5. Gruppen und Abrechnung festlegen
+## 5. Eröffnen von Gruppen festlegen
 
 - [ ] Eröffnen eigener Gruppen über `/gruppe-eroeffnen` ist ab Werk an. Solange
       Impressum und AGB nur Entwürfe mit Platzhaltern sind und die
       Datenschutzerklärung fehlt ([rechtliches.md](../domains/rechtliches.md)), den SSM-Parameter
       `/vereint/SIGNUP_ENABLED` mit dem Wert `false` anlegen. Einladungslinks
       funktionieren weiter.
-- [ ] Stripe ist optional. Ohne Stripe-Werte bleibt die Online-Zahlung aus und
-      „Meine Gruppe“ läuft mit allen Funktionen. Einrichtung:
-      [docs/domains/abrechnung.md](../domains/abrechnung.md#einrichtung).
 
 ## 6. Ausrollen
 
@@ -86,8 +80,6 @@ Start frisch importiert wird.
 - [ ] Ein kurzes Video in Moments hochladen.
 - [ ] Thekentablet einrichten und den Kiosk-Modus einmal starten und über
       *Vorstand → Kiosk-Geräte* entsperren.
-- [ ] Website unter der Website-Domain öffnen; „Gruppe kostenlos eröffnen“,
-      „Anmelden“, Impressum und AGB müssen in die App führen.
 - [ ] Am nächsten Tag prüfen, dass das nächtliche Backup gelaufen ist
       (`journalctl -u vereint-backup.service`) und kein Backup-Alarm kam.
 

@@ -81,7 +81,6 @@ const mockConfig: MomentConfigDto = {
     maxMediaPerResponse: 4,
     imageTypes: ['image/jpeg', 'image/png', 'image/gif'],
     videoTypes: ['video/mp4', 'video/quicktime'],
-    videosAllowed: true,
   },
 };
 
@@ -446,24 +445,6 @@ describe('MomentsComponent', () => {
     expect(photo?.getAttribute('capture')).toBe('environment');
     expect(photo?.accept).toBe('image/*');
     expect(video?.accept).toBe('video/*');
-    expect(document.querySelector('[data-testid="videos-not-in-plan"]')).toBeNull();
-  });
-
-  it('hides video capture when the group plan has no videos', async () => {
-    api.getMomentConfig.mockReturnValue(
-      of({ ...mockConfig, mediaLimits: { ...mockConfig.mediaLimits, videoTypes: [], videosAllowed: false } }),
-    );
-    const fixture = await createComponent();
-    const comp = fixture.componentInstance as any;
-    comp.openRespondModal('m-1');
-    fixture.detectChanges();
-
-    expect(document.querySelector('[data-testid="capture-photo"]')).not.toBeNull();
-    expect(document.querySelector('[data-testid="capture-video"]')).toBeNull();
-    expect(document.querySelector<HTMLInputElement>('[data-testid="pick-gallery"]')?.accept).toBe('image/*');
-    expect(document.querySelector('[data-testid="videos-not-in-plan"]')?.textContent).toContain(
-      'Videos sind im aktuellen Tarif',
-    );
   });
 
   it('removes a photo or video after confirmation and reloads the moment', async () => {
