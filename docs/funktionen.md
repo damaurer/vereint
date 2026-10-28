@@ -121,7 +121,9 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 - Je Event eine Auswahl aus dem Katalog (Subliste) mit eigenen Preisen.
 - Gemeinsame **Getränkedatenbank** aller Gruppen (ohne Preise und Bilder): unter
   *Aus der Getränkedatenbank* übernimmt man ein Getränk und setzt den eigenen
-  Preis; eigene freigegebene Getränke lassen sich dorthin teilen. Ab Werk
+  Preis; eigene freigegebene Getränke lassen sich dorthin teilen. *Barcode
+  scannen* im Katalog sucht einen unbekannten Code auch dort und füllt
+  *Getränk anlegen* damit vor (nur der Preis fehlt noch). Ab Werk
   enthält sie über 1.200 Getränke von mehr als 130 deutschen Brauereien und
   Herstellern (Migrationen 017/018).
 - Details: [docs/domains/drink-catalog-and-sublists.md](domains/drink-catalog-and-sublists.md),
