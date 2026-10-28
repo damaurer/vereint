@@ -1,24 +1,17 @@
 # Produktionsbetrieb
 
-Dieser Ordner ist alles, was auf dem Server liegt (`/srv/vereint/app`). Den
-Server gibt es in zwei Varianten:
+> Dieser Ordner beschreibt den Betrieb auf AWS. Für einen eigenen Server (z. B.
+> Strato) richtet [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup)
+> alles ein, siehe [Betrieb auf einem Strato VPS](../docs/betrieb/strato.md).
 
-- **Eigener Server** (z. B. Strato VPS): einmal `bin/server-setup.sh`, Secrets
-  in `/srv/vereint/secrets.env`, Dateien im Verzeichnis
-  `/srv/vereint/data/files`, Deployment per SSH. Plan und Checkliste:
-  [docs/betrieb/strato.md](../docs/betrieb/strato.md).
-- **AWS**: Terraform (`infra/aws`), Secrets im SSM Parameter Store, Dateien in
-  S3, Deployment per Systems Manager.
-
-Wo unten SSM-Parameter (`/vereint/NAME`) stehen, gilt auf einem eigenen Server
-dieselbe Zeile `NAME=wert` in `/srv/vereint/secrets.env`; danach neu
-ausrollen.
+Dieser Ordner ist alles, was auf dem Server liegt (`/srv/vereint/app`). Der
+Server selbst entsteht mit Terraform (`infra/aws`).
 
 ```text
 Internet ──443──▶ Caddy ──┬─ /kc/*  ──▶ Keycloak ─┐
  (HTTPS, HTTP/3)          └─ /*     ──▶ webservice ──▶ baseservice
                                                       │
-                                     PostgreSQL ◀─────┘     Dateien (Verzeichnis oder S3)
+                                     PostgreSQL ◀─────┘     S3 (Dateien)
 ```
 
 | Dienst | Image | Aufgabe |
@@ -50,9 +43,8 @@ Rollback exakt genauso wieder.
   `/vereint/VAPID_*` ab. Pushes enthalten keine Inhalte; das Gerät lädt die
   Mitteilung mit seiner Sitzung nach. Geht der Schlüssel verloren, ist nichts
   verloren: Geräte melden sich beim nächsten App-Start mit dem neuen Schlüssel an.
-- **Secrets** stehen nur in `/srv/vereint/secrets.env` (eigener Server, nur
-  root) bzw. im SSM Parameter Store (AWS). `bin/fetch-env.sh` schreibt sie bei
-  jedem Deployment in `.env` (nur für root lesbar).
+- **Secrets** stehen nur im SSM Parameter Store. `bin/fetch-env.sh` schreibt sie
+  bei jedem Deployment in `.env` (nur für root lesbar).
 - Container laufen ohne Root (eigene Images), mit `no-new-privileges`, ohne
   Linux-Capabilities (nur Caddy und PostgreSQL bekommen die wenigen, die sie
   brauchen), mit Prozess- und Speicherlimits. baseservice und webservice haben
@@ -111,11 +103,7 @@ Tunnel, Realm `vereint`):
 
 ## Backups
 
-Jede Nacht um 01:30 UTC läuft `bin/backup.sh` (systemd-Timer). Auf einem
-eigenen Server gehen Dumps und Dateien per rclone an `BACKUP_REMOTE`, der Erfolg
-an `BACKUP_PING_URL`; Details in
-[docs/betrieb/backups-und-wiederherstellung.md](../docs/betrieb/backups-und-wiederherstellung.md).
-Bei AWS:
+Jede Nacht um 01:30 UTC läuft `bin/backup.sh` (systemd-Timer):
 
 1. `pg_dump` beider Datenbanken.
 2. **Probe-Wiederherstellung** jedes Dumps in eine temporäre Datenbank. Nur was
@@ -201,15 +189,7 @@ selbst aus.
 ## Keycloak-Verwaltung
 
 Tunnel vom eigenen Rechner öffnen und dann `http://localhost:8082/kc/admin`
-aufrufen (Benutzer `admin`, Passwort `KEYCLOAK_ADMIN_PASSWORD`).
-
-Eigener Server:
-
-```bash
-ssh -L 8082:127.0.0.1:8082 root@<server-ip>
-```
-
-AWS:
+aufrufen (Benutzer `admin`, Passwort aus `/vereint/KEYCLOAK_ADMIN_PASSWORD`):
 
 ```bash
 aws ssm start-session --target <instance-id> \

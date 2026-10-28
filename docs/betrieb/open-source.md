@@ -61,9 +61,9 @@ privater Repositories gilt nicht mehr. Die Container-Images unter
 
 Für Ausprobieren und Entwickeln reicht `node local/vereint.mjs up`
 ([local/README.md](../../local/README.md)). Für den
-Produktionsbetrieb auf einem eigenen Linux-Server (z. B. Strato, Hetzner,
-IONOS) richtet `deploy/bin/server-setup.sh` den Server ein; Secrets liegen in
-einer Datei auf dem Server, Dateien im Server-Verzeichnis, Backups gehen per
-rclone außer Haus, ausgerollt wird per SSH. Schritt für Schritt:
-[Betrieb auf einem Strato VPS](strato.md). Die AWS-Variante (Terraform, SSM,
-S3) beschreibt [AWS und Kosten](aws-und-kosten.md).
+Produktionsbetrieb auf einem eigenen Server richtet
+[LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) per Ansible
+einen gehärteten Server mit Traefik, Backups und Monitoring ein; Vereint ist
+dort eine eigene Rolle, Dateien liegen in einem Docker-Volume, ausgerollt wird
+per SSH. Schritt für Schritt: [Betrieb auf einem Strato VPS](strato.md). Die
+AWS-Variante (Terraform, SSM, S3) beschreibt [AWS und Kosten](aws-und-kosten.md).

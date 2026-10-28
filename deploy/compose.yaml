@@ -1,13 +1,12 @@
 # Produktions-Stack fuer einen einzelnen Server (siehe deploy/README.md).
 #
 # Werte kommen aus `.env` neben dieser Datei. Die Datei erzeugt
-# `bin/fetch-env.sh` aus /srv/vereint/secrets.env (eigener Server, z. B. Strato)
-# oder dem AWS SSM Parameter Store; sie wird nie eingecheckt.
-# Alle Daten liegen unter /srv/vereint/data und werden naechtlich gesichert
-# (bin/backup.sh).
+# `bin/fetch-env.sh` aus dem AWS SSM Parameter Store; sie wird nie eingecheckt.
+# Alle Daten liegen unter /srv/vereint/data auf dem separaten, taeglich
+# gesicherten Datenvolume.
 #
 # Nach aussen ist ausschliesslich Caddy erreichbar (80/443). Keycloaks
-# Admin-Konsole lauscht nur auf 127.0.0.1 und ist ueber einen SSH- bzw.
+# Admin-Konsole lauscht nur auf 127.0.0.1 und ist ueber einen
 # Session-Manager-Tunnel erreichbar.
 
 name: vereint
@@ -129,10 +128,6 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777
-    volumes:
-      # Bilder und Videos bei STORAGE_BACKEND=filesystem (bereits von der App
-      # verschluesselt). Bei S3 bleibt das Verzeichnis leer.
-      - /srv/vereint/data/files:/data/files
     environment:
       VEREINT_DB_URL: jdbc:postgresql://postgres:5432/vereint
       VEREINT_DB_USERNAME: vereint
@@ -142,17 +137,13 @@ services:
       KEYCLOAK_ISSUER_URI: https://${PUBLIC_DOMAIN}/kc/realms/vereint
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/kc/realms/vereint/protocol/openid-connect/certs
       VEREIN_CORS_ALLOWED_ORIGINS: https://${PUBLIC_DOMAIN}
-      # Dateien: `filesystem` (eigener Server) oder `s3` (AWS oder ein anderer
-      # S3-kompatibler Speicher, dann S3_ENDPOINT setzen). Pflichtwerte prueft
-      # bin/fetch-env.sh.
-      STORAGE_BACKEND: ${STORAGE_BACKEND:-s3}
-      STORAGE_DIRECTORY: /data/files
-      S3_ENDPOINT: ${S3_ENDPOINT:-https://${S3_BUCKET:-}.s3.${S3_REGION:-}.amazonaws.com}
-      S3_BUCKET: ${S3_BUCKET:-}
-      S3_REGION: ${S3_REGION:-}
-      S3_PATH_STYLE_ACCESS: ${S3_PATH_STYLE_ACCESS:-false}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
+      S3_ENABLED: "true"
+      S3_ENDPOINT: https://${S3_BUCKET:?S3_BUCKET fehlt}.s3.${S3_REGION:?S3_REGION fehlt}.amazonaws.com
+      S3_BUCKET: ${S3_BUCKET}
+      S3_REGION: ${S3_REGION}
+      S3_PATH_STYLE_ACCESS: "false"
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY fehlt}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY fehlt}
       DATA_ENCRYPTION_ENABLED: "true"
       DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?DATA_ENCRYPTION_KEY fehlt}
       DATA_ENCRYPTION_KEY_PREVIOUS: ${DATA_ENCRYPTION_KEY_PREVIOUS:-}
