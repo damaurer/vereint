@@ -38,7 +38,8 @@ keine Daten einer anderen Gruppe zeigt.
 
 Ausnahmen laufen bewusst im System-Kontext (`vereint.rls_bypass`): die Auswahl
 der Gruppe vor einer Anfrage, Hintergrundjobs je Gruppe
-(`StammtischJobs.forEachStammtisch`), Tarif und Stripe sowie das Auflösen von
+(`StammtischJobs.forEachStammtisch`), Zählen von Mitgliedern und Speicher für
+die Plattform-Administration sowie das Auflösen von
 Gast- und Einladungslinks, die erst die Gruppe ihres Events oder Links finden
 müssen.
 
@@ -57,7 +58,7 @@ die Trennung.
   `409 stammtisch_required`; die App zeigt dann die Auswahlseite `/gruppen`.
   In der Kopfzeile wechselt man die Gruppe jederzeit.
 - Es gibt zwei Arten von Admin: den **Gruppen-Admin** (Rolle `admin` in
-  einer Gruppe: Mitglieder, Rollen, Tarif) und die **Plattform-Administration**
+  einer Gruppe: Mitglieder, Rollen, Datenexport) und die **Plattform-Administration**
   des Vereint-Teams (siehe unten).
 - Rollen und Rechte der Anfrage stammen ausschließlich aus der gewählten
   Gruppe. Realmrollen aus Keycloak zählen nicht, mit einer Ausnahme:
@@ -84,7 +85,6 @@ Rechte für die Verwaltung je Gruppe:
 | `members.manage` | Mitglieder bearbeiten und sperren, Vorstandsamt setzen |
 | `roles.manage` | Rollen anlegen, ändern, zuweisen |
 | `stammtisch.manage` | Gruppe umbenennen, Bild setzen, Daten exportieren |
-| `billing.manage` | Tarif buchen, Zahlung und Rechnungen (siehe [Tarife & Abrechnung](abrechnung.md)) |
 | `moments.manage` | Moment-Typen und Reaktionen verwalten |
 | `kiosk.manage` | Kiosk-Geräte sehen und aus der Ferne entsperren |
 | `notifications.broadcast` | Mitteilungen an Mitglieder senden |
@@ -121,15 +121,16 @@ Rolle „Kasse“ mit `ledger.read` sieht so die Kasse, aber nicht den Adminbere
   unter `/gruppe-eroeffnen` mit Gruppenname, Vor- und Nachname, E-Mail,
   Passwort und Zustimmung zu den AGB (`POST /api/v1/signup`, öffentlich, je IP
   begrenzt). Das Konto entsteht in Keycloak, die Person wird Admin der Gruppe,
-  die Gruppe startet im kostenlosen Tarif. Danach bucht sie unter
-  **Gruppe → Tarif** und lädt Mitglieder per Einladungslink ein. Angemeldete
+  alle Funktionen sind ohne Grenzen frei nutzbar. Danach lädt sie Mitglieder
+  per Einladungslink ein. Angemeldete
   Personen eröffnen weitere Gruppen unter `/gruppen` (`POST /api/v1/stammtische`),
   höchstens drei eigene aktive (`SIGNUP_MAX_OWNED`, Fehler `stammtisch_limit`).
   `SIGNUP_ENABLED=false` schaltet das Eröffnen ab.
 - **Anlegen (Vereint-Team):** Die Plattform-Administration legt unter
   `/plattform` Gruppen an. Optional wird ein bestehendes Konto per E-Mail Admin
   der neuen Gruppe, sonst die anlegende Person. Dort lassen sich Gruppen auch
-  umbenennen, archivieren (nicht löschen) und von Hand einem Tarif zuordnen.
+  umbenennen und archivieren (nicht löschen); die Liste zeigt Mitgliederzahl
+  und belegten Speicher.
 
 ## Gemeinsame Getränkedatenbank
 

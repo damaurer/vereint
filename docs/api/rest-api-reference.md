@@ -139,7 +139,7 @@ Wer einen Moment sieht: Sichtbarkeit `group` (Standard, ohne Event immer) alle M
 | `POST` | `/api/v1/moments/{momentId}/media` | Foto (JPEG/PNG/GIF, bis 10 MB) oder Video (MP4/MOV, bis 60 s, bis 100 MB) als rohen Request-Körper hochladen (`Content-Type`, `Content-Length` Pflicht); Videos nur in Tarifen mit Videos | sieht den Moment |
 | `GET` | `/api/v1/moments/{momentId}/media/{mediaId}/content` | Datei entschlüsselt abrufen, mit HTTP-Range (`206`) | wie oben |
 | `DELETE` | `/api/v1/moments/{momentId}/media/{mediaId}` | Datei entfernen | Eigentümer; fremde Beiträge Veranstalter oder `event.manage` |
-| `GET` | `/api/v1/moment-config` | Themen, Reaktionen (inkl. ausgemusterter) und Upload-Grenzen; `mediaLimits.videosAllowed` sagt, ob der Tarif Videos erlaubt | Mitglied |
+| `GET` | `/api/v1/moment-config` | Themen, Reaktionen (inkl. ausgemusterter) und Upload-Grenzen | Mitglied |
 | `POST` / `PUT` | `/api/v1/moment-config/types`, `/types/{id}` | Thema (Moment-Typ) anlegen bzw. ändern oder ausmustern | `moments.manage` |
 | `POST` / `PUT` | `/api/v1/moment-config/reactions`, `/reactions/{id}` | Reaktion anlegen bzw. ändern oder ausmustern | `moments.manage` |
 
@@ -229,35 +229,30 @@ Gruppenübergreifend und ohne gewählte Gruppe, siehe [Kalender, Freunde und Dir
 | `GET` | `/api/v1/statistics` | Kennzahlen der Gruppe für die letzten 90 Tage, eigene Platzierung | Mitglied |
 | `GET` | `/api/v1/audit-logs` | Revisionsprotokoll mit Filtern `targetEntity`, `action`, `actorId`, `targetId`; sichtbare Bereiche hängen von `audit.read`, `audit.read.all` und der Vorstandsrolle ab | `audit.read` |
 
-### 9. Gruppen, Tarife & Getränkedatenbank (`StammtischController`, `BillingController`, `DrinkLibraryController`)
+### 9. Gruppen, Datenexport & Getränkedatenbank (`StammtischController`, `StammtischExportController`, `DrinkLibraryController`)
 
 Alle fachlichen Endpunkte oben gelten für die gewählte Gruppe. Der BFF setzt dafür
 den Header `X-Stammtisch-Id` aus dem HttpOnly-Cookie `vereint.stammtisch`; fehlt
 er bei mehreren Mitgliedschaften, antwortet der Fachservice mit
 `409 stammtisch_required`, ohne Mitgliedschaft mit `403 stammtisch_access_denied`.
-Fachlich: [Gruppen](../domains/stammtische.md), [Tarife & Abrechnung](../domains/abrechnung.md).
+Fachlich: [Gruppen](../domains/stammtische.md).
 
 | Methode | Pfad | Beschreibung | Berechtigung |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/stammtische` | Eigene Gruppen auflisten | Angemeldet |
 | `POST` | `/api/v1/stammtische` | Weitere eigene Gruppe eröffnen (höchstens `SIGNUP_MAX_OWNED`) | Angemeldet |
 | `POST` | `/api/v1/signup` | Gruppe und Konto in einem Schritt eröffnen (öffentlich, je IP begrenzt, `SIGNUP_ENABLED`) | Öffentlich |
-| `GET` | `/api/v1/stammtisch` | Gewählte Gruppe mit Tarif und eigenen Rechten | Mitglied |
+| `GET` | `/api/v1/stammtisch` | Gewählte Gruppe mit eigenen Rechten | Mitglied |
 | `PUT` | `/api/v1/stammtisch` | Gruppe umbenennen | `stammtisch.manage` |
 | `POST` | `/api/v1/stammtisch/leave` | Gruppe verlassen | Mitglied |
 | `PUT` / `DELETE` | `/api/v1/stammtisch/image` | Bild der Gruppe setzen oder entfernen (PNG/JPEG/GIF bis 5 MB) | `stammtisch.manage` |
 | `GET` | `/api/v1/stammtische/{id}/image` | Bild einer Gruppe | Mitglied dieser Gruppe |
 | `GET` | `/api/v1/stammtisch/roles` | Rollen der Gruppe | `roles.manage` oder `members.read` |
 | `POST` / `PUT` / `DELETE` | `/api/v1/stammtisch/roles`, `/api/v1/stammtisch/roles/{id}` | Eigene Rollen anlegen, ändern, löschen (Systemrollen nicht löschbar) | `roles.manage` |
-| `GET` | `/api/v1/stammtisch/billing` | Tarif, Status, Grenzen und Verbrauch | Mitglied |
-| `POST` | `/api/v1/stammtisch/billing/checkout` | Stripe Checkout für Tarif und Zahlweise starten | `billing.manage` |
-| `POST` | `/api/v1/stammtisch/billing/portal` | Stripe-Kundenportal öffnen | `billing.manage` |
-| `POST` | `/api/v1/stammtisch/billing/supporter` | Förderbeitrag abschließen | Mitglied |
-| `GET` | `/api/v1/stammtisch/export` | Alle Daten der Gruppe als JSON (ohne Bilder und Videos) | `stammtisch.manage` oder `billing.manage` |
-| `POST` | `/api/v1/billing/stripe/webhook` | Stripe-Ereignisse (Signatur geprüft, Caddy leitet direkt weiter) | Stripe |
+| `GET` | `/api/v1/stammtisch/export` | Alle Daten der Gruppe als JSON (ohne Bilder und Videos) | `stammtisch.manage` |
 | `GET` | `/api/v1/drink-library` | Gemeinsame Getränkedatenbank durchsuchen (Name oder Barcode) | Angemeldet |
 | `GET` | `/api/v1/drink-library/{id}` | Eintrag der Getränkedatenbank | Angemeldet |
 | `PUT` / `DELETE` | `/api/v1/drink-library/{id}` | Eintrag ändern oder löschen | Plattform-Admin |
 | `POST` | `/api/v1/drinks/{id}/share-to-library` | Eigenes freigegebenes Getränk in die Datenbank teilen | `catalog.approve` |
 | `GET` / `POST` | `/api/v1/platform/stammtische` | Alle Gruppen auflisten, Gruppe anlegen | Plattform-Admin |
-| `PUT` | `/api/v1/platform/stammtische/{id}` | Gruppe umbenennen, archivieren, Tarif von Hand vergeben | Plattform-Admin |
+| `PUT` | `/api/v1/platform/stammtische/{id}` | Gruppe umbenennen oder archivieren | Plattform-Admin |

@@ -191,7 +191,7 @@ describe('authorizePages Express Middleware', () => {
 
   it('moves the former group addresses to the new ones and keeps the query', async () => {
     const cases: [string, string, string][] = [
-      ['/stammtisch', '/stammtisch?billing=success&returnTo=%2Fdashboard', '/gruppe?billing=success&returnTo=%2Fdashboard'],
+      ['/stammtisch', '/stammtisch?ref=mail&returnTo=%2Fdashboard', '/gruppe?ref=mail&returnTo=%2Fdashboard'],
       ['/stammtische', '/stammtische?returnTo=%2Fboard', '/gruppen?returnTo=%2Fboard'],
       ['/eroeffnen', '/eroeffnen', '/gruppe-eroeffnen'],
     ];

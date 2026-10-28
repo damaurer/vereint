@@ -19,8 +19,7 @@ export const GROUP_OPEN_PATH = 'gruppe-eroeffnen';
 
 /**
  * Frühere Adressen (`/stammtische`, `/stammtisch`, `/eroeffnen`) führen auf die
- * neuen; Query-Parameter (etwa `?billing=success` der Stripe-Rückkehr oder
- * `returnTo`) und Fragment bleiben erhalten.
+ * neuen; Query-Parameter (etwa `returnTo`) und Fragment bleiben erhalten.
  */
 export function legacyRedirect(target: string): RedirectFunction {
   return ({ queryParams, fragment }) =>
@@ -71,7 +70,6 @@ export const routes: Routes = [
   },
   { path: 'eroeffnen', pathMatch: 'full', redirectTo: legacyRedirect(GROUP_OPEN_PATH) },
   { path: 'stammtische', pathMatch: 'full', redirectTo: legacyRedirect(GROUP_CHOICE_PATH) },
-  // Stripe kehrt (noch) nach `/stammtisch?billing=…` zurück.
   { path: 'stammtisch', pathMatch: 'full', redirectTo: legacyRedirect(GROUP_SETTINGS_PATH) },
   {
     path: 'plattform',
@@ -309,7 +307,7 @@ export const routes: Routes = [
     loadComponent: () => import('./tablet/tablet.component').then((m) => m.TabletComponent),
   },
   {
-    // Name, Bild, Tarif, Rollen und Austritt der gewählten Gruppe.
+    // Name, Bild, Datenexport, Rollen und Austritt der gewählten Gruppe.
     path: GROUP_SETTINGS_PATH,
     canActivate: [authGuard],
     data: { title: 'routes.stammtisch.title', description: 'routes.stammtisch.description', access: 'routes.access.protected' },

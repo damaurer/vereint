@@ -555,8 +555,6 @@ export interface MomentMediaLimitsDto {
   maxMediaPerResponse: number;
   imageTypes: string[];
   videoTypes: string[];
-  /** Erlaubt der Tarif der Gruppe Videos? */
-  videosAllowed: boolean;
 }
 
 export interface MomentConfigDto {

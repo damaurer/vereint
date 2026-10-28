@@ -77,12 +77,8 @@ Die Klasse `ErrorCode.kt` definiert alle stabilen Fehlerkonstanten im System:
 | `video_too_long` | `400 Bad Request` | Video in Moments ist zu lang. |
 | `stammtisch_required` | `409 Conflict` | Fachlicher Endpunkt ohne gewählte Gruppe. |
 | `stammtisch_access_denied` | `403 Forbidden` | Die Person ist kein aktives Mitglied der angefragten Gruppe. |
-| `stammtisch_read_only` | `403 Forbidden` | Zahlung über die Kulanzfrist hinaus offen; die Gruppe ist nur lesbar. |
 | `stammtisch_limit` | `409 Conflict` | Höchstzahl selbst eröffneter Gruppen erreicht (`SIGNUP_MAX_OWNED`). |
 | `last_role_manager_protected` | `403 Forbidden` | Die Änderung nähme der Gruppe die letzte Person mit `members.manage` oder `roles.manage`. |
-| `plan_limit_members`, `plan_limit_storage`, `plan_limit_videos`, `plan_limit_kiosk` | `409 Conflict` | Grenze des Tarifs erreicht (Mitglieder, Speicher, Videos, mehrere Kiosks). |
-| `billing_unavailable` | `503 Service Unavailable` | Stripe ist nicht eingerichtet. |
-| `billing_no_customer` | `409 Conflict` | Kundenportal ohne bestehendes Stripe-Kundenkonto. |
 | `internal_error` | `500 Internal Server Error` | Unerwarteter Serverfehler oder ungefangene Exception. |
 
 ---

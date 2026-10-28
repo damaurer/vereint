@@ -4,7 +4,7 @@ name: Deployment (Produktion)
 #
 # Ausgeloest wird das Deployment
 #   - nachdem ein Image-Workflow auf `main` erfolgreich ein Image gepusht hat,
-#   - bei Aenderungen an deploy/ oder website/ auf `main`,
+#   - bei Aenderungen an deploy/ auf `main`,
 #   - von Hand (Actions -> Deployment -> Run workflow), auch als Rollback.
 #
 # Der Job meldet sich per OIDC bei AWS an (keine dauerhaften Schluessel in
@@ -25,7 +25,6 @@ on:
     branches: [main]
     paths:
       - 'deploy/**'
-      - 'website/**'
       - '.github/workflows/deploy.yml'
       - '.github/scripts/ssm-run.sh'
   workflow_dispatch:
@@ -142,8 +141,6 @@ jobs:
           bundle="$RUNNER_TEMP/bundle"
           cp -r deploy "$bundle"
           rm -f "$bundle"/.env "$bundle"/.env.*
-          # Statische Website; Caddy liefert sie aus dem Bundle aus.
-          cp -r website "$bundle/website"
           cp images.env "$bundle/images.env"
           tar -czf "$RUNNER_TEMP/bundle.tgz" -C "$bundle" .
           key="deploy/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tgz"

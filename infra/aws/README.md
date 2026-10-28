@@ -84,8 +84,7 @@ terraform apply
 Danach:
 
 1. **DNS:** Für die Subdomain einen `A`-Record auf `terraform output public_ip`
-   anlegen. Ist `website_domain` gesetzt, für jede dieser Domains ebenso
-   (öffentliche Website, siehe [docs/website.md](../../docs/website.md)).
+   anlegen.
 2. **Mails bestätigen:** AWS schickt an `alert_email` je eine Bestätigung für Budget- und Betriebsalarme (fehlendes Backup, Hardware-Ausfall). Bis das erste nächtliche Backup gelaufen ist, meldet der Backup-Alarm einmal „ALARM“.
 3. **GitHub:** Im Repository unter *Settings → Environments* ein Environment
    `production` anlegen (optional mit erforderlicher Freigabe und nur für den

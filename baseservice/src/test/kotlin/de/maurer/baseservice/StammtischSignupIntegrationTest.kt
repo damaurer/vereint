@@ -1,6 +1,5 @@
 package de.maurer.baseservice
 
-import de.maurer.baseservice.domain.BillingPlan
 import de.maurer.baseservice.dto.OpenStammtischRequest
 import de.maurer.baseservice.dto.StammtischSignupRequest
 import de.maurer.baseservice.error.ApiException
@@ -9,7 +8,6 @@ import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.identity.IdentityProvisioner
 import de.maurer.baseservice.identity.NewAccount
-import de.maurer.baseservice.repository.StammtischSubscriptionRepository
 import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.service.GroupImageService
@@ -39,7 +37,7 @@ import javax.imageio.ImageIO
 
 /**
  * Selbstregistrierung: Kunden legen ein Konto an und eröffnen ihren Stammtisch
- * (kostenloser Tarif, Person ist Stammtisch-Admin). Keycloak ist gemockt.
+ * (Person ist Stammtisch-Admin). Keycloak ist gemockt.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -47,7 +45,6 @@ class StammtischSignupIntegrationTest @Autowired constructor(
     private val signupService: StammtischSignupService,
     private val memberships: StammtischMemberships,
     private val userRepository: UserRepository,
-    private val subscriptionRepository: StammtischSubscriptionRepository,
     private val tenantTransactions: TenantTransactions,
     private val groupImageService: GroupImageService,
     private val termsConsent: TermsConsent
@@ -76,10 +73,6 @@ class StammtischSignupIntegrationTest @Autowired constructor(
         val membership = memberships.memberships(user.id).single()
         assertEquals(response.stammtischId, membership.stammtischId.toString())
         assertTrue(membership.roles.contains("admin"))
-        val plan = tenantTransactions.readAsSystem {
-            subscriptionRepository.findById(membership.stammtischId).map { it.plan }.orElse(BillingPlan.free)
-        }
-        assertEquals(BillingPlan.free, plan)
         assertEquals(termsConsent.termsVersion, user.termsVersion)
         assertNotNull(user.termsAcceptedAt)
     }

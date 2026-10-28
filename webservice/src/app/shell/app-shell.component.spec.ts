@@ -9,7 +9,6 @@ import { AuthSessionUser } from '../auth/auth.types';
 import { ChatApiService } from '../chat/chat-api.service';
 import { NotificationsApiService } from '../notifications/notifications-api.service';
 import { KioskModeService } from '../kiosk/kiosk-mode.service';
-import { StammtischApiService } from '../stammtisch/stammtisch-api.service';
 import { AppShellComponent } from './app-shell.component';
 import { BreakpointService } from './breakpoint.service';
 import { Viewport } from './breakpoint.service';
@@ -24,7 +23,6 @@ describe('AppShellComponent', () => {
   let unread: number;
   let chatUnread: number;
   let chatUnreadCalls: number;
-  let readOnly: boolean;
 
   const member = (roles: AuthSessionUser['roles'], permissions: string[] = []): AuthSessionUser => ({
     uid: 'u-1',
@@ -55,7 +53,6 @@ describe('AppShellComponent', () => {
             },
           },
         },
-        { provide: StammtischApiService, useValue: { billing: () => of({ readOnly }) } },
       ],
     });
     const fixture = TestBed.createComponent(AppShellComponent);
@@ -73,7 +70,6 @@ describe('AppShellComponent', () => {
     unread = 0;
     chatUnread = 0;
     chatUnreadCalls = 0;
-    readOnly = false;
     viewport.set('web');
   });
 
@@ -235,15 +231,6 @@ describe('AppShellComponent', () => {
     expect(el(fixture).querySelector('a[href="/statistik"]')).toBeTruthy();
   });
 
-  it('warns when the chosen group is read-only', async () => {
-    session = { ...member(['member']), stammtisch: { id: 'st-1', name: 'Eber' } };
-    readOnly = true;
-    const fixture = await create();
-    const banner = el(fixture).querySelector('.shell-readonly');
-    expect(banner?.textContent).toContain('nur noch lesbar');
-    expect(banner?.querySelector('a')?.getAttribute('href')).toBe('/gruppe');
-  });
-
   it('shows the picture of the chosen group in the switcher, initials without one', async () => {
     session = {
       ...member(['member']),
@@ -263,11 +250,5 @@ describe('AppShellComponent', () => {
     session = { ...member(['member']), stammtisch: { id: 'st-2', name: 'Kegelfreunde' } };
     const other = await create();
     expect(el(other).querySelector('.shell-stammtisch vereint-group-avatar')?.textContent?.trim()).toBe('K');
-  });
-
-  it('shows no read-only banner while payment is fine', async () => {
-    session = { ...member(['member']), stammtisch: { id: 'st-1', name: 'Eber' } };
-    const fixture = await create();
-    expect(el(fixture).querySelector('.shell-readonly')).toBeNull();
   });
 });

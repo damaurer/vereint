@@ -51,7 +51,6 @@ baseservice/
 │   │   │   ├── RegistrationConfig.kt    # Kontoanlage in Keycloak (IdentityProvisioner)
 │   │   │   ├── SchedulingConfig.kt      # @EnableScheduling (Erinnerungen, Aufräumjobs)
 │   │   │   └── StorageConfig.kt         # Storage-Bean (S3ObjectStorage vs. InMemoryObjectStorage)
-│   │   ├── billing/                     # Tarife, Stripe-Client, Webhooks, Export
 │   │   ├── controller/                  # 27 REST-Controller (@RestController, @RequestMapping)
 │   │   ├── service/                     # Fachliche Services (@Service, @Transactional)
 │   │   ├── domain/                      # JPA-Entities (@Entity, @Table, @Version) & Enums
@@ -168,13 +167,7 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `KEYCLOAK_REGISTRATION_CLIENT_SECRET` | `vereint.registration.client-secret` | String | *leer* | Secret dieses Clients (Geheimnis). |
 | `SIGNUP_ENABLED` | `vereint.signup.enabled` | Boolean | `true` | Öffentliches Eröffnen neuer Gruppen (`/api/v1/signup`). |
 | `SIGNUP_MAX_OWNED` | `vereint.signup.max-owned` | Integer | `3` | Höchstzahl aktiver Gruppen, die eine Person selbst eröffnet. |
-| `TERMS_VERSION` | `vereint.legal.terms-version` | String | `2026-10-16` | Gültige Fassung der AGB, der bei Registrierung und Eröffnung zugestimmt wird. |
-| `STRIPE_ENABLED` | `vereint.billing.stripe-enabled` | Boolean | `false` | Online-Zahlung über Stripe. Ohne `true`, Secret-Key und Webhook-Secret antworten Buchung und Portal mit `503`. |
-| `STRIPE_SECRET_KEY` | `vereint.billing.stripe-secret-key` | String | *leer* | Stripe-API-Schlüssel (Geheimnis). |
-| `STRIPE_WEBHOOK_SECRET` | `vereint.billing.stripe-webhook-secret` | String | *leer* | Signatur-Secret des Webhooks (Geheimnis). |
-| `STRIPE_PRICE_STAMMTISCH_MONTH`, `STRIPE_PRICE_STAMMTISCH_YEAR`, `STRIPE_PRICE_VEREIN_MONTH`, `STRIPE_PRICE_VEREIN_YEAR`, `STRIPE_PRICE_SUPPORTER` | `vereint.billing.prices.*` | String | *leer* | Stripe-Preis-IDs der Tarife. |
-| `PUBLIC_BASE_URL` | `vereint.billing.app-url` | URL | `http://localhost:4200` | Rücksprungadresse nach Checkout und Kundenportal. |
-| `BILLING_GRACE_DAYS` | `vereint.billing.grace-days` | Integer | `30` | Kulanzfrist nach offener Zahlung, danach ist die Gruppe nur lesbar. |
+| `TERMS_VERSION` | `vereint.legal.terms-version` | String | `2026-10-28` | Gültige Fassung der AGB, der bei Registrierung und Eröffnung zugestimmt wird. |
 | `API_DOCS_ENABLED` | `springdoc.api-docs.enabled`, `springdoc.swagger-ui.enabled` | Boolean | `false` | OpenAPI und Swagger UI; in Produktion aus. |
 
 ---

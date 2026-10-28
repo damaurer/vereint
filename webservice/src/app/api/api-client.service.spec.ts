@@ -84,16 +84,6 @@ describe('ApiClient', () => {
     expect(describeApiError('plain string')).toContain('nicht abgeschlossen');
   });
 
-  it('describeApiError explains plan limits, read-only mode and missing online payment', () => {
-    expect(describeApiError(new ApiError(403, 'stammtisch_read_only', ''))).toContain('nur noch lesbar');
-    expect(describeApiError(new ApiError(409, 'plan_limit_members', ''))).toContain('Mitglieder');
-    expect(describeApiError(new ApiError(409, 'plan_limit_storage', ''))).toContain('Speicherplatz');
-    expect(describeApiError(new ApiError(409, 'plan_limit_videos', ''))).toContain('Videos');
-    expect(describeApiError(new ApiError(409, 'plan_limit_kiosk', ''))).toContain('Thekenterminal');
-    expect(describeApiError(new ApiError(503, 'billing_unavailable', ''))).toContain('Online-Zahlung');
-    expect(describeApiError(new ApiError(409, 'billing_no_customer', ''))).toContain('Zahlungskonto');
-  });
-
   it('describeApiError explains the limit of own Stammtische', () => {
     expect(describeApiError(new ApiError(409, 'stammtisch_limit', ''))).toContain('drei');
   });

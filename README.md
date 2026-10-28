@@ -9,7 +9,7 @@
 
 **Vereint** ist die App für Gruppen aller Art, ob Stammtisch, Verein oder Team.
 Eine Installation trägt beliebig viele Gruppen; jede hat eigene Mitglieder,
-Rollen und einen Tarif (Kostenlos, Standard, Premium; Zahlung über Stripe). Je
+Rollen und Daten; alle Funktionen sind frei nutzbar, ohne Tarife. Je
 Gruppe gibt es Treffen und Events mit Zu- und Absagen, Gruppenchat,
 Direkt- und Event-Chats, Guthaben statt Bargeld, Bezahlen per Barcode-Scan, das
 Thekenterminal im Kiosk-Modus, Getränke- und Speisenkatalog, Moments mit Fotos
@@ -82,14 +82,13 @@ Backup, Health Check und automatischem Rollback aus.
 
 | Verzeichnis | Technologie | Aufgabe |
 | :--- | :--- | :--- |
-| `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-API, Fachlogik, Trennung der Gruppen (Row-Level-Security), PostgreSQL/Liquibase, Verschlüsselung, S3, Web Push, Stripe |
+| `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-API, Fachlogik, Trennung der Gruppen (Row-Level-Security), PostgreSQL/Liquibase, Verschlüsselung, S3, Web Push |
 | `webservice/` | Angular 22, Express 5, TypeScript 6 | Oberfläche, PWA, SSR, BFF mit Session-Cookie und API-Proxy |
 | `keycloak/` | Keycloak 26.8.1 | Realm-Definitionen, Login-Theme, Produktions-Image |
 | `deploy/` | Docker Compose, Caddy | Produktions-Stack, Backups, Deployment-Skripte |
 | `infra/aws/` | Terraform | AWS-Server, Buckets, Secrets, Alarme, GitHub-OIDC |
 | `e2e/` | Playwright | Tests gegen den kompletten Produktions-Stack |
 | `scripts/handbook/` | Playwright | Bildschirmfotos für das Benutzerhandbuch |
-| `website/` | HTML, CSS | Öffentliche Website mit Funktionen und Tarifen, ausgeliefert von Caddy ([docs/website.md](docs/website.md)) |
 | `docs/` | Markdown | Technische und fachliche Dokumentation, Benutzerhandbuch |
 
 ---
@@ -98,7 +97,7 @@ Backup, Health Check und automatischem Rollback aus.
 
 - Gearbeitet wird auf `develop`. Jeder Pull Request nach `develop`, `qs` oder `main`
   muss Tests, Sicherheitsscans und E2E-Tests bestehen.
-- Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` oder `website/` rollt
+- Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` rollt
   automatisch auf einen einzelnen AWS-Server in Frankfurt aus: Datenbank-Backup vorher, Health Check danach, automatischer
   Rollback bei Fehlern.
 - Chat-Nachrichten, Mitteilungen, Bilder und Videos werden in der App mit
@@ -116,6 +115,7 @@ Backup, Health Check und automatischem Rollback aus.
 | Ausrollen und Zurückrollen | [Deployment und Rollback](docs/betrieb/deployment-und-rollback.md) |
 | Backups und Restore | [Backups und Wiederherstellung](docs/betrieb/backups-und-wiederherstellung.md) |
 | Verschlüsselung, Schlüssel, Härtung | [Sicherheit und Schlüssel](docs/betrieb/sicherheit-und-schluessel.md) |
+| Lizenz, Öffentlichschalten, Selbstbetrieb | [Open Source](docs/betrieb/open-source.md) |
 
 ---
 
@@ -124,8 +124,16 @@ Backup, Health Check und automatischem Rollback aus.
 - [docs/README.md](docs/README.md) – Übersicht aller Dokumente und Glossar
 - [docs/handbuch/](docs/handbuch/README.md) – Benutzerhandbuch je Rolle
 - [docs/domains/stammtische.md](docs/domains/stammtische.md) – Mehrere Gruppen, Trennung der Daten, Rollen je Gruppe
-- [docs/domains/abrechnung.md](docs/domains/abrechnung.md) – Tarife (Kostenlos, Standard, Premium) mit Stripe
 - [deploy/README.md](deploy/README.md) – Produktionsbetrieb, Backups, Deployments
-- [docs/website.md](docs/website.md) – Öffentliche Website, Domain, Bildschirmfotos
 - [infra/aws/README.md](infra/aws/README.md) – AWS mit Terraform
 - [e2e/README.md](e2e/README.md) – E2E-Tests
+
+---
+
+## 🤝 Mitmachen und Lizenz
+
+Vereint ist ein Open-Source-Hobbyprojekt unter der
+[GNU Affero General Public License v3.0](LICENSE). Beiträge sind willkommen,
+siehe [CONTRIBUTING.md](CONTRIBUTING.md); Sicherheitslücken bitte vertraulich
+melden, siehe [SECURITY.md](SECURITY.md). Der Startbestand der
+Getränkedatenbank stammt aus Open Food Facts (ODbL 1.0).

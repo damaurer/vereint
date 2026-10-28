@@ -26,7 +26,7 @@ Du hast schon ein Konto, etwa weil du in einer anderen Gruppe bist? Dann brauchs
 2. Öffne den Einladungslink. Vereint zeigt **Gruppe beitreten**.
 3. Tippe auf **Dieser Gruppe beitreten**.
 
-Du bist sofort Mitglied und landest auf der Startseite der neuen Gruppe. Dein Konto, dein Name und deine Einstellungen bleiben gleich. Erlaubt der Tarif der Gruppe keine weiteren Mitglieder, ist kein Beitritt möglich; dann hilft nur der Vorstand der Gruppe.
+Du bist sofort Mitglied und landest auf der Startseite der neuen Gruppe. Dein Konto, dein Name und deine Einstellungen bleiben gleich.
 
 ## Anmelden
 
@@ -106,8 +106,8 @@ Jede Person kann selbst eine Gruppe gründen und ist dann ihr Admin. Den Weg dor
 
 In beiden Fällen gilt:
 
-- Die Gruppe startet im Tarif **Kostenlos** mit bis zu 10 Mitgliedern. Einen größeren Tarif kannst du später buchen (siehe [Leitfaden Administration](04-administration.md#tarif-zahlung-und-rechnungen)).
-- Nach der Anmeldung landest du in den **Gruppeneinstellungen**. Dort wählst du den Tarif. Mitglieder lädst du per Einladungslink ein (siehe [Neue Mitglieder einladen](04-administration.md#neue-mitglieder-einladen)).
+- Vereint ist kostenlos, ohne Grenzen für Mitglieder oder Speicher.
+- Nach der Anmeldung landest du in den **Gruppeneinstellungen**. Mitglieder lädst du per Einladungslink ein (siehe [Neue Mitglieder einladen](04-administration.md#neue-mitglieder-einladen)).
 - Pro Person sind höchstens drei eigene Gruppen möglich.
 - Hat der Betreiber das Eröffnen abgeschaltet, meldet Vereint „Die Registrierung ist gerade nicht möglich“. In eine bestehende Gruppe kommst du dann weiter per Einladungslink.
 

@@ -1,6 +1,6 @@
 # 🔌 Integrationen, Objektspeicher & Push-Dienste
 
-In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: S3-kompatibler Objektspeicher (AWS S3 in Produktion, S3Mock lokal), Web-Push-Zustellung über das VAPID-Protokoll, Kontoanlage in Keycloak, Stripe sowie die zugehörigen Feature-Toggles.
+In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: S3-kompatibler Objektspeicher (AWS S3 in Produktion, S3Mock lokal), Web-Push-Zustellung über das VAPID-Protokoll, Kontoanlage in Keycloak sowie die zugehörigen Feature-Toggles.
 
 ---
 
@@ -103,12 +103,6 @@ Für Einladungslinks und das Eröffnen einer Gruppe legt der `baseservice` Konte
 
 ---
 
-## 💳 Stripe (`billing/`)
-
-Tarife je Gruppe werden optional über Stripe abgerechnet: `StripeClient` erzeugt Checkout- und Kundenportal-Sitzungen, `StripeWebhookService` prüft die Signatur eingehender Webhooks (`/api/v1/billing/stripe/webhook`) und merkt sich verarbeitete Ereignisse in `billing_events`. Ohne `STRIPE_ENABLED=true`, Secret-Key und Webhook-Secret antworten Buchung und Portal mit `503 billing_unavailable`; Tarife setzt dann die Plattform-Administration. Details: [Abrechnung](../domains/abrechnung.md).
-
----
-
 ## 🎛️ Feature-Toggles im Überblick
 
 | Toggle (Umgebungsvariable) | Default | Bei `true` | Bei `false` (Fallback) |
@@ -119,7 +113,6 @@ Tarife je Gruppe werden optional über Stripe abgerechnet: `StripeClient` erzeug
 | **`DATA_ENCRYPTION_ENABLED`** | `false` | Verschlüsselt Chat, Benachrichtigungen und Dateien | Klartext (nur lokal) |
 | **`REGISTRATION_ENABLED`** | `false` | Kontoanlage über Keycloak | Registrierung antwortet mit `503` |
 | **`SIGNUP_ENABLED`** | `true` | Öffentliches Eröffnen von Gruppen | Nur Einladungslinks und Plattform-Administration |
-| **`STRIPE_ENABLED`** | `false` | Online-Zahlung über Stripe | Tarife nur durch die Plattform-Administration |
 | **`API_DOCS_ENABLED`** | `false` | OpenAPI und Swagger UI | abgeschaltet |
 
 Durch diese Toggles kann der gesamte `baseservice` lokal ohne Objektspeicher oder Push-Infrastruktur voll funktionsfähig betrieben und getestet werden.
