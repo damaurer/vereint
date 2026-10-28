@@ -277,7 +277,7 @@ import { translate } from '../i18n/i18n.service';
       }
       .member-button-outline:hover:not(:disabled) {
         background: var(--color-brand, #3b82f6);
-        color: #ffffff;
+        color: var(--color-on-brand);
       }
       .btn-secondary-sm {
         padding: 0.35rem 0.75rem;
