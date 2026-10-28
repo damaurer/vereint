@@ -152,7 +152,9 @@ der ODbL 1.0, Quellenangabe in
 Einträge mit gleichem Namen oder Barcode bleiben unberührt.
 
 - Unter **Katalog → Aus der Getränkedatenbank** (`/catalog/library`) sucht man
-  nach Name oder Barcode und übernimmt ein Getränk in den eigenen Katalog; Preis
+  nach Name oder Barcode (auch per Kamera) und übernimmt ein Getränk in den
+  eigenen Katalog; „Barcode scannen“ im Katalog füllt „Getränk anlegen“ bei einem
+  Treffer ebenfalls daraus vor. Preis
   und Einkaufspreis setzt jede Gruppe selbst. Der Katalogeintrag merkt sich die
   Herkunft (`drink_catalog.library_drink_id`).
 - Wer `catalog.approve` hat, kann ein freigegebenes eigenes Getränk in die

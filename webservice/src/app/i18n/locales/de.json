@@ -976,10 +976,12 @@
     "lookup": {
       "open": "Barcode scannen",
       "title": "Getränk per Barcode finden",
-      "intro": "Halte den Barcode der Flasche vor die Kamera. Ist das Getränk bekannt, öffnet es sich; sonst kannst du es gleich anlegen.",
+      "intro": "Halte den Barcode der Flasche vor die Kamera. Ist das Getränk schon im Katalog, öffnet es sich. Kennt es die Getränkedatenbank, wird es vorausgefüllt übernommen; sonst legst du es neu an.",
       "manual": "Barcode eingeben …",
       "search": "Suchen",
-      "newBarcode": "Der Barcode {barcode} ist noch keinem Getränk zugeordnet. Er wird mit dem neuen Getränk gespeichert."
+      "newBarcode": "Der Barcode {barcode} ist noch keinem Getränk zugeordnet. Er wird mit dem neuen Getränk gespeichert.",
+      "fromLibrary": "„{name}“ ist aus der Getränkedatenbank übernommen. Prüf die Angaben und leg den Preis für eure Gruppe fest.",
+      "inCatalog": "Der Barcode {barcode} gehört zu „{name}“, ist hier aber noch nicht zugeordnet. Mit „+ Barcode hinzufügen“ ist er gespeichert."
     },
     "createInfo": "„{name}“ wurde angelegt und ist sofort im Katalog.",
     "library": {

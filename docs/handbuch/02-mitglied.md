@@ -243,7 +243,7 @@ Ist ein Moment vorbei, landet er unter **Archivierte Moments & Rituale**.
 
 Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen der Gruppe mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, das Suchfeld findet Getränke nach Name oder Kategorie. **Details & Barcodes** zeigt Preis, Beschreibung und die hinterlegten Strichcodes.
 
-**Barcode scannen**: Scanne eine Flasche, um zu sehen, ob sie schon im Katalog ist. Kennt Vereint den Strichcode, öffnet sich das Getränk. Sonst öffnet sich gleich der Vorschlag mit dem Strichcode.
+**Barcode scannen**: Scanne eine Flasche, um zu sehen, ob sie schon im Katalog ist. Kennt Vereint den Strichcode, öffnet sich das Getränk. Steht es in der gemeinsamen Getränkedatenbank, öffnet sich der Vorschlag mit Name, Sorte und Strichcodes schon ausgefüllt, du trägst nur noch den Preis ein. Sonst öffnet sich der leere Vorschlag mit dem Strichcode.
 
 Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, Kategorie, Preis und Strichcode vor. Vereint warnt dich, wenn es schon ein Getränk mit diesem Namen oder Strichcode gibt. Der Vorstand prüft den Vorschlag und gibt ihn frei; bis dahin steht er als „Vorgeschlagen“ in der Liste.
 

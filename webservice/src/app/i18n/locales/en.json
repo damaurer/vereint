@@ -1009,10 +1009,12 @@
     "lookup": {
       "open": "Scan barcode",
       "title": "Find drink by barcode",
-      "intro": "Hold the bottle's barcode in front of the camera. If the drink is known it opens; otherwise you can add it right away.",
+      "intro": "Hold the bottle's barcode in front of the camera. If the drink is already in the catalog, it opens. If the drinks database knows it, it is filled in for you; otherwise you add it as a new drink.",
       "manual": "Enter barcode …",
       "search": "Search",
-      "newBarcode": "Barcode {barcode} is not assigned to any drink yet. It will be saved with the new drink."
+      "newBarcode": "Barcode {barcode} is not assigned to any drink yet. It will be saved with the new drink.",
+      "fromLibrary": "“{name}” was taken from the drinks database. Check the details and set the price for your group.",
+      "inCatalog": "The barcode {barcode} belongs to “{name}” but is not assigned here yet. Press “+ Add barcode” to save it."
     },
     "createInfo": "“{name}” was added and is in the catalog right away.",
     "library": {
