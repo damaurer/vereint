@@ -38,12 +38,8 @@ services:
       - "443:443/udp"
     environment:
       PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?PUBLIC_DOMAIN fehlt}
-      # Optionale Domain(s) der statischen Website; ohne Wert ein Platzhalter,
-      # auf den nie jemand zugreift (siehe Caddyfile).
-      WEBSITE_DOMAIN: ${WEBSITE_DOMAIN:-http://website.invalid}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./website:/srv/website:ro
       - /srv/vereint/data/caddy:/data
     networks:
       default:
@@ -169,19 +165,8 @@ services:
       REGISTRATION_ENABLED: "true"
       KEYCLOAK_ADMIN_BASE_URL: http://keycloak:8080/kc
       KEYCLOAK_REGISTRATION_CLIENT_SECRET: ${KEYCLOAK_REGISTRATION_CLIENT_SECRET}
-      # Tarife je Stammtisch (Stripe). Ohne Werte bleibt die Online-Zahlung aus;
-      # Werte in secrets.env bzw. SSM unter /vereint anlegen (siehe README, Abrechnung).
-      PUBLIC_BASE_URL: https://${PUBLIC_DOMAIN}
       SIGNUP_ENABLED: ${SIGNUP_ENABLED:-true}
       SIGNUP_MAX_OWNED: ${SIGNUP_MAX_OWNED:-3}
-      STRIPE_ENABLED: ${STRIPE_ENABLED:-false}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
-      STRIPE_PRICE_STAMMTISCH_MONTH: ${STRIPE_PRICE_STAMMTISCH_MONTH:-}
-      STRIPE_PRICE_STAMMTISCH_YEAR: ${STRIPE_PRICE_STAMMTISCH_YEAR:-}
-      STRIPE_PRICE_VEREIN_MONTH: ${STRIPE_PRICE_VEREIN_MONTH:-}
-      STRIPE_PRICE_VEREIN_YEAR: ${STRIPE_PRICE_VEREIN_YEAR:-}
-      STRIPE_PRICE_SUPPORTER: ${STRIPE_PRICE_SUPPORTER:-}
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError
     depends_on:
       postgres:

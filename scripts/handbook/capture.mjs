@@ -398,7 +398,7 @@ const SHOTS = [
     },
   },
 
-  // Gruppen, Tarif und Getränkedatenbank
+  // Gruppen und Getränkedatenbank
   { id: 'g-gruppe-eroeffnen', who: null, device: PHONE, run: async (page) => open(page, '/gruppe-eroeffnen') },
   { id: 'a-gruppe', who: 'admin', device: DESKTOP, run: async (page) => open(page, '/gruppe') },
   {
@@ -408,15 +408,6 @@ const SHOTS = [
     run: async (page) => {
       await open(page, '/gruppe');
       await scrollToHeading(page, 'Rollen & Berechtigungen', 90);
-    },
-  },
-  {
-    id: 'a-tarif',
-    who: 'admin',
-    device: DESKTOP,
-    run: async (page) => {
-      await open(page, '/gruppe');
-      await scrollToHeading(page, 'Tarif', 90);
     },
   },
   { id: 'v-getraenkedatenbank', who: 'board', device: PHONE, run: async (page) => open(page, '/catalog/library') },

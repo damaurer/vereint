@@ -1,10 +1,7 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.billing.BillingService
-import de.maurer.baseservice.billing.PlanLimits
-import de.maurer.baseservice.domain.BillingPlan
+import de.maurer.baseservice.domain.ImageStatus
 import de.maurer.baseservice.domain.StammtischEntity
-import de.maurer.baseservice.domain.SubscriptionStatus
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.CreateStammtischRequest
 import de.maurer.baseservice.dto.PlatformStammtischDto
@@ -14,6 +11,8 @@ import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
+import de.maurer.baseservice.repository.ImageAssetRepository
+import de.maurer.baseservice.repository.MomentMediaRepository
 import de.maurer.baseservice.repository.StammtischMemberRepository
 import de.maurer.baseservice.repository.StammtischRepository
 import de.maurer.baseservice.repository.UserRepository
@@ -24,7 +23,6 @@ import de.maurer.baseservice.tenancy.TenantContext
 import de.maurer.baseservice.tenancy.TenantTransactions
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
-import java.time.Instant
 import java.util.UUID
 
 /**
@@ -44,8 +42,8 @@ class PlatformService(
     private val seeder: StammtischSeeder,
     private val auditService: AuditService,
     private val tenantTransactions: TenantTransactions,
-    private val billingService: BillingService,
-    private val planLimits: PlanLimits
+    private val imageAssetRepository: ImageAssetRepository,
+    private val momentMediaRepository: MomentMediaRepository
 ) {
 
     fun list(principal: UserPrincipal): List<PlatformStammtischDto> {
@@ -72,8 +70,7 @@ class PlatformService(
 
     /**
      * Legt einen Stammtisch mit Systemrollen und Moment-Startbestand an und
-     * macht [admin] zu seinem Stammtisch-Admin. Neue Stammtische starten im
-     * kostenlosen Tarif. Gemeinsamer Weg für Plattform-Administration und
+     * macht [admin] zu seinem Stammtisch-Admin. Gemeinsamer Weg für Plattform-Administration und
      * Selbstregistrierung ([StammtischSignupService]).
      */
     fun createStammtisch(name: String, admin: UserEntity, creator: UserEntity): StammtischEntity {
@@ -102,10 +99,6 @@ class PlatformService(
             request.name?.let { stammtisch.name = requireName(it) }
             request.archived?.let { stammtisch.archived = it }
             stammtischRepository.saveAndFlush(stammtisch)
-        }
-        request.plan?.trim()?.takeIf { it.isNotEmpty() }?.let { plan ->
-            val actor = TenantContext.runWithoutTenant { userService.getOrCreateUser(principal) }
-            billingService.setPlanManually(id, plan, actor)
         }
         return toDto(updated)
     }
@@ -140,18 +133,17 @@ class PlatformService(
     }
 
     private fun toDto(stammtisch: StammtischEntity): PlatformStammtischDto {
-        val subscription = billingService.subscriptionOf(stammtisch.id)
-        val usage = tenantTransactions.readInStammtisch(stammtisch.id) { planLimits.usage() }
+        val (members, storageBytes) = tenantTransactions.readInStammtisch(stammtisch.id) {
+            memberRepository.countByActiveTrue() to
+                imageAssetRepository.sumSizeBytesByStatus(ImageStatus.active) + momentMediaRepository.sumSizeBytes()
+        }
         return PlatformStammtischDto(
             id = stammtisch.id.toString(),
             name = stammtisch.name,
             archived = stammtisch.archived,
-            memberCount = usage.members,
+            memberCount = members,
             createdAt = stammtisch.createdAt,
-            plan = (subscription?.plan ?: BillingPlan.free).name,
-            billingStatus = (subscription?.status ?: SubscriptionStatus.none).name,
-            readOnly = subscription?.isReadOnly(Instant.now()) == true,
-            storageBytes = usage.storageBytes,
+            storageBytes = storageBytes,
             imageVersion = stammtisch.imageVersion.takeIf { stammtisch.imageKey != null }
         )
     }

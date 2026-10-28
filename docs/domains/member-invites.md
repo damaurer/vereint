@@ -25,7 +25,6 @@ diesem Konto bei. Danach ist die Person normales Mitglied der Gruppe (Rolle
      Formulars *Gruppe beitreten*; ein Klick nimmt sie mit ihrem Konto auf. Wer
      schon Mitglied ist, verbraucht den Link nicht. Wer nicht angemeldet ist,
      meldet sich zuerst an und öffnet den Link danach erneut.
-4. Die Mitgliedergrenze des Tarifs gilt auch hier (`409 plan_limit_members`).
 
 In der Liste im Dialog stehen alle Links mit Status (*Offen*, *Verwendet*,
 *Abgelaufen*, *Zurückgezogen*) und den Namen der Personen, die sich damit
@@ -78,7 +77,7 @@ registriert haben. Offene Links lassen sich zurückziehen.
 
 Fehlercodes: `not_found` (unbekannter Link), `invitation_expired`,
 `invitation_revoked`, `invitation_used_up`, `email_already_registered`,
-`password_rejected`, `terms_not_accepted`, `plan_limit_members`,
+`password_rejected`, `terms_not_accepted`,
 `registration_unavailable` (503, Keycloak nicht erreichbar oder Registrierung
 nicht konfiguriert).
 

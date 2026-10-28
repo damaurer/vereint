@@ -4,6 +4,5 @@ domain      = "vereint.example.de"
 alert_email = "admin@example.de"
 
 # Optional:
-# website_domain     = "example.de, www.example.de"  # statische Website, A-Records auf die Server-IP
 # monthly_budget_usd = 30
 # instance_type      = "t4g.small"

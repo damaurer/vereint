@@ -44,21 +44,20 @@ describe('legal pages', () => {
     expect(page.querySelector('.legal-notice-warning') !== null).toBe(hasOpenPlaceholders());
   });
 
-  it('covers plans, cancellation, withdrawal and content reports in the terms', () => {
+  it('covers free use, cancellation and content reports in the terms', () => {
     const page = render(AgbComponent);
     const text = page.textContent ?? '';
     for (const heading of [
-      'Tarife, Preise und Zahlung',
       'Laufzeit und Kündigung',
-      'Widerrufsrecht für Verbraucher',
       'Umgang mit rechtswidrigen Inhalten',
       'Haftung',
     ]) {
       expect(text).toContain(heading);
     }
-    expect(text).toContain('Muster-Widerrufsformular');
     expect(text).toContain('weder E-Geld');
-    expect(page.querySelector('#widerruf')).not.toBeNull();
+    expect(text).toContain('keine bezahlten Tarife');
+    expect(text).not.toContain('Stripe');
+    expect(page.querySelector('#widerruf')).toBeNull();
     expect(page.querySelector('#inhalte')).not.toBeNull();
   });
 });

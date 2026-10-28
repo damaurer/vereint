@@ -1,5 +1,5 @@
 /**
- * Angaben zum Betreiber für Impressum, AGB und Widerrufsbelehrung.
+ * Angaben zum Betreiber für Impressum und AGB.
  *
  * Werte in eckigen Klammern sind Platzhalter. Solange einer übrig ist, zeigen
  * Impressum und AGB einen gut sichtbaren Hinweis. Vor dem Freischalten der
@@ -21,8 +21,6 @@ export interface LegalOperator {
   readonly vatId: string;
   /** Wirtschafts-Identifikationsnummer; leer lassen, wenn keine erteilt ist. */
   readonly economicId: string;
-  /** Kleinunternehmer nach § 19 UStG: Preise ohne Umsatzsteuer. */
-  readonly smallBusiness: boolean;
   /** Öffentliche Adresse der App, ohne abschließenden Schrägstrich. */
   readonly appUrl: string;
 }
@@ -37,7 +35,6 @@ export const LEGAL_OPERATOR: LegalOperator = {
   phone: '[Telefonnummer]',
   vatId: '',
   economicId: '',
-  smallBusiness: true,
   appUrl: '[https://deine-domain.de]',
 };
 
@@ -46,22 +43,10 @@ export const LEGAL_OPERATOR: LegalOperator = {
  * `vereint.legal.terms-version` im Fachservice gleichziehen; der Fachservice
  * speichert diese Fassung zur Zustimmung jedes Kontos.
  */
-export const TERMS_VERSION = '2026-10-16';
+export const TERMS_VERSION = '2026-10-28';
 
-/** Datum der AGB-Fassung für die Anzeige („16. Oktober 2026“). */
-export const TERMS_DATE_LABEL = '16. Oktober 2026';
-
-/** Preise der bezahlten Tarife in Euro, wie sie in Stripe hinterlegt sind. */
-export const LEGAL_PRICES = {
-  standardMonth: '4,00 €',
-  standardYear: '40,00 €',
-  premiumMonth: '9,00 €',
-  premiumYear: '90,00 €',
-  supporterMonth: '2,00 €',
-} as const;
-
-/** Zahlungsfrist bis zur Nur-Lesen-Sperre (`BILLING_GRACE_DAYS`). */
-export const LEGAL_GRACE_DAYS = 30;
+/** Datum der AGB-Fassung für die Anzeige („28. Oktober 2026“). */
+export const TERMS_DATE_LABEL = '28. Oktober 2026';
 
 /** Aufbewahrung der Datenbanksicherungen (`backup_retention_days`). */
 export const LEGAL_BACKUP_RETENTION_DAYS = 30;

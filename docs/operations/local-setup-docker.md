@@ -60,7 +60,6 @@ docker compose down -v
 | `API_DOCS_ENABLED` | Swagger UI unter `http://localhost:8081/swagger-ui.html` | `true` (Produktion `false`) |
 | `TENANCY_BOOTSTRAP_REALM_ROLES` | Testkonten ohne Mitgliedschaft treten „Meine Gruppe“ bei, Realmrollen werden Gruppenrollen. Nur lokal und in E2E, in Produktion nie | `true` |
 | `SIGNUP_ENABLED`, `SIGNUP_MAX_OWNED` | Eigene Gruppen eröffnen (`/gruppe-eroeffnen`) an/aus, Höchstzahl eigener Gruppen | `true`, `3` |
-| `STRIPE_ENABLED` | Online-Zahlung der Tarife; lokal nur mit Test-Schlüsseln (siehe [abrechnung.md](../domains/abrechnung.md#einrichtung)) | `false` |
 
 ---
 

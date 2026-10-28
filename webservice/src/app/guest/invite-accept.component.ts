@@ -149,7 +149,7 @@ interface AcceptInviteResponse {
       }
       .btn-primary {
         background-color: var(--color-brand, #3b82f6);
-        color: #ffffff;
+        color: var(--color-on-brand);
       }
       .btn-primary:hover:not(:disabled) {
         background-color: var(--color-brand-hover, #2563eb);

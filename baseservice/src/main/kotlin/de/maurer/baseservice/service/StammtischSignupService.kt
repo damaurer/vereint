@@ -28,12 +28,11 @@ import java.util.UUID
  * Kunden eröffnen ihren Stammtisch selbst.
  *
  * - Ohne Konto: [signup] legt das Konto in Keycloak an und eröffnet den
- *   Stammtisch; die Person ist dort Stammtisch-Admin, bucht den Tarif und lädt
- *   Mitglieder per Einladungslink ein.
+ *   Stammtisch; die Person ist dort Stammtisch-Admin und lädt Mitglieder per
+ *   Einladungslink ein.
  * - Mit Konto: [openOwn] eröffnet einen weiteren Stammtisch.
  *
- * Jeder neue Stammtisch startet im kostenlosen Tarif. Eine Person eröffnet
- * höchstens [maxOwned] aktive Stammtische (Schutz vor Missbrauch).
+ * Eine Person eröffnet höchstens [maxOwned] aktive Stammtische (Schutz vor Missbrauch).
  */
 @Service
 class StammtischSignupService(

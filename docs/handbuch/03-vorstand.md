@@ -136,7 +136,13 @@ Im **Getränkekatalog** pflegst du alle Getränke der Gruppe. Bei jedem Getränk
 - **Freigeben**: Das Getränk wird Teil des Katalogs.
 - **Ablehnen**: Der Vorschlag wird verworfen.
 
-**Getränk anlegen**: Getränke, die der Vorstand anlegt, sind sofort freigegeben. Am schnellsten geht es mit **Barcode scannen**: Ist der Strichcode neu, öffnet sich das Formular mit dem Strichcode schon ausgefüllt. Kennt Vereint ihn, öffnet sich das vorhandene Getränk.
+**Getränk anlegen**: Getränke, die der Vorstand anlegt, sind sofort freigegeben. Am schnellsten geht es mit **Barcode scannen**:
+
+- Ist das Getränk schon in eurem Katalog, öffnet es sich.
+- Kennt die gemeinsame Getränkedatenbank den Strichcode, öffnet sich **Getränk anlegen** mit Name, Sorte, Beschreibung und Strichcodes schon ausgefüllt. Du trägst nur noch den Preis ein und tippst **Getränk anlegen**. Das Getränk bleibt mit der Getränkedatenbank verknüpft.
+- Ist der Strichcode ganz neu, öffnet sich das leere Formular mit dem Strichcode.
+
+Das klappt auch, wenn du schon in **Getränk anlegen** bist: Scannst du dort bei leerem Namen einen Strichcode, füllt Vereint die Angaben aus der Getränkedatenbank ein.
 
 <br clear="right">
 
@@ -158,7 +164,7 @@ Vereint warnt, wenn ein Name oder Strichcode schon vergeben ist. **Speichern** �
 **Getränkedatenbank**: Alle Gruppen teilen sich eine gemeinsame Getränkedatenbank. Sie enthält Name, Sorte, Beschreibung und Strichcodes, aber keine Preise und keine Bilder. Von Anfang an stehen dort über 1.200 Getränke, darunter die Sortimente von mehr als 130 deutschen Brauereien, von Krombacher über Club-Mate bis Jägermeister.
 
 1. Im **Getränkekatalog** auf **Aus der Getränkedatenbank** tippen.
-2. Nach **Name oder Sorte** oder nach dem **Strichcode (EAN)** suchen.
+2. Nach **Name oder Sorte** oder nach dem **Strichcode (EAN)** suchen, oder mit **Barcode scannen** die Flasche vor die Kamera halten. Gibt es genau einen Treffer, öffnet sich gleich das Übernehmen.
 3. Beim passenden Getränk **Übernehmen** tippen. Name, Sorte und Beschreibung sind schon ausgefüllt, die Strichcodes kommen mit.
 4. **Verkaufspreis** eintragen, optional den **Einkaufspreis**, dann **In den Katalog übernehmen**.
 

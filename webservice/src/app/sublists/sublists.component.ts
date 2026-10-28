@@ -282,7 +282,7 @@ import { translate } from '../i18n/i18n.service';
       }
       .btn-primary-sm {
         background-color: var(--color-brand, #3b82f6);
-        color: #ffffff;
+        color: var(--color-on-brand);
       }
       .btn-secondary-sm {
         background-color: var(--color-surface-subtle, #f1f5f9);
@@ -409,7 +409,7 @@ import { translate } from '../i18n/i18n.service';
         font-size: 0.85rem;
         font-weight: 600;
         background-color: var(--color-brand, #3b82f6);
-        color: #ffffff;
+        color: var(--color-on-brand);
         border: none;
         border-radius: var(--radius-sm, 0.375rem);
         cursor: pointer;

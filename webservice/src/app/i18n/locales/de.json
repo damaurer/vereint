@@ -19,13 +19,6 @@
       "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen.",
       "stammtischRequired": "Bitte zuerst eine Gruppe wählen.",
       "stammtischDenied": "Du gehörst dieser Gruppe nicht (mehr) an.",
-      "stammtischReadOnly": "Die Gruppe ist nur noch lesbar, weil die Zahlung überfällig ist. Nach der Zahlung geht wieder alles.",
-      "planLimitMembers": "Der aktuelle Tarif erlaubt keine weiteren Mitglieder. Ein größerer Tarif schafft Platz.",
-      "planLimitStorage": "Der Speicherplatz des aktuellen Tarifs ist aufgebraucht.",
-      "planLimitVideos": "Videos sind im aktuellen Tarif nicht enthalten.",
-      "planLimitKiosk": "Der aktuelle Tarif erlaubt nur ein aktives Thekenterminal.",
-      "billingUnavailable": "Online-Zahlung ist noch nicht eingerichtet. Bitte später erneut versuchen.",
-      "billingNoCustomer": "Es gibt noch kein Zahlungskonto. Bitte zuerst einen Tarif buchen.",
       "stammtischLimit": "Du hast bereits drei eigene Gruppen eröffnet. Mehr sind pro Person nicht möglich."
     }
   },
@@ -277,9 +270,7 @@
     "notifications": "Mitteilungen",
     "notificationsUnread": "Mitteilungen, {count} ungelesen",
     "chatUnread": "{label}, {count} ungelesen",
-    "switchStammtisch": "Gruppe wechseln (aktuell: {name})",
-    "readOnly": "Diese Gruppe ist nur noch lesbar, weil die Zahlung überfällig ist.",
-    "readOnlyLink": "Zum Tarif"
+    "switchStammtisch": "Gruppe wechseln (aktuell: {name})"
   },
   "nav": {
     "items": {
@@ -868,9 +859,7 @@
       },
       "takePhoto": "Foto aufnehmen",
       "takeVideo": "Video aufnehmen",
-      "fromGallery": "Aus Galerie",
-      "hintPhotos": "Bis zu {count} Fotos.",
-      "videosNotInPlan": "Videos sind im aktuellen Tarif der Gruppe nicht enthalten."
+      "fromGallery": "Aus Galerie"
     },
     "allMoments": "Alle Moments",
     "eventFilter": "Moments zum Event „{title}“"
@@ -987,10 +976,12 @@
     "lookup": {
       "open": "Barcode scannen",
       "title": "Getränk per Barcode finden",
-      "intro": "Halte den Barcode der Flasche vor die Kamera. Ist das Getränk bekannt, öffnet es sich; sonst kannst du es gleich anlegen.",
+      "intro": "Halte den Barcode der Flasche vor die Kamera. Ist das Getränk schon im Katalog, öffnet es sich. Kennt es die Getränkedatenbank, wird es vorausgefüllt übernommen; sonst legst du es neu an.",
       "manual": "Barcode eingeben …",
       "search": "Suchen",
-      "newBarcode": "Der Barcode {barcode} ist noch keinem Getränk zugeordnet. Er wird mit dem neuen Getränk gespeichert."
+      "newBarcode": "Der Barcode {barcode} ist noch keinem Getränk zugeordnet. Er wird mit dem neuen Getränk gespeichert.",
+      "fromLibrary": "„{name}“ ist aus der Getränkedatenbank übernommen. Prüf die Angaben und leg den Preis für eure Gruppe fest.",
+      "inCatalog": "Der Barcode {barcode} gehört zu „{name}“, ist hier aber noch nicht zugeordnet. Mit „+ Barcode hinzufügen“ ist er gespeichert."
     },
     "createInfo": "„{name}“ wurde angelegt und ist sofort im Katalog.",
     "library": {
@@ -1887,11 +1878,7 @@
       "archive": "Archivieren",
       "unarchive": "Wiederherstellen",
       "archiveConfirm": "„{name}“ archivieren? Mitglieder können ihn danach nicht mehr öffnen.",
-      "plan": "Tarif",
-      "setPlan": "Tarif von „{name}“",
-      "storage": "{size} belegt",
-      "readOnly": "Nur lesbar",
-      "planChanged": "„{name}“ hat jetzt den Tarif {plan}."
+      "storage": "{size} belegt"
     },
     "settings": {
       "eyebrow": "Gruppe",
@@ -1945,7 +1932,6 @@
     "permissionGroups": {
       "audit": "Protokoll",
       "balance": "Guthaben",
-      "billing": "Tarif und Zahlung",
       "catalog": "Katalog",
       "chat": "Chat",
       "event": "Veranstaltungen",
@@ -1959,69 +1945,6 @@
       "roles": "Rollen",
       "stammtisch": "Gruppe"
     },
-    "billing": {
-      "title": "Tarif",
-      "plans": {
-        "free": "Kostenlos",
-        "stammtisch": "Standard",
-        "verein": "Premium"
-      },
-      "status": {
-        "active": "Aktiv",
-        "past_due": "Zahlung offen",
-        "canceled": "Gekündigt",
-        "comped": "Kostenlos vergeben"
-      },
-      "renews": "Verlängert sich am {date}.",
-      "endsOn": "Läuft bis {date}.",
-      "comped": "Dieser Tarif wurde kostenlos vergeben.",
-      "pastDue": "Die letzte Zahlung ist fehlgeschlagen. Bitte die Zahlungsart bis {date} aktualisieren, sonst ist die Gruppe danach nur noch lesbar.",
-      "pastDueNoDate": "Die letzte Zahlung ist fehlgeschlagen. Bitte die Zahlungsart aktualisieren.",
-      "readOnly": "Die Zahlung ist überfällig: Die Gruppe ist nur noch lesbar. Ansehen geht, Ändern und Buchen nicht. Nach der Zahlung geht sofort wieder alles.",
-      "usage": "Verbrauch",
-      "members": "Mitglieder",
-      "membersOf": "{count} von {max}",
-      "membersUnlimited": "{count} (unbegrenzt)",
-      "storage": "Speicher",
-      "storageOf": "{used} von {limit}",
-      "videos": "Videos in Moments",
-      "kiosks": "Thekenterminals",
-      "kiosksOne": "eines ({count} aktiv)",
-      "kiosksMany": "mehrere ({count} aktiv)",
-      "yes": "Ja",
-      "no": "Nein",
-      "choose": "Tarif wählen",
-      "interval": "Zahlweise",
-      "month": "Monatlich",
-      "year": "Jährlich",
-      "perMonth": "{price} / Monat",
-      "perYear": "{price} / Jahr",
-      "intervalMissing": "In dieser Zahlweise nicht buchbar.",
-      "current": "Aktueller Tarif",
-      "limitMembers": {
-        "one": "Bis zu {count} Mitglied",
-        "other": "Bis zu {count} Mitglieder"
-      },
-      "limitMembersUnlimited": "Unbegrenzt viele Mitglieder",
-      "limitStorage": "{size} Speicher",
-      "limitVideos": "Videos in Moments",
-      "limitNoVideos": "Keine Videos",
-      "limitKiosks": "Mehrere Thekenterminals",
-      "limitOneKiosk": "Ein Thekenterminal",
-      "book": "Buchen",
-      "checkoutUnavailable": "Online-Zahlung ist noch nicht eingerichtet.",
-      "portal": "Zahlung und Rechnungen",
-      "portalHint": "Zahlungsart, Rechnungen, Tarif wechseln oder kündigen.",
-      "supporter": "Vereint unterstützen",
-      "supporterHint": "Freiwillig und persönlich: {price} im Monat helfen, Vereint weiterzuentwickeln.",
-      "supporterHintNoAmount": "Freiwillig und persönlich: Ein monatlicher Beitrag hilft, Vereint weiterzuentwickeln.",
-      "export": "Daten exportieren",
-      "exportHint": "Alle Daten dieser Gruppe als JSON-Datei.",
-      "success": "Danke! Der Tarif wird in wenigen Sekunden aktiv.",
-      "thanks": "Danke für deine Unterstützung!",
-      "canceled": "Zahlung abgebrochen, nichts wurde gebucht.",
-      "unavailable": "Der Tarif konnte nicht geladen werden."
-    },
     "open": {
       "eyebrow": "Neue Gruppe",
       "title": "Gruppe eröffnen",
@@ -2029,11 +1952,11 @@
       "checking": "Wird vorbereitet …",
       "intro": "Lege deine Gruppe und dein Konto in einem Schritt an. Du wirst Admin der Gruppe.",
       "createIntro": "Du bist angemeldet. Gib deiner neuen Gruppe einen Namen – du wirst ihr Admin.",
-      "planInfo": "Die Gruppe startet im kostenlosen Tarif mit bis zu 10 Mitgliedern. Einen größeren Tarif kannst du später jederzeit buchen. Mitglieder kommen per Einladungslink dazu.",
+      "planInfo": "Mitglieder kommen per Einladungslink dazu.",
       "name": "Name der Gruppe",
       "submit": "Gruppe eröffnen",
       "submitting": "Gruppe wird eröffnet …",
-      "done": "„{name}“ ist eröffnet und dein Konto für {email} angelegt. Melde dich jetzt an, um den Tarif zu wählen und Mitglieder einzuladen.",
+      "done": "„{name}“ ist eröffnet und dein Konto für {email} angelegt. Melde dich jetzt an, um Mitglieder einzuladen.",
       "haveAccount": "Du hast schon ein Konto?",
       "loginFirst": "Erst anmelden, dann eröffnen",
       "back": "Zurück zur Gruppenauswahl",
@@ -2042,6 +1965,11 @@
         "checkInput": "Bitte prüfe deine Eingaben. Der Gruppenname darf höchstens {max} Zeichen lang sein, das Passwort braucht mindestens {min} Zeichen.",
         "selectFailed": "Die Gruppe ist eröffnet, konnte aber nicht geöffnet werden. Du findest sie in der Gruppenauswahl."
       }
+    },
+    "export": {
+      "title": "Datenexport",
+      "hint": "Alle Daten dieser Gruppe als JSON-Datei.",
+      "button": "Daten exportieren"
     }
   },
   "legal": {
@@ -2054,8 +1982,6 @@
     "acceptPrefix": "Ich habe die",
     "acceptLink": "AGB",
     "acceptSuffix": " gelesen und stimme ihnen zu.",
-    "acceptRequired": "Bitte stimme den AGB zu.",
-    "paidNotice": "Für bezahlte Tarife und den Förderbeitrag gelten die AGB mit der Widerrufsbelehrung für Verbraucher.",
-    "withdrawal": "Widerrufsbelehrung"
+    "acceptRequired": "Bitte stimme den AGB zu."
   }
 }

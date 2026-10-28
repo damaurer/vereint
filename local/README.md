@@ -64,7 +64,7 @@ Daten bleiben dabei erhalten.
 
 Die Passwörter für Datenbank, Keycloak-Admin und die übrigen Secrets erzeugt
 `up` beim ersten Start zufällig und legt sie in `local/.env.local` ab (nicht
-versioniert). E-Mail-Versand, Web-Push und Stripe sind lokal aus.
+versioniert). E-Mail-Versand und Web-Push sind lokal aus.
 
 ## Alle Tests ausführen
 

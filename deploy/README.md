@@ -16,15 +16,14 @@ ausrollen.
 
 ```text
 Internet ──443──▶ Caddy ──┬─ /kc/*  ──▶ Keycloak ─┐
- (HTTPS, HTTP/3)          ├─ /*     ──▶ webservice ──▶ baseservice
-                          └─ Website-Domain ──▶ website/ (statisch)
+ (HTTPS, HTTP/3)          └─ /*     ──▶ webservice ──▶ baseservice
                                                       │
                                      PostgreSQL ◀─────┘     Dateien (Verzeichnis oder S3)
 ```
 
 | Dienst | Image | Aufgabe |
 |---|---|---|
-| `caddy` | `caddy` | TLS-Zertifikat (Let's Encrypt, automatisch), HSTS, Weiterleitung, statische Website unter `WEBSITE_DOMAIN` ([docs/website.md](../docs/website.md)) |
+| `caddy` | `caddy` | TLS-Zertifikat (Let's Encrypt, automatisch), HSTS, Weiterleitung |
 | `keycloak` | `ghcr.io/damaurer/keycloak` | Login unter `https://<domain>/kc` |
 | `webservice` | `ghcr.io/damaurer/webservice` | Angular SSR und BFF |
 | `baseservice` | `ghcr.io/damaurer/baseservice` | Fachlogik und API |
@@ -158,15 +157,13 @@ Jeder Merge nach `main` rollt automatisch aus (`.github/workflows/deploy.yml`):
    bindet die Images `keycloak`, `baseservice` und `webservice` an ihren
    Digest.
 2. Der Job meldet sich per OIDC bei AWS an, legt diesen Ordner samt
-   `images.env` und der Website (`website/`) unter `deploy/` im Backup-Bucket ab und startet auf dem Server
+   `images.env` unter `deploy/` im Backup-Bucket ab und startet auf dem Server
    per Systems Manager `bin/deploy.sh`. SSH ist dafür nicht nötig.
 3. `deploy.sh` zieht die neuen Images, **sichert beide Datenbanken** (wie
    nachts, inklusive Probe-Wiederherstellung; ohne Backup kein Deployment),
    aktiviert den neuen Stand und wartet, bis alle Container gesund sind.
 4. Danach prüft es von außen über Caddy, ob `/api/v1/health`, der Login
-   (`/kc/realms/vereint/...`) und die Startseite antworten, und ob die Website
-   im Caddy-Container liegt. Antwortet die Website-Domain noch nicht, gibt es
-   nur eine Warnung.
+   (`/kc/realms/vereint/...`) und die Startseite antworten.
 5. **Schlägt Schritt 3 oder 4 fehl, startet automatisch wieder der vorherige
    Stand** und der Workflow wird rot. Der fehlgeschlagene Stand liegt zur
    Analyse unter `/srv/vereint/releases/failed`.
@@ -293,20 +290,3 @@ Mit mehreren Gruppen (siehe `docs/domains/stammtische.md`) gilt:
   Impressum und AGB Platzhalter enthalten (`webservice/src/app/legal/legal-operator.ts`,
   siehe `docs/domains/rechtliches.md`) und die Datenschutzerklärung fehlt, den
   SSM-Parameter `/vereint/SIGNUP_ENABLED` auf `false` setzen und neu ausrollen.
-
-### Abrechnung (Stripe)
-
-Tarife je Gruppe und die Einrichtung von Stripe beschreibt
-`docs/domains/abrechnung.md`. Ohne Stripe-Werte bleibt die Online-Zahlung aus,
-„Meine Gruppe" läuft kostenlos mit allen Funktionen weiter. Zum Einschalten
-die Werte als SSM-Parameter anlegen und neu ausrollen, zum Beispiel:
-
-```bash
-aws ssm put-parameter --name /vereint/STRIPE_ENABLED --type String --value true
-aws ssm put-parameter --name /vereint/STRIPE_SECRET_KEY --type SecureString --value '<sk_live_...>'
-aws ssm put-parameter --name /vereint/STRIPE_WEBHOOK_SECRET --type SecureString --value '<whsec_...>'
-aws ssm put-parameter --name /vereint/STRIPE_PRICE_STAMMTISCH_MONTH --type String --value '<price_...>'
-```
-
-(entsprechend für die übrigen Preis-IDs). Der Webhook-Pfad
-`/api/v1/billing/stripe/webhook` geht in Caddy direkt an den Fachservice.

@@ -87,7 +87,7 @@ einsetzen, wo `203.0.113.10` steht, die IP des Servers.
 
 - [ ] **Domain:** Name festlegen. Frei waren am 21.10.2026 zum Beispiel
       `vereintapp.de` und `vereintapp.com`. Die App läuft auf einer Subdomain
-      (`app.vereintapp.de`), die Website auf der Domain selbst und `www`.
+      (`app.vereintapp.de`).
 - [ ] **Server-Tarif:** VPS M mit 12 Monaten Laufzeit (siehe oben).
 - [ ] **Backup-Ziel:** Strato HiDrive (bleibt beim selben Anbieter, Rechenzentrum
       in Deutschland) oder eine Hetzner Storage Box. Wichtig ist nur: nicht auf
@@ -108,8 +108,6 @@ einsetzen, wo `203.0.113.10` steht, die IP des Servers.
 ### 3. DNS setzen
 
 - [ ] Im DNS der Domain einen **A-Record** `app` → `203.0.113.10` anlegen.
-- [ ] Für die Website (falls sie bleibt) zusätzlich A-Records für die Domain
-      selbst (`@`) und `www` auf dieselbe IP.
 - [ ] Keine AAAA-Records (IPv6) eintragen, solange IPv6 auf dem Server nicht
       getestet ist; sonst scheitert das Zertifikat für Nutzer mit IPv6.
 - [ ] Prüfen, bevor es weitergeht: `nslookup app.example.de` muss die IP
@@ -145,11 +143,9 @@ Im Ordner des Repositorys (`develop` bzw. `main` nach dem Merge dieses Stands):
       ssh root@203.0.113.10
       bash /root/vereint-setup/server-setup.sh \
         --domain app.example.de \
-        --website-domain "example.de, www.example.de" \
         --deploy-key "$(cat /root/vereint-setup/vereint-deploy.pub)"
       ```
-      `--website-domain` weglassen, wenn es keine Website gibt. Das Skript
-      bricht ab, wenn root noch keinen SSH-Schlüssel hat, damit man sich nicht
+      Das Skript bricht ab, wenn root noch keinen SSH-Schlüssel hat, damit man sich nicht
       aussperrt.
 - [ ] Die Ausgabe am Ende aufheben: Sie enthält die Zeile für
       `DEPLOY_SSH_KNOWN_HOSTS` (Schritt 9).
@@ -230,8 +226,11 @@ Unter *Settings → Environments* im Repository:
 - [ ] Branch-Schutz für `main` (sinnvoll auch für `qs` und `develop`): Pull
       Request vor dem Merge, CI-Checks als Pflicht, kein Force-Push.
 - [ ] GitHub Actions müssen laufen: Im Oktober war das Minutenkontingent
-      aufgebraucht. Es erneuert sich am 1. November; für ein öffentliches
-      Repository (Open Source) sind die Standard-Runner ohnehin kostenlos.
+      aufgebraucht. Sobald das Repository öffentlich ist
+      ([Open Source](open-source.md)), sind die Standard-Runner kostenlos;
+      sonst erneuert sich das Kontingent am 1. November. Die Images unter
+      `ghcr.io` dürfen privat bleiben, der Server zieht sie mit dem
+      kurzlebigen Token des Workflows.
 
 ### 10. Rechtliches vor dem Öffnen für andere
 

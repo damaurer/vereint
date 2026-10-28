@@ -22,7 +22,7 @@ Die Benutzerverwaltung in **Vereint** verbindet das externe Identitätsmanagemen
    - Eigene Rollen, Berechtigungen und den eigenen Status kann niemand selbst ändern. Die letzte Person mit `members.manage` oder `roles.manage` einer Gruppe bleibt geschützt.
 4. **Sperren**:
    - Mit `members.manage` lässt sich ein Mitglied sperren. Das beendet die Mitgliedschaft in dieser Gruppe und entfernt seine Rollen dort; Buchungen und Verläufe bleiben erhalten. In anderen Gruppen bleibt die Person Mitglied.
-   - Entsperren nimmt die Person wieder mit der Rolle `member` auf (zählt gegen die Mitgliedergrenze des Tarifs).
+   - Entsperren nimmt die Person wieder mit der Rolle `member` auf.
    - Gesperrte Mitglieder sehen die Gruppe nicht mehr und können dort weder buchen noch schreiben.
    - Daneben gibt es ein kontoweites Sperrkennzeichen (`users.disabled`, Antwort `403 account_disabled`); die App setzt es derzeit nicht.
 

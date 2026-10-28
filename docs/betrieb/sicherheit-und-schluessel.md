@@ -26,8 +26,7 @@ Tabellen. Das greift nur, wenn sich der baseservice als Benutzer `vereint`
 verbindet (kein Superuser); in Produktion legt `deploy/postgres/init-databases.sh`
 ihn so an. Details: [stammtische.md](../domains/stammtische.md#trennung).
 
-Zahlungsdaten speichert Vereint nicht; Stripe-Webhooks werden über die Signatur
-geprüft (`STRIPE_WEBHOOK_SECRET`).
+Zahlungsdaten gibt es in Vereint nicht; die App ist frei nutzbar.
 
 ## Schlüssel, die offline gesichert sein müssen
 

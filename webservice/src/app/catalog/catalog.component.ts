@@ -2,11 +2,12 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { IconComponent } from '../ui/icon.component';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { type Observable, catchError, forkJoin, map, of } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import {
   CatalogApiService,
   type DrinkDto,
+  type DrinkLibraryEntryDto,
   type DrinkSummaryDto,
   type FoodSummaryDto,
   type FoodDto,
@@ -734,7 +735,7 @@ type CatalogTab = 'drinks' | 'food';
       }
       .btn-primary-sm {
         background-color: var(--color-brand, #3b82f6);
-        color: #ffffff;
+        color: var(--color-on-brand);
       }
       .btn-secondary-sm {
         background-color: var(--color-surface-subtle, #f1f5f9);
@@ -892,7 +893,7 @@ type CatalogTab = 'drinks' | 'food';
         font-size: 0.85rem;
         font-weight: 600;
         background-color: var(--color-brand, #3b82f6);
-        color: #ffffff;
+        color: var(--color-on-brand);
         border: none;
         border-radius: var(--radius-sm, 0.375rem);
         cursor: pointer;
@@ -945,6 +946,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
   protected readonly barcodeBusy = signal(false);
   /** Kamera zum Erfassen eines Strichcodes ist eingeblendet. */
   protected readonly scanningBarcode = signal(false);
+  /** Eintrag der Getränkedatenbank, aus dem das neue Getränk übernommen wird. */
+  private readonly libraryDrinkId = signal<string | null>(null);
 
   // Strichcode scannen, um ein Getränk zu finden oder anzulegen
   protected readonly showLookup = signal(false);
@@ -1101,11 +1104,19 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.drinkFormMode.set('create');
   }
 
-  protected openEditDrink(id: string): void {
+  /**
+   * Getränk bearbeiten. Mit `barcode` (gescannt, aber noch nicht zugeordnet) steht
+   * der Code schon im Eingabefeld, damit er mit einem Klick hinzugefügt ist.
+   */
+  protected openEditDrink(id: string, barcode?: string): void {
     this.actionError.set(null);
     this.catalogApi.getDrink(id).subscribe({
       next: (drink) => {
         this.resetDrinkForm();
+        if (barcode) {
+          this.barcodeInput = barcode;
+          this.formInfo.set(translate('catalog.lookup.inCatalog', { barcode, name: drink.name }));
+        }
         this.editingDrink.set(drink);
         this.drinkName = drink.name;
         this.drinkCategory = drink.category ?? '';
@@ -1131,8 +1142,46 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.barcodeInput = '';
     this.barcodeHint.set(null);
     this.scanningBarcode.set(false);
+    this.libraryDrinkId.set(null);
     this.formInfo.set(null);
     this.formError.set(null);
+  }
+
+  /**
+   * Übernimmt Name, Sorte und Beschreibung aus der Getränkedatenbank in das
+   * Anlegeformular. Weitere Codes des Eintrags kommen nur mit, wenn sie in
+   * diesem Katalog noch frei sind; der Preis bleibt Sache der Gruppe.
+   */
+  private applyLibraryEntry(entry: DrinkLibraryEntryDto, freeBarcodes: string[]): void {
+    this.libraryDrinkId.set(entry.id);
+    this.drinkName = entry.name;
+    this.drinkCategory = entry.category ?? '';
+    this.drinkDescription = entry.description ?? '';
+    this.pendingBarcodes.update((list) => [...new Set([...list, ...freeBarcodes])]);
+    this.formInfo.set(translate('catalog.lookup.fromLibrary', { name: entry.name }));
+  }
+
+  /** Codes, die noch keinem Getränk dieses Katalogs gehören. */
+  private freeBarcodes(codes: string[]): Observable<string[]> {
+    if (codes.length === 0) return of([]);
+    return forkJoin(
+      codes.map((code) =>
+        this.catalogApi.getDrinkByBarcode(code).pipe(
+          map(() => null),
+          catchError((err: unknown) =>
+            of(err instanceof ApiError && err.status === 404 ? code : null),
+          ),
+        ),
+      ),
+    ).pipe(map((list) => list.filter((code): code is string => code !== null)));
+  }
+
+  /** Erster passender Eintrag der Getränkedatenbank; ist sie nicht erreichbar, gibt es keinen. */
+  private findInLibrary(barcode: string): Observable<DrinkLibraryEntryDto | null> {
+    return this.catalogApi.searchLibrary({ barcode }).pipe(
+      map((entries) => entries[0] ?? null),
+      catchError(() => of(null)),
+    );
   }
 
   protected closeDrinkForm(): void {
@@ -1175,9 +1224,14 @@ export class CatalogComponent implements OnInit, OnDestroy {
         }
         const editing = this.editingDrink();
         if (!editing) {
-          this.barcodeBusy.set(false);
           this.pendingBarcodes.update((list) => [...list, barcode]);
           this.barcodeInput = '';
+          // Ein noch leeres Formular wird aus der Getränkedatenbank vorausgefüllt.
+          if (this.libraryDrinkId() || this.drinkName.trim()) {
+            this.barcodeBusy.set(false);
+            return;
+          }
+          this.prefillFromLibrary(barcode);
           return;
         }
         this.catalogApi.addBarcode(editing.id, { barcode }).subscribe({
@@ -1194,6 +1248,22 @@ export class CatalogComponent implements OnInit, OnDestroy {
           },
         });
       },
+    });
+  }
+
+  private prefillFromLibrary(barcode: string): void {
+    this.findInLibrary(barcode).subscribe((entry) => {
+      if (!entry || entry.catalogDrinkId) {
+        this.barcodeBusy.set(false);
+        return;
+      }
+      const others = entry.barcodes.filter((code) => code !== barcode);
+      this.freeBarcodes(others).subscribe((free) => {
+        this.barcodeBusy.set(false);
+        // Hat jemand inzwischen selbst etwas eingetragen, bleibt das stehen.
+        if (this.drinkFormMode() !== 'create' || this.drinkName.trim()) return;
+        this.applyLibraryEntry(entry, free);
+      });
     });
   }
 
@@ -1264,6 +1334,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       ...fields,
       currency: 'EUR',
       barcodes: this.pendingBarcodes(),
+      libraryDrinkId: this.libraryDrinkId(),
     };
     this.catalogApi.proposeDrink(payload).subscribe({
       next: (created) => {
@@ -1314,7 +1385,11 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.showLookup.set(false);
   }
 
-  /** Bekannter Code öffnet das Getränk, unbekannter das Formular mit vorausgefülltem Code. */
+  /**
+   * Bekannter Code öffnet das Getränk. Ein unbekannter wird in der
+   * Getränkedatenbank gesucht: Treffer füllen das Anlegeformular vor, sonst
+   * öffnet es leer mit dem Code.
+   */
   protected lookupBarcode(raw: string): void {
     const barcode = normalizeBarcode(raw);
     if (!barcode) return;
@@ -1330,12 +1405,37 @@ export class CatalogComponent implements OnInit, OnDestroy {
       error: (err: unknown) => {
         this.barcodeBusy.set(false);
         if (err instanceof ApiError && err.status === 404) {
-          this.closeLookup();
-          this.openCreateDrink(barcode);
+          this.createFromBarcode(barcode);
         } else {
           this.barcodeHint.set(describeApiError(err));
         }
       },
+    });
+  }
+
+  private createFromBarcode(barcode: string): void {
+    this.barcodeBusy.set(true);
+    this.findInLibrary(barcode).subscribe((entry) => {
+      if (!entry) {
+        this.barcodeBusy.set(false);
+        this.closeLookup();
+        this.openCreateDrink(barcode);
+        return;
+      }
+      if (entry.catalogDrinkId) {
+        // Schon übernommen, aber unter einem anderen Code: das Getränk öffnen.
+        this.barcodeBusy.set(false);
+        this.closeLookup();
+        if (this.isBoardOrAdmin()) this.openEditDrink(entry.catalogDrinkId, barcode);
+        else this.openDrinkDetail(entry.catalogDrinkId);
+        return;
+      }
+      this.freeBarcodes(entry.barcodes.filter((code) => code !== barcode)).subscribe((free) => {
+        this.barcodeBusy.set(false);
+        this.closeLookup();
+        this.openCreateDrink(barcode);
+        this.applyLibraryEntry(entry, free);
+      });
     });
   }
 

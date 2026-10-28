@@ -19,13 +19,6 @@
       "generic": "The action could not be completed. Please try again later.",
       "stammtischRequired": "Please choose a group first.",
       "stammtischDenied": "You are not (or no longer) a member of this group.",
-      "stammtischReadOnly": "This group is read-only because a payment is overdue. Everything works again once it is paid.",
-      "planLimitMembers": "The current plan does not allow more members. A larger plan makes room.",
-      "planLimitStorage": "The storage of the current plan is used up.",
-      "planLimitVideos": "Videos are not included in the current plan.",
-      "planLimitKiosk": "The current plan allows only one active bar terminal.",
-      "billingUnavailable": "Online payment is not set up yet. Please try again later.",
-      "billingNoCustomer": "There is no payment account yet. Please book a plan first.",
       "stammtischLimit": "You have already opened three groups of your own. That is the maximum per person."
     }
   },
@@ -283,9 +276,7 @@
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} unread",
     "chatUnread": "{label}, {count} unread",
-    "switchStammtisch": "Switch group (current: {name})",
-    "readOnly": "This group is read-only because a payment is overdue.",
-    "readOnlyLink": "Go to plan"
+    "switchStammtisch": "Switch group (current: {name})"
   },
   "nav": {
     "items": {
@@ -901,9 +892,7 @@
       },
       "takePhoto": "Take photo",
       "takeVideo": "Record video",
-      "fromGallery": "From gallery",
-      "hintPhotos": "Up to {count} photos.",
-      "videosNotInPlan": "Videos are not included in the group’s current plan."
+      "fromGallery": "From gallery"
     },
     "allMoments": "All moments",
     "eventFilter": "Moments for the event “{title}”"
@@ -1020,10 +1009,12 @@
     "lookup": {
       "open": "Scan barcode",
       "title": "Find drink by barcode",
-      "intro": "Hold the bottle's barcode in front of the camera. If the drink is known it opens; otherwise you can add it right away.",
+      "intro": "Hold the bottle's barcode in front of the camera. If the drink is already in the catalog, it opens. If the drinks database knows it, it is filled in for you; otherwise you add it as a new drink.",
       "manual": "Enter barcode …",
       "search": "Search",
-      "newBarcode": "Barcode {barcode} is not assigned to any drink yet. It will be saved with the new drink."
+      "newBarcode": "Barcode {barcode} is not assigned to any drink yet. It will be saved with the new drink.",
+      "fromLibrary": "“{name}” was taken from the drinks database. Check the details and set the price for your group.",
+      "inCatalog": "The barcode {barcode} belongs to “{name}” but is not assigned here yet. Press “+ Add barcode” to save it."
     },
     "createInfo": "“{name}” was added and is in the catalog right away.",
     "library": {
@@ -1920,11 +1911,7 @@
       "archive": "Archive",
       "unarchive": "Restore",
       "archiveConfirm": "Archive “{name}”? Members will no longer be able to open it.",
-      "plan": "Plan",
-      "setPlan": "Plan of “{name}”",
-      "storage": "{size} used",
-      "readOnly": "Read-only",
-      "planChanged": "“{name}” is now on the {plan} plan."
+      "storage": "{size} used"
     },
     "settings": {
       "eyebrow": "Group",
@@ -1978,7 +1965,6 @@
     "permissionGroups": {
       "audit": "Audit log",
       "balance": "Balance",
-      "billing": "Plan and payment",
       "catalog": "Catalogue",
       "chat": "Chat",
       "event": "Events",
@@ -1992,69 +1978,6 @@
       "roles": "Roles",
       "stammtisch": "Group"
     },
-    "billing": {
-      "title": "Plan",
-      "plans": {
-        "free": "Free",
-        "stammtisch": "Standard",
-        "verein": "Premium"
-      },
-      "status": {
-        "active": "Active",
-        "past_due": "Payment due",
-        "canceled": "Cancelled",
-        "comped": "Granted free of charge"
-      },
-      "renews": "Renews on {date}.",
-      "endsOn": "Runs until {date}.",
-      "comped": "This plan was granted free of charge.",
-      "pastDue": "The last payment failed. Please update the payment method by {date}, otherwise the group becomes read-only.",
-      "pastDueNoDate": "The last payment failed. Please update the payment method.",
-      "readOnly": "The payment is overdue: this group is read-only. Viewing works, changes and purchases do not. Everything works again as soon as it is paid.",
-      "usage": "Usage",
-      "members": "Members",
-      "membersOf": "{count} of {max}",
-      "membersUnlimited": "{count} (unlimited)",
-      "storage": "Storage",
-      "storageOf": "{used} of {limit}",
-      "videos": "Videos in Moments",
-      "kiosks": "Bar terminals",
-      "kiosksOne": "one ({count} active)",
-      "kiosksMany": "several ({count} active)",
-      "yes": "Yes",
-      "no": "No",
-      "choose": "Choose a plan",
-      "interval": "Billing interval",
-      "month": "Monthly",
-      "year": "Yearly",
-      "perMonth": "{price} / month",
-      "perYear": "{price} / year",
-      "intervalMissing": "Not available with this billing interval.",
-      "current": "Current plan",
-      "limitMembers": {
-        "one": "Up to {count} member",
-        "other": "Up to {count} members"
-      },
-      "limitMembersUnlimited": "Unlimited members",
-      "limitStorage": "{size} storage",
-      "limitVideos": "Videos in Moments",
-      "limitNoVideos": "No videos",
-      "limitKiosks": "Several bar terminals",
-      "limitOneKiosk": "One bar terminal",
-      "book": "Book",
-      "checkoutUnavailable": "Online payment is not set up yet.",
-      "portal": "Payment and invoices",
-      "portalHint": "Payment method, invoices, change or cancel the plan.",
-      "supporter": "Support Vereint",
-      "supporterHint": "Voluntary and personal: {price} a month helps to develop Vereint further.",
-      "supporterHintNoAmount": "Voluntary and personal: a monthly contribution helps to develop Vereint further.",
-      "export": "Export data",
-      "exportHint": "All data of this group as a JSON file.",
-      "success": "Thank you! The plan will be active in a few seconds.",
-      "thanks": "Thank you for your support!",
-      "canceled": "Payment cancelled, nothing was booked.",
-      "unavailable": "The plan could not be loaded."
-    },
     "open": {
       "eyebrow": "New group",
       "title": "Open a group",
@@ -2062,11 +1985,11 @@
       "checking": "Getting ready …",
       "intro": "Create your group and your account in one step. You will be the group admin.",
       "createIntro": "You are signed in. Give your new group a name – you will be its admin.",
-      "planInfo": "The group starts on the free plan with up to 10 members. You can book a larger plan at any time later. Members join via an invitation link.",
+      "planInfo": "Members join via an invitation link.",
       "name": "Group name",
       "submit": "Open group",
       "submitting": "Opening group …",
-      "done": "“{name}” is open and your account for {email} has been created. Sign in now to choose a plan and invite members.",
+      "done": "“{name}” is open and your account for {email} has been created. Sign in now to invite members.",
       "haveAccount": "Already have an account?",
       "loginFirst": "Sign in first, then open it",
       "back": "Back to group selection",
@@ -2075,6 +1998,11 @@
         "checkInput": "Please check your input. The group name may be at most {max} characters long, the password needs at least {min} characters.",
         "selectFailed": "The group has been created but could not be opened. You will find it in the group selection."
       }
+    },
+    "export": {
+      "title": "Data export",
+      "hint": "All data of this group as a JSON file.",
+      "button": "Export data"
     }
   },
   "legal": {
@@ -2087,8 +2015,6 @@
     "acceptPrefix": "I have read and accept the",
     "acceptLink": "terms and conditions",
     "acceptSuffix": ".",
-    "acceptRequired": "Please accept the terms and conditions.",
-    "paidNotice": "Paid plans and the supporter fee are subject to the terms and conditions, including the consumer right of withdrawal.",
-    "withdrawal": "Right of withdrawal"
+    "acceptRequired": "Please accept the terms and conditions."
   }
 }

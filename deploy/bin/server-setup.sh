@@ -3,8 +3,7 @@
 # z. B. ein Strato VPS) einmalig fuer Vereint ein. Als root ausfuehren:
 #
 #   bash server-setup.sh --domain app.example.de \
-#     --deploy-key 'ssh-ed25519 AAAA... github-actions-deploy' \
-#     [--website-domain 'example.de, www.example.de']
+#     --deploy-key 'ssh-ed25519 AAAA... github-actions-deploy'
 #
 # Das Skript ist idempotent (mehrfach ausfuehrbar) und
 #   1. aktualisiert das System und schaltet automatische Sicherheitsupdates an,
@@ -21,12 +20,10 @@
 set -euo pipefail
 
 DOMAIN=""
-WEBSITE_DOMAIN=""
 DEPLOY_KEY=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --domain) DOMAIN="${2:-}"; shift 2 ;;
-    --website-domain) WEBSITE_DOMAIN="${2:-}"; shift 2 ;;
     --deploy-key) DEPLOY_KEY="${2:-}"; shift 2 ;;
     *) echo "Unbekannte Option: $1" >&2; exit 1 ;;
   esac
@@ -38,7 +35,6 @@ die() { echo "FEHLER: $*" >&2; exit 1; }
 [ "$(id -u)" -eq 0 ] || die "Bitte als root ausfuehren"
 [[ "$DOMAIN" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$ ]] || die "--domain fehlt oder ist ungueltig (z. B. app.example.de)"
 [[ "$DEPLOY_KEY" =~ ^ssh-(ed25519|rsa)\ [A-Za-z0-9+/=]+( .*)?$ ]] || die "--deploy-key fehlt (oeffentlicher Schluessel, beginnt mit ssh-ed25519)"
-[[ -z "$WEBSITE_DOMAIN" || "$WEBSITE_DOMAIN" =~ ^[a-z0-9.,\ -]+$ ]] || die "--website-domain ist ungueltig"
 # shellcheck disable=SC1091
 . /etc/os-release
 case "$ID" in
@@ -157,7 +153,6 @@ if ! has PUBLIC_DOMAIN; then
 CONF
 fi
 put PUBLIC_DOMAIN "$DOMAIN"
-[ -z "$WEBSITE_DOMAIN" ] || put WEBSITE_DOMAIN "$WEBSITE_DOMAIN"
 put STORAGE_BACKEND filesystem
 # Eroeffnen eigener Gruppen erst einschalten, wenn Datenschutzerklaerung,
 # Impressum und AGB fertig sind (docs/domains/rechtliches.md).
