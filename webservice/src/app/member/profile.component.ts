@@ -133,10 +133,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
   ];
   /**
    * Zwei-Faktor-Anmeldung ist freiwillig: Mitglieder richten sie in der
-   * Keycloak-Kontoverwaltung ein (gleiche Herkunft unter `/kc`). Danach fragt
-   * der Standard-Login den Code automatisch ab.
+   * Keycloak-Kontoverwaltung ein; der BFF leitet dorthin weiter, weil nur er
+   * die Adresse von Keycloak kennt. Danach fragt der Standard-Login den Code
+   * automatisch ab.
    */
-  protected readonly twoFactorUrl = '/kc/realms/vereint/account/account-security/signing-in';
+  protected readonly twoFactorUrl = '/api/auth/account-security';
   protected readonly languages = this.i18n.languages;
   protected readonly language = this.i18n.language;
 

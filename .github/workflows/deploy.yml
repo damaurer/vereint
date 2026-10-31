@@ -10,8 +10,10 @@ name: Deployment (Produktion)
 # Zwei Ziele, je nach Environment `production`:
 #   - Eigener Server nach damaurer/LinuxServerSetup (z. B. Strato VPS,
 #     docs/betrieb/strato.md): ist die Variable APP_NAME gesetzt, gibt
-#     der Job `server` den drei Images einen gemeinsamen Tag `release-<commit>` und
-#     ruft per SSH `deploy <APP_NAME> <tag>` auf. Der Server sichert vorher die
+#     der Job `server` den Images baseservice und webservice einen gemeinsamen
+#     Tag `release-<commit>` und ruft per SSH `deploy <APP_NAME> <tag>` auf.
+#     Den Login stellt dort der Keycloak der Plattform (Realm und Theme liegen
+#     in LinuxServerSetup), das Keycloak-Image wird nicht gebraucht. Der Server sichert vorher die
 #     Datenbank und kehrt bei einem Fehler selbst zum vorherigen Tag zurueck.
 #     Rollback: von Hand mit einem frueheren Tag starten.
 #   - AWS (infra/aws), sonst: Job `deploy`.
@@ -103,7 +105,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # Damit nicht ein halb fertiger Stand mit gemischten Versionen ausrollt.
-          for wf in baseservice-docker.yml webservice-docker.yml keycloak-docker.yml; do
+          for wf in baseservice-docker.yml webservice-docker.yml; do
             for _ in $(seq 1 60); do
               running="$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --branch main \
                 --json status --jq '[.[] | select(.status != "completed")] | length')"
@@ -127,8 +129,8 @@ jobs:
         run: |
           owner="${GITHUB_REPOSITORY_OWNER,,}"
           if [ -n "$ROLLBACK_TAG" ]; then
-            # Rollback: der Tag muss fuer alle drei Images schon existieren.
-            for svc in keycloak baseservice webservice; do
+            # Rollback: der Tag muss fuer beide Images schon existieren.
+            for svc in baseservice webservice; do
               docker buildx imagetools inspect "ghcr.io/$owner/$svc:$ROLLBACK_TAG" >/dev/null ||
                 { echo "::error::ghcr.io/$owner/$svc:$ROLLBACK_TAG gibt es nicht"; exit 1; }
             done
@@ -136,13 +138,13 @@ jobs:
             exit 0
           fi
           # Die Images werden nur gebaut, wenn sich ihr Ordner aendert. Der
-          # Release-Tag friert den aktuellen Stand von :main aller drei ein.
+          # Release-Tag friert den aktuellen Stand von :main beider ein.
           tag="release-${GITHUB_SHA::12}"
           {
             echo "### Release $tag"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
-          for svc in keycloak baseservice webservice; do
+          for svc in baseservice webservice; do
             digest="$(docker buildx imagetools inspect "ghcr.io/$owner/$svc:main" --format '{{json .Manifest}}' | jq -r .digest)"
             [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Kein Image ghcr.io/$owner/$svc:main gefunden"; exit 1; }
             docker buildx imagetools create --tag "ghcr.io/$owner/$svc:$tag" "ghcr.io/$owner/$svc@$digest"
