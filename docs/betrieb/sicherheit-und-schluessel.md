@@ -1,5 +1,8 @@
 # Sicherheit und Verschlüsselung
 
+> **Strato / eigener Server:** Dort übernimmt [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) Secrets (Ansible Vault) und Schlüsselrotation, siehe
+> [Betrieb auf einem Strato VPS](strato.md). Diese Seite beschreibt den Weg über AWS.
+
 ## Verschlüsselung in Schichten
 
 | Schicht | Wie |

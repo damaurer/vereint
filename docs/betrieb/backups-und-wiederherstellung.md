@@ -1,5 +1,8 @@
 # Backups und Wiederherstellung
 
+> **Strato / eigener Server:** Dort übernimmt [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) die Backups (Dump vor jedem Deployment, nachts restic nach HiDrive), siehe
+> [Betrieb auf einem Strato VPS](strato.md). Diese Seite beschreibt den Weg über AWS.
+
 Datenverlust soll praktisch ausgeschlossen sein. Dafür gibt es mehrere
 unabhängige Sicherungen.
 

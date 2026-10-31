@@ -24,7 +24,8 @@ docs/
 ├── handbuch/                             # Benutzerhandbuch je Rolle mit Bildschirmfotos
 │
 ├── betrieb/                              # Produktion: Go-Live, CI, AWS, Deployment, Backups, Schlüssel
-│   ├── go-live-checkliste.md             # Was vor dem ersten Produktivbetrieb von Hand zu tun ist
+│   ├── strato.md                         # Betrieb auf Strato (eigener VPS): Plan und Go-Live-Checkliste
+│   ├── go-live-checkliste.md             # Was vor dem ersten Produktivbetrieb auf AWS von Hand zu tun ist
 │   ├── branches-und-ci.md                # develop, qs, main, Prüfungen vor jedem Merge, Images
 │   ├── aws-und-kosten.md                 # Terraform, Server, Budget, monatliche Kosten
 │   ├── deployment-und-rollback.md        # Automatisches Ausrollen, Health Check, Zurückrollen

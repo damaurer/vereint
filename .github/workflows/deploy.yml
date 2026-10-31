@@ -7,7 +7,16 @@ name: Deployment (Produktion)
 #   - bei Aenderungen an deploy/ auf `main`,
 #   - von Hand (Actions -> Deployment -> Run workflow), auch als Rollback.
 #
-# Der Job meldet sich per OIDC bei AWS an (keine dauerhaften Schluessel in
+# Zwei Ziele, je nach Environment `production`:
+#   - Eigener Server nach damaurer/LinuxServerSetup (z. B. Strato VPS,
+#     docs/betrieb/strato.md): ist die Variable APP_NAME gesetzt, gibt
+#     der Job `server` den drei Images einen gemeinsamen Tag `release-<commit>` und
+#     ruft per SSH `deploy <APP_NAME> <tag>` auf. Der Server sichert vorher die
+#     Datenbank und kehrt bei einem Fehler selbst zum vorherigen Tag zurueck.
+#     Rollback: von Hand mit einem frueheren Tag starten.
+#   - AWS (infra/aws), sonst: Job `deploy`.
+#
+# Der AWS-Job meldet sich per OIDC bei AWS an (keine dauerhaften Schluessel in
 # GitHub) und laeuft nur im Environment `production`. Er bindet alle drei
 # Images an ihren Digest, legt das Bundle in S3 ab und startet auf dem Server
 # per AWS Systems Manager `bin/deploy.sh`. Das Skript sichert vorher die
@@ -30,10 +39,14 @@ on:
   workflow_dispatch:
     inputs:
       action:
-        description: 'deploy = aktuellen Stand von main ausrollen, rollback = vorherigen Stand wiederherstellen'
+        description: 'deploy = aktuellen Stand von main ausrollen, rollback = vorherigen Stand wiederherstellen (nur AWS)'
         type: choice
         options: [deploy, rollback]
         default: deploy
+      tag:
+        description: 'Nur eigener Server: diesen frueheren Tag ausrollen (z. B. release-1a2b3c4d5e6f), leer = aktueller Stand von main'
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -44,11 +57,124 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Auf den Server ausrollen
+  server:
+    name: Auf den eigenen Server ausrollen
     if: >-
-      github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
+      vars.APP_NAME != '' && (
+        github.event_name != 'workflow_run' ||
+        (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+
+    permissions:
+      contents: read
+      # Fuer den gemeinsamen Release-Tag in ghcr.io.
+      packages: write
+      actions: read
+
+    env:
+      APP_NAME: ${{ vars.APP_NAME }}
+      ROLLBACK_TAG: ${{ inputs.tag }}
+
+    steps:
+      - name: Konfiguration pruefen
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          missing=""
+          [ -n "$DEPLOY_HOST" ] || missing="$missing DEPLOY_HOST"
+          [ -n "$DEPLOY_SSH_KEY" ] || missing="$missing DEPLOY_SSH_KEY"
+          [ -n "$DEPLOY_KNOWN_HOSTS" ] || missing="$missing DEPLOY_KNOWN_HOSTS"
+          if [ -n "$missing" ]; then
+            echo "::error::Im Environment production fehlen die Secrets:$missing (siehe docs/betrieb/strato.md)"
+            exit 1
+          fi
+          if [ -n "$ROLLBACK_TAG" ] && ! [[ "$ROLLBACK_TAG" =~ ^release-[0-9a-f]{12}$ ]]; then
+            echo "::error::Tag muss die Form release-<12 Zeichen Commit> haben"
+            exit 1
+          fi
+
+      - name: Laufende Image-Builds abwarten
+        if: inputs.tag == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Damit nicht ein halb fertiger Stand mit gemischten Versionen ausrollt.
+          for wf in baseservice-docker.yml webservice-docker.yml keycloak-docker.yml; do
+            for _ in $(seq 1 60); do
+              running="$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$wf" --branch main \
+                --json status --jq '[.[] | select(.status != "completed")] | length')"
+              [ "$running" = 0 ] && continue 2
+              echo "$wf laeuft noch, warte ..."
+              sleep 30
+            done
+            echo "::error::$wf ist nach 30 Minuten noch nicht fertig"
+            exit 1
+          done
+
+      - name: An GitHub Container Registry anmelden
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Gemeinsamen Release-Tag setzen
+        id: release
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          if [ -n "$ROLLBACK_TAG" ]; then
+            # Rollback: der Tag muss fuer alle drei Images schon existieren.
+            for svc in keycloak baseservice webservice; do
+              docker buildx imagetools inspect "ghcr.io/$owner/$svc:$ROLLBACK_TAG" >/dev/null ||
+                { echo "::error::ghcr.io/$owner/$svc:$ROLLBACK_TAG gibt es nicht"; exit 1; }
+            done
+            echo "tag=$ROLLBACK_TAG" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Die Images werden nur gebaut, wenn sich ihr Ordner aendert. Der
+          # Release-Tag friert den aktuellen Stand von :main aller drei ein.
+          tag="release-${GITHUB_SHA::12}"
+          {
+            echo "### Release $tag"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          for svc in keycloak baseservice webservice; do
+            digest="$(docker buildx imagetools inspect "ghcr.io/$owner/$svc:main" --format '{{json .Manifest}}' | jq -r .digest)"
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::Kein Image ghcr.io/$owner/$svc:main gefunden"; exit 1; }
+            docker buildx imagetools create --tag "ghcr.io/$owner/$svc:$tag" "ghcr.io/$owner/$svc@$digest"
+            echo "$svc@$digest" >> "$GITHUB_STEP_SUMMARY"
+          done
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: SSH vorbereiten
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_deploy ~/.ssh/known_hosts
+
+      - name: Auf dem Server ausrollen
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes -o ServerAliveInterval=30 \
+            "deploy@${DEPLOY_HOST}" deploy "$APP_NAME" "$TAG"
+
+  deploy:
+    name: Auf den Server ausrollen (AWS)
+    if: >-
+      vars.APP_NAME == '' && (
+        github.event_name != 'workflow_run' ||
+        (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request'))
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: production

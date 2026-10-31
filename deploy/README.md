@@ -1,5 +1,9 @@
 # Produktionsbetrieb
 
+> Dieser Ordner beschreibt den Betrieb auf AWS. Für einen eigenen Server (z. B.
+> Strato) richtet [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup)
+> alles ein, siehe [Betrieb auf einem Strato VPS](../docs/betrieb/strato.md).
+
 Dieser Ordner ist alles, was auf dem Server liegt (`/srv/vereint/app`). Der
 Server selbst entsteht mit Terraform (`infra/aws`).
 

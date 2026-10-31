@@ -60,7 +60,10 @@ privater Repositories gilt nicht mehr. Die Container-Images unter
 ## Selbst betreiben
 
 Für Ausprobieren und Entwickeln reicht `node local/vereint.mjs up`
-([local/README.md](../../local/README.md)). Der Produktionsbetrieb in
-[`deploy/`](../../deploy/README.md) ist auf AWS ausgelegt (Terraform, SSM
-für Secrets, S3 für Dateien und Backups). Eine Anleitung für einen eigenen
-Server ohne AWS gibt es noch nicht ([offene Punkte](../offene-punkte.md)).
+([local/README.md](../../local/README.md)). Für den
+Produktionsbetrieb auf einem eigenen Server richtet
+[LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) per Ansible
+einen gehärteten Server mit Traefik, Backups und Monitoring ein; Vereint ist
+dort eine eigene Rolle, Dateien liegen in einem Docker-Volume, ausgerollt wird
+per SSH. Schritt für Schritt: [Betrieb auf einem Strato VPS](strato.md). Die
+AWS-Variante (Terraform, SSM, S3) beschreibt [AWS und Kosten](aws-und-kosten.md).

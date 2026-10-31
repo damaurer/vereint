@@ -39,6 +39,10 @@ RUN addgroup --system --gid 10001 vereint \
 
 COPY --from=build --chown=10001:10001 /workspace/build/libs/*.jar app.jar
 
+# Ablage fuer STORAGE_BACKEND=filesystem. Ein leeres Docker-Volume uebernimmt
+# beim ersten Einhaengen Besitzer und Rechte dieses Verzeichnisses.
+RUN install -d -m 0700 -o 10001 -g 10001 /data/files
+
 USER 10001:10001
 
 ENV PORT=8081 \

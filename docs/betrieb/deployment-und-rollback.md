@@ -1,5 +1,8 @@
 # Deployment und Rollback
 
+> **Strato / eigener Server:** Dort übernimmt [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) das Ausrollen (`deploy vereint <tag>` per SSH, Dump vorher, automatischer Rollback), siehe
+> [Betrieb auf einem Strato VPS](strato.md). Diese Seite beschreibt den Weg über AWS.
+
 Auf dem Server liegt der Inhalt von
 [`deploy/`](../../deploy/) unter
 `/srv/vereint/app`: Docker Compose mit Caddy, Keycloak, webservice, baseservice

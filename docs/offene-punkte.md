@@ -5,7 +5,7 @@ austragen.
 
 | Punkt | Stand |
 | :--- | :--- |
-| Go-Live | In AWS ist noch nichts angelegt, auf `main` wurde noch nie ausgerollt. Schritte in der [Go-Live-Checkliste](betrieb/go-live-checkliste.md). |
+| Go-Live | Geplant ist ein Strato VPS; noch ist kein Server bestellt, auf `main` wurde noch nie ausgerollt. Schritte in [Betrieb auf einem Strato VPS](betrieb/strato.md#checkliste-für-den-go-live) (AWS-Variante: [Go-Live-Checkliste](betrieb/go-live-checkliste.md)). |
 | Prüfen nach dem Deployment | Barcode-Kamera, Web Push, Zwei-Faktor-Anmeldung und Video-Upload lassen sich erst unter echtem HTTPS am Handy prüfen. |
 | Regel für Barcode-Käufe | Scannen nur bei laufenden Events, an denen das Mitglied teilnimmt. Diese Regel war ein gewählter Standard und ist noch nicht ausdrücklich bestätigt. |
 | Keycloak-Login-Theme | Die vier FTL-Vorlagen basieren noch auf Keycloak 26.1.4 und laufen unter 26.8.1. Beim nächsten Theme-Umbau mit den 26.8.1-Originalen abgleichen ([keycloak/README.md](../keycloak/README.md#produktion)). |
@@ -15,4 +15,3 @@ austragen.
 | Push für Chat-Nachrichten | Einzelne Chat-Nachrichten lösen keinen Push aus; neue Nachrichten zeigt der Ungelesen-Zähler am Chat. |
 | Bildschirmfotos im Handbuch | Für Moments mit Fotos und Videos, die Seite *Gruppe wählen* und den Beitritt mit bestehendem Konto gibt es noch keine Bilder. Aufnehmen mit [`scripts/handbook`](../scripts/handbook/). |
 | Arbeitsspeicher | Die Container-Grenzen summieren sich auf etwa 2,1 GB bei 2 GB RAM plus 2 GB Swap. Im Betrieb beobachten. |
-| Selbst betreiben ohne AWS | Der Produktionsbetrieb in `deploy/` setzt AWS voraus (SSM, S3). Für einen eigenen Server ohne AWS fehlen eine Anleitung und ein S3-kompatibler Speicher wie MinIO ([open-source.md](betrieb/open-source.md#selbst-betreiben)). |
