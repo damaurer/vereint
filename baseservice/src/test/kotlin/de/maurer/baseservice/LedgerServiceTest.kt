@@ -332,7 +332,7 @@ class LedgerServiceTest {
             currency = "EUR",
             accountingMode = AccountingMode.credit,
             actor = admin(),
-            idempotencyKey = "purchase-food-1"
+            idempotencyKey = "purchase-2"
         )
         `when`(ledgerEntryRepository.findById(original.id)).thenReturn(Optional.of(original))
         `when`(ledgerEntryRepository.findByReversesEntryId(original.id)).thenReturn(emptyList())
