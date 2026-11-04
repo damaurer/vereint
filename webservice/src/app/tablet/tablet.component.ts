@@ -4,7 +4,7 @@ import { forkJoin, type Observable } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
 import { eventStatusLabel, formatMoney } from '../member/member-format';
-import { newIdempotencyKey } from '../api/idempotency';
+import { newIdempotencyKey, RetryableIdempotencyKey } from '../api/idempotency';
 import { TabletApiService } from './tablet-api.service';
 import type { KioskSession } from '../kiosk/kiosk-api.service';
 import { KioskStartDialogComponent } from '../kiosk/kiosk-start-dialog.component';
@@ -411,6 +411,14 @@ export class TabletComponent implements OnInit, OnDestroy {
   protected readonly drinkOverlayOpen = signal(false);
   protected readonly revenueSheetOpen = signal(false);
   protected readonly tallies = signal<Record<string, number>>({});
+
+  /**
+   * Schlüssel für Striche und Runden. Bricht eine Buchung ab (z. B. nach einer
+   * Zeitüberschreitung), schickt ein erneuter Tipp mit denselben Daten denselben
+   * Schlüssel, damit eine schon gespeicherte Buchung nicht doppelt entsteht.
+   */
+  private readonly purchaseKey = new RetryableIdempotencyKey();
+  private readonly revenueKey = new RetryableIdempotencyKey();
   /** Buchungs-IDs der in dieser Sitzung erfassten Striche je Mitglied (für „−“/Rückgängig). */
   private readonly booked = signal<Record<string, string[]>>({});
   /** Letzter erfasster Strich für die Rückgängig-Leiste. */
@@ -661,13 +669,14 @@ export class TabletComponent implements OnInit, OnDestroy {
     this.revenueSheetOpen.set(false);
   }
 
-  private runAction(source: Observable<unknown>, successInfo: string): void {
+  private runAction(source: Observable<unknown>, successInfo: string, onSuccess?: () => void): void {
     this.busy.set(true);
     this.actionError.set(null);
     this.actionInfo.set(null);
     source.subscribe({
       next: () => {
         this.busy.set(false);
+        onSuccess?.();
         this.actionInfo.set(successInfo);
       },
       error: (error: unknown) => {
@@ -685,19 +694,17 @@ export class TabletComponent implements OnInit, OnDestroy {
     this.busy.set(true);
     this.actionError.set(null);
     this.actionInfo.set(null);
+    const payload = {
+      memberId,
+      eventDrinkId: eventDrinkId || undefined,
+      eventFoodId: eventFoodId || undefined,
+    };
     this.api
-      .recordPurchase(
-        eventId,
-        {
-          memberId,
-          eventDrinkId: eventDrinkId || undefined,
-          eventFoodId: eventFoodId || undefined,
-        },
-        newIdempotencyKey(),
-      )
+      .recordPurchase(eventId, payload, this.purchaseKey.for({ eventId, ...payload }))
       .subscribe({
         next: (entry) => {
           this.busy.set(false);
+          this.purchaseKey.reset();
           if (entry?.id) {
             this.booked.update((current) => ({
               ...current,
@@ -741,7 +748,12 @@ export class TabletComponent implements OnInit, OnDestroy {
       eventFoodId: eventFoodId || undefined,
       memberIds,
     };
-    const key = newIdempotencyKey();
+    const key = this.revenueKey.for({
+      eventId,
+      kind: this.revenueForm.kind,
+      ...payload,
+      memberIds: [...memberIds].sort(),
+    });
     const source: Observable<LedgerEntry[]> =
       this.revenueForm.kind === 'evening'
         ? this.api.recordEvening(eventId, payload, key)
@@ -749,6 +761,7 @@ export class TabletComponent implements OnInit, OnDestroy {
     this.runAction(
       source,
       translate(this.revenueForm.kind === 'evening' ? 'tablet.messages.eveningBooked' : 'tablet.messages.roundBooked'),
+      () => this.revenueKey.reset(),
     );
     this.revenueForm = { eventDrinkId: '', eventFoodId: '', kind: this.revenueForm.kind };
     this.revenueSelection = {};

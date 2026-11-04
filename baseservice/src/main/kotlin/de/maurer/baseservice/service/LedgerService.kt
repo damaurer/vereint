@@ -219,6 +219,7 @@ class LedgerService(
                 member = member,
                 event = original.event,
                 drink = original.drink,
+                food = original.food,
                 amount = original.amount,
                 currency = original.currency,
                 accountingMode = original.accountingMode,

@@ -92,7 +92,7 @@ erDiagram
   - `source` (`VARCHAR(32)`, nullable, Check: `pwaBarcode`, `tabletManual`, `round`, `evening`)
   - `actor_id` (`UUID`, FK `users.id`)
   - `idempotency_key` (`VARCHAR(128)`, Unique je Gruppe)
-  - `reverses_entry_id` (`UUID`, FK `ledger_entries.id`, RESTRICT delete) – Für Stornierungen
+  - `reverses_entry_id` (`UUID`, FK `ledger_entries.id`, RESTRICT delete, eindeutig) – Für Stornierungen
   - `created_at` (`TIMESTAMPTZ`)
 - **`purchase_snapshots`**:
   - `id` (`UUID`, PK)
@@ -231,5 +231,6 @@ FOR EACH ROW EXECUTE FUNCTION vereint_reject_ledger_mutation();
 | `019` | `019-friends-and-direct-messages.xml` | Freundesliste und gruppenübergreifende Direktnachrichten; Umzug bestehender Direktchats. |
 | `020` | `020-moments-without-events.xml` | Moments ohne Event. |
 | `021` | `021-remove-plans-and-billing.xml` | Entfernt Tarife, Stripe-Ereignisse und das Recht `billing.manage`. |
+| `022` | `022-unique-ledger-correction.xml` | Höchstens eine Gegenbuchung je Buchung: Unique-Constraint auf `ledger_entries.reverses_entry_id`. |
 
 Die Nummer `006` ist nicht vergeben.

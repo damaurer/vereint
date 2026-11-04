@@ -315,6 +315,40 @@ class LedgerServiceTest {
     }
 
     @Test
+    fun `correction of a food purchase keeps the food reference`() {
+        `when`(userService.getOrCreateUser(adminPrincipal())).thenReturn(admin())
+        val food = FoodCatalogEntity(
+            id = UUID.randomUUID(),
+            name = "Currywurst",
+            defaultPrice = BigDecimal("4.50"),
+            costPrice = BigDecimal("2.00")
+        )
+        val original = LedgerEntryEntity(
+            entryType = LedgerEntryType.purchase,
+            event = EventEntity(id = UUID.randomUUID(), title = "Fest"),
+            member = member(),
+            food = food,
+            amount = BigDecimal("4.50"),
+            currency = "EUR",
+            accountingMode = AccountingMode.credit,
+            actor = admin(),
+            idempotencyKey = "purchase-food-1"
+        )
+        `when`(ledgerEntryRepository.findById(original.id)).thenReturn(Optional.of(original))
+        `when`(ledgerEntryRepository.findByReversesEntryId(original.id)).thenReturn(emptyList())
+        `when`(ledgerEntryRepository.save(anyLedgerEntry())).thenAnswer { it.arguments[0] }
+
+        val dto = ledgerService.correct(
+            CorrectionRequest(originalEntryId = original.id.toString()),
+            "idem-correction-food",
+            adminPrincipal()
+        )
+
+        assertEquals(food.id.toString(), dto.foodId)
+        assertEquals(original.id.toString(), dto.reversesEntryId)
+    }
+
+    @Test
     fun `correction rejects an already corrected entry`() {
         `when`(userService.getOrCreateUser(adminPrincipal())).thenReturn(admin())
         val original = LedgerEntryEntity(
