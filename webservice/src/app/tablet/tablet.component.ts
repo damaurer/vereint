@@ -669,7 +669,12 @@ export class TabletComponent implements OnInit, OnDestroy {
     this.revenueSheetOpen.set(false);
   }
 
-  private runAction(source: Observable<unknown>, successInfo: string, onSuccess?: () => void): void {
+  private runAction(
+    source: Observable<unknown>,
+    successInfo: string,
+    onSuccess?: () => void,
+    onError?: () => void,
+  ): void {
     this.busy.set(true);
     this.actionError.set(null);
     this.actionInfo.set(null);
@@ -681,6 +686,7 @@ export class TabletComponent implements OnInit, OnDestroy {
       },
       error: (error: unknown) => {
         this.busy.set(false);
+        onError?.();
         this.actionError.set(describeApiError(error));
       },
     });
@@ -699,12 +705,23 @@ export class TabletComponent implements OnInit, OnDestroy {
       eventDrinkId: eventDrinkId || undefined,
       eventFoodId: eventFoodId || undefined,
     };
+    const keyData = { eventId, ...payload };
+    const key = this.purchaseKey.for(keyData);
     this.api
-      .recordPurchase(eventId, payload, this.purchaseKey.for({ eventId, ...payload }))
+      .recordPurchase(eventId, payload, key)
       .subscribe({
         next: (entry) => {
           this.busy.set(false);
           this.purchaseKey.reset();
+          if (entry?.id && this.booked()[memberId]?.includes(entry.id)) {
+            // Der Server hat eine schon gezählte Buchung als Wiederholung
+            // zurückgegeben: den eben optimistisch gesetzten Strich zurücknehmen.
+            this.tallies.update((current) => ({
+              ...current,
+              [memberId]: Math.max(0, (current[memberId] ?? 0) - 1),
+            }));
+            return;
+          }
           if (entry?.id) {
             this.booked.update((current) => ({
               ...current,
@@ -716,6 +733,7 @@ export class TabletComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           this.busy.set(false);
+          this.purchaseKey.failed(keyData, key);
           // Fehlgeschlagene Buchung: den optimistisch gezählten Strich wieder entfernen.
           this.tallies.update((current) => ({
             ...current,
@@ -748,12 +766,13 @@ export class TabletComponent implements OnInit, OnDestroy {
       eventFoodId: eventFoodId || undefined,
       memberIds,
     };
-    const key = this.revenueKey.for({
+    const keyData = {
       eventId,
       kind: this.revenueForm.kind,
       ...payload,
       memberIds: [...memberIds].sort(),
-    });
+    };
+    const key = this.revenueKey.for(keyData);
     const source: Observable<LedgerEntry[]> =
       this.revenueForm.kind === 'evening'
         ? this.api.recordEvening(eventId, payload, key)
@@ -762,6 +781,7 @@ export class TabletComponent implements OnInit, OnDestroy {
       source,
       translate(this.revenueForm.kind === 'evening' ? 'tablet.messages.eveningBooked' : 'tablet.messages.roundBooked'),
       () => this.revenueKey.reset(),
+      () => this.revenueKey.failed(keyData, key),
     );
     this.revenueForm = { eventDrinkId: '', eventFoodId: '', kind: this.revenueForm.kind };
     this.revenueSelection = {};

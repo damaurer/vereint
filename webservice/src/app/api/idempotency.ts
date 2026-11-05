@@ -16,29 +16,39 @@ export function newIdempotencyKey(): string {
 }
 
 /**
- * Hält den Idempotency-Key einer Buchung, bis sie sicher angekommen ist.
+ * Merkt sich den Idempotency-Key einer fehlgeschlagenen Buchung.
  *
  * Bricht eine Anfrage ab (Zeitüberschreitung, Netzwerk, `503`), kann der
  * Fachservice die Buchung trotzdem gespeichert haben. Wiederholt die Person
- * dieselbe Buchung, muss deshalb derselbe Schlüssel mitgehen: Dann liefert der
- * Server die vorhandene Buchung zurück, statt eine zweite anzulegen. Ein neuer
- * Schlüssel entsteht erst, wenn sich die Buchungsdaten ändern oder die letzte
- * Buchung erfolgreich war ([reset]).
+ * danach dieselbe Buchung, muss deshalb derselbe Schlüssel mitgehen: Dann
+ * liefert der Server die vorhandene Buchung zurück, statt eine zweite
+ * anzulegen.
+ *
+ * Gemerkt wird ein Schlüssel erst nach einem Fehler ([failed]). Zwei Buchungen
+ * mit gleichen Daten, die gleichzeitig unterwegs sind (zweimal schnell „+“ am
+ * Thekenterminal), bekommen daher verschiedene Schlüssel und zählen beide.
  */
 export class RetryableIdempotencyKey {
-  private current: { readonly fingerprint: string; readonly key: string } | null = null;
+  private failedAttempt: { readonly fingerprint: string; readonly key: string } | null = null;
 
-  /** Schlüssel für [payload]; bei gleichen Daten derselbe wie beim letzten Versuch. */
+  /** Schlüssel für [payload]: der einer fehlgeschlagenen gleichen Buchung, sonst ein neuer. */
   for(payload: unknown): string {
-    const fingerprint = JSON.stringify(payload) ?? '';
-    if (this.current?.fingerprint !== fingerprint) {
-      this.current = { fingerprint, key: newIdempotencyKey() };
-    }
-    return this.current.key;
+    const fingerprint = RetryableIdempotencyKey.fingerprint(payload);
+    if (this.failedAttempt?.fingerprint === fingerprint) return this.failedAttempt.key;
+    return newIdempotencyKey();
+  }
+
+  /** Die Buchung mit [key] ist fehlgeschlagen; eine Wiederholung nutzt denselben Schlüssel. */
+  failed(payload: unknown, key: string): void {
+    this.failedAttempt = { fingerprint: RetryableIdempotencyKey.fingerprint(payload), key };
   }
 
   /** Nach Erfolg: Die nächste Buchung ist eine neue, auch mit gleichen Daten. */
   reset(): void {
-    this.current = null;
+    this.failedAttempt = null;
+  }
+
+  private static fingerprint(payload: unknown): string {
+    return JSON.stringify(payload) ?? '';
   }
 }

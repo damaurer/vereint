@@ -658,6 +658,7 @@ export class TreasuryComponent implements OnInit, OnDestroy {
     source: Observable<LedgerEntry>,
     successInfo: string,
     onSuccess: () => void,
+    onError: () => void = () => undefined,
   ): void {
     this.busy.set(true);
     this.actionError.set(null);
@@ -671,6 +672,7 @@ export class TreasuryComponent implements OnInit, OnDestroy {
       },
       error: (error: unknown) => {
         this.busy.set(false);
+        onError();
         this.actionError.set(describeApiError(error));
       },
     });
@@ -682,14 +684,16 @@ export class TreasuryComponent implements OnInit, OnDestroy {
     if (!memberId || !amount) return;
     const note = this.topupForm.note.trim();
     const payload = { memberId, amount, note: note || undefined };
+    const key = this.topupKey.for(payload);
     this.runBooking(
       memberId,
-      this.api.topup(payload, this.topupKey.for(payload)),
+      this.api.topup(payload, key),
       translate('board.treasury.booking.topupDone'),
       () => {
         this.topupKey.reset();
         this.topupForm = { amount: '', note: '' };
       },
+      () => this.topupKey.failed(payload, key),
     );
   }
 
@@ -699,14 +703,16 @@ export class TreasuryComponent implements OnInit, OnDestroy {
     if (!memberId || !amount) return;
     const note = this.payoutForm.note.trim();
     const payload = { memberId, amount, note: note || undefined };
+    const key = this.payoutKey.for(payload);
     this.runBooking(
       memberId,
-      this.api.payout(payload, this.payoutKey.for(payload)),
+      this.api.payout(payload, key),
       translate('board.treasury.booking.payoutDone'),
       () => {
         this.payoutKey.reset();
         this.payoutForm = { amount: '', note: '' };
       },
+      () => this.payoutKey.failed(payload, key),
     );
   }
 
@@ -716,14 +722,16 @@ export class TreasuryComponent implements OnInit, OnDestroy {
     if (!memberId || !originalEntryId) return;
     const reason = this.correctionForm.reason.trim();
     const payload = { originalEntryId, reason: reason || undefined };
+    const key = this.correctionKey.for(payload);
     this.runBooking(
       memberId,
-      this.api.correct(payload, this.correctionKey.for(payload)),
+      this.api.correct(payload, key),
       translate('board.treasury.booking.correctionDone'),
       () => {
         this.correctionKey.reset();
         this.correctionForm = { originalEntryId: '', reason: '' };
       },
+      () => this.correctionKey.failed(payload, key),
     );
   }
 }

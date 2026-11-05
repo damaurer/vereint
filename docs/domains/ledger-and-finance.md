@@ -43,7 +43,7 @@ Das System unterscheidet vier elementare Buchungstypen (`entryType`):
   - `POST /api/v1/ledger/purchases/{entryId}/undo`: eigenen Barcode-Kauf zurücknehmen (`purchase.self`)
   - `POST /api/v1/ledger/topups`, `POST /api/v1/ledger/payouts`, `POST /api/v1/ledger/corrections`: Aufladung, Auszahlung, Gegenbuchung (`ledger.correct`, Startwert: Vorstand und Admin)
   - Alle schreibenden Aufrufe verlangen den Header `Idempotency-Key`.
-  - Die App (Kasse, Thekenterminal, Bezahlen) behält den Schlüssel nach einem Fehler und schickt ihn bei einer Wiederholung mit denselben Daten erneut (`RetryableIdempotencyKey` in `webservice/src/app/api/idempotency.ts`). Nach einer Zeitüberschreitung kann die Buchung schon gespeichert sein; die Wiederholung liefert dann diese Buchung zurück, statt eine zweite anzulegen. Einen neuen Schlüssel gibt es erst nach Erfolg oder wenn sich die Daten ändern.
+  - Die App (Kasse, Thekenterminal, Bezahlen) behält den Schlüssel nach einem Fehler und schickt ihn bei einer Wiederholung mit denselben Daten erneut (`RetryableIdempotencyKey` in `webservice/src/app/api/idempotency.ts`). Nach einer Zeitüberschreitung kann die Buchung schon gespeichert sein; die Wiederholung liefert dann diese Buchung zurück, statt eine zweite anzulegen. Gemerkt wird ein Schlüssel nur nach einem Fehler; gleichzeitig laufende Buchungen mit gleichen Daten (zweimal schnell „+“ am Thekenterminal) bekommen eigene Schlüssel und zählen beide.
 - **Service**: `LedgerService`
   - Berechnet Salden aus den Buchungen eines Mitglieds und Event-Summen aus den Buchungen des Events.
   - Speichert `PurchaseSnapshot`-Objekte mit fixem Verkaufs- und Einkaufspreis (`unitPrice`, `costPrice`, `profit = unitPrice - costPrice`) zum Kaufzeitpunkt.
