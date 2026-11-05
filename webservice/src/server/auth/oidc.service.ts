@@ -248,6 +248,15 @@ export async function logoutFromKeycloak(refreshToken?: string, requestId?: stri
   }
 }
 
+/**
+ * Seite der Keycloak-Kontoverwaltung, auf der Mitglieder die freiwillige
+ * Zwei-Faktor-Anmeldung einrichten. Keycloak kann unter `/kc` derselben
+ * Herkunft oder auf einem eigenen Host (z. B. dem Login der Plattform) laufen.
+ */
+export function accountSecurityUrl(): string {
+  return `${issuerBase()}/account/account-security/signing-in`;
+}
+
 export function buildEndSessionUrl(options?: { idTokenHint?: string; postLogoutRedirectUri?: string }): string {
   const logoutEndpoint = `${issuerBase()}/protocol/openid-connect/logout`;
   const postLogoutRedirect = options?.postLogoutRedirectUri || `${serverEnvironment.publicBaseUrl}/auth/logged-out`;

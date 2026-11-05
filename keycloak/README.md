@@ -61,3 +61,7 @@ Prüfschritte nach Änderungen: Seite rendert mit `<html class="login-pf vereint
 Laufzeit ist seit dem Produktions-Setup Keycloak 26.8.1 (26.1.4 hatte zahlreiche bekannte Schwachstellen); die FTL-Vorlagen basieren weiterhin auf 26.1.4 und rendern unter 26.8.1 (Login, Passwort zurücksetzen und Fehlermeldungen geprüft). Beim nächsten Theme-Umbau die Vorlagen mit den 26.8.1-Originalen abgleichen.
 
 Das Theme benötigt keinen Build-Schritt (`kc.sh build` ist nicht erforderlich). Den Ordner `keycloak/themes/vereint` entweder in das Image kopieren (`COPY keycloak/themes /opt/keycloak/themes`) oder wie lokal nach `/opt/keycloak/themes` mounten. Die Cache-Variablen aus `docker-compose.yml` **nicht** übernehmen: Keycloak cached Themes und Templates standardmäßig, was in Produktion gewünscht ist.
+
+### Produktion auf dem Strato-Server
+
+Auf dem Strato-Server ([docs/betrieb/strato.md](../docs/betrieb/strato.md)) läuft dieses Image nicht. Dort stellt der Keycloak der Plattform aus [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) den Realm `vereint` bereit, unter `https://auth.<domain>/realms/vereint` ohne `/kc`. Realm und Theme liegen dort als Kopie (`ansible/roles/keycloak/templates/realms/vereint-realm.json.j2`, `ansible/roles/keycloak/files/themes/vereint`). **Wer `realm-export.json` oder `themes/vereint` ändert, zieht die Änderung in LinuxServerSetup nach.** Der Realm wird dort nur beim ersten Start importiert; spätere Änderungen am laufenden Realm macht man in der Admin-Konsole. Das Theme läuft dort unter Keycloak 26.4 (Login-Seite geprüft).
