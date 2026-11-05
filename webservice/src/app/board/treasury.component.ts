@@ -6,7 +6,7 @@ import { forkJoin, map, type Observable } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
 import { entryTypeLabel, eventStatusLabel, formatDateTime, formatMoney } from '../member/member-format';
-import { newIdempotencyKey } from '../api/idempotency';
+import { RetryableIdempotencyKey } from '../api/idempotency';
 import { BoardApiService } from './board-api.service';
 import type {
   EventLedgerSummary,
@@ -496,6 +496,11 @@ export class TreasuryComponent implements OnInit, OnDestroy {
   protected payoutForm = { amount: '', note: '' };
   protected correctionForm = { originalEntryId: '', reason: '' };
 
+  /** Je Buchungsart ein Schlüssel, der eine Wiederholung nach Fehler nicht doppelt bucht. */
+  private readonly topupKey = new RetryableIdempotencyKey();
+  private readonly payoutKey = new RetryableIdempotencyKey();
+  private readonly correctionKey = new RetryableIdempotencyKey();
+
   protected readonly formatMoney = formatMoney;
   protected readonly formatDateTime = formatDateTime;
   protected readonly entryTypeLabel = entryTypeLabel;
@@ -653,6 +658,7 @@ export class TreasuryComponent implements OnInit, OnDestroy {
     source: Observable<LedgerEntry>,
     successInfo: string,
     onSuccess: () => void,
+    onError: () => void = () => undefined,
   ): void {
     this.busy.set(true);
     this.actionError.set(null);
@@ -666,6 +672,7 @@ export class TreasuryComponent implements OnInit, OnDestroy {
       },
       error: (error: unknown) => {
         this.busy.set(false);
+        onError();
         this.actionError.set(describeApiError(error));
       },
     });
@@ -676,11 +683,17 @@ export class TreasuryComponent implements OnInit, OnDestroy {
     const amount = this.topupForm.amount.trim();
     if (!memberId || !amount) return;
     const note = this.topupForm.note.trim();
+    const payload = { memberId, amount, note: note || undefined };
+    const key = this.topupKey.for(payload);
     this.runBooking(
       memberId,
-      this.api.topup({ memberId, amount, note: note || undefined }, newIdempotencyKey()),
+      this.api.topup(payload, key),
       translate('board.treasury.booking.topupDone'),
-      () => (this.topupForm = { amount: '', note: '' }),
+      () => {
+        this.topupKey.reset();
+        this.topupForm = { amount: '', note: '' };
+      },
+      () => this.topupKey.failed(payload, key),
     );
   }
 
@@ -689,11 +702,17 @@ export class TreasuryComponent implements OnInit, OnDestroy {
     const amount = this.payoutForm.amount.trim();
     if (!memberId || !amount) return;
     const note = this.payoutForm.note.trim();
+    const payload = { memberId, amount, note: note || undefined };
+    const key = this.payoutKey.for(payload);
     this.runBooking(
       memberId,
-      this.api.payout({ memberId, amount, note: note || undefined }, newIdempotencyKey()),
+      this.api.payout(payload, key),
       translate('board.treasury.booking.payoutDone'),
-      () => (this.payoutForm = { amount: '', note: '' }),
+      () => {
+        this.payoutKey.reset();
+        this.payoutForm = { amount: '', note: '' };
+      },
+      () => this.payoutKey.failed(payload, key),
     );
   }
 
@@ -702,11 +721,17 @@ export class TreasuryComponent implements OnInit, OnDestroy {
     const originalEntryId = this.correctionForm.originalEntryId;
     if (!memberId || !originalEntryId) return;
     const reason = this.correctionForm.reason.trim();
+    const payload = { originalEntryId, reason: reason || undefined };
+    const key = this.correctionKey.for(payload);
     this.runBooking(
       memberId,
-      this.api.correct({ originalEntryId, reason: reason || undefined }, newIdempotencyKey()),
+      this.api.correct(payload, key),
       translate('board.treasury.booking.correctionDone'),
-      () => (this.correctionForm = { originalEntryId: '', reason: '' }),
+      () => {
+        this.correctionKey.reset();
+        this.correctionForm = { originalEntryId: '', reason: '' };
+      },
+      () => this.correctionKey.failed(payload, key),
     );
   }
 }

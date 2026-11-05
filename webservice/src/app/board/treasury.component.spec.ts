@@ -224,6 +224,55 @@ describe('TreasuryComponent', () => {
     expect(api.listEntries).toHaveBeenCalledWith('m-1');
   });
 
+  it('retries a failed topup with the same idempotency key and uses a new one after success', async () => {
+    const fixture = await create();
+    await openAlice(fixture);
+    api.topup.mockReturnValueOnce(
+      throwError(() => new ApiError(503, 'upstream_unavailable', 'Zeitüberschreitung')),
+    );
+
+    const form = formWith(fixture, 'Aufladen');
+    const [amount] = Array.from(form.querySelectorAll('input'));
+    fill(amount, '50.00');
+    await settle(fixture);
+    form.dispatchEvent(new Event('submit'));
+    await settle(fixture);
+    // Wiederholung mit denselben Daten: derselbe Schlüssel, der Server bucht nicht doppelt.
+    form.dispatchEvent(new Event('submit'));
+    await settle(fixture);
+
+    expect(api.topup).toHaveBeenCalledTimes(2);
+    const firstKey = api.topup.mock.calls[0][1];
+    expect(api.topup.mock.calls[1][1]).toBe(firstKey);
+    expect(html(fixture)).toContain('Aufladung gebucht.');
+
+    // Nach dem Erfolg ist die nächste Aufladung eine neue Buchung.
+    fill(amount, '50.00');
+    await settle(fixture);
+    form.dispatchEvent(new Event('submit'));
+    await settle(fixture);
+    expect(api.topup.mock.calls[2][1]).not.toBe(firstKey);
+  });
+
+  it('uses a new idempotency key when the topup data changes after a failure', async () => {
+    const fixture = await create();
+    await openAlice(fixture);
+    api.topup.mockReturnValueOnce(throwError(() => new ApiError(400, 'validation_failed', '')));
+
+    const form = formWith(fixture, 'Aufladen');
+    const [amount] = Array.from(form.querySelectorAll('input'));
+    fill(amount, '5.00');
+    await settle(fixture);
+    form.dispatchEvent(new Event('submit'));
+    await settle(fixture);
+    fill(amount, '6.00');
+    await settle(fixture);
+    form.dispatchEvent(new Event('submit'));
+    await settle(fixture);
+
+    expect(api.topup.mock.calls[1][1]).not.toBe(api.topup.mock.calls[0][1]);
+  });
+
   it('books a payout for the selected member', async () => {
     const fixture = await create();
     await openAlice(fixture);

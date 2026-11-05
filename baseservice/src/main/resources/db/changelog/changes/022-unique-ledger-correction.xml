@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 241. Jede Buchung darf höchstens eine Gegenbuchung haben. Bisher prüfte
+         nur der Dienst vor dem Speichern; zwei gleichzeitige Korrekturen
+         derselben Buchung konnten beide durchgehen und den Kauf doppelt
+         gutschreiben (Issue #69). NULL zählt in Postgres und H2 nicht als
+         Duplikat, normale Buchungen ohne reverses_entry_id bleiben erlaubt.
+         Der bisherige einfache Index bleibt, H2 nutzt ihn für den Fremdschlüssel. -->
+    <changeSet id="241-unique-ledger-correction" author="claude">
+        <addUniqueConstraint tableName="ledger_entries"
+                             columnNames="reverses_entry_id"
+                             constraintName="uk_ledger_entries_reverses_entry"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
 import type { EventDrink } from '../events/event-manage.types';
@@ -185,6 +185,48 @@ describe('TabletComponent', () => {
     cmp.onTallyDecrease('m-1');
     expect(cmp.tallyFor('m-1')).toBe(1);
     expect(cmp.actionError()).toBeTruthy();
+  });
+
+  it('books two quick taps on the same member as two purchases with separate keys', async () => {
+    const first = new Subject<LedgerEntry>();
+    const second = new Subject<LedgerEntry>();
+    api.recordPurchase.mockReturnValueOnce(first).mockReturnValueOnce(second);
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as TabletInternals;
+    cmp.selectEvent('e-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    cmp.selectActiveDrink('d-1');
+    cmp.onTallyIncrease('m-1');
+    cmp.onTallyIncrease('m-1');
+    expect(api.recordPurchase).toHaveBeenCalledTimes(2);
+    expect(api.recordPurchase.mock.calls[1][2]).not.toBe(api.recordPurchase.mock.calls[0][2]);
+    first.next({ id: 'l-1' } as LedgerEntry);
+    first.complete();
+    second.next({ id: 'l-2' } as LedgerEntry);
+    second.complete();
+    expect(cmp.tallyFor('m-1')).toBe(2);
+  });
+
+  it('retries a failed tally with the same key and counts a replayed booking only once', async () => {
+    api.recordPurchase
+      .mockReturnValueOnce(throwError(() => new ApiError(503, 'upstream_unavailable', '')))
+      .mockReturnValueOnce(of({ id: 'l-9' } as LedgerEntry))
+      .mockReturnValueOnce(of({ id: 'l-9' } as LedgerEntry));
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as TabletInternals;
+    cmp.selectEvent('e-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    cmp.selectActiveDrink('d-1');
+    cmp.onTallyIncrease('m-1');
+    expect(cmp.tallyFor('m-1')).toBe(0);
+    cmp.onTallyIncrease('m-1');
+    expect(api.recordPurchase.mock.calls[1][2]).toBe(api.recordPurchase.mock.calls[0][2]);
+    expect(cmp.tallyFor('m-1')).toBe(1);
+    // Kommt dieselbe Buchung noch einmal zurück, zählt sie nicht doppelt.
+    cmp.onTallyIncrease('m-1');
+    expect(cmp.tallyFor('m-1')).toBe(1);
   });
 
   it('removes the optimistic tally when the purchase fails', async () => {

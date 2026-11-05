@@ -125,6 +125,16 @@ class GlobalExceptionHandler(
         request: HttpServletRequest
     ): ResponseEntity<ProblemDetail> {
         log.warn("Data integrity violation on ${request.requestURI}: ${ex.message}")
+        // Zwei gleichzeitige Korrekturen derselben Buchung: Die zweite scheitert am
+        // Unique-Constraint auf reverses_entry_id (Migration 022).
+        if (ex.mostSpecificCause.message?.contains(LEDGER_CORRECTION_CONSTRAINT, ignoreCase = true) == true) {
+            return problem(
+                HttpStatus.CONFLICT,
+                ErrorCode.LEDGER_ALREADY_CORRECTED,
+                messages.resolve("error.ledger.correctionConflict", request),
+                request
+            )
+        }
         return problem(
             HttpStatus.CONFLICT,
             ErrorCode.DATA_INTEGRITY_VIOLATION,
@@ -177,5 +187,9 @@ class GlobalExceptionHandler(
         return ResponseEntity.status(status)
             .header(RequestIdFilter.HEADER_NAME, traceId)
             .body(body)
+    }
+
+    private companion object {
+        const val LEDGER_CORRECTION_CONSTRAINT = "uk_ledger_entries_reverses_entry"
     }
 }
