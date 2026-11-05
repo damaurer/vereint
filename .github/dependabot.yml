@@ -20,6 +20,14 @@ updates:
       npm:
         patterns: ['*']
         exclude-patterns: ['@angular/*', '@angular-devkit/*']
+    ignore:
+      # Angular gibt die TypeScript-Version vor (Angular 22: >=6.0 <6.1).
+      # Erst mit dem Angular-Update anheben, das den neuen Major unterstuetzt.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      # Die Typen folgen der Node-Laufzeit im Dockerfile (node:22).
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: docker
     directories:
