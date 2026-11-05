@@ -6,8 +6,8 @@
 	# Groesster legitimer Request ist ein Bild-Upload (6 MB, siehe baseservice).
 	# Einzige Ausnahme: Bilder und kurze Videos in Moments (bis 100 MiB, siehe
 	# MomentMediaService); sie stroemen ungepuffert bis in den Objektspeicher.
-	@momentMedia path_regexp momentMedia ^/api/v1/events/[^/]+/moments/[^/]+/media$
-	@otherRequests not path_regexp ^/api/v1/events/[^/]+/moments/[^/]+/media$
+	@momentMedia path_regexp momentMedia ^/api/v1/moments/[^/]+/media$
+	@otherRequests not path_regexp ^/api/v1/moments/[^/]+/media$
 	request_body @momentMedia {
 		max_size 110MB
 	}
