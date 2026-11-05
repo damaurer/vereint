@@ -23,7 +23,7 @@ docs/
 ├── offene-punkte.md                      # Bekannte Lücken und nächste Schritte
 ├── handbuch/                             # Benutzerhandbuch je Rolle mit Bildschirmfotos
 │
-├── betrieb/                              # Produktion: Go-Live, CI, AWS, Deployment, Backups, Schlüssel
+├── betrieb/                              # Produktion: Strato, CI, AWS-Variante, Deployment, Backups, Schlüssel
 │   ├── strato.md                         # Betrieb auf Strato (eigener VPS): Plan und Go-Live-Checkliste
 │   ├── go-live-checkliste.md             # Was vor dem ersten Produktivbetrieb auf AWS von Hand zu tun ist
 │   ├── branches-und-ci.md                # develop, qs, main, Prüfungen vor jedem Merge, Images
@@ -83,7 +83,7 @@ docs/
 │
 └── operations/                           # Lokaler Betrieb, Keycloak, Speicher & Migrationen
     ├── local-setup-docker.md             # Lokale Entwicklung & Docker Compose Topology
-    ├── keycloak-and-storage.md           # Keycloak Realms & S3-Objektspeicher (AWS, lokal S3Mock)
+    ├── keycloak-and-storage.md           # Keycloak Realms & Objektspeicher (Verzeichnis, S3, lokal S3Mock)
     └── database-migrations.md            # Liquibase Migrationen & Schema-Verwaltung
 ```
 

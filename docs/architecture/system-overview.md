@@ -33,7 +33,7 @@ graph TD
     subgraph InfraLayer ["4. Infrastructure & Persistence"]
         PG["PostgreSQL 17 (vereint-db:5432)"]
         KC["Keycloak 26 (keycloak:8082)"]
-        S3["S3 Objektspeicher (Produktion AWS S3, lokal S3Mock)"]
+        S3["Objektspeicher (Produktion Verzeichnis, lokal S3Mock)"]
     end
 
     Browser -->|HTTP / Hydration / Static Assets| SSR
@@ -90,8 +90,8 @@ graph TD
 - **PostgreSQL 17**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.
 - **Liquibase**: Versionskontrollierte Datenbankmigrationen (`db.changelog-master.xml`).
 - **Keycloak 26.8.1**: Identity & Access Management (OIDC Provider). Lokal mit Testbenutzern (`keycloak/dev/realm-export-dev.json`), in Produktion ohne Seed-Benutzer (`keycloak/realm-export.json`).
-- **Objektspeicher**: In Produktion ein privater AWS-S3-Bucket (`vereint-app-<account>`), lokal S3Mock (`docker-compose.yml`), in den E2E-Tests ein S3-Ersatz.
-- **Produktion**: Alle Dienste laufen per Docker Compose hinter Caddy auf einem AWS-Server, siehe [deploy/README.md](../../deploy/README.md) und [infra/aws/README.md](../../infra/aws/README.md).
+- **Objektspeicher**: In Produktion auf Strato ein Verzeichnis im Docker-Volume `vereint_files` (`STORAGE_BACKEND=filesystem`), in der AWS-Variante ein privater S3-Bucket, lokal S3Mock (`docker-compose.yml`), in den E2E-Tests ein S3-Ersatz.
+- **Produktion**: Vereint läuft unter `https://vereint.maurercloud.de` auf einem Strato VPS, den [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) einrichtet (Traefik, Keycloak der Plattform mit Realm `vereint`, PostgreSQL mit pgvector), siehe [Betrieb auf einem Strato VPS](../betrieb/strato.md). Die AWS-Variante (Docker Compose hinter Caddy) beschreiben [deploy/README.md](../../deploy/README.md) und [infra/aws/README.md](../../infra/aws/README.md).
 
 ---
 

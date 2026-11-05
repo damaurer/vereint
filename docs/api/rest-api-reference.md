@@ -136,7 +136,7 @@ Wer einen Moment sieht: Sichtbarkeit `group` (Standard, ohne Event immer) alle M
 | `GET` | `/api/v1/moments/{momentId}/map` | GeoJSON FeatureCollection mit freigegebenen Standorten (RFC 7946) | wie oben |
 | `POST` | `/api/v1/moments/{momentId}/complete` | Moment abschließen | Ersteller, Veranstalter des Events, `event.manage` |
 | `GET` | `/api/v1/moments/history` | Abgeschlossene Moments; `?eventId=` nur die eines Events | Mitglied; Liste nach Sichtbarkeit gefiltert |
-| `POST` | `/api/v1/moments/{momentId}/media` | Foto (JPEG/PNG/GIF, bis 10 MB) oder Video (MP4/MOV, bis 60 s, bis 100 MB) als rohen Request-Körper hochladen (`Content-Type`, `Content-Length` Pflicht); Videos nur in Tarifen mit Videos | sieht den Moment |
+| `POST` | `/api/v1/moments/{momentId}/media` | Foto (JPEG/PNG/GIF, bis 10 MB) oder Video (MP4/MOV, bis 60 s, bis 100 MB) als rohen Request-Körper hochladen (`Content-Type`, `Content-Length` Pflicht) | sieht den Moment |
 | `GET` | `/api/v1/moments/{momentId}/media/{mediaId}/content` | Datei entschlüsselt abrufen, mit HTTP-Range (`206`) | wie oben |
 | `DELETE` | `/api/v1/moments/{momentId}/media/{mediaId}` | Datei entfernen | Eigentümer; fremde Beiträge Veranstalter oder `event.manage` |
 | `GET` | `/api/v1/moment-config` | Themen, Reaktionen (inkl. ausgemusterter) und Upload-Grenzen | Mitglied |
