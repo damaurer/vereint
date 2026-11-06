@@ -2,6 +2,8 @@
 
 Für alle Mitglieder einer Gruppe. Anmeldung, Navigation und Profil stehen in den [Ersten Schritten](01-erste-schritte.md).
 
+Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#mitglied). Dort stehen auch die geplanten Statistiken (Getränke, Kalorien, Zusagen) und die Runde am eigenen Handy.
+
 ## Auf einen Blick
 
 | Ich möchte … | So geht's |

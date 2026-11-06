@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Bierkasse verwalten</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Kasse &amp; Finanzen" back-href="Vorstand.dc.html" bell="1" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Kassenwart</p>
+      <h2 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em">Bierkasse verwalten</h2>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <div class="ui-stat-card" style="padding: 12px"><p class="ui-stat-label" style="font-size: 11px">Guthaben gesamt</p><p class="ui-stat-value" style="font-size: 20px">142,40 €</p></div>
+      <div class="ui-stat-card" style="padding: 12px"><p class="ui-stat-label" style="font-size: 11px">Mitglieder</p><p class="ui-stat-value" style="font-size: 20px">7</p></div>
+      <div class="ui-stat-card" style="padding: 12px"><p class="ui-stat-label" style="font-size: 11px">Im Minus</p><p class="ui-stat-value" style="font-size: 20px; color: var(--color-danger)">1</p></div>
+    </div>
+
+    <p style="margin: 0; padding: 10px 12px; border-radius: 10px; background-color: var(--color-brand-soft); font-size: 13px; line-height: 1.45">Jede Buchung zählt nur einmal, auch wenn sie versehentlich doppelt abgeschickt wird.</p>
+
+    <label for="q" class="visually-hidden">Mitglied suchen</label>
+    <input id="q" value="{{q}}" onChange="{{onQ}}" placeholder="Mitglied suchen …" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+
+    <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+        <li style="{{r.li}}">
+          <a href="KontoBuchen.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: inherit; text-decoration: none">
+            <span style="display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 12px; font-weight: 800">{{r.initials}}</span>
+            <span style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 15px; font-weight: 700">{{r.label}}</span><span style="color: var(--color-text-muted); font-size: 12px">Letzte Buchung {{r.last}}</span></span>
+            <span style="{{r.amountStyle}}">{{r.amount}}</span>
+          </a>
+        </li>
+      </sc-for>
+    </ul>
+  </main>
+  <dc-import name="TabBar" active="mehr" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { q: '' };
+  }
+  renderVals() {
+    const all = [
+      ['FB', 'Felix Braun', '11,50 €', '17.10.'], ['JK', 'Jonas Keller', '15,40 €', '17.10.'], ['LH', 'Lena Hoffmann', '29,50 €', '17.10.'],
+      ['MS', 'Mia Schulz', '−3,20 €', '16.10.'], ['SW', 'Sabine Wolf', '48,00 €', '12.10.'], ['TB', 'Thomas Berger', '41,20 €', '15.10.']
+    ];
+    const q = this.state.q.trim().toLowerCase();
+    const rows = all.filter((r) => !q || r[1].toLowerCase().includes(q)).slice(0, 5);
+    return {
+      theme: this.props.theme ?? 'light',
+      q: this.state.q,
+      onQ: (e) => this.setState({ q: e.target.value }),
+      rows: rows.map(([initials, label, amount, last], i) => ({
+        initials, label, amount, last,
+        li: i ? 'border-top: 1px solid var(--color-border)' : '',
+        amountStyle: 'font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; color: ' + (amount.startsWith('−') ? 'var(--color-danger)' : 'var(--color-text)')
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

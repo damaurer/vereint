@@ -2,6 +2,8 @@
 
 Für Vorstandsmitglieder, zum Beispiel Kassenwart und Schriftwart. Als Vorstand bist du auch Mitglied; alles aus dem [Leitfaden Mitglied](02-mitglied.md) gilt für dich ebenso. Gastgeber eines Events finden hier außerdem den Abschnitt [Ein Event vorbereiten](#ein-event-vorbereiten).
 
+Jeden Vorstandsbildschirm einzeln erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#vorstand), dort auch die geplanten [Strich-Kategorien](07-alle-screens.md#strich-kategorien).
+
 Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltung**, am Rechner links unter **Verwaltung**: **Vorstand**, **Kasse & Finanzen** und **Kommunikation**. Welche davon du siehst, hängt von den Rechten deiner Rollen in der Gruppe ab. Eine eigene Rolle mit nur `ledger.read` sieht zum Beispiel nur **Vorstand** und **Kasse & Finanzen**.
 
 ## Auf einen Blick

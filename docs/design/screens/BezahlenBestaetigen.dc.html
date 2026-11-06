@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Bezahlen bestätigen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Bezahlen" back-href="Bezahlen.dc.html" hint-size="100%,56px"></dc-import>
+  <div aria-hidden="true" style="flex: 1; margin: 16px; border-radius: 16px; background-color: #0f172a"></div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background-color: rgba(15, 23, 42, 0.4)"></div>
+  <section role="dialog" aria-modal="true" aria-labelledby="ttl" style="position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 16px; padding: 12px 20px 28px; border-top-left-radius: 16px; border-top-right-radius: 16px; background-color: var(--color-surface)">
+    <span aria-hidden="true" style="width: 40px; height: 5px; margin: 0 auto; border-radius: 999px; background-color: var(--color-border-dark)"></span>
+    <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Mit Guthaben bezahlen</p>
+    <div style="display: flex; align-items: center; gap: 14px">
+      <span style="display: grid; place-items: center; width: 56px; height: 56px; flex-shrink: 0; border-radius: 14px; background-color: var(--color-brand-soft); color: var(--color-brand)">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.5" y="8.5" width="11" height="12" rx="2.5"/><path d="M15.5 11h1.5a3 3 0 0 1 3 3v.5a3 3 0 0 1-3 3h-1.5"/><path d="M4.5 9V8a3.2 3.2 0 0 1 4.8-2.8A3.2 3.2 0 0 1 14 5a2.8 2.8 0 0 1 1.5 2.5V9"/><line x1="8.5" y1="12.5" x2="8.5" y2="16.5"/><line x1="11.5" y1="12.5" x2="11.5" y2="16.5"/></svg>
+      </span>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+        <h1 id="ttl" style="margin: 0; font-size: 22px; font-weight: 800">Helles 0,5 l</h1>
+        <span style="color: var(--color-text-muted); font-size: 14px">für Stammtisch Oktober</span>
+      </div>
+      <span style="color: var(--color-brand); font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums">3,50 €</span>
+    </div>
+    <dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 14px; border-radius: 12px; background-color: var(--color-bg)">
+      <div><dt style="color: var(--color-text-muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase">Guthaben jetzt</dt><dd style="margin: 2px 0 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums">33,00 €</dd></div>
+      <div><dt style="color: var(--color-text-muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase">Guthaben danach</dt><dd style="margin: 2px 0 0; font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums">29,50 €</dd></div>
+    </dl>
+    <a href="Bezahlt.dc.html" style="display: grid; place-items: center; height: 56px; border-radius: 10px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 17px; font-weight: 700; text-decoration: none">3,50 € bezahlen</a>
+    <a href="Bezahlen.dc.html" style="display: grid; place-items: center; height: 48px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 10px; color: var(--color-text); font-size: 15px; font-weight: 600; text-decoration: none">Abbrechen</a>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

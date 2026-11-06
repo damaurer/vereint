@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Event: Teilnehmer und Getränke</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Event verwalten" back-href="Vorstand.dc.html" bell="1" hint-size="100%,56px"></dc-import>
+  <nav aria-label="Bereiche" style="flex-shrink: 0; display: flex; gap: 4px; padding: 8px 16px 0; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <a href="EventVerwalten.dc.html" style="padding: 10px 10px 12px; border-bottom: 3px solid transparent; color: var(--color-text-muted); font-size: 14px; font-weight: 600; text-decoration: none">Stammdaten</a>
+    <a href="EventTeilnehmer.dc.html" aria-current="page" style="padding: 10px 10px 12px; border-bottom: 3px solid var(--color-brand); color: var(--color-brand); font-size: 14px; font-weight: 700; text-decoration: none">Teilnehmer &amp; Getränke</a>
+    <a href="Eventabrechnung.dc.html" style="padding: 10px 10px 12px; border-bottom: 3px solid transparent; color: var(--color-text-muted); font-size: 14px; font-weight: 600; text-decoration: none">Abrechnung</a>
+  </nav>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px; overflow: hidden">
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <h2 style="margin: 0; font-size: 17px; font-weight: 700">Teilnehmer ({{peopleCount}})</h2>
+        <button type="button" style="height: 36px; padding: 0 10px; border: none; background: transparent; color: var(--color-brand); font: inherit; font-size: 14px; font-weight: 700">Mitglieder einladen</button>
+      </div>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <sc-for list="{{people}}" as="p" hint-placeholder-count="4">
+          <li style="{{p.row}}">
+            <span style="display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 12px; font-weight: 800">{{p.initials}}</span>
+            <span style="flex: 1; font-size: 15px; font-weight: 600">{{p.label}}</span>
+            <span class="{{p.badge}}">{{p.status}}</span>
+            <button type="button" onClick="{{p.remove}}" aria-label="{{p.removeLabel}}" style="display: grid; place-items: center; width: 36px; height: 36px; border: none; border-radius: 999px; background: transparent; color: var(--color-text-muted)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+            </button>
+          </li>
+        </sc-for>
+      </ul>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 700">Getränke ({{drinkCount}})</h2>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <sc-for list="{{drinks}}" as="d" hint-placeholder-count="4">
+          <li style="{{d.row}}">
+            <span style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 15px; font-weight: 600">{{d.label}}</span><span style="color: var(--color-text-muted); font-size: 12px">{{d.meta}}</span></span>
+            <span style="font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums">{{d.price}}</span>
+            <button type="button" onClick="{{d.remove}}" aria-label="{{d.removeLabel}}" style="display: grid; place-items: center; width: 36px; height: 36px; border: none; border-radius: 999px; background: transparent; color: var(--color-text-muted)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4.5" y1="7" x2="19.5" y2="7"/><path d="M9.5 7V4.5h5V7"/><path d="M6.5 7l1 13h9l1-13"/></svg>
+            </button>
+          </li>
+        </sc-for>
+      </ul>
+      <div style="display: flex; gap: 8px">
+        <label for="add" class="visually-hidden">Getränk aus dem Katalog</label>
+        <select id="add" style="flex: 1; min-width: 0; height: 44px; padding: 0 8px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px">
+          <option>Getränk aus dem Katalog …</option><option>Obstler 2 cl</option><option>Spezi 0,5 l</option>
+        </select>
+        <button type="button" style="height: 44px; padding: 0 14px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">Hinzufügen</button>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { gone: {} };
+  }
+  renderVals() {
+    const P = [['FB', 'Felix Braun', 'Zugesagt'], ['JK', 'Jonas Keller', 'Zugesagt'], ['LH', 'Lena Hoffmann', 'Zugesagt'], ['SW', 'Sabine Wolf', 'Offen']];
+    const D = [['Helles 0,5 l', '3,50 €', 'EK 1,10 € · Marge 2,40 €'], ['Weißbier 0,5 l', '3,80 €', 'EK 1,25 €'], ['Apfelschorle 0,5 l', '2,50 €', 'EK 0,70 €'], ['Wasser 0,5 l', '1,50 €', 'EK 0,35 €']];
+    const gone = this.state.gone;
+    const people = P.filter(([id]) => !gone['p' + id]);
+    const drinks = D.filter(([l]) => !gone['d' + l]);
+    const rm = (key) => () => this.setState({ gone: { ...gone, [key]: true } });
+    return {
+      theme: this.props.theme ?? 'light',
+      peopleCount: String(people.length),
+      drinkCount: String(drinks.length),
+      people: people.map(([id, label, st], i) => ({
+        initials: id, label, status: st,
+        badge: st === 'Zugesagt' ? 'ui-badge ui-badge-success' : 'ui-badge ui-badge-neutral',
+        remove: rm('p' + id), removeLabel: label + ' entfernen',
+        row: 'display: flex; align-items: center; gap: 10px; padding: 8px 6px 8px 12px' + (i ? '; border-top: 1px solid var(--color-border)' : '')
+      })),
+      drinks: drinks.map(([label, price, meta], i) => ({
+        label, price, meta, remove: rm('d' + label), removeLabel: label + ' entfernen',
+        row: 'display: flex; align-items: center; gap: 10px; padding: 8px 6px 8px 14px' + (i ? '; border-top: 1px solid var(--color-border)' : '')
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

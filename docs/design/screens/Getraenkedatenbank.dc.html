@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Getränkedatenbank</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Getränkedatenbank" back-href="Katalog.dc.html" bell="1" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Für alle Gruppen</p>
+      <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">Getränkedatenbank</h2>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 14px; line-height: 1.45">Ohne Preise. Den Preis legt deine Gruppe beim Übernehmen fest.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <label for="q" style="font-size: 13px; font-weight: 600">Name, Sorte oder Strichcode</label>
+      <input id="q" value="{{q}}" onChange="{{onQ}}" placeholder="z. B. Helles oder 4017719…" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+    </div>
+    <span style="color: var(--color-text-muted); font-size: 13px">{{count}} Treffer</span>
+    <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+        <li style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+            <span style="font-size: 15px; font-weight: 700">{{r.label}}</span>
+            <span style="color: var(--color-text-muted); font-size: 13px">{{r.meta}}</span>
+            <code style="align-self: flex-start; padding: 2px 6px; border-radius: 4px; background-color: var(--color-bg); color: var(--color-text-muted); font-size: 12px">{{r.ean}}</code>
+          </span>
+          <button type="button" onClick="{{r.take}}" disabled="{{r.done}}" style="{{r.btn}}">{{r.btnLabel}}</button>
+        </li>
+      </sc-for>
+    </ul>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { q: '', taken: {} };
+  }
+  renderVals() {
+    const all = [
+      ['ABK Allgäu Stoff 0,33 l', 'Bier · ABK', '4017719021321'],
+      ['ABK Hell Das Blaue 0,33 l', 'Bier · Helles · ABK', '4017719020010'],
+      ['Augustiner Lagerbier Hell 0,5 l', 'Bier · Helles · Augustiner', '4105250022003'],
+      ['Schneider Weisse Tap 7 0,5 l', 'Bier · Weißbier · Schneider', '4002631000016'],
+      ['Spezi Original 0,5 l', 'Alkoholfrei · Spezi', '4009249002000']
+    ];
+    const q = this.state.q.trim().toLowerCase();
+    const rows = all.filter(([l, m, e]) => !q || l.toLowerCase().includes(q) || m.toLowerCase().includes(q) || e.includes(q));
+    const taken = this.state.taken;
+    return {
+      theme: this.props.theme ?? 'light',
+      q: this.state.q,
+      onQ: (e) => this.setState({ q: e.target.value }),
+      count: String(rows.length),
+      rows: rows.slice(0, 4).map(([label, meta, ean]) => {
+        const done = !!taken[ean];
+        return {
+          label, meta, ean, done,
+          take: () => this.setState({ taken: { ...taken, [ean]: true } }),
+          btnLabel: done ? 'Übernommen' : 'Übernehmen',
+          btn: 'height: 40px; padding: 0 12px; flex-shrink: 0; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 700; ' + (done ? 'border: 1px solid var(--color-border); background: transparent; color: var(--color-success)' : 'border: none; background-color: var(--color-brand); color: var(--color-on-brand)')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
