@@ -16,8 +16,8 @@ Getränkedatenbank stammt aus Open Food Facts und steht unter der ODbL 1.0
   (28.10.2026). Gefunden wurden nur zwei Testwerte (ein fester Einladungs-Token
   und der PEM-Rahmen um einen im Test erzeugten Schlüssel); beide stehen jetzt
   in `.gitleaksignore`. Keine Terraform-States, `.env`-Dateien, Schlüsseldateien
-  oder AWS-Konto-IDs im Verlauf. Alle echten Schlüssel liegen nur in SSM und
-  in den GitHub-Secrets.
+  oder AWS-Konto-IDs im Verlauf. Alle echten Schlüssel liegen nur im Vault von
+  LinuxServerSetup und in den GitHub-Secrets.
 - **Demo-Zugänge:** Die Passwörter in `.env.example` und im Entwicklungs-Realm
   (`admin-demo-2026` usw.) gelten nur lokal; Produktion erzeugt eigene Werte.
 - **Workflows:** Kein Workflow nutzt `pull_request_target` oder selbst gehostete

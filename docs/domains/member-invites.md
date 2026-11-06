@@ -87,4 +87,4 @@ nicht konfiguriert).
 | :--- | :--- |
 | `REGISTRATION_ENABLED` | `true` schaltet die Kontoanlage ein |
 | `KEYCLOAK_ADMIN_BASE_URL` | interne Keycloak-URL, Produktion `http://keycloak:8080/kc`, lokal `http://localhost:8082` |
-| `KEYCLOAK_REGISTRATION_CLIENT_SECRET` | Secret des Clients `vereint-registration`; Terraform erzeugt es im SSM Parameter Store |
+| `KEYCLOAK_REGISTRATION_CLIENT_SECRET` | Secret des Clients `vereint-registration`; in Produktion aus dem Vault von LinuxServerSetup (`vault_vereint_keycloak_registration_client_secret`, [Strato](../betrieb/strato.md)) |
