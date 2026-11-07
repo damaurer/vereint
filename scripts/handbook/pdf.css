@@ -1,0 +1,192 @@
+/* Satz des PDF-Handbuchs (Paged.js). Farben aus webservice/src/styles.css und dem Logo. */
+:root {
+  --ink: #1e293b;
+  --muted: #526075;
+  --brand: #1e3a8a;
+  --brand-deep: #172554;
+  --brand-soft: #e1e9f7;
+  --accent: #d97706;
+  --accent-soft: #fef3c7;
+  --line: #d3d9e2;
+  --paper-tint: #f4f6f9;
+  --g1: #2ec4b6;
+  --g2: #3a86ff;
+  --g3: #8338ec;
+  --grad: linear-gradient(120deg, var(--g1), var(--g2) 55%, var(--g3));
+}
+
+/* ---------- Seiten ---------- */
+@page {
+  size: A4;
+  margin: 24mm 20mm 22mm 20mm;
+  @top-left {
+    content: string(chapter-title);
+    font: 600 7.5pt "Inter Handbuch", Inter, sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brand);
+    vertical-align: bottom;
+    padding-bottom: 5mm;
+  }
+  @top-right {
+    content: "Vereint · Benutzerhandbuch";
+    font: 500 7.5pt "Inter Handbuch", Inter, sans-serif;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    vertical-align: bottom;
+    padding-bottom: 5mm;
+  }
+  @bottom-right {
+    content: counter(page);
+    font: 700 8.5pt "Inter Handbuch", Inter, sans-serif;
+    color: var(--brand);
+    vertical-align: top;
+    padding-top: 6mm;
+  }
+  @bottom-left {
+    content: "__EDITION__";
+    font: 500 7.5pt "Inter Handbuch", Inter, sans-serif;
+    color: var(--muted);
+    vertical-align: top;
+    padding-top: 6mm;
+  }
+}
+@page cover { margin: 0; @top-left { content: none; } @top-right { content: none; } @bottom-left { content: none; } @bottom-right { content: none; } }
+@page toc { @top-left { content: none; } @top-right { content: none; } }
+@page chapter-open { margin: 0; @top-left { content: none; } @top-right { content: none; } @bottom-left { content: none; } @bottom-right { content: none; } }
+
+/* ---------- Grundschrift ---------- */
+html { font-family: "Inter Handbuch", Inter, "Segoe UI", Helvetica, Arial, sans-serif; color: var(--ink); }
+body { margin: 0; font-size: 9.6pt; line-height: 1.55; font-feature-settings: "cv11", "ss01"; hyphens: auto; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+p { margin: 0 0 2.6mm; orphans: 3; widows: 3; }
+strong { font-weight: 650; color: var(--brand-deep); }
+a { color: var(--brand); text-decoration: none; }
+a strong { color: inherit; }
+code { font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace; font-size: 0.86em; background: var(--brand-soft); color: var(--brand-deep); padding: 0.1em 0.35em; border-radius: 1mm; }
+em { color: var(--muted); }
+ul, ol { margin: 0 0 3mm; padding-left: 5.5mm; }
+li { margin: 0 0 1.2mm; }
+li::marker { color: var(--accent); font-weight: 700; }
+
+h1, h2, h3 { font-weight: 750; letter-spacing: -0.015em; color: var(--brand-deep); break-after: avoid; }
+h2 {
+  font-size: 15pt;
+  line-height: 1.25;
+  margin: 8mm 0 3.5mm;
+  padding-top: 3.5mm;
+  border-top: 0.6mm solid transparent;
+  border-image: var(--grad) 1;
+  border-image-width: 0.6mm 0 0 0;
+}
+h3 { font-size: 11pt; margin: 5mm 0 2mm; }
+.chapter-body > h2:first-child { margin-top: 0; }
+.eyebrow { font-size: 7.8pt; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 0 0 3mm; }
+
+/* ---------- Tabellen ---------- */
+table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 2mm 0 5mm; font-size: 8.8pt; line-height: 1.45; break-inside: auto; border: 0.25mm solid var(--line); border-radius: 2.5mm; overflow: hidden; }
+thead th { background: var(--brand-deep); color: #fff; font-weight: 650; text-align: left; padding: 2.4mm 3.2mm; }
+thead th strong { color: #fff; }
+td { padding: 2.2mm 3.2mm; vertical-align: top; border-top: 0.25mm solid var(--line); }
+tbody tr:nth-child(even) td { background: var(--paper-tint); }
+tr { break-inside: avoid; }
+td:first-child { font-weight: 550; }
+
+/* ---------- Abbildungen ---------- */
+figure { margin: 0; break-inside: avoid; }
+.frame { border-radius: 3mm; overflow: hidden; border: 0.3mm solid var(--line); box-shadow: 0 1.2mm 4mm rgba(23, 37, 84, 0.16), 0 0.2mm 0.8mm rgba(23, 37, 84, 0.12); background: #fff; }
+.frame img { display: block; width: 100%; height: auto; }
+figcaption { font-size: 7.4pt; line-height: 1.35; color: var(--muted); margin-top: 2mm; }
+figcaption span { font-weight: 700; color: var(--brand); margin-right: 1mm; }
+
+.phone .frame { border-radius: 4.5mm; border: 1.1mm solid var(--brand-deep); }
+.split { display: flex; gap: 8mm; align-items: flex-start; margin: 1mm 0 6mm; break-inside: avoid; }
+.split-text { flex: 1 1 auto; min-width: 0; }
+.split-text > :last-child { margin-bottom: 0; }
+.split .phone { flex: 0 0 46mm; width: 46mm; }
+
+.wide { margin: 2mm 0 6mm; }
+.wide .frame { border-radius: 2.5mm; }
+
+/* ---------- Deckblatt ---------- */
+.cover, .back {
+  page: cover;
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  overflow: hidden;
+  color: #fff;
+  background: radial-gradient(130mm 110mm at 100% 0%, rgba(131, 56, 236, 0.55), transparent 70%),
+    radial-gradient(150mm 120mm at 0% 100%, rgba(46, 196, 182, 0.42), transparent 70%),
+    linear-gradient(160deg, #1e3a8a 0%, #172554 55%, #0f1a3d 100%);
+  break-after: page;
+}
+.cover-glow { position: absolute; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, 0.07) 0.35mm, transparent 0.4mm); background-size: 6mm 6mm; }
+.cover-brand { position: absolute; top: 20mm; left: 20mm; display: flex; align-items: center; gap: 3.5mm; font-size: 17pt; font-weight: 750; letter-spacing: -0.02em; }
+.cover-brand svg { width: 12mm; height: 12mm; }
+.cover-title { position: absolute; top: 52mm; left: 20mm; width: 100mm; }
+.cover-kicker { font-size: 9pt; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #fbbf24; margin: 0 0 5mm; }
+.cover h1 { font-size: 40pt; line-height: 1.04; letter-spacing: -0.035em; font-weight: 800; color: #fff; margin: 0 0 7mm; }
+.cover-sub { font-size: 11pt; line-height: 1.5; color: rgba(255, 255, 255, 0.82); margin: 0; }
+.cover-phones img { position: absolute; width: 58mm; border-radius: 7mm; border: 1.6mm solid #0b1230; box-shadow: 0 6mm 16mm rgba(0, 0, 0, 0.45); }
+.cover-phones .p1 { left: 22mm; top: 150mm; transform: rotate(-7deg); opacity: 0.92; }
+.cover-phones .p2 { left: 76mm; top: 132mm; z-index: 2; width: 62mm; }
+.cover-phones .p3 { left: 134mm; top: 150mm; transform: rotate(7deg); opacity: 0.92; }
+.cover-foot { position: absolute; left: 20mm; right: 20mm; bottom: 14mm; display: flex; justify-content: space-between; font-size: 8pt; color: rgba(255, 255, 255, 0.7); border-top: 0.25mm solid rgba(255, 255, 255, 0.25); padding-top: 4mm; z-index: 3; }
+
+.back { break-before: page; break-after: auto; }
+.back-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.back-inner svg { width: 26mm; height: 26mm; margin-bottom: 6mm; }
+.back-name { font-size: 26pt; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 2mm; }
+.back-inner p:last-child { color: rgba(255, 255, 255, 0.75); font-size: 11pt; }
+
+/* ---------- Inhaltsverzeichnis ---------- */
+.toc { page: toc; break-after: page; }
+.toc-title { font-size: 30pt; margin: 0 0 10mm; letter-spacing: -0.03em; }
+.toc ol { list-style: none; padding: 0; margin: 0; }
+.toc li { margin: 0; }
+.toc a { display: flex; align-items: baseline; color: var(--ink); }
+.toc a::after { content: target-counter(attr(href), page); margin-left: auto; padding-left: 3mm; font-variant-numeric: tabular-nums; color: var(--muted); }
+.toc-chapter { margin-top: 5mm !important; break-after: avoid; }
+.toc-chapter a { font-size: 11.5pt; font-weight: 700; color: var(--brand-deep); padding-bottom: 1.6mm; border-bottom: 0.3mm solid var(--line); margin-bottom: 1mm; }
+.toc-chapter a::after { color: var(--brand); font-weight: 700; }
+.toc-no { display: inline-block; width: 9mm; color: var(--accent); font-weight: 800; }
+.toc-section a { font-size: 9pt; padding: 0.9mm 0 0.9mm 9mm; }
+
+/* ---------- Einleitung ---------- */
+.intro { break-before: page; }
+.intro h1 { font-size: 26pt; margin: 0 0 6mm; letter-spacing: -0.03em; string-set: chapter-title content(text); }
+.intro > p:first-of-type { font-size: 11pt; line-height: 1.55; color: var(--ink); }
+
+/* ---------- Kapitel ---------- */
+.chapter { break-before: page; }
+.chapter-open {
+  page: chapter-open;
+  position: relative;
+  box-sizing: border-box;
+  width: 210mm;
+  height: 297mm;
+  padding: 92mm 22mm 20mm;
+  overflow: hidden;
+  color: #fff;
+  background: radial-gradient(110mm 90mm at 100% 0%, rgba(131, 56, 236, 0.45), transparent 70%),
+    radial-gradient(120mm 90mm at 0% 100%, rgba(46, 196, 182, 0.32), transparent 70%),
+    linear-gradient(160deg, #1e3a8a, #172554);
+  break-after: page;
+}
+.chapter-open .eyebrow { color: #fbbf24; }
+.chapter-open h1 { color: #fff; font-size: 34pt; line-height: 1.05; letter-spacing: -0.035em; margin: 0 0 5mm; string-set: chapter-title content(text); }
+.chapter-no { position: absolute; left: 20mm; top: 22mm; font-size: 150pt; font-weight: 800; letter-spacing: -0.05em; line-height: 1; color: transparent; -webkit-text-stroke: 0.45mm rgba(255, 255, 255, 0.35); }
+.chapter-lead p { font-size: 11pt; line-height: 1.55; color: rgba(255, 255, 255, 0.88); max-width: 140mm; }
+.chapter-lead strong, .chapter-lead a { color: #fff; }
+.chapter-lead a { border-bottom: 0.25mm solid rgba(255, 255, 255, 0.5); }
+.chapter-toc { list-style: none; padding: 0; margin: 6mm 0 0; columns: 2; column-gap: 10mm; font-size: 8.6pt; }
+.chapter-toc li { margin: 0 0 1.4mm; break-inside: avoid; }
+.chapter-toc a { color: rgba(255, 255, 255, 0.9); display: flex; }
+.chapter-toc a::before { content: "→"; color: #fbbf24; margin-right: 2mm; }
+.chapter-toc a::after { content: target-counter(attr(href), page); margin-left: auto; padding-left: 2mm; color: rgba(255, 255, 255, 0.6); font-variant-numeric: tabular-nums; }
+.chapter-body { padding-top: 0; }
+.chapter-open .cover-glow { z-index: 0; }
+.chapter-open > * { position: relative; }
+.chapter-open > .chapter-no, .chapter-open > .cover-glow { position: absolute; }
+.chapter-toc { columns: 1; margin-top: 10mm; max-width: 120mm; font-size: 9.5pt; }
+.chapter-toc li { margin-bottom: 2mm; padding-bottom: 2mm; border-bottom: 0.25mm solid rgba(255,255,255,0.15); }
