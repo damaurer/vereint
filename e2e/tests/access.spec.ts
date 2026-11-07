@@ -26,7 +26,7 @@ test.describe('Rollen und Zugriff', () => {
   test('Vorstand erreicht Kasse und Kommunikation, aber nicht die Administration', async ({ as }) => {
     const { page } = await as('board');
     await page.goto('/board');
-    await expect(page.getByRole('link', { name: /Kasse & Finanzen/ })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('link', { name: /Kasse & Finanzen/ })).toBeVisible();
     await page.goto('/board/treasury');
     await expect(page.getByRole('heading', { level: 1, name: 'Bierkasse verwalten' })).toBeVisible();
     await page.goto('/board/communications');

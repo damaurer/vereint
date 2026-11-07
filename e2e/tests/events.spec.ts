@@ -146,6 +146,7 @@ test.describe('Events', () => {
     });
 
     await page.reload();
+    await page.getByRole('tab', { name: 'Chat' }).click();
     await expect(page.getByText('Bin dabei!')).toBeVisible();
 
     // Verschluesselung auf Anwendungsebene: Klartext steht nicht in der Datenbank.
