@@ -1,9 +1,9 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { forkJoin, switchMap } from 'rxjs';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
-import { entryTypeLabel, formatDateTime, formatMoney } from './member-format';
+import { entryTypeLabel, formatDateTime, formatMoney, formatShortDateTime, formatSignedMoney } from './member-format';
 import { translate } from '../i18n/i18n.service';
 import type { LedgerEntry, MemberBalance, PurchaseSnapshot } from '../api/api.types';
 import { BalanceCardComponent, InfoPanelComponent } from '../ui';
@@ -29,7 +29,7 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
  */
 @Component({
   selector: 'app-member-wallet',
-  imports: [StateComponent, BalanceCardComponent, InfoPanelComponent, TranslatePipe],
+  imports: [StateComponent, RouterLink, BalanceCardComponent, InfoPanelComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="wallet-title">
@@ -55,9 +55,12 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
             [label]="'member.balance.current' | t"
             [amount]="formatMoney(view.balance.creditBalance, view.balance.currency)"
             [negative]="isNegative(view.balance.creditBalance)"
+            [note]="lastEntryNote(view.entries)"
             [showTopup]="canManageTreasury()"
             (topup)="onTopup()"
-          />
+          >
+            <a class="wallet-pay" routerLink="/scan">{{ 'nav.items.scan' | t }}</a>
+          </vereint-balance-card>
 
           <vereint-info-panel icon="treasury" [title]="'member.wallet.treasurerTitle' | t">
             {{ 'member.wallet.treasurerHint' | t }}
@@ -107,13 +110,14 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
                   <span class="member-list-title">{{ entryTitle(entry, view.entries) }}</span>
                   <span class="member-list-meta">
                     @if (hasItemTitle(entry, view.entries)) { {{ entryTypeLabel(entry.entryType) }} · }
-                    {{ formatDateTime(entry.createdAt) }}
+                    {{ formatShortDateTime(entry.createdAt) }}
                   </span>
                   <span
                     class="member-amount"
-                    [class.member-amount-negative]="isNegative(entry.amount)"
+                    [class.member-amount-positive]="delta(entry, view.entries) > 0"
+                    [class.member-amount-neutral]="delta(entry, view.entries) === 0"
                   >
-                    {{ formatMoney(entry.amount, entry.currency) }}
+                    {{ signedAmount(entry, view.entries) }}
                   </span>
                 </li>
               } @empty {
@@ -139,8 +143,52 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
         font: inherit;
       }
 
-      .member-amount-negative {
-        color: var(--color-danger);
+      .member-amount-neutral {
+        color: var(--color-text-muted);
+        font-weight: 600;
+      }
+
+      .wallet-filter .ui-chip {
+        min-height: 2.25rem;
+        padding: 0 0.9rem;
+        background-color: var(--color-surface);
+        color: var(--color-text);
+        font-size: 0.875rem;
+        font-weight: 600;
+      }
+
+      .wallet-filter .ui-chip-accent {
+        border-color: transparent;
+        background-color: var(--color-brand-soft);
+        color: var(--color-brand);
+        font-weight: 700;
+      }
+
+      .wallet-pay {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        min-height: 2.75rem;
+        padding: 0 1rem;
+        border: 1px solid var(--color-border-dark);
+        border-radius: var(--radius-sm);
+        background-color: var(--color-surface);
+        color: var(--color-text);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .wallet-pay:hover,
+      .wallet-pay:focus-visible {
+        border-color: var(--color-brand);
+        color: var(--color-brand);
+        text-decoration: none;
+      }
+
+      vereint-balance-card ::ng-deep .ui-balance-actions > .ui-button {
+        flex: 1;
+        min-height: 2.75rem;
       }
     `,
   ],
@@ -155,7 +203,17 @@ export class WalletComponent implements OnInit, OnDestroy {
   protected readonly canManageTreasury = signal(false);
   protected readonly formatMoney = formatMoney;
   protected readonly formatDateTime = formatDateTime;
+  protected readonly formatShortDateTime = formatShortDateTime;
   protected readonly entryTypeLabel = entryTypeLabel;
+
+  /** „Stand 17. Okt, 10:24“: Zeitpunkt der letzten Buchung. */
+  protected lastEntryNote(entries: LedgerEntry[]): string | null {
+    const latest = entries.reduce<string | null>(
+      (max, entry) => (!max || Date.parse(entry.createdAt) > Date.parse(max) ? entry.createdAt : max),
+      null,
+    );
+    return latest ? translate('member.wallet.asOf', { date: formatShortDateTime(latest) }) : null;
+  }
 
   ngOnInit(): void {
     this.reload();
@@ -172,9 +230,40 @@ export class WalletComponent implements OnInit, OnDestroy {
     const newestFirst = [...entries].sort(
       (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
     );
-    if (active === 'topup') return newestFirst.filter((entry) => Number(entry.amount) > 0);
-    if (active === 'spend') return newestFirst.filter((entry) => Number(entry.amount) < 0);
+    if (active === 'topup') return newestFirst.filter((entry) => this.delta(entry, entries) > 0);
+    if (active === 'spend') return newestFirst.filter((entry) => this.delta(entry, entries) < 0);
     return newestFirst;
+  }
+
+  /**
+   * Wirkung einer Buchung auf das Guthaben, wie der Fachservice sie rechnet:
+   * Aufladung plus, Auszahlung und Kauf auf Guthaben minus, Korrektur hebt die
+   * korrigierte Buchung auf. Käufe, die die Gruppe trägt, ändern nichts.
+   */
+  protected delta(entry: LedgerEntry, entries: LedgerEntry[], depth = 0): number {
+    const amount = Number(entry.amount);
+    if (!Number.isFinite(amount)) return 0;
+    switch (entry.entryType) {
+      case 'topup':
+        return amount;
+      case 'payout':
+        return -amount;
+      case 'purchase':
+        return entry.accountingMode === 'credit' ? -amount : 0;
+      case 'correction': {
+        const reversed = entries.find((candidate) => candidate.id === entry.reversesEntryId);
+        return reversed && depth < 5 ? -this.delta(reversed, entries, depth + 1) : 0;
+      }
+      default:
+        return 0;
+    }
+  }
+
+  /** Betrag mit Vorzeichen der Guthabenwirkung („−7,50 €“, „+20,00 €“). */
+  protected signedAmount(entry: LedgerEntry, entries: LedgerEntry[]): string {
+    const delta = this.delta(entry, entries);
+    if (delta === 0) return formatMoney(entry.amount, entry.currency);
+    return formatSignedMoney(String(delta), entry.currency);
   }
 
   /**

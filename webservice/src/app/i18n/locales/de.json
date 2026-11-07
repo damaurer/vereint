@@ -58,7 +58,7 @@
       "unavailable": "Übersicht nicht verfügbar",
       "eyebrow": "Servus",
       "greeting": {
-        "morning": "Guten Morgen, schön dass du da bist.",
+        "morning": "Guten Morgen, schön, dass du da bist.",
         "day": "Schön, dass du wieder da bist.",
         "evening": "Guten Abend. Wer ist heute dabei?"
       },
@@ -71,31 +71,11 @@
       "noEvents": "Aktuell keine Events.",
       "statEvents": "Deine Events",
       "statEntries": "Buchungen",
-      "shortcutsHeading": "Schnellzugriff",
-      "shortcuts": {
-        "scan": {
-          "title": "Getränk bezahlen",
-          "sub": "Strichcode scannen"
-        },
-        "moments": {
-          "title": "Moments",
-          "sub": "Anstoßen & Rituale"
-        },
-        "catalog": {
-          "title": "Getränkekatalog",
-          "sub": "Getränke & Speisen"
-        },
-        "purchases": {
-          "title": "Käufe",
-          "sub": "Was du getrunken hast"
-        },
-        "notifications": {
-          "title": "Mitteilungen",
-          "sub": "Neuigkeiten aus der Gruppe"
-        }
-      },
       "declined": "Du hast abgesagt",
-      "maybe": "Du hast mit Vielleicht geantwortet"
+      "maybe": "Du hast mit Vielleicht geantwortet",
+      "statementShort": "Kontoauszug",
+      "statEventsHint": "diesen Monat",
+      "statEntriesHint": "insgesamt"
     },
     "events": {
       "eyebrow": "Mitglied",
@@ -106,7 +86,14 @@
       "emptyTitle": "Keine Events",
       "emptyMessage": "Aktuell nimmst du an keinem Event teil.",
       "create": "Event anlegen",
-      "rsvpGroup": "Antwort für {title}"
+      "rsvpGroup": "Antwort für {title}",
+      "upcoming": "Kommend",
+      "past": "Vergangen",
+      "rangeGroup": "Zeitraum",
+      "emptyPast": "Noch keine vergangenen Events.",
+      "attending": "Du bist dabei",
+      "declined": "Du hast abgesagt",
+      "maybe": "Du hast mit Vielleicht geantwortet"
     },
     "eventDetail": {
       "eyebrow": "Event",
@@ -160,7 +147,14 @@
         "send": "Senden",
         "loading": "Der Chat wird geladen.",
         "unavailable": "Der Chat ist für dich nicht verfügbar."
-      }
+      },
+      "route": "Route",
+      "organizedBy": "Organisiert von {name}",
+      "chatChip": "Event-Chat",
+      "momentsChip": "Moments",
+      "momentsChipActive": "Moments ({count} aktiv)",
+      "attendanceHeading": "Anwesenheit",
+      "attendanceSummary": "{accepted} zugesagt · {invited} offen"
     },
     "purchases": {
       "eyebrow": "Belege",
@@ -190,7 +184,8 @@
         "spend": "Ausgaben",
         "empty": "Keine Buchungen für diesen Filter."
       },
-      "reversal": "Storno: {name}"
+      "reversal": "Storno: {name}",
+      "asOf": "Stand {date}"
     }
   },
   "profile": {
@@ -270,7 +265,8 @@
     "notifications": "Mitteilungen",
     "notificationsUnread": "Mitteilungen, {count} ungelesen",
     "chatUnread": "{label}, {count} ungelesen",
-    "switchStammtisch": "Gruppe wechseln (aktuell: {name})"
+    "switchStammtisch": "Gruppe wechseln (aktuell: {name})",
+    "back": "Zurück"
   },
   "nav": {
     "items": {

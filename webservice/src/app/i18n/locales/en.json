@@ -71,31 +71,11 @@
       "noEvents": "No events at the moment.",
       "statEvents": "Your events",
       "statEntries": "Transactions",
-      "shortcutsHeading": "Quick access",
-      "shortcuts": {
-        "scan": {
-          "title": "Pay for a drink",
-          "sub": "Scan the barcode"
-        },
-        "moments": {
-          "title": "Moments",
-          "sub": "Toasts & rituals"
-        },
-        "catalog": {
-          "title": "Drinks menu",
-          "sub": "Drinks & food"
-        },
-        "purchases": {
-          "title": "Purchases",
-          "sub": "What you've had"
-        },
-        "notifications": {
-          "title": "Notifications",
-          "sub": "News from the group"
-        }
-      },
       "declined": "You declined",
-      "maybe": "You answered maybe"
+      "maybe": "You answered maybe",
+      "statementShort": "Statement",
+      "statEventsHint": "this month",
+      "statEntriesHint": "in total"
     },
     "events": {
       "eyebrow": "Member",
@@ -106,7 +86,14 @@
       "emptyTitle": "No events",
       "emptyMessage": "You are not attending any events at the moment.",
       "create": "Create event",
-      "rsvpGroup": "Response for {title}"
+      "rsvpGroup": "Response for {title}",
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "rangeGroup": "Period",
+      "emptyPast": "No past events yet.",
+      "attending": "You're going",
+      "declined": "You declined",
+      "maybe": "You answered maybe"
     },
     "eventDetail": {
       "eyebrow": "Event",
@@ -166,7 +153,14 @@
         "send": "Send",
         "loading": "Loading the chat.",
         "unavailable": "The chat is not available to you."
-      }
+      },
+      "route": "Route",
+      "organizedBy": "Organised by {name}",
+      "chatChip": "Event chat",
+      "momentsChip": "Moments",
+      "momentsChipActive": "Moments ({count} active)",
+      "attendanceHeading": "Attendance",
+      "attendanceSummary": "{accepted} going · {invited} open"
     },
     "purchases": {
       "eyebrow": "Receipts",
@@ -196,7 +190,8 @@
         "spend": "Spending",
         "empty": "No transactions for this filter."
       },
-      "reversal": "Reversal: {name}"
+      "reversal": "Reversal: {name}",
+      "asOf": "As of {date}"
     }
   },
   "profile": {
@@ -276,7 +271,8 @@
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} unread",
     "chatUnread": "{label}, {count} unread",
-    "switchStammtisch": "Switch group (current: {name})"
+    "switchStammtisch": "Switch group (current: {name})",
+    "back": "Back"
   },
   "nav": {
     "items": {

@@ -62,6 +62,24 @@ function titleOf(root: ActivatedRouteSnapshot): string {
 }
 
 /**
+ * Ziel des Zurück-Pfeils in der Kopfzeile (`route.data.back`, z. B.
+ * `/events/:eventId`); Platzhalter werden durch die Routenparameter ersetzt.
+ * Leer auf Hauptseiten, die das Logo zeigen.
+ */
+function backOf(root: ActivatedRouteSnapshot): string {
+  let route: ActivatedRouteSnapshot | null = root;
+  let back = '';
+  let params: Record<string, string> = {};
+  while (route) {
+    const candidate = route.data?.['back'];
+    if (typeof candidate === 'string') back = candidate;
+    params = { ...params, ...route.params };
+    route = route.firstChild;
+  }
+  return back.replace(/:([A-Za-z]+)/g, (match, name: string) => params[name] ?? match);
+}
+
+/**
  * Responsive Layout-Hülle (TICKET-032).
  *
  * Genau eine Shell umschließt alle geschützten Routen und schaltet die
@@ -96,24 +114,29 @@ function titleOf(root: ActivatedRouteSnapshot): string {
       .shell-stammtisch {
         display: inline-flex;
         align-items: center;
-        gap: 0.35rem;
+        gap: 0.4rem;
         max-width: 11rem;
-        min-height: 2.75rem;
-        padding: 0 0.6rem;
+        height: 2.25rem;
+        padding: 0 0.65rem 0 0.25rem;
+        border: 1px solid var(--color-border);
         border-radius: 999px;
-        color: var(--color-text-muted);
+        background-color: var(--color-surface);
+        color: var(--color-text);
+        font-weight: 600;
         text-decoration: none;
       }
       a.shell-stammtisch:hover,
       a.shell-stammtisch:focus-visible {
+        border-color: var(--color-border-dark);
+        background-color: var(--color-surface-hover);
         color: var(--color-text);
-        background: var(--color-surface-muted, rgba(0, 0, 0, 0.05));
+        text-decoration: none;
       }
       .shell-stammtisch-name {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 0.9rem;
+        font-size: 0.82rem;
       }
       .shell-rail-link,
       .shell-bottom-link {
@@ -149,6 +172,8 @@ export class AppShellComponent implements OnInit, OnDestroy {
   private readonly sessionSignal = signal<AuthSessionUser | null>(null);
   private readonly urlSignal = signal<string>('');
   private readonly titleSignal = signal<string>('');
+  /** Ziel des Zurück-Pfeils auf Unterseiten (leer auf Hauptseiten). */
+  readonly backLink = signal<string>('');
   private routerSub: Subscription | null = null;
   private chatTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -273,11 +298,13 @@ export class AppShellComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.urlSignal.set(this.router.url);
     this.titleSignal.set(titleOf(this.router.routerState.snapshot.root));
+    this.backLink.set(backOf(this.router.routerState.snapshot.root));
     this.routerSub = this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
         this.urlSignal.set(event.urlAfterRedirects);
         this.titleSignal.set(titleOf(this.router.routerState.snapshot.root));
+        this.backLink.set(backOf(this.router.routerState.snapshot.root));
         this.closeMenus();
         this.refreshUnread();
         this.refreshChatUnread();

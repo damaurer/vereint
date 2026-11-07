@@ -26,6 +26,73 @@ export function formatDateTime(iso: string | null | undefined): string {
   return new Intl.DateTimeFormat(activeLocale(), { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
+/**
+ * Kurzes Datum wie im Design-Entwurf: „Fr, 17. Okt“ (Jahr nur, wenn es nicht
+ * das aktuelle ist). Abkürzungspunkte entfallen.
+ */
+export function formatShortDate(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const sameYear = date.getFullYear() === now.getFullYear();
+  const parts = new Intl.DateTimeFormat(activeLocale(), {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  }).formatToParts(date);
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value.replace(/\.$/, '') ?? '';
+  const day = activeLocale().startsWith('de') ? `${value('day')}.` : value('day');
+  const head = `${value('weekday')}, ${day} ${value('month')}`;
+  return sameYear ? head : `${head} ${value('year')}`;
+}
+
+/** Uhrzeit eines ISO-Zeitstempels („18:30“). */
+export function formatTime(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return new Intl.DateTimeFormat(activeLocale(), { timeStyle: 'short' }).format(date);
+}
+
+/** Datum und Uhrzeit wie im Design-Entwurf: „Fr, 17. Okt · 18:30“. */
+export function formatEventWhen(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return '';
+  const date = formatShortDate(iso, now);
+  const time = formatTime(iso);
+  return date && time ? `${date} · ${time}` : date;
+}
+
+/** Geldbetrag mit Vorzeichen („+20,00 €“, „−7,50 €“) für Kontoauszüge. */
+export function formatSignedMoney(amount: string, currency: string): string {
+  const value = Number(amount);
+  if (!Number.isFinite(value)) return `${amount} ${currency}`;
+  try {
+    return new Intl.NumberFormat(activeLocale(), { style: 'currency', currency, signDisplay: 'exceptZero' })
+      .format(value)
+      .replace('-', '−');
+  } catch {
+    return `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(2)} ${currency}`;
+  }
+}
+
+/** Kurzes Datum mit Uhrzeit ohne Wochentag: „17. Okt, 10:24“. */
+export function formatShortDateTime(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const sameYear = date.getFullYear() === now.getFullYear();
+  const day = new Intl.DateTimeFormat(activeLocale(), {
+    day: 'numeric',
+    month: 'short',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+    .format(date)
+    .replace(/\.(?=\s|$)/g, (match, offset: number, text: string) => (/\d/.test(text[offset - 1] ?? '') ? match : ''));
+  return `${day}, ${formatTime(iso)}`;
+}
+
 /** Klartext der Ledger-Buchungsarten in der aktiven Sprache. */
 export function entryTypeLabel(entryType: string): string {
   switch (entryType) {

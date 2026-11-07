@@ -7,7 +7,7 @@ import { forkJoin, of, catchError, type Subscription } from 'rxjs';
 import { describeApiError } from '../api/api-client.service';
 import { AsyncState } from './async-state';
 import { MemberApiService, rsvpLabelKey, rsvpTone, type RsvpAnswer } from './member-api.service';
-import { eventStatusLabel, formatDateTime } from './member-format';
+import { eventStatusLabel, formatDateTime, formatEventWhen, formatTime } from './member-format';
 import type {
   ChatMessageDto,
   EventDetail,
@@ -53,10 +53,6 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="event-title">
-        <span class="eyebrow">{{ 'member.eventDetail.eyebrow' | t }}</span>
-
-        <a class="member-back" routerLink="/events">{{ 'member.eventDetail.back' | t }}</a>
-
         @if (load.isLoading()) {
           <vereint-state
             kind="loading"
@@ -71,74 +67,86 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
             (retry)="reload()"
           />
         } @else if (load.data(); as view) {
-          <article class="detail-head">
-            <div class="detail-head-top">
-              <h1 id="event-title">{{ view.event.title }}</h1>
-              <vereint-status-badge
-                [label]="eventStatusLabel(view.event.status)"
-                [tone]="'success'"
-              />
+          <header class="detail-head">
+            <div class="detail-eyebrow">
+              <span class="eyebrow">{{ 'member.eventDetail.eyebrow' | t }}</span>
+              <vereint-status-badge [label]="eventStatusLabel(view.event.status)" [tone]="eventTone(view.event.status)" />
             </div>
+            <h1 id="event-title">{{ view.event.title }}</h1>
             <ul class="detail-meta">
-              <li><vereint-icon name="events" /> {{ formatDateTime(view.event.startsAt) }}</li>
-              @if (view.event.endsAt) {
-                <li><vereint-icon name="clock" /> {{ 'member.eventDetail.until' | t: { date: formatDateTime(view.event.endsAt) } }}</li>
-              }
+              <li>
+                <vereint-icon name="clock" />
+                <span>{{ whenRange(view.event.startsAt, view.event.endsAt) }}</span>
+              </li>
               @if (view.event.location) {
-                <li><vereint-icon name="location" /> {{ view.event.location }}</li>
+                <li>
+                  <vereint-icon name="location" />
+                  <span class="detail-meta-grow">{{ view.event.location }}</span>
+                  <button type="button" class="detail-route" (click)="openRoute(view.event.location)">
+                    {{ 'member.eventDetail.route' | t }}
+                  </button>
+                </li>
               }
-              <li><vereint-icon name="user" /> {{ view.event.ownerDisplayName }}</li>
+              <li>
+                <vereint-icon name="user" />
+                <span>{{ 'member.eventDetail.organizedBy' | t: { name: view.event.ownerDisplayName } }}</span>
+              </li>
             </ul>
-            <div class="detail-actions">
-              @if (view.event.location) {
-                <button type="button" class="member-button route-button" (click)="openRoute(view.event.location)">
-                  {{ 'member.eventDetail.openRoute' | t }}
-                </button>
-              }
-              @if (view.event.canManage) {
-                <a class="member-button manage-link" [routerLink]="['/events', view.event.id, 'manage']">
-                  <vereint-icon name="edit" /> {{ 'member.eventDetail.manage' | t }}
-                </a>
-              }
-            </div>
-          </article>
+          </header>
 
           @if (view.event.description) {
-            <p class="member-description">{{ view.event.description }}</p>
+            <p class="member-description detail-description">{{ view.event.description }}</p>
           }
+
+          <nav class="detail-chips" [attr.aria-label]="'member.eventDetail.eyebrow' | t">
+            <a class="detail-chip" [routerLink]="[]" fragment="event-chat">{{ 'member.eventDetail.chatChip' | t }}</a>
+            <a class="detail-chip" [routerLink]="['/events', view.event.id, 'moments']">
+              @if (view.moments.length > 0) {
+                {{ 'member.eventDetail.momentsChipActive' | t: { count: view.moments.length } }}
+              } @else {
+                {{ 'member.eventDetail.momentsChip' | t }}
+              }
+            </a>
+            @if (view.event.canManage) {
+              <a class="detail-chip detail-chip-strong" [routerLink]="['/events', view.event.id, 'manage']">
+                <vereint-icon name="edit" /> {{ 'member.eventDetail.manage' | t }}
+              </a>
+            }
+          </nav>
 
           @if (view.event.myRsvp) {
-            <h2 class="member-subtitle">{{ 'member.eventDetail.rsvpHeading' | t }}</h2>
-            <p class="rsvp-state" role="status">{{ myRsvpText(view.event.myRsvp) }}</p>
-            <div class="rsvp-row" role="group" [attr.aria-label]="'member.eventDetail.rsvpHeading' | t">
-              @for (option of rsvpOptions; track option.value) {
-                <button
-                  type="button"
-                  class="rsvp-button"
-                  [attr.data-answer]="option.value"
-                  [class.is-active]="view.event.myRsvp === option.value"
-                  [attr.aria-pressed]="view.event.myRsvp === option.value"
-                  [disabled]="rsvpBusy() || !canAnswer(view.event.status)"
-                  (click)="setRsvp(option.value)"
-                >
-                  {{ option.labelKey | t }}
-                </button>
+            <section class="detail-card" aria-labelledby="rsvp-title">
+              <h2 id="rsvp-title" class="detail-card-title">{{ 'member.eventDetail.rsvpHeading' | t }}</h2>
+              <div class="rsvp-row" role="group" [attr.aria-label]="'member.eventDetail.rsvpHeading' | t">
+                @for (option of rsvpOptions; track option.value) {
+                  <button
+                    type="button"
+                    class="rsvp-button"
+                    [attr.data-answer]="option.value"
+                    [class.is-active]="view.event.myRsvp === option.value"
+                    [attr.aria-pressed]="view.event.myRsvp === option.value"
+                    [disabled]="rsvpBusy() || !canAnswer(view.event.status)"
+                    (click)="setRsvp(option.value)"
+                  >
+                    {{ option.labelKey | t }}
+                  </button>
+                }
+              </div>
+              <p class="rsvp-state" role="status">{{ myRsvpText(view.event.myRsvp) }}</p>
+              @if (rsvpError(); as error) {
+                <p class="member-hint rsvp-error" role="alert">{{ error }}</p>
               }
-            </div>
-            @if (rsvpError(); as error) {
-              <p class="member-hint rsvp-error" role="alert">{{ error }}</p>
-            }
+            </section>
           }
 
-          <h2 class="member-subtitle">{{ 'member.eventDetail.attendance' | t: { count: view.participants.length } }}</h2>
-          @if (view.event.rsvpCounts; as counts) {
-            <ul class="rsvp-counts" [attr.aria-label]="'member.eventDetail.countsLabel' | t">
-              <li class="count-accepted">{{ 'member.eventDetail.counts.accepted' | t: { count: counts.accepted } }}</li>
-              <li class="count-maybe">{{ 'member.eventDetail.counts.maybe' | t: { count: counts.maybe } }}</li>
-              <li class="count-declined">{{ 'member.eventDetail.counts.declined' | t: { count: counts.declined } }}</li>
-              <li class="count-invited">{{ 'member.eventDetail.counts.invited' | t: { count: counts.invited } }}</li>
-            </ul>
-          }
+          <div class="detail-section-head">
+            <h2 class="detail-section-title">{{ 'member.eventDetail.attendanceHeading' | t }}</h2>
+            @if (view.event.rsvpCounts; as counts) {
+              <span class="detail-section-meta" [attr.aria-label]="'member.eventDetail.countsLabel' | t">
+                {{ 'member.eventDetail.attendanceSummary' | t: { accepted: counts.accepted, invited: counts.invited } }}
+              </span>
+            }
+          </div>
           @if (view.participants.length === 0) {
             <p class="member-muted">{{ 'member.eventDetail.noParticipants' | t }}</p>
           } @else {
@@ -169,7 +177,7 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
           }
 
           <!-- Event-Chat -->
-          <section class="event-chat" aria-labelledby="event-chat-title">
+          <section class="event-chat" id="event-chat" aria-labelledby="event-chat-title">
             <h2 id="event-chat-title" class="member-subtitle">{{ 'member.eventDetail.chat.heading' | t }}</h2>
             @if (chatError(); as error) {
               <p class="member-muted" role="status">{{ error }}</p>
@@ -218,34 +226,6 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
             }
           </section>
 
-          <!-- Gemeinschaftsmomente & Rituale (Moments) Sektion -->
-          <h2 class="member-subtitle">{{ 'member.eventDetail.momentsHeading' | t }}</h2>
-          <div class="moments-banner-card">
-            <div class="moments-banner-head">
-              <vereint-icon class="moments-banner-icon" name="moments" />
-              <div>
-                <strong>{{ 'member.eventDetail.momentsTitle' | t }}</strong>
-                <p>
-                  @if (view.moments.length > 0) {
-                    {{ 'member.eventDetail.momentsActive' | t: { count: view.moments.length } }}
-                  } @else {
-                    {{ 'member.eventDetail.momentsInvite' | t }}
-                  }
-                </p>
-              </div>
-            </div>
-            <a
-              class="member-button moments-btn"
-              [routerLink]="['/events', view.event.id, 'moments']"
-            >
-              @if (view.moments.length > 0) {
-                {{ 'member.eventDetail.momentsView' | t: { count: view.moments.length } }}
-              } @else {
-                {{ 'member.eventDetail.momentsStart' | t }}
-              }
-            </a>
-          </div>
-
           <!-- Vergangene Moments / Archiv -->
           @if (view.history.length > 0) {
             <h3 class="member-subtitle history-title">{{ 'member.eventDetail.historyHeading' | t }}</h3>
@@ -274,19 +254,15 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
       .detail-head {
         display: flex;
         flex-direction: column;
-        gap: 0.6rem;
-        padding: var(--space-3, 1rem);
-        border-radius: var(--radius-lg, 1rem);
-        background: rgba(148, 163, 184, 0.08);
+        gap: 0.35rem;
       }
-      .detail-head-top {
+      .detail-eyebrow {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
+        gap: 0.6rem;
       }
-      .detail-head-top h1 {
-        margin: 0;
+      .detail-head h1 {
+        margin: 0 0 0.35rem;
       }
       .detail-meta {
         list-style: none;
@@ -294,139 +270,129 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 0.3rem;
-        opacity: 0.9;
+        gap: 0.4rem;
+        color: var(--color-text);
+        font-size: 0.95rem;
       }
-      .detail-actions {
+      .detail-meta li {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+      .detail-meta .ui-icon {
+        flex-shrink: 0;
+        color: var(--color-text-muted);
+        font-size: 1.1rem;
+      }
+      .detail-meta-grow {
+        flex: 1;
+        min-width: 0;
+      }
+      .detail-route {
+        padding: 0;
+        border: none;
+        background: none;
+        color: var(--color-brand);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .detail-description {
+        margin: var(--space-2) 0 0;
+        color: var(--color-text-muted);
+      }
+      .detail-chips {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
+        margin: var(--space-3) 0;
       }
-      .manage-link {
+      .detail-chip {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
+        min-height: 2.5rem;
+        padding: 0 0.9rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        background-color: var(--color-surface);
+        color: var(--color-text);
+        font-size: 0.9rem;
+        font-weight: 600;
         text-decoration: none;
       }
-      .rsvp-state {
-        margin: 0 0 0.5rem;
-        font-weight: 600;
+      .detail-chip:hover,
+      .detail-chip:focus-visible {
+        border-color: var(--color-brand);
+        text-decoration: none;
       }
-      .rsvp-error {
-        color: var(--color-danger, #b91c1c);
+      .detail-chip-strong {
+        border-color: transparent;
+        background-color: var(--color-brand-soft);
+        color: var(--color-brand);
       }
-      .rsvp-counts {
-        list-style: none;
-        margin: 0 0 0.75rem;
-        padding: 0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.4rem 1rem;
-        font-size: 0.9rem;
-        color: var(--color-text-muted);
+      .detail-card {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: var(--space-4);
+        padding: var(--space-3);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-surface);
       }
-      .event-chat {
-        margin-top: 1rem;
-      }
-      .chat-messages {
-        list-style: none;
-        margin: 0 0 0.75rem;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        max-height: 24rem;
-        overflow-y: auto;
-      }
-      .chat-message {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-        max-width: 85%;
-        padding: 0.5rem 0.75rem;
-        border-radius: var(--radius-md, 0.75rem);
-        background: rgba(148, 163, 184, 0.1);
-      }
-      .chat-message.is-mine {
-        align-self: flex-end;
-        background: var(--color-brand-soft, rgba(245, 166, 35, 0.15));
-      }
-      .chat-sender {
-        font-size: 0.8rem;
+      .detail-card-title,
+      .detail-section-title {
+        margin: 0;
+        font-size: 1.05rem;
         font-weight: 700;
       }
-      .chat-text {
-        overflow-wrap: anywhere;
-        white-space: pre-wrap;
+      .detail-section-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-2);
+        margin-bottom: 0.6rem;
       }
-      .chat-time {
-        font-size: 0.72rem;
+      .detail-section-meta {
         color: var(--color-text-muted);
+        font-size: 0.875rem;
       }
-      .chat-composer {
-        display: flex;
-        gap: 0.5rem;
-        align-items: stretch;
+      .rsvp-state {
+        margin: 0;
+        color: var(--color-text-muted);
+        font-size: 0.875rem;
       }
-      .chat-field {
-        flex: 1 1 auto;
-        min-width: 0;
-        display: flex;
-      }
-      .chat-field input {
-        flex: 1 1 auto;
-        min-width: 0;
-        min-height: 2.75rem;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid var(--color-border-dark, #cbd5e1);
-        border-radius: 0.5rem;
-        font: inherit;
-      }
-      .chat-send {
-        flex: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-      }
-      .visually-hidden {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-        white-space: nowrap;
+      .rsvp-error {
+        color: var(--color-danger);
       }
       .rsvp-row {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 0.5rem;
       }
       .rsvp-button {
-        flex: 1 1 6rem;
-        padding: 0.7rem 0.9rem;
-        border: 1px solid rgba(148, 163, 184, 0.4);
-        border-radius: var(--radius-md, 0.75rem);
-        background: transparent;
-        color: inherit;
+        min-height: 2.75rem;
+        padding: 0 0.5rem;
+        border: 1px solid var(--color-border-dark);
+        border-radius: var(--radius-sm);
+        background-color: var(--color-surface);
+        color: var(--color-text);
         font: inherit;
+        font-weight: 600;
         cursor: pointer;
       }
       .rsvp-button.is-active {
-        border-color: var(--color-brand);
-        background: rgba(245, 166, 35, 0.15);
-        font-weight: 600;
+        border: 2px solid var(--color-brand);
+        background-color: var(--color-brand-soft);
+        color: var(--color-brand);
+        font-weight: 700;
       }
       .rsvp-button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
       }
-      .rsvp-button[data-answer='accepted'].is-active {
-        border-color: #16a34a;
-        background: rgba(22, 163, 74, 0.18);
-      }
-      .rsvp-button[data-answer='declined'].is-active {
-        border-color: #b91c1c;
-        background: rgba(185, 28, 28, 0.12);
+      .rsvp-button.is-active:disabled {
+        opacity: 1;
       }
       .detail-participants {
         list-style: none;
@@ -434,48 +400,23 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-surface);
       }
       .detail-participant {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
-        padding: 0.5rem 0.6rem;
-        border-radius: var(--radius-md, 0.75rem);
-        background: rgba(148, 163, 184, 0.08);
+        gap: 0.75rem;
+        padding: 0.65rem var(--space-3);
+      }
+      .detail-participant + .detail-participant {
+        border-top: 1px solid var(--color-border);
       }
       .detail-participant-name {
         flex: 1 1 auto;
-      }
-      .moments-banner-card {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        padding: 1rem;
-        border-radius: var(--radius-md, 0.75rem);
-        background-color: var(--color-surface-raised, rgba(148, 163, 184, 0.08));
-        border: 1px solid var(--color-border);
-      }
-      .moments-banner-head {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
-      .moments-banner-icon {
-        font-size: 1.5rem;
-      }
-      .moments-banner-head strong {
-        display: block;
-        color: var(--color-text);
-        font-size: 0.95rem;
-      }
-      .moments-banner-head p {
-        margin: 0.15rem 0 0;
-        font-size: 0.85rem;
-        color: var(--color-text-muted);
-      }
-      .moments-btn {
-        align-self: flex-start;
+        font-weight: 600;
       }
       .history-title {
         margin-top: 1.5rem;
@@ -593,6 +534,29 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   }
 
   /** Satz zur eigenen Antwort über den Buttons. */
+  /** „Fr, 17. Okt · 18:30 – 23:30“; endet das Event an einem anderen Tag, mit dessen Datum. */
+  protected whenRange(startsAt: string, endsAt: string | null): string {
+    const start = formatEventWhen(startsAt);
+    if (!endsAt) return start;
+    const sameDay = new Date(startsAt).toDateString() === new Date(endsAt).toDateString();
+    return `${start} – ${sameDay ? formatTime(endsAt) : formatEventWhen(endsAt)}`;
+  }
+
+  /** Badge-Farbe des Eventstatus. */
+  protected eventTone(status: EventStatus): StatusTone {
+    switch (status) {
+      case 'active':
+      case 'published':
+        return 'success';
+      case 'cancelled':
+        return 'danger';
+      case 'draft':
+        return 'warning';
+      default:
+        return 'neutral';
+    }
+  }
+
   protected myRsvpText(status: string): string {
     return translate(`member.eventDetail.myRsvp.${status}`);
   }

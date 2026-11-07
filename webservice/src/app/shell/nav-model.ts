@@ -44,7 +44,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
   { id: 'home', labelKey: 'nav.items.home', icon: 'home', route: '/dashboard' },
   { id: 'events', labelKey: 'nav.items.events', icon: 'events', route: '/events' },
   { id: 'chat', labelKey: 'nav.items.chat', icon: 'chat', route: '/chat' },
-  { id: 'moments', labelKey: 'nav.items.moments', icon: 'moments', route: '/moments' },
+  { id: 'wallet', labelKey: 'nav.items.wallet', icon: 'wallet', route: '/wallet' },
 ];
 
 /**
@@ -52,7 +52,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
  * erscheinen in der Seitenleiste und im „Mehr“-Sheet.
  */
 export const SECONDARY_NAV: readonly NavItem[] = [
-  { id: 'wallet', labelKey: 'nav.items.wallet', icon: 'wallet', route: '/wallet' },
+  { id: 'moments', labelKey: 'nav.items.moments', icon: 'moments', route: '/moments' },
   { id: 'direct', labelKey: 'nav.items.direct', icon: 'direct-message', route: '/direktnachrichten' },
   { id: 'calendar', labelKey: 'nav.items.calendar', icon: 'calendar', route: '/kalender' },
   { id: 'friends', labelKey: 'nav.items.friends', icon: 'friends', route: '/freunde' },
@@ -111,7 +111,7 @@ export const PANEL_NAV: readonly NavItem[] = [
   {
     id: 'tablet',
     labelKey: 'nav.items.tablet',
-    icon: 'terminal',
+    icon: 'tally',
     route: '/tablet',
     requiredPermissions: [TABLET_PERMISSION],
   },
@@ -126,18 +126,19 @@ export interface NavSection {
 }
 
 const SECTION_LAYOUT: readonly { id: NavSection['id']; labelKey: string; ids: readonly string[] }[] = [
-  { id: 'club', labelKey: 'nav.sections.club', ids: ['home', 'events', 'moments', 'chat', 'direct'] },
+  // Reihenfolge und Gruppierung nach dem Design-Entwurf (docs/design/screens: Mehr, Seitenleiste).
+  { id: 'club', labelKey: 'nav.sections.club', ids: ['home', 'events', 'moments', 'chat', 'direct', 'statistik'] },
   {
     id: 'account',
     labelKey: 'nav.sections.account',
     // Kalender und Freunde sind persönlich und gruppenübergreifend.
-    ids: ['calendar', 'friends', 'wallet', 'scan', 'purchases', 'notifications', 'profil', 'stammtisch'],
+    ids: ['calendar', 'friends', 'wallet', 'scan', 'purchases', 'notifications', 'profil'],
   },
-  { id: 'bar', labelKey: 'nav.sections.bar', ids: ['catalog', 'sublists', 'statistik'] },
+  { id: 'bar', labelKey: 'nav.sections.bar', ids: ['catalog', 'sublists', 'tablet'] },
   {
     id: 'admin',
     labelKey: 'nav.sections.admin',
-    ids: ['board', 'treasury', 'communications', 'admin', 'tablet'],
+    ids: ['board', 'treasury', 'communications', 'admin', 'stammtisch'],
   },
 ];
 
@@ -196,9 +197,17 @@ export function buildMoreNav(session: AuthSessionUser | null): NavItem[] {
  */
 export function buildNavSections(session: AuthSessionUser | null): NavSection[] {
   const visible = new Map(filterNavItems(ALL_NAV, session).map((item) => [item.id, item]));
-  return SECTION_LAYOUT.map((section) => ({
+  const sections = SECTION_LAYOUT.map((section) => ({
     id: section.id,
     labelKey: section.labelKey,
     items: section.ids.flatMap((id) => visible.get(id) ?? []),
-  })).filter((section) => section.items.length > 0);
+  }));
+  // Ohne Verwaltungsrechte bliebe unter „Verwaltung“ nur die Gruppe stehen;
+  // dann steht sie unter „Mein Konto“, und der Abschnitt entfällt.
+  const admin = sections.find((section) => section.id === 'admin');
+  if (admin && admin.items.every((item) => item.id === 'stammtisch')) {
+    sections.find((section) => section.id === 'account')?.items.push(...admin.items);
+    admin.items = [];
+  }
+  return sections.filter((section) => section.items.length > 0);
 }

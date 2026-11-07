@@ -8,6 +8,8 @@ import {
   Output,
   ViewChild,
 } from '@angular/core';
+import { TranslatePipe } from '../i18n';
+import { IconComponent } from './icon.component';
 
 /** Ab dieser Wischstrecke (px) nach unten schließt das Sheet beim Loslassen. */
 export const SHEET_DISMISS_DISTANCE = 96;
@@ -28,6 +30,7 @@ export const SHEET_DISMISS_VELOCITY = 0.5;
 @Component({
   selector: 'vereint-bottom-sheet',
   standalone: true,
+  imports: [IconComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (open) {
@@ -48,6 +51,11 @@ export const SHEET_DISMISS_VELOCITY = 0.5;
           @if (title) {
             <header class="ui-sheet-head">
               <h2 class="ui-sheet-title">{{ title }}</h2>
+              @if (dismissible) {
+                <button type="button" class="ui-sheet-close" [attr.aria-label]="'common.close' | t" (click)="requestClose()">
+                  <vereint-icon name="close" />
+                </button>
+              }
             </header>
           }
           <div #body class="ui-sheet-body"><ng-content></ng-content></div>
