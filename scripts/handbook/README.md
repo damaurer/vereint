@@ -46,3 +46,26 @@ Neue Bilder ergänzt man als Eintrag in `SHOTS` in `capture.mjs`.
 Die Kiosk-Bilder (`t-kiosk-start`, `t-kiosk-entsperren`, `v-kiosk-geraete`) stehen am Ende
 von `SHOTS`, weil das Demo-Terminal danach im Kiosk-Modus bleibt. Wer sie einzeln
 mit `--reuse` aufnimmt, setzt die Umgebung danach am besten neu auf.
+
+## Handbuch als PDF
+
+`pdf.mjs` setzt `docs/handbuch` als gestaltetes A4-PDF: Deckblatt, Inhaltsverzeichnis
+mit Seitenzahlen, eine Titelseite je Kapitel, Kopf- und Fußzeilen, nummerierte
+Abbildungen in Vereint-Farben. Es nutzt nur die vorhandenen Markdown-Dateien und
+Bilder; eine laufende App braucht es nicht.
+
+```bash
+cd scripts/handbook
+npm install
+npx playwright install chromium   # einmalig, falls noch kein Browser da ist
+npm run pdf                        # -> dist/vereint-handbuch.pdf
+node pdf.mjs ~/Desktop/handbuch.pdf  # anderer Ablageort
+```
+
+- Gestaltung steht in `pdf.css`, Kapitelreihenfolge und Untertitel oben in `pdf.mjs`.
+- Die Ausgabe (Monat/Jahr auf Deckblatt und Fußzeile) ist das aktuelle Datum;
+  `HANDBOOK_DATE=2026-11-01 npm run pdf` setzt ein festes.
+- `HANDBOOK_CHROMIUM=/pfad/zu/chrome` nimmt einen vorhandenen Chromium statt des
+  von Playwright installierten.
+- Der Abschnitt „Bilder neu erzeugen“ der Handbuch-README und Links auf
+  Entwicklerdateien kommen nicht ins PDF.
