@@ -1,11 +1,10 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { forkJoin, map, type Observable } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
-import { entryTypeLabel, eventStatusLabel, formatDateTime, formatMoney } from '../member/member-format';
+import { entryTypeLabel, eventStatusLabel, formatDateTime, formatMoney, formatShortDate } from '../member/member-format';
 import { RetryableIdempotencyKey } from '../api/idempotency';
 import { BoardApiService } from './board-api.service';
 import type {
@@ -17,8 +16,8 @@ import type {
   MemberBalanceOverview,
 } from '../api/api.types';
 import {
+  AvatarBadgeComponent,
   BalanceCardComponent,
-  InfoPanelComponent,
   StatCardComponent,
   StatusBadgeComponent,
   type StatusTone,
@@ -50,9 +49,8 @@ interface MemberLedger {
   imports: [
     StateComponent,
     FormsModule,
-    RouterLink,
     BalanceCardComponent,
-    InfoPanelComponent,
+    AvatarBadgeComponent,
     StatCardComponent,
     StatusBadgeComponent,
     TranslatePipe,
@@ -62,12 +60,6 @@ interface MemberLedger {
       <section class="page-card member-card" aria-labelledby="treasury-title">
         <span class="eyebrow">{{ 'board.treasury.eyebrow' | t }}</span>
         <h1 id="treasury-title">{{ 'board.treasury.title' | t }}</h1>
-        <p>{{ 'board.treasury.intro' | t }}</p>
-        <a class="member-back" routerLink="/board">{{ 'board.backToBoard' | t }}</a>
-
-        <vereint-info-panel icon="treasury" [title]="'board.treasury.infoTitle' | t">
-          {{ 'board.treasury.infoText' | t }}
-        </vereint-info-panel>
 
         @if (actionError(); as err) {
           <p class="manage-action-error" role="alert">{{ err }}</p>
@@ -77,7 +69,7 @@ interface MemberLedger {
         }
 
         <!-- Guthabenübersicht -->
-        <h2 class="member-subtitle">{{ 'board.treasury.members.title' | t }}</h2>
+        <h2 class="visually-hidden">{{ 'board.treasury.members.title' | t }}</h2>
         @if (balances.isLoading()) {
           <vereint-state kind="loading" [title]="'common.loading' | t" [message]="'board.treasury.members.loading' | t" />
         } @else if (balances.isError()) {
@@ -89,17 +81,24 @@ interface MemberLedger {
           />
         } @else if (balances.data(); as all) {
           <div class="treasury-stats">
-            <vereint-stat-card icon="users" [label]="'board.treasury.members.statMembers' | t" [value]="all.length" />
-            <vereint-stat-card [label]="'board.treasury.members.statNegative' | t" [value]="negativeCount()" />
+            <vereint-stat-card [label]="'board.treasury.members.statTotal' | t" [value]="totalBalance()" />
+            <vereint-stat-card [label]="'board.treasury.members.statMembers' | t" [value]="all.length" />
+            <vereint-stat-card
+              class="treasury-stat-negative"
+              [class.has-negative]="negativeCount() > 0"
+              [label]="'board.treasury.members.statNegative' | t"
+              [value]="negativeCount()"
+            />
           </div>
+          <p class="treasury-note">{{ 'board.treasury.infoText' | t }}</p>
 
-          <label class="manage-field treasury-search">
-            <span>{{ 'board.treasury.members.search' | t }}</span>
+          <label class="treasury-search">
+            <span class="visually-hidden">{{ 'board.treasury.members.search' | t }}</span>
             <input
               type="search"
               name="memberSearch"
               autocomplete="off"
-              [placeholder]="'board.treasury.members.searchPlaceholder' | t"
+              [placeholder]="'board.treasury.members.search' | t"
               [ngModel]="search()"
               (ngModelChange)="search.set($event)"
             />
@@ -119,16 +118,19 @@ interface MemberLedger {
                     [attr.aria-pressed]="selected()?.memberId === row.memberId"
                     (click)="selectMember(row)"
                   >
-                    <span class="treasury-member-name">{{ row.displayName }}</span>
-                    <span class="treasury-member-balance">
-                      {{ formatMoney(row.creditBalance, row.currency) }}
+                    <vereint-avatar-badge [name]="row.displayName" />
+                    <span class="treasury-member-text">
+                      <span class="treasury-member-name">{{ row.displayName }}</span>
+                      <span class="treasury-member-meta">
+                        @if (row.lastEntryAt) {
+                          {{ 'board.treasury.members.lastEntry' | t: { date: formatShortDate(row.lastEntryAt) } }}
+                        } @else {
+                          {{ 'board.treasury.members.noEntry' | t }}
+                        }
+                      </span>
                     </span>
-                    <span class="treasury-member-meta">
-                      @if (row.lastEntryAt) {
-                        {{ 'board.treasury.members.lastEntry' | t: { date: formatDateTime(row.lastEntryAt) } }}
-                      } @else {
-                        {{ 'board.treasury.members.noEntry' | t }}
-                      }
+                    <span class="treasury-member-balance">
+                      {{ formatSignedBalance(row.creditBalance, row.currency) }}
                     </span>
                   </button>
                 </li>
@@ -344,25 +346,49 @@ interface MemberLedger {
         font: inherit;
         min-width: 0;
       }
+      .treasury-note {
+        margin: 0 0 var(--space-3);
+        padding: 0.6rem 0.75rem;
+        border-radius: var(--radius-md);
+        background-color: var(--color-brand-soft);
+        color: var(--color-text);
+        font-size: 0.85rem;
+      }
       .treasury-search {
-        margin: 0.25rem 0 0.75rem;
-        max-width: 24rem;
+        display: block;
+        margin: 0 0 var(--space-3);
+      }
+      .treasury-search input {
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0.6rem 0.9rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background-color: var(--color-surface-raised);
+        color: inherit;
+        font: inherit;
       }
       .treasury-members {
         list-style: none;
+        margin: 0;
         padding: 0;
-        display: grid;
-        gap: 0.5rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-surface-raised);
+        overflow: hidden;
+      }
+      .treasury-members > li + li {
+        border-top: 1px solid var(--color-border);
       }
       .treasury-member {
+        --avatar-size: 2.25rem;
         width: 100%;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 0.15rem 0.75rem;
-        padding: 0.75rem;
-        border: 1px solid var(--color-border, #cbd5e1);
-        border-radius: var(--radius-md, 0.75rem);
-        background: var(--color-surface-raised, transparent);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.65rem var(--space-3);
+        border: 0;
+        background: transparent;
         color: inherit;
         font: inherit;
         text-align: left;
@@ -370,11 +396,16 @@ interface MemberLedger {
       }
       .treasury-member:hover,
       .treasury-member:focus-visible {
-        border-color: var(--color-brand);
+        background-color: var(--color-surface-subtle);
       }
       .treasury-member-selected {
-        border-color: var(--color-brand);
-        box-shadow: 0 0 0 1px var(--color-brand);
+        background-color: var(--color-brand-soft);
+      }
+      .treasury-member-text {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
       }
       .treasury-member-name {
         font-weight: 700;
@@ -385,16 +416,12 @@ interface MemberLedger {
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
-      .treasury-member-negative {
-        border-left: 4px solid var(--color-danger, #b91c1c);
-      }
       .treasury-member-negative .treasury-member-balance {
-        color: var(--color-danger, #b91c1c);
+        color: var(--color-danger);
       }
       .treasury-member-meta {
-        grid-column: 1 / -1;
         color: var(--color-text-muted);
-        font-size: 0.85rem;
+        font-size: 0.8rem;
       }
       .treasury-panel {
         margin: 1rem 0 1.5rem;
@@ -454,9 +481,10 @@ interface MemberLedger {
       .treasury-stats {
         display: grid;
         gap: var(--space-2);
-        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-        margin: 0.5rem 0 1rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: 0 0 var(--space-2);
       }
+
       .member-button-secondary {
         background: transparent;
         color: var(--color-text);
@@ -503,6 +531,7 @@ export class TreasuryComponent implements OnInit, OnDestroy {
 
   protected readonly formatMoney = formatMoney;
   protected readonly formatDateTime = formatDateTime;
+  protected readonly formatShortDate = formatShortDate;
   protected readonly entryTypeLabel = entryTypeLabel;
   protected readonly eventStatusLabel = eventStatusLabel;
 
@@ -514,6 +543,17 @@ export class TreasuryComponent implements OnInit, OnDestroy {
     );
     return term ? rows.filter((row) => row.displayName.toLocaleLowerCase().includes(term)) : rows;
   });
+
+  protected readonly totalBalance = computed(() => {
+    const rows = this.balances.data() ?? [];
+    const sum = rows.reduce((total, row) => total + (Number(row.creditBalance) || 0), 0);
+    return formatMoney(sum.toFixed(2), rows[0]?.currency ?? 'EUR');
+  });
+
+  /** Guthaben mit echtem Minuszeichen. */
+  protected formatSignedBalance(amount: string, currency: string): string {
+    return formatMoney(amount, currency).replace('-', '−');
+  }
 
   protected readonly negativeCount = computed(
     () => (this.balances.data() ?? []).filter((row) => this.isNegative(row.creditBalance)).length,

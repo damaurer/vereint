@@ -6,7 +6,9 @@
     "cancel": "Abbrechen",
     "close": "Schließen",
     "retry": "Erneut versuchen",
-    "optional": "optional"
+    "optional": "optional",
+    "yesterday": "Gestern",
+    "today": "Heute"
   },
   "errors": {
     "api": {
@@ -159,13 +161,23 @@
     "purchases": {
       "eyebrow": "Belege",
       "title": "Käufe",
-      "intro": "Deine Käufe mit unveränderlichem Beleg.",
+      "intro": "Jeder Kauf hat einen unveränderlichen Beleg mit dem Preis von damals.",
       "loadingMessage": "Die Käufe werden abgerufen.",
       "unavailable": "Käufe nicht verfügbar",
       "emptyTitle": "Keine Käufe",
       "emptyMessage": "Du hast bisher keine Getränke gekauft.",
       "barcode": "Barcode {code}",
-      "catalogVersion": "Katalog v{version}"
+      "catalogVersion": "Katalog v{version}",
+      "count": "{count} Käufe",
+      "mostOften": "Am häufigsten",
+      "times": "{count} ×",
+      "source": {
+        "pwaBarcode": "Bezahlt per Scan",
+        "tabletManual": "Strichliste",
+        "round": "Runde",
+        "evening": "Ganzer Abend"
+      },
+      "food": "Speisen"
     },
     "wallet": {
       "eyebrow": "Guthaben & Transaktionen",
@@ -195,7 +207,9 @@
     "noRoles": "keine Rollen",
     "beerWithMe": {
       "title": "BeerWithMe Status",
-      "hint": "Verfügbar für ein spontanes Bier in der Nähe."
+      "hint": "Verfügbar für ein spontanes Bier in der Nähe.",
+      "short": "Spontanes Bier",
+      "shortHint": "Freunde sehen, dass du Zeit hast"
     },
     "theme": {
       "title": "Darstellung",
@@ -220,7 +234,8 @@
       "title": "Sicherheit",
       "hint": "Schütze dein Konto zusätzlich mit einer Authenticator-App (z. B. Google Authenticator). Danach fragt der Login nach Passwort und einem 6-stelligen Code. Freiwillig, aber empfohlen für Vorstand und Admin.",
       "setupTwoFactor": "Zwei-Faktor-Anmeldung einrichten"
-    }
+    },
+    "since": "seit {date}"
   },
   "notifications": {
     "eyebrow": "Mitteilungen",
@@ -243,14 +258,16 @@
       "moment": "Moment",
       "eventInvitation": "Einladung",
       "eventReminder": "Erinnerung",
-      "eventCancelled": "Abgesagt"
+      "eventCancelled": "Abgesagt",
+      "general": "Rundbrief"
     },
     "open": "Öffnen",
     "openEvent": "Zum Event",
     "answered": {
       "accepted": "Du hast zugesagt.",
       "declined": "Du hast abgesagt."
-    }
+    },
+    "markReadShort": "Gelesen"
   },
   "shell": {
     "brandHome": "Vereint – zur Startseite",
@@ -595,14 +612,14 @@
       "readOnlyDirect": "Ihr seid weder befreundet noch in einer gemeinsamen Gruppe. Der Verlauf bleibt lesbar, neue Nachrichten gehen nicht."
     },
     "direct": {
-      "eyebrow": "Direktnachrichten",
+      "eyebrow": "Über alle Gruppen",
       "title": "Einzelgespräche",
       "badge": "DMs",
       "toGroupChat": "← Zum Gruppenchat",
       "unavailable": "Direktnachrichten nicht verfügbar",
       "searchLabel": "Gespräche durchsuchen",
       "searchPlaceholder": "Gespräche durchsuchen…",
-      "conversations": "Konversationen ({count})",
+      "conversations": "Gespräche ({count})",
       "emptyTitle": "Keine Konversationen",
       "emptyMessage": "Es gibt keine passenden Einzelgespräche.",
       "emptyStart": "Du hast noch keine Einzelgespräche. Starte eins mit „Neue Nachricht“.",
@@ -650,7 +667,7 @@
     "eyebrow": "Über alle Gruppen",
     "title": "Freunde",
     "toDirect": "Zu den Direktnachrichten",
-    "intro": "Füge Personen aus deinen Gruppen als Freunde hinzu. Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt, und ihr könnt euch weiter Direktnachrichten schreiben.",
+    "intro": "Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt.",
     "unavailable": "Freundesliste nicht verfügbar",
     "loadingMessage": "Deine Freunde werden abgerufen.",
     "incoming": "Anfragen an dich ({count})",
@@ -1321,9 +1338,9 @@
       "infoText": "Verwalte hier die Gruppenkasse, versende wichtige Ankündigungen oder plane die nächsten Treffen.",
       "panelsTitle": "Rollenspezifische Verwaltung",
       "panelsNav": "Vorstandsbereiche",
-      "treasuryTitle": "Kassenwart · Kasse & Finanzen",
-      "treasuryDesc": "Bierkasse, Guthaben und Buchungen",
-      "commsTitle": "Schriftwart · Kommunikation",
+      "treasuryTitle": "Kasse & Finanzen",
+      "treasuryDesc": "Bierkasse, Guthaben, Buchungen",
+      "commsTitle": "Kommunikation",
       "commsDesc": "Ankündigungen und Pinnwand",
       "loadingMessage": "Events und Protokoll werden abgerufen.",
       "unavailable": "Vorstandsbereich nicht verfügbar",
@@ -1332,14 +1349,14 @@
       "eventsHeading": "Gastgeber · Events ({count})",
       "eventsEmptyTitle": "Keine Events",
       "eventsEmptyMessage": "Aktuell sind keine Events zur Moderation sichtbar.",
-      "moderate": "Moderieren",
+      "moderate": "Verwalten",
       "auditHeading": "Letzte Aktionen ({count})",
       "inviteTitle": "Mitglied einladen",
-      "inviteDesc": "Einladungslink zur Registrierung erstellen",
+      "inviteDesc": "Einladungslink erstellen",
       "kioskDevicesTitle": "Kiosk-Geräte",
-      "kioskDevicesDesc": "Laufende Thekenterminals sehen und aus der Ferne entsperren",
-      "momentConfigTitle": "Moments · Themen & Reaktionen",
-      "momentConfigDesc": "Festlegen, welche Moments und Reaktionen es gibt"
+      "kioskDevicesDesc": "Thekenterminals sehen und entsperren",
+      "momentConfigTitle": "Moments",
+      "momentConfigDesc": "Typen und Reaktionen"
     },
     "comms": {
       "eyebrow": "Schriftwart",
@@ -1464,7 +1481,8 @@
         "empty": "Keine Mitglieder gefunden.",
         "lastEntry": "Letzte Buchung: {date}",
         "noEntry": "Noch keine Buchung",
-        "id": "ID {id}"
+        "id": "ID {id}",
+        "statTotal": "Guthaben gesamt"
       }
     },
     "kioskDevices": {
@@ -1654,17 +1672,18 @@
     "consumption": {
       "ariaLabel": "Rangliste nach Strichen",
       "title": "Rangliste",
-      "total": "Striche in der Gruppe",
-      "mine": "Deine Striche",
+      "total": "Gruppe",
+      "mine": "Du",
       "myRank": "Dein Platz",
-      "rankValue": "Platz {rank}",
+      "rankValue": "{rank}.",
       "noRank": "Noch kein Platz",
       "you": "Du",
       "count": {
         "one": "{count} Strich",
         "other": "{count} Striche"
       },
-      "empty": "In diesem Zeitraum gibt es noch keine Striche."
+      "empty": "In diesem Zeitraum gibt es noch keine Striche.",
+      "unit": "Striche"
     },
     "attendance": {
       "title": "Zusagequote",

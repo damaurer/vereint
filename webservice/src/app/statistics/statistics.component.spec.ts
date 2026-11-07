@@ -80,7 +80,8 @@ describe('StatisticsComponent', () => {
     expect(text).toContain('letzten 90 Tage');
     expect(text).toContain('Max Mustermann');
     expect(text).toContain('18 Striche');
-    expect(text).toContain('Platz 2');
+    expect(text).toContain('Dein Platz');
+    expect(text).toContain('2.');
     expect(text).toContain('83%');
     expect(text).toContain('240,00');
     expect(text).toContain('+14% gegenüber den 30 Tagen davor');

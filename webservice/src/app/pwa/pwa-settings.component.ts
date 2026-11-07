@@ -1,6 +1,5 @@
 import { Component, OnInit, inject, input } from '@angular/core';
 import { TranslatePipe } from '../i18n';
-import { IconComponent } from '../ui/icon.component';
 import { InstallPromptService } from './install-prompt.service';
 import { PushNotificationsService } from './push-notifications.service';
 
@@ -11,13 +10,35 @@ import { PushNotificationsService } from './push-notifications.service';
  */
 @Component({
   selector: 'vereint-pwa-settings',
-  imports: [IconComponent, TranslatePipe],
+  imports: [TranslatePipe],
   template: `
     <div class="pwa-settings">
+      <div class="pwa-row">
+        <div class="pwa-text">
+          <span class="pwa-title" id="push-label"
+            >{{ 'pwa.push.title' | t }}</span
+          >
+          <span class="member-muted">{{ pushHintKey() | t }}</span>
+        </div>
+        @if (pushToggleable()) {
+          <input
+            type="checkbox"
+            role="switch"
+            aria-labelledby="push-label"
+            [checked]="push.state() === 'on'"
+            [attr.aria-checked]="push.state() === 'on'"
+            [disabled]="push.busy()"
+            (change)="togglePush()"
+          />
+        }
+      </div>
+
+      <ng-content />
+
       @if (showInstall()) {
-        <div class="pwa-row">
+        <div class="pwa-row pwa-row-sep">
           <div class="pwa-text">
-            <span class="pwa-title"><vereint-icon name="install" /> {{ 'pwa.install.title' | t }}</span>
+            <span class="pwa-title">{{ 'pwa.install.title' | t }}</span>
             @switch (installMode()) {
               @case ('installed') {
                 <span class="member-muted">{{ 'pwa.install.installed' | t }}</span>
@@ -41,26 +62,6 @@ import { PushNotificationsService } from './push-notifications.service';
         </div>
       }
 
-      <div class="pwa-row">
-        <div class="pwa-text">
-          <span class="pwa-title" id="push-label"
-            ><vereint-icon name="bell" /> {{ 'pwa.push.title' | t }}</span
-          >
-          <span class="member-muted">{{ pushHintKey() | t }}</span>
-        </div>
-        @if (pushToggleable()) {
-          <input
-            type="checkbox"
-            role="switch"
-            aria-labelledby="push-label"
-            [checked]="push.state() === 'on'"
-            [attr.aria-checked]="push.state() === 'on'"
-            [disabled]="push.busy()"
-            (change)="togglePush()"
-          />
-        }
-      </div>
-
       @if (push.message(); as message) {
         <p class="member-hint" role="status">{{ message }}</p>
       }
@@ -70,8 +71,11 @@ import { PushNotificationsService } from './push-notifications.service';
     `
       .pwa-settings {
         display: grid;
-        gap: var(--space-2);
         margin: var(--space-3) 0 0;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-surface);
       }
 
       .pwa-row {
@@ -79,31 +83,37 @@ import { PushNotificationsService } from './push-notifications.service';
         align-items: center;
         justify-content: space-between;
         gap: var(--space-3);
-        padding: var(--space-3);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--color-border);
-        background-color: var(--color-surface-raised);
+        padding: 0.8rem var(--space-3);
       }
 
       .pwa-text {
         display: grid;
-        gap: 0.2rem;
+        gap: 0.1rem;
+      }
+
+      .pwa-text .member-muted {
+        font-size: 0.8rem;
+        line-height: 1.4;
       }
 
       .pwa-title {
         color: var(--color-text);
+        font-size: 0.95rem;
         font-weight: 700;
-      }
-
-      .pwa-row input {
-        flex: none;
-        width: 1.25rem;
-        height: 1.25rem;
-        accent-color: var(--color-brand);
       }
 
       .pwa-row .member-button {
         flex: none;
+      }
+
+      .pwa-row-sep {
+        border-top: 1px solid var(--color-border);
+      }
+
+      .pwa-settings > .member-hint {
+        border-top: 1px solid var(--color-border);
+        margin: 0;
+        padding: 0.6rem var(--space-3);
       }
     `,
   ],

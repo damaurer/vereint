@@ -414,6 +414,9 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
       .detail-participant + .detail-participant {
         border-top: 1px solid var(--color-border);
       }
+      .detail-participant vereint-avatar-badge {
+        --avatar-size: 2.25rem;
+      }
       .detail-participant-name {
         flex: 1 1 auto;
         font-weight: 600;

@@ -93,6 +93,28 @@ export function formatShortDateTime(iso: string | null | undefined, now: Date = 
   return `${day}, ${formatTime(iso)}`;
 }
 
+/** Zeit in Chatlisten: „10:24“ heute, „Gestern“, sonst „17. Okt“. */
+export function formatChatTime(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  if (date.getTime() >= startOfToday) return formatTime(iso);
+  if (date.getTime() >= startOfToday - 86_400_000) return translate('common.yesterday');
+  return formatShortDateTime(iso, now).split(',')[0];
+}
+
+/** „Heute, 10:24“, „Gestern, 18:02“, sonst „17. Okt, 10:24“. */
+export function formatDayTime(iso: string | null | undefined, now: Date = new Date()): string {
+  if (!iso) return '';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  if (date.getTime() >= startOfToday) return `${translate('common.today')}, ${formatTime(iso)}`;
+  if (date.getTime() >= startOfToday - 86_400_000) return `${translate('common.yesterday')}, ${formatTime(iso)}`;
+  return formatShortDateTime(iso, now);
+}
+
 /** Klartext der Ledger-Buchungsarten in der aktiven Sprache. */
 export function entryTypeLabel(entryType: string): string {
   switch (entryType) {

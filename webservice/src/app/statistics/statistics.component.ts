@@ -72,16 +72,18 @@ import { activeLocale, translate } from '../i18n/i18n.service';
             />
           } @else {
             <div class="stats-grid">
+              <div class="stats-span">
+            <div class="stats-kpis">
+              <vereint-stat-card [label]="'statistics.consumption.total' | t" [value]="view.totalItems" [hint]="'statistics.consumption.unit' | t" />
+              <vereint-stat-card [label]="'statistics.consumption.mine' | t" [value]="view.myItems" [hint]="'statistics.consumption.unit' | t" />
+              <vereint-stat-card
+                [label]="'statistics.consumption.myRank' | t"
+                [value]="view.myRank !== null ? ('statistics.consumption.rankValue' | t: { rank: view.myRank }) : ('statistics.consumption.noRank' | t)"
+              />
+            </div>
+              </div>
               <article class="stats-panel stats-span" [attr.aria-label]="'statistics.consumption.ariaLabel' | t">
                 <h2 class="stats-panel-title">{{ 'statistics.consumption.title' | t }}</h2>
-                <div class="stats-kpis">
-                  <vereint-stat-card [label]="'statistics.consumption.total' | t" [value]="view.totalItems" />
-                  <vereint-stat-card [label]="'statistics.consumption.mine' | t" [value]="view.myItems" />
-                  <vereint-stat-card
-                    [label]="'statistics.consumption.myRank' | t"
-                    [value]="view.myRank !== null ? ('statistics.consumption.rankValue' | t: { rank: view.myRank }) : ('statistics.consumption.noRank' | t)"
-                  />
-                </div>
                 @if (view.topConsumers.length === 0) {
                   <p class="stats-empty">{{ 'statistics.consumption.empty' | t }}</p>
                 } @else {
@@ -110,11 +112,13 @@ import { activeLocale, translate } from '../i18n/i18n.service';
                 @if (view.attendancePercent === null) {
                   <p class="stats-empty" data-testid="attendance-empty">{{ 'statistics.attendance.empty' | t }}</p>
                 } @else {
-                  <div class="ring" [style.--ring-value]="view.attendancePercent" role="img"
-                       [attr.aria-label]="'statistics.attendance.ringLabel' | t: { percent: view.attendancePercent }">
-                    <span class="ring-label">{{ view.attendancePercent }}%</span>
+                  <div class="ring-row">
+                    <div class="ring" [style.--ring-value]="view.attendancePercent" role="img"
+                         [attr.aria-label]="'statistics.attendance.ringLabel' | t: { percent: view.attendancePercent }">
+                      <span class="ring-label">{{ view.attendancePercent }}%</span>
+                    </div>
+                    <p class="stats-note">{{ 'statistics.attendance.hint' | t }}</p>
                   </div>
-                  <p class="stats-note">{{ 'statistics.attendance.hint' | t }}</p>
                 }
               </article>
 
@@ -196,7 +200,6 @@ import { activeLocale, translate } from '../i18n/i18n.service';
 
       .stats-title {
         margin: 0.1rem 0 0;
-        font-size: 1.6rem;
       }
 
       .stats-grid {
@@ -222,8 +225,9 @@ import { activeLocale, translate } from '../i18n/i18n.service';
       }
 
       .stats-panel {
-        border-radius: var(--radius-md, 0.75rem);
-        background: rgba(148, 163, 184, 0.08);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background: var(--color-surface-raised);
         padding: 1rem;
       }
 
@@ -250,8 +254,7 @@ import { activeLocale, translate } from '../i18n/i18n.service';
       .stats-kpis {
         display: grid;
         gap: var(--space-2, 0.75rem);
-        grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-        margin-bottom: 1rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
       .stats-sub {
@@ -269,15 +272,14 @@ import { activeLocale, translate } from '../i18n/i18n.service';
 
       .bar-row {
         display: grid;
-        grid-template-columns: 1.75rem minmax(5rem, 9rem) 1fr auto;
+        grid-template-columns: 1.25rem minmax(4.5rem, 7rem) 1fr auto;
         align-items: center;
-        gap: 0.6rem;
+        gap: 0.5rem;
         padding: 0.15rem 0.25rem;
         border-radius: 0.5rem;
       }
 
       .bar-row-me {
-        background: var(--color-brand-soft, rgba(245, 158, 11, 0.15));
         font-weight: 700;
       }
 
@@ -302,14 +304,17 @@ import { activeLocale, translate } from '../i18n/i18n.service';
       }
 
       .bar-name {
+        min-width: 0;
         font-size: 0.9rem;
-        overflow-wrap: anywhere;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .bar-track {
-        height: 0.9rem;
+        height: 0.45rem;
         border-radius: 999px;
-        background: rgba(148, 163, 184, 0.18);
+        background: var(--color-surface-subtle);
         overflow: hidden;
       }
 
@@ -317,42 +322,57 @@ import { activeLocale, translate } from '../i18n/i18n.service';
         display: block;
         height: 100%;
         border-radius: 999px;
+        background: var(--color-text-muted);
+      }
+
+      .bar-row-me .bar-fill {
         background: var(--color-brand);
       }
 
       .bar-value {
+        font-size: 0.9rem;
         font-variant-numeric: tabular-nums;
-        color: var(--color-text-muted);
+        text-align: right;
       }
 
       .ring {
         --ring-value: 0;
         position: relative;
-        width: 8rem;
-        height: 8rem;
-        margin: 0 auto;
+        flex: none;
+        width: 5rem;
+        height: 5rem;
         border-radius: 50%;
         display: grid;
         place-items: center;
         background: conic-gradient(
           var(--color-brand) calc(var(--ring-value) * 1%),
-          rgba(148, 163, 184, 0.18) 0
+          var(--color-surface-subtle) 0
         );
       }
 
       .ring::before {
         content: '';
         position: absolute;
-        width: 6rem;
-        height: 6rem;
+        width: 3.8rem;
+        height: 3.8rem;
         border-radius: 50%;
-        background: var(--color-surface, #1c1c1c);
+        background: var(--color-surface-raised);
       }
 
       .ring-label {
         position: relative;
-        font-size: 1.5rem;
-        font-weight: 700;
+        font-size: 1.05rem;
+        font-weight: 800;
+      }
+
+      .ring-row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+      }
+
+      .ring-row .stats-note {
+        margin: 0;
       }
 
       .trend {

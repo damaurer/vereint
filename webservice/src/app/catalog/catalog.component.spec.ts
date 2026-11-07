@@ -130,7 +130,7 @@ describe('CatalogComponent', () => {
 
     const text = fixture.nativeElement.textContent ?? '';
     expect(text).toContain('Bratwurstsemmel');
-    expect(text).toContain('3.50 EUR');
+    expect(text).toMatch(/3,50\s€/);
   });
 
   it('shows approve/reject buttons for board/admin users on proposed drinks', async () => {

@@ -3,11 +3,12 @@ import { IconComponent } from '../ui/icon.component';
 import { map, switchMap } from 'rxjs';
 import { AsyncState } from './async-state';
 import { MemberApiService } from './member-api.service';
-import { formatDateTime, formatMoney } from './member-format';
+import { formatDateTime, formatMoney, formatShortDateTime } from './member-format';
 import type { LedgerEntry, PurchaseSnapshot } from '../api/api.types';
-import { StatusBadgeComponent } from '../ui';
+import { StatCardComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
+import { activeLocale, translate } from '../i18n/i18n.service';
 
 /**
  * Historische Käufe eines Mitglieds (TICKET-024, Redesign TICKET-033).
@@ -20,7 +21,7 @@ import { TranslatePipe } from '../i18n';
  */
 @Component({
   selector: 'app-member-purchases',
-  imports: [StateComponent, IconComponent, StatusBadgeComponent, TranslatePipe],
+  imports: [StateComponent, IconComponent, StatCardComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="purchases-title">
@@ -50,8 +51,23 @@ import { TranslatePipe } from '../i18n';
               [message]="'member.purchases.emptyMessage' | t"
             />
           } @else {
+            <div class="receipt-stats">
+              <vereint-stat-card
+                [label]="monthLabel()"
+                [value]="formatMoney(monthTotal(purchases), currency(purchases))"
+                [hint]="'member.purchases.count' | t: { count: monthCount(purchases) }"
+              />
+              @if (mostOften(purchases); as top) {
+                <vereint-stat-card
+                  class="receipt-stat-top"
+                  [label]="'member.purchases.mostOften' | t"
+                  [value]="top.name"
+                  [hint]="'member.purchases.times' | t: { count: top.count }"
+                />
+              }
+            </div>
             <ul class="receipt-list">
-              @for (purchase of purchases; track purchase.id) {
+              @for (purchase of newestFirst(purchases); track purchase.id) {
                 <li class="receipt">
                   @if (purchase.snapshot!.imageReference) {
                     <img
@@ -60,27 +76,18 @@ import { TranslatePipe } from '../i18n';
                       [alt]="itemName(purchase.snapshot!)"
                     />
                   } @else {
-                    <span class="receipt-image receipt-image-fallback" aria-hidden="true"><vereint-icon [name]="purchase.snapshot!.itemType === 'FOOD' ? 'food' : 'beer'" /></span>
+                    <span class="receipt-image receipt-image-fallback" aria-hidden="true"><vereint-icon name="receipt" /></span>
                   }
                   <div class="receipt-body">
-                    <div class="receipt-head">
-                      <span class="receipt-name">{{ itemName(purchase.snapshot!) }}</span>
-                      <span class="receipt-price">
-                        {{ formatMoney(purchase.snapshot!.unitPrice, purchase.snapshot!.currency) }}
-                      </span>
-                    </div>
-                    <span class="receipt-meta">{{ formatDateTime(purchase.createdAt) }}</span>
-                    <div class="receipt-tags">
-                      @if (purchase.snapshot!.barcode) {
-                        <span class="receipt-barcode">{{ 'member.purchases.barcode' | t: { code: purchase.snapshot!.barcode } }}</span>
-                      }
-                      @if (purchase.snapshot!.catalogVersion !== null) {
-                        <vereint-status-badge
-                          [label]="'member.purchases.catalogVersion' | t: { version: purchase.snapshot!.catalogVersion }"
-                        />
-                      }
-                    </div>
+                    <span class="receipt-name">{{ itemName(purchase.snapshot!) }}</span>
+                    <span class="receipt-meta">{{ formatShortDateTime(purchase.createdAt) }} · {{ origin(purchase) }}</span>
+                    @if (purchase.snapshot!.barcode) {
+                      <span class="receipt-barcode">{{ 'member.purchases.barcode' | t: { code: purchase.snapshot!.barcode } }}</span>
+                    }
                   </div>
+                  <span class="receipt-price">
+                    {{ formatMoney(purchase.snapshot!.unitPrice, purchase.snapshot!.currency) }}
+                  </span>
                 </li>
               }
             </ul>
@@ -91,26 +98,38 @@ import { TranslatePipe } from '../i18n';
   `,
   styles: [
     `
+      .receipt-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-2);
+        margin: var(--space-3) 0;
+      }
+
       .receipt-list {
         list-style: none;
-        margin: 0.5rem 0 0;
+        margin: 0;
         padding: 0;
         display: grid;
-        gap: var(--space-2);
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-surface);
       }
 
       .receipt {
         display: flex;
-        gap: var(--space-3);
-        padding: var(--space-3);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--color-border);
-        background-color: var(--color-surface-raised);
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem var(--space-3);
+      }
+
+      .receipt + .receipt {
+        border-top: 1px solid var(--color-border);
       }
 
       .receipt-image {
-        width: 2.75rem;
-        height: 2.75rem;
+        width: 2.25rem;
+        height: 2.25rem;
         border-radius: var(--radius-sm);
         object-fit: cover;
         flex: none;
@@ -120,19 +139,14 @@ import { TranslatePipe } from '../i18n';
         display: grid;
         place-items: center;
         background-color: var(--color-brand-soft);
-        font-size: 1.4rem;
+        color: var(--color-brand);
+        font-size: 1.15rem;
       }
 
       .receipt-body {
+        display: grid;
         flex: 1;
         min-width: 0;
-      }
-
-      .receipt-head {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: var(--space-2);
       }
 
       .receipt-name {
@@ -144,27 +158,14 @@ import { TranslatePipe } from '../i18n';
       .receipt-price {
         color: var(--color-text);
         font-weight: 700;
+        font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
 
-      .receipt-meta {
-        display: block;
-        margin-top: 0.2rem;
-        color: var(--color-text-muted);
-        font-size: 0.85rem;
-      }
-
-      .receipt-tags {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--space-2);
-        margin-top: 0.4rem;
-      }
-
+      .receipt-meta,
       .receipt-barcode {
         color: var(--color-text-muted);
-        font-size: 0.85rem;
+        font-size: 0.8rem;
       }
     `,
   ],
@@ -175,6 +176,64 @@ export class PurchasesComponent implements OnInit, OnDestroy {
   protected readonly load = new AsyncState<LedgerEntry[]>();
   protected readonly formatMoney = formatMoney;
   protected readonly formatDateTime = formatDateTime;
+
+  protected readonly formatShortDateTime = formatShortDateTime;
+
+  /** Neueste Käufe zuerst (der Server liefert aufsteigend). */
+  protected newestFirst(purchases: LedgerEntry[]): LedgerEntry[] {
+    return [...purchases].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  }
+
+  /** Käufe im laufenden Kalendermonat. */
+  private thisMonth(purchases: LedgerEntry[], now: Date = new Date()): LedgerEntry[] {
+    return purchases.filter((purchase) => {
+      const date = new Date(purchase.createdAt);
+      return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+    });
+  }
+
+  /** Überschrift der Monatskachel, z. B. „November“. */
+  protected monthLabel(now: Date = new Date()): string {
+    return new Intl.DateTimeFormat(activeLocale(), { month: 'long' }).format(now);
+  }
+
+  protected monthTotal(purchases: LedgerEntry[]): string {
+    const total = this.thisMonth(purchases).reduce((sum, purchase) => sum + Number(purchase.snapshot?.unitPrice ?? 0), 0);
+    return total.toFixed(2);
+  }
+
+  protected monthCount(purchases: LedgerEntry[]): number {
+    return this.thisMonth(purchases).length;
+  }
+
+  protected currency(purchases: LedgerEntry[]): string {
+    return purchases[0]?.snapshot?.currency ?? 'EUR';
+  }
+
+  /** Am häufigsten gekaufter Artikel über alle Käufe. */
+  protected mostOften(purchases: LedgerEntry[]): { name: string; count: number } | null {
+    const counts = new Map<string, number>();
+    for (const purchase of purchases) {
+      const name = purchase.snapshot ? this.itemName(purchase.snapshot) : '';
+      if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    let best: { name: string; count: number } | null = null;
+    for (const [name, count] of counts) {
+      if (!best || count > best.count) best = { name, count };
+    }
+    return best;
+  }
+
+  /** Herkunft des Kaufs: Scan, Strichliste, Runde, Speisen oder Katalogstand. */
+  protected origin(purchase: LedgerEntry): string {
+    const source = purchase.source;
+    if (source && ['pwaBarcode', 'tabletManual', 'round', 'evening'].includes(source)) {
+      return translate(`member.purchases.source.${source}`);
+    }
+    if (purchase.snapshot?.itemType === 'FOOD') return translate('member.purchases.food');
+    const version = purchase.snapshot?.catalogVersion;
+    return version != null ? translate('member.purchases.catalogVersion', { version }) : '';
+  }
 
   /** Name des gekauften Artikels; Speisen tragen ihn in `foodName`. */
   protected itemName(snapshot: PurchaseSnapshot): string {

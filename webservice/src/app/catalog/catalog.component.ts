@@ -15,6 +15,7 @@ import {
   type CreateFoodRequest,
 } from './catalog-api.service';
 import { AsyncState } from '../member/async-state';
+import { formatMoney } from '../member/member-format';
 import { BarcodeScannerComponent } from '../scan/barcode-scanner.component';
 import { ModalComponent, StatusBadgeComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
@@ -45,33 +46,36 @@ type CatalogTab = 'drinks' | 'food';
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="catalog-title">
         <div class="catalog-header">
-          <div>
-            <span class="eyebrow">{{ 'catalog.header.eyebrow' | t }}</span>
-            <h1 id="catalog-title">{{ 'catalog.header.title' | t }}</h1>
-            <p>{{ 'catalog.header.intro' | t }}</p>
-          </div>
-          <div class="catalog-header-actions">
-            @if (activeTab() === 'drinks') {
-              <a class="btn-secondary-sm catalog-library-link" routerLink="/catalog/library">
-                <vereint-icon name="search" /> {{ 'catalog.library.open' | t }}
-              </a>
-              <button type="button" class="btn-secondary-sm" (click)="openLookup()">
-                <vereint-icon name="camera" /> {{ 'catalog.lookup.open' | t }}
-              </button>
-              <button type="button" class="member-button" (click)="openCreateDrink()">
-                {{
-                  (isBoardOrAdmin()
-                    ? 'catalog.actions.createDrink'
-                    : 'catalog.actions.proposeDrink'
-                  ) | t
-                }}
-              </button>
-            } @else if (isBoardOrAdmin()) {
-              <button type="button" class="member-button" (click)="openCreateFoodModal()">
-                {{ 'catalog.actions.createFood' | t }}
-              </button>
-            }
-          </div>
+          <span class="eyebrow">{{ 'catalog.header.eyebrow' | t }}</span>
+          <h1 id="catalog-title">{{ 'catalog.header.title' | t }}</h1>
+        </div>
+        <div class="catalog-header-actions">
+          @if (activeTab() === 'drinks') {
+            <button type="button" class="member-button" (click)="openCreateDrink()">
+              {{
+                (isBoardOrAdmin()
+                  ? 'catalog.actions.createDrink'
+                  : 'catalog.actions.proposeDrink'
+                ) | t
+              }}
+            </button>
+            <a class="btn-secondary-sm catalog-library-link" routerLink="/catalog/library">
+              {{ 'catalog.library.open' | t }}
+            </a>
+            <button
+              type="button"
+              class="btn-secondary-sm catalog-icon-btn"
+              [attr.aria-label]="'catalog.lookup.open' | t"
+              [title]="'catalog.lookup.open' | t"
+              (click)="openLookup()"
+            >
+              <vereint-icon name="camera" />
+            </button>
+          } @else if (isBoardOrAdmin()) {
+            <button type="button" class="member-button" (click)="openCreateFoodModal()">
+              {{ 'catalog.actions.createFood' | t }}
+            </button>
+          }
         </div>
 
         <!-- Tabs -->
@@ -82,7 +86,7 @@ type CatalogTab = 'drinks' | 'food';
             [class.active]="activeTab() === 'drinks'"
             (click)="setTab('drinks')"
           >
-            <vereint-icon name="beer" /> {{ 'catalog.tabs.drinks' | t }}
+            {{ 'catalog.tabs.drinks' | t }}
           </button>
           <button
             type="button"
@@ -90,7 +94,7 @@ type CatalogTab = 'drinks' | 'food';
             [class.active]="activeTab() === 'food'"
             (click)="setTab('food')"
           >
-            <vereint-icon name="food" /> {{ 'catalog.tabs.food' | t }}
+            {{ 'catalog.tabs.food' | t }}
           </button>
         </nav>
 
@@ -147,61 +151,49 @@ type CatalogTab = 'drinks' | 'food';
                 [message]="'catalog.state.noDrinksMessage' | t"
               />
             } @else {
-              <div class="catalog-grid">
+              <ul class="catalog-list">
                 @for (drink of filteredDrinks(); track drink.id) {
-                  <article class="catalog-card">
-                    <div class="catalog-card-header">
-                      <div>
-                        <h3 class="catalog-card-title">{{ drink.name }}</h3>
+                  <li class="catalog-item">
+                    <button
+                      type="button"
+                      class="catalog-item-main"
+                      [attr.aria-label]="
+                        (isBoardOrAdmin() ? 'catalog.card.edit' : 'catalog.card.detailsAndBarcodes')
+                          | t
+                      "
+                      (click)="isBoardOrAdmin() ? openEditDrink(drink.id) : openDrinkDetail(drink.id)"
+                    >
+                      <span class="catalog-item-text">
+                        <span class="catalog-card-title">{{ drink.name }}</span>
                         <span class="catalog-card-category">{{
                           drink.category || ('catalog.card.generalCategory' | t)
                         }}</span>
-                      </div>
-                      @if (drink.status === 'approved' && !drink.active) {
-                        <vereint-status-badge
-                          [label]="'catalog.card.inactive' | t"
-                          tone="neutral"
-                        />
-                      } @else {
-                        <vereint-status-badge
-                          [label]="drinkStatusLabel(drink.status)"
-                          [tone]="drinkStatusTone(drink.status)"
-                        />
-                      }
-                    </div>
-
-                    <div class="catalog-card-price">
-                      <span class="price-val">{{
-                        formatPrice(drink.defaultPrice, drink.currency)
-                      }}</span>
-                      @if (isBoardOrAdmin() && drink.costPrice) {
-                        <span class="price-margin">{{
-                          'catalog.card.margin'
-                            | t: { amount: formatPrice(margin(drink), drink.currency) }
+                      </span>
+                      <span class="catalog-item-side">
+                        <span class="price-val">{{
+                          formatPrice(drink.defaultPrice, drink.currency)
                         }}</span>
-                      }
-                    </div>
-
-                    <div class="catalog-card-actions">
-                      @if (isBoardOrAdmin()) {
-                        <button
-                          type="button"
-                          class="btn-secondary-sm"
-                          (click)="openEditDrink(drink.id)"
-                        >
-                          {{ 'catalog.card.edit' | t }}
-                        </button>
-                      } @else {
-                        <button
-                          type="button"
-                          class="btn-secondary-sm"
-                          (click)="openDrinkDetail(drink.id)"
-                        >
-                          {{ 'catalog.card.detailsAndBarcodes' | t }}
-                        </button>
-                      }
-
-                      @if (isBoardOrAdmin() && drink.status === 'proposed') {
+                        @if (drink.status === 'approved' && !drink.active) {
+                          <vereint-status-badge
+                            [label]="'catalog.card.inactive' | t"
+                            tone="neutral"
+                          />
+                        } @else {
+                          <vereint-status-badge
+                            [label]="drinkStatusLabel(drink.status)"
+                            [tone]="drinkStatusTone(drink.status)"
+                          />
+                        }
+                        @if (isBoardOrAdmin() && drink.costPrice) {
+                          <span class="price-margin">{{
+                            'catalog.card.margin'
+                              | t: { amount: formatPrice(margin(drink), drink.currency) }
+                          }}</span>
+                        }
+                      </span>
+                    </button>
+                    @if (isBoardOrAdmin() && drink.status === 'proposed') {
+                      <div class="catalog-card-actions">
                         <button
                           type="button"
                           class="btn-primary-sm"
@@ -212,11 +204,11 @@ type CatalogTab = 'drinks' | 'food';
                         <button type="button" class="btn-danger-sm" (click)="rejectDrink(drink.id)">
                           {{ 'catalog.card.reject' | t }}
                         </button>
-                      }
-                    </div>
-                  </article>
+                      </div>
+                    }
+                  </li>
                 }
-              </div>
+              </ul>
             }
           }
 
@@ -229,44 +221,37 @@ type CatalogTab = 'drinks' | 'food';
                 [message]="'catalog.state.noFoodMessage' | t"
               />
             } @else {
-              <div class="catalog-grid">
+              <ul class="catalog-list">
                 @for (food of filteredFoods(); track food.id) {
-                  <article class="catalog-card">
-                    <div class="catalog-card-header">
-                      <div>
-                        <h3 class="catalog-card-title">{{ food.name }}</h3>
+                  <li class="catalog-item">
+                    <button
+                      type="button"
+                      class="catalog-item-main"
+                      [disabled]="!isBoardOrAdmin()"
+                      [attr.aria-label]="isBoardOrAdmin() ? ('catalog.card.edit' | t) : null"
+                      (click)="openEditFoodModal(food.id)"
+                    >
+                      <span class="catalog-item-text">
+                        <span class="catalog-card-title">{{ food.name }}</span>
                         <span class="catalog-card-category">{{
                           food.category || ('catalog.card.generalCategory' | t)
                         }}</span>
-                      </div>
-                      <vereint-status-badge
-                        [label]="
-                          (food.active ? 'catalog.card.active' : 'catalog.card.inactive') | t
-                        "
-                        [tone]="food.active ? 'success' : 'neutral'"
-                      />
-                    </div>
-
-                    <div class="catalog-card-price">
-                      <span class="price-val">{{
-                        formatPrice(food.defaultPrice, food.currency)
-                      }}</span>
-                    </div>
-
-                    @if (isBoardOrAdmin()) {
-                      <div class="catalog-card-actions">
-                        <button
-                          type="button"
-                          class="btn-secondary-sm"
-                          (click)="openEditFoodModal(food.id)"
-                        >
-                          {{ 'catalog.card.edit' | t }}
-                        </button>
-                      </div>
-                    }
-                  </article>
+                      </span>
+                      <span class="catalog-item-side">
+                        <span class="price-val">{{
+                          formatPrice(food.defaultPrice, food.currency)
+                        }}</span>
+                        <vereint-status-badge
+                          [label]="
+                            (food.active ? 'catalog.card.active' : 'catalog.card.inactive') | t
+                          "
+                          [tone]="food.active ? 'success' : 'neutral'"
+                        />
+                      </span>
+                    </button>
+                  </li>
                 }
-              </div>
+              </ul>
             }
           }
         }
@@ -618,61 +603,81 @@ type CatalogTab = 'drinks' | 'food';
   styles: [
     `
       .catalog-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-bottom: 1.5rem;
+        margin-bottom: var(--space-3);
       }
       .catalog-header-actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
+      }
+      .catalog-header-actions > * {
+        min-height: 2.75rem;
+        border-radius: var(--radius-md);
+        font-size: 0.95rem;
+      }
+      .catalog-header-actions .member-button {
+        flex: 1 1 100%;
       }
       .catalog-library-link {
+        flex: 1 1 auto;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 0.35rem;
         text-decoration: none;
       }
+      .catalog-icon-btn {
+        flex: none;
+        width: 2.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
       .catalog-tabs {
-        display: flex;
-        gap: 0.5rem;
-        border-bottom: 2px solid var(--color-border, #e2e8f0);
-        margin-bottom: 1.5rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        border-radius: var(--radius-md);
+        background-color: var(--color-surface-subtle);
+        margin-bottom: var(--space-3);
       }
       .tab-btn {
-        padding: 0.6rem 1.2rem;
+        min-height: 2.5rem;
+        padding: 0 1rem;
+        font: inherit;
         font-weight: 600;
         font-size: 0.95rem;
         background: none;
         border: none;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -2px;
-        color: var(--color-text-muted, #64748b);
+        border-radius: calc(var(--radius-md) - 2px);
+        color: var(--color-text-muted);
         cursor: pointer;
-        transition: all 0.2s;
       }
       .tab-btn:hover {
-        color: var(--color-text, #0f172a);
+        color: var(--color-text);
       }
       .tab-btn.active {
-        color: var(--color-brand, #3b82f6);
-        border-bottom-color: var(--color-brand, #3b82f6);
+        color: var(--color-text);
+        background-color: var(--color-surface-raised);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
       }
       .catalog-filter-bar {
         display: flex;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
+        gap: var(--space-2);
+        margin-bottom: var(--space-3);
         flex-wrap: wrap;
       }
       .filter-input {
+        min-height: 2.75rem;
         padding: 0.6rem 0.9rem;
-        border: 1px solid var(--color-border, #cbd5e1);
-        border-radius: var(--radius-md, 0.5rem);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background-color: var(--color-surface-raised);
+        color: inherit;
         font: inherit;
-        font-size: 0.9rem;
       }
       .search-input {
         flex: 1 1 240px;
@@ -680,48 +685,69 @@ type CatalogTab = 'drinks' | 'food';
       .select-input {
         flex: 0 0 auto;
       }
-      .catalog-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1rem;
+      .catalog-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-surface-raised);
+        overflow: hidden;
       }
-      .catalog-card {
-        background: var(--color-surface, #ffffff);
-        border: 1px solid var(--color-border, #e2e8f0);
-        border-radius: var(--radius-md, 0.75rem);
-        padding: 1.25rem;
+      .catalog-item + .catalog-item {
+        border-top: 1px solid var(--color-border);
+      }
+      .catalog-item-main {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-3);
+        padding: 0.8rem var(--space-3);
+        border: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .catalog-item-main:disabled {
+        cursor: default;
+        opacity: 1;
+      }
+      .catalog-item-main:not(:disabled):hover {
+        background-color: var(--color-surface-subtle);
+      }
+      .catalog-item-text {
+        min-width: 0;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        gap: 0.75rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       }
-      .catalog-card-header {
+      .catalog-item-side {
+        flex: none;
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 0.5rem;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.2rem;
       }
       .catalog-card-title {
-        margin: 0;
-        font-size: 1.05rem;
+        font-size: 1rem;
         font-weight: 700;
-        color: var(--color-text, #0f172a);
+        color: var(--color-text);
+        overflow-wrap: anywhere;
       }
       .catalog-card-category {
-        font-size: 0.8rem;
-        color: var(--color-text-muted, #64748b);
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
       }
-      .catalog-card-price {
-        font-size: 1.25rem;
+      .price-val {
         font-weight: 700;
-        color: var(--color-brand, #3b82f6);
+        font-variant-numeric: tabular-nums;
       }
       .catalog-card-actions {
         display: flex;
-        gap: 0.4rem;
-        flex-wrap: wrap;
-        margin-top: auto;
+        gap: var(--space-2);
+        padding: 0 var(--space-3) var(--space-3);
       }
       .btn-primary-sm,
       .btn-secondary-sm,
@@ -1049,8 +1075,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
   }
 
   protected formatPrice(amount: number, currency = 'EUR'): string {
-    const val = Number(amount) || 0;
-    return `${val.toFixed(2)} ${currency}`;
+    return formatMoney(String(Number(amount) || 0), currency);
   }
 
   protected drinkStatusLabel(status: string): string {
