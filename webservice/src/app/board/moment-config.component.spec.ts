@@ -56,7 +56,6 @@ const config: MomentConfigDto = {
     maxMediaPerResponse: 4,
     imageTypes: ['image/jpeg'],
     videoTypes: ['video/mp4'],
-    videosAllowed: true,
   },
 };
 

@@ -1,6 +1,5 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.crypto.DataEncryptor
 import de.maurer.baseservice.domain.DrinkStatus
 import de.maurer.baseservice.domain.ImageAssetEntity
@@ -49,8 +48,7 @@ class ImageService(
     private val access: StammtischAccess,
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
-    private val drinkCatalogRepository: DrinkCatalogRepository,
-    private val planLimits: PlanLimits
+    private val drinkCatalogRepository: DrinkCatalogRepository
 ) {
 
     fun uploadImage(
@@ -92,7 +90,6 @@ class ImageService(
 
         // Zielobjekt auflösen und Uploadberechtigung objektbezogen prüfen.
         val targetId = resolveTargetForWrite(purpose, targetIdValue, caller, principal)
-        planLimits.requireStorage(cleaned.size.toLong())
 
         val nextVersion = imageAssetRepository.findMaxImageVersion(purpose, targetId) + 1
         // Bisher aktuelle Bilder desselben Objekts werden als abgelöst markiert;

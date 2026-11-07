@@ -60,6 +60,7 @@ describe('CatalogComponent', () => {
     addBarcode: ReturnType<typeof vi.fn>;
     removeBarcode: ReturnType<typeof vi.fn>;
     shareToLibrary: ReturnType<typeof vi.fn>;
+    searchLibrary: ReturnType<typeof vi.fn>;
   };
   let auth: { getSession: ReturnType<typeof vi.fn> };
 
@@ -107,6 +108,7 @@ describe('CatalogComponent', () => {
       addBarcode: vi.fn(() => of({ id: 'b-9', barcode: '999', active: true })),
       removeBarcode: vi.fn(() => of(undefined)),
       shareToLibrary: vi.fn(() => of({ id: 'l-1' })),
+      searchLibrary: vi.fn(() => of([])),
     };
   });
 
@@ -186,6 +188,100 @@ describe('CatalogComponent', () => {
     expect(cmp.showLookup()).toBe(false);
     expect(cmp.drinkFormMode()).toBe('create');
     expect(cmp.formBarcodes()).toEqual([{ barcode: '555' }]);
+  });
+
+  it('prefills a scanned drink from the drinks database and links it on save', async () => {
+    catalogApi.searchLibrary.mockReturnValue(
+      of([
+        {
+          id: 'lib-1',
+          name: 'Spezi Original',
+          description: 'Cola-Mix',
+          category: 'Limo',
+          barcodes: ['4029764001807', '4029764001814', '4029764001821'],
+          catalogDrinkId: null,
+        },
+      ]),
+    );
+    // 4029764001821 gehört in diesem Katalog schon zu einem anderen Getränk.
+    catalogApi.getDrinkByBarcode.mockImplementation((code: string) =>
+      code === '4029764001821'
+        ? of({ ...mockDrinks[0], barcodes: [] })
+        : throwError(() => new ApiError(404, 'not_found', 'nicht gefunden')),
+    );
+    catalogApi.proposeDrink.mockReturnValue(of({ status: 'approved' }));
+    const fixture = await create(['board']);
+    const cmp = fixture.componentInstance as any;
+
+    cmp.openLookup();
+    cmp.lookupBarcode('4029764001807');
+
+    expect(catalogApi.searchLibrary).toHaveBeenCalledWith({ barcode: '4029764001807' });
+    expect(cmp.showLookup()).toBe(false);
+    expect(cmp.drinkFormMode()).toBe('create');
+    expect(cmp.drinkName).toBe('Spezi Original');
+    expect(cmp.drinkCategory).toBe('Limo');
+    expect(cmp.formInfo()).toContain('Getränkedatenbank');
+    expect(cmp.formBarcodes()).toEqual([{ barcode: '4029764001807' }, { barcode: '4029764001814' }]);
+
+    cmp.drinkPrice = 2.5;
+    cmp.submitDrinkForm(new Event('submit'));
+    expect(catalogApi.proposeDrink).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Spezi Original',
+        defaultPrice: 2.5,
+        libraryDrinkId: 'lib-1',
+        barcodes: ['4029764001807', '4029764001814'],
+      }),
+    );
+  });
+
+  it('opens the existing drink when the database entry is already in the catalog', async () => {
+    catalogApi.searchLibrary.mockReturnValue(
+      of([{ id: 'lib-1', name: 'Eber Hell', description: null, category: 'Bier', barcodes: ['777'], catalogDrinkId: 'd-1' }]),
+    );
+    catalogApi.getDrink.mockReturnValue(of({ ...mockDrinks[0], description: null, barcodes: [] }));
+    const fixture = await create(['board']);
+    const cmp = fixture.componentInstance as any;
+
+    cmp.lookupBarcode('777');
+
+    expect(catalogApi.getDrink).toHaveBeenCalledWith('d-1');
+    expect(cmp.drinkFormMode()).toBe('edit');
+    expect(cmp.barcodeInput).toBe('777');
+    expect(cmp.formInfo()).toContain('Eber Hell');
+  });
+
+  it('falls back to an empty create form when the drinks database is unreachable', async () => {
+    catalogApi.searchLibrary.mockReturnValue(throwError(() => new ApiError(503, 'unavailable', 'weg')));
+    const fixture = await create(['board']);
+    const cmp = fixture.componentInstance as any;
+
+    cmp.lookupBarcode('555');
+
+    expect(cmp.drinkFormMode()).toBe('create');
+    expect(cmp.drinkName).toBe('');
+    expect(cmp.formBarcodes()).toEqual([{ barcode: '555' }]);
+  });
+
+  it('fills an empty create form when a scanned barcode is in the drinks database', async () => {
+    catalogApi.searchLibrary.mockReturnValue(
+      of([{ id: 'lib-2', name: 'Augustiner Hell', description: null, category: 'Bier', barcodes: ['888'], catalogDrinkId: null }]),
+    );
+    const fixture = await create(['member']);
+    const cmp = fixture.componentInstance as any;
+
+    cmp.openCreateDrink();
+    cmp.onFormBarcodeScanned('888');
+
+    expect(cmp.drinkName).toBe('Augustiner Hell');
+    expect(cmp.formBarcodes()).toEqual([{ barcode: '888' }]);
+
+    // Ein schon eingetragener Name wird nicht überschrieben.
+    cmp.openCreateDrink();
+    cmp.drinkName = 'Mein Helles';
+    cmp.onFormBarcodeScanned('888');
+    expect(cmp.drinkName).toBe('Mein Helles');
   });
 
   it('edits price, cost price and availability of an existing drink', async () => {

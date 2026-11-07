@@ -136,6 +136,17 @@ describe('auth.routes', () => {
     });
   });
 
+  describe('GET /api/auth/account-security', () => {
+    it('redirects to the two-factor page of the Keycloak account console', async () => {
+      const response = await originalFetch(`${baseUrl}/api/auth/account-security`, { redirect: 'manual' });
+
+      expect(response.status).toBe(302);
+      expect(response.headers.get('location')).toMatch(
+        /\/realms\/vereint\/account\/account-security\/signing-in$/,
+      );
+    });
+  });
+
   describe('GET /api/auth/callback', () => {
     it('handles successful OIDC code exchange, creates session and redirects to returnTo', async () => {
       const tokens = await signTokenPair({

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 240. Keine Tarife und keine Online-Zahlung mehr: Jede Gruppe darf alles.
+         Tarife mit Stripe-Kennungen und die verarbeiteten Stripe-Ereignisse
+         fallen weg, ebenso das Recht billing.manage in allen Rollen.
+         stammtisch_roles hat Row-Level-Security, daher der Bypass. -->
+    <changeSet id="240-remove-plans-and-billing" author="claude">
+        <dropTable tableName="billing_events"/>
+        <dropTable tableName="stammtisch_subscriptions"/>
+        <sql dbms="postgresql">SET LOCAL vereint.rls_bypass = 'on'</sql>
+        <update tableName="stammtisch_roles">
+            <column name="permissions"
+                    valueComputed="TRIM(BOTH ',' FROM REPLACE(REPLACE(',' || permissions || ',', ',billing.manage,', ','), ',,', ','))"/>
+            <where>permissions LIKE '%billing.manage%'</where>
+        </update>
+    </changeSet>
+
+</databaseChangeLog>

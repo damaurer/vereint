@@ -48,7 +48,7 @@ Rollen und Rechte einer Anfrage kommen nur aus der gewählten Gruppe (`stammtisc
 ### Systemrollen einer Gruppe (`UserRole`)
 - `member`: Reguläres Mitglied der Gruppe mit Basisrechten.
 - `board`: Vorstand mit erweiterten Verwaltungsrechten.
-- `admin`: Verwaltet Mitglieder, Rollen, Gruppe und Tarif.
+- `admin`: Verwaltet Mitglieder, Rollen und Gruppe, exportiert die Daten.
 - `tabletRecorder`: Technische Rolle für das Thekenkonto.
 
 ### Vorstands-Funktionsrollen (`BoardRole`)
@@ -85,7 +85,6 @@ Optionale Funktionsbezeichnung innerhalb des Vorstands, je Gruppe in `stammtisch
 | `members.manage` | ❌ | ❌ | ✅ | ❌ | Mitglieder bearbeiten und sperren |
 | `roles.manage` | ❌ | ❌ | ✅ | ❌ | Rollen der Gruppe anlegen, ändern und zuweisen |
 | `stammtisch.manage` | ❌ | ❌ | ✅ | ❌ | Name, Bild und Einstellungen der Gruppe |
-| `billing.manage` | ❌ | ❌ | ✅ | ❌ | Tarif buchen und verwalten |
 | `audit.read.all` | ❌ | ❌ | ✅ | ❌ | Vollständiges Audit-Log einsehen |
 
 ---
@@ -102,7 +101,6 @@ In `baseservice` wird jede eingehende Anfrage durch `SecurityConfig` und `JwtAut
    - `/api/v1/member-invites/preview`, `/api/v1/member-invites/register` (Registrierung per Einladungslink)
    - `/api/v1/events/*/chat/guest/**` (Gast-Chat via temporärem Gasttoken im Header)
    - `/api/v1/signup` (Konto anlegen und Gruppe eröffnen)
-   - `/api/v1/billing/stripe/webhook` (geschützt durch die Stripe-Signatur)
    - `/v3/api-docs/**`, `/swagger-ui/**` (OpenAPI Dokumentation, nur mit `API_DOCS_ENABLED=true`, in Produktion aus)
 2. **Admin-Endpunkte**:
    - Alle übrigen `/actuator/**`-Endpunkte erfordern `ROLE_ADMIN`.
@@ -112,7 +110,6 @@ In `baseservice` wird jede eingehende Anfrage durch `SecurityConfig` und `JwtAut
    - Legt das lokale Konto bei Bedarf an (`UserService`, `UserProvisioningService`).
    - Wählt die Gruppe aus dem Header `X-Stammtisch-Id` (der BFF setzt ihn aus dem Gruppen-Cookie) oder, ohne Header, die einzige Gruppe der Person. Fremde Gruppe: `403 stammtisch_access_denied`; fachlicher Endpunkt ohne Gruppe: `409 stammtisch_required`.
    - Ersetzt Rollen und Rechte im Principal durch die der Gruppe und setzt den Mandantenkontext für Hibernate und PostgreSQL.
-   - Ist eine Zahlung über die Kulanzfrist hinaus offen, sind schreibende Anfragen gesperrt (`403 stammtisch_read_only`), außer Tarif, Export, Verlassen und Kiosk.
 5. **Fachliche Prüfung im Service**:
    - Es gibt kein `@PreAuthorize`. Die Services prüfen Rechte über `StammtischAccess` (`has`, `require`) bzw. `AuthContext.requirePermission`.
 

@@ -106,8 +106,7 @@ export const authorizePages: RequestHandler = async (req, res, next) => {
     return;
   }
 
-  // 1b. Frühere Adressen der Gruppen-Seiten (`/stammtisch`, …) samt Query umleiten;
-  //     Stripe kehrt etwa nach `/stammtisch?billing=success` zurück.
+  // 1b. Frühere Adressen der Gruppen-Seiten (`/stammtisch`, …) samt Query umleiten.
   const renamed = LEGACY_PAGE_REDIRECTS.get(pathname);
   if (renamed) {
     const query = (req.originalUrl ?? '').indexOf('?');

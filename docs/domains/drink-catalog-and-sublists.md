@@ -16,7 +16,7 @@ Die Getränkeverwaltung in **Vereint** bildet das Sortiment einer Gruppe ab: vom
   4. Legt jemand mit `catalog.approve` ein Getränk selbst an, ist es sofort freigegeben und aktiv (`approved_by` = Anlegende); ein zweiter Freigabeschritt entfällt.
   5. Ohne `catalog.approve` sieht man im Katalog nur freigegebene Getränke und die eigenen Vorschläge; eigene Vorschläge darf man bearbeiten und mit Barcodes versehen.
 - **Erfassung in der Oberfläche** (`/catalog`):
-  - „Barcode scannen“: Ein bekannter Barcode öffnet das Getränk, ein unbekannter das Formular „Getränk anlegen“ mit vorausgefülltem Code.
+  - „Barcode scannen“: Ein Barcode aus dem eigenen Katalog öffnet das Getränk. Sonst sucht die App ihn in der Getränkedatenbank (`GET /api/v1/drink-library?barcode=`): Ein Treffer füllt „Getränk anlegen“ mit Name, Kategorie, Beschreibung und den im Katalog noch freien Barcodes vor und speichert mit `libraryDrinkId`; ist der Eintrag schon übernommen (anderer Barcode), öffnet sich das vorhandene Getränk mit dem Code im Barcodefeld. Ohne Treffer (oder wenn die Datenbank nicht erreichbar ist) öffnet sich das leere Formular mit dem Code. Wird im leeren Anlegeformular ein Barcode erfasst, füllt die App es auf dieselbe Weise vor.
   - Ein Formular für Anlegen, Vorschlagen und Bearbeiten: Name, Kategorie (Vorschläge aus vorhandenen Kategorien), Verkaufs- und Einkaufspreis mit Marge (Einkaufspreis nur mit `catalog.approve`), Beschreibung, beliebig viele Barcodes per Kamera oder Eingabe.
   - Vor dem Speichern wird geprüft, ob ein Barcode schon zu einem anderen Getränk gehört und ob es ein Getränk gleichen Namens gibt.
   - „Im Sortiment“ nimmt ein Getränk aus dem Verkauf (`active = false`), ohne es zu löschen; die Karte zeigt dann „Inaktiv“.

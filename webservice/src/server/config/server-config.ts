@@ -23,7 +23,7 @@ export function pathIs(pathname: string, prefix: string): boolean {
 
 /**
  * Frühere sichtbare Adressen der Gruppen-Seiten und ihre neuen Ziele. Express
- * leitet sie dauerhaft um und behält die Query (`?billing=…`, `?returnTo=…`).
+ * leitet sie dauerhaft um und behält die Query (etwa `?returnTo=…`).
  */
 export const LEGACY_PAGE_REDIRECTS: ReadonlyMap<string, string> = new Map([
   ['/stammtische', '/gruppen'],

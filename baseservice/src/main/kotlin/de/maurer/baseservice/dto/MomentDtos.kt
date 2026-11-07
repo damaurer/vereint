@@ -219,9 +219,7 @@ data class MomentMediaLimitsDto(
     val maxVideoSeconds: Int,
     val maxMediaPerResponse: Int,
     val imageTypes: List<String>,
-    val videoTypes: List<String>,
-    /** Erlaubt der Tarif der Gruppe Videos? Ohne Videos ist [videoTypes] leer. */
-    val videosAllowed: Boolean = true
+    val videoTypes: List<String>
 )
 
 /** Typen, Reaktionen (auch ausgemusterte, für alte Moments) und Upload-Grenzen. */

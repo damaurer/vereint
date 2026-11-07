@@ -14,7 +14,7 @@ löschen lassen sie sich nicht.
 | :--- | :--- | :--- |
 | **Mitglied** | `member` | Events sehen und zusagen, Chat, eigenes Guthaben und Käufe, per Barcode bezahlen, Getränke vorschlagen, Moments, Statistiken |
 | **Vorstand** | `board` | Zusätzlich Events anlegen und verwalten, Guthaben aller Mitglieder buchen (Kasse), Katalog pflegen und freigeben, Einkaufspreise, Rundbriefe und Infotafel, Einladungslinks, Moment-Typen und Reaktionen, Kiosk-Geräte entsperren, fremde Bilder und Videos aus Moments entfernen |
-| **Admin** | `admin` | Alles vom Vorstand, dazu Mitglieder und Rollen verwalten, Konten deaktivieren, Audit-Protokoll aller Mitglieder, Gruppe umbenennen und Bild ändern, Daten exportieren, Tarif und Zahlung, das Thekenterminal bedienen |
+| **Admin** | `admin` | Alles vom Vorstand, dazu Mitglieder und Rollen verwalten, Konten deaktivieren, Audit-Protokoll aller Mitglieder, Gruppe umbenennen und Bild ändern, Daten exportieren, das Thekenterminal bedienen |
 | **Theke** (in der Administration „Thekenterminal“) | `tabletRecorder` | Das Thekenterminal bedienen (Striche für Mitglieder buchen), Kiosk-Modus mit PIN starten |
 
 Zusätzlich gibt es Vorstandsfunktionen als Kennzeichnung ohne eigene Rechte:
@@ -38,7 +38,6 @@ Adminbereich. Rechte für die Verwaltung:
 | `members.manage` | Mitglieder deaktivieren, Vorstandsamt setzen |
 | `roles.manage` | Rollen anlegen, ändern, zuweisen |
 | `stammtisch.manage` | Gruppe umbenennen, Bild, Daten exportieren |
-| `billing.manage` | Tarif buchen, Zahlung und Rechnungen |
 | `moments.manage` | Moment-Typen und Reaktionen verwalten |
 | `kiosk.manage` | Kiosk-Geräte entsperren |
 | `notifications.broadcast` | Rundschreiben senden |
@@ -48,8 +47,7 @@ Adminbereich. Rechte für die Verwaltung:
 ## Plattform-Admin
 
 Die Keycloak-Realmrolle `admin` macht eine Person zum **Plattform-Admin** des
-Vereint-Teams: Gruppen anlegen, umbenennen, archivieren und Tarife von Hand
-vergeben (`/plattform`). Alle anderen Realmrollen (`board`, `member` …) haben
+Vereint-Teams: Gruppen anlegen, umbenennen und archivieren (`/plattform`). Alle anderen Realmrollen (`board`, `member` …) haben
 in Produktion keine Wirkung; Rollen kommen nur aus der gewählten Gruppe. Nur in
 der lokalen Entwicklung und in den E2E-Tests treten Konten ohne Gruppe mit
 ihren Realmrollen der Gruppe „Meine Gruppe“ bei.

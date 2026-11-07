@@ -35,11 +35,11 @@ describe('app routes: group addresses', () => {
     expect(shellChildren().find((route) => route.path === 'gruppe')?.data?.['title']).toBe('routes.stammtisch.title');
   });
 
-  it('redirects the former addresses and keeps query and fragment (Stripe return)', () => {
+  it('redirects the former addresses and keeps query and fragment', () => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     const router = TestBed.inject(Router);
     const cases: [string, string, Record<string, string>, string][] = [
-      ['stammtisch', '/gruppe?billing=success&returnTo=%2Fdashboard', { billing: 'success', returnTo: '/dashboard' }, ''],
+      ['stammtisch', '/gruppe?ref=mail&returnTo=%2Fdashboard', { ref: 'mail', returnTo: '/dashboard' }, ''],
       ['stammtische', '/gruppen?returnTo=%2Fboard', { returnTo: '/board' }, ''],
       ['eroeffnen', '/gruppe-eroeffnen#start', {}, 'start'],
     ];

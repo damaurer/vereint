@@ -1,6 +1,5 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.billing.PlanLimits
 import de.maurer.baseservice.domain.MomentReactionEntity
 import de.maurer.baseservice.domain.MomentTypeEntity
 import de.maurer.baseservice.domain.UserEntity
@@ -31,8 +30,7 @@ class MomentConfigService(
     private val momentReactionRepository: MomentReactionRepository,
     private val access: StammtischAccess,
     private val userService: UserService,
-    private val auditService: AuditService,
-    private val planLimits: PlanLimits
+    private val auditService: AuditService
 ) {
 
     @Transactional(readOnly = true)
@@ -42,7 +40,7 @@ class MomentConfigService(
         return MomentConfigDto(
             types = types.map { toTypeDto(it, reactions) },
             reactions = reactions.map { toReactionDto(it) },
-            mediaLimits = MomentMediaService.limits(videosAllowed = planLimits.currentLimits().videos)
+            mediaLimits = MomentMediaService.limits()
         )
     }
 

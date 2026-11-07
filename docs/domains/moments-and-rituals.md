@@ -76,7 +76,6 @@ Zu einem Beitrag lassen sich bis zu **4 Fotos oder Videos** anhängen (höchsten
 
 - **Fotos**: JPEG, PNG oder GIF bis 10 MB. Der Browser verkleinert sie vor dem Hochladen; der Server entfernt EXIF/XMP-Metadaten (GPS, Gerät, Aufnahmezeit).
 - **Aufnehmen**: Im Beitragsdialog gibt es „Foto aufnehmen“ und „Video aufnehmen“ (`<input capture="environment">`, öffnet auf Handys direkt die Kamera) sowie „Aus Galerie“.
-- **Tarif**: Videos nur in Tarifen mit Videos (`PlanLimits.videos`). Die App blendet den Video-Button sonst aus (`mediaLimits.videosAllowed`); der Server prüft beim Upload zusätzlich (`PLAN_LIMIT_VIDEOS`).
 - **Videos**: MP4 oder MOV, höchstens **60 Sekunden** und **100 MB**. Der Server entfernt ohne Transkodierung die Metadaten-Boxen (`udta`, `meta`, XMP) mit Ort und Gerät.
 - **Speicherung**: AES-256-GCM-verschlüsselt in 64-KiB-Blöcken im Objektspeicher, gestreamt statt ganz im Speicher gehalten.
 - **Auslieferung**: nur über den berechtigungsgeprüften Endpunkt mit HTTP-Range, damit Videos abspielbar und spulbar sind.

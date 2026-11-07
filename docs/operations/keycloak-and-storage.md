@@ -1,6 +1,6 @@
 # Betriebshandbuch: Keycloak IAM & S3-Objektspeicher
 
-Dieses Dokument beschreibt die Konfiguration des Identity Providers **Keycloak 26.8.1** und des Objektspeichers (**AWS S3** in Produktion, **S3Mock** lokal). Den Produktionsbetrieb beschreibt [deploy/README.md](../../deploy/README.md).
+Dieses Dokument beschreibt die Konfiguration des Identity Providers **Keycloak 26.8.1** und des Objektspeichers (in Produktion auf Strato ein **Verzeichnis**, alternativ **AWS S3**, lokal **S3Mock**). Den Produktionsbetrieb beschreibt [Betrieb auf einem Strato VPS](../betrieb/strato.md), die AWS-Variante [deploy/README.md](../../deploy/README.md).
 
 ---
 
@@ -12,7 +12,7 @@ Keycloak ist der zentrale Identity & Access Provider (OIDC). Das Realm `vereint`
 - **Entwicklungs-Export**: `keycloak/dev/realm-export-dev.json` (wird in `/opt/keycloak/data/import` gemountet), mit Seed-Benutzern, Registrierungsseite und „Passwort vergessen“.
 - **Produktions-Export**: `keycloak/realm-export.json`, ohne Seed-Benutzer, ohne offene Registrierung und ohne „Passwort vergessen“ (`resetPasswordAllowed: false`); im Produktions-Image eingebaut. Neue Konten entstehen nur über die App (Einladungslink oder Gruppe eröffnen).
 - **Admin-Konsole lokal**: `http://localhost:8082/admin` (Zugang aus `KEYCLOAK_ADMIN` / `KEYCLOAK_ADMIN_PASSWORD` der `.env`).
-- **Admin-Konsole in Produktion**: von außen gesperrt, nur per SSM-Tunnel, siehe [deploy/README.md](../../deploy/README.md#keycloak-verwaltung).
+- **Admin-Konsole in Produktion**: Vereint nutzt den Keycloak der Plattform (Realm `vereint`); die Konsole liegt unter `https://auth.maurercloud.de/admin` hinter dem Admin-Login mit 2FA, siehe [Strato](../betrieb/strato.md#5-ersten-administrator-anlegen).
 
 ### 2. OIDC Clients
 | Client ID | Flow | Zweck |
@@ -22,7 +22,7 @@ Keycloak ist der zentrale Identity & Access Provider (OIDC). Das Realm `vereint`
 | `vereint-tablet` | Service-Account | Thekenterminal (Rolle `tabletRecorder`) |
 | `vereint-registration` | Service-Account, nur `realm-management/manage-users` | Kontoanlage über [Einladungslinks](../domains/member-invites.md) und beim Eröffnen einer Gruppe |
 
-Die Secrets kommen beim Import aus Umgebungsvariablen (`keycloak/README.md`); in Produktion erzeugt Terraform sie im SSM Parameter Store.
+Die Secrets kommen beim Import aus Umgebungsvariablen (`keycloak/README.md`); in Produktion stehen sie im Vault von LinuxServerSetup (`vault_vereint_keycloak_*`), der den Realm `vereint` anlegt ([Strato](../betrieb/strato.md#was-der-code-dafür-kann)).
 
 ### 3. Seed-Benutzer (nur Entwicklungs-Realm)
 
@@ -57,7 +57,8 @@ Bilder, Gruppenbilder sowie Fotos und Videos aus Moments liegen im Objektspeiche
 
 | Umgebung | Speicher |
 | :--- | :--- |
-| Produktion | Privater AWS-S3-Bucket `vereint-app-<account>`, von Terraform angelegt, serverseitig verschlüsselt, nur per TLS erreichbar |
+| Produktion (Strato) | Docker-Volume `vereint_files` mit `STORAGE_BACKEND=filesystem`; die Dateien sind von der App verschlüsselt und laufen mit in die restic-Backups |
+| AWS-Variante | Privater AWS-S3-Bucket `vereint-app-<account>`, von Terraform angelegt, serverseitig verschlüsselt, nur per TLS erreichbar |
 | Lokal | S3Mock aus `docker-compose.yml`: API `http://localhost:9090`, Bucket `vereint` (wird beim Start angelegt, Signaturen werden nicht geprüft) |
 | E2E-Tests | S3-Ersatz im Test-Stack |
 

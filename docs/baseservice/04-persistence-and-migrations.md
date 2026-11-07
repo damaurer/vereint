@@ -46,7 +46,6 @@ Alle Entities liegen unter `de.maurer.baseservice.domain` und sind nach Fachdom�
 | **`MomentEntities.kt`** | `MomentTypeEntity`, `MomentReactionEntity`, `MomentMediaEntity` | Moment-Typen und Reaktionen je Gruppe, Fotos und Videos. |
 | **`KioskEntities.kt`** | `KioskSessionEntity` | Kiosk-Sitzungen mit PIN-Hash und Sperrzählern. |
 | **`MemberInviteEntities.kt`** | `MemberInviteEntity`, `MemberInviteRedemptionEntity` | Einladungslinks in eine Gruppe und ihre Einlösungen. |
-| **`BillingEntities.kt`** | `StammtischSubscriptionEntity`, `BillingEventEntity` | Tarif je Gruppe (`BillingPlan`, `SubscriptionStatus`) und verarbeitete Stripe-Ereignisse. |
 | **`DomainEnums.kt`** | `AccountingMode`, `PurchaseSource`, `LedgerEntryType`, `EventStatus`, `UserRole`, `BoardRole`, `RsvpStatus`, `GuestStatus`, `DrinkStatus`, `ImagePurpose`, `ImageStatus` | Typsichere Enums (gespeichert als `EnumType.STRING`). |
 
 ### Trennung der Gruppen
@@ -92,7 +91,7 @@ Die vollständige Liste aller Changesets mit Beschreibung steht im [Datenmodell]
 6. **`007-food-and-cost-prices.xml`**: `food_catalog`, `event_food`, Einkaufspreise und Beleg-Snapshots mit `item_type`, `food_name`, `cost_price`, `profit`.
 7. **`008`** bis **`012`**: verschlüsselte Benachrichtigungstitel, Chat und Zusagen, Einladungslinks, Kiosk-Sitzungen, Moment-Typen und Medien.
 8. **`013-stammtische.xml`**: Gruppen, Mitgliedschaften, Rollen je Gruppe, `stammtisch_id` an allen fachlichen Tabellen, Eindeutigkeit je Gruppe, Row Level Security.
-9. **`014`** bis **`018`**: gemeinsame Getränkedatenbank, Tarife und Stripe-Ereignisse, AGB-Zustimmung, Startbestand der Getränkedatenbank (Daten aus Open Food Facts, ODbL).
+9. **`014`** bis **`018`**: gemeinsame Getränkedatenbank, Tarife und Stripe-Ereignisse (mit `021` wieder entfernt), AGB-Zustimmung, Startbestand der Getränkedatenbank (Daten aus Open Food Facts, ODbL).
 
 ### 2. Liquibase-Kontexte (`contexts`)
 - **`prod`**: Standardkontext für Produktiv- und Compose-Umgebungen (`EV_LIQUIBASE_CONTEXTS: prod`).

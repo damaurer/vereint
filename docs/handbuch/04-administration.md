@@ -31,7 +31,7 @@ Neue Mitglieder registrieren sich selbst über einen Einladungslink. Links erste
 
 Unter **Einladungslinks** siehst du jeden Link mit Stand (**Offen**, **Verwendet**, **Abgelaufen**, **Zurückgezogen**), wie oft er schon genutzt wurde und wer sich damit registriert hat. **Zurückziehen** macht einen Link sofort ungültig.
 
-Wer sich über den Link registriert oder mit einem bestehenden Konto beitritt, ist danach normales Mitglied mit der Rolle `member`. Erlaubt der Tarif keine weiteren Mitglieder, ist kein Beitritt möglich (siehe [Tarif](#tarif-zahlung-und-rechnungen)). Weitere Rollen vergibst du anschließend unter **Bearbeiten**. Wie die Registrierung für die eingeladene Person aussieht, steht in den [Ersten Schritten](01-erste-schritte.md#mit-einem-einladungslink-registrieren).
+Wer sich über den Link registriert oder mit einem bestehenden Konto beitritt, ist danach normales Mitglied mit der Rolle `member`. Weitere Rollen vergibst du anschließend unter **Bearbeiten**. Wie die Registrierung für die eingeladene Person aussieht, steht in den [Ersten Schritten](01-erste-schritte.md#mit-einem-einladungslink-registrieren).
 
 ## Ein Mitglied bearbeiten
 
@@ -45,7 +45,7 @@ Nach **Bearbeiten** erscheint unter der Liste der Bereich „… bearbeiten“ m
 | :--- | :--- |
 | **Mitglied** (`member`) | Termine, Chat, Guthaben, Käufe, Moments, Getränke vorschlagen |
 | **Vorstand** (`board`) | Kasse, Events moderieren, Getränke freigeben, Rundbriefe, Mitglieder einladen, Kiosk-Geräte |
-| **Admin** (`admin`) | Alles vom Vorstand, dazu Mitglieder und Rollen verwalten, Gruppe, Tarif und das Thekenterminal |
+| **Admin** (`admin`) | Alles vom Vorstand, dazu Mitglieder und Rollen verwalten, Gruppe, Datenexport und das Thekenterminal |
 | **Thekenterminal** (`tabletRecorder`) | Striche für alle Mitglieder erfassen |
 
 **Vorstands-Unterrolle** und **Drink Recorder**, dann **Profil speichern**. Zur Auswahl stehen **Vorsitz**, **Kassenwart**, **Schriftwart** und **Beisitzer**; sie sind eine Kennzeichnung und geben keine eigenen Rechte. Drink Recorder schaltet das Thekenterminal für dieses Mitglied frei, etwa für den Thekendienst am eigenen Handy. Das ist dasselbe wie die Rolle **Thekenterminal** unter **Rollen**.
@@ -79,7 +79,7 @@ Jede Gruppe hat eigene Rollen. Beim Anlegen bekommt sie vier **Systemrollen**: M
 
 Im Abschnitt **Rollen & Berechtigungen** der Gruppeneinstellungen steht jede Rolle mit Name, Code, Anzahl der Personen und ihren Berechtigungen. Ändern darf das, wer das Recht `roles.manage` hat. Wer nur `members.read` hat, sieht die Liste ohne Knöpfe. Einfache Mitglieder sehen diesen Abschnitt nicht.
 
-- **Neue Rolle**: **Name** und optional eine **Beschreibung** eintragen, die gewünschten **Berechtigungen** anhaken und **Speichern** tippen. Die Berechtigungen sind nach Bereichen gruppiert, etwa **Buchungen**, **Katalog** oder **Tarif und Zahlung**.
+- **Neue Rolle**: **Name** und optional eine **Beschreibung** eintragen, die gewünschten **Berechtigungen** anhaken und **Speichern** tippen. Die Berechtigungen sind nach Bereichen gruppiert, etwa **Buchungen**, **Katalog** oder **Gruppe**.
 - **Bearbeiten**: Name, Beschreibung und Berechtigungen einer Rolle anpassen. Das geht auch bei Systemrollen.
 - **Löschen**: entfernt eine eigene Rolle. Personen mit dieser Rolle verlieren ihre Berechtigungen. Systemrollen lassen sich nicht löschen.
 
@@ -89,34 +89,11 @@ Ein Beispiel: Eine eigene Rolle „Kasse“ mit `ledger.read` sieht die Kasse, a
 
 Zuweisen: Eigene Rollen gibst du einer Person unter **Administration** → **Bearbeiten** → **Rollen** (siehe oben). Sie erscheinen dort auch im Rollenfilter und in der Mitgliedertabelle.
 
-## Tarif, Zahlung und Rechnungen
+## Daten exportieren
 
-<img src="bilder/a-tarif.png" alt="Tarif und Verbrauch" width="720">
+**Daten exportieren** in den Gruppeneinstellungen lädt alle Daten der Gruppe als JSON-Datei herunter: Rollen, Mitglieder, Events, Katalog, Buchungen, Chats und Moments. Bilder und Videos sind nicht enthalten. Dafür brauchst du `stammtisch.manage`.
 
-Jede Gruppe hat einen eigenen Tarif. Der Abschnitt **Tarif** in den Gruppeneinstellungen zeigt allen Mitgliedern den aktuellen Tarif und den **Verbrauch**: Mitglieder, Speicher, Videos in Moments und Thekenterminals.
-
-| | Kostenlos | Standard | Premium |
-| :--- | :--- | :--- | :--- |
-| Mitglieder | bis 10 | bis 40 | unbegrenzt |
-| Speicher für Bilder und Videos | 1 GB | 10 GB | 50 GB |
-| Videos in Moments | nein | ja | ja |
-| Thekenterminals gleichzeitig | eines | eines | mehrere |
-
-Neue Gruppen starten in **Kostenlos**. Die Grenzen gelten nur für Neues: Ist eine Grenze erreicht, kommen keine weiteren Mitglieder dazu, es lässt sich nichts mehr hochladen oder kein weiteres Thekenterminal starten. Was schon da ist, bleibt erhalten, auch nach einem Wechsel in einen kleineren Tarif.
-
-**Tarif buchen** (Recht `billing.manage`, Systemrolle Admin):
-
-1. Unter **Tarif wählen** die Zahlweise **Monatlich** oder **Jährlich** wählen. Die Preise stehen bei jedem Tarif.
-2. Beim gewünschten Tarif **Buchen** tippen. Vereint leitet zur Bezahlseite von Stripe weiter.
-3. Dort bezahlen. Zurück in Vereint steht „Danke! Der Tarif wird in wenigen Sekunden aktiv.“
-
-Vereint speichert keine Zahlungsdaten; das erledigt Stripe. Steht dort „Online-Zahlung ist noch nicht eingerichtet.“, hat der Betreiber Stripe noch nicht eingerichtet.
-
-**Zahlung und Rechnungen**: Nach der ersten Buchung öffnet dieser Knopf das Kundenportal von Stripe. Dort änderst du die Zahlungsart, lädst Rechnungen herunter, wechselst den Tarif oder kündigst. Nach einer Kündigung zeigt Vereint beim Tarif, bis wann er läuft. Danach ist die Gruppe wieder in **Kostenlos**. Daten gehen dabei nicht verloren.
-
-**Zahlung offen**: Schlägt eine Zahlung fehl, steht beim Tarif **Zahlung offen** mit einem Datum. Bis dahin läuft alles normal weiter, bitte die Zahlungsart rechtzeitig aktualisieren. Nach 30 Tagen ohne Zahlung ist die Gruppe **nur noch lesbar**: Ansehen geht, Ändern und Buchen nicht. Oben in der App steht dann ein Hinweis mit dem Link **Zum Tarif**. Tarif und Zahlung, Datenexport, Gruppe verlassen, Kiosk beenden und das eigene Profil gehen weiterhin. Gelöscht wird nichts. Sobald bezahlt ist, geht wieder alles.
-
-**Daten exportieren**: Lädt alle Daten der Gruppe als JSON-Datei herunter: Rollen, Mitglieder, Events, Katalog, Buchungen, Chats und Moments. Bilder und Videos sind nicht enthalten. Der Export geht auch, wenn die Gruppe nur noch lesbar ist. Dafür brauchst du `stammtisch.manage` oder `billing.manage`.
+Vereint ist kostenlos. Es gibt keine Tarife und keine Grenzen für Mitglieder, Speicher, Videos oder Thekenterminals.
 
 ## Thekentablet einrichten
 
@@ -132,4 +109,4 @@ Vereint verschickt keine E-Mails, deshalb gibt es keinen Link zum Zurücksetzen.
 
 ## Plattform-Administration
 
-Die Seite **Plattform** (`/plattform`) ist nur für das Vereint-Team, das die Installation betreibt. Dort werden alle Gruppen angelegt, umbenannt, archiviert und Tarife von Hand vergeben. Als Admin einer Gruppe brauchst du sie nicht.
+Die Seite **Plattform** (`/plattform`) ist nur für das Vereint-Team, das die Installation betreibt. Dort werden alle Gruppen angelegt, umbenannt und archiviert. Als Admin einer Gruppe brauchst du sie nicht.

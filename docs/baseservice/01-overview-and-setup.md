@@ -51,7 +51,6 @@ baseservice/
 │   │   │   ├── RegistrationConfig.kt    # Kontoanlage in Keycloak (IdentityProvisioner)
 │   │   │   ├── SchedulingConfig.kt      # @EnableScheduling (Erinnerungen, Aufräumjobs)
 │   │   │   └── StorageConfig.kt         # Storage-Bean (S3ObjectStorage vs. InMemoryObjectStorage)
-│   │   ├── billing/                     # Tarife, Stripe-Client, Webhooks, Export
 │   │   ├── controller/                  # 27 REST-Controller (@RestController, @RequestMapping)
 │   │   ├── service/                     # Fachliche Services (@Service, @Transactional)
 │   │   ├── domain/                      # JPA-Entities (@Entity, @Table, @Version) & Enums
@@ -145,8 +144,10 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `VEREINT_I18N_SUPPORTED_LOCALES` | `vereint.i18n.supported-locales` | String (CSV) | `de,en` | Sprachen der Fehlertexte, siehe [i18n](i18n.md). |
 | `TENANCY_BOOTSTRAP_REALM_ROLES` | `vereint.tenancy.bootstrap-realm-roles` | Boolean | `false` | Nur Entwicklung/E2E: Konten ohne Mitgliedschaft treten „Meine Gruppe“ mit ihren Keycloak-Realmrollen bei. In Produktion aus. |
 | `VEREIN_CORS_ALLOWED_ORIGINS` | `vereint.cors.allowed-origins` | String (CSV) | `http://localhost:4200` | Erlaubte CORS-Ursprünge (z. B. `http://localhost:4200,http://localhost:4300`). Wildcards (`*`) sind verboten. |
-| `S3_ENABLED` | `vereint.storage.enabled` | Boolean | `false` | Schaltet echten S3-Speicher frei. Bei `false` greift der `InMemoryObjectStorage`. |
-| `S3_ENDPOINT` | `vereint.storage.endpoint` | URL | `http://localhost:9000` | S3-kompatibler Endpunkt (lokal S3Mock, in Produktion AWS S3). |
+| `STORAGE_BACKEND` | `vereint.storage.backend` | String | *leer* | `filesystem` (Verzeichnis, so in Produktion auf Strato), `s3` oder `memory`. Leer: `S3_ENABLED` entscheidet. |
+| `STORAGE_DIRECTORY` | `vereint.storage.directory` | Pfad | *leer* | Verzeichnis für `STORAGE_BACKEND=filesystem`. |
+| `S3_ENABLED` | `vereint.storage.enabled` | Boolean | `false` | Nur bei leerem `STORAGE_BACKEND`: schaltet echten S3-Speicher frei. Bei `false` greift der `InMemoryObjectStorage`. |
+| `S3_ENDPOINT` | `vereint.storage.endpoint` | URL | `http://localhost:9000` | S3-kompatibler Endpunkt (lokal S3Mock, in der AWS-Variante AWS S3). |
 | `S3_BUCKET` | `vereint.storage.bucket` | String | `vereint` | Name des S3-Buckets für Bild-Uploads. |
 | `S3_REGION` | `vereint.storage.region` | String | `us-east-1` | S3-Region. |
 | `S3_ACCESS_KEY` | `vereint.storage.access-key` | String | *leer* | S3 Access Key ID (Geheimnis). |
@@ -168,13 +169,7 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `KEYCLOAK_REGISTRATION_CLIENT_SECRET` | `vereint.registration.client-secret` | String | *leer* | Secret dieses Clients (Geheimnis). |
 | `SIGNUP_ENABLED` | `vereint.signup.enabled` | Boolean | `true` | Öffentliches Eröffnen neuer Gruppen (`/api/v1/signup`). |
 | `SIGNUP_MAX_OWNED` | `vereint.signup.max-owned` | Integer | `3` | Höchstzahl aktiver Gruppen, die eine Person selbst eröffnet. |
-| `TERMS_VERSION` | `vereint.legal.terms-version` | String | `2026-10-16` | Gültige Fassung der AGB, der bei Registrierung und Eröffnung zugestimmt wird. |
-| `STRIPE_ENABLED` | `vereint.billing.stripe-enabled` | Boolean | `false` | Online-Zahlung über Stripe. Ohne `true`, Secret-Key und Webhook-Secret antworten Buchung und Portal mit `503`. |
-| `STRIPE_SECRET_KEY` | `vereint.billing.stripe-secret-key` | String | *leer* | Stripe-API-Schlüssel (Geheimnis). |
-| `STRIPE_WEBHOOK_SECRET` | `vereint.billing.stripe-webhook-secret` | String | *leer* | Signatur-Secret des Webhooks (Geheimnis). |
-| `STRIPE_PRICE_STAMMTISCH_MONTH`, `STRIPE_PRICE_STAMMTISCH_YEAR`, `STRIPE_PRICE_VEREIN_MONTH`, `STRIPE_PRICE_VEREIN_YEAR`, `STRIPE_PRICE_SUPPORTER` | `vereint.billing.prices.*` | String | *leer* | Stripe-Preis-IDs der Tarife. |
-| `PUBLIC_BASE_URL` | `vereint.billing.app-url` | URL | `http://localhost:4200` | Rücksprungadresse nach Checkout und Kundenportal. |
-| `BILLING_GRACE_DAYS` | `vereint.billing.grace-days` | Integer | `30` | Kulanzfrist nach offener Zahlung, danach ist die Gruppe nur lesbar. |
+| `TERMS_VERSION` | `vereint.legal.terms-version` | String | `2026-10-28` | Gültige Fassung der AGB, der bei Registrierung und Eröffnung zugestimmt wird. |
 | `API_DOCS_ENABLED` | `springdoc.api-docs.enabled`, `springdoc.swagger-ui.enabled` | Boolean | `false` | OpenAPI und Swagger UI; in Produktion aus. |
 
 ---

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe, translate } from '../i18n';
+import { BarcodeScannerComponent } from '../scan/barcode-scanner.component';
 import { apiErrorText } from '../stammtisch/stammtisch-api.service';
 import { IconComponent } from '../ui/icon.component';
 import { StateComponent } from '../ui/state.component';
@@ -22,7 +23,7 @@ function normalizeBarcode(value: string): string {
  */
 @Component({
   selector: 'app-drink-library',
-  imports: [FormsModule, RouterLink, TranslatePipe, IconComponent, StateComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, IconComponent, StateComponent, BarcodeScannerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../stammtisch/stammtisch.css',
   template: `
@@ -44,9 +45,16 @@ function normalizeBarcode(value: string): string {
               <input name="barcode" inputmode="numeric" [(ngModel)]="barcode" maxlength="128" autocomplete="off" />
             </label>
           </div>
+          @if (scanning()) {
+            <vereint-barcode-scanner (detected)="onScanned($event)" />
+          }
           <div class="st-actions">
             <button type="submit" class="member-button" [disabled]="loading()">
               <vereint-icon name="search" /> {{ 'catalog.library.search' | t }}
+            </button>
+            <button type="button" class="member-button member-button-ghost" (click)="scanning.set(!scanning())">
+              <vereint-icon name="camera" />
+              {{ (scanning() ? 'catalog.detail.scanCancel' : 'catalog.lookup.open') | t }}
             </button>
           </div>
         </form>
@@ -147,6 +155,8 @@ export class DrinkLibraryComponent implements OnInit {
   protected readonly busy = signal(false);
   protected readonly formError = signal<string | null>(null);
   protected readonly success = signal<string | null>(null);
+  /** Kamera zum Scannen eines Strichcodes ist eingeblendet. */
+  protected readonly scanning = signal(false);
 
   protected query = '';
   protected barcode = '';
@@ -162,8 +172,16 @@ export class DrinkLibraryComponent implements OnInit {
     this.search();
   }
 
+  /** Gescannter Code: exakt suchen und einen eindeutigen Treffer gleich zum Übernehmen öffnen. */
+  protected onScanned(code: string): void {
+    this.scanning.set(false);
+    this.barcode = code;
+    this.query = '';
+    this.search(true);
+  }
+
   /** Mit Strichcode exakt, sonst nach Name oder Sorte (leer = erste Treffer). */
-  protected search(): void {
+  protected search(openSingleHit = false): void {
     const barcode = normalizeBarcode(this.barcode);
     this.loading.set(true);
     this.loadError.set(null);
@@ -172,6 +190,7 @@ export class DrinkLibraryComponent implements OnInit {
       next: (entries) => {
         this.results.set(entries);
         this.loading.set(false);
+        if (openSingleHit && entries.length === 1 && !entries[0].catalogDrinkId) this.startAdopt(entries[0]);
       },
       error: (error: unknown) => {
         this.loadError.set(apiErrorText(error));

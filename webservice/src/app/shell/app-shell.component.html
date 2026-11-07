@@ -188,14 +188,6 @@
       </header>
 
       <div class="shell-content" id="shell-main-content" tabindex="-1">
-        @if (readOnly() && !isGuest()) {
-          <p class="shell-readonly" role="alert">
-            {{ 'shell.readOnly' | t }}
-            @if (!kiosk()) {
-              <a routerLink="/gruppe">{{ 'shell.readOnlyLink' | t }}</a>
-            }
-          </p>
-        }
         <router-outlet />
       </div>
 

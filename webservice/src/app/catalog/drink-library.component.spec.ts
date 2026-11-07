@@ -9,6 +9,8 @@ interface LibraryInternals {
   barcode: string;
   price: number | null;
   search(): void;
+  onScanned(code: string): void;
+  adoptingId(): string | null;
   startAdopt(entry: DrinkLibraryEntryDto): void;
   adopt(entry: DrinkLibraryEntryDto): void;
   formError(): string | null;
@@ -50,6 +52,14 @@ describe('DrinkLibraryComponent', () => {
     cmp.barcode = ' 4001 ';
     cmp.search();
     expect(api.searchLibrary).toHaveBeenLastCalledWith({ barcode: '4001' });
+  });
+
+  it('opens the adopt form right away for a scanned barcode with one hit', () => {
+    const { cmp } = create();
+    api.searchLibrary.mockReturnValue(of([entries[0]]));
+    cmp.onScanned('4001');
+    expect(api.searchLibrary).toHaveBeenLastCalledWith({ barcode: '4001' });
+    expect(cmp.adoptingId()).toBe('l-1');
   });
 
   it('requires a price and adopts with the library id', () => {

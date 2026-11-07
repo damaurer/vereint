@@ -19,7 +19,7 @@ export const MAX_STAMMTISCH_NAME_LENGTH = 80;
 /** Fehler beim Anlegen des Kontos; die Texte teilt sich die Seite mit der Einladung. */
 const ACCOUNT_ERROR_CODES = new Set(['email_already_registered', 'password_rejected', 'registration_unavailable']);
 
-/** Nach dem Eröffnen geht es zu Tarif und Einladungen des neuen Stammtischs. */
+/** Nach dem Eröffnen geht es zu den Einstellungen und Einladungen des neuen Stammtischs. */
 const AFTER_OPEN_ROUTE = '/gruppe';
 
 /**

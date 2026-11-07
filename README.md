@@ -5,11 +5,11 @@
 [![Angular](https://img.shields.io/badge/Angular-22_SSR-DD0031?logo=angular&logoColor=white)](https://angular.dev/)
 [![Keycloak](https://img.shields.io/badge/Keycloak-26.8-4D4D4D?logo=redhat&logoColor=white)](https://www.keycloak.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![AWS](https://img.shields.io/badge/AWS-S3_%26_EC2-FF9900?logo=amazonwebservices&logoColor=white)](infra/aws/)
+[![Strato VPS](https://img.shields.io/badge/Betrieb-Strato_VPS-003D8F)](docs/betrieb/strato.md)
 
 **Vereint** ist die App für Gruppen aller Art, ob Stammtisch, Verein oder Team.
 Eine Installation trägt beliebig viele Gruppen; jede hat eigene Mitglieder,
-Rollen und einen Tarif (Kostenlos, Standard, Premium; Zahlung über Stripe). Je
+Rollen und Daten; alle Funktionen sind frei nutzbar, ohne Tarife. Je
 Gruppe gibt es Treffen und Events mit Zu- und Absagen, Gruppenchat,
 Direkt- und Event-Chats, Guthaben statt Bargeld, Bezahlen per Barcode-Scan, das
 Thekenterminal im Kiosk-Modus, Getränke- und Speisenkatalog, Moments mit Fotos
@@ -60,18 +60,19 @@ E2E-Tests: [e2e/README.md](e2e/README.md).
 
 ```mermaid
 graph LR
-    Browser["Browser / PWA"] -->|HTTPS| Caddy
-    Caddy -->|"/kc/*"| Keycloak
-    Caddy -->|"/*"| Web["webservice<br/>Angular SSR + BFF"]
+    Browser["Browser / PWA"] -->|HTTPS| Traefik
+    Traefik -->|"auth.*"| Keycloak
+    Traefik -->|"vereint.*"| Web["webservice<br/>Angular SSR + BFF"]
     Web -->|"/api/v1"| Base["baseservice<br/>Spring Boot"]
     Base --> PG[("PostgreSQL")]
-    Keycloak --> PG
-    Base -->|"verschlüsselte Dateien"| S3[("AWS S3")]
+    Base -->|"verschlüsselte Dateien"| Files[("Datei-Volume")]
 ```
 
-Produktion: ein ARM-Server bei AWS in Frankfurt, per Terraform angelegt
-([infra/aws](infra/aws/README.md)), Docker Compose hinter Caddy
-([deploy](deploy/README.md)). Chat-Nachrichten, Mitteilungen, Bilder und Videos
+Produktion: `https://vereint.maurercloud.de` auf einem Strato VPS, den
+[LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) per Ansible
+einrichtet (Traefik, Keycloak der Plattform, Backups nach HiDrive), siehe
+[Betrieb auf einem Strato VPS](docs/betrieb/strato.md). Die frühere AWS-Variante
+([infra/aws](infra/aws/README.md), [deploy](deploy/README.md)) bleibt im Repo. Chat-Nachrichten, Mitteilungen, Bilder und Videos
 verschlüsselt der baseservice mit AES-256-GCM, bevor sie gespeichert werden.
 Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` rollt mit
 Backup, Health Check und automatischem Rollback aus.
@@ -82,14 +83,13 @@ Backup, Health Check und automatischem Rollback aus.
 
 | Verzeichnis | Technologie | Aufgabe |
 | :--- | :--- | :--- |
-| `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-API, Fachlogik, Trennung der Gruppen (Row-Level-Security), PostgreSQL/Liquibase, Verschlüsselung, S3, Web Push, Stripe |
+| `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-API, Fachlogik, Trennung der Gruppen (Row-Level-Security), PostgreSQL/Liquibase, Verschlüsselung, Dateispeicher (Verzeichnis oder S3), Web Push |
 | `webservice/` | Angular 22, Express 5, TypeScript 6 | Oberfläche, PWA, SSR, BFF mit Session-Cookie und API-Proxy |
 | `keycloak/` | Keycloak 26.8.1 | Realm-Definitionen, Login-Theme, Produktions-Image |
-| `deploy/` | Docker Compose, Caddy | Produktions-Stack, Backups, Deployment-Skripte |
-| `infra/aws/` | Terraform | AWS-Server, Buckets, Secrets, Alarme, GitHub-OIDC |
+| `deploy/` | Docker Compose, Caddy | Stack für die AWS-Variante, Backups, Deployment-Skripte |
+| `infra/aws/` | Terraform | AWS-Variante: Server, Buckets, Secrets, Alarme, GitHub-OIDC |
 | `e2e/` | Playwright | Tests gegen den kompletten Produktions-Stack |
 | `scripts/handbook/` | Playwright | Bildschirmfotos für das Benutzerhandbuch |
-| `website/` | HTML, CSS | Öffentliche Website mit Funktionen und Tarifen, ausgeliefert von Caddy ([docs/website.md](docs/website.md)) |
 | `docs/` | Markdown | Technische und fachliche Dokumentation, Benutzerhandbuch |
 
 ---
@@ -98,24 +98,27 @@ Backup, Health Check und automatischem Rollback aus.
 
 - Gearbeitet wird auf `develop`. Jeder Pull Request nach `develop`, `qs` oder `main`
   muss Tests, Sicherheitsscans und E2E-Tests bestehen.
-- Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` oder `website/` rollt
-  automatisch auf einen einzelnen AWS-Server in Frankfurt aus: Datenbank-Backup vorher, Health Check danach, automatischer
-  Rollback bei Fehlern.
+- Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` rollt
+  automatisch auf den Strato VPS aus (`deploy vereint <release-tag>` per SSH):
+  Datenbank-Dump vorher, Health Check danach, automatischer Rollback bei Fehlern.
 - Chat-Nachrichten, Mitteilungen, Bilder und Videos werden in der App mit
-  AES-256-GCM verschlüsselt, bevor sie in der Datenbank oder in S3 landen.
-- Backups laufen jede Nacht, werden vorher probeweise wiederhergestellt und
-  verschlüsselt abgelegt.
-- `BACKUP_ENCRYPTION_KEY` und `DATA_ENCRYPTION_KEY` müssen zusätzlich offline
-  aufbewahrt werden. Ohne sie sind Backups bzw. verschlüsselte Inhalte nicht mehr lesbar.
+  AES-256-GCM verschlüsselt, bevor sie in der Datenbank oder im Dateispeicher landen.
+- Backups macht LinuxServerSetup: Dump vor jedem Deployment, stündlich und
+  nachts, verschlüsselt mit restic nach HiDrive.
+- Den Datenschlüssel (`vault_vereint_data_encryption_key`) zusätzlich offline
+  aufbewahren, neben Vault-Passwort und restic-Passwort. Ohne ihn sind Chat,
+  Bilder und Videos auch aus einem intakten Backup nicht mehr lesbar.
 
 | Thema | Dokument |
 | :--- | :--- |
-| Vor dem ersten Produktivbetrieb | [Go-Live-Checkliste](docs/betrieb/go-live-checkliste.md) |
+| Betrieb auf Strato (eigener Server), Go-Live-Checkliste | [Betrieb auf einem Strato VPS](docs/betrieb/strato.md) |
+| Vor dem ersten Produktivbetrieb auf AWS | [Go-Live-Checkliste](docs/betrieb/go-live-checkliste.md) |
 | Branches, CI, Images | [Branches und CI](docs/betrieb/branches-und-ci.md) |
 | AWS, Terraform, Kosten | [AWS und Kosten](docs/betrieb/aws-und-kosten.md) |
 | Ausrollen und Zurückrollen | [Deployment und Rollback](docs/betrieb/deployment-und-rollback.md) |
 | Backups und Restore | [Backups und Wiederherstellung](docs/betrieb/backups-und-wiederherstellung.md) |
 | Verschlüsselung, Schlüssel, Härtung | [Sicherheit und Schlüssel](docs/betrieb/sicherheit-und-schluessel.md) |
+| Lizenz, Öffentlichschalten, Selbstbetrieb | [Open Source](docs/betrieb/open-source.md) |
 
 ---
 
@@ -124,8 +127,17 @@ Backup, Health Check und automatischem Rollback aus.
 - [docs/README.md](docs/README.md) – Übersicht aller Dokumente und Glossar
 - [docs/handbuch/](docs/handbuch/README.md) – Benutzerhandbuch je Rolle
 - [docs/domains/stammtische.md](docs/domains/stammtische.md) – Mehrere Gruppen, Trennung der Daten, Rollen je Gruppe
-- [docs/domains/abrechnung.md](docs/domains/abrechnung.md) – Tarife (Kostenlos, Standard, Premium) mit Stripe
-- [deploy/README.md](deploy/README.md) – Produktionsbetrieb, Backups, Deployments
-- [docs/website.md](docs/website.md) – Öffentliche Website, Domain, Bildschirmfotos
-- [infra/aws/README.md](infra/aws/README.md) – AWS mit Terraform
+- [docs/betrieb/strato.md](docs/betrieb/strato.md) – Produktionsbetrieb auf Strato, Go-Live-Checkliste
+- [deploy/README.md](deploy/README.md) – AWS-Variante: Stack, Backups, Deployments
+- [infra/aws/README.md](infra/aws/README.md) – AWS-Variante mit Terraform
 - [e2e/README.md](e2e/README.md) – E2E-Tests
+
+---
+
+## 🤝 Mitmachen und Lizenz
+
+Vereint ist ein Open-Source-Hobbyprojekt unter der
+[GNU Affero General Public License v3.0](LICENSE). Beiträge sind willkommen,
+siehe [CONTRIBUTING.md](CONTRIBUTING.md); Sicherheitslücken bitte vertraulich
+melden, siehe [SECURITY.md](SECURITY.md). Der Startbestand der
+Getränkedatenbank stammt aus Open Food Facts (ODbL 1.0).

@@ -49,7 +49,6 @@ object RolePermissionMatrix {
         Permission.MEMBERS_MANAGE,
         Permission.ROLES_MANAGE,
         Permission.STAMMTISCH_MANAGE,
-        Permission.BILLING_MANAGE,
         Permission.AUDIT_READ_ALL
     )
 

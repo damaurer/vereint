@@ -14,36 +14,21 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
   Moments, Mitteilungen, Einladungen, Kiosk-Geräte, Protokoll und Statistik. Die
   Trennung sichern Anwendung und Datenbank (Row-Level-Security) doppelt ab.
 - Eigene Gruppe eröffnen unter *Eigene Gruppe eröffnen* (`/gruppe-eroeffnen`):
-  Gruppenname und Konto in einem Schritt, die Person wird Admin, die Gruppe
-  startet im Tarif *Kostenlos*. Höchstens drei eigene Gruppen pro Person.
+  Gruppenname und Konto in einem Schritt, die Person wird Admin. Höchstens drei
+  eigene Gruppen pro Person.
   Der Betreiber kann das Eröffnen abschalten (`SIGNUP_ENABLED`); Einladungslinks
   funktionieren dann weiter.
 - *Gruppeneinstellungen*: Name und Bild der Gruppe, Rollen und Berechtigungen,
-  Tarif, Datenexport, Gruppe verlassen.
+  Datenexport, Gruppe verlassen.
 - Die Plattform-Administration (Vereint-Team) legt unter `/plattform` Gruppen an,
-  archiviert sie und vergibt Tarife von Hand.
+  und archiviert sie.
 - Details: [docs/domains/stammtische.md](domains/stammtische.md)
 
-## Tarife
+## Kosten
 
-| | Kostenlos | Standard | Premium |
-| :--- | :--- | :--- | :--- |
-| Preis | 0 € | 4 €/Monat oder 40 €/Jahr | 9 €/Monat oder 90 €/Jahr |
-| Mitglieder | bis 10 | bis 40 | unbegrenzt |
-| Speicher für Bilder und Videos | 1 GB | 10 GB | 50 GB |
-| Videos in Moments | nein | ja | ja |
-| Thekenterminals gleichzeitig | 1 | 1 | mehrere |
-
-- Gebucht und bezahlt wird je Gruppe online über Stripe. Rechnungen, Zahlart,
-  Wechsel und Kündigung laufen über das Stripe-Kundenportal.
-- Nach einer fehlgeschlagenen Zahlung läuft die Gruppe 30 Tage normal weiter,
-  danach ist sie nur lesbar, bis bezahlt ist. Gelöscht wird nichts.
-- Ohne Stripe-Einrichtung ist die Online-Zahlung aus; „Meine Gruppe“ aus der
-  Migration läuft mit allen Funktionen weiter.
-- Ist ein Förderbeitrag eingerichtet, kann jedes Mitglied unter *Vereint
-  unterstützen* freiwillig einen persönlichen Monatsbeitrag zahlen. Am Tarif
-  der Gruppe ändert das nichts.
-- Details: [docs/domains/abrechnung.md](domains/abrechnung.md)
+Vereint ist kostenlos und Open Source (AGPL-3.0). Es gibt keine Tarife, keine
+Online-Zahlung und keine Grenzen für Mitglieder, Speicher, Videos oder
+Thekenterminals.
 
 ## Start und Navigation
 
@@ -121,7 +106,9 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 - Je Event eine Auswahl aus dem Katalog (Subliste) mit eigenen Preisen.
 - Gemeinsame **Getränkedatenbank** aller Gruppen (ohne Preise und Bilder): unter
   *Aus der Getränkedatenbank* übernimmt man ein Getränk und setzt den eigenen
-  Preis; eigene freigegebene Getränke lassen sich dorthin teilen. Ab Werk
+  Preis; eigene freigegebene Getränke lassen sich dorthin teilen. *Barcode
+  scannen* im Katalog sucht einen unbekannten Code auch dort und füllt
+  *Getränk anlegen* damit vor (nur der Preis fehlt noch). Ab Werk
   enthält sie über 1.200 Getränke von mehr als 130 deutschen Brauereien und
   Herstellern (Migrationen 017/018).
 - Details: [docs/domains/drink-catalog-and-sublists.md](domains/drink-catalog-and-sublists.md),

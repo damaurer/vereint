@@ -323,7 +323,7 @@ import { PersonalApiService } from './personal-api.service';
       }
       .cal-day.is-today .cal-day-number {
         background-color: var(--color-brand);
-        color: #ffffff;
+        color: var(--color-on-brand);
         border-radius: 999px;
         padding: 0 0.4rem;
       }

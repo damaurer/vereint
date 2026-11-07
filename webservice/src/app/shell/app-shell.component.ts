@@ -36,7 +36,6 @@ import { BreakpointService } from './breakpoint.service';
 import { BottomSheetComponent } from '../ui/bottom-sheet.component';
 import { IconComponent } from '../ui/icon.component';
 import { KioskModeService } from '../kiosk/kiosk-mode.service';
-import { BillingStatusStore } from '../stammtisch/billing-status';
 import { GroupAvatarComponent } from '../stammtisch/group-avatar.component';
 import { buildNavSections, buildPrimaryNav, NavItem, NavSection, PRIMARY_NAV } from './nav-model';
 
@@ -115,17 +114,6 @@ function titleOf(root: ActivatedRouteSnapshot): string {
         text-overflow: ellipsis;
         white-space: nowrap;
         font-size: 0.9rem;
-      }
-      .shell-readonly {
-        margin: 0 0 1rem;
-        padding: 0.65rem 0.8rem;
-        border-radius: 0.5rem;
-        background-color: var(--color-danger-light);
-        color: var(--color-danger);
-      }
-      .shell-readonly a {
-        color: inherit;
-        font-weight: 700;
       }
       .shell-rail-link,
       .shell-bottom-link {
@@ -259,9 +247,6 @@ export class AppShellComponent implements OnInit, OnDestroy {
   /** Ungelesene Chat-Nachrichten für das Badge am Chat-Eintrag. */
   readonly chatUnread;
 
-  /** Stammtisch nur noch lesbar (Zahlung überfällig): Banner über dem Inhalt. */
-  readonly readOnly;
-
   /** Badge-Text am Chat-Eintrag (ab 100 gekürzt). */
   readonly chatBadge = computed(() => {
     const count = this.chatUnread();
@@ -283,7 +268,6 @@ export class AppShellComponent implements OnInit, OnDestroy {
     this.kiosk = this.injector.get(KioskModeService).active;
     this.unread = this.injector.get(UnreadBadgeStore).count;
     this.chatUnread = this.injector.get(ChatUnreadStore).count;
-    this.readOnly = this.injector.get(BillingStatusStore).readOnly;
   }
 
   ngOnInit(): void {
@@ -304,7 +288,6 @@ export class AppShellComponent implements OnInit, OnDestroy {
         this.sessionSignal.set(session);
         this.refreshUnread();
         this.refreshChatUnread();
-        this.refreshBilling();
       });
       this.chatTimer = setInterval(() => {
         if (typeof document === 'undefined' || document.visibilityState !== 'hidden') {
@@ -320,16 +303,6 @@ export class AppShellComponent implements OnInit, OnDestroy {
     this.injector.get(ChatUnreadStore).refresh();
   }
 
-  /**
-   * Prüft einmal je Shell, ob der gewählte Stammtisch nur noch lesbar ist. Die
-   * Shell entsteht nach jedem Stammtisch-Wechsel neu (Auswahl liegt außerhalb).
-   */
-  private refreshBilling(): void {
-    const store = this.injector.get(BillingStatusStore);
-    store.readOnly.set(false);
-    if (!this.sessionSignal()?.stammtisch || this.isGuest()) return;
-    store.refresh();
-  }
 
   /** Zugängliche Bezeichnung eines Eintrags; nur der Chat trägt die Ungelesen-Anzahl. */
   navAriaLabel(item: NavItem): string | null {

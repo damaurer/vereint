@@ -77,14 +77,14 @@ describe('StammtischOpenComponent', () => {
     cmp.acceptTerms.set(true);
   };
 
-  it('shows the signup form with the free plan hint to visitors without a session', async () => {
+  it('shows the signup form with the invitation hint to visitors without a session', async () => {
     const { fixture, cmp } = await create();
     expect(cmp.state()).toBe('signup');
     const text = fixture.nativeElement.textContent as string;
     expect(text).toContain('Name der Gruppe');
     expect(text).toContain('Vorname');
     expect(text).toContain('Passwort wiederholen');
-    expect(text).toContain('bis zu 10 Mitgliedern');
+    expect(text).not.toContain('Tarif');
     expect(text).toContain('Einladungslink');
   });
 

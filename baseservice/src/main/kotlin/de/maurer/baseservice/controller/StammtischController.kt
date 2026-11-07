@@ -52,7 +52,7 @@ class StammtischController(
     @PostMapping("/stammtische")
     @Operation(
         summary = "Eigenen Stammtisch eröffnen",
-        description = "Die Person wird Stammtisch-Admin; neuer Stammtisch im kostenlosen Tarif"
+        description = "Die Person wird Stammtisch-Admin des neuen Stammtischs"
     )
     fun openOwn(@Valid @RequestBody request: OpenStammtischRequest): ResponseEntity<StammtischMembershipDto> =
         ResponseEntity.status(HttpStatus.CREATED).body(signupService.openOwn(request, authContext.getRequiredPrincipal()))

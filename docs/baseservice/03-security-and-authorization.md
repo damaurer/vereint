@@ -40,7 +40,6 @@ Folgende Pfade sind ohne Bearer-Token öffentlich erreichbar:
 - **Registrierung per Einladungslink**: `/api/v1/member-invites/preview`, `/api/v1/member-invites/register` (das Token im Body ist das Geheimnis)
 - **Gast-Chat**: `/api/v1/events/*/chat/guest/**` (die Autorisierung erfolgt über den kryptografischen `X-Guest-Token`-Header)
 - **Gruppe eröffnen**: `/api/v1/signup` (Konto anlegen und erste Gruppe eröffnen)
-- **Stripe-Webhook**: `/api/v1/billing/stripe/webhook` (geschützt durch die Stripe-Signatur, `StripeWebhookService`)
 - **API-Dokumentation**: `/v3/api-docs/**`, `/swagger-ui/**`, `/swagger-ui.html` (nur erreichbar, wenn `API_DOCS_ENABLED=true`; in Produktion aus)
 
 Alle übrigen Actuator-Endpunkte (`/actuator/**`) erfordern zwingend die Rolle `ADMIN`. Alle Fach-Endpunkte (`/api/v1/**`) erfordern standardmäßig ein gültiges JWT.
@@ -84,7 +83,6 @@ Direkt nach `BearerTokenAuthenticationFilter` läuft der `StammtischContextFilte
 2. Er wählt die Gruppe aus dem Header `X-Stammtisch-Id`; ohne Header gilt die einzige Gruppe der Person. Ist die Person dort kein aktives Mitglied: `403 stammtisch_access_denied`. Fachliche Endpunkte ohne gewählte Gruppe: `409 stammtisch_required`. Ohne Gruppe laufen nur Konto-, Gruppenwahl-, Plattform-, Getränkedatenbank-, Einladungs- und Push-Geräte-Endpunkte (`isStammtischFree`).
 3. Er ersetzt `roles`, `permissions` und `boardRole` im Principal durch die Werte der Gruppe. Die Realmrolle `admin` aus dem Token setzt nur `platformAdmin = true` (Autorität `ROLE_PLATFORM_ADMIN`).
 4. Er setzt den `TenantContext`, aus dem Hibernate (`@TenantId`) und `TenantAwareDataSource` (Row Level Security) die Gruppe lesen.
-5. Ist die Kulanzfrist nach einer offenen Zahlung abgelaufen, beantwortet er schreibende Anfragen mit `403 stammtisch_read_only` (außer Tarif, Export, Verlassen, Kiosk).
 
 Nur in Entwicklung und E2E (`TENANCY_BOOTSTRAP_REALM_ROLES=true`) treten Konten ohne Mitgliedschaft automatisch „Meine Gruppe“ mit ihren Realmrollen bei (`RealmRoleBootstrap`). Ein Plattform-Admin ohne Mitgliedschaft übernimmt eine noch herrenlose Gruppe (`PlatformService.claimUnclaimedStammtisch`).
 
@@ -124,7 +122,7 @@ Startwerte (vollständige Tabelle mit Beschreibungen: [Sicherheitskonzept](../ar
 
 - `member`: `profile.read.self`, `balance.read.self`, `purchase.self`, `chat.member`, `chat.event`, `event.create`, `catalog.propose`
 - `board`: wie `member`, dazu `event.manage`, `event.invites.manage`, `catalog.approve`, `ledger.read`, `ledger.correct`, `audit.read`, `members.read`, `members.invite`, `moments.manage`, `kiosk.manage`, `notifications.broadcast`, `chat.moderate`
-- `admin`: wie `board`, dazu `purchase.tablet`, `members.manage`, `roles.manage`, `stammtisch.manage`, `billing.manage`, `audit.read.all`
+- `admin`: wie `board`, dazu `purchase.tablet`, `members.manage`, `roles.manage`, `stammtisch.manage`, `audit.read.all`
 - `tabletRecorder`: nur `purchase.tablet` (Thekenkonto)
 
 Schutzregeln beim Ändern: Niemand ändert die eigenen Rollen oder Rechte (`self_privilege_change_denied`), und nach jeder Änderung an Rollen, Zuweisungen oder Mitgliedschaften muss mindestens ein aktives Mitglied `members.manage` oder `roles.manage` behalten (`StammtischManagers`, `last_role_manager_protected`).

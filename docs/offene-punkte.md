@@ -1,19 +1,26 @@
 # Offene Punkte
 
-Bekannte Lücken und nächste Schritte, Stand 25.10.2026. Erledigtes bitte hier
-austragen.
+Die Liste der offenen Aufgaben, Bugs und Entscheidungen sind die
+[GitHub-Issues](https://github.com/damaurer/vereint/issues). Neue Punkte bitte
+dort anlegen, nicht hier. Diese Seite fasst nur bekannte Grenzen der App
+zusammen, für die es kein eigenes Issue gibt, und verweist auf die wichtigsten
+Issues. Stand 05.11.2026.
+
+## Wichtige Issues
+
+| Punkt | Issue |
+| :--- | :--- |
+| Go-Live auf dem Strato VPS (`vereint.maurercloud.de`), Schritte in [Betrieb auf einem Strato VPS](betrieb/strato.md#checkliste-für-den-go-live) | [#57](https://github.com/damaurer/vereint/issues/57) mit Unteraufgaben |
+| Prüfen nach dem ersten Deployment: Barcode-Kamera, Web Push, Zwei-Faktor-Anmeldung und Video-Upload gehen erst unter echtem HTTPS am Handy | [#62](https://github.com/damaurer/vereint/issues/62) |
+| Rechtliches vor dem Öffnen für andere: Betreiberangaben in `webservice/src/app/legal/legal-operator.ts`, Datenschutzerklärung, AV-Vertrag ([rechtliches.md](domains/rechtliches.md#vor-dem-freischalten-der-registrierung)). Bis dahin bleibt in LinuxServerSetup `vereint_signup_enabled: false` ([Schritt 6](betrieb/strato.md#6-rechtliches-vor-dem-öffnen-für-andere)); Einladungslinks funktionieren trotzdem | [#63](https://github.com/damaurer/vereint/issues/63) |
+| Regel für Barcode-Käufe (Scannen nur bei laufenden Events, an denen das Mitglied teilnimmt) bestätigen | [#67](https://github.com/damaurer/vereint/issues/67) |
+| Keycloak-Login-Theme: FTL-Vorlagen mit der laufenden Keycloak-Version abgleichen ([keycloak/README.md](../keycloak/README.md#produktion)) | [#72](https://github.com/damaurer/vereint/issues/72) |
+| Bildschirmfotos im Handbuch erneuern und ergänzen (aufnehmen mit [`scripts/handbook`](../scripts/handbook/)) | [#70](https://github.com/damaurer/vereint/issues/70) |
+
+## Bekannte Grenzen der App
 
 | Punkt | Stand |
 | :--- | :--- |
-| Go-Live | In AWS ist noch nichts angelegt, auf `main` wurde noch nie ausgerollt. Schritte in der [Go-Live-Checkliste](betrieb/go-live-checkliste.md). |
-| Prüfen nach dem Deployment | Barcode-Kamera, Web Push, Zwei-Faktor-Anmeldung und Video-Upload lassen sich erst unter echtem HTTPS am Handy prüfen. |
-| Regel für Barcode-Käufe | Scannen nur bei laufenden Events, an denen das Mitglied teilnimmt. Diese Regel war ein gewählter Standard und ist noch nicht ausdrücklich bestätigt. |
-| Keycloak-Login-Theme | Die vier FTL-Vorlagen basieren noch auf Keycloak 26.1.4 und laufen unter 26.8.1. Beim nächsten Theme-Umbau mit den 26.8.1-Originalen abgleichen ([keycloak/README.md](../keycloak/README.md#produktion)). |
-| Rechtliches vor dem Eröffnen von Gruppen | Impressum und AGB gibt es als Seiten, aber nur als Entwurf: Die Betreiberangaben in `webservice/src/app/legal/legal-operator.ts` sind Platzhalter, die Texte sind nicht anwaltlich geprüft. Datenschutzerklärung, Vertrag zur Auftragsverarbeitung und ein Kündigungsbutton für Verbraucher fehlen ([rechtliches.md](domains/rechtliches.md#vor-dem-freischalten-der-registrierung)). Bis dahin in Produktion `/vereint/SIGNUP_ENABLED` auf `false` setzen ([deploy/README.md](../deploy/README.md#mehrere-gruppen)). |
-| Website | Die öffentliche Website ([website.md](website.md)) gibt es nur auf Deutsch. Sie verlinkt Impressum und AGB der App; eine Datenschutzerklärung fehlt auch hier. Solange `SIGNUP_ENABLED` aus ist, endet „Gruppe kostenlos eröffnen“ mit einer Fehlermeldung; `website_domain` deshalb erst setzen, wenn die Registrierung freigeschaltet ist. |
-| Online-Zahlung | Stripe ist noch nicht eingerichtet; ohne Stripe bleibt die Online-Zahlung aus, Tarife vergibt die Plattform-Administration von Hand ([abrechnung.md](domains/abrechnung.md#einrichtung)). |
 | Push aus einer anderen Gruppe | Kommt eine Mitteilung aus einer anderen als der gerade gewählten Gruppe, zeigt das Gerät nur die neueste Mitteilung der gewählten Gruppe oder „Du hast eine neue Mitteilung“. |
-| Push für Chat-Nachrichten | Direktnachrichten und Freundschaftsanfragen lösen einen Push aus, Nachrichten im Gruppen- und Event-Chat nicht; dort zeigt nur der Ungelesen-Zähler am Chat neue Nachrichten. |
-| Bildschirmfotos im Handbuch | Das Profil (`profil.png`) zeigt noch den entfernten BeerWithMe-Schalter. Für Moments mit Fotos und Videos, die Seite *Gruppe wählen* und den Beitritt mit bestehendem Konto gibt es noch keine Bilder. Aufnehmen mit [`scripts/handbook`](../scripts/handbook/). |
-| Kartenserver für Moments | Die Moment-Karte lädt Kacheln direkt von `tile.openstreetmap.org` (`webservice/src/app/moments/moment-map.component.ts`). Dabei gehen die IP-Adressen der Nutzer an die OpenStreetMap Foundation; das gehört in die Datenschutzerklärung. Die Nutzungsregeln der OSM-Kachelserver sind für eine produktive App eng, auf Dauer einen eigenen oder kommerziellen Kachelanbieter einplanen. |
-| Arbeitsspeicher | Die Container-Grenzen summieren sich auf etwa 2,1 GB bei 2 GB RAM plus 2 GB Swap. Im Betrieb beobachten. |
+| BeerWithMe Status | Im Profil nur eine Vorschau, wird nicht an andere übertragen. |
+| Push für Chat-Nachrichten | Einzelne Chat-Nachrichten lösen keinen Push aus; neue Nachrichten zeigt der Ungelesen-Zähler am Chat. |

@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import type { OidcTransactionState } from '../auth/auth.types';
 import { clearOidcStateCookie, readOidcStateCookie, setOidcStateCookie } from '../auth/cookie.service';
 import {
+  accountSecurityUrl,
   buildEndSessionUrl,
   createAuthorizationRequest,
   exchangeCodeForTokens,
@@ -280,6 +281,15 @@ async function selectStammtisch(req: Request, res: Response): Promise<void> {
 
 authRoutes.post('/stammtisch', (req, res, next) => {
   selectStammtisch(req, res).catch(next);
+});
+
+/**
+ * Leitet zur Zwei-Faktor-Einrichtung in der Keycloak-Kontoverwaltung weiter.
+ * Das Frontend kennt die Adresse von Keycloak nicht, sie folgt aus
+ * `KEYCLOAK_ISSUER_URI`.
+ */
+authRoutes.get('/account-security', (_req, res) => {
+  res.redirect(302, accountSecurityUrl());
 });
 
 authRoutes.get('/me', (req, res, next) => {

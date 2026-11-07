@@ -87,19 +87,15 @@ resource "aws_ssm_parameter" "vapid_private_key" {
 
 # Nicht geheime Werte, die das Deployment ebenfalls braucht.
 resource "aws_ssm_parameter" "config" {
-  for_each = merge(
-    {
-      PUBLIC_DOMAIN    = var.domain
-      S3_BUCKET        = aws_s3_bucket.app.bucket
-      S3_REGION        = var.region
-      BACKUP_BUCKET    = aws_s3_bucket.backups.bucket
-      VAPID_ENABLED    = "true"
-      VAPID_SUBJECT    = "https://${var.domain}"
-      VAPID_PUBLIC_KEY = local.vapid_public_key
-    },
-    # Domain(s) der statischen Website; ohne Wert bleibt sie unveroeffentlicht.
-    var.website_domain == "" ? {} : { WEBSITE_DOMAIN = var.website_domain }
-  )
+  for_each = {
+    PUBLIC_DOMAIN    = var.domain
+    S3_BUCKET        = aws_s3_bucket.app.bucket
+    S3_REGION        = var.region
+    BACKUP_BUCKET    = aws_s3_bucket.backups.bucket
+    VAPID_ENABLED    = "true"
+    VAPID_SUBJECT    = "https://${var.domain}"
+    VAPID_PUBLIC_KEY = local.vapid_public_key
+  }
 
   name  = "${local.ssm_prefix}/${each.key}"
   type  = "String"

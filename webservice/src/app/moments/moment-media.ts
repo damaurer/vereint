@@ -49,9 +49,6 @@ function megabytes(bytes: number): string {
 export async function prepareMedia(file: File, limits: MomentMediaLimitsDto): Promise<PreparedMedia> {
   const type = mediaType(file);
   if (type.startsWith('video/')) {
-    if (limits.videosAllowed === false) {
-      throw new MediaPrepareError(translate('moments.media.videosNotInPlan'));
-    }
     if (!limits.videoTypes.includes(type)) {
       throw new MediaPrepareError(translate('moments.media.errors.videoType'));
     }

@@ -1,6 +1,6 @@
 # ☕ Spring Boot Fachservice (baseservice)
 
-Herzlich willkommen in der technischen Dokumentation des **Vereint Fachservice (`baseservice`)**. Dieses Backend-Modul implementiert die fachliche Geschäftslogik, Datenpersistenz, Benutzerprovisionierung, die Trennung mehrerer Gruppen, das Kassenbuch (Ledger), Event- und Katalogverwaltung, Chat, Push-Benachrichtigungen sowie Tarife und Abrechnung für die Vereint-Plattform.
+Herzlich willkommen in der technischen Dokumentation des **Vereint Fachservice (`baseservice`)**. Dieses Backend-Modul implementiert die fachliche Geschäftslogik, Datenpersistenz, Benutzerprovisionierung, die Trennung mehrerer Gruppen, das Kassenbuch (Ledger), Event- und Katalogverwaltung, Chat, Push-Benachrichtigungen und Datenexport für die Vereint-Plattform.
 
 ---
 
@@ -23,7 +23,7 @@ graph TD
 3. **[03. Sicherheit & Autorisierung](03-security-and-authorization.md)**: `SecurityConfig`, Deny-by-Default, JWT-Verarbeitung (`JwtAuthConverter`, `JwtClaimExtractor`, `UserPrincipal`, `AuthContext`), Gruppenkontext (`StammtischContextFilter`, `StammtischAccess`), Rollen je Gruppe, `AccessResolverService`, Provisionierung und CORS-Absicherung.
 4. **[04. Persistenz & Migrationen](04-persistence-and-migrations.md)**: JPA-Entities, Repositories, Transaktionsregeln (`@Transactional`), Optimistic Locking (`@Version`), Mandantentrennung (`@TenantId`, Row Level Security), Liquibase-Changelogs (`001`–`016`), Konventionen und Rollback-Strategien.
 5. **[05. Fehlerbehandlung & Observability](05-error-handling-and-observability.md)**: `ApiException`-Hierarchie, `ErrorCode`-Katalog, RFC-7807-Problem-Details (`ApiProblem`), `GlobalExceptionHandler`-Mapping, Request-Tracing (`X-Request-Id` / `traceId`), Actuator-Endpunkte und OpenAPI/Swagger.
-6. **[06. Integrationen](06-integrations.md)**: S3-kompatibler Objektspeicher (`ObjectStorage`, `S3ObjectStorage`, `InMemoryObjectStorage`), Web-Push-Versand (`PushSender`, `VapidPushSender`, `NoOpPushSender`), Keycloak-Kontoanlage, Stripe und Feature-Toggles.
+6. **[06. Integrationen](06-integrations.md)**: S3-kompatibler Objektspeicher (`ObjectStorage`, `S3ObjectStorage`, `InMemoryObjectStorage`), Web-Push-Versand (`PushSender`, `VapidPushSender`, `NoOpPushSender`), Keycloak-Kontoanlage und Feature-Toggles.
 7. **[07. Service erweitern & Rezepte](07-extending-the-service.md)**: Schritt-für-Schritt-Rezepte (neuer REST-Endpunkt, Entity mit Liquibase-Migration, Permission, ErrorCode, Config-Property), Testkonventionen (MockMvc, `@MockitoBean`, `jwt()`, Testcontainers), Debugging-Tabelle und PR-Checkliste.
 
 ---
@@ -58,7 +58,6 @@ graph LR
     Postgres[("PostgreSQL DB (Port 5432)")]
     MinIO["S3 Storage (AWS S3, lokal S3Mock)"]
     WebPush["Web Push Endpunkte (Browser)"]
-    Stripe["Stripe (optional)"]
   end
 
   Browser -->|HTTPS Session-Cookie| BFF
@@ -76,7 +75,6 @@ graph LR
   Repo -->|SQL / Liquibase| Postgres
   Storage -->|S3 REST API| MinIO
   Push -->|VAPID Push Protocol| WebPush
-  Svc -->|Checkout, Portal, Webhooks| Stripe
 ```
 
 ---

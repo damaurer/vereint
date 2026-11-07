@@ -27,7 +27,9 @@ baseservice/src/main/resources/db/changelog/
     ├── 016-terms-acceptance.xml          # Zustimmung zu den AGB je Konto
     ├── 017-drink-library-seed.xml        # Startbestand der Getränkedatenbank (CSV in data/)
     ├── 018-drink-library-seed-breweries.xml # Sortimente von über 100 Brauereien, Rapp's, Bayern (CSV in data/)
-    └── 019-friends-and-direct-messages.xml # Freundesliste und gruppenübergreifende Direktnachrichten
+    ├── 019-friends-and-direct-messages.xml # Freundesliste und gruppenübergreifende Direktnachrichten
+    ├── 020-moments-without-events.xml    # Moments ohne Event
+    └── 021-remove-plans-and-billing.xml  # Tarife und Stripe wieder entfernt
 ```
 
 Die Nummer `006` ist nicht vergeben.
@@ -56,12 +58,14 @@ Die Nummer `006` ist nicht vergeben.
 | `210` | `017-drink-library-seed.xml` | Startbestand der Getränkedatenbank: 95 bekannte Getränke mit 101 Barcodes aus Open Food Facts (`data/drink-library-seed*.csv`); überspringt Getränke, deren Name oder Barcode schon eingetragen ist | ✅ (löscht die Startgetränke) |
 | `211` | `018-drink-library-seed-breweries.xml` | 1.127 weitere Getränke mit 1.171 Barcodes: Sortimente von 138 deutschen Brauereien, Rapp's, Brauerei Rapp, Adelholzener und Almdudler (`data/drink-library-seed-2*.csv`, erzeugt mit `scripts/drink-library/`); gleiche Überspring-Regeln | ✅ (löscht diese Getränke) |
 | `220-222` | `019-friends-and-direct-messages.xml` | `friendships`, `direct_conversations`, `direct_participants`, `direct_messages`, `direct_reactions` (ohne Gruppe, ohne Row-Level-Security); 222 zieht bestehende Direktchats aus `conversations` um und führt Verläufe eines Paars aus mehreren Gruppen zusammen (nur PostgreSQL) | teilweise (222 ohne) |
+| `230` | `020-moments-without-events.xml` | Moments ohne Event | ✅ |
+| `240` | `021-remove-plans-and-billing.xml` | Löscht `billing_events` und `stammtisch_subscriptions` und nimmt `billing.manage` aus den Rollen aller Gruppen (Vereint hat keine Tarife mehr) | ❌ |
 
 ---
 
 ## ✍️ Richtlinien für neue Migrationsskripte
 
-1. **Neue Datei**: nächste freie Nummer ist `020-…xml`, eingetragen in `db.changelog-master.xml`. Changeset-IDs fortlaufend und noch nicht vergeben wählen (belegt sind u. a. `201-202`, `210-211`, `220-222` und `301-302`).
+1. **Neue Datei**: nächste freie Nummer ist `022-…xml`, eingetragen in `db.changelog-master.xml`. Changeset-IDs fortlaufend und noch nicht vergeben wählen (belegt sind u. a. `201-202`, `210-211`, `220-222`, `230`, `240` und `301-302`).
 2. **DBMS-Kompatibilität**:
    - Die Zieldatenbank ist **PostgreSQL 17**.
    - H2 ist ausschließlich für die schnellen Spring-Context-Tests zugelassen.

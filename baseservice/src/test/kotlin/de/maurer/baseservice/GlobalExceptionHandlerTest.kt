@@ -73,6 +73,15 @@ class TestErrorController {
     fun dataIntegrity(): Nothing =
         throw org.springframework.dao.DataIntegrityViolationException("duplicate key value violates unique constraint")
 
+    @GetMapping("/ledger-correction-conflict")
+    fun ledgerCorrectionConflict(): Nothing =
+        throw org.springframework.dao.DataIntegrityViolationException(
+            "could not execute statement",
+            java.sql.SQLException(
+                "ERROR: duplicate key value violates unique constraint \"uk_ledger_entries_reverses_entry\""
+            )
+        )
+
     @GetMapping("/constraint-violation")
     fun constraintViolation(): Nothing =
         throw jakarta.validation.ConstraintViolationException("barcode must not be blank", emptySet())
@@ -199,6 +208,14 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(get("/api/v1/test-errors/data-integrity").with(jwt()))
             .andExpect(status().isConflict)
             .andExpect(jsonPath("$.code").value(ErrorCode.DATA_INTEGRITY_VIOLATION))
+            .andExpect(jsonPath("$.status").value(409))
+    }
+
+    @Test
+    fun `maps a concurrent second correction of the same entry to ledger_already_corrected`() {
+        mockMvc.perform(get("/api/v1/test-errors/ledger-correction-conflict").with(jwt()))
+            .andExpect(status().isConflict)
+            .andExpect(jsonPath("$.code").value(ErrorCode.LEDGER_ALREADY_CORRECTED))
             .andExpect(jsonPath("$.status").value(409))
     }
 

@@ -2,7 +2,6 @@ package de.maurer.baseservice.tenancy
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import de.maurer.baseservice.billing.BillingService
 import de.maurer.baseservice.error.ApiException
 import de.maurer.baseservice.error.ApiProblem
 import de.maurer.baseservice.error.ErrorCode
@@ -38,10 +37,6 @@ import java.util.UUID
  *    die Realm-Rolle `admin` wird zur Plattform-Administration.
  * 4. Fachliche Endpunkte ohne Stammtisch beantwortet der Filter mit `409`.
  *    Nur die in [isStammtischFree] gelisteten Pfade laufen ohne Stammtisch.
- * 5. Ist die Kulanzfrist nach einer offenen Zahlung abgelaufen, ist der
- *    Stammtisch nur lesbar: schreibende Anfragen erhalten `403
- *    stammtisch_read_only`, außer Tarif, Export und Verlassen
- *    ([isReadOnlyExempt]).
  */
 @Component
 class StammtischContextFilter(
@@ -50,7 +45,6 @@ class StammtischContextFilter(
     private val authContext: AuthContext,
     private val platformService: PlatformService,
     private val realmRoleBootstrap: RealmRoleBootstrap,
-    private val billingService: BillingService,
     private val messages: ErrorMessageResolver
 ) : OncePerRequestFilter() {
 
@@ -99,13 +93,6 @@ class StammtischContextFilter(
 
         if (selected == null && user != null && !isStammtischFree(request)) {
             writeProblem(request, response, HttpStatus.CONFLICT, ErrorCode.STAMMTISCH_REQUIRED, "error.stammtisch.required")
-            return
-        }
-
-        if (selected != null && request.method !in READ_METHODS && !isReadOnlyExempt(request) &&
-            billingService.isReadOnly(selected.stammtischId)
-        ) {
-            writeProblem(request, response, HttpStatus.FORBIDDEN, ErrorCode.STAMMTISCH_READ_ONLY, "error.billing.readOnly")
             return
         }
 
@@ -188,23 +175,6 @@ class StammtischContextFilter(
         )
 
         private val STAMMTISCH_FREE_EXACT = setOf("/api/v1/auth", "/api/v1/users/me")
-
-        private val READ_METHODS = setOf("GET", "HEAD", "OPTIONS")
-
-        /** Bleiben im nur lesbaren Stammtisch erlaubt: bezahlen, Daten mitnehmen, gehen, Kiosk beenden. */
-        private val READ_ONLY_EXEMPT_PREFIXES = listOf(
-            "/api/v1/stammtisch/billing",
-            "/api/v1/stammtisch/export",
-            "/api/v1/stammtisch/leave",
-            "/api/v1/kiosk",
-            "/api/v1/notifications/subscriptions",
-            "/api/v1/users/me"
-        )
-
-        fun isReadOnlyExempt(request: HttpServletRequest): Boolean {
-            val path = request.requestURI.removePrefix(request.contextPath)
-            return isStammtischFree(request) || READ_ONLY_EXEMPT_PREFIXES.any { path.startsWith(it) }
-        }
 
         /** Gast-Chat: der Controller wählt den Stammtisch über das Event. */
         private val GUEST_CHAT = Regex("^/api/v1/events/[^/]+/chat/guest(/.*)?$")

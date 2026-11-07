@@ -72,20 +72,6 @@ export function describeApiError(error: unknown): string {
       return translate('errors.api.stammtischRequired');
     case 'stammtisch_access_denied':
       return translate('errors.api.stammtischDenied');
-    case 'stammtisch_read_only':
-      return translate('errors.api.stammtischReadOnly');
-    case 'plan_limit_members':
-      return translate('errors.api.planLimitMembers');
-    case 'plan_limit_storage':
-      return translate('errors.api.planLimitStorage');
-    case 'plan_limit_videos':
-      return translate('errors.api.planLimitVideos');
-    case 'plan_limit_kiosk':
-      return translate('errors.api.planLimitKiosk');
-    case 'billing_unavailable':
-      return translate('errors.api.billingUnavailable');
-    case 'billing_no_customer':
-      return translate('errors.api.billingNoCustomer');
     case 'stammtisch_limit':
       return translate('errors.api.stammtischLimit');
     default:

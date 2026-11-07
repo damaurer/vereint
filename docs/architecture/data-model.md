@@ -92,7 +92,7 @@ erDiagram
   - `source` (`VARCHAR(32)`, nullable, Check: `pwaBarcode`, `tabletManual`, `round`, `evening`)
   - `actor_id` (`UUID`, FK `users.id`)
   - `idempotency_key` (`VARCHAR(128)`, Unique je Gruppe)
-  - `reverses_entry_id` (`UUID`, FK `ledger_entries.id`, RESTRICT delete) – Für Stornierungen
+  - `reverses_entry_id` (`UUID`, FK `ledger_entries.id`, RESTRICT delete, eindeutig) – Für Stornierungen
   - `created_at` (`TIMESTAMPTZ`)
 - **`purchase_snapshots`**:
   - `id` (`UUID`, PK)
@@ -180,10 +180,6 @@ Ohne `stammtisch_id` und ohne Row-Level-Security; den Zugriff prüfen `FriendSer
 - **`direct_messages`**: `id` (`UUID`, PK), `conversation_id` (FK), `sender_id` (FK `users.id`), `message` (`TEXT`, verschlüsselt), `image_url`, `created_at`
 - **`direct_reactions`**: `id` (`UUID`, PK), `message_id` (FK `direct_messages.id`), `user_id` (FK `users.id`), `emoji`, `created_at`; Unique (`message_id`, `user_id`, `emoji`)
 
-### 6. Tarife
-- **`stammtisch_subscriptions`**: PK `stammtisch_id`, `plan` (`free`, `stammtisch`, `verein`), `billing_interval` (`month`, `year`), `status` (`none`, `active`, `past_due`, `canceled`, `comped`), `stripe_customer_id`, `stripe_subscription_id`, `current_period_end`, `grace_until`, `updated_at`, `version`
-- **`billing_events`**: `id` (Stripe-Ereignis-Id, PK), `type`, `stammtisch_id`, `received_at`; verhindert die doppelte Verarbeitung eines Webhooks
-
 ---
 
 ## 🔒 Datenbankseitige Integritätsregeln & Trigger
@@ -228,10 +224,13 @@ FOR EACH ROW EXECUTE FUNCTION vereint_reject_ledger_mutation();
 | `012` | `012-moment-types-and-media.xml` | Verwaltbare Moment-Typen und Reaktionen mit Startbestand, Fotos und Videos zu Beiträgen (`moment_media`). |
 | `013` | `013-stammtische.xml` | Gruppen (`stammtische`, `stammtisch_members`, `stammtisch_roles`), Spalte `stammtisch_id` an allen fachlichen Tabellen, Row-Level-Security (Details: [stammtische.md](../domains/stammtische.md)). |
 | `014` | `014-drink-library.xml` | Gemeinsame Getränkedatenbank (`drink_library`, `drink_library_barcodes`) ohne Preise. |
-| `015` | `015-billing.xml` | Tarife je Gruppe (`stammtisch_subscriptions`) und verarbeitete Stripe-Ereignisse (`billing_events`). |
+| `015` | `015-billing.xml` | Tarife je Gruppe (`stammtisch_subscriptions`) und verarbeitete Stripe-Ereignisse (`billing_events`); mit `021` wieder entfernt. |
 | `016` | `016-terms-acceptance.xml` | Zugestimmte AGB-Fassung je Konto (`users.terms_version`, `users.terms_accepted_at`). |
 | `017` | `017-drink-library-seed.xml` | Startbestand der Getränkedatenbank. |
 | `018` | `018-drink-library-seed-breweries.xml` | Weitere Getränke aus Brauerei-Sortimenten. |
 | `019` | `019-friends-and-direct-messages.xml` | Freundesliste und gruppenübergreifende Direktnachrichten; Umzug bestehender Direktchats. |
+| `020` | `020-moments-without-events.xml` | Moments ohne Event. |
+| `021` | `021-remove-plans-and-billing.xml` | Entfernt Tarife, Stripe-Ereignisse und das Recht `billing.manage`. |
+| `022` | `022-unique-ledger-correction.xml` | Höchstens eine Gegenbuchung je Buchung: Unique-Constraint auf `ledger_entries.reverses_entry_id`. |
 
 Die Nummer `006` ist nicht vergeben.

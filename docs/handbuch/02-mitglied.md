@@ -229,7 +229,7 @@ Ein **Moment** ist eine kurze gemeinsame Aktion während eines Events, zum Beisp
 
 **Reagieren**: Tippe auf **Reagieren** oder unter **Schnell reagieren** direkt auf eine Reaktion wie **Anstoßen**, **Jubel** oder **Daumen hoch**. Mit **+ Status & Text** schreibst du einen eigenen Satz dazu.
 
-**Fotos und Videos teilen**: Beim Starten unter **Fotos & Videos (optional)** oder später im Moment mit **Foto/Video teilen** hängst du bis zu vier Bilder oder Videos an. Videos dürfen höchstens 60 Sekunden lang und 100 MB groß sein (MP4 oder MOV); zu große Videos am besten in 720p aufnehmen. Videos gehen nur, wenn der Tarif der Gruppe sie enthält. Standort und Gerätedaten werden vor dem Speichern aus den Dateien entfernt. Eigene Bilder und Videos kannst du mit **Entfernen** wieder löschen.
+**Fotos und Videos teilen**: Beim Starten unter **Fotos & Videos (optional)** oder später im Moment mit **Foto/Video teilen** hängst du bis zu vier Bilder oder Videos an. Videos dürfen höchstens 60 Sekunden lang und 100 MB groß sein (MP4 oder MOV); zu große Videos am besten in 720p aufnehmen. Standort und Gerätedaten werden vor dem Speichern aus den Dateien entfernt. Eigene Bilder und Videos kannst du mit **Entfernen** wieder löschen.
 
 Die **Timeline** zeigt alle Reaktionen, Bilder und Videos. Wer beim Reagieren den Standort freigibt, erscheint zusätzlich auf der **Weltkarte**. Das ist freiwillig.
 
@@ -243,7 +243,7 @@ Ist ein Moment vorbei, landet er unter **Archivierte Moments & Rituale**.
 
 Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen der Gruppe mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, das Suchfeld findet Getränke nach Name oder Kategorie. **Details & Barcodes** zeigt Preis, Beschreibung und die hinterlegten Strichcodes.
 
-**Barcode scannen**: Scanne eine Flasche, um zu sehen, ob sie schon im Katalog ist. Kennt Vereint den Strichcode, öffnet sich das Getränk. Sonst öffnet sich gleich der Vorschlag mit dem Strichcode.
+**Barcode scannen**: Scanne eine Flasche, um zu sehen, ob sie schon im Katalog ist. Kennt Vereint den Strichcode, öffnet sich das Getränk. Steht es in der gemeinsamen Getränkedatenbank, öffnet sich der Vorschlag mit Name, Sorte und Strichcodes schon ausgefüllt, du trägst nur noch den Preis ein. Sonst öffnet sich der leere Vorschlag mit dem Strichcode.
 
 Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, Kategorie, Preis und Strichcode vor. Vereint warnt dich, wenn es schon ein Getränk mit diesem Namen oder Strichcode gibt. Der Vorstand prüft den Vorschlag und gibt ihn frei; bis dahin steht er als „Vorgeschlagen“ in der Liste.
 
@@ -274,7 +274,3 @@ Unter **Mehr → Gruppeneinstellungen** steht ganz unten **Gruppe verlassen**.
 Danach hast du in dieser Gruppe keine Rechte mehr. Deine Buchungen und Beiträge bleiben in der Gruppe erhalten. Dein Konto und deine anderen Gruppen bleiben unberührt. Wieder dabei bist du nur mit einem neuen Einladungslink.
 
 Bist du die letzte Person, die Mitglieder und Rollen verwalten darf, geht das Verlassen nicht. Gib diese Rolle zuerst jemand anderem.
-
-## Vereint unterstützen
-
-Hat der Betreiber einen Förderbeitrag eingerichtet, steht unter **Gruppeneinstellungen** im Abschnitt **Tarif** der Knopf **Vereint unterstützen**. Das ist ein freiwilliger, persönlicher Monatsbeitrag für die Weiterentwicklung von Vereint. Bezahlt wird über Stripe. Am Tarif deiner Gruppe ändert der Beitrag nichts.
