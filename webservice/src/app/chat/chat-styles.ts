@@ -34,37 +34,55 @@ export const CHAT_LAYOUT_STYLES = `
   }
   .chat-aside-title {
     margin: var(--space-2) 0 0;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--color-text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
   }
+  /* Eine Karte je Liste, Zeilen durch Linien getrennt (Design-Entwurf). */
   .chat-conversations {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+  }
+  .chat-conversations > li + li {
+    border-top: 1px solid var(--color-border);
   }
   .chat-conversation {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: var(--color-surface-raised);
+    gap: 0.75rem;
+    padding: 0.75rem var(--space-3);
+    border: none;
+    border-radius: 0;
+    background: transparent;
     color: inherit;
     font: inherit;
     text-align: left;
     cursor: pointer;
   }
+  .chat-conversation:hover {
+    background-color: var(--color-surface-subtle);
+  }
   .chat-conversation.is-active {
-    border-color: var(--color-brand);
     background-color: var(--color-brand-soft);
+  }
+  /* Gruppenchat als hervorgehobene Karte mit gefülltem Symbol. */
+  .chat-conversations-club {
+    border-color: var(--color-brand-soft);
+    background-color: var(--color-brand-soft);
+  }
+  .chat-conversations-club .chat-conversation-icon {
+    background-color: var(--color-brand);
+    color: var(--color-on-brand);
   }
   .chat-conversation-icon {
     flex: none;
@@ -88,16 +106,27 @@ export const CHAT_LAYOUT_STYLES = `
     gap: var(--space-2);
   }
   .chat-conversation-name {
+    min-width: 0;
+    overflow: hidden;
     font-weight: 700;
-    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .chat-conversation-time {
     color: var(--color-text-muted);
     font-size: 0.8rem;
     white-space: nowrap;
   }
+  .chat-conversation-bottom {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: 0.1rem;
+  }
   .chat-conversation-preview {
     display: block;
+    flex: 1;
+    min-width: 0;
     color: var(--color-text-muted);
     font-size: 0.85rem;
     overflow: hidden;
@@ -113,7 +142,7 @@ export const CHAT_LAYOUT_STYLES = `
     place-items: center;
     border-radius: 999px;
     background-color: var(--color-brand);
-    color: #1a1206;
+    color: var(--color-on-brand);
     font-size: 0.8rem;
     font-weight: 700;
   }
@@ -130,10 +159,11 @@ export const CHAT_LAYOUT_STYLES = `
   }
   .chat-search input {
     width: 100%;
-    padding: 0.7rem 0.9rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-    background-color: var(--color-surface-raised);
+    min-height: 2.75rem;
+    padding: 0 0.9rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-dark);
+    background-color: var(--color-surface);
     color: inherit;
     font: inherit;
   }

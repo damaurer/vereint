@@ -12,8 +12,8 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltu
 | Guthaben auszahlen | **Kasse & Finanzen** → Mitglied antippen → **Auszahlen** |
 | ein neues Event planen | **Events** → **Event anlegen** |
 | sehen, was ein Abend eingebracht hat | **Kasse & Finanzen** → Event → **Abrechnung** |
-| Titel, Ort oder Status eines Events ändern | **Vorstand** → Event → **Moderieren** |
-| einen Gast einladen | Event moderieren → **Einladungen** → **Gasteinladung erzeugen** |
+| Titel, Ort oder Status eines Events ändern | **Vorstand** → Event → **Verwalten** |
+| einen Gast einladen | Event verwalten → Reiter **Gäste** → **Gasteinladung erzeugen** |
 | ein vorgeschlagenes Getränk freigeben | **Getränkekatalog** → Vorschlag → **Freigeben** |
 | ein Getränk anlegen oder den Preis ändern | **Getränkekatalog** → **Getränk anlegen** oder **Bearbeiten** |
 | ein Getränk aus der gemeinsamen Datenbank holen | **Getränkekatalog** → **Aus der Getränkedatenbank** → **Übernehmen** |
@@ -22,7 +22,7 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltu
 | allen eine Nachricht schicken | **Kommunikation** → Meldung verfassen → **Alle Mitglieder** |
 | einen Hinweis oben im Gruppenchat anheften | **Kommunikation** → Infotafel → **Anpinnen** |
 | ein Thekenterminal ohne PIN entsperren | **Vorstand** → **Kiosk-Geräte** → **Entsperren** |
-| festlegen, welche Moments und Reaktionen es gibt | **Vorstand** → **Moments · Typen & Reaktionen** |
+| festlegen, welche Moments und Reaktionen es gibt | **Vorstand** → **Moments** |
 
 ## Vorstandsübersicht
 
@@ -30,9 +30,9 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltu
 
 **Vorstand** ist dein Einstieg:
 
-- **Rollenspezifische Verwaltung** führt zu **Kassenwart · Kasse & Finanzen**, **Schriftwart · Kommunikation**, **Moments · Typen & Reaktionen**, **Mitglied einladen** und **Kiosk-Geräte**.
+- Die Kacheln oben führen zu **Kasse & Finanzen**, **Kommunikation**, **Moments** (Typen und Reaktionen), **Mitglied einladen** und **Kiosk-Geräte**.
 - Die Kennzahlen zeigen, wie viele Events du siehst und wie viele Aktionen zuletzt protokolliert wurden.
-- Unter **Gastgeber · Events** stehen alle Events mit **Moderieren**.
+- Unter **Gastgeber · Events** stehen alle Events mit Datum, Status und **Verwalten**.
 - **Letzte Aktionen** ist das Protokoll: wer wann was gebucht, geändert oder versendet hat, mit den Namen der beteiligten Mitglieder, Events und Artikel.
 
 <br clear="right">
@@ -43,7 +43,7 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltu
 
 Hier verwaltet der Kassenwart die Bierkasse.
 
-**Mitglieder und Guthaben**: Oben steht, wie viele Mitglieder es gibt und wie viele im Minus sind. Darunter die Liste aller Mitglieder mit Guthaben und letzter Buchung. Mit **Mitglied suchen** findest du jemanden schnell über den Namen.
+**Mitglieder und Guthaben**: Oben stehen das Guthaben aller Mitglieder zusammen, die Zahl der Mitglieder und wie viele im Minus sind (rot, wenn es welche gibt). Darunter die Liste aller Mitglieder mit Guthaben und Datum der letzten Buchung; ein Minus-Guthaben ist rot. Mit **Mitglied suchen** findest du jemanden schnell über den Namen.
 
 <br clear="right">
 
@@ -73,11 +73,13 @@ Tippe auf ein Mitglied. Es öffnen sich sein Guthaben, alle seine Buchungen und 
 
 ## Ein Event vorbereiten
 
-Ein neues Event legst du unter **Events** → **Event anlegen** an, wie im [Leitfaden Mitglied](02-mitglied.md#selbst-ein-event-anlegen) beschrieben. Bestehende Events moderierst du über **Vorstand** → **Moderieren**. Gastgeber eines Events kommen auch über die Eventseite dorthin.
+Ein neues Event legst du unter **Events** → **Event anlegen** an, wie im [Leitfaden Mitglied](02-mitglied.md#selbst-ein-event-anlegen) beschrieben. Bestehende Events bearbeitest du über **Vorstand** → **Verwalten**. Gastgeber eines Events kommen auch über die Eventseite dorthin.
+
+Oben stehen Status, Zeit und Ort. Darunter teilen Reiter die Seite in **Stammdaten**, **Teilnehmer**, **Getränke & Speisen**, **Gäste** und **Chat**.
 
 <img src="bilder/v-event-verwalten.png" alt="Event verwalten" width="300" align="right">
 
-**Stammdaten**: Titel, Ort, Beschreibung, Beginn und Ende ändern, dazu wann die Eingeladenen benachrichtigt werden und ob es eine Erinnerung gibt. Dann **Stammdaten speichern**.
+Reiter **Stammdaten**: Titel, Ort, Beschreibung, Beginn und Ende ändern, dazu wann die Eingeladenen benachrichtigt werden und ob es eine Erinnerung gibt. Dann **Stammdaten speichern**.
 
 Über **Status** steuerst du den Ablauf:
 
@@ -93,7 +95,7 @@ Stelle ein Event am Abend selbst auf **Aktiv**, sonst erscheint es nicht am Thek
 
 <img src="bilder/v-event-teilnehmer.png" alt="Teilnehmer und Einladungen" width="300" align="right">
 
-**Teilnehmer & Anwesenheit**: alle Eingeladenen mit ihrer Antwort (Zugesagt, Vielleicht, Abgesagt, Offen). **Entfernen** nimmt jemanden heraus.
+Reiter **Teilnehmer**: alle Eingeladenen mit ihrer Antwort (Zugesagt, Vielleicht, Abgesagt, Offen). **Entfernen** nimmt jemanden heraus.
 
 **Mitglieder einladen**: Namen suchen und anhaken, oder **Alle Mitglieder einladen**, dann **Einladen**. Die neuen Eingeladenen bekommen eine Mitteilung.
 
@@ -101,7 +103,7 @@ Stelle ein Event am Abend selbst auf **Aktiv**, sonst erscheint es nicht am Thek
 
 <img src="bilder/v-event-getraenke.png" alt="Getränke eines Events" width="300" align="right">
 
-**Getränke** und **Speisen**: zeigen, was an diesem Abend an der Theke angeboten wird, mit Verkaufspreis und Einkaufspreis (EK). **Entfernen** nimmt einen Artikel aus dem Angebot.
+Reiter **Getränke & Speisen**: zeigt, was an diesem Abend an der Theke angeboten wird, mit Verkaufspreis und Einkaufspreis (EK). **Entfernen** nimmt einen Artikel aus dem Angebot.
 
 Zum Hinzufügen unter **Getränk aus dem Katalog** ein Getränk wählen, optional einen abweichenden Preis und EK eintragen und **Getränk hinzufügen** tippen. Schneller geht es mit **Sublist**: eine Getränkeliste wählen und **Sublist zuweisen**. Speisen fügst du genauso unter **Speise aus dem Katalog** hinzu.
 
@@ -109,7 +111,7 @@ Zum Hinzufügen unter **Getränk aus dem Katalog** ein Getränk wählen, optiona
 
 <img src="bilder/v-event-einladungen.png" alt="Gasteinladungen" width="300" align="right">
 
-**Einladungen**: So holst du Gäste ohne Konto dazu.
+Reiter **Gäste**: So holst du Gäste ohne Konto dazu.
 
 1. **Gültig (Minuten)** und **Max. Nutzungen** eintragen, z. B. 10080 Minuten (eine Woche) und 5 Nutzungen.
 2. **Gasteinladung erzeugen** tippen.
@@ -121,7 +123,7 @@ Die Liste zeigt jede Einladung mit Stand und Nutzungen, z. B. „aktiv · 0 / 5�
 
 <img src="bilder/v-event-chat.png" alt="Event-Chat" width="300" align="right">
 
-**Event-Chat**: Alle Nachrichten zu diesem Event, auch die der Gäste. Unten schreibst du unter **Nachricht** und tippst **Senden**.
+Reiter **Chat**: Alle Nachrichten zu diesem Event, auch die der Gäste. Unten schreibst du unter **Nachricht** und tippst **Senden**.
 
 <br clear="right">
 
@@ -223,7 +225,7 @@ Das Gerät verlässt den Kiosk-Modus innerhalb weniger Sekunden. Start, Fernents
 
 <img src="bilder/v-moments-verwalten.png" alt="Moments-Typen und Reaktionen verwalten" width="300" align="right">
 
-Unter **Vorstand** → **Moments · Typen & Reaktionen** legt ihr fest, welche Arten von Moments Mitglieder starten können (z. B. Anstoßen, Jubeln) und mit welchen Reaktionen sie antworten.
+Unter **Vorstand** → **Moments** legt ihr fest, welche Arten von Moments Mitglieder starten können (z. B. Anstoßen, Jubeln) und mit welchen Reaktionen sie antworten.
 
 - **Neuer Typ** bzw. **Neue Reaktion**: Emoji und Name eintragen, beim Typ optional eine Beschreibung. Beim Typ wählst du, ob **alle aktiven Reaktionen** erlaubt sind oder nur eine Auswahl.
 - **Bearbeiten** ändert einen Eintrag. Schaltest du **Mitglieder können diesen Typ starten** bzw. **… diese Reaktion verwenden** aus, ist der Eintrag ausgemustert: Für neue Moments ist er nicht mehr wählbar, bestehende Moments behalten ihn.

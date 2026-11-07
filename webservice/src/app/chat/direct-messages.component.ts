@@ -14,12 +14,13 @@ import { forkJoin, map, type Subscription } from 'rxjs';
 import type { ConversationSummary, FriendContact } from '../api/api.types';
 import { describeApiError } from '../api/api-client.service';
 import { AsyncState } from '../member/async-state';
-import { formatDateTime } from '../member/member-format';
+import { formatChatTime, formatDateTime } from '../member/member-format';
 import { AvatarBadgeComponent, BottomSheetComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe, translate } from '../i18n';
 import { CHAT_LIST_REFRESH_MS, ChatApiService } from './chat-api.service';
 import { CHAT_LAYOUT_STYLES } from './chat-styles';
+import { IconComponent } from '../ui/icon.component';
 import { ChatThreadComponent } from './chat-thread.component';
 
 interface DirectPageData {
@@ -49,6 +50,7 @@ interface DirectPageData {
     AvatarBadgeComponent,
     BottomSheetComponent,
     ChatThreadComponent,
+    IconComponent,
     TranslatePipe,
   ],
   template: `
@@ -59,10 +61,7 @@ interface DirectPageData {
             <span class="eyebrow">{{ 'chat.direct.eyebrow' | t }}</span>
             <h1 id="dm-title">{{ 'chat.direct.title' | t }}</h1>
           </div>
-          <div class="dm-links">
-            <a class="member-back" routerLink="/freunde">{{ 'chat.direct.toFriends' | t }}</a>
-            <a class="member-back" routerLink="/chat">{{ 'chat.direct.toGroupChat' | t }}</a>
-          </div>
+          <a class="dm-head-link" routerLink="/freunde">{{ 'chat.direct.toFriends' | t }}</a>
         </div>
 
         @if (isBusy()) {
@@ -81,25 +80,35 @@ interface DirectPageData {
         } @else if (data(); as page) {
           <div class="chat-layout" [class.is-thread]="mobileView() === 'thread'">
             <aside class="chat-aside" [attr.aria-label]="'chat.list.ariaLabel' | t">
-              <button type="button" class="member-button dm-new" (click)="openPicker()">
-                {{ 'chat.list.newMessage' | t }}
-              </button>
+              <div class="dm-toolbar">
+                @if (directs().length > 0) {
+                  <label class="chat-search">
+                    <span class="chat-search-label">{{ 'chat.direct.searchLabel' | t }}</span>
+                    <input
+                      name="search"
+                      type="search"
+                      autocomplete="off"
+                      [placeholder]="'chat.direct.searchPlaceholder' | t"
+                      [ngModel]="term()"
+                      (ngModelChange)="term.set($event)"
+                    />
+                  </label>
+                }
+                <button
+                  type="button"
+                  class="member-button dm-new"
+                  [attr.aria-label]="'chat.list.newMessage' | t"
+                  [attr.title]="'chat.list.newMessage' | t"
+                  (click)="openPicker()"
+                >
+                  <vereint-icon name="plus" />
+                  @if (directs().length === 0) {
+                    <span>{{ 'chat.list.newMessage' | t }}</span>
+                  }
+                </button>
+              </div>
               @if (startError()) {
                 <p class="manage-action-error" role="alert">{{ startError() }}</p>
-              }
-
-              @if (directs().length > 0) {
-                <label class="chat-search">
-                  <span class="chat-search-label">{{ 'chat.direct.searchLabel' | t }}</span>
-                  <input
-                    name="search"
-                    type="search"
-                    autocomplete="off"
-                    [placeholder]="'chat.direct.searchPlaceholder' | t"
-                    [ngModel]="term()"
-                    (ngModelChange)="term.set($event)"
-                  />
-                </label>
               }
 
               <h2 class="chat-aside-title">
@@ -130,26 +139,28 @@ interface DirectPageData {
                             <span class="chat-conversation-name dm-name">{{ partnerName(conversation) }}</span>
                             @if (conversation.lastMessage; as last) {
                               <span class="chat-conversation-time dm-time">{{
-                                formatDateTime(last.createdAt)
+                                formatChatTime(last.createdAt)
                               }}</span>
                             }
                           </span>
-                          <span class="chat-conversation-preview dm-preview">
-                            @if (conversation.lastMessage; as last) {
-                              {{ last.message }}
-                            } @else {
-                              {{ 'chat.list.noMessages' | t }}
+                          <span class="chat-conversation-bottom">
+                            <span class="chat-conversation-preview dm-preview">
+                              @if (conversation.lastMessage; as last) {
+                                {{ last.message }}
+                              } @else {
+                                {{ 'chat.list.noMessages' | t }}
+                              }
+                            </span>
+                            @if (conversation.unreadCount > 0) {
+                              <span
+                                class="chat-unread dm-unread"
+                                [attr.aria-label]="'chat.unread' | t: { count: conversation.unreadCount }"
+                              >
+                                {{ conversation.unreadCount }}
+                              </span>
                             }
                           </span>
                         </span>
-                        @if (conversation.unreadCount > 0) {
-                          <span
-                            class="chat-unread dm-unread"
-                            [attr.aria-label]="'chat.unread' | t: { count: conversation.unreadCount }"
-                          >
-                            {{ conversation.unreadCount }}
-                          </span>
-                        }
                       </button>
                     </li>
                   }
@@ -240,8 +251,31 @@ interface DirectPageData {
   styles: [
     CHAT_LAYOUT_STYLES,
     `
+      .dm-toolbar {
+        display: flex;
+        gap: var(--space-1);
+      }
+      .dm-toolbar .chat-search {
+        flex: 1;
+        min-width: 0;
+      }
       .dm-new {
-        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        padding: 0 0.75rem;
+        font-size: 1.2rem;
+      }
+      .dm-new span {
+        font-size: 0.95rem;
+      }
+      .dm-head-link {
+        align-self: flex-end;
+        padding-bottom: 0.35rem;
+        font-size: 0.95rem;
       }
       .dm-picker {
         display: flex;
@@ -328,6 +362,7 @@ export class DirectMessagesComponent implements OnInit, OnDestroy {
   protected readonly starting = signal<string | null>(null);
   protected readonly startError = signal<string | null>(null);
   protected readonly formatDateTime = formatDateTime;
+  protected readonly formatChatTime = formatChatTime;
 
   private listTimer: ReturnType<typeof setInterval> | null = null;
   private listSub?: Subscription;

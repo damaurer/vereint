@@ -8,7 +8,7 @@ test('Mobil: untere Leiste fuehrt durch die Hauptbereiche', async ({ as }) => {
   for (const [label, path] of [
     ['Events', '/events'],
     ['Chat', '/chat'],
-    ['Moments', '/moments'],
+    ['Guthaben', '/wallet'],
     ['Start', '/dashboard'],
   ]) {
     await bar.getByRole('link', { name: label }).click();

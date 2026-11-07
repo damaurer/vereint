@@ -6,7 +6,9 @@
     "cancel": "Cancel",
     "close": "Close",
     "retry": "Try again",
-    "optional": "optional"
+    "optional": "optional",
+    "yesterday": "Yesterday",
+    "today": "Today"
   },
   "errors": {
     "api": {
@@ -71,31 +73,11 @@
       "noEvents": "No events at the moment.",
       "statEvents": "Your events",
       "statEntries": "Transactions",
-      "shortcutsHeading": "Quick access",
-      "shortcuts": {
-        "scan": {
-          "title": "Pay for a drink",
-          "sub": "Scan the barcode"
-        },
-        "moments": {
-          "title": "Moments",
-          "sub": "Toasts & rituals"
-        },
-        "catalog": {
-          "title": "Drinks menu",
-          "sub": "Drinks & food"
-        },
-        "purchases": {
-          "title": "Purchases",
-          "sub": "What you've had"
-        },
-        "notifications": {
-          "title": "Notifications",
-          "sub": "News from the group"
-        }
-      },
       "declined": "You declined",
-      "maybe": "You answered maybe"
+      "maybe": "You answered maybe",
+      "statementShort": "Statement",
+      "statEventsHint": "this month",
+      "statEntriesHint": "in total"
     },
     "events": {
       "eyebrow": "Member",
@@ -106,7 +88,14 @@
       "emptyTitle": "No events",
       "emptyMessage": "You are not attending any events at the moment.",
       "create": "Create event",
-      "rsvpGroup": "Response for {title}"
+      "rsvpGroup": "Response for {title}",
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "rangeGroup": "Period",
+      "emptyPast": "No past events yet.",
+      "attending": "You're going",
+      "declined": "You declined",
+      "maybe": "You answered maybe"
     },
     "eventDetail": {
       "eyebrow": "Event",
@@ -166,18 +155,35 @@
         "send": "Send",
         "loading": "Loading the chat.",
         "unavailable": "The chat is not available to you."
-      }
+      },
+      "route": "Route",
+      "organizedBy": "Organised by {name}",
+      "chatChip": "Event chat",
+      "momentsChip": "Moments",
+      "momentsChipActive": "Moments ({count} active)",
+      "attendanceHeading": "Attendance",
+      "attendanceSummary": "{accepted} going · {invited} open"
     },
     "purchases": {
       "eyebrow": "Receipts",
       "title": "Purchases",
-      "intro": "Your purchases with permanent receipts.",
+      "intro": "Every purchase has a fixed receipt with the price at the time.",
       "loadingMessage": "Loading purchases.",
       "unavailable": "Purchases unavailable",
       "emptyTitle": "No purchases",
       "emptyMessage": "You haven't bought any drinks yet.",
       "barcode": "Barcode {code}",
-      "catalogVersion": "Catalogue v{version}"
+      "catalogVersion": "Catalogue v{version}",
+      "count": "{count} purchases",
+      "mostOften": "Most often",
+      "times": "{count} ×",
+      "source": {
+        "pwaBarcode": "Paid by scan",
+        "tabletManual": "Tally sheet",
+        "round": "Round",
+        "evening": "Whole evening"
+      },
+      "food": "Food"
     },
     "wallet": {
       "eyebrow": "Balance & transactions",
@@ -196,7 +202,8 @@
         "spend": "Spending",
         "empty": "No transactions for this filter."
       },
-      "reversal": "Reversal: {name}"
+      "reversal": "Reversal: {name}",
+      "asOf": "As of {date}"
     }
   },
   "profile": {
@@ -206,7 +213,9 @@
     "noRoles": "no roles",
     "beerWithMe": {
       "title": "BeerWithMe status",
-      "hint": "Up for a spontaneous beer nearby."
+      "hint": "Up for a spontaneous beer nearby.",
+      "short": "Spontaneous beer",
+      "shortHint": "Friends see that you have time"
     },
     "theme": {
       "title": "Appearance",
@@ -231,7 +240,8 @@
       "title": "Security",
       "hint": "Protect your account with an authenticator app (e.g. Google Authenticator). Login then asks for your password and a 6-digit code. Optional, but recommended for board members and admins.",
       "setupTwoFactor": "Set up two-factor sign-in"
-    }
+    },
+    "since": "since {date}"
   },
   "notifications": {
     "eyebrow": "Messages",
@@ -254,14 +264,16 @@
       "moment": "Moment",
       "eventInvitation": "Invitation",
       "eventReminder": "Reminder",
-      "eventCancelled": "Cancelled"
+      "eventCancelled": "Cancelled",
+      "general": "Newsletter"
     },
     "open": "Open",
     "openEvent": "Go to event",
     "answered": {
       "accepted": "You accepted.",
       "declined": "You declined."
-    }
+    },
+    "markReadShort": "Read"
   },
   "shell": {
     "brandHome": "Vereint – go to home page",
@@ -276,7 +288,8 @@
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} unread",
     "chatUnread": "{label}, {count} unread",
-    "switchStammtisch": "Switch group (current: {name})"
+    "switchStammtisch": "Switch group (current: {name})",
+    "back": "Back"
   },
   "nav": {
     "items": {
@@ -377,17 +390,17 @@
     }
   },
   "errorPages": {
-    "toDashboard": "Go to dashboard",
-    "toHome": "Go to home page",
+    "toDashboard": "Go to start",
     "forbidden": {
       "title": "Access denied",
-      "description": "You do not have the required permissions for this page, or your session is no longer valid.",
+      "description": "You lack the rights for this page or your sign-in has expired.",
       "signInAgain": "Sign in again"
     },
     "notFound": {
-      "title": "Page not found",
-      "description": "The page you requested does not exist, has been moved, or the address is incorrect."
-    }
+      "title": "This page does not exist",
+      "description": "Maybe the event was deleted or the link is outdated."
+    },
+    "eyebrow": "Error {code}"
   },
   "routes": {
     "placeholder": {
@@ -611,7 +624,7 @@
       "readOnlyDirect": "You are neither friends nor share a group. The history stays readable, but you cannot send new messages."
     },
     "direct": {
-      "eyebrow": "Direct messages",
+      "eyebrow": "Across all groups",
       "title": "One-to-one chats",
       "badge": "DMs",
       "toGroupChat": "← To the group chat",
@@ -666,7 +679,7 @@
     "eyebrow": "Across all groups",
     "title": "Friends",
     "toDirect": "To direct messages",
-    "intro": "Add people from your groups as friends. Friends stay even if you no longer share a group, and you can keep sending each other direct messages.",
+    "intro": "Friends stay, even when you no longer share a group.",
     "unavailable": "Friends list unavailable",
     "loadingMessage": "Loading your friends.",
     "incoming": "Requests to you ({count})",
@@ -1358,10 +1371,10 @@
       "infoText": "Manage the group kitty, send important announcements or plan the next get-togethers here.",
       "panelsTitle": "Role-specific management",
       "panelsNav": "Board areas",
-      "treasuryTitle": "Treasurer · Kitty & finances",
-      "treasuryDesc": "Beer kitty, balances and bookings",
-      "commsTitle": "Secretary · Communication",
-      "commsDesc": "Announcements and notice board",
+      "treasuryTitle": "Treasury",
+      "treasuryDesc": "Bar fund, balances, bookings",
+      "commsTitle": "Communication",
+      "commsDesc": "Announcements and pinboard",
       "loadingMessage": "Loading events and audit log.",
       "unavailable": "Board area unavailable",
       "statEvents": "Visible events",
@@ -1369,14 +1382,14 @@
       "eventsHeading": "Host · Events ({count})",
       "eventsEmptyTitle": "No events",
       "eventsEmptyMessage": "There are currently no events to moderate.",
-      "moderate": "Moderate",
+      "moderate": "Manage",
       "auditHeading": "Recent actions ({count})",
       "inviteTitle": "Invite member",
-      "inviteDesc": "Create an invite link for registration",
+      "inviteDesc": "Create an invite link",
       "kioskDevicesTitle": "Kiosk devices",
-      "kioskDevicesDesc": "See running bar terminals and unlock them remotely",
-      "momentConfigTitle": "Moments · topics & reactions",
-      "momentConfigDesc": "Decide which moments and reactions exist"
+      "kioskDevicesDesc": "See and unlock bar terminals",
+      "momentConfigTitle": "Moments",
+      "momentConfigDesc": "Types and reactions"
     },
     "comms": {
       "eyebrow": "Secretary",
@@ -1501,7 +1514,8 @@
         "empty": "No members found.",
         "lastEntry": "Last booking: {date}",
         "noEntry": "No bookings yet",
-        "id": "ID {id}"
+        "id": "ID {id}",
+        "statTotal": "Total balance"
       }
     },
     "kioskDevices": {
@@ -1629,7 +1643,15 @@
         "messageSent": "Message sent.",
         "membersInvited": "Members invited."
       },
-      "choose": "Please choose"
+      "choose": "Please choose",
+      "tabs": {
+        "label": "Sections",
+        "details": "Details",
+        "participants": "Participants",
+        "drinks": "Drinks & food",
+        "guests": "Guests",
+        "chat": "Chat"
+      }
     },
     "picker": {
       "allMembers": "Invite all members",
@@ -1691,17 +1713,18 @@
     "consumption": {
       "ariaLabel": "Leaderboard by tallies",
       "title": "Leaderboard",
-      "total": "Group tallies",
-      "mine": "Your tallies",
+      "total": "Group",
+      "mine": "You",
       "myRank": "Your rank",
-      "rankValue": "Rank {rank}",
+      "rankValue": "#{rank}",
       "noRank": "No rank yet",
       "you": "You",
       "count": {
         "one": "{count} tally",
         "other": "{count} tallies"
       },
-      "empty": "No tallies in this period yet."
+      "empty": "No tallies in this period yet.",
+      "unit": "tallies"
     },
     "attendance": {
       "title": "Acceptance rate",

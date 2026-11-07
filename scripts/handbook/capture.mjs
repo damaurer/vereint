@@ -233,7 +233,8 @@ const SHOTS = [
     device: PHONE,
     run: async (page, data) => {
       await open(page, `/events/${data.events.stammtisch.id}/manage`);
-      await scrollToHeading(page, /^Teilnehmer & Anwesenheit/);
+      await page.getByRole('tab', { name: 'Teilnehmer' }).click();
+      await page.waitForTimeout(300);
     },
   },
   {
@@ -248,7 +249,8 @@ const SHOTS = [
     device: PHONE,
     run: async (page, data) => {
       await open(page, `/events/${data.events.stammtisch.id}/manage`);
-      await scrollToHeading(page, /^Getränke \(/);
+      await page.getByRole('tab', { name: 'Getränke & Speisen' }).click();
+      await page.waitForTimeout(300);
     },
   },
   {
@@ -257,7 +259,8 @@ const SHOTS = [
     device: PHONE,
     run: async (page, data) => {
       await open(page, `/events/${data.events.stammtisch.id}/manage`);
-      await scrollToHeading(page, /^Einladungen \(/);
+      await page.getByRole('tab', { name: 'Gäste' }).click();
+      await page.waitForTimeout(300);
     },
   },
   {
@@ -266,7 +269,8 @@ const SHOTS = [
     device: PHONE,
     run: async (page, data) => {
       await open(page, `/events/${data.events.stammtisch.id}/manage`);
-      await scrollToHeading(page, /^Event-Chat \(/);
+      await page.getByRole('tab', { name: 'Chat' }).click();
+      await page.waitForTimeout(300);
     },
   },
   {

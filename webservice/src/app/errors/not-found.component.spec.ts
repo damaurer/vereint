@@ -14,7 +14,7 @@ describe('NotFoundComponent', () => {
 
     const text = fixture.nativeElement.textContent ?? '';
     expect(text).toContain('404');
-    expect(text).toContain('Seite nicht gefunden');
-    expect(text).toContain('Zum Dashboard');
+    expect(text).toContain('Diese Seite gibt es nicht');
+    expect(text).toContain('Zur Startseite');
   });
 });

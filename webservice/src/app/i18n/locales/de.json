@@ -6,7 +6,9 @@
     "cancel": "Abbrechen",
     "close": "Schließen",
     "retry": "Erneut versuchen",
-    "optional": "optional"
+    "optional": "optional",
+    "yesterday": "Gestern",
+    "today": "Heute"
   },
   "errors": {
     "api": {
@@ -58,7 +60,7 @@
       "unavailable": "Übersicht nicht verfügbar",
       "eyebrow": "Servus",
       "greeting": {
-        "morning": "Guten Morgen, schön dass du da bist.",
+        "morning": "Guten Morgen, schön, dass du da bist.",
         "day": "Schön, dass du wieder da bist.",
         "evening": "Guten Abend. Wer ist heute dabei?"
       },
@@ -71,31 +73,11 @@
       "noEvents": "Aktuell keine Events.",
       "statEvents": "Deine Events",
       "statEntries": "Buchungen",
-      "shortcutsHeading": "Schnellzugriff",
-      "shortcuts": {
-        "scan": {
-          "title": "Getränk bezahlen",
-          "sub": "Strichcode scannen"
-        },
-        "moments": {
-          "title": "Moments",
-          "sub": "Anstoßen & Rituale"
-        },
-        "catalog": {
-          "title": "Getränkekatalog",
-          "sub": "Getränke & Speisen"
-        },
-        "purchases": {
-          "title": "Käufe",
-          "sub": "Was du getrunken hast"
-        },
-        "notifications": {
-          "title": "Mitteilungen",
-          "sub": "Neuigkeiten aus der Gruppe"
-        }
-      },
       "declined": "Du hast abgesagt",
-      "maybe": "Du hast mit Vielleicht geantwortet"
+      "maybe": "Du hast mit Vielleicht geantwortet",
+      "statementShort": "Kontoauszug",
+      "statEventsHint": "diesen Monat",
+      "statEntriesHint": "insgesamt"
     },
     "events": {
       "eyebrow": "Mitglied",
@@ -106,7 +88,14 @@
       "emptyTitle": "Keine Events",
       "emptyMessage": "Aktuell nimmst du an keinem Event teil.",
       "create": "Event anlegen",
-      "rsvpGroup": "Antwort für {title}"
+      "rsvpGroup": "Antwort für {title}",
+      "upcoming": "Kommend",
+      "past": "Vergangen",
+      "rangeGroup": "Zeitraum",
+      "emptyPast": "Noch keine vergangenen Events.",
+      "attending": "Du bist dabei",
+      "declined": "Du hast abgesagt",
+      "maybe": "Du hast mit Vielleicht geantwortet"
     },
     "eventDetail": {
       "eyebrow": "Event",
@@ -160,18 +149,35 @@
         "send": "Senden",
         "loading": "Der Chat wird geladen.",
         "unavailable": "Der Chat ist für dich nicht verfügbar."
-      }
+      },
+      "route": "Route",
+      "organizedBy": "Organisiert von {name}",
+      "chatChip": "Event-Chat",
+      "momentsChip": "Moments",
+      "momentsChipActive": "Moments ({count} aktiv)",
+      "attendanceHeading": "Anwesenheit",
+      "attendanceSummary": "{accepted} zugesagt · {invited} offen"
     },
     "purchases": {
       "eyebrow": "Belege",
       "title": "Käufe",
-      "intro": "Deine Käufe mit unveränderlichem Beleg.",
+      "intro": "Jeder Kauf hat einen unveränderlichen Beleg mit dem Preis von damals.",
       "loadingMessage": "Die Käufe werden abgerufen.",
       "unavailable": "Käufe nicht verfügbar",
       "emptyTitle": "Keine Käufe",
       "emptyMessage": "Du hast bisher keine Getränke gekauft.",
       "barcode": "Barcode {code}",
-      "catalogVersion": "Katalog v{version}"
+      "catalogVersion": "Katalog v{version}",
+      "count": "{count} Käufe",
+      "mostOften": "Am häufigsten",
+      "times": "{count} ×",
+      "source": {
+        "pwaBarcode": "Bezahlt per Scan",
+        "tabletManual": "Strichliste",
+        "round": "Runde",
+        "evening": "Ganzer Abend"
+      },
+      "food": "Speisen"
     },
     "wallet": {
       "eyebrow": "Guthaben & Transaktionen",
@@ -190,7 +196,8 @@
         "spend": "Ausgaben",
         "empty": "Keine Buchungen für diesen Filter."
       },
-      "reversal": "Storno: {name}"
+      "reversal": "Storno: {name}",
+      "asOf": "Stand {date}"
     }
   },
   "profile": {
@@ -200,7 +207,9 @@
     "noRoles": "keine Rollen",
     "beerWithMe": {
       "title": "BeerWithMe Status",
-      "hint": "Verfügbar für ein spontanes Bier in der Nähe."
+      "hint": "Verfügbar für ein spontanes Bier in der Nähe.",
+      "short": "Spontanes Bier",
+      "shortHint": "Freunde sehen, dass du Zeit hast"
     },
     "theme": {
       "title": "Darstellung",
@@ -225,7 +234,8 @@
       "title": "Sicherheit",
       "hint": "Schütze dein Konto zusätzlich mit einer Authenticator-App (z. B. Google Authenticator). Danach fragt der Login nach Passwort und einem 6-stelligen Code. Freiwillig, aber empfohlen für Vorstand und Admin.",
       "setupTwoFactor": "Zwei-Faktor-Anmeldung einrichten"
-    }
+    },
+    "since": "seit {date}"
   },
   "notifications": {
     "eyebrow": "Mitteilungen",
@@ -248,14 +258,16 @@
       "moment": "Moment",
       "eventInvitation": "Einladung",
       "eventReminder": "Erinnerung",
-      "eventCancelled": "Abgesagt"
+      "eventCancelled": "Abgesagt",
+      "general": "Rundbrief"
     },
     "open": "Öffnen",
     "openEvent": "Zum Event",
     "answered": {
       "accepted": "Du hast zugesagt.",
       "declined": "Du hast abgesagt."
-    }
+    },
+    "markReadShort": "Gelesen"
   },
   "shell": {
     "brandHome": "Vereint – zur Startseite",
@@ -270,7 +282,8 @@
     "notifications": "Mitteilungen",
     "notificationsUnread": "Mitteilungen, {count} ungelesen",
     "chatUnread": "{label}, {count} ungelesen",
-    "switchStammtisch": "Gruppe wechseln (aktuell: {name})"
+    "switchStammtisch": "Gruppe wechseln (aktuell: {name})",
+    "back": "Zurück"
   },
   "nav": {
     "items": {
@@ -371,17 +384,17 @@
     }
   },
   "errorPages": {
-    "toDashboard": "Zum Dashboard",
-    "toHome": "Zur Startseite",
+    "toDashboard": "Zur Startseite",
     "forbidden": {
       "title": "Zugriff verweigert",
-      "description": "Für diese Seite fehlen Ihnen die erforderlichen Berechtigungen oder Ihre Sitzung ist nicht mehr gültig.",
+      "description": "Für diese Seite fehlen dir die Rechte oder deine Anmeldung ist abgelaufen.",
       "signInAgain": "Neu anmelden"
     },
     "notFound": {
-      "title": "Seite nicht gefunden",
-      "description": "Die von Ihnen aufgerufene Seite existiert nicht, wurde verschoben oder die Adresse ist fehlerhaft."
-    }
+      "title": "Diese Seite gibt es nicht",
+      "description": "Vielleicht wurde das Event gelöscht oder der Link ist veraltet."
+    },
+    "eyebrow": "Fehler {code}"
   },
   "routes": {
     "placeholder": {
@@ -599,14 +612,14 @@
       "readOnlyDirect": "Ihr seid weder befreundet noch in einer gemeinsamen Gruppe. Der Verlauf bleibt lesbar, neue Nachrichten gehen nicht."
     },
     "direct": {
-      "eyebrow": "Direktnachrichten",
+      "eyebrow": "Über alle Gruppen",
       "title": "Einzelgespräche",
       "badge": "DMs",
       "toGroupChat": "← Zum Gruppenchat",
       "unavailable": "Direktnachrichten nicht verfügbar",
       "searchLabel": "Gespräche durchsuchen",
       "searchPlaceholder": "Gespräche durchsuchen…",
-      "conversations": "Konversationen ({count})",
+      "conversations": "Gespräche ({count})",
       "emptyTitle": "Keine Konversationen",
       "emptyMessage": "Es gibt keine passenden Einzelgespräche.",
       "emptyStart": "Du hast noch keine Einzelgespräche. Starte eins mit „Neue Nachricht“.",
@@ -654,7 +667,7 @@
     "eyebrow": "Über alle Gruppen",
     "title": "Freunde",
     "toDirect": "Zu den Direktnachrichten",
-    "intro": "Füge Personen aus deinen Gruppen als Freunde hinzu. Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt, und ihr könnt euch weiter Direktnachrichten schreiben.",
+    "intro": "Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt.",
     "unavailable": "Freundesliste nicht verfügbar",
     "loadingMessage": "Deine Freunde werden abgerufen.",
     "incoming": "Anfragen an dich ({count})",
@@ -1325,9 +1338,9 @@
       "infoText": "Verwalte hier die Gruppenkasse, versende wichtige Ankündigungen oder plane die nächsten Treffen.",
       "panelsTitle": "Rollenspezifische Verwaltung",
       "panelsNav": "Vorstandsbereiche",
-      "treasuryTitle": "Kassenwart · Kasse & Finanzen",
-      "treasuryDesc": "Bierkasse, Guthaben und Buchungen",
-      "commsTitle": "Schriftwart · Kommunikation",
+      "treasuryTitle": "Kasse & Finanzen",
+      "treasuryDesc": "Bierkasse, Guthaben, Buchungen",
+      "commsTitle": "Kommunikation",
       "commsDesc": "Ankündigungen und Pinnwand",
       "loadingMessage": "Events und Protokoll werden abgerufen.",
       "unavailable": "Vorstandsbereich nicht verfügbar",
@@ -1336,14 +1349,14 @@
       "eventsHeading": "Gastgeber · Events ({count})",
       "eventsEmptyTitle": "Keine Events",
       "eventsEmptyMessage": "Aktuell sind keine Events zur Moderation sichtbar.",
-      "moderate": "Moderieren",
+      "moderate": "Verwalten",
       "auditHeading": "Letzte Aktionen ({count})",
       "inviteTitle": "Mitglied einladen",
-      "inviteDesc": "Einladungslink zur Registrierung erstellen",
+      "inviteDesc": "Einladungslink erstellen",
       "kioskDevicesTitle": "Kiosk-Geräte",
-      "kioskDevicesDesc": "Laufende Thekenterminals sehen und aus der Ferne entsperren",
-      "momentConfigTitle": "Moments · Themen & Reaktionen",
-      "momentConfigDesc": "Festlegen, welche Moments und Reaktionen es gibt"
+      "kioskDevicesDesc": "Thekenterminals sehen und entsperren",
+      "momentConfigTitle": "Moments",
+      "momentConfigDesc": "Typen und Reaktionen"
     },
     "comms": {
       "eyebrow": "Schriftwart",
@@ -1468,7 +1481,8 @@
         "empty": "Keine Mitglieder gefunden.",
         "lastEntry": "Letzte Buchung: {date}",
         "noEntry": "Noch keine Buchung",
-        "id": "ID {id}"
+        "id": "ID {id}",
+        "statTotal": "Guthaben gesamt"
       }
     },
     "kioskDevices": {
@@ -1596,7 +1610,15 @@
         "messageSent": "Nachricht gesendet.",
         "membersInvited": "Mitglieder eingeladen."
       },
-      "choose": "Bitte wählen"
+      "choose": "Bitte wählen",
+      "tabs": {
+        "label": "Bereiche",
+        "details": "Stammdaten",
+        "participants": "Teilnehmer",
+        "drinks": "Getränke & Speisen",
+        "guests": "Gäste",
+        "chat": "Chat"
+      }
     },
     "picker": {
       "allMembers": "Alle Mitglieder einladen",
@@ -1658,17 +1680,18 @@
     "consumption": {
       "ariaLabel": "Rangliste nach Strichen",
       "title": "Rangliste",
-      "total": "Striche in der Gruppe",
-      "mine": "Deine Striche",
+      "total": "Gruppe",
+      "mine": "Du",
       "myRank": "Dein Platz",
-      "rankValue": "Platz {rank}",
+      "rankValue": "{rank}.",
       "noRank": "Noch kein Platz",
       "you": "Du",
       "count": {
         "one": "{count} Strich",
         "other": "{count} Striche"
       },
-      "empty": "In diesem Zeitraum gibt es noch keine Striche."
+      "empty": "In diesem Zeitraum gibt es noch keine Striche.",
+      "unit": "Striche"
     },
     "attendance": {
       "title": "Zusagequote",

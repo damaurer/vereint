@@ -5,16 +5,10 @@ import { IconComponent } from '../ui/icon.component';
 import { RouterLink } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
 import { AsyncState } from '../member/async-state';
-import { eventStatusLabel, formatDateTime } from '../member/member-format';
+import { eventStatusLabel, formatDateTime, formatShortDate } from '../member/member-format';
 import { auditActionLabel, auditDetails, auditTargetLabel } from './board-format';
 import { BoardApiService } from './board-api.service';
-import type { AuditLogEntry, EventStatus, EventSummary } from '../api/api.types';
-import {
-  InfoPanelComponent,
-  StatCardComponent,
-  StatusBadgeComponent,
-  type StatusTone,
-} from '../ui';
+import type { AuditLogEntry, EventSummary } from '../api/api.types';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 
@@ -39,7 +33,7 @@ interface BoardView {
  */
 @Component({
   selector: 'app-board',
-  imports: [StateComponent, IconComponent, RouterLink, InfoPanelComponent, StatCardComponent, StatusBadgeComponent, TranslatePipe, InviteModalComponent, KioskDevicesModalComponent],
+  imports: [StateComponent, IconComponent, RouterLink, TranslatePipe, InviteModalComponent, KioskDevicesModalComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="board-title">
@@ -47,11 +41,6 @@ interface BoardView {
         <h1 id="board-title">{{ 'board.overview.title' | t }}</h1>
         <p>{{ 'board.overview.intro' | t }}</p>
 
-        <vereint-info-panel icon="board" [title]="'board.overview.infoTitle' | t">
-          {{ 'board.overview.infoText' | t }}
-        </vereint-info-panel>
-
-        <h2 class="member-subtitle">{{ 'board.overview.panelsTitle' | t }}</h2>
         <nav class="board-panels" [attr.aria-label]="'board.overview.panelsNav' | t">
           <a class="board-panel" routerLink="/board/treasury">
             <vereint-icon class="board-panel-icon" name="treasury" />
@@ -96,11 +85,6 @@ interface BoardView {
             (retry)="reload()"
           />
         } @else if (load.data(); as view) {
-          <div class="board-stats">
-            <vereint-stat-card icon="events" [label]="'board.overview.statEvents' | t" [value]="view.events.length" />
-            <vereint-stat-card icon="receipt" [label]="'board.overview.statActions' | t" [value]="view.audit.length" />
-          </div>
-
           <h2 class="member-subtitle">{{ 'board.overview.eventsHeading' | t: { count: view.events.length } }}</h2>
           @if (view.events.length === 0) {
             <vereint-state
@@ -112,13 +96,18 @@ interface BoardView {
             <ul class="member-list">
               @for (event of view.events; track event.id) {
                 <li class="member-list-item board-row">
-                  <span class="member-list-title">{{ event.title }}</span>
-                  <vereint-status-badge
-                    [label]="eventStatusLabel(event.status)"
-                    [tone]="eventTone(event.status)"
-                  />
-                  <span class="member-list-meta">{{ formatDateTime(event.startsAt) }}</span>
-                  <a class="member-button" [routerLink]="['/events', event.id, 'manage']">{{ 'board.overview.moderate' | t }}</a>
+                  <span class="board-row-text">
+                    <span class="member-list-title">{{ event.title }}</span>
+                    <span class="member-list-meta">
+                      {{ formatShortDate(event.startsAt) }} · {{ eventStatusLabel(event.status) }}
+                    </span>
+                  </span>
+                  <a
+                    class="board-row-action"
+                    [class.is-primary]="event.status === 'active'"
+                    [routerLink]="['/events', event.id, 'manage']"
+                    >{{ 'board.overview.moderate' | t }}</a
+                  >
                 </li>
               }
             </ul>
@@ -163,8 +152,8 @@ interface BoardView {
       .board-panels {
         display: grid;
         gap: var(--space-2);
-        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-        margin: 0.75rem 0 1.5rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        margin: var(--space-3) 0 var(--space-4);
       }
       .board-panel {
         font: inherit;
@@ -174,7 +163,7 @@ interface BoardView {
         flex-direction: column;
         gap: 0.2rem;
         padding: var(--space-3);
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-lg);
         border: 1px solid var(--color-border);
         background-color: var(--color-surface-raised);
         text-decoration: none;
@@ -185,7 +174,14 @@ interface BoardView {
         border-color: var(--color-brand);
       }
       .board-panel-icon {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
+        color: var(--color-brand);
+        margin-bottom: 0.35rem;
+      }
+      @media (min-width: 48rem) {
+        .board-panels {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
       }
       .board-panel-title {
         font-weight: 700;
@@ -195,18 +191,33 @@ interface BoardView {
         font-size: 0.85rem;
         color: var(--color-text-muted);
       }
-      .board-stats {
-        display: grid;
-        gap: var(--space-2);
-        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-        margin: 0.5rem 0 1rem;
-      }
       .board-row {
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
         gap: 0.75rem;
         justify-content: space-between;
+      }
+      .board-row-text {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .board-row-action {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.5rem;
+        padding: 0 1rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .board-row-action.is-primary {
+        border-color: var(--color-brand);
+        background-color: var(--color-brand);
+        color: var(--color-on-brand);
       }
       .member-chat-text {
         display: block;
@@ -222,25 +233,12 @@ export class BoardComponent implements OnInit, OnDestroy {
   protected readonly kioskDevicesOpen = signal(false);
   protected readonly eventStatusLabel = eventStatusLabel;
   protected readonly formatDateTime = formatDateTime;
+  protected readonly formatShortDate = formatShortDate;
   protected readonly auditTargetLabel = auditTargetLabel;
   protected readonly auditActionLabel = auditActionLabel;
   protected readonly auditDetails = auditDetails;
 
   /** Ordnet den Eventstatus einer Badge-Farbe der geteilten Primitive zu. */
-  protected eventTone(status: EventStatus): StatusTone {
-    switch (status) {
-      case 'active':
-      case 'published':
-        return 'success';
-      case 'cancelled':
-        return 'danger';
-      case 'draft':
-        return 'warning';
-      default:
-        return 'neutral';
-    }
-  }
-
   ngOnInit(): void {
     this.reload();
   }

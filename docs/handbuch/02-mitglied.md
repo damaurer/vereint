@@ -9,15 +9,15 @@ Für alle Mitglieder einer Gruppe. Anmeldung, Navigation und Profil stehen in de
 | zu einem Termin zusagen | **Events** → **Zusagen** bei der Einladung, oder direkt in der Push-Nachricht |
 | selbst ein Event planen | **Events** → **Event anlegen** |
 | mit allen in der Gruppe schreiben | **Chat** → **Gruppenchat** |
-| jemandem persönlich schreiben | **Mehr → Direktnachrichten** → **Neue Nachricht** |
+| jemandem persönlich schreiben | **Mehr → Direktnachrichten** → **+** |
 | alle Termine aus allen meinen Gruppen sehen | **Mehr → Kalender** |
 | jemanden als Freund hinzufügen | **Mehr → Freunde** → **Anfragen** |
 | sehen, wer am meisten Striche hat | **Mehr → Statistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
-| ein Getränk selbst bezahlen | **Mehr → Bezahlen** (oder **Getränk bezahlen** auf der Startseite) → Strichcode scannen |
+| ein Getränk selbst bezahlen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
-| beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments ansehen** |
+| beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments** |
 | ein neues Getränk vorschlagen | **Mehr → Getränkekatalog** → **Getränk vorschlagen** oder **Barcode scannen** |
 | die Gruppe wechseln | Gruppenname oben rechts antippen, oder **Mehr → Gruppeneinstellungen** → **Gruppe wechseln** |
 | eine Gruppe verlassen | **Mehr → Gruppeneinstellungen** → **Gruppe verlassen** |
@@ -31,7 +31,7 @@ Wirst du zu einem Event eingeladen, bekommst du eine Mitteilung, mit eingeschalt
 Antworten kannst du an drei Stellen:
 
 - direkt in der **Push-Nachricht** mit **Zusagen** oder **Absagen**,
-- unter **Events**: Bei offenen Einladungen steht „Offen“ mit **Zusagen** und **Absagen**,
+- unter **Events**: Bei offenen Einladungen steht „Offen“ mit **Zusagen** und **Absagen**. Oben wechselst du zwischen **Kommend** und **Vergangen**,
 - auf der Eventseite mit **Zusagen**, **Vielleicht** oder **Absagen**.
 
 Deine Antwort kannst du bis zum Event jederzeit ändern. Die Karten zeigen außerdem den Stand des Events:
@@ -46,10 +46,10 @@ Deine Antwort kannst du bis zum Event jederzeit ändern. Die Karten zeigen auße
 
 Tippe auf ein Event, um die Details zu sehen:
 
-- Datum, Ende, Ort und Gastgeber. **Route öffnen** startet die Navigation zum Treffpunkt.
-- **Deine Antwort**: Deine aktuelle Wahl ist grün hinterlegt.
-- **Anwesenheit**: wer eingeladen ist und wie viele zugesagt, vielleicht gesagt, abgesagt oder noch nicht geantwortet haben.
-- **Event-Chat** und **Moments & Rituale** weiter unten.
+- Datum, Uhrzeit, Ort und wer das Event organisiert. **Route** startet die Navigation zum Treffpunkt.
+- Darunter führen **Event-Chat** und **Moments** (mit der Zahl laufender Moments) weiter; Gastgeber und Vorstand sehen zusätzlich **Verwalten**.
+- **Deine Antwort**: Deine aktuelle Wahl ist hervorgehoben.
+- **Anwesenheit**: wie viele zugesagt, vielleicht gesagt, abgesagt oder noch nicht geantwortet haben, darunter die Eingeladenen nach ihrer Antwort gruppiert.
 
 Auf der **Startseite** steht außerdem immer dein nächster Termin.
 
@@ -105,8 +105,8 @@ Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vor
 
 **Direktnachrichten** (über **Mehr** oder oben im Chat) sind Gespräche zu zweit, die nur ihr beide seht. Sie gelten über alle Gruppen: Mit jeder Person gibt es genau ein Gespräch, egal in welcher Gruppe du gerade bist.
 
-- **Neue Nachricht**: Person wählen und losschreiben. Zur Auswahl stehen alle aus deinen Gruppen und deine Freunde. Unter dem Namen siehst du eure gemeinsamen Gruppen.
-- Bestehende Gespräche stehen unter **Konversationen**; mit dem Suchfeld findest du sie schnell.
+- **+** (neben dem Suchfeld): Person wählen und losschreiben. Zur Auswahl stehen alle aus deinen Gruppen und deine Freunde. Unter dem Namen siehst du eure gemeinsamen Gruppen.
+- Bestehende Gespräche stehen unter **Gespräche**; mit dem Suchfeld findest du sie schnell. **Freunde** oben rechts führt zur Freundesliste.
 - Seid ihr weder befreundet noch in einer gemeinsamen Gruppe, bleibt das Gespräch lesbar, neue Nachrichten gehen aber nicht mehr.
 - Mit eingeschaltetem Push bekommst du neue Direktnachrichten aufs Handy, egal welche Gruppe gerade gewählt ist. Ein Tipp darauf öffnet das Gespräch.
 
@@ -148,7 +148,7 @@ Unter **Mehr → Freunde** führst du deine Freundesliste. Sie gilt über alle G
 
 Vereint führt für dich ein Guthabenkonto, die „Bierkasse“. Alles, was an der Theke auf deinen Namen angeschrieben wird, wird davon abgezogen.
 
-- Oben steht der **aktuelle Stand**.
+- Oben steht der **aktuelle Stand**. **Bezahlen** öffnet direkt den Strichcode-Scanner.
 - In der **Historie** siehst du jede Buchung. Mit **Alle**, **Aufladungen** und **Ausgaben** filterst du die Liste.
 
 **Aufladen**: Gib das Geld beim Kassenwart ab. Er bucht den Betrag ein, danach erscheint er hier als „Aufladung“. Selbst aufladen kannst du nicht.
@@ -219,7 +219,7 @@ Die **Glocke** oben rechts (oder **Mehr → Mitteilungen**) sammelt alles, was d
 
 Ein **Moment** ist eine kurze gemeinsame Aktion während eines Events, zum Beispiel alle stoßen gleichzeitig an. Jemand startet ihn, alle anderen reagieren darauf.
 
-- **Mehr → Moments** zeigt die Moments deiner aktiven Events. Aus einem Event kommst du über **Moments ansehen** direkt hierher.
+- **Mehr → Moments** zeigt die Moments deiner aktiven Events. Aus einem Event kommst du über **Moments** direkt hierher.
 - Eine Karte zeigt Art, Titel, wer ihn gestartet hat, wie lange er noch läuft und wie viele schon reagiert haben.
 - **Neuen Moment starten** beginnt selbst einen Moment: Art wählen (z. B. Anstoßen), Titel und Nachricht eingeben, Dauer festlegen. Welche Arten es gibt, legt der Vorstand fest.
 
@@ -241,9 +241,9 @@ Ist ein Moment vorbei, landet er unter **Archivierte Moments & Rituale**.
 
 <img src="bilder/m-katalog.png" alt="Getränkekatalog" width="300" align="right">
 
-Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen der Gruppe mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, das Suchfeld findet Getränke nach Name oder Kategorie. **Details & Barcodes** zeigt Preis, Beschreibung und die hinterlegten Strichcodes.
+Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen der Gruppe mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, das Suchfeld findet Getränke nach Name oder Kategorie. Jede Zeile zeigt Preis und Stand; ein Tipp darauf zeigt Preis, Beschreibung und die hinterlegten Strichcodes.
 
-**Barcode scannen**: Scanne eine Flasche, um zu sehen, ob sie schon im Katalog ist. Kennt Vereint den Strichcode, öffnet sich das Getränk. Steht es in der gemeinsamen Getränkedatenbank, öffnet sich der Vorschlag mit Name, Sorte und Strichcodes schon ausgefüllt, du trägst nur noch den Preis ein. Sonst öffnet sich der leere Vorschlag mit dem Strichcode.
+**Kamera-Knopf** (Barcode scannen): Scanne eine Flasche, um zu sehen, ob sie schon im Katalog ist. Kennt Vereint den Strichcode, öffnet sich das Getränk. Steht es in der gemeinsamen Getränkedatenbank, öffnet sich der Vorschlag mit Name, Sorte und Strichcodes schon ausgefüllt, du trägst nur noch den Preis ein. Sonst öffnet sich der leere Vorschlag mit dem Strichcode.
 
 Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, Kategorie, Preis und Strichcode vor. Vereint warnt dich, wenn es schon ein Getränk mit diesem Namen oder Strichcode gibt. Der Vorstand prüft den Vorschlag und gibt ihn frei; bis dahin steht er als „Vorgeschlagen“ in der Liste.
 

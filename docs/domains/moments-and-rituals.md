@@ -63,7 +63,7 @@ Wenn ein Moment abläuft oder fertiggestellt wird, wird die Session abgeschlosse
 - **Zweck**: Bewahrt gemeinsame Erinnerungen, ohne Haupt-Planungskalender mit Mikro-Events zu überladen.
 
 ### 7. Typen & Reaktionen verwalten
-Vorstand und Administration legen unter *Vorstand → Moments · Typen & Reaktionen* (`/board/moments`) fest, welche Arten von Moments es gibt und mit welchen Reaktionen Mitglieder antworten:
+Vorstand und Administration legen unter *Vorstand → Moments* (`/board/moments`) fest, welche Arten von Moments es gibt und mit welchen Reaktionen Mitglieder antworten:
 
 - **Typ**: Emoji, Name, optionale Beschreibung, Reihenfolge. Je Typ sind entweder alle aktiven Reaktionen erlaubt oder eine Auswahl.
 - **Reaktion**: Emoji, Name, Reihenfolge.

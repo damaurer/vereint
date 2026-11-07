@@ -1,96 +1,68 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '../i18n';
-import { StatusBadgeComponent } from '../ui';
+import { IconComponent } from '../ui/icon.component';
 
 @Component({
   selector: 'app-forbidden',
-  imports: [RouterLink, StatusBadgeComponent, TranslatePipe],
+  imports: [RouterLink, IconComponent, TranslatePipe],
   template: `
-    <div class="error-page-container">
-      <div class="error-card">
-        <div class="error-header">
-          <vereint-status-badge label="403" tone="danger" />
-          <h1 class="error-title">{{ 'errorPages.forbidden.title' | t }}</h1>
-        </div>
-        <p class="error-description">
-          {{ 'errorPages.forbidden.description' | t }}
-        </p>
-        <div class="error-actions">
-          <a routerLink="/dashboard" class="btn btn-primary">{{ 'errorPages.toDashboard' | t }}</a>
-          <a routerLink="/" class="btn btn-secondary">{{ 'errorPages.forbidden.signInAgain' | t }}</a>
-        </div>
-      </div>
-    </div>
+    <main class="error-page">
+      <span class="error-icon" aria-hidden="true"><vereint-icon name="lock" /></span>
+      <span class="eyebrow">{{ 'errorPages.eyebrow' | t: { code: '403' } }}</span>
+      <h1 class="error-title">{{ 'errorPages.forbidden.title' | t }}</h1>
+      <p class="error-description">{{ 'errorPages.forbidden.description' | t }}</p>
+      <a routerLink="/dashboard" class="member-button error-primary">{{ 'errorPages.toDashboard' | t }}</a>
+        <a routerLink="/" class="error-secondary">{{ 'errorPages.forbidden.signInAgain' | t }}</a>
+    </main>
   `,
   styles: [
     `
-      .error-page-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 70vh;
-        padding: 1.5rem;
-      }
-      .error-card {
-        background: var(--color-surface, #ffffff);
-        border: 1px solid var(--color-border, #e2e8f0);
-        border-radius: var(--radius-lg, 1rem);
-        padding: 2.5rem;
-        max-width: 32rem;
-        width: 100%;
-        text-align: center;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      }
-      .error-header {
+      .error-page {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 0.75rem;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 70vh;
+        max-width: 28rem;
+        margin: 0 auto;
+        padding: 1.5rem var(--space-3);
+      }
+      .error-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 4.5rem;
+        height: 4.5rem;
         margin-bottom: 1rem;
+        border-radius: 999px;
+        background-color: var(--color-brand-soft);
+        color: var(--color-brand);
+        font-size: 1.6rem;
       }
       .error-title {
-        font-size: 1.75rem;
-        font-weight: 700;
         margin: 0;
-        color: var(--color-text, #0f172a);
+        font-size: clamp(1.75rem, 2.5vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
       }
       .error-description {
-        color: var(--color-text-muted, #64748b);
-        margin: 0 0 2rem 0;
-        line-height: 1.6;
+        margin: 0 0 1rem;
+        color: var(--color-text-muted);
+        line-height: 1.5;
       }
-      .error-actions {
+      .error-primary {
         display: flex;
-        gap: 1rem;
         justify-content: center;
-        flex-wrap: wrap;
-      }
-      .btn {
-        display: inline-flex;
+        min-height: 3rem;
         align-items: center;
-        justify-content: center;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        font-size: 0.95rem;
-        border-radius: var(--radius-md, 0.5rem);
         text-decoration: none;
-        transition: background-color 0.2s, color 0.2s;
       }
-      .btn-primary {
-        background-color: var(--color-brand, #3b82f6);
-        color: var(--color-on-brand);
-      }
-      .btn-primary:hover {
-        background-color: var(--color-brand-hover, #2563eb);
-      }
-      .btn-secondary {
-        background-color: var(--color-surface-subtle, #f1f5f9);
-        color: var(--color-text, #0f172a);
-        border: 1px solid var(--color-border, #e2e8f0);
-      }
-      .btn-secondary:hover {
-        background-color: var(--color-surface-hover, #e2e8f0);
+      .error-secondary {
+        align-self: center;
+        margin-top: 0.5rem;
+        color: var(--color-brand);
+        font-weight: 600;
       }
     `,
   ],

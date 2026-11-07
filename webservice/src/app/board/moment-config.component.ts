@@ -23,7 +23,7 @@ import { StateComponent } from '../ui/state.component';
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="moment-config-title">
-        <a class="member-back" routerLink="/board">{{ 'board.momentConfig.back' | t }}</a>
+        <a class="member-back" data-topbar-back routerLink="/board">{{ 'board.momentConfig.back' | t }}</a>
         <span class="eyebrow">{{ 'board.overview.eyebrow' | t }}</span>
         <h1 id="moment-config-title">{{ 'board.momentConfig.title' | t }}</h1>
         <p>{{ 'board.momentConfig.intro' | t }}</p>

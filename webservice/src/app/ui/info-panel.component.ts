@@ -12,16 +12,16 @@ import type { IconName } from './icons';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <aside class="ui-info-panel" role="note">
-      @if (title) {
-        <p class="ui-info-title">
-          @if (icon) {
-            <vereint-icon class="ui-info-icon" [name]="icon" />
-          }
-          {{ title }}
-        </p>
+    <aside class="ui-info-panel" [class.ui-info-with-icon]="!!icon" role="note">
+      @if (icon) {
+        <vereint-icon class="ui-info-icon" [name]="icon" />
       }
-      <div class="ui-info-body"><ng-content></ng-content></div>
+      <div class="ui-info-content">
+        @if (title) {
+          <p class="ui-info-title">{{ title }}</p>
+        }
+        <div class="ui-info-body"><ng-content></ng-content></div>
+      </div>
     </aside>
   `,
 })
