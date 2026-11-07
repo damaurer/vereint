@@ -135,7 +135,7 @@ Thekenterminals.
   100 MB (MP4/MOV). Standort- und Gerätedaten werden entfernt, alles wird
   verschlüsselt gespeichert.
 - Welche Moment-Typen und Reaktionen es gibt, legt der Vorstand unter
-  *Vorstand → Moments · Typen & Reaktionen* fest.
+  *Vorstand → Moments* fest.
 - Details: [docs/domains/moments-and-rituals.md](domains/moments-and-rituals.md)
 
 ## Statistiken

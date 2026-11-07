@@ -312,13 +312,14 @@ export async function seedAppData(sessions) {
 
   // Ein Moment am laufenden Abend.
   try {
-    const moment = await api.board.post(`/events/${stammtisch.id}/moments`, {
+    const moment = await api.board.post('/moments', {
+      eventId: stammtisch.id,
       title: 'Prost auf den Vereinsabend!',
       topicType: 'toast',
       message: 'Alle Gläser hoch 🍻',
     });
     for (const key of ['member', 'jonas', 'mia']) {
-      await api[key].post(`/events/${stammtisch.id}/moments/${moment.id}/responses`, { reaction: 'TOAST', statusText: 'Prost!' });
+      await api[key].post(`/moments/${moment.id}/responses`, { reaction: 'TOAST', statusText: 'Prost!' });
     }
   } catch (error) {
     console.warn(`Moment konnte nicht angelegt werden: ${error.message}`);

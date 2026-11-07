@@ -71,9 +71,8 @@ describe('PurchasesComponent', () => {
     const root = fixture.nativeElement as HTMLElement;
     expect(html(fixture)).toContain('Cola');
     expect(html(fixture)).toContain('Barcode 4001');
-    // Catalog version is surfaced via the shared ui/ status-badge primitive.
-    expect(root.querySelector('vereint-status-badge')).toBeTruthy();
-    expect(html(fixture)).toContain('Katalog v3');
+    expect(root.querySelector('.receipt-list')).toBeTruthy();
+    expect(html(fixture)).toContain('Bezahlt per Scan');
   });
 
   it('names food purchases and hides a missing catalog version', async () => {
