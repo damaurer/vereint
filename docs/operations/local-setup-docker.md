@@ -20,7 +20,6 @@ services:
   keycloak-db:      # PostgreSQL 17.6 Alpine auf Port 5433 (Keycloak Realm DB)
   vereint-db:       # PostgreSQL 17.6 Alpine auf Port 5432 (Hauptanwendung)
   keycloak:         # Keycloak 26.8.1 Dev Mode auf Port 8082 (importiert ./keycloak/dev, bindet ./keycloak/themes ein)
-  object-storage:   # S3Mock als lokaler S3-Ersatz auf Port 9090, legt den Bucket selbst an; Produktion auf Strato nutzt ein Verzeichnis
 ```
 
 Fachservice und Oberfläche laufen lokal nicht in Compose, sondern direkt (siehe unten).
@@ -47,7 +46,7 @@ docker compose down -v
 
 ## ⚙️ Umgebungsvariablen (.env Konfiguration)
 
-`.env.example` nach `.env` kopieren (oder `npm run env:prepare` im `webservice/`). Die Vorlage enthält funktionierende Entwicklungswerte und passt ohne Änderungen zu `docker-compose.yml` und dem Entwicklungs-Realm. Ihre Passwörter und Secrets sind bekannte Werte, die nur für die lokalen Container gelten; Produktion bekommt eigene Werte aus dem Vault von LinuxServerSetup ([Strato](../betrieb/strato.md)). Wichtige Einträge:
+`.env.example` nach `.env` kopieren (oder `npm run env:prepare` im `webservice/`). Die Vorlage enthält funktionierende Entwicklungswerte und passt ohne Änderungen zu `docker-compose.yml` und dem Entwicklungs-Realm. Ihre Passwörter und Secrets sind bekannte Werte, die nur für die lokalen Container gelten; Produktion bekommt eigene Werte ([Vereint selbst betreiben](../betrieb/selbst-betreiben.md#konfiguration)). Wichtige Einträge:
 
 | Variable | Beschreibung | Standard / Entwicklung |
 | :--- | :--- | :--- |
@@ -56,7 +55,7 @@ docker compose down -v
 | `KEYCLOAK_DB_PORT`, `KEYCLOAK_DB_USERNAME`, `KEYCLOAK_DB_PASSWORD` | Keycloak-Datenbank | Port `5433` |
 | `KEYCLOAK_ADMIN`, `KEYCLOAK_ADMIN_PASSWORD` | Zugang zur Keycloak-Admin-Konsole (`http://localhost:8082/admin`) | `admin` / `local-dev-keycloak-admin` |
 | `KEYCLOAK_SEED_ADMIN_PASSWORD`, `KEYCLOAK_SEED_BOARD_PASSWORD`, `KEYCLOAK_SEED_MEMBER_PASSWORD` | Startpasswörter der Konten `admin`, `board`, `member` im Entwicklungs-Realm; beim ersten Login zu ändern | `admin-demo-2026`, `board-demo-2026`, `member-demo-2026` |
-| `S3_ENABLED`, `S3_ENDPOINT` | Bilder und Videos im S3Mock-Container; mit `S3_ENABLED=false` im Arbeitsspeicher des Fachservice | `true`, `http://localhost:9090` |
+| `STORAGE_BACKEND`, `STORAGE_DIRECTORY` | Bilder und Videos in einem Verzeichnis wie in Produktion; mit `memory` nur im Arbeitsspeicher des Fachservice | `filesystem`, `../.data/files` (relativ zu `baseservice/`) |
 | `API_DOCS_ENABLED` | Swagger UI unter `http://localhost:8081/swagger-ui.html` | `true` (Produktion `false`) |
 | `TENANCY_BOOTSTRAP_REALM_ROLES` | Testkonten ohne Mitgliedschaft treten „Meine Gruppe“ bei, Realmrollen werden Gruppenrollen. Nur lokal und in E2E, in Produktion nie | `true` |
 | `SIGNUP_ENABLED`, `SIGNUP_MAX_OWNED` | Eigene Gruppen eröffnen (`/gruppe-eroeffnen`) an/aus, Höchstzahl eigener Gruppen | `true`, `3` |

@@ -1,8 +1,9 @@
 # E2E-Tests
 
-Playwright-Tests gegen den echten Produktions-Stack: `deploy/compose.yaml`
-mit den Anpassungen aus `compose.e2e.yaml` (Keycloak, baseservice, webservice,
-Postgres, ein S3-Ersatz statt AWS und Caddy mit einer eigenen Test-CA). Die App
+Playwright-Tests gegen den kompletten Stack: `local/compose.yaml` mit den
+Anpassungen aus `compose.e2e.yaml` (Keycloak, baseservice, webservice,
+Postgres, Bilder und Videos im Dateispeicher wie in Produktion und
+Caddy mit einer eigenen Test-CA). Die App
 läuft dabei wie in Produktion unter HTTPS, hier unter `https://vereint.test:8443`.
 
 In GitHub Actions laufen die Tests bei jedem Pull Request und Push auf

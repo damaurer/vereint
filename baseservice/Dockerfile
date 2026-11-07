@@ -28,7 +28,10 @@ WORKDIR /app
 # `curl` wird ausschliesslich fuer den Healthcheck auf /api/v1/health benoetigt.
 # `pebble` (Service-Manager aus dem Ubuntu-Basisimage) wird nicht genutzt und
 # bringt eine Go-Laufzeit mit bekannten Schwachstellen mit; daher entfernt.
+# `apt-get upgrade` holt Sicherheitsupdates (z. B. apt selbst), die noch nicht
+# im Basis-Image stecken.
 RUN apt-get update \
+ && apt-get upgrade -y --no-install-recommends \
  && apt-get install --no-install-recommends -y curl \
  && rm -rf /var/lib/apt/lists/* \
  && rm -f /usr/bin/pebble

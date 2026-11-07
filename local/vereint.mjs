@@ -68,10 +68,6 @@ function ensureEnv() {
     KEYCLOAK_REGISTRATION_CLIENT_SECRET: rand(),
     SESSION_SECRET: rand(),
     DATA_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
-    S3_BUCKET: 'vereint-local',
-    S3_REGION: 'us-east-1',
-    S3_ACCESS_KEY: `local${randomBytes(8).toString('hex')}`,
-    S3_SECRET_KEY: rand(),
     ...SEED_PASSWORDS,
   };
   const text = Object.entries(values).map(([key, value]) => `${key}=${value}`).join('\n');
@@ -87,9 +83,9 @@ function compose(args) {
   return run('docker', [
     'compose',
     '--project-name', 'vereint-local',
-    '--project-directory', join(ROOT, 'deploy'),
+    '--project-directory', join(ROOT, 'local'),
     '--env-file', ENV_FILE,
-    '-f', join(ROOT, 'deploy', 'compose.yaml'),
+    '-f', join(ROOT, 'local', 'compose.yaml'),
     '-f', join(ROOT, 'local', 'compose.local.yaml'),
     ...args,
   ]);
@@ -177,8 +173,8 @@ function testFrontend() {
   return containerTest(
     'frontend',
     'node:22.23.3',
-    // keycloak/ prüfen die Realm-Tests mit.
-    { dirs: ['webservice', 'keycloak'], exclude: ['node_modules', 'dist', '.angular'] },
+    // keycloak/ und das Caddyfile prüfen die Realm- und Caddyfile-Tests mit.
+    { dirs: ['webservice', 'keycloak', 'local/Caddyfile'], exclude: ['node_modules', 'dist', '.angular'] },
     'npm ci --no-audit --no-fund --loglevel=error && npm test -- --watch=false',
     ['-v', 'vereint-local-npm:/root/.npm'],
   );

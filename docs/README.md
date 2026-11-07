@@ -23,13 +23,9 @@ docs/
 ├── offene-punkte.md                      # Bekannte Lücken und nächste Schritte
 ├── handbuch/                             # Benutzerhandbuch je Rolle mit Bildschirmfotos
 │
-├── betrieb/                              # Produktion: Strato, CI, AWS-Variante, Deployment, Backups, Schlüssel
-│   ├── strato.md                         # Betrieb auf Strato (eigener VPS): Plan und Go-Live-Checkliste
-│   ├── go-live-checkliste.md             # Was vor dem ersten Produktivbetrieb auf AWS von Hand zu tun ist
+├── betrieb/                              # Images, Selbstbetrieb, CI, Schlüssel
+│   ├── selbst-betreiben.md               # Images, Konfiguration, erster Start, Updates
 │   ├── branches-und-ci.md                # develop, qs, main, Prüfungen vor jedem Merge, Images
-│   ├── aws-und-kosten.md                 # Terraform, Server, Budget, monatliche Kosten
-│   ├── deployment-und-rollback.md        # Automatisches Ausrollen, Health Check, Zurückrollen
-│   ├── backups-und-wiederherstellung.md  # Nächtliche Backups, Snapshots, Restore
 │   ├── sicherheit-und-schluessel.md      # Verschlüsselung, Secrets, Offline-Schlüssel, Härtung
 │   └── open-source.md                    # Lizenz (AGPL-3.0), Öffentlichschalten, Selbstbetrieb
 │
@@ -46,7 +42,7 @@ docs/
 │   ├── 04-persistence-and-migrations.md  # Entities, Repositories, Optimistic Locking & Liquibase
 │   ├── 05-error-handling-and-observability.md # ApiException, ErrorCode, RFC 7807, Actuator & OpenAPI
 │   ├── i18n.md                           # Mehrsprachige Fehler- und Validierungstexte
-│   ├── 06-integrations.md                # Objektspeicher (S3/In-Memory), Web-Push (VAPID) & Chat
+│   ├── 06-integrations.md                # Dateispeicher (Verzeichnis/S3/In-Memory), Web-Push (VAPID) & Chat
 │   └── 07-extending-the-service.md       # How-Tos, Testing (MockMvc/Testcontainers), Troubleshooting & PR-Checkliste
 │
 ├── backend-for-frontend/                 # Express 5 BFF Technische Dokumentation
@@ -83,7 +79,7 @@ docs/
 │
 └── operations/                           # Lokaler Betrieb, Keycloak, Speicher & Migrationen
     ├── local-setup-docker.md             # Lokale Entwicklung & Docker Compose Topology
-    ├── keycloak-and-storage.md           # Keycloak Realms & Objektspeicher (Verzeichnis, S3, lokal S3Mock)
+    ├── keycloak-and-storage.md           # Keycloak Realms & Dateispeicher (Verzeichnis, optional S3)
     └── database-migrations.md            # Liquibase Migrationen & Schema-Verwaltung
 ```
 
@@ -140,5 +136,5 @@ docs/
 - **Für Event-Betreiber & Thekenteams**:
   1. Siehe [Tablet Strichlisten-Recorder](domains/tablet-strichliste-recorder.md) für Kiosk-Abläufe, Speisen-/Getränkeauswahl und 1-Tap-Touch-Buchungen.
 - **Für den Betrieb (Produktion)**:
-  1. Vor dem ersten Ausrollen die [Go-Live-Checkliste](betrieb/go-live-checkliste.md) abarbeiten.
-  2. Siehe [Deployment & Rollback](betrieb/deployment-und-rollback.md), [Backups & Wiederherstellung](betrieb/backups-und-wiederherstellung.md) und [Sicherheit & Schlüssel](betrieb/sicherheit-und-schluessel.md).
+  1. Images, Konfiguration und erster Start: [Vereint selbst betreiben](betrieb/selbst-betreiben.md).
+  2. Verschlüsselung und Schlüssel: [Sicherheit & Schlüssel](betrieb/sicherheit-und-schluessel.md).

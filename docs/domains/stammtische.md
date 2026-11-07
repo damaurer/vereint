@@ -175,7 +175,7 @@ sofern sie noch „Mein Stammtisch“ hieß; der Name lässt sich unter **Gruppe
 
 - Row-Level-Security greift nur für Datenbankbenutzer ohne Superuser- und ohne
   `BYPASSRLS`-Recht. In Produktion ist das der Benutzer `vereint`
-  (`deploy/postgres/init-databases.sh`), dem die Tabellen gehören; `FORCE` sorgt
+  (`local/postgres/init-databases.sh`), dem die Tabellen gehören; `FORCE` sorgt
   dafür, dass die Policy auch für den Eigentümer gilt. Lokal mit
   `docker compose` verbindet sich der Dienst als Superuser, dort ist RLS wirksam
   ausgeschaltet; die Trennung in der Anwendung bleibt.

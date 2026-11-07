@@ -12,12 +12,12 @@ function findRepoFile(relativePath: string): string {
 }
 
 /**
- * Caddy (AWS-Betrieb) erlaubt große Körper nur auf dem Upload-Pfad für
- * Moment-Dateien. Weicht der Pfad im Caddyfile vom echten Upload-Pfad ab,
+ * Caddy (lokaler und E2E-Stack) erlaubt große Körper nur auf dem Upload-Pfad
+ * für Moment-Dateien; ein Proxy in Produktion braucht dieselbe Regel. Weicht der Pfad im Caddyfile vom echten Upload-Pfad ab,
  * scheitern Videos über 8 MB mit 413 (Issue #68).
  */
-describe('deploy/Caddyfile', () => {
-  const caddyfile = readFileSync(findRepoFile('deploy/Caddyfile'), 'utf8');
+describe('local/Caddyfile', () => {
+  const caddyfile = readFileSync(findRepoFile('local/Caddyfile'), 'utf8');
 
   function regexOf(line: RegExp): RegExp {
     const match = caddyfile.match(line);

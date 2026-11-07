@@ -1,13 +1,13 @@
-# Produktions-Stack fuer einen einzelnen Server (siehe deploy/README.md).
+# Gemeinsamer Stack für den lokalen Start (local/vereint.mjs) und die
+# E2E-Tests (e2e/stack.sh) und zugleich ein Beispiel fuer den Betrieb
+# (docs/betrieb/selbst-betreiben.md): dieselben Images, PostgreSQL mit eigenem
+# Benutzer `vereint` (Row-Level-Security), Bilder und Videos verschlüsselt im
+# Dateisystem (STORAGE_BACKEND=filesystem), gehärtete Container, Caddy davor
+# und Keycloak mit dem Realm aus keycloak/ unter /kc.
 #
-# Werte kommen aus `.env` neben dieser Datei. Die Datei erzeugt
-# `bin/fetch-env.sh` aus dem AWS SSM Parameter Store; sie wird nie eingecheckt.
-# Alle Daten liegen unter /srv/vereint/data auf dem separaten, taeglich
-# gesicherten Datenvolume.
-#
-# Nach aussen ist ausschliesslich Caddy erreichbar (80/443). Keycloaks
-# Admin-Konsole lauscht nur auf 127.0.0.1 und ist ueber einen
-# Session-Manager-Tunnel erreichbar.
+# Werte kommen aus der Env-Datei, die local/vereint.mjs bzw. e2e/stack.sh mit
+# Wegwerf-Secrets erzeugt. Die Anpassungen je Zweck stehen in
+# local/compose.local.yaml und e2e/compose.e2e.yaml.
 
 name: vereint
 
@@ -39,7 +39,7 @@ services:
       PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?PUBLIC_DOMAIN fehlt}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - /srv/vereint/data/caddy:/data
+      - caddy-data:/data
     networks:
       default:
         # Container erreichen die oeffentliche Domain direkt ueber Caddy, ohne
@@ -69,7 +69,7 @@ services:
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?KEYCLOAK_DB_PASSWORD fehlt}
       VEREINT_DB_PASSWORD: ${VEREINT_DB_PASSWORD:?VEREINT_DB_PASSWORD fehlt}
     volumes:
-      - /srv/vereint/data/postgres:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
       - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/10-init-databases.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -90,7 +90,6 @@ services:
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
       KC_HOSTNAME: https://${PUBLIC_DOMAIN}/kc
-      # Admin-Konsole nur ueber den Tunnel auf localhost:8082 (siehe README).
       KC_HOSTNAME_ADMIN: http://localhost:8082/kc
       KC_HTTP_ENABLED: "true"
       KC_PROXY_HEADERS: xforwarded
@@ -124,10 +123,13 @@ services:
   baseservice:
     <<: *defaults
     image: ${BASESERVICE_IMAGE:?BASESERVICE_IMAGE fehlt}
-    # Unveraenderliches Dateisystem; nur /tmp (Tomcat, Uploads) ist beschreibbar.
+    # Unveraenderliches Dateisystem; nur /tmp (Tomcat, Uploads) und die
+    # Dateien sind beschreibbar.
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777
+    volumes:
+      - files:/data/files
     environment:
       VEREINT_DB_URL: jdbc:postgresql://postgres:5432/vereint
       VEREINT_DB_USERNAME: vereint
@@ -137,13 +139,9 @@ services:
       KEYCLOAK_ISSUER_URI: https://${PUBLIC_DOMAIN}/kc/realms/vereint
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/kc/realms/vereint/protocol/openid-connect/certs
       VEREIN_CORS_ALLOWED_ORIGINS: https://${PUBLIC_DOMAIN}
-      S3_ENABLED: "true"
-      S3_ENDPOINT: https://${S3_BUCKET:?S3_BUCKET fehlt}.s3.${S3_REGION:?S3_REGION fehlt}.amazonaws.com
-      S3_BUCKET: ${S3_BUCKET}
-      S3_REGION: ${S3_REGION}
-      S3_PATH_STYLE_ACCESS: "false"
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY fehlt}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY fehlt}
+      # Bilder und Videos im Volume `files`.
+      STORAGE_BACKEND: filesystem
+      STORAGE_DIRECTORY: /data/files
       DATA_ENCRYPTION_ENABLED: "true"
       DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?DATA_ENCRYPTION_KEY fehlt}
       DATA_ENCRYPTION_KEY_PREVIOUS: ${DATA_ENCRYPTION_KEY_PREVIOUS:-}
@@ -194,3 +192,8 @@ services:
       retries: 10
       start_period: 30s
     mem_limit: 256m
+
+volumes:
+  caddy-data:
+  postgres-data:
+  files:

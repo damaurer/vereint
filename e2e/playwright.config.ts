@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * E2E-Tests gegen den Produktions-Stack aus e2e/stack.sh
- * (Caddy, Keycloak, webservice, baseservice, PostgreSQL, S3).
+ * (Caddy, Keycloak, webservice, baseservice, PostgreSQL, Dateispeicher).
  */
 export const BASE_URL = process.env.E2E_BASE_URL ?? 'https://vereint.test:8443';
 

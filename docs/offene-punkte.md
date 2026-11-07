@@ -10,9 +10,9 @@ Issues. Stand 05.11.2026.
 
 | Punkt | Issue |
 | :--- | :--- |
-| Go-Live auf dem Strato VPS (`vereint.maurercloud.de`), Schritte in [Betrieb auf einem Strato VPS](betrieb/strato.md#checkliste-für-den-go-live) | [#57](https://github.com/damaurer/vereint/issues/57) mit Unteraufgaben |
+| Erster Produktivbetrieb | [#57](https://github.com/damaurer/vereint/issues/57) mit Unteraufgaben |
 | Prüfen nach dem ersten Deployment: Barcode-Kamera, Web Push, Zwei-Faktor-Anmeldung und Video-Upload gehen erst unter echtem HTTPS am Handy | [#62](https://github.com/damaurer/vereint/issues/62) |
-| Rechtliches vor dem Öffnen für andere: Betreiberangaben in `webservice/src/app/legal/legal-operator.ts`, Datenschutzerklärung, AV-Vertrag ([rechtliches.md](domains/rechtliches.md#vor-dem-freischalten-der-registrierung)). Bis dahin bleibt in LinuxServerSetup `vereint_signup_enabled: false` ([Schritt 6](betrieb/strato.md#6-rechtliches-vor-dem-öffnen-für-andere)); Einladungslinks funktionieren trotzdem | [#63](https://github.com/damaurer/vereint/issues/63) |
+| Rechtliches vor dem Öffnen für andere: Betreiberangaben in `webservice/src/app/legal/legal-operator.ts`, Datenschutzerklärung, AV-Vertrag ([rechtliches.md](domains/rechtliches.md#vor-dem-freischalten-der-registrierung)). Bis dahin bleibt `SIGNUP_ENABLED=false`; Einladungslinks funktionieren trotzdem | [#63](https://github.com/damaurer/vereint/issues/63) |
 | Regel für Barcode-Käufe (Scannen nur bei laufenden Events, an denen das Mitglied teilnimmt) bestätigen | [#67](https://github.com/damaurer/vereint/issues/67) |
 | Keycloak-Login-Theme: FTL-Vorlagen mit der laufenden Keycloak-Version abgleichen ([keycloak/README.md](../keycloak/README.md#produktion)) | [#72](https://github.com/damaurer/vereint/issues/72) |
 | Bildschirmfotos im Handbuch erneuern und ergänzen (aufnehmen mit [`scripts/handbook`](../scripts/handbook/)) | [#70](https://github.com/damaurer/vereint/issues/70) |

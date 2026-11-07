@@ -33,7 +33,7 @@ graph TD
     subgraph InfraLayer ["4. Infrastructure & Persistence"]
         PG["PostgreSQL 17 (vereint-db:5432)"]
         KC["Keycloak 26 (keycloak:8082)"]
-        S3["Objektspeicher (Produktion Verzeichnis, lokal S3Mock)"]
+        S3["Dateispeicher (Verzeichnis)"]
     end
 
     Browser -->|HTTP / Hydration / Static Assets| SSR
@@ -90,8 +90,8 @@ graph TD
 - **PostgreSQL 17**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.
 - **Liquibase**: Versionskontrollierte Datenbankmigrationen (`db.changelog-master.xml`).
 - **Keycloak 26.8.1**: Identity & Access Management (OIDC Provider). Lokal mit Testbenutzern (`keycloak/dev/realm-export-dev.json`), in Produktion ohne Seed-Benutzer (`keycloak/realm-export.json`).
-- **Objektspeicher**: In Produktion auf Strato ein Verzeichnis im Docker-Volume `vereint_files` (`STORAGE_BACKEND=filesystem`), in der AWS-Variante ein privater S3-Bucket, lokal S3Mock (`docker-compose.yml`), in den E2E-Tests ein S3-Ersatz.
-- **Produktion**: Vereint läuft unter `https://vereint.maurercloud.de` auf einem Strato VPS, den [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) einrichtet (Traefik, Keycloak der Plattform mit Realm `vereint`, PostgreSQL mit pgvector), siehe [Betrieb auf einem Strato VPS](../betrieb/strato.md). Die AWS-Variante (Docker Compose hinter Caddy) beschreiben [deploy/README.md](../../deploy/README.md) und [infra/aws/README.md](../../infra/aws/README.md).
+- **Dateispeicher**: Überall ein Verzeichnis (`STORAGE_BACKEND=filesystem`): in Produktion ein dauerhaftes Volume, im lokalen Stack und in den E2E-Tests das Volume `files`, bei `./gradlew bootRun` `<Repo>/.data/files`. Ein S3-kompatibler Speicher ist optional möglich (`STORAGE_BACKEND=s3`).
+- **Produktion**: Das Repository liefert die Images `ghcr.io/damaurer/baseservice` und `ghcr.io/damaurer/webservice`; Betrieb siehe [Vereint selbst betreiben](../betrieb/selbst-betreiben.md).
 
 ---
 
@@ -128,6 +128,5 @@ sequenceDiagram
 | **Keycloak IAM** | Keycloak 26 Dev | `8082` | `8080` | HTTP / OIDC Provider & Admin-Console |
 | **Keycloak DB** | PostgreSQL 17 | `5433` | `5432` | PostgreSQL JDBC (Keycloak Realm DB) |
 | **Vereint DB** | PostgreSQL 17 | `5432` | `5432` | PostgreSQL JDBC (Hauptanwendung) |
-| **S3-Ersatz** | S3Mock (nur lokal) | `9090` | `9090` | S3 REST API (Asset Storage) |
 
-In Produktion ist von außen nur Caddy auf Port 80/443 erreichbar; alle anderen Dienste sprechen nur im internen Container-Netz miteinander ([deploy/README.md](../../deploy/README.md)).
+In Produktion sollte von außen nur der Reverse Proxy auf Port 80/443 erreichbar sein; alle anderen Dienste sprechen nur im internen Container-Netz miteinander ([Vereint selbst betreiben](../betrieb/selbst-betreiben.md)).

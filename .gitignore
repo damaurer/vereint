@@ -4,3 +4,6 @@
 # Lokaler Stack (local/vereint.mjs)
 /local/.env.local
 /local/test-results/
+
+# Dateispeicher der lokalen Entwicklung (STORAGE_DIRECTORY in .env.example)
+/.data/

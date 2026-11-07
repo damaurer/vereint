@@ -1,11 +1,11 @@
-# Oeffentlicher Einstiegspunkt. Caddy holt und erneuert das TLS-Zertifikat
-# fuer die Domain automatisch bei Let's Encrypt; HTTP leitet auf HTTPS um.
+# Einstiegspunkt des lokalen und des E2E-Stacks (local/compose.yaml) und
+# Vorbild fuer den Reverse Proxy in Produktion (gleiche Grenzen und Header).
 {$PUBLIC_DOMAIN} {
 	encode zstd gzip
 
 	# Groesster legitimer Request ist ein Bild-Upload (6 MB, siehe baseservice).
 	# Einzige Ausnahme: Bilder und kurze Videos in Moments (bis 100 MiB, siehe
-	# MomentMediaService); sie stroemen ungepuffert bis in den Objektspeicher.
+	# MomentMediaService); sie stroemen ungepuffert bis in den Dateispeicher.
 	@momentMedia path_regexp momentMedia ^/api/v1/moments/[^/]+/media$
 	@otherRequests not path_regexp ^/api/v1/moments/[^/]+/media$
 	request_body @momentMedia {
@@ -28,8 +28,8 @@
 		-X-Powered-By
 	}
 
-	# Keycloak-Verwaltung (Admin-Konsole und Master-Realm) ist von aussen
-	# nicht erreichbar, nur per Session-Manager-Tunnel (siehe README).
+	# Keycloak-Verwaltung (Admin-Konsole und Master-Realm) ist ueber Caddy
+	# nicht erreichbar, lokal nur direkt am Keycloak-Port.
 	handle /kc/admin* {
 		respond 404
 	}
