@@ -3,10 +3,17 @@
 Ein Befehl startet die komplette App auf dem eigenen Rechner, mit Demo-Daten.
 Ein zweiter Befehl führt alle Tests aus: Backend, Frontend und E2E.
 
-Es läuft derselbe Stack wie in Produktion (`deploy/compose.yaml`: Caddy,
-Keycloak mit dem Produktionsrealm, baseservice, webservice, PostgreSQL), nur
-unter `http://localhost:4200` statt HTTPS und mit einem S3-Ersatz statt AWS.
-Die Abweichungen stehen in [`compose.local.yaml`](compose.local.yaml).
+Es laufen dieselben Images und dieselbe Konfiguration wie auf dem
+Strato-Server ([`compose.yaml`](compose.yaml): baseservice, webservice,
+PostgreSQL, Bilder und Videos verschlüsselt im Dateispeicher). Statt Traefik
+und dem Keycloak der Plattform stehen Caddy und ein eigener Keycloak mit dem
+Produktionsrealm davor, und die App läuft unter `http://localhost:4200` statt
+HTTPS. Die lokalen Abweichungen stehen in
+[`compose.local.yaml`](compose.local.yaml).
+
+Wer den Stack schon vor dem Umstieg auf den Dateispeicher genutzt hat
+(November 2026), startet einmal mit `node local/vereint.mjs down --clean` und
+`up` neu, sonst fehlen die Bilder der Demo-Daten.
 
 ## Voraussetzungen
 

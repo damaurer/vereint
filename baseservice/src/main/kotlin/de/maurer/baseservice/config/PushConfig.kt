@@ -28,7 +28,7 @@ class PushConfig {
     @ConditionalOnProperty(prefix = "vereint.push", name = ["enabled"], havingValue = "true")
     fun vapidPushSender(properties: PushProperties, objectMapper: ObjectMapper): PushSender =
         VapidPushSender(
-            // Schlüssel aus Terraform kommen DER-kodiert; ungültige Werte brechen
+            // Schlüssel dürfen auch DER-kodiert sein (z. B. von openssl); ungültige Werte brechen
             // den Start ab, statt Push still ins Leere laufen zu lassen.
             properties.copy(
                 publicKey = VapidKeys.normalizePublicKey(properties.publicKey),

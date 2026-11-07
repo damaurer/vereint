@@ -6,7 +6,7 @@
 | :--- | :--- |
 | `develop` | Standard-Branch, hier landen alle Pull Requests |
 | `qs` | Qualitätssicherung vor dem Release |
-| `main` | Produktion. **Ein Merge nach `main` rollt automatisch aus**, sobald ein Image neu gebaut wurde oder sich `deploy/` geändert hat ([Deployment und Rollback](deployment-und-rollback.md)) |
+| `main` | Produktion. **Ein Merge nach `main` rollt automatisch auf den Strato-Server aus**, sobald baseservice oder webservice neu gebaut wurden ([Betrieb auf einem Strato VPS](strato.md#im-betrieb)) |
 
 Feature-Branches gehen per Pull Request nach `develop`. Die Prüfungen laufen nur
 für Pull Requests in diese drei Branches; ein Pull Request, der auf einem
@@ -18,10 +18,9 @@ anderen Feature-Branch aufsetzt, bekommt CI erst, wenn er auf `develop` zeigt.
 | :--- | :--- |
 | `baseservice CI/CD` | Tests (JDK 25), Docker-Image bauen, Trivy-Scan des Images |
 | `webservice CI/CD` | Tests, Docker-Image bauen, Trivy-Scan des Images |
-| `keycloak CI/CD` | Keycloak-Image mit Realm und Theme bauen und scannen |
+| `keycloak CI/CD` | Keycloak-Image mit Realm und Theme bauen und scannen (nur für den lokalen Stack und die E2E-Tests, wird nicht veröffentlicht) |
 | `Security` | Gitleaks (Secrets in der gesamten Historie), Trivy auf Abhängigkeiten und Konfiguration; zusätzlich jeden Montag |
 | `E2E-Tests` | Playwright gegen den kompletten Stack ([E2E-Tests](../../e2e/README.md)) |
-| `Infrastruktur` | `terraform fmt` und `terraform validate` bei Änderungen in `infra/` |
 
 GitHub Actions sind auf Commit-SHAs gepinnt, Images auf Digests. Dependabot hält
 beides und die Abhängigkeiten aktuell
@@ -29,15 +28,16 @@ beides und die Abhängigkeiten aktuell
 
 Für `main`, `qs` und `develop` sollte in GitHub ein Branch-Schutz gelten: Pull
 Request vor dem Merge, die CI-Checks als Pflicht, kein Force-Push und kein
-Löschen (siehe [Go-Live-Checkliste](go-live-checkliste.md)).
+Löschen (siehe [Go-Live-Checkliste](strato.md#checkliste-für-den-go-live)).
 
 ## Images
 
 Die drei Image-Workflows laufen nur, wenn sich ihr Ordner (`baseservice/`,
 `webservice/`, `keycloak/`) oder der Workflow selbst geändert hat; `Security`
 und `E2E-Tests` laufen immer. Gebaut und gescannt wird bei jedem Pull Request
-und Push. Nur nach einem Merge auf `qs` oder `main` werden die Images für
-`linux/amd64` und `linux/arm64` nach `ghcr.io/damaurer/<dienst>` gepusht,
-getaggt mit Commit-SHA und Branch-Namen. Mit *Run workflow* lassen sich die
-Image-Workflows auch von Hand starten. Ausgerollt wird immer über den Digest,
-nie über einen veränderlichen Tag.
+und Push. Nur nach einem Merge auf `qs` oder `main` werden baseservice und
+webservice für `linux/amd64` und `linux/arm64` nach
+`ghcr.io/damaurer/<dienst>` gepusht, getaggt mit Commit-SHA und Branch-Namen.
+Mit *Run workflow* lassen sich die Image-Workflows auch von Hand starten. Vor
+dem Ausrollen friert `Deployment (Produktion)` den Stand `:main` beider Images
+als gemeinsamen Tag `release-<commit>` ein; der Server zieht nur diesen Tag.

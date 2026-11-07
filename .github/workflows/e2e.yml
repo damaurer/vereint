@@ -1,8 +1,8 @@
 name: E2E-Tests
 
-# Startet den kompletten Produktions-Stack (deploy/compose.yaml mit den
-# Anpassungen aus e2e/compose.e2e.yaml: Keycloak, baseservice, webservice,
-# Postgres, S3-Ersatz, Caddy mit Test-CA) und testet die App mit Playwright
+# Startet den kompletten Stack (local/compose.yaml mit den Anpassungen aus
+# e2e/compose.e2e.yaml: Keycloak, baseservice, webservice, Postgres,
+# Dateispeicher, Caddy mit Test-CA) und testet die App mit Playwright
 # im Browser unter https://vereint.test:8443.
 #
 # Laeuft bei jedem Pull Request und Push auf develop, qs und main. Bei

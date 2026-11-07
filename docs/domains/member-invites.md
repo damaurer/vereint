@@ -35,7 +35,7 @@ registriert haben. Offene Links lassen sich zurückziehen.
 - Token: 32 Byte aus `SecureRandom` (base64url). In der Datenbank liegt nur der
   Hash (`member_invites.token_hash`).
 - Das Token steht im **URL-Fragment** (`#…`). Browser schicken Fragmente nie an
-  den Server, das Token landet also weder in Caddy-Zugriffslogs noch im
+  den Server, das Token landet also weder in Zugriffslogs von Traefik oder Caddy noch im
   `Referer`. Die Seite entfernt es nach dem Lesen aus der Adresszeile und
   schickt es nur im Request-Body.
 - Registrierung und Beitritt sind nur mit gültigem, nicht widerrufenem, nicht
@@ -51,8 +51,9 @@ registriert haben. Offene Links lassen sich zurückziehen.
   `vereint-registration`. Dessen Service-Account hat nur
   `realm-management/manage-users`; das Secret
   (`KEYCLOAK_REGISTRATION_CLIENT_SECRET`) kennt nur der Fachservice. Der Aufruf
-  geht im Container-Netz direkt an `http://keycloak:8080/kc`, weil Caddy
-  `/kc/admin` von außen sperrt.
+  geht im Container-Netz direkt an Keycloak (lokal `http://keycloak:8080/kc`,
+  auf Strato über das Netz `keycloak-vereint`), weil die Admin-API von außen
+  gesperrt ist.
 - Schlägt nach dem Anlegen in Keycloak etwas fehl (z. B. Datenbank), löscht der
   Fachservice das Keycloak-Konto wieder; der Link bleibt unverbraucht.
 - Passwort: 10 bis 128 Zeichen. Es wird nie gespeichert oder geloggt

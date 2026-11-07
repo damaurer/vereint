@@ -105,7 +105,7 @@ Ein eigenes Thekenkonto ist besser als ein persönliches: So erscheint auf dem T
 
 ## Passwort vergessen
 
-Vereint verschickt keine E-Mails, deshalb gibt es keinen Link zum Zurücksetzen. Hat jemand sein Passwort vergessen, hilft, wer Zugang zur Keycloak-Verwaltung hat, meist der Betreiber der Installation. Dort unter Realm `vereint` → *Users* → Person → *Credentials* → *Reset password* ein neues Passwort mit **Temporary** setzen. Die Person muss es beim nächsten Anmelden ändern. Wie man die Keycloak-Verwaltung erreicht, steht in [`deploy/README.md`](../../deploy/README.md#keycloak-verwaltung).
+Vereint verschickt keine E-Mails, deshalb gibt es keinen Link zum Zurücksetzen. Hat jemand sein Passwort vergessen, hilft, wer Zugang zur Keycloak-Verwaltung hat, meist der Betreiber der Installation. Dort unter Realm `vereint` → *Users* → Person → *Credentials* → *Reset password* ein neues Passwort mit **Temporary** setzen. Die Person muss es beim nächsten Anmelden ändern. Die Keycloak-Verwaltung liegt auf dem Strato-Server unter `https://auth.maurercloud.de/admin` ([Betrieb auf einem Strato VPS](../betrieb/strato.md#im-betrieb)).
 
 ## Plattform-Administration
 

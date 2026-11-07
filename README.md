@@ -36,7 +36,7 @@ direkt auf dem Rechner. Voraussetzungen: Docker mit Compose, Java 25, Node.js �
 # 1. Umgebungsvariablen anlegen; die Vorlage funktioniert ohne Änderungen
 cp .env.example .env
 
-# 2. PostgreSQL (2x), Keycloak und S3Mock (lokaler S3-Ersatz) starten
+# 2. PostgreSQL (2x) und Keycloak starten
 docker compose up -d
 
 # 3. Fachservice, Port 8081
@@ -71,11 +71,12 @@ graph LR
 Produktion: `https://vereint.maurercloud.de` auf einem Strato VPS, den
 [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) per Ansible
 einrichtet (Traefik, Keycloak der Plattform, Backups nach HiDrive), siehe
-[Betrieb auf einem Strato VPS](docs/betrieb/strato.md). Die frühere AWS-Variante
-([infra/aws](infra/aws/README.md), [deploy](deploy/README.md)) bleibt im Repo. Chat-Nachrichten, Mitteilungen, Bilder und Videos
-verschlüsselt der baseservice mit AES-256-GCM, bevor sie gespeichert werden.
-Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` rollt mit
-Backup, Health Check und automatischem Rollback aus.
+[Betrieb auf einem Strato VPS](docs/betrieb/strato.md). Dieses Repo liefert
+die Images und die Pipeline, den Server beschreibt allein LinuxServerSetup.
+Chat-Nachrichten, Mitteilungen, Bilder und Videos verschlüsselt der
+baseservice mit AES-256-GCM, bevor sie gespeichert werden. Ein Merge nach
+`main` mit neuen Images rollt mit Backup, Health Check und automatischem
+Rollback aus.
 
 ---
 
@@ -85,10 +86,9 @@ Backup, Health Check und automatischem Rollback aus.
 | :--- | :--- | :--- |
 | `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-API, Fachlogik, Trennung der Gruppen (Row-Level-Security), PostgreSQL/Liquibase, Verschlüsselung, Dateispeicher (Verzeichnis oder S3), Web Push |
 | `webservice/` | Angular 22, Express 5, TypeScript 6 | Oberfläche, PWA, SSR, BFF mit Session-Cookie und API-Proxy |
-| `keycloak/` | Keycloak 26.8.1 | Realm-Definitionen, Login-Theme, Produktions-Image |
-| `deploy/` | Docker Compose, Caddy | Stack für die AWS-Variante, Backups, Deployment-Skripte |
-| `infra/aws/` | Terraform | AWS-Variante: Server, Buckets, Secrets, Alarme, GitHub-OIDC |
-| `e2e/` | Playwright | Tests gegen den kompletten Produktions-Stack |
+| `keycloak/` | Keycloak 26.8.1 | Realm-Definitionen und Login-Theme (Vorlage für LinuxServerSetup), Image für den lokalen Stack |
+| `local/` | Docker Compose, Caddy | Kompletter Stack für den lokalen Start und die E2E-Tests |
+| `e2e/` | Playwright | Tests gegen den kompletten Stack |
 | `scripts/handbook/` | Playwright | Bildschirmfotos für das Benutzerhandbuch |
 | `docs/` | Markdown | Technische und fachliche Dokumentation, Benutzerhandbuch |
 
@@ -98,7 +98,7 @@ Backup, Health Check und automatischem Rollback aus.
 
 - Gearbeitet wird auf `develop`. Jeder Pull Request nach `develop`, `qs` oder `main`
   muss Tests, Sicherheitsscans und E2E-Tests bestehen.
-- Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` rollt
+- Ein Merge nach `main` mit neuen Images rollt
   automatisch auf den Strato VPS aus (`deploy vereint <release-tag>` per SSH):
   Datenbank-Dump vorher, Health Check danach, automatischer Rollback bei Fehlern.
 - Chat-Nachrichten, Mitteilungen, Bilder und Videos werden in der App mit
@@ -112,11 +112,7 @@ Backup, Health Check und automatischem Rollback aus.
 | Thema | Dokument |
 | :--- | :--- |
 | Betrieb auf Strato (eigener Server), Go-Live-Checkliste | [Betrieb auf einem Strato VPS](docs/betrieb/strato.md) |
-| Vor dem ersten Produktivbetrieb auf AWS | [Go-Live-Checkliste](docs/betrieb/go-live-checkliste.md) |
 | Branches, CI, Images | [Branches und CI](docs/betrieb/branches-und-ci.md) |
-| AWS, Terraform, Kosten | [AWS und Kosten](docs/betrieb/aws-und-kosten.md) |
-| Ausrollen und Zurückrollen | [Deployment und Rollback](docs/betrieb/deployment-und-rollback.md) |
-| Backups und Restore | [Backups und Wiederherstellung](docs/betrieb/backups-und-wiederherstellung.md) |
 | Verschlüsselung, Schlüssel, Härtung | [Sicherheit und Schlüssel](docs/betrieb/sicherheit-und-schluessel.md) |
 | Lizenz, Öffentlichschalten, Selbstbetrieb | [Open Source](docs/betrieb/open-source.md) |
 
@@ -128,8 +124,7 @@ Backup, Health Check und automatischem Rollback aus.
 - [docs/handbuch/](docs/handbuch/README.md) – Benutzerhandbuch je Rolle
 - [docs/domains/stammtische.md](docs/domains/stammtische.md) – Mehrere Gruppen, Trennung der Daten, Rollen je Gruppe
 - [docs/betrieb/strato.md](docs/betrieb/strato.md) – Produktionsbetrieb auf Strato, Go-Live-Checkliste
-- [deploy/README.md](deploy/README.md) – AWS-Variante: Stack, Backups, Deployments
-- [infra/aws/README.md](infra/aws/README.md) – AWS-Variante mit Terraform
+- [local/README.md](local/README.md) – Lokal ausführen und testen
 - [e2e/README.md](e2e/README.md) – E2E-Tests
 
 ---

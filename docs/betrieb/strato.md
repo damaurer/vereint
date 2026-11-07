@@ -8,10 +8,9 @@ mit 2FA, Monitoring, Backups nach HiDrive und den Deploy-Zugang. Vereint ist
 dort eine eigene Rolle (`vereint`), beschrieben in
 [docs/vereint.md](https://github.com/damaurer/LinuxServerSetup/blob/master/docs/vereint.md).
 
-Diese Seite ist zugleich die Checkliste für den ersten Go-Live. Die
-AWS-Variante ([AWS und Kosten](aws-und-kosten.md), [`deploy/`](../../deploy/))
-bleibt im Repository. Welches Ziel ausgerollt wird, entscheidet die
-Repository-Variable `APP_NAME` (gesetzt: eigener Server, leer: AWS).
+Diese Seite ist zugleich die Checkliste für den ersten Go-Live. Das ist der
+einzige Produktionsweg: Die frühere AWS-Variante (Terraform, eigener
+Caddy-Stack, SSM) ist seit November 2026 aus dem Repository entfernt.
 
 ## Der Plan
 
@@ -25,19 +24,22 @@ Internet ──443──▶ Traefik ─┬─ vereint.maurercloud.de ──▶ v
               stündlich/nachts: Dumps und Volumes ──restic──▶ HiDrive
 ```
 
-| Thema | AWS (bisher geplant) | Strato mit LinuxServerSetup |
-| :--- | :--- | :--- |
-| Server | EC2 `t4g.small`, Terraform | VPS XL der Plattform, Ansible (`site.yml`) |
-| HTTPS | Caddy | Traefik der Plattform, Let's Encrypt |
-| Login | eigener Keycloak unter `/kc` | Keycloak der Plattform, eigener Realm `vereint` unter `auth.maurercloud.de` |
-| Datenbank | PostgreSQL 17 | PostgreSQL 17 mit pgvector (`pgvector/pgvector:0.8.7-pg17`) |
-| Secrets | SSM Parameter Store | Ansible Vault (`vault_vereint_*`), auf dem Server nur in Dateien für root |
-| Bilder und Videos | S3-Bucket | Docker-Volume `vereint_files` (`STORAGE_BACKEND=filesystem`), von der App verschlüsselt |
-| Deployment | OIDC und Systems Manager | SSH als Benutzer `deploy`, dessen Key nur `deploy vereint <tag>` darf |
-| Datenbank-Backup | `pg_dump` nach S3 | `pg_dumpall` vor jedem Deployment, stündlich und nachts (Label `backup.postgres`) |
-| Backups außer Haus | S3 (versioniert) | restic nach HiDrive, Kopie auf die NAS |
-| Keycloak-Verwaltung | Session-Manager-Tunnel | `https://auth.maurercloud.de/admin` nach Admin-Login mit 2FA |
-| Überwachung | CloudWatch | Grafana, Alertmanager und Uptime Kuma der Plattform |
+| Thema | Strato mit LinuxServerSetup |
+| :--- | :--- |
+| Server | VPS XL der Plattform, Ansible (`site.yml`) |
+| HTTPS | Traefik der Plattform, Let's Encrypt |
+| Login | Keycloak der Plattform, eigener Realm `vereint` unter `auth.maurercloud.de` |
+| Datenbank | PostgreSQL mit pgvector (Image aus `vereint_db_image` in LinuxServerSetup) |
+| Secrets | Ansible Vault (`vault_vereint_*`), auf dem Server nur in Dateien für root |
+| Bilder und Videos | Docker-Volume `vereint_files` (`STORAGE_BACKEND=filesystem`), von der App verschlüsselt |
+| Deployment | SSH als Benutzer `deploy`, dessen Key nur `deploy vereint <tag>` darf |
+| Datenbank-Backup | `pg_dumpall` vor jedem Deployment, stündlich und nachts (Label `backup.postgres`) |
+| Backups außer Haus | restic nach HiDrive, Kopie auf die NAS |
+| Keycloak-Verwaltung | `https://auth.maurercloud.de/admin` nach Admin-Login mit 2FA |
+| Überwachung | Grafana, Alertmanager und Uptime Kuma der Plattform |
+
+Lokal und in den E2E-Tests läuft derselbe Aufbau mit Caddy statt Traefik und
+einem eigenen Keycloak ([local/README.md](../../local/README.md)).
 
 Gleich bleiben Health Checks mit automatischem Rollback, die Verschlüsselung
 von Chat, Bildern und Videos in der App und die Trennung der Gruppen per
@@ -57,7 +59,13 @@ Row-Level-Security.
   [`.github/workflows/deploy.yml`](../../.github/workflows/deploy.yml) friert
   deshalb den Stand `:main` von baseservice und webservice als
   `release-<12 Zeichen Commit>` ein und rollt genau diesen Tag aus. Das
-  Keycloak-Image dieses Repos braucht der Server nicht.
+  Keycloak-Image dieses Repos wird nicht veröffentlicht; es läuft nur im
+  lokalen Stack und in den E2E-Tests.
+- **Große Uploads nur für Moments:** Traefik begrenzt Anfragen auf 8 MB,
+  außer auf dem Upload-Pfad `/api/v1/moments/<id>/media` (Bilder und Videos
+  bis 100 MiB). Lokal macht `local/Caddyfile` dasselbe, ein Test im
+  webservice prüft den Pfad. Ändert sich der Upload-Pfad, die Regel in
+  LinuxServerSetup (`roles/vereint/templates/compose.yml.j2`) mitziehen.
 - **Realm und Login-Theme** liegen als Kopie in LinuxServerSetup
   (`ansible/roles/keycloak/templates/realms/vereint-realm.json.j2` und
   `files/themes/vereint`). Wer `keycloak/realm-export.json` oder
@@ -135,10 +143,9 @@ HiDrive laufen. `203.0.113.10` steht unten für die IP des Servers.
       - `DEPLOY_SSH_KEY` = kompletter Inhalt von `deploy_vereint` (privater
         Schlüssel mit den Zeilen `-----BEGIN` und `-----END`)
       - `DEPLOY_KNOWN_HOSTS` = Ausgabe von `ssh-keyscan -t ed25519 203.0.113.10`
-- [ ] Unter *Settings → Secrets and variables → Actions → Variables* die
-      **Repository-Variable** `APP_NAME` = `vereint` anlegen. Sie muss im
-      Repository stehen, nicht im Environment, weil GitHub sie schon vor dem
-      Start des Jobs auswertet.
+- [ ] Nur wenn die App auf dem Server anders heißt als `vereint`: die
+      Repository-Variable `APP_NAME` mit diesem Namen anlegen. Ohne sie ruft
+      der Workflow `deploy vereint <tag>` auf.
 - [ ] Die Datei `deploy_vereint` vom eigenen Rechner löschen. Geht sie
       verloren, neu erzeugen und Schritt 2 und 4 wiederholen.
 - [ ] Branch-Schutz für `main`, `qs` und `develop`: Pull Request vor dem
@@ -151,9 +158,17 @@ HiDrive laufen. `203.0.113.10` steht unten für die IP des Servers.
 - [ ] `https://auth.maurercloud.de/admin` öffnen: erst Admin-Login der
       Plattform (Realm `server`, 2FA), dann Login im Realm `master`.
 - [ ] Links oben den Realm **`vereint`** wählen, *Users → Add user*, Passwort
-      setzen (*Temporary* an) und unter *Role mapping* die Realm-Rolle
-      `admin` zuweisen. Details:
-      [deploy/README.md](../../deploy/README.md#ersten-administrator-anlegen).
+      setzen (*Temporary* an, mindestens 10 Zeichen), *Email verified* an
+      und unter *Role mapping* die Realm-Rolle `admin` zuweisen. Sie macht
+      die Person zur **Plattform-Admin** (Gruppen unter `/plattform` anlegen,
+      umbenennen, archivieren). Beim ersten Login wird sie außerdem Admin der
+      noch nie genutzten Gruppe „Meine Gruppe“; alle anderen Rollen vergibt
+      jede Gruppe in der App, Realmrollen wie `board` oder `member` wirken
+      nicht.
+- [ ] „Passwort vergessen“ ist im Realm aus, weil Vereint keine E-Mails
+      verschickt. Vergisst jemand sein Passwort, setzt es die Administration
+      unter *Users → Benutzer → Credentials → Reset password* zurück
+      (*Temporary* an).
 
 ### 6. Rechtliches vor dem Öffnen für andere
 

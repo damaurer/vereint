@@ -48,7 +48,7 @@ Getränkedatenbank stammt aus Open Food Facts und steht unter der ODbL 1.0
    kostenlos).
 5. **Settings → Environments → production:** Deployments nur von `main`
    zulassen (falls noch nicht geschehen, siehe
-   [Go-Live-Checkliste](go-live-checkliste.md)).
+   [Go-Live-Checkliste](strato.md#checkliste-für-den-go-live)).
 6. **Settings → Branches:** Schutzregeln für `develop`, `qs` und `main`
    (Pull Request nötig, Prüfungen müssen grün sein).
 
@@ -65,5 +65,6 @@ Produktionsbetrieb auf einem eigenen Server richtet
 [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) per Ansible
 einen gehärteten Server mit Traefik, Backups und Monitoring ein; Vereint ist
 dort eine eigene Rolle, Dateien liegen in einem Docker-Volume, ausgerollt wird
-per SSH. Schritt für Schritt: [Betrieb auf einem Strato VPS](strato.md). Die
-AWS-Variante (Terraform, SSM, S3) beschreibt [AWS und Kosten](aws-und-kosten.md).
+per SSH. Schritt für Schritt: [Betrieb auf einem Strato VPS](strato.md). Wer
+lieber S3 statt eines Verzeichnisses nutzt, stellt `STORAGE_BACKEND=s3` und
+die `S3_*`-Werte ein ([Integrationen](../baseservice/06-integrations.md)).

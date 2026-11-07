@@ -107,29 +107,6 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  # S3-kompatibler Objektspeicher (S3Mock, wie im lokalen Stack und in den
-  # E2E-Tests). Legt den Bucket beim Start an und prueft keine Signaturen,
-  # S3_ACCESS_KEY/S3_SECRET_KEY sind deshalb beliebig. Produktion nutzt AWS S3.
-  # (Das fruehere MinIO-Image gibt es auf Docker Hub nicht mehr.)
-  object-storage:
-    image: adobe/s3mock:4.7.0
-    container_name: object-storage
-    environment:
-      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: ${S3_BUCKET:-vereint}
-      COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT: "true"
-      COM_ADOBE_TESTING_S3MOCK_STORE_ROOT: /data
-    ports:
-      - "9090:9090"
-    volumes:
-      - object-storage-data:/data
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9090/"]
-      interval: 3s
-      timeout: 5s
-      retries: 40
-    restart: unless-stopped
-
 volumes:
   keycloak-db-data:
   vereint-db-data:
-  object-storage-data:

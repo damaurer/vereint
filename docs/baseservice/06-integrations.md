@@ -1,6 +1,6 @@
 # 🔌 Integrationen, Objektspeicher & Push-Dienste
 
-In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: Objektspeicher (in Produktion auf Strato ein Verzeichnis im Docker-Volume, alternativ S3; lokal S3Mock), Web-Push-Zustellung über das VAPID-Protokoll, Kontoanlage in Keycloak sowie die zugehörigen Feature-Toggles.
+In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: Dateispeicher (in Produktion auf Strato und lokal ein Verzeichnis, optional S3), Web-Push-Zustellung über das VAPID-Protokoll, Kontoanlage in Keycloak sowie die zugehörigen Feature-Toggles.
 
 ---
 
@@ -13,7 +13,7 @@ graph LR
   Client[Browser / PWA] -->|1. Multipart Upload| Ctrl[ImageController]
   Ctrl --> Svc[ImageService]
   Svc --> Store{S3_ENABLED?}
-  Store -- true --> S3[S3ObjectStorage - AWS S3 / S3Mock]
+  Store -- true --> S3[S3ObjectStorage - S3-kompatibel]
   Store -- false --> Mem[InMemoryObjectStorage]
   Svc --> DB[(PostgreSQL: image_assets)]
 
@@ -40,7 +40,7 @@ interface ObjectStorage {
 
 ### 2. Implementierungen & Konfiguration (`StorageConfig.kt`)
 - **`FileSystemObjectStorage`**: Aktiviert mit `STORAGE_BACKEND=filesystem`. Legt die (verschlüsselten) Dateien im Verzeichnis `STORAGE_DIRECTORY` ab, schreibt atomar und prüft Pfade gegen Ausbruch. So läuft Vereint in Produktion auf Strato (Docker-Volume `vereint_files`, siehe [Strato](../betrieb/strato.md)).
-- **`S3ObjectStorage`**: Aktiviert mit `STORAGE_BACKEND=s3` oder, ohne `STORAGE_BACKEND`, mit `S3_ENABLED=true`. Spricht die S3-REST-API mit selbst signierten Anfragen (SigV4) an, lokal gegen S3Mock mit Path-Style-Access (`/bucket/key`), in der AWS-Variante gegen AWS S3 mit dem IAM-Benutzer `vereint-app-storage`.
+- **`S3ObjectStorage`**: Aktiviert mit `STORAGE_BACKEND=s3` oder, ohne `STORAGE_BACKEND`, mit `S3_ENABLED=true`. Spricht die S3-REST-API mit selbst signierten Anfragen (SigV4) an, optional mit Path-Style-Access (`/bucket/key`). Weder Produktion noch der lokale Stack nutzen es; es bleibt für Betreiber, die lieber einen S3-Dienst verwenden.
 - **`InMemoryObjectStorage`**: Fallback für lokale Entwicklung und Tests (`STORAGE_BACKEND=memory` oder nichts gesetzt und `S3_ENABLED=false`). Hält Binärdaten im Prozessspeicher; `presignedGetUrl` liefert eine Pseudo-URL mit derselben Vertragsform.
 - **Sicherheitsgarantie**: S3-Credentials gelangen **niemals** an den Client. Der Browser lädt Bilder nie direkt aus S3, sondern nur über `GET /api/v1/images/{id}/content`: Der `ImageService` prüft die Berechtigung bei jedem Abruf, liest den Chiffretext und liefert die entschlüsselten Daten mit `Cache-Control: private, no-store` aus. Presigned URLs nutzt der Service nur noch intern für den eigenen Zugriff auf S3 (Lebensdauer `S3_URL_TTL_SECONDS`).
 
@@ -108,7 +108,7 @@ Für Einladungslinks und das Eröffnen einer Gruppe legt der `baseservice` Konte
 
 | Toggle (Umgebungsvariable) | Default | Bei `true` | Bei `false` (Fallback) |
 | :--- | :---: | :--- | :--- |
-| **`S3_ENABLED`** | `false` | Verwendet S3 (lokal S3Mock) für Bilder und Moment-Medien, wenn `STORAGE_BACKEND` leer ist | `InMemoryObjectStorage` (In-Memory Data URIs) |
+| **`S3_ENABLED`** | `false` | Verwendet S3 für Bilder und Moment-Medien, wenn `STORAGE_BACKEND` leer ist | `InMemoryObjectStorage` (In-Memory Data URIs) |
 | **`VAPID_ENABLED`** | `false` | Sendet echte Web-Push-Nachrichten via VAPID | `NoOpPushSender` (Persistenz ohne Versand) |
 | **`EV_LIQUIBASE_ENABLED`** | `true` | Führt Schema-Migrationen beim Start aus | Migrationen deaktiviert (z. B. für externe Tools) |
 | **`DATA_ENCRYPTION_ENABLED`** | `false` | Verschlüsselt Chat, Benachrichtigungen und Dateien | Klartext (nur lokal) |

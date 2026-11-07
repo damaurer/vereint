@@ -56,7 +56,7 @@ Prüfschritte nach Änderungen: Seite rendert mit `<html class="login-pf vereint
 
 ### Produktion
 
-`keycloak/Dockerfile` baut das Produktions-Image (Keycloak 26.8.1): Realm-Import (`realm-export.json`) und Theme sind eingebaut, die Konfiguration ist vorab optimiert, Keycloak läuft unter dem Pfad `/kc`. CI baut und prüft das Image bei jeder Änderung und pusht es nach `ghcr.io/<owner>/keycloak`. Der Betrieb ist in `deploy/README.md` beschrieben.
+`keycloak/Dockerfile` baut ein Image mit dem Produktionsrealm (Keycloak 26.8.1): Realm-Import (`realm-export.json`) und Theme sind eingebaut, die Konfiguration ist vorab optimiert, Keycloak läuft unter dem Pfad `/kc`. Es läuft im lokalen Stack (`local/`) und in den E2E-Tests; CI baut und prüft es bei jeder Änderung, veröffentlicht es aber nicht. In Produktion stellt der Keycloak der Plattform aus LinuxServerSetup den Login, mit einer Kopie von Realm und Theme ([Betrieb auf einem Strato VPS](../docs/betrieb/strato.md)).
 
 Laufzeit ist seit dem Produktions-Setup Keycloak 26.8.1 (26.1.4 hatte zahlreiche bekannte Schwachstellen); die FTL-Vorlagen basieren weiterhin auf 26.1.4 und rendern unter 26.8.1 (Login, Passwort zurücksetzen und Fehlermeldungen geprüft). Beim nächsten Theme-Umbau die Vorlagen mit den 26.8.1-Originalen abgleichen.
 

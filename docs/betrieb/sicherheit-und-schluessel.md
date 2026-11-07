@@ -1,20 +1,22 @@
 # Sicherheit und Verschlüsselung
 
-> **Strato / eigener Server:** Dort übernimmt [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) Secrets (Ansible Vault) und Schlüsselrotation, siehe
-> [Betrieb auf einem Strato VPS](strato.md). Diese Seite beschreibt den Weg über AWS.
+Vereint läuft auf dem Strato-Server, den
+[LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) einrichtet
+([Betrieb auf einem Strato VPS](strato.md)). Server, Secrets (Ansible Vault),
+Backups und Schlüsselrotation beschreibt LinuxServerSetup; diese Seite fasst
+zusammen, was die App selbst schützt und welche Schlüssel offline gehören.
 
 ## Verschlüsselung in Schichten
 
 | Schicht | Wie |
 | :--- | :--- |
-| **Übertragung** | Von außen nur HTTPS über Caddy (Let's Encrypt, HSTS, HTTP leitet um). S3 lehnt Zugriffe ohne TLS ab. |
-| **Inhalte in der App** | Chat-Nachrichten, Benachrichtigungen, Bilder sowie Fotos und Videos aus Moments verschlüsselt der baseservice mit **AES-256-GCM** (`DATA_ENCRYPTION_KEY`), bevor sie in PostgreSQL oder S3 landen. Ein Datenbank-Dump oder ein Bucket allein ist damit unlesbar. |
-| **Speicher** | EBS-Disks und S3-Buckets sind verschlüsselt, beide Buckets privat. |
-| **Backups** | Zusätzlich mit GnuPG (AES-256, `BACKUP_ENCRYPTION_KEY`) verschlüsselt, bevor sie den Server verlassen. |
+| **Übertragung** | Von außen nur HTTPS über Traefik (Let's Encrypt, HSTS, HTTP leitet um). |
+| **Inhalte in der App** | Chat-Nachrichten, Benachrichtigungen, Bilder sowie Fotos und Videos aus Moments verschlüsselt der baseservice mit **AES-256-GCM** (`DATA_ENCRYPTION_KEY`), bevor sie in PostgreSQL oder im Datei-Volume landen. Ein Datenbank-Dump oder eine Kopie des Volumes allein ist damit unlesbar. |
+| **Backups** | restic verschlüsselt alle Backups (`vault_restic_password`), bevor sie nach HiDrive gehen. |
 | **Web Push** | Pushes enthalten keine Inhalte. Das Gerät lädt die Mitteilung mit seiner Sitzung nach. |
 
 Bilder und Videos gibt es nur über Endpunkte des baseservice, die vorher prüfen,
-ob die Person sie sehen darf. Direkte S3-Links gibt es dafür nicht.
+ob die Person sie sehen darf. Direkte Links auf Dateien gibt es nicht.
 
 Bewusst **keine** Ende-zu-Ende-Verschlüsselung: Sie würde Suche und
 Push-Vorschauen verhindern. Der Schlüssel liegt auf dem Server, nicht bei den
@@ -26,44 +28,39 @@ Daten einer Gruppe sieht nur, wer Mitglied dieser Gruppe ist. Das sichern zwei
 unabhängige Schichten: Hibernate hängt an jede Abfrage die Gruppe an, und
 PostgreSQL erzwingt dieselbe Grenze per Row-Level-Security auf allen fachlichen
 Tabellen. Das greift nur, wenn sich der baseservice als Benutzer `vereint`
-verbindet (kein Superuser); in Produktion legt `deploy/postgres/init-databases.sh`
-ihn so an. Details: [stammtische.md](../domains/stammtische.md#trennung).
+verbindet (kein Superuser); in Produktion legt ihn `init-databases.sh` der
+Rolle `vereint` in LinuxServerSetup so an, lokal `local/postgres/init-databases.sh`. Details: [stammtische.md](../domains/stammtische.md#trennung).
 
 Zahlungsdaten gibt es in Vereint nicht; die App ist frei nutzbar.
 
 ## Schlüssel, die offline gesichert sein müssen
 
-> **Wichtig:** Diese zwei Werte aus dem SSM Parameter Store zusätzlich offline
-> aufbewahren, zum Beispiel im Passwort-Manager des Vorstands. Die Werte gehören
-> nie in die Dokumentation, ins Repository oder in einen Chat.
+> **Wichtig:** Diese Werte zusätzlich offline aufbewahren, zum Beispiel im
+> Passwort-Manager und ausgedruckt. Sie gehören nie in die Dokumentation, ins
+> Repository oder in einen Chat.
 
-| Parameter | Ohne ihn … |
+| Wert | Ohne ihn … |
 | :--- | :--- |
-| `/vereint/BACKUP_ENCRYPTION_KEY` | … sind die Backups in S3 nicht lesbar. |
-| `/vereint/DATA_ENCRYPTION_KEY` | … sind Chat-Nachrichten, Benachrichtigungen, Bilder und Videos **auch aus einem intakten Backup** nicht mehr lesbar. |
+| `vault_vereint_data_encryption_key` (`DATA_ENCRYPTION_KEY`) | … sind Chat-Nachrichten, Benachrichtigungen, Bilder und Videos **auch aus einem intakten Backup** nicht mehr lesbar. |
+| `vault_restic_password` | … ist kein Backup auf HiDrive lesbar. |
+| Vault-Passwort von LinuxServerSetup | … kommt man an keinen der Werte im Vault. |
 
-Auslesen (mit AWS-Admin-Login):
-
-```bash
-aws ssm get-parameter --name /vereint/BACKUP_ENCRYPTION_KEY --with-decryption
-aws ssm get-parameter --name /vereint/DATA_ENCRYPTION_KEY --with-decryption
-```
-
-**`DATA_ENCRYPTION_KEY` rotieren:** den bisherigen Wert zusätzlich als
-`/vereint/DATA_ENCRYPTION_KEY_PREVIOUS` anlegen, dann
-`terraform apply -replace=random_bytes.data_encryption_key` und neu ausrollen.
-Alte Inhalte bleiben mit dem vorherigen Schlüssel lesbar.
+**`DATA_ENCRYPTION_KEY` rotieren:** wie in
+[docs/vereint.md von LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup/blob/master/docs/vereint.md#betrieb)
+beschrieben: den bisherigen Wert als `vereint_data_encryption_key_previous`
+übernehmen, den neuen in den Vault, `site.yml --tags vereint`. Alte Inhalte
+bleiben damit lesbar.
 
 ## Secrets
 
-- Alle Secrets erzeugt Terraform zufällig und legt sie als `SecureString` unter
-  `/vereint/*` im Parameter Store ab. Im Repository und in GitHub stehen sie nie.
-- Bei jedem Deployment schreibt `bin/fetch-env.sh` sie in eine `.env`, die nur
-  root lesen kann.
-- Der Terraform-State enthält die Secrets und liegt deshalb verschlüsselt und
-  versioniert in S3.
-- In GitHub liegt nur `AWS_DEPLOY_ROLE_ARN`, und das ist kein Schlüssel, sondern
-  der Name der Rolle, die nur Jobs im Environment `production` übernehmen dürfen.
+- Alle Secrets stehen im Ansible Vault von LinuxServerSetup
+  (`vault_vereint_*`). Auf dem Server liegen sie nur in Env-Dateien, die nur
+  root lesen kann. Im Repository stehen sie nie.
+- In GitHub liegen nur `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS` und der
+  Deploy-Key `DEPLOY_SSH_KEY` im Environment `production`. Der Key darf auf dem
+  Server nur `deploy vereint <tag>` ausführen.
+- Lokal und in den E2E-Tests erzeugen `local/vereint.mjs` und `e2e/stack.sh`
+  Wegwerf-Secrets in nicht versionierten Dateien.
 
 ## Härtung
 
@@ -98,18 +95,19 @@ Alte Inhalte bleiben mit dem vorherigen Schlüssel lesbar.
   Geräteangaben aus Videos werden entfernt, bevor sie verschlüsselt gespeichert
   werden.
 
-**Server**
+**Server** (LinuxServerSetup)
 
-- **Kein SSH**, Port 22 geschlossen. Shell nur über AWS Session Manager.
-- Nur Port 80 und 443 offen; ausgehend nur Web und E-Mail.
-- IMDSv2 mit Hop-Limit 1, damit Container nicht an die Rechte des Servers kommen.
-- Container ohne Root, ohne Linux-Capabilities, mit `no-new-privileges`, Prozess-
-  und Speicherlimits; baseservice und webservice mit schreibgeschütztem
+- SSH nur per Key, ohne Root- und Passwort-Login; Firewall lässt nur SSH, 80
+  und 443 durch; CrowdSec sperrt Angreifer; Sicherheitsupdates täglich.
+- Datenbank und API haben kein Internet (eigenes internes Netz), nur die API
+  darf für Web Push nach außen.
+- Container ohne Linux-Capabilities, mit `no-new-privileges`, Prozess- und
+  Speicherlimits; baseservice und webservice mit schreibgeschütztem
   Dateisystem.
-- Caddy weist Anfragen über 8 MB ab (Moment-Medien bis 110 MB) und erlaubt Kamera
-  und Standort nur für die eigene Seite.
-- Keycloak-Admin-Konsole und Master-Realm sind von außen nicht erreichbar.
-- Automatische Sicherheitsupdates des Betriebssystems (`dnf-automatic`).
+- Traefik weist Anfragen über 8 MB ab (Moment-Medien bis 100 MiB) und erlaubt
+  Kamera und Standort nur für die eigene Seite.
+- Die Keycloak-Verwaltung ist nur nach dem Admin-Login der Plattform mit 2FA
+  erreichbar.
 
 **Lieferkette**
 
@@ -118,6 +116,5 @@ Alte Inhalte bleiben mit dem vorherigen Schlüssel lesbar.
 - GitHub Actions sind auf Commit-SHAs gepinnt, Images auf Digests; Dependabot
   hält beides aktuell.
 
-Mehr: [deploy/README.md](../../deploy/README.md#sicherheit),
-[infra/aws/README.md](../../infra/aws/README.md#sicherheit),
+Mehr: [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup#readme),
 [docs/architecture/security-and-auth.md](../architecture/security-and-auth.md)

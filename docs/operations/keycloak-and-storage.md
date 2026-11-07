@@ -1,6 +1,6 @@
 # Betriebshandbuch: Keycloak IAM & S3-Objektspeicher
 
-Dieses Dokument beschreibt die Konfiguration des Identity Providers **Keycloak 26.8.1** und des Objektspeichers (in Produktion auf Strato ein **Verzeichnis**, alternativ **AWS S3**, lokal **S3Mock**). Den Produktionsbetrieb beschreibt [Betrieb auf einem Strato VPS](../betrieb/strato.md), die AWS-Variante [deploy/README.md](../../deploy/README.md).
+Dieses Dokument beschreibt die Konfiguration des Identity Providers **Keycloak 26.8.1** und des Dateispeichers (in Produktion auf Strato und lokal ein **Verzeichnis**, optional **S3**). Den Produktionsbetrieb beschreibt [Betrieb auf einem Strato VPS](../betrieb/strato.md).
 
 ---
 
@@ -51,16 +51,16 @@ Im Produktions-Realm gibt es außer den Service-Accounts keine Benutzer; die ers
 
 ---
 
-## 🪣 S3-Objektspeicher
+## 🪣 Dateispeicher
 
 Bilder, Gruppenbilder sowie Fotos und Videos aus Moments liegen im Objektspeicher; in der Datenbank stehen nur die Metadaten (`image_assets`, `moment_media`, Schlüssel des Gruppenbilds an `stammtische`).
 
 | Umgebung | Speicher |
 | :--- | :--- |
 | Produktion (Strato) | Docker-Volume `vereint_files` mit `STORAGE_BACKEND=filesystem`; die Dateien sind von der App verschlüsselt und laufen mit in die restic-Backups |
-| AWS-Variante | Privater AWS-S3-Bucket `vereint-app-<account>`, von Terraform angelegt, serverseitig verschlüsselt, nur per TLS erreichbar |
-| Lokal | S3Mock aus `docker-compose.yml`: API `http://localhost:9090`, Bucket `vereint` (wird beim Start angelegt, Signaturen werden nicht geprüft) |
-| E2E-Tests | S3-Ersatz im Test-Stack |
+| Lokaler Stack und E2E-Tests | Volume `files` in `local/compose.yaml`, ebenfalls `STORAGE_BACKEND=filesystem` |
+| Entwicklung mit `bootRun` | Verzeichnis `<Repo>/.data/files` (`STORAGE_DIRECTORY` aus `.env.example`) |
+| Optional | S3-kompatibler Speicher mit `STORAGE_BACKEND=s3` und den `S3_*`-Werten |
 
 ### Speicher-Schlüssel
 ```text
@@ -72,5 +72,5 @@ group/{gruppen_uuid}/{datei_uuid}.bin                               # Bild der G
 ### Sicherheit
 - Jede Datei wird vor dem Hochladen mit `DATA_ENCRYPTION_KEY` (AES-256-GCM) verschlüsselt; Moment-Medien in 64-KiB-Blöcken, damit auch Videos gestreamt statt ganz im Speicher gehalten werden.
 - Bilder werden vor dem Verschlüsseln von EXIF/XMP-Metadaten (z. B. GPS) befreit, Videos von Orts- und Geräteangaben.
-- Der Browser lädt Dateien nie direkt aus S3, sondern nur über berechtigungsgeprüfte Endpunkte des baseservice (`/api/v1/images/{id}/content`, `/api/v1/moments/{momentId}/media/{mediaId}/content` mit HTTP-Range für Videos).
-- Nur der baseservice spricht mit S3 (`S3ObjectStorage.kt`); er signiert seine Anfragen selbst (SigV4, `S3_URL_TTL_SECONDS`) und gibt keine Links an Clients heraus.
+- Der Browser lädt Dateien nie direkt aus dem Speicher, sondern nur über berechtigungsgeprüfte Endpunkte des baseservice (`/api/v1/images/{id}/content`, `/api/v1/moments/{momentId}/media/{mediaId}/content` mit HTTP-Range für Videos).
+- Mit S3 spricht nur der baseservice (`S3ObjectStorage.kt`); er signiert seine Anfragen selbst (SigV4, `S3_URL_TTL_SECONDS`) und gibt keine Links an Clients heraus.
