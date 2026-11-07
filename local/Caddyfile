@@ -1,6 +1,5 @@
-# Einstiegspunkt des lokalen und des E2E-Stacks (local/compose.yaml). Auf
-# dem Strato-Server uebernimmt Traefik aus LinuxServerSetup diese Aufgabe mit
-# denselben Grenzen und Headern (Rolle vereint, compose.yml.j2).
+# Einstiegspunkt des lokalen und des E2E-Stacks (local/compose.yaml) und
+# Vorbild fuer den Reverse Proxy in Produktion (gleiche Grenzen und Header).
 {$PUBLIC_DOMAIN} {
 	encode zstd gzip
 

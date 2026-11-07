@@ -9,9 +9,7 @@ name: keycloak CI/CD
 # (behebbare HIGH/CRITICAL-Funde lassen den Lauf fehlschlagen).
 #
 # Das Image wird nicht veroeffentlicht: Es laeuft nur im lokalen Stack und in
-# den E2E-Tests. Auf dem Strato-Server stellt der Keycloak der Plattform den
-# Login, Realm und Theme liegen als Kopie in LinuxServerSetup
-# (keycloak/README.md).
+# den E2E-Tests (keycloak/README.md).
 on:
   push:
     branches:

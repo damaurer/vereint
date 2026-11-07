@@ -144,7 +144,7 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `VEREINT_I18N_SUPPORTED_LOCALES` | `vereint.i18n.supported-locales` | String (CSV) | `de,en` | Sprachen der Fehlertexte, siehe [i18n](i18n.md). |
 | `TENANCY_BOOTSTRAP_REALM_ROLES` | `vereint.tenancy.bootstrap-realm-roles` | Boolean | `false` | Nur Entwicklung/E2E: Konten ohne Mitgliedschaft treten „Meine Gruppe“ mit ihren Keycloak-Realmrollen bei. In Produktion aus. |
 | `VEREIN_CORS_ALLOWED_ORIGINS` | `vereint.cors.allowed-origins` | String (CSV) | `http://localhost:4200` | Erlaubte CORS-Ursprünge (z. B. `http://localhost:4200,http://localhost:4300`). Wildcards (`*`) sind verboten. |
-| `STORAGE_BACKEND` | `vereint.storage.backend` | String | *leer* | `filesystem` (Verzeichnis, so in Produktion auf Strato), `s3` oder `memory`. Leer: `S3_ENABLED` entscheidet. |
+| `STORAGE_BACKEND` | `vereint.storage.backend` | String | *leer* | `filesystem` (Verzeichnis, empfohlen), `s3` oder `memory`. Leer: `S3_ENABLED` entscheidet. |
 | `STORAGE_DIRECTORY` | `vereint.storage.directory` | Pfad | *leer* | Verzeichnis für `STORAGE_BACKEND=filesystem`. |
 | `S3_ENABLED` | `vereint.storage.enabled` | Boolean | `false` | Nur bei leerem `STORAGE_BACKEND`: schaltet echten S3-Speicher frei. Bei `false` greift der `InMemoryObjectStorage`. |
 | `S3_ENDPOINT` | `vereint.storage.endpoint` | URL | `http://localhost:9000` | S3-kompatibler Endpunkt, nur mit `STORAGE_BACKEND=s3`. |

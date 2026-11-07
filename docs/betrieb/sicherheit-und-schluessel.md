@@ -1,18 +1,15 @@
 # Sicherheit und Verschlüsselung
 
-Vereint läuft auf dem Strato-Server, den
-[LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) einrichtet
-([Betrieb auf einem Strato VPS](strato.md)). Server, Secrets (Ansible Vault),
-Backups und Schlüsselrotation beschreibt LinuxServerSetup; diese Seite fasst
-zusammen, was die App selbst schützt und welche Schlüssel offline gehören.
+Diese Seite beschreibt, was die App selbst schützt und welche Schlüssel
+offline gehören. Server, Proxy und Backups liegen beim Betreiber
+([Vereint selbst betreiben](selbst-betreiben.md)).
 
 ## Verschlüsselung in Schichten
 
 | Schicht | Wie |
 | :--- | :--- |
-| **Übertragung** | Von außen nur HTTPS über Traefik (Let's Encrypt, HSTS, HTTP leitet um). |
+| **Übertragung** | Von außen nur HTTPS über den Reverse Proxy (HSTS, HTTP leitet um). |
 | **Inhalte in der App** | Chat-Nachrichten, Benachrichtigungen, Bilder sowie Fotos und Videos aus Moments verschlüsselt der baseservice mit **AES-256-GCM** (`DATA_ENCRYPTION_KEY`), bevor sie in PostgreSQL oder im Datei-Volume landen. Ein Datenbank-Dump oder eine Kopie des Volumes allein ist damit unlesbar. |
-| **Backups** | restic verschlüsselt alle Backups (`vault_restic_password`), bevor sie nach HiDrive gehen. |
 | **Web Push** | Pushes enthalten keine Inhalte. Das Gerät lädt die Mitteilung mit seiner Sitzung nach. |
 
 Bilder und Videos gibt es nur über Endpunkte des baseservice, die vorher prüfen,
@@ -28,37 +25,28 @@ Daten einer Gruppe sieht nur, wer Mitglied dieser Gruppe ist. Das sichern zwei
 unabhängige Schichten: Hibernate hängt an jede Abfrage die Gruppe an, und
 PostgreSQL erzwingt dieselbe Grenze per Row-Level-Security auf allen fachlichen
 Tabellen. Das greift nur, wenn sich der baseservice als Benutzer `vereint`
-verbindet (kein Superuser); in Produktion legt ihn `init-databases.sh` der
-Rolle `vereint` in LinuxServerSetup so an, lokal `local/postgres/init-databases.sh`. Details: [stammtische.md](../domains/stammtische.md#trennung).
+verbindet (kein Superuser), wie ihn `local/postgres/init-databases.sh` anlegt. Details: [stammtische.md](../domains/stammtische.md#trennung).
 
 Zahlungsdaten gibt es in Vereint nicht; die App ist frei nutzbar.
 
 ## Schlüssel, die offline gesichert sein müssen
 
-> **Wichtig:** Diese Werte zusätzlich offline aufbewahren, zum Beispiel im
-> Passwort-Manager und ausgedruckt. Sie gehören nie in die Dokumentation, ins
-> Repository oder in einen Chat.
+> **Wichtig:** `DATA_ENCRYPTION_KEY` zusätzlich außerhalb des Servers
+> aufbewahren, zum Beispiel im Passwort-Manager und ausgedruckt. Ohne ihn sind
+> Chat-Nachrichten, Benachrichtigungen, Bilder und Videos **auch aus einem
+> intakten Backup** nicht mehr lesbar. Der Wert gehört nie in die
+> Dokumentation, ins Repository oder in einen Chat.
 
-| Wert | Ohne ihn … |
-| :--- | :--- |
-| `vault_vereint_data_encryption_key` (`DATA_ENCRYPTION_KEY`) | … sind Chat-Nachrichten, Benachrichtigungen, Bilder und Videos **auch aus einem intakten Backup** nicht mehr lesbar. |
-| `vault_restic_password` | … ist kein Backup auf HiDrive lesbar. |
-| Vault-Passwort von LinuxServerSetup | … kommt man an keinen der Werte im Vault. |
-
-**`DATA_ENCRYPTION_KEY` rotieren:** wie in
-[docs/vereint.md von LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup/blob/master/docs/vereint.md#betrieb)
-beschrieben: den bisherigen Wert als `vereint_data_encryption_key_previous`
-übernehmen, den neuen in den Vault, `site.yml --tags vereint`. Alte Inhalte
-bleiben damit lesbar.
+**`DATA_ENCRYPTION_KEY` rotieren:** den bisherigen Wert als
+`DATA_ENCRYPTION_KEY_PREVIOUS` setzen, einen neuen `DATA_ENCRYPTION_KEY`
+erzeugen (`openssl rand -base64 32`) und den baseservice neu starten. Alte
+Inhalte bleiben mit dem vorherigen Schlüssel lesbar. `SESSION_SECRET`
+rotiert man ebenso mit `SESSION_SECRET_PREVIOUS`.
 
 ## Secrets
 
-- Alle Secrets stehen im Ansible Vault von LinuxServerSetup
-  (`vault_vereint_*`). Auf dem Server liegen sie nur in Env-Dateien, die nur
-  root lesen kann. Im Repository stehen sie nie.
-- In GitHub liegen nur `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS` und der
-  Deploy-Key `DEPLOY_SSH_KEY` im Environment `production`. Der Key darf auf dem
-  Server nur `deploy vereint <tag>` ausführen.
+- Im Repository stehen keine echten Secrets. Der Betreiber gibt sie den
+  Containern als Umgebungsvariablen ([Konfiguration](selbst-betreiben.md#konfiguration)).
 - Lokal und in den E2E-Tests erzeugen `local/vereint.mjs` und `e2e/stack.sh`
   Wegwerf-Secrets in nicht versionierten Dateien.
 
@@ -95,19 +83,17 @@ bleiben damit lesbar.
   Geräteangaben aus Videos werden entfernt, bevor sie verschlüsselt gespeichert
   werden.
 
-**Server** (LinuxServerSetup)
+**Container**
 
-- SSH nur per Key, ohne Root- und Passwort-Login; Firewall lässt nur SSH, 80
-  und 443 durch; CrowdSec sperrt Angreifer; Sicherheitsupdates täglich.
-- Datenbank und API haben kein Internet (eigenes internes Netz), nur die API
-  darf für Web Push nach außen.
-- Container ohne Linux-Capabilities, mit `no-new-privileges`, Prozess- und
-  Speicherlimits; baseservice und webservice mit schreibgeschütztem
-  Dateisystem.
-- Traefik weist Anfragen über 8 MB ab (Moment-Medien bis 100 MiB) und erlaubt
-  Kamera und Standort nur für die eigene Seite.
-- Die Keycloak-Verwaltung ist nur nach dem Admin-Login der Plattform mit 2FA
-  erreichbar.
+- Beide Images laufen als unprivilegierter Benutzer (UID 10001), ohne
+  Paketmanager zur Laufzeit; sie vertragen ein schreibgeschütztes Dateisystem
+  (nur `/tmp` und beim baseservice das Datei-Volume beschreibbar).
+- Empfohlen und in `local/compose.yaml` umgesetzt: keine Linux-Capabilities,
+  `no-new-privileges`, Prozess- und Speicherlimits, Datenbank und baseservice
+  ohne direkten Zugang von außen.
+- Der Proxy weist Anfragen über 8 MB ab (Moment-Medien bis 110 MB) und
+  erlaubt Kamera und Standort nur für die eigene Seite; die
+  Keycloak-Verwaltung ist von außen nicht erreichbar.
 
 **Lieferkette**
 
@@ -116,5 +102,4 @@ bleiben damit lesbar.
 - GitHub Actions sind auf Commit-SHAs gepinnt, Images auf Digests; Dependabot
   hält beides aktuell.
 
-Mehr: [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup#readme),
-[docs/architecture/security-and-auth.md](../architecture/security-and-auth.md)
+Mehr: [docs/architecture/security-and-auth.md](../architecture/security-and-auth.md)

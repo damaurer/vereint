@@ -72,7 +72,7 @@ Pfade mit `..`, `.`, Backslashes oder kodierten Schrägstrichen und Punkten werd
 
 ### 6. Uploads und Medien-Streaming
 - Multipart-Uploads (Bilder, Gruppenbild) puffert der Proxy bis `API_PROXY_MAX_UPLOAD` (`6mb`).
-- Fotos und Videos in Moments (`MOMENT_MEDIA_PATH`: `/api/v1/moments/{id}/media` und `.../media/{id}/content`) laufen über `mediaStreamProxy`: ungepuffert, mit `Content-Length` und `Range`-Unterstützung (`206`). Größen- und Dauergrenzen prüft Spring; Traefik (lokal Caddy) lässt auf diesem Pfad große Körper durch, sonst höchstens 8 MB.
+- Fotos und Videos in Moments (`MOMENT_MEDIA_PATH`: `/api/v1/moments/{id}/media` und `.../media/{id}/content`) laufen über `mediaStreamProxy`: ungepuffert, mit `Content-Length` und `Range`-Unterstützung (`206`). Größen- und Dauergrenzen prüft Spring; der Reverse Proxy lässt auf diesem Pfad große Körper durch, sonst höchstens 8 MB.
 
 ### 7. Timeout-Parameter
 - **`API_PROXY_TIMEOUT_MS`**: `8000 ms` (8 Sekunden).

@@ -6,7 +6,7 @@
 | :--- | :--- |
 | `develop` | Standard-Branch, hier landen alle Pull Requests |
 | `qs` | Qualitätssicherung vor dem Release |
-| `main` | Produktion. **Ein Merge nach `main` rollt automatisch auf den Strato-Server aus**, sobald baseservice oder webservice neu gebaut wurden ([Betrieb auf einem Strato VPS](strato.md#im-betrieb)) |
+| `main` | Produktion. Nach einem Merge landen neu gebaute Images als `:main` in GitHub Packages ([Vereint selbst betreiben](selbst-betreiben.md)) |
 
 Feature-Branches gehen per Pull Request nach `develop`. Die Prüfungen laufen nur
 für Pull Requests in diese drei Branches; ein Pull Request, der auf einem
@@ -28,7 +28,7 @@ beides und die Abhängigkeiten aktuell
 
 Für `main`, `qs` und `develop` sollte in GitHub ein Branch-Schutz gelten: Pull
 Request vor dem Merge, die CI-Checks als Pflicht, kein Force-Push und kein
-Löschen (siehe [Go-Live-Checkliste](strato.md#checkliste-für-den-go-live)).
+Löschen.
 
 ## Images
 
@@ -38,6 +38,5 @@ und `E2E-Tests` laufen immer. Gebaut und gescannt wird bei jedem Pull Request
 und Push. Nur nach einem Merge auf `qs` oder `main` werden baseservice und
 webservice für `linux/amd64` und `linux/arm64` nach
 `ghcr.io/damaurer/<dienst>` gepusht, getaggt mit Commit-SHA und Branch-Namen.
-Mit *Run workflow* lassen sich die Image-Workflows auch von Hand starten. Vor
-dem Ausrollen friert `Deployment (Produktion)` den Stand `:main` beider Images
-als gemeinsamen Tag `release-<commit>` ein; der Server zieht nur diesen Tag.
+Mit *Run workflow* lassen sich die Image-Workflows auch von Hand starten.
+Ausgerollt wird außerhalb dieses Repositorys.

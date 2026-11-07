@@ -3,12 +3,10 @@
 Ein Befehl startet die komplette App auf dem eigenen Rechner, mit Demo-Daten.
 Ein zweiter Befehl führt alle Tests aus: Backend, Frontend und E2E.
 
-Es laufen dieselben Images und dieselbe Konfiguration wie auf dem
-Strato-Server ([`compose.yaml`](compose.yaml): baseservice, webservice,
-PostgreSQL, Bilder und Videos verschlüsselt im Dateispeicher). Statt Traefik
-und dem Keycloak der Plattform stehen Caddy und ein eigener Keycloak mit dem
-Produktionsrealm davor, und die App läuft unter `http://localhost:4200` statt
-HTTPS. Die lokalen Abweichungen stehen in
+Es laufen dieselben Images wie in Produktion ([`compose.yaml`](compose.yaml):
+Caddy, Keycloak mit dem Produktionsrealm, baseservice, webservice, PostgreSQL,
+Bilder und Videos verschlüsselt im Dateispeicher), nur unter
+`http://localhost:4200` statt HTTPS. Die lokalen Abweichungen stehen in
 [`compose.local.yaml`](compose.local.yaml).
 
 Wer den Stack schon vor dem Umstieg auf den Dateispeicher genutzt hat

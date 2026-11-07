@@ -1,6 +1,6 @@
 # 🔌 Integrationen, Objektspeicher & Push-Dienste
 
-In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: Dateispeicher (in Produktion auf Strato und lokal ein Verzeichnis, optional S3), Web-Push-Zustellung über das VAPID-Protokoll, Kontoanlage in Keycloak sowie die zugehörigen Feature-Toggles.
+In diesem Kapitel erfährst du, wie der `baseservice` mit externen Systemen integriert ist: Dateispeicher (ein Verzeichnis, optional S3), Web-Push-Zustellung über das VAPID-Protokoll, Kontoanlage in Keycloak sowie die zugehörigen Feature-Toggles.
 
 ---
 
@@ -39,7 +39,7 @@ interface ObjectStorage {
 ```
 
 ### 2. Implementierungen & Konfiguration (`StorageConfig.kt`)
-- **`FileSystemObjectStorage`**: Aktiviert mit `STORAGE_BACKEND=filesystem`. Legt die (verschlüsselten) Dateien im Verzeichnis `STORAGE_DIRECTORY` ab, schreibt atomar und prüft Pfade gegen Ausbruch. So läuft Vereint in Produktion auf Strato (Docker-Volume `vereint_files`, siehe [Strato](../betrieb/strato.md)).
+- **`FileSystemObjectStorage`**: Aktiviert mit `STORAGE_BACKEND=filesystem`. Legt die (verschlüsselten) Dateien im Verzeichnis `STORAGE_DIRECTORY` ab, schreibt atomar und prüft Pfade gegen Ausbruch. So läuft Vereint lokal, in den E2E-Tests und empfohlen auch in Produktion ([Vereint selbst betreiben](../betrieb/selbst-betreiben.md)).
 - **`S3ObjectStorage`**: Aktiviert mit `STORAGE_BACKEND=s3` oder, ohne `STORAGE_BACKEND`, mit `S3_ENABLED=true`. Spricht die S3-REST-API mit selbst signierten Anfragen (SigV4) an, optional mit Path-Style-Access (`/bucket/key`). Weder Produktion noch der lokale Stack nutzen es; es bleibt für Betreiber, die lieber einen S3-Dienst verwenden.
 - **`InMemoryObjectStorage`**: Fallback für lokale Entwicklung und Tests (`STORAGE_BACKEND=memory` oder nichts gesetzt und `S3_ENABLED=false`). Hält Binärdaten im Prozessspeicher; `presignedGetUrl` liefert eine Pseudo-URL mit derselben Vertragsform.
 - **Sicherheitsgarantie**: S3-Credentials gelangen **niemals** an den Client. Der Browser lädt Bilder nie direkt aus S3, sondern nur über `GET /api/v1/images/{id}/content`: Der `ImageService` prüft die Berechtigung bei jedem Abruf, liest den Chiffretext und liefert die entschlüsselten Daten mit `Cache-Control: private, no-store` aus. Presigned URLs nutzt der Service nur noch intern für den eigenen Zugriff auf S3 (Lebensdauer `S3_URL_TTL_SECONDS`).
@@ -47,7 +47,7 @@ interface ObjectStorage {
 ### 3. Anwendungsverschlüsselung (`crypto/DataEncryptor.kt`)
 Bilddateien, Fotos und Videos aus Moments (in 64-KiB-Blöcken, damit Videos gestreamt werden können), Chat-Nachrichten (`chat_messages.message`) sowie Titel und Text von Benachrichtigungen (`notifications.title`, `notifications.body`) werden vor dem Speichern mit **AES-256-GCM** verschlüsselt. Ein geleakter Datenbank-Dump oder Bucket-Inhalt ist ohne den Schlüssel unlesbar; GCM erkennt zusätzlich jede Manipulation.
 
-- **Schlüssel:** `DATA_ENCRYPTION_KEY` (32 Byte, Base64), in Produktion aus dem Vault von LinuxServerSetup (`vault_vereint_data_encryption_key`, siehe [Strato](../betrieb/strato.md)). Mit `DATA_ENCRYPTION_ENABLED=true` startet der Service ohne gültigen Schlüssel nicht. Lokal ist die Verschlüsselung standardmäßig aus; Tests laufen mit einem festen Testschlüssel.
+- **Schlüssel:** `DATA_ENCRYPTION_KEY` (32 Byte, Base64), in Produktion vom Betreiber gesetzt und offline gesichert ([Sicherheit und Schlüssel](../betrieb/sicherheit-und-schluessel.md)). Mit `DATA_ENCRYPTION_ENABLED=true` startet der Service ohne gültigen Schlüssel nicht. Lokal ist die Verschlüsselung standardmäßig aus; Tests laufen mit einem festen Testschlüssel.
 - **Textspalten** nutzen den JPA-Konverter `EncryptedStringConverter` und speichern `enc:v1:` + Base64. Diese Spalten lassen sich nicht mehr per SQL durchsuchen oder sortieren.
 - **Bestandsdaten** ohne Kennung werden unverändert gelesen und beim nächsten Schreiben verschlüsselt.
 - **Rotation:** Neuen Schlüssel als `DATA_ENCRYPTION_KEY`, den alten als `DATA_ENCRYPTION_KEY_PREVIOUS` setzen. Jeder Chiffretext trägt eine Schlüssel-ID, daher bleiben alte Daten lesbar; neue werden mit dem neuen Schlüssel geschrieben.

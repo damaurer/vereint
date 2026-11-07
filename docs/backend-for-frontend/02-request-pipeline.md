@@ -78,7 +78,7 @@ In `webservice/src/server.ts` ist die Pipeline wie folgt aufgebaut:
 
 ### 5. `crossSiteRequestGuard`
 - **Zweck**: Lehnt schreibende Anfragen ab, die nicht von der eigenen Seite stammen (`Sec-Fetch-Site`, ersatzweise `Origin`). Das schützt auch gegen andere Subdomains derselben Domain.
-- **Vorher**: `trust proxy` erlaubt `X-Forwarded-For` nur aus dem privaten Container-Netz (Traefik bzw. lokal Caddy); `x-powered-by` ist abgeschaltet.
+- **Vorher**: `trust proxy` erlaubt `X-Forwarded-For` nur aus dem privaten Container-Netz (Reverse Proxy); `x-powered-by` ist abgeschaltet.
 
 ### 6. `express.json()` & `express.urlencoded({ extended: true })`
 - **Zweck**: Parst JSON- und Form-Payloads in `req.body`.

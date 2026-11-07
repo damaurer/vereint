@@ -90,8 +90,8 @@ graph TD
 - **PostgreSQL 17**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.
 - **Liquibase**: Versionskontrollierte Datenbankmigrationen (`db.changelog-master.xml`).
 - **Keycloak 26.8.1**: Identity & Access Management (OIDC Provider). Lokal mit Testbenutzern (`keycloak/dev/realm-export-dev.json`), in Produktion ohne Seed-Benutzer (`keycloak/realm-export.json`).
-- **Dateispeicher**: Überall ein Verzeichnis (`STORAGE_BACKEND=filesystem`): in Produktion auf Strato das Docker-Volume `vereint_files`, im lokalen Stack und in den E2E-Tests das Volume `files`, bei `./gradlew bootRun` `<Repo>/.data/files`. Ein S3-kompatibler Speicher ist optional möglich (`STORAGE_BACKEND=s3`).
-- **Produktion**: Vereint läuft unter `https://vereint.maurercloud.de` auf einem Strato VPS, den [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) einrichtet (Traefik, Keycloak der Plattform mit Realm `vereint`, PostgreSQL mit pgvector), siehe [Betrieb auf einem Strato VPS](../betrieb/strato.md).
+- **Dateispeicher**: Überall ein Verzeichnis (`STORAGE_BACKEND=filesystem`): in Produktion ein dauerhaftes Volume, im lokalen Stack und in den E2E-Tests das Volume `files`, bei `./gradlew bootRun` `<Repo>/.data/files`. Ein S3-kompatibler Speicher ist optional möglich (`STORAGE_BACKEND=s3`).
+- **Produktion**: Das Repository liefert die Images `ghcr.io/damaurer/baseservice` und `ghcr.io/damaurer/webservice`; Betrieb siehe [Vereint selbst betreiben](../betrieb/selbst-betreiben.md).
 
 ---
 
@@ -129,4 +129,4 @@ sequenceDiagram
 | **Keycloak DB** | PostgreSQL 17 | `5433` | `5432` | PostgreSQL JDBC (Keycloak Realm DB) |
 | **Vereint DB** | PostgreSQL 17 | `5432` | `5432` | PostgreSQL JDBC (Hauptanwendung) |
 
-In Produktion ist von außen nur Traefik auf Port 80/443 erreichbar; alle anderen Dienste sprechen nur im internen Container-Netz miteinander ([Betrieb auf einem Strato VPS](../betrieb/strato.md)).
+In Produktion sollte von außen nur der Reverse Proxy auf Port 80/443 erreichbar sein; alle anderen Dienste sprechen nur im internen Container-Netz miteinander ([Vereint selbst betreiben](../betrieb/selbst-betreiben.md)).

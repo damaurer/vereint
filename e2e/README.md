@@ -2,7 +2,7 @@
 
 Playwright-Tests gegen den kompletten Stack: `local/compose.yaml` mit den
 Anpassungen aus `compose.e2e.yaml` (Keycloak, baseservice, webservice,
-Postgres, Bilder und Videos im Dateispeicher wie auf dem Strato-Server und
+Postgres, Bilder und Videos im Dateispeicher wie in Produktion und
 Caddy mit einer eigenen Test-CA). Die App
 läuft dabei wie in Produktion unter HTTPS, hier unter `https://vereint.test:8443`.
 

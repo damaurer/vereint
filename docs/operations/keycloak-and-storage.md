@@ -1,6 +1,6 @@
 # Betriebshandbuch: Keycloak IAM & S3-Objektspeicher
 
-Dieses Dokument beschreibt die Konfiguration des Identity Providers **Keycloak 26.8.1** und des Dateispeichers (in Produktion auf Strato und lokal ein **Verzeichnis**, optional **S3**). Den Produktionsbetrieb beschreibt [Betrieb auf einem Strato VPS](../betrieb/strato.md).
+Dieses Dokument beschreibt die Konfiguration des Identity Providers **Keycloak 26.8.1** und des Dateispeichers (ein **Verzeichnis**, optional **S3**). Den Betrieb beschreibt [Vereint selbst betreiben](../betrieb/selbst-betreiben.md).
 
 ---
 
@@ -12,7 +12,7 @@ Keycloak ist der zentrale Identity & Access Provider (OIDC). Das Realm `vereint`
 - **Entwicklungs-Export**: `keycloak/dev/realm-export-dev.json` (wird in `/opt/keycloak/data/import` gemountet), mit Seed-Benutzern, Registrierungsseite und „Passwort vergessen“.
 - **Produktions-Export**: `keycloak/realm-export.json`, ohne Seed-Benutzer, ohne offene Registrierung und ohne „Passwort vergessen“ (`resetPasswordAllowed: false`); im Produktions-Image eingebaut. Neue Konten entstehen nur über die App (Einladungslink oder Gruppe eröffnen).
 - **Admin-Konsole lokal**: `http://localhost:8082/admin` (Zugang aus `KEYCLOAK_ADMIN` / `KEYCLOAK_ADMIN_PASSWORD` der `.env`).
-- **Admin-Konsole in Produktion**: Vereint nutzt den Keycloak der Plattform (Realm `vereint`); die Konsole liegt unter `https://auth.maurercloud.de/admin` hinter dem Admin-Login mit 2FA, siehe [Strato](../betrieb/strato.md#5-ersten-administrator-anlegen).
+- **Admin-Konsole in Produktion**: Sie darf von außen nicht erreichbar sein (lokal sperrt `local/Caddyfile` `/kc/admin`); den ersten Administrator beschreibt [Vereint selbst betreiben](../betrieb/selbst-betreiben.md#erster-start).
 
 ### 2. OIDC Clients
 | Client ID | Flow | Zweck |
@@ -22,7 +22,7 @@ Keycloak ist der zentrale Identity & Access Provider (OIDC). Das Realm `vereint`
 | `vereint-tablet` | Service-Account | Thekenterminal (Rolle `tabletRecorder`) |
 | `vereint-registration` | Service-Account, nur `realm-management/manage-users` | Kontoanlage über [Einladungslinks](../domains/member-invites.md) und beim Eröffnen einer Gruppe |
 
-Die Secrets kommen beim Import aus Umgebungsvariablen (`keycloak/README.md`); in Produktion stehen sie im Vault von LinuxServerSetup (`vault_vereint_keycloak_*`), der den Realm `vereint` anlegt ([Strato](../betrieb/strato.md#was-der-code-dafür-kann)).
+Die Secrets kommen beim Import aus Umgebungsvariablen (`keycloak/README.md`); in Produktion setzt sie der Betreiber.
 
 ### 3. Seed-Benutzer (nur Entwicklungs-Realm)
 
@@ -57,7 +57,7 @@ Bilder, Gruppenbilder sowie Fotos und Videos aus Moments liegen im Objektspeiche
 
 | Umgebung | Speicher |
 | :--- | :--- |
-| Produktion (Strato) | Docker-Volume `vereint_files` mit `STORAGE_BACKEND=filesystem`; die Dateien sind von der App verschlüsselt und laufen mit in die restic-Backups |
+| Produktion | Dauerhaftes Volume mit `STORAGE_BACKEND=filesystem`; die Dateien sind von der App verschlüsselt und gehören in die Backups |
 | Lokaler Stack und E2E-Tests | Volume `files` in `local/compose.yaml`, ebenfalls `STORAGE_BACKEND=filesystem` |
 | Entwicklung mit `bootRun` | Verzeichnis `<Repo>/.data/files` (`STORAGE_DIRECTORY` aus `.env.example`) |
 | Optional | S3-kompatibler Speicher mit `STORAGE_BACKEND=s3` und den `S3_*`-Werten |

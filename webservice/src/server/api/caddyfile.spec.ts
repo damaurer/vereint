@@ -13,8 +13,7 @@ function findRepoFile(relativePath: string): string {
 
 /**
  * Caddy (lokaler und E2E-Stack) erlaubt große Körper nur auf dem Upload-Pfad
- * für Moment-Dateien. Auf dem Strato-Server gilt dieselbe Regel in Traefik
- * (Rolle vereint in LinuxServerSetup). Weicht der Pfad im Caddyfile vom echten Upload-Pfad ab,
+ * für Moment-Dateien; ein Proxy in Produktion braucht dieselbe Regel. Weicht der Pfad im Caddyfile vom echten Upload-Pfad ab,
  * scheitern Videos über 8 MB mit 413 (Issue #68).
  */
 describe('local/Caddyfile', () => {

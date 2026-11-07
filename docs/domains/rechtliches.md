@@ -24,9 +24,8 @@ Alle Angaben zum Betreiber und die Fristen stehen an einer Stelle:
 `webservice/src/app/legal/legal-operator.ts`. Werte in eckigen Klammern sind
 Platzhalter; solange einer übrig ist, zeigen beide Seiten oben einen gelben
 Hinweis „Entwurf“. Die Aufbewahrung der Sicherungen
-(`LEGAL_BACKUP_RETENTION_DAYS`) muss zur Aufbewahrung der Backups in
-LinuxServerSetup passen (`backup_keep_*` der Rolle `backup`; ab Werk bis zu
-sechs Monatsstände, also länger als die 30 Tage im Text).
+(`LEGAL_BACKUP_RETENTION_DAYS`) muss zur tatsächlichen Aufbewahrung der
+Backups beim Betreiber passen.
 
 Vereint ist unentgeltlich: keine Tarife, keine Zahlung. Die AGB enthalten
 deshalb keine Preise, keine Widerrufsbelehrung und keine Regeln zu Abos; die

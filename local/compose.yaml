@@ -1,13 +1,9 @@
 # Gemeinsamer Stack für den lokalen Start (local/vereint.mjs) und die
-# E2E-Tests (e2e/stack.sh). Er bildet die Produktion auf dem Strato-Server
-# nach (docs/betrieb/strato.md, Rolle `vereint` in damaurer/LinuxServerSetup):
-# dieselben Images, PostgreSQL mit eigenem Benutzer `vereint` (Row-Level-
-# Security), Bilder und Videos verschlüsselt im Dateisystem
-# (STORAGE_BACKEND=filesystem), gehärtete Container.
-#
-# Unterschiede zur Produktion: Statt Traefik steht Caddy davor, und Keycloak
-# läuft mit dem Realm aus keycloak/ als eigener Container unter /kc statt
-# als Keycloak der Plattform unter auth.maurercloud.de.
+# E2E-Tests (e2e/stack.sh) und zugleich ein Beispiel fuer den Betrieb
+# (docs/betrieb/selbst-betreiben.md): dieselben Images, PostgreSQL mit eigenem
+# Benutzer `vereint` (Row-Level-Security), Bilder und Videos verschlüsselt im
+# Dateisystem (STORAGE_BACKEND=filesystem), gehärtete Container, Caddy davor
+# und Keycloak mit dem Realm aus keycloak/ unter /kc.
 #
 # Werte kommen aus der Env-Datei, die local/vereint.mjs bzw. e2e/stack.sh mit
 # Wegwerf-Secrets erzeugt. Die Anpassungen je Zweck stehen in
@@ -143,7 +139,7 @@ services:
       KEYCLOAK_ISSUER_URI: https://${PUBLIC_DOMAIN}/kc/realms/vereint
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/kc/realms/vereint/protocol/openid-connect/certs
       VEREIN_CORS_ALLOWED_ORIGINS: https://${PUBLIC_DOMAIN}
-      # Wie auf dem Strato-Server: Bilder und Videos im Volume `files`.
+      # Bilder und Videos im Volume `files`.
       STORAGE_BACKEND: filesystem
       STORAGE_DIRECTORY: /data/files
       DATA_ENCRYPTION_ENABLED: "true"

@@ -23,8 +23,8 @@ docs/
 ├── offene-punkte.md                      # Bekannte Lücken und nächste Schritte
 ├── handbuch/                             # Benutzerhandbuch je Rolle mit Bildschirmfotos
 │
-├── betrieb/                              # Produktion auf Strato, CI, Schlüssel
-│   ├── strato.md                         # Betrieb auf Strato: Plan, Go-Live-Checkliste, Ausrollen, Zurückrollen
+├── betrieb/                              # Images, Selbstbetrieb, CI, Schlüssel
+│   ├── selbst-betreiben.md               # Images, Konfiguration, erster Start, Updates
 │   ├── branches-und-ci.md                # develop, qs, main, Prüfungen vor jedem Merge, Images
 │   ├── sicherheit-und-schluessel.md      # Verschlüsselung, Secrets, Offline-Schlüssel, Härtung
 │   └── open-source.md                    # Lizenz (AGPL-3.0), Öffentlichschalten, Selbstbetrieb
@@ -136,5 +136,5 @@ docs/
 - **Für Event-Betreiber & Thekenteams**:
   1. Siehe [Tablet Strichlisten-Recorder](domains/tablet-strichliste-recorder.md) für Kiosk-Abläufe, Speisen-/Getränkeauswahl und 1-Tap-Touch-Buchungen.
 - **Für den Betrieb (Produktion)**:
-  1. Vor dem ersten Ausrollen die [Go-Live-Checkliste](betrieb/strato.md#checkliste-für-den-go-live) abarbeiten.
-  2. Ausrollen, Zurückrollen und Backups: [Betrieb auf einem Strato VPS](betrieb/strato.md#im-betrieb); Verschlüsselung und Schlüssel: [Sicherheit & Schlüssel](betrieb/sicherheit-und-schluessel.md).
+  1. Images, Konfiguration und erster Start: [Vereint selbst betreiben](betrieb/selbst-betreiben.md).
+  2. Verschlüsselung und Schlüssel: [Sicherheit & Schlüssel](betrieb/sicherheit-und-schluessel.md).
