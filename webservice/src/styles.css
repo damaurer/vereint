@@ -1074,10 +1074,16 @@ a:focus-visible {
   background: transparent;
 }
 
+/* Wie im Design-Entwurf: Seiten liegen direkt auf dem Hintergrund, ohne Rahmenkarte. */
 .shell-content .page-card {
   width: 100%;
   max-width: 64rem;
   margin: 0 auto;
+  padding: var(--space-2) 0 var(--space-4);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
 .shell-content .page-card > h1:first-of-type,
@@ -2174,4 +2180,11 @@ input[type='checkbox'][role='switch']:disabled {
 
 .treasury-stat-negative.has-negative .ui-stat-value {
   color: var(--color-danger);
+}
+
+/* Auf dem Handy führt der Pfeil in der Kopfzeile zurück; der Textlink wäre doppelt. */
+@media (max-width: 640px) {
+  .member-back[data-topbar-back] {
+    display: none;
+  }
 }

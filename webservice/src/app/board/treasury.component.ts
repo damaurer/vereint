@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { forkJoin, map, type Observable } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
@@ -49,6 +50,7 @@ interface MemberLedger {
   imports: [
     StateComponent,
     FormsModule,
+    RouterLink,
     BalanceCardComponent,
     AvatarBadgeComponent,
     StatCardComponent,
@@ -60,6 +62,7 @@ interface MemberLedger {
       <section class="page-card member-card" aria-labelledby="treasury-title">
         <span class="eyebrow">{{ 'board.treasury.eyebrow' | t }}</span>
         <h1 id="treasury-title">{{ 'board.treasury.title' | t }}</h1>
+        <a class="member-back" data-topbar-back routerLink="/board">{{ 'board.backToBoard' | t }}</a>
 
         @if (actionError(); as err) {
           <p class="manage-action-error" role="alert">{{ err }}</p>

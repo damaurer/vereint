@@ -390,17 +390,17 @@
     }
   },
   "errorPages": {
-    "toDashboard": "Go to dashboard",
-    "toHome": "Go to home page",
+    "toDashboard": "Go to start",
     "forbidden": {
       "title": "Access denied",
-      "description": "You do not have the required permissions for this page, or your session is no longer valid.",
+      "description": "You lack the rights for this page or your sign-in has expired.",
       "signInAgain": "Sign in again"
     },
     "notFound": {
-      "title": "Page not found",
-      "description": "The page you requested does not exist, has been moved, or the address is incorrect."
-    }
+      "title": "This page does not exist",
+      "description": "Maybe the event was deleted or the link is outdated."
+    },
+    "eyebrow": "Error {code}"
   },
   "routes": {
     "placeholder": {
@@ -1643,7 +1643,15 @@
         "messageSent": "Message sent.",
         "membersInvited": "Members invited."
       },
-      "choose": "Please choose"
+      "choose": "Please choose",
+      "tabs": {
+        "label": "Sections",
+        "details": "Details",
+        "participants": "Participants",
+        "drinks": "Drinks & food",
+        "guests": "Guests",
+        "chat": "Chat"
+      }
     },
     "picker": {
       "allMembers": "Invite all members",

@@ -41,6 +41,11 @@ function profile(overrides: Partial<MemberProfile> = {}): MemberProfile {
   };
 }
 
+function showTab(fixture: { componentInstance: unknown; detectChanges(): void }, tab: string): void {
+  (fixture.componentInstance as { tab: { set(value: string): void } }).tab.set(tab);
+  fixture.detectChanges();
+}
+
 describe('EventManageComponent', () => {
   let serviceStub: Record<string, ReturnType<typeof vi.fn>>;
 
@@ -146,7 +151,7 @@ describe('EventManageComponent', () => {
     };
     component.inviteForm.expiresInMinutes = '60';
     component.createInvite();
-    fixture.detectChanges();
+    showTab(fixture, 'guests');
 
     expect(serviceStub['createInvite']).toHaveBeenCalledWith('e-1', { role: 'guest', expiresInMinutes: 60 });
     expect(textOf(fixture)).toContain('/invite/accept?token=x');
@@ -158,6 +163,7 @@ describe('EventManageComponent', () => {
     );
     const fixture = await createFixture();
     const root = fixture.nativeElement as HTMLElement;
+    showTab(fixture, 'participants');
     expect(textOf(fixture)).toContain('Bruno');
     expect(textOf(fixture)).toContain('Vielleicht');
     expect(root.querySelector('input[name="participantId"]')).toBeNull();
@@ -184,6 +190,7 @@ describe('EventManageComponent', () => {
     serviceStub['listDrinks'] = vi.fn(() => of([{ id: 'ed-1', drinkId: 'd-2', drinkName: 'Apfelschorle', price: '2.00', currency: 'EUR' }]));
     const fixture = await createFixture();
     const root = fixture.nativeElement as HTMLElement;
+    showTab(fixture, 'drinks');
     const drinkOptions = Array.from(root.querySelectorAll('select[name="drinkId"] option')).map((o) => o.textContent?.trim());
     expect(drinkOptions.some((o) => o?.startsWith('Helles'))).toBe(true);
     expect(drinkOptions.some((o) => o?.startsWith('Apfelschorle'))).toBe(false);

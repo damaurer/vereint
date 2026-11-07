@@ -92,7 +92,7 @@ import { activeLocale, translate } from '../i18n/i18n.service';
                       <li class="bar-row" [class.bar-row-me]="isMe(i, view)" [attr.aria-current]="isMe(i, view) ? 'true' : null">
                         <span class="bar-rank">{{ i + 1 }}.</span>
                         <span class="bar-name">
-                          {{ row.displayName }}
+                          <span class="bar-name-text">{{ row.displayName }}</span>
                           @if (isMe(i, view)) {
                             <span class="bar-me">{{ 'statistics.consumption.you' | t }}</span>
                           }
@@ -305,10 +305,20 @@ import { activeLocale, translate } from '../i18n/i18n.service';
 
       .bar-name {
         min-width: 0;
+        display: flex;
+        align-items: center;
         font-size: 0.9rem;
+      }
+
+      .bar-name-text {
+        min-width: 0;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .bar-me {
+        flex: none;
       }
 
       .bar-track {

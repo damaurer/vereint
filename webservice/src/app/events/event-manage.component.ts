@@ -12,7 +12,6 @@ import { rsvpLabelKey, rsvpTone } from '../member/member-api.service';
 import { REMINDER_HOUR_OPTIONS, isoToLocalInput, localInputToIso, reminderLabelKey } from './event-datetime';
 import { MemberPickerComponent } from './member-picker.component';
 import {
-  InfoPanelComponent,
   StatusBadgeComponent,
   type StatusTone,
 } from '../ui';
@@ -57,6 +56,9 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
   'archived',
 ];
 
+const MANAGE_TABS = ['details', 'participants', 'drinks', 'guests', 'chat'] as const;
+type ManageTab = (typeof MANAGE_TABS)[number];
+
 /**
  * Owner-Verwaltung eines Events (TICKET-025).
  *
@@ -69,12 +71,12 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
  */
 @Component({
   selector: 'app-event-manage',
-  imports: [StateComponent, FormsModule, RouterLink, InfoPanelComponent, StatusBadgeComponent, MemberPickerComponent, TranslatePipe],
+  imports: [StateComponent, FormsModule, RouterLink, StatusBadgeComponent, MemberPickerComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="manage-title">
         <span class="eyebrow">{{ 'events.manage.eyebrow' | t }}</span>
-        <a class="member-back" [routerLink]="['/events', eventId]">{{ 'events.manage.back' | t }}</a>
+        <a class="member-back" data-topbar-back [routerLink]="['/events', eventId]">{{ 'events.manage.back' | t }}</a>
 
         @if (header.isLoading()) {
           <vereint-state
@@ -96,12 +98,13 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
               [label]="eventStatusLabel(head.event.status)"
               [tone]="eventTone(head.event.status)"
             />
+            <span class="manage-when">
+              {{ formatDateTime(head.event.startsAt) }}
+              @if (head.event.location) {
+                · {{ head.event.location }}
+              }
+            </span>
           </p>
-          @if (head.event.location) {
-            <vereint-info-panel icon="location" [title]="'events.manage.nextDate' | t">
-              {{ head.event.location }} · {{ formatDateTime(head.event.startsAt) }}
-            </vereint-info-panel>
-          }
 
           @if (!isManager()) {
             <div class="state-card state-error" role="alert">
@@ -116,6 +119,22 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
               <p class="manage-action-info" role="status">{{ info }}</p>
             }
 
+            <nav class="manage-tabs" role="tablist" [attr.aria-label]="'events.manage.tabs.label' | t">
+              @for (item of tabs; track item) {
+                <button
+                  type="button"
+                  role="tab"
+                  class="manage-tab"
+                  [class.is-active]="tab() === item"
+                  [attr.aria-selected]="tab() === item"
+                  (click)="tab.set(item)"
+                >
+                  {{ 'events.manage.tabs.' + item | t }}
+                </button>
+              }
+            </nav>
+
+            @if (tab() === 'details') {
             <!-- Stammdaten und Status -->
             <h2 class="member-subtitle">{{ 'events.manage.details.title' | t }}</h2>
             <form class="manage-form" (ngSubmit)="saveEvent()">
@@ -175,7 +194,10 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
               <button type="submit" class="member-button" [disabled]="busy()">{{ 'events.manage.details.save' | t }}</button>
             </form>
 
+            }
+
             @if (sections.data(); as data) {
+              @if (tab() === 'participants') {
               <!-- Teilnehmer & Anwesenheit -->
               <h2 class="member-subtitle">{{ 'events.manage.participants.heading' | t: { count: data.participants.length } }}</h2>
               @if (data.participants.length === 0) {
@@ -224,6 +246,7 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                 </button>
               </form>
 
+              } @else if (tab() === 'drinks') {
               <!-- Eventgetränke -->
               <h2 class="member-subtitle">{{ 'events.manage.drinks.heading' | t: { count: data.drinks.length } }}</h2>
               @if (data.drinks.length === 0) {
@@ -340,6 +363,7 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                 <button type="submit" class="member-button" [disabled]="busy()">{{ 'events.manage.food.add' | t }}</button>
               </form>
 
+              } @else if (tab() === 'guests') {
               <!-- Einladungen -->
               <h2 class="member-subtitle">{{ 'events.manage.invites.heading' | t: { count: data.invites.length } }}</h2>
               @if (createdInvite(); as created) {
@@ -384,6 +408,7 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                 <button type="submit" class="member-button" [disabled]="busy()">{{ 'events.manage.invites.create' | t }}</button>
               </form>
 
+              } @else if (tab() === 'chat') {
               <!-- Event-Chat -->
               <h2 class="member-subtitle">{{ 'events.manage.chat.heading' | t: { count: data.messages.length } }}</h2>
               @if (data.messages.length === 0) {
@@ -406,6 +431,7 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
                 </label>
                 <button type="submit" class="member-button" [disabled]="busy()">{{ 'events.manage.chat.send' | t }}</button>
               </form>
+              }
             } @else if (sections.isError()) {
               <p class="manage-action-error" role="alert">{{ sections.errorMessage() }}</p>
             }
@@ -416,6 +442,41 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
   `,
   styles: [
     `
+      .manage-status {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0.25rem 0 0;
+      }
+      .manage-when {
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+      }
+      .manage-tabs {
+        display: flex;
+        gap: 0.25rem;
+        margin: var(--space-3) calc(-1 * var(--space-1)) var(--space-3);
+        border-bottom: 1px solid var(--color-border);
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .manage-tab {
+        flex: none;
+        padding: 0.7rem 0.75rem;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        background: none;
+        color: var(--color-text-muted);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .manage-tab.is-active {
+        color: var(--color-brand);
+        border-bottom-color: var(--color-brand);
+      }
       .manage-form {
         display: flex;
         flex-wrap: wrap;
@@ -424,10 +485,12 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
         margin: 0.75rem 0 1.5rem;
       }
       .manage-field {
+        flex: 1 1 14rem;
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
         min-width: 12rem;
+        font-weight: 600;
       }
       .manage-field-grow {
         flex: 1 1 18rem;
@@ -435,10 +498,14 @@ const EVENT_STATUS_VALUES: readonly EventStatus[] = [
       .manage-field input,
       .manage-field select,
       .manage-field textarea {
-        padding: 0.5rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 0.5rem;
+        min-height: 2.75rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background-color: var(--color-surface-raised);
+        color: inherit;
         font: inherit;
+        font-weight: 400;
       }
       .manage-fieldset {
         display: flex;
@@ -495,6 +562,8 @@ export class EventManageComponent implements OnInit, OnDestroy {
 
   protected readonly eventId = this.route.snapshot.paramMap.get('eventId') ?? '';
   protected readonly statusValues = EVENT_STATUS_VALUES;
+  protected readonly tabs = MANAGE_TABS;
+  protected readonly tab = signal<ManageTab>('details');
 
   protected readonly header = new AsyncState<ManageHeader>();
   protected readonly sections = new AsyncState<ManageSections>();

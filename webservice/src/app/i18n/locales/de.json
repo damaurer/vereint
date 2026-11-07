@@ -384,17 +384,17 @@
     }
   },
   "errorPages": {
-    "toDashboard": "Zum Dashboard",
-    "toHome": "Zur Startseite",
+    "toDashboard": "Zur Startseite",
     "forbidden": {
       "title": "Zugriff verweigert",
-      "description": "Für diese Seite fehlen Ihnen die erforderlichen Berechtigungen oder Ihre Sitzung ist nicht mehr gültig.",
+      "description": "Für diese Seite fehlen dir die Rechte oder deine Anmeldung ist abgelaufen.",
       "signInAgain": "Neu anmelden"
     },
     "notFound": {
-      "title": "Seite nicht gefunden",
-      "description": "Die von Ihnen aufgerufene Seite existiert nicht, wurde verschoben oder die Adresse ist fehlerhaft."
-    }
+      "title": "Diese Seite gibt es nicht",
+      "description": "Vielleicht wurde das Event gelöscht oder der Link ist veraltet."
+    },
+    "eyebrow": "Fehler {code}"
   },
   "routes": {
     "placeholder": {
@@ -1610,7 +1610,15 @@
         "messageSent": "Nachricht gesendet.",
         "membersInvited": "Mitglieder eingeladen."
       },
-      "choose": "Bitte wählen"
+      "choose": "Bitte wählen",
+      "tabs": {
+        "label": "Bereiche",
+        "details": "Stammdaten",
+        "participants": "Teilnehmer",
+        "drinks": "Getränke & Speisen",
+        "guests": "Gäste",
+        "chat": "Chat"
+      }
     },
     "picker": {
       "allMembers": "Alle Mitglieder einladen",

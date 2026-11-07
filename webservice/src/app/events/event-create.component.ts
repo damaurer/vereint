@@ -29,7 +29,7 @@ export type InvitationTiming = 'onPublish' | 'at';
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="create-title">
         <span class="eyebrow">{{ 'events.create.eyebrow' | t }}</span>
-        <a class="member-back" routerLink="/events">{{ 'events.create.back' | t }}</a>
+        <a class="member-back" data-topbar-back routerLink="/events">{{ 'events.create.back' | t }}</a>
         <h1 id="create-title">{{ 'events.create.title' | t }}</h1>
         <p>{{ 'events.create.intro' | t }}</p>
 
