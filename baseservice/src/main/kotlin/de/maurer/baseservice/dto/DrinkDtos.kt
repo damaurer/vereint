@@ -43,7 +43,10 @@ data class ProposeDrinkRequest(
     val barcodes: List<String>? = null,
 
     @Schema(description = "Eintrag der gemeinsamen Getränkedatenbank, aus dem das Getränk übernommen wird")
-    val libraryDrinkId: String? = null
+    val libraryDrinkId: String? = null,
+
+    @Schema(description = "Strich-Kategorie (nur Vorstand/Admin); leer = ohne Kategorie")
+    val tallyCategoryId: String? = null
 )
 
 data class UpdateDrinkRequest(
@@ -70,7 +73,10 @@ data class UpdateDrinkRequest(
     @field:Size(max = 512, message = "imageReference {validation.size.max}")
     val imageReference: String? = null,
 
-    val active: Boolean? = null
+    val active: Boolean? = null,
+
+    @Schema(description = "Strich-Kategorie (nur Vorstand/Admin); null = unverändert, leer = ohne Kategorie")
+    val tallyCategoryId: String? = null
 )
 
 data class AddBarcodeRequest(
@@ -103,7 +109,11 @@ data class DrinkDto(
     val createdAt: Instant,
     val updatedAt: Instant,
     @Schema(description = "Herkunft aus der gemeinsamen Getränkedatenbank")
-    val libraryDrinkId: String? = null
+    val libraryDrinkId: String? = null,
+    val tallyCategoryId: String? = null,
+    val tallyCategoryName: String? = null,
+    @Schema(description = "Preis je Strich der Kategorie; überschreibt den Verkaufspreis")
+    val tallyCategoryPrice: BigDecimal? = null
 )
 
 data class DrinkSummaryDto(
@@ -115,7 +125,10 @@ data class DrinkSummaryDto(
     val currency: String,
     val status: String,
     val active: Boolean,
-    val catalogVersion: Int
+    val catalogVersion: Int,
+    val tallyCategoryId: String? = null,
+    val tallyCategoryName: String? = null,
+    val tallyCategoryPrice: BigDecimal? = null
 )
 
 @Schema(description = "Eintrag der gemeinsamen Getränkedatenbank (ohne Preis)")

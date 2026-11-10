@@ -66,5 +66,9 @@ data class EventDrinkDto(
     val catalogVersion: Int,
     val imageSnapshot: String?,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    /** Preis, der im Event wirklich gilt: Kategoriepreis > Event-Preis > Getränkepreis. */
+    val effectivePrice: BigDecimal = price,
+    val tallyCategoryId: String? = null,
+    val tallyCategoryName: String? = null
 )

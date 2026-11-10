@@ -292,7 +292,10 @@ class EventDrinkService(
             catalogVersion = eventDrink.catalogVersion,
             imageSnapshot = eventDrink.imageSnapshot,
             createdAt = eventDrink.createdAt,
-            updatedAt = eventDrink.updatedAt
+            updatedAt = eventDrink.updatedAt,
+            effectivePrice = EventDrinkPricing.resolve(eventDrink).unitPrice,
+            tallyCategoryId = EventDrinkPricing.activeCategory(eventDrink)?.id?.toString(),
+            tallyCategoryName = EventDrinkPricing.activeCategory(eventDrink)?.name
         )
     }
 }

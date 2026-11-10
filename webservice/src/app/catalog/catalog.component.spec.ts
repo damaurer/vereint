@@ -61,6 +61,7 @@ describe('CatalogComponent', () => {
     removeBarcode: ReturnType<typeof vi.fn>;
     shareToLibrary: ReturnType<typeof vi.fn>;
     searchLibrary: ReturnType<typeof vi.fn>;
+    listTallyCategories: ReturnType<typeof vi.fn>;
   };
   let auth: { getSession: ReturnType<typeof vi.fn> };
 
@@ -109,6 +110,9 @@ describe('CatalogComponent', () => {
       removeBarcode: vi.fn(() => of(undefined)),
       shareToLibrary: vi.fn(() => of({ id: 'l-1' })),
       searchLibrary: vi.fn(() => of([])),
+      listTallyCategories: vi.fn(() =>
+        of([{ id: 'c-bier', name: 'Bier', price: 3.5, currency: 'EUR', sortOrder: 0, drinks: [] }]),
+      ),
     };
   });
 
@@ -301,6 +305,37 @@ describe('CatalogComponent', () => {
       'd-1',
       expect.objectContaining({ defaultPrice: 2.8, costPrice: 1.1, active: false }),
     );
+  });
+
+  it('assigns a tally category and shows the price that applies at the bar', async () => {
+    catalogApi.getDrink.mockReturnValue(
+      of({ ...mockDrinks[0], description: null, defaultPrice: 3.6, costPrice: 1.1, barcodes: [], tallyCategoryId: null }),
+    );
+    const fixture = await create(['board'], ['catalog.approve']);
+    const cmp = fixture.componentInstance as any;
+    expect(fixture.nativeElement.textContent).toContain('Strich-Kategorien');
+
+    cmp.openEditDrink('d-1');
+    cmp.drinkTallyCategoryId = 'c-bier';
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent ?? '';
+    expect(text).toContain('Strich-Kategorie');
+    expect(text).toMatch(/An der Theke: 3,50\s€ \(Kategorie Bier/);
+    expect(text).toMatch(/Marge pro Verkauf: 2,40\s€/);
+
+    cmp.submitDrinkForm(new Event('submit'));
+    expect(catalogApi.updateDrink).toHaveBeenCalledWith('d-1', expect.objectContaining({ tallyCategoryId: 'c-bier' }));
+  });
+
+  it('sends an empty tally category to remove it, but not without catalog rights', async () => {
+    catalogApi.getDrink.mockReturnValue(of({ ...mockDrinks[0], barcodes: [], tallyCategoryId: 'c-bier' }));
+    const fixture = await create(['board'], ['catalog.approve']);
+    const cmp = fixture.componentInstance as any;
+    cmp.openEditDrink('d-1');
+    expect(cmp.drinkTallyCategoryId).toBe('c-bier');
+    cmp.drinkTallyCategoryId = '';
+    cmp.submitDrinkForm(new Event('submit'));
+    expect(catalogApi.updateDrink).toHaveBeenCalledWith('d-1', expect.objectContaining({ tallyCategoryId: '' }));
   });
 
   it('warns about a drink with the same name', async () => {

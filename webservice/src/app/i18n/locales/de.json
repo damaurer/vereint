@@ -565,6 +565,10 @@
     "friends": {
       "title": "Freunde",
       "description": "Deine Freundesliste über alle Gruppen."
+    },
+    "tallyCategories": {
+      "title": "Strich-Kategorien",
+      "description": "Spalten der Strichliste mit Preis je Strich festlegen."
     }
   },
   "chat": {
@@ -1025,6 +1029,32 @@
       "share": "In die Getränkedatenbank teilen",
       "shared": "Dieses Getränk ist mit der Getränkedatenbank verknüpft.",
       "sharedInfo": "„{name}“ ist jetzt in der Getränkedatenbank (ohne Preis)."
+    },
+    "tally": {
+      "open": "Strich-Kategorien",
+      "field": "Strich-Kategorie",
+      "none": "Ohne",
+      "effectivePrice": "An der Theke: {price} (Kategorie {name}, überschreibt den Verkaufspreis)",
+      "eyebrow": "Strichliste",
+      "title": "Kategorien",
+      "create": "Neue Kategorie",
+      "intro": "Jede Kategorie ist eine Spalte der Strichliste. Ihr Preis gilt im Event für alle zugeordneten Getränke und überschreibt den Getränkepreis.",
+      "name": "Name",
+      "pricePerTally": "Preis je Strich",
+      "loadError": "Kategorien nicht verfügbar",
+      "emptyTitle": "Noch keine Kategorien",
+      "emptyMessage": "Lege mit „Neue Kategorie“ die erste Spalte an, zum Beispiel Bier.",
+      "unassign": "{name} aus der Kategorie nehmen",
+      "noDrinks": "Noch keine Getränke zugeordnet.",
+      "moveUp": "Nach links",
+      "moveDown": "Nach rechts",
+      "delete": "Löschen",
+      "confirmDelete": "Kategorie „{name}“ löschen? Ihre Getränke behalten dann ihren eigenen Preis.",
+      "withoutTitle": "Ohne Kategorie · eigener Preis",
+      "assign": "Zuordnen …",
+      "assignTo": "{name} einer Kategorie zuordnen",
+      "allAssigned": "Alle Getränke im Sortiment haben eine Kategorie.",
+      "required": "Bitte Name und einen Preis ab 0 angeben."
     }
   },
   "sublists": {
@@ -1086,9 +1116,6 @@
     }
   },
   "tablet": {
-    "row": {
-      "strokesFor": "Striche für {name}"
-    },
     "revenue": {
       "eveningTitle": "Ganzen Abend stiften",
       "roundTitle": "Runde ausgeben",
@@ -1137,26 +1164,39 @@
       "select": "Auswählen"
     },
     "tally": {
-      "heading": "Strichliste",
-      "activeItem": "Artikel: {name} · {price}",
-      "activeDrink": "Getränk: {name} · {price}",
-      "chooseItem": "Artikel wählen",
-      "booked": "Strich erfasst: {label}",
+      "booked": "Strich: {label}",
       "undo": "Rückgängig",
-      "quickbookLabel": "Aktiver Artikel für Schnellbuchung:",
       "round": "Runde ausgeben",
       "evening": "Ganzen Abend stiften"
     },
     "messages": {
       "undoNotPossible": "Hier lassen sich nur Striche dieser Sitzung zurücknehmen. Ältere Buchungen korrigiert der Vorstand.",
       "undone": "Strich zurückgenommen.",
-      "purchaseRecorded": "Kauf erfasst.",
       "eveningBooked": "Abendaktion gebucht.",
-      "roundBooked": "Runde gebucht."
+      "roundBooked": "Runde gebucht.",
+      "noDrinksInCategory": "Für {name} ist in diesem Event kein Getränk freigegeben."
     },
     "fallback": {
       "member": "Mitglied",
       "item": "Artikel"
+    },
+    "board": {
+      "hint": "Tippe auf das Feld unter der Kategorie, um einen Strich zu machen.",
+      "member": "Mitglied",
+      "perTally": "{price} je Strich",
+      "other": "Sonstiges",
+      "otherHint": "Weitere Getränke & Speisen",
+      "ownTab": "Eigene Rechnung",
+      "cellLabel": "{name}, {column}: {count} Striche. Tippen für einen Strich.",
+      "todayTitle": "Heute an der Theke",
+      "tallies": "Striche",
+      "revenue": "Umsatz"
+    },
+    "picker": {
+      "categoryTitle": "{name}: welches Getränk?",
+      "otherTitle": "Sonstiges: was wird gebucht?",
+      "forMember": "Strich für {name}",
+      "empty": "Für dieses Feld ist im Event nichts freigegeben."
     }
   },
   "admin": {

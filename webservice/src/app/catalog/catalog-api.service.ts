@@ -18,6 +18,9 @@ export interface DrinkSummaryDto {
   status: string;
   active: boolean;
   catalogVersion: number;
+  tallyCategoryId?: string | null;
+  tallyCategoryName?: string | null;
+  tallyCategoryPrice?: number | null;
 }
 
 export interface DrinkDto {
@@ -39,6 +42,28 @@ export interface DrinkDto {
   updatedAt: string;
   /** Herkunft aus der gemeinsamen Getränkedatenbank (`null` = nicht geteilt). */
   libraryDrinkId?: string | null;
+  /** Strich-Kategorie; ihr Preis überschreibt im Event den Verkaufspreis. */
+  tallyCategoryId?: string | null;
+  tallyCategoryName?: string | null;
+  tallyCategoryPrice?: number | null;
+}
+
+/** Getränk, das einer Strich-Kategorie zugeordnet ist. */
+export interface TallyCategoryDrinkDto {
+  id: string;
+  name: string;
+  defaultPrice: number;
+  currency: string;
+}
+
+/** Strich-Kategorie: eine Spalte der Strichliste mit Preis je Strich. */
+export interface TallyCategoryDto {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  sortOrder: number;
+  drinks: TallyCategoryDrinkDto[];
 }
 
 /** Eintrag der stammtischübergreifenden Getränkedatenbank (ohne Preise). */
@@ -63,6 +88,8 @@ export interface ProposeDrinkRequest {
   barcodes?: string[] | null;
   /** Eintrag der Getränkedatenbank, aus dem das Getränk übernommen wird. */
   libraryDrinkId?: string | null;
+  /** Strich-Kategorie (nur wer den Katalog pflegt). */
+  tallyCategoryId?: string | null;
 }
 
 export interface UpdateDrinkRequest {
@@ -74,6 +101,8 @@ export interface UpdateDrinkRequest {
   currency?: string | null;
   imageReference?: string | null;
   active?: boolean | null;
+  /** Strich-Kategorie; leer = ohne Kategorie, weglassen = unverändert. */
+  tallyCategoryId?: string | null;
 }
 
 export interface AddBarcodeRequest {
@@ -177,6 +206,32 @@ export class CatalogApiService {
   /** Teilt ein freigegebenes Getränk dieses Stammtischs in die Getränkedatenbank. */
   shareToLibrary(id: string): Observable<DrinkLibraryEntryDto> {
     return this.api.post<DrinkLibraryEntryDto>(`/drinks/${encodeURIComponent(id)}/share-to-library`, {});
+  }
+
+  /** Strich-Kategorien in Spaltenreihenfolge samt Getränken. */
+  listTallyCategories(): Observable<TallyCategoryDto[]> {
+    return this.api.get<TallyCategoryDto[]>('/tally-categories');
+  }
+
+  createTallyCategory(request: { name: string; price: number }): Observable<TallyCategoryDto> {
+    return this.api.post<TallyCategoryDto>('/tally-categories', request);
+  }
+
+  updateTallyCategory(id: string, request: { name?: string; price?: number }): Observable<TallyCategoryDto> {
+    return this.api.put<TallyCategoryDto>(`/tally-categories/${encodeURIComponent(id)}`, request);
+  }
+
+  reorderTallyCategories(ids: string[]): Observable<TallyCategoryDto[]> {
+    return this.api.put<TallyCategoryDto[]>('/tally-categories/order', { ids });
+  }
+
+  deleteTallyCategory(id: string): Observable<void> {
+    return this.api.delete<void>(`/tally-categories/${encodeURIComponent(id)}`);
+  }
+
+  /** Ordnet ein Getränk einer Strich-Kategorie zu (`''` = ohne Kategorie). */
+  assignTallyCategory(drinkId: string, tallyCategoryId: string): Observable<DrinkDto> {
+    return this.api.put<DrinkDto>(`/drinks/${encodeURIComponent(drinkId)}`, { tallyCategoryId });
   }
 
   listFoods(active?: boolean): Observable<FoodSummaryDto[]> {

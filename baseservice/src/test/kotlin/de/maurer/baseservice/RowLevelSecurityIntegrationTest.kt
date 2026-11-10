@@ -102,7 +102,8 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
                 String::class.java
             )
         }
-        assertEquals(33, tables.size, "Tabellen mit Policy: $tables")
+        assertEquals(34, tables.size, "Tabellen mit Policy: $tables")
+        assertTrue("tally_categories" in tables, "Strich-Kategorien brauchen eine Policy: $tables")
     }
 
     @Test
@@ -114,6 +115,31 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
         assertEquals(0, TenantContext.runIn(stammtischB) { countEvent(eventA) })
         assertEquals(0, TenantContext.runWithoutTenant { countEvent(eventA) })
         assertEquals(1, TenantContext.runAsSystem { countEvent(eventA) })
+    }
+
+    @Test
+    fun `tally categories of one Stammtisch are invisible from another`() {
+        val stammtischB = newStammtisch()
+        val categoryId = UUID.randomUUID()
+        jdbcTemplate.update(
+            "insert into tally_categories (id, stammtisch_id, name, price) values (?, ?, 'Bier', 3.50)",
+            categoryId,
+            DEFAULT_STAMMTISCH_ID
+        )
+        val count = { jdbcTemplate.queryForObject("select count(*) from tally_categories where id = ?", Int::class.java, categoryId)!! }
+
+        assertEquals(1, count())
+        assertEquals(0, TenantContext.runIn(stammtischB) { count() })
+        assertEquals(0, TenantContext.runWithoutTenant { count() })
+        assertThrows(DataAccessException::class.java) {
+            TenantContext.runIn(DEFAULT_STAMMTISCH_ID) {
+                jdbcTemplate.update(
+                    "insert into tally_categories (id, stammtisch_id, name, price) values (?, ?, 'Eingeschmuggelt', 1.00)",
+                    UUID.randomUUID(),
+                    stammtischB
+                )
+            }
+        }
     }
 
     @Test

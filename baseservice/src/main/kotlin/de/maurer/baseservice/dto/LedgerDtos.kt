@@ -138,7 +138,10 @@ data class LedgerEntryDto(
     val reversesEntryId: String?,
     val idempotencyKey: String,
     val createdAt: Instant,
-    val snapshot: PurchaseSnapshotDto?
+    val snapshot: PurchaseSnapshotDto?,
+    /** Strich-Kategorie, zu deren Preis gebucht wurde (Issue #80). */
+    val tallyCategoryId: String? = null,
+    val tallyCategoryName: String? = null
 )
 
 /**

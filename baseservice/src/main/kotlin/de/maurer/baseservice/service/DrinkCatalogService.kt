@@ -3,6 +3,7 @@ package de.maurer.baseservice.service
 import de.maurer.baseservice.domain.DrinkBarcodeEntity
 import de.maurer.baseservice.domain.DrinkCatalogEntity
 import de.maurer.baseservice.domain.DrinkStatus
+import de.maurer.baseservice.domain.TallyCategoryEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.AccessDeniedException
@@ -13,6 +14,7 @@ import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.DrinkLibraryRepository
+import de.maurer.baseservice.repository.TallyCategoryRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.Identifiers
@@ -37,6 +39,7 @@ class DrinkCatalogService(
     private val drinkCatalogRepository: DrinkCatalogRepository,
     private val drinkBarcodeRepository: DrinkBarcodeRepository,
     private val drinkLibraryRepository: DrinkLibraryRepository,
+    private val tallyCategoryRepository: TallyCategoryRepository,
     private val access: StammtischAccess,
     private val userService: UserService
 ) {
@@ -139,7 +142,9 @@ class DrinkCatalogService(
             active = privileged,
             status = if (privileged) DrinkStatus.approved else DrinkStatus.proposed,
             proposedBy = caller,
-            approvedBy = if (privileged) caller else null
+            approvedBy = if (privileged) caller else null,
+            // Nur wer den Katalog pflegt, ordnet eine Strich-Kategorie zu (Issue #80).
+            tallyCategory = if (privileged) request.tallyCategoryId?.let { resolveTallyCategory(it) } else null
         )
         val saved = drinkCatalogRepository.save(drink)
 
@@ -175,6 +180,15 @@ class DrinkCatalogService(
                 )
             }
             drink.active = request.active
+        }
+        if (request.tallyCategoryId != null) {
+            if (!privileged) {
+                throw AccessDeniedException(
+                    Msg("error.tallyCategory.assignDenied"),
+                    ErrorCode.ACCESS_DENIED
+                )
+            }
+            drink.tallyCategory = resolveTallyCategory(request.tallyCategoryId)
         }
 
         // Katalogversion nur für bereits freigegebene Stammdaten fortschreiben, damit
@@ -285,6 +299,19 @@ class DrinkCatalogService(
         drinkBarcodeRepository.delete(barcode)
     }
 
+    /** Leer = ohne Kategorie; sonst eine nicht gelöschte Kategorie der Gruppe. */
+    private fun resolveTallyCategory(value: String): TallyCategoryEntity? {
+        val trimmed = value.trim()
+        if (trimmed.isEmpty()) return null
+        val id = Identifiers.parseUuid(trimmed, "tallyCategoryId")
+        return tallyCategoryRepository.findById(id).filter { !it.archived }.orElseThrow {
+            ResourceNotFoundException(Msg("error.tallyCategory.notFound", id), ErrorCode.NOT_FOUND)
+        }
+    }
+
+    private fun activeTallyCategory(drink: DrinkCatalogEntity): TallyCategoryEntity? =
+        drink.tallyCategory?.takeUnless { it.archived }
+
     private fun requireDrink(id: UUID): DrinkCatalogEntity =
         drinkCatalogRepository.findById(id).orElseThrow {
             ResourceNotFoundException(Msg("error.drink.notFound", id), ErrorCode.NOT_FOUND)
@@ -383,7 +410,10 @@ class DrinkCatalogService(
             barcodes = barcodes,
             createdAt = drink.createdAt,
             updatedAt = drink.updatedAt,
-            libraryDrinkId = drink.libraryDrinkId?.toString()
+            libraryDrinkId = drink.libraryDrinkId?.toString(),
+            tallyCategoryId = activeTallyCategory(drink)?.id?.toString(),
+            tallyCategoryName = activeTallyCategory(drink)?.name,
+            tallyCategoryPrice = activeTallyCategory(drink)?.price
         )
     }
 
@@ -397,7 +427,10 @@ class DrinkCatalogService(
             currency = drink.currency,
             status = drink.status.name,
             active = drink.active,
-            catalogVersion = drink.catalogVersion
+            catalogVersion = drink.catalogVersion,
+            tallyCategoryId = activeTallyCategory(drink)?.id?.toString(),
+            tallyCategoryName = activeTallyCategory(drink)?.name,
+            tallyCategoryPrice = activeTallyCategory(drink)?.price
         )
 
     private fun toBarcodeDto(barcode: DrinkBarcodeEntity): DrinkBarcodeDto =

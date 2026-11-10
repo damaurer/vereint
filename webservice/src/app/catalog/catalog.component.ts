@@ -13,6 +13,7 @@ import {
   type FoodDto,
   type ProposeDrinkRequest,
   type CreateFoodRequest,
+  type TallyCategoryDto,
 } from './catalog-api.service';
 import { AsyncState } from '../member/async-state';
 import { formatMoney } from '../member/member-format';
@@ -62,6 +63,11 @@ type CatalogTab = 'drinks' | 'food';
             <a class="btn-secondary-sm catalog-library-link" routerLink="/catalog/library">
               {{ 'catalog.library.open' | t }}
             </a>
+            @if (canApprove()) {
+              <a class="btn-secondary-sm catalog-library-link" routerLink="/catalog/categories">
+                {{ 'catalog.tally.open' | t }}
+              </a>
+            }
             <button
               type="button"
               class="btn-secondary-sm catalog-icon-btn"
@@ -300,6 +306,18 @@ type CatalogTab = 'drinks' | 'food';
             }
           </datalist>
 
+          @if (canApprove()) {
+            <label class="form-field">
+              <span>{{ 'catalog.tally.field' | t }}</span>
+              <select [(ngModel)]="drinkTallyCategoryId" name="tallyCategoryId">
+                <option value="">{{ 'catalog.tally.none' | t }}</option>
+                @for (tc of tallyCategories(); track tc.id) {
+                  <option [value]="tc.id">{{ tc.name }} · {{ formatPrice(tc.price, tc.currency) }}</option>
+                }
+              </select>
+            </label>
+          }
+
           <div class="form-row">
             <label class="form-field">
               <span>{{ 'catalog.form.defaultPrice' | t }}</span>
@@ -329,7 +347,14 @@ type CatalogTab = 'drinks' | 'food';
               </label>
             }
           </div>
-          @if (isBoardOrAdmin() && drinkPrice !== null && drinkCostPrice !== null) {
+          @if (selectedTallyCategory(); as tc) {
+            <p class="form-hint tally-price-hint">
+              {{ 'catalog.tally.effectivePrice' | t: { price: formatPrice(tc.price, tc.currency), name: tc.name } }}
+              @if (isBoardOrAdmin() && drinkCostPrice !== null) {
+                · {{ 'catalog.form.marginHint' | t: { amount: formatPrice(tc.price - drinkCostPrice) } }}
+              }
+            </p>
+          } @else if (isBoardOrAdmin() && drinkPrice !== null && drinkCostPrice !== null) {
             <p class="form-hint">
               {{
                 'catalog.form.marginHint' | t: { amount: formatPrice(drinkPrice - drinkCostPrice) }
@@ -965,6 +990,9 @@ export class CatalogComponent implements OnInit, OnDestroy {
   protected drinkCostPrice: number | null = null;
   protected drinkDescription = '';
   protected drinkActive = true;
+  /** Strich-Kategorie des Getränks; leer = ohne Kategorie (Issue #80). */
+  protected drinkTallyCategoryId = '';
+  protected readonly tallyCategories = signal<TallyCategoryDto[]>([]);
   /** Beim Anlegen gesammelte Codes; beim Bearbeiten die gespeicherten des Getränks. */
   private readonly pendingBarcodes = signal<string[]>([]);
   protected barcodeInput = '';
@@ -1059,13 +1087,29 @@ export class CatalogComponent implements OnInit, OnDestroy {
     const roles = session?.roles ?? [];
     this.isBoardOrAdmin.set(roles.includes('board') || roles.includes('admin'));
     this.canApprove.set(session?.permissions?.includes('catalog.approve') ?? false);
+    this.loadTallyCategories();
   }
 
   protected setTab(tab: CatalogTab): void {
     this.activeTab.set(tab);
   }
 
+  /** Strich-Kategorie, die im Formular gewählt ist; ihr Preis gilt im Event. */
+  protected selectedTallyCategory(): TallyCategoryDto | null {
+    if (!this.drinkTallyCategoryId) return null;
+    return this.tallyCategories().find((tc) => tc.id === this.drinkTallyCategoryId) ?? null;
+  }
+
+  private loadTallyCategories(): void {
+    if (!this.canApprove()) return;
+    this.catalogApi.listTallyCategories().subscribe({
+      next: (list) => this.tallyCategories.set(list),
+      error: () => this.tallyCategories.set([]),
+    });
+  }
+
   protected reload(): void {
+    this.loadTallyCategories();
     this.load.run(
       forkJoin({
         drinks: this.catalogApi.listDrinks(this.statusFilter || undefined),
@@ -1149,6 +1193,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
         this.drinkCostPrice = drink.costPrice ? Number(drink.costPrice) : null;
         this.drinkDescription = drink.description ?? '';
         this.drinkActive = drink.active;
+        this.drinkTallyCategoryId = drink.tallyCategoryId ?? '';
         this.drinkFormMode.set('edit');
       },
       error: (err: unknown) => this.actionError.set(describeApiError(err)),
@@ -1163,6 +1208,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.drinkCostPrice = null;
     this.drinkDescription = '';
     this.drinkActive = true;
+    this.drinkTallyCategoryId = '';
     this.pendingBarcodes.set([]);
     this.barcodeInput = '';
     this.barcodeHint.set(null);
@@ -1340,6 +1386,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
           category: fields.category ?? '',
           description: fields.description ?? '',
           ...(this.isBoardOrAdmin() ? { active: this.drinkActive } : {}),
+          ...(this.canApprove() ? { tallyCategoryId: this.drinkTallyCategoryId } : {}),
         })
         .subscribe({
           next: () => {
@@ -1360,6 +1407,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       currency: 'EUR',
       barcodes: this.pendingBarcodes(),
       libraryDrinkId: this.libraryDrinkId(),
+      ...(this.canApprove() && this.drinkTallyCategoryId ? { tallyCategoryId: this.drinkTallyCategoryId } : {}),
     };
     this.catalogApi.proposeDrink(payload).subscribe({
       next: (created) => {
