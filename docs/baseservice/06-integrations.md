@@ -47,7 +47,7 @@ interface ObjectStorage {
 ### 3. Anwendungsverschlüsselung (`crypto/DataEncryptor.kt`)
 Bilddateien, Fotos und Videos aus Moments (in 64-KiB-Blöcken, damit Videos gestreamt werden können), Chat-Nachrichten (`chat_messages.message`) sowie Titel und Text von Benachrichtigungen (`notifications.title`, `notifications.body`) werden vor dem Speichern mit **AES-256-GCM** verschlüsselt. Ein geleakter Datenbank-Dump oder Bucket-Inhalt ist ohne den Schlüssel unlesbar; GCM erkennt zusätzlich jede Manipulation.
 
-- **Schlüssel:** `DATA_ENCRYPTION_KEY` (32 Byte, Base64), in Produktion vom Betreiber gesetzt und offline gesichert ([Sicherheit und Schlüssel](../betrieb/sicherheit-und-schluessel.md)). Mit `DATA_ENCRYPTION_ENABLED=true` startet der Service ohne gültigen Schlüssel nicht. Lokal ist die Verschlüsselung standardmäßig aus; Tests laufen mit einem festen Testschlüssel.
+- **Schlüssel:** `DATA_ENCRYPTION_KEY` (32 Byte, Base64), in Produktion vom Betreiber gesetzt und offline gesichert ([Sicherheit und Schlüssel](../betrieb/sicherheit-und-schluessel.md)). Mit `DATA_ENCRYPTION_ENABLED=true` startet der Service ohne gültigen Schlüssel nicht, mit dem Kontext `prod` ohne `DATA_ENCRYPTION_ENABLED=true` ebenfalls nicht (Ausweg nur bewusst: `DATA_ENCRYPTION_ALLOW_PLAINTEXT=true`, siehe `config/StartupSafetyChecks.kt`). Lokal (`.env.example`, Kontext `dev`) ist die Verschlüsselung aus; Tests laufen mit einem festen Testschlüssel.
 - **Textspalten** nutzen den JPA-Konverter `EncryptedStringConverter` und speichern `enc:v1:` + Base64. Diese Spalten lassen sich nicht mehr per SQL durchsuchen oder sortieren.
 - **Bestandsdaten** ohne Kennung werden unverändert gelesen und beim nächsten Schreiben verschlüsselt.
 - **Rotation:** Neuen Schlüssel als `DATA_ENCRYPTION_KEY`, den alten als `DATA_ENCRYPTION_KEY_PREVIOUS` setzen. Jeder Chiffretext trägt eine Schlüssel-ID, daher bleiben alte Daten lesbar; neue werden mit dem neuen Schlüssel geschrieben.
@@ -111,9 +111,9 @@ Für Einladungslinks und das Eröffnen einer Gruppe legt der `baseservice` Konte
 | **`S3_ENABLED`** | `false` | Verwendet S3 für Bilder und Moment-Medien, wenn `STORAGE_BACKEND` leer ist | `InMemoryObjectStorage` (In-Memory Data URIs) |
 | **`VAPID_ENABLED`** | `false` | Sendet echte Web-Push-Nachrichten via VAPID | `NoOpPushSender` (Persistenz ohne Versand) |
 | **`EV_LIQUIBASE_ENABLED`** | `true` | Führt Schema-Migrationen beim Start aus | Migrationen deaktiviert (z. B. für externe Tools) |
-| **`DATA_ENCRYPTION_ENABLED`** | `false` | Verschlüsselt Chat, Benachrichtigungen und Dateien | Klartext (nur lokal) |
+| **`DATA_ENCRYPTION_ENABLED`** | `false` | Verschlüsselt Chat, Benachrichtigungen und Dateien | Klartext (nur lokal); mit Kontext `prod` startet der Service nicht, außer `DATA_ENCRYPTION_ALLOW_PLAINTEXT=true` |
 | **`REGISTRATION_ENABLED`** | `false` | Kontoanlage über Keycloak | Registrierung antwortet mit `503` |
-| **`SIGNUP_ENABLED`** | `true` | Öffentliches Eröffnen von Gruppen | Nur Einladungslinks und Plattform-Administration |
+| **`SIGNUP_ENABLED`** | `false` | Öffentliches Eröffnen von Gruppen | Nur Einladungslinks und Plattform-Administration |
 | **`API_DOCS_ENABLED`** | `false` | OpenAPI und Swagger UI | abgeschaltet |
 
 Durch diese Toggles kann der gesamte `baseservice` lokal ohne Objektspeicher oder Push-Infrastruktur voll funktionsfähig betrieben und getestet werden.

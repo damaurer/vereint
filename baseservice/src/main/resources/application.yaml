@@ -74,7 +74,11 @@ vereint:
     # und stammt ausschließlich aus DATA_ENCRYPTION_KEY. Ist enabled=true, startet
     # der Service ohne Schlüssel nicht. DATA_ENCRYPTION_KEY_PREVIOUS dient nur der
     # Rotation und wird ausschließlich zum Entschlüsseln genutzt.
+    # In Produktion (Liquibase-Kontext oder Spring-Profil `prod`) bricht der
+    # Start ohne Verschlüsselung ab (StartupSafetyChecks); Klartext nur bewusst
+    # mit DATA_ENCRYPTION_ALLOW_PLAINTEXT=true.
     enabled: ${DATA_ENCRYPTION_ENABLED:false}
+    allow-plaintext: ${DATA_ENCRYPTION_ALLOW_PLAINTEXT:false}
     key: ${DATA_ENCRYPTION_KEY:}
     previous-key: ${DATA_ENCRYPTION_KEY_PREVIOUS:}
   push:
@@ -100,8 +104,10 @@ vereint:
     client-secret: ${KEYCLOAK_REGISTRATION_CLIENT_SECRET:}
   signup:
     # Personen registrieren sich selbst und eröffnen ihre Gruppe.
-    # Braucht die Kontoanlage über Keycloak (registration).
-    enabled: ${SIGNUP_ENABLED:true}
+    # Braucht die Kontoanlage über Keycloak (registration). Standardmäßig aus:
+    # erst einschalten, wenn Impressum, AGB und Datenschutzerklärung fertig sind.
+    # Einladungslinks funktionieren auch ohne.
+    enabled: ${SIGNUP_ENABLED:false}
     # Höchstzahl aktiver Stammtische, die eine Person selbst eröffnet.
     max-owned: ${SIGNUP_MAX_OWNED:3}
   legal:

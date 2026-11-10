@@ -41,7 +41,7 @@ Ein komplettes, lauffähiges Beispiel aller Dienste ist
 | `STORAGE_BACKEND`, `STORAGE_DIRECTORY` | Dateispeicher |
 | `DATA_ENCRYPTION_ENABLED=true`, `DATA_ENCRYPTION_KEY`, optional `DATA_ENCRYPTION_KEY_PREVIOUS` | Verschlüsselung von Chat, Mitteilungen, Bildern und Videos |
 | `REGISTRATION_ENABLED=true`, `KEYCLOAK_ADMIN_BASE_URL`, `KEYCLOAK_REGISTRATION_CLIENT_SECRET` | Konten über Einladungslinks anlegen |
-| `SIGNUP_ENABLED`, `SIGNUP_MAX_OWNED` | Eigene Gruppen eröffnen (erst einschalten, wenn Impressum, AGB und Datenschutzerklärung fertig sind) |
+| `SIGNUP_ENABLED`, `SIGNUP_MAX_OWNED` | Eigene Gruppen eröffnen, Standard aus (`false`). Erst mit `true` einschalten, wenn Impressum, AGB und Datenschutzerklärung fertig sind; Einladungslinks funktionieren auch ohne |
 | `VAPID_ENABLED`, `VAPID_SUBJECT`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | Web Push (optional) |
 
 **webservice**
@@ -57,6 +57,18 @@ Alle Secrets mindestens 32 Zeichen, zum Beispiel `openssl rand -hex 32`;
 `DATA_ENCRYPTION_KEY` mit `openssl rand -base64 32`. Weitere Variablen:
 [baseservice](../baseservice/01-overview-and-setup.md),
 [webservice](../backend-for-frontend/README.md).
+
+### Startprüfungen
+
+Mit `EV_LIQUIBASE_CONTEXTS=prod` (Standard) oder dem Spring-Profil `prod`
+bricht der baseservice den Start mit einer Meldung samt Abhilfe ab, wenn
+
+- `DATA_ENCRYPTION_ENABLED` nicht `true` ist. Wer Inhalte bewusst im Klartext
+  speichern will, setzt `DATA_ENCRYPTION_ALLOW_PLAINTEXT=true`;
+- der Datenbankbenutzer Superuser ist oder `BYPASSRLS` hat. Dann wäre die
+  Trennung der Gruppen in der Datenbank wirkungslos.
+
+Mit anderen Kontexten (lokal `dev`) gibt es dafür nur Warnungen im Log.
 
 ## Erster Start
 

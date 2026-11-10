@@ -9,6 +9,7 @@
 #     Keycloak unter derselben Adresse localhost:4200/kc wie der Browser.
 #   - Images werden lokal aus den Dockerfiles gebaut (vereint-local/*, Namen in local/.env.local).
 #   - Testkonten ohne Mitgliedschaft treten automatisch „Meine Gruppe" bei.
+#   - „Gruppe eröffnen“ ist eingeschaltet (SIGNUP_ENABLED).
 #   - Der Dienst `seed` (Profil seed) legt einmalig Demo-Daten an.
 # Alle Ports lauschen nur auf 127.0.0.1.
 
@@ -43,6 +44,8 @@ services:
       VEREIN_CORS_ALLOWED_ORIGINS: http://localhost:4200
       PUBLIC_BASE_URL: http://localhost:4200
       TENANCY_BOOTSTRAP_REALM_ROLES: "true"
+      # „Gruppe eröffnen“ lokal an (Standard ist aus).
+      SIGNUP_ENABLED: "true"
 
   webservice:
     build: ../webservice

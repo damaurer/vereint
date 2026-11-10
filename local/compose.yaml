@@ -154,7 +154,9 @@ services:
       REGISTRATION_ENABLED: "true"
       KEYCLOAK_ADMIN_BASE_URL: http://keycloak:8080/kc
       KEYCLOAK_REGISTRATION_CLIENT_SECRET: ${KEYCLOAK_REGISTRATION_CLIENT_SECRET}
-      SIGNUP_ENABLED: ${SIGNUP_ENABLED:-true}
+      # Gruppe eröffnen standardmäßig aus (wie im baseservice); lokal und in E2E
+      # schalten local/compose.local.yaml und e2e/compose.e2e.yaml es ein.
+      SIGNUP_ENABLED: ${SIGNUP_ENABLED:-false}
       SIGNUP_MAX_OWNED: ${SIGNUP_MAX_OWNED:-3}
       JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError
     depends_on:
