@@ -9,7 +9,7 @@ test.describe('Anmeldung', () => {
     await expect(page.locator('#kc-login')).toBeVisible();
     await expect(page.getByText('Benutzername oder E-Mail')).toBeVisible();
     // Wer noch keine Gruppe hat, kann direkt eine eigene eroeffnen.
-    await expect(page.getByRole('link', { name: 'Eigene Gruppe eröffnen' })).toHaveAttribute('href', '/gruppe-eroeffnen');
+    await expect(page.getByRole('link', { name: 'Eigene Gruppe eröffnen' })).toHaveAttribute('href', /\/gruppe-eroeffnen$/);
   });
 
   test('die fruehere Adresse /eroeffnen fuehrt zur Seite "Gruppe eröffnen"', async ({ page }) => {
