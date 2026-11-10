@@ -37,7 +37,7 @@ concurrency:
 jobs:
   secrets:
     name: Secrets suchen (Gitleaks)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout (gesamte Historie)
@@ -53,7 +53,7 @@ jobs:
 
   dependencies:
     name: Abhaengigkeiten und Konfiguration pruefen (Trivy)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
