@@ -25,6 +25,14 @@ class DrinkCatalogEntity(
     @Column(name = "category", length = 64)
     var category: String? = null,
 
+    /** Füllmenge einer Portion in Millilitern; ohne Angabe zählt das Getränk in der Statistik nicht bei den Litern. */
+    @Column(name = "volume_ml")
+    var volumeMl: Int? = null,
+
+    /** Kalorien je Portion; ohne Angabe zählt das Getränk in der Statistik nicht bei den Kalorien. */
+    @Column(name = "kcal_per_serving")
+    var kcalPerServing: Int? = null,
+
     @Column(name = "default_price", precision = 10, scale = 2, nullable = false)
     var defaultPrice: BigDecimal = BigDecimal.ZERO,
 

@@ -106,8 +106,9 @@ vereint:
     max-owned: ${SIGNUP_MAX_OWNED:3}
   legal:
     # Gültige Fassung der AGB (Datum wie `TERMS_VERSION` im Frontend). Wer ein
-    # Konto anlegt oder eine Gruppe eröffnet, stimmt dieser Fassung zu.
-    terms-version: ${TERMS_VERSION:2026-10-28}
+    # Konto anlegt oder eine Gruppe eröffnet, stimmt dieser Fassung zu; alle
+    # anderen Konten werden nach dem Login gefragt, bevor die App nutzbar ist.
+    terms-version: ${TERMS_VERSION:2026-11-10}
 management:
   endpoints:
     web:

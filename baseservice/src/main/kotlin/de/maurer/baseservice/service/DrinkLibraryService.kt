@@ -94,7 +94,9 @@ class DrinkLibraryService(
             val created = DrinkLibraryEntity(
                 name = drink.name,
                 description = drink.description,
-                category = drink.category
+                category = drink.category,
+                volumeMl = drink.volumeMl,
+                kcalPerServing = drink.kcalPerServing
             )
             barcodes.forEach { created.barcodes.add(DrinkLibraryBarcodeEntity(drink = created, barcode = it)) }
             libraryRepository.saveAndFlush(created)
@@ -114,6 +116,10 @@ class DrinkLibraryService(
         }
         request.description?.let { entry.description = it.trim().ifBlank { null } }
         request.category?.let { entry.category = it.trim().ifBlank { null } }
+        request.nutrition?.let {
+            entry.volumeMl = it.volumeMl
+            entry.kcalPerServing = it.kcalPerServing
+        }
         request.barcodes?.let { values ->
             val barcodes = values.map { normalizeBarcode(it) }.distinct()
             libraryBarcodeRepository.findByBarcodeIn(barcodes).firstOrNull { it.drink?.id != entry.id }?.let {
@@ -149,7 +155,9 @@ class DrinkLibraryService(
                 description = entry.description,
                 category = entry.category,
                 barcodes = barcodes[entry.id].orEmpty().sorted(),
-                catalogDrinkId = adopted[entry.id]?.toString()
+                catalogDrinkId = adopted[entry.id]?.toString(),
+                volumeMl = entry.volumeMl,
+                kcalPerServing = entry.kcalPerServing
             )
         }
     }

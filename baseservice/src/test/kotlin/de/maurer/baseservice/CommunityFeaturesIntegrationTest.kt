@@ -1,5 +1,6 @@
 package de.maurer.baseservice
 
+import de.maurer.baseservice.dto.AcceptTermsRequest
 import de.maurer.baseservice.dto.BroadcastNotificationRequest
 import de.maurer.baseservice.dto.CreateEventRequest
 import de.maurer.baseservice.dto.PinNoteRequest
@@ -18,6 +19,7 @@ import de.maurer.baseservice.service.EventService
 import de.maurer.baseservice.service.LedgerService
 import de.maurer.baseservice.service.NotificationService
 import de.maurer.baseservice.service.StatisticsService
+import de.maurer.baseservice.service.TermsService
 import de.maurer.baseservice.service.UserService
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -46,6 +48,7 @@ class CommunityFeaturesIntegrationTest @Autowired constructor(
     private val notificationService: NotificationService,
     private val ledgerService: LedgerService,
     private val statisticsService: StatisticsService,
+    private val termsService: TermsService,
     private val userService: UserService,
     private val userRepository: UserRepository,
     private val notificationRepository: NotificationRepository
@@ -199,10 +202,11 @@ class CommunityFeaturesIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `statistics are available to every member`() {
-        val stats = statisticsService.clubStatistics(member("Neu"))
-        assertEquals(90, stats.periodDays)
+    fun `statistics are available to every member after accepting the terms`() {
+        val newcomer = member("Neu")
+        termsService.accept(newcomer, AcceptTermsRequest(acceptTerms = true))
+        val stats = statisticsService.clubStatistics(newcomer)
+        assertEquals("90", stats.period)
         assertEquals(0, stats.myItems)
-        assertEquals(8, stats.spending.weekly.size)
     }
 }

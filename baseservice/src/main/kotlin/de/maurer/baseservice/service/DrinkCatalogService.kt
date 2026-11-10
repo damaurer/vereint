@@ -112,13 +112,13 @@ class DrinkCatalogService(
         }
 
         // Übernahme aus der gemeinsamen Getränkedatenbank: nur die Herkunft merken.
-        val libraryDrinkId = request.libraryDrinkId?.trim()?.takeIf { it.isNotEmpty() }?.let { value ->
+        val libraryDrink = request.libraryDrinkId?.trim()?.takeIf { it.isNotEmpty() }?.let { value ->
             val id = Identifiers.parseUuid(value, "libraryDrinkId")
-            if (!drinkLibraryRepository.existsById(id)) {
-                throw ResourceNotFoundException(Msg("error.drinkLibrary.notFound", id), ErrorCode.NOT_FOUND)
+            drinkLibraryRepository.findById(id).orElseThrow {
+                ResourceNotFoundException(Msg("error.drinkLibrary.notFound", id), ErrorCode.NOT_FOUND)
             }
-            id
         }
+        val libraryDrinkId = libraryDrink?.id
 
         // Barcodes vor dem Speichern prüfen, damit ein belegter Code kein halb angelegtes Getränk hinterlässt.
         val barcodes = request.barcodes.orEmpty().map { normalizeBarcode(it) }.distinct()
@@ -130,6 +130,9 @@ class DrinkCatalogService(
             name = name,
             description = request.description?.trim()?.ifBlank { null },
             category = request.category?.trim()?.ifBlank { null },
+            // Füllmenge und Kalorien: eigene Angabe, sonst die der Getränkedatenbank.
+            volumeMl = request.nutrition?.volumeMl ?: libraryDrink?.volumeMl,
+            kcalPerServing = request.nutrition?.kcalPerServing ?: libraryDrink?.kcalPerServing,
             defaultPrice = price,
             costPrice = request.costPrice ?: BigDecimal.ZERO,
             currency = normalizeCurrency(request.currency),
@@ -202,6 +205,10 @@ class DrinkCatalogService(
         }
         if (request.category != null) {
             drink.category = request.category.trim().ifBlank { null }
+        }
+        request.nutrition?.let {
+            drink.volumeMl = it.volumeMl
+            drink.kcalPerServing = it.kcalPerServing
         }
         if (request.imageReference != null) {
             val image = request.imageReference.trim().ifBlank { null }
@@ -383,7 +390,9 @@ class DrinkCatalogService(
             barcodes = barcodes,
             createdAt = drink.createdAt,
             updatedAt = drink.updatedAt,
-            libraryDrinkId = drink.libraryDrinkId?.toString()
+            libraryDrinkId = drink.libraryDrinkId?.toString(),
+            volumeMl = drink.volumeMl,
+            kcalPerServing = drink.kcalPerServing
         )
     }
 

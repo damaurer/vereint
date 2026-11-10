@@ -108,6 +108,9 @@ interface UserPermissionRepository : JpaRepository<UserPermissionEntity, UserPer
 interface EventRepository : JpaRepository<EventEntity, UUID> {
     fun findByOwnerId(ownerId: UUID): List<EventEntity>
     fun findByStatus(status: EventStatus): List<EventEntity>
+
+    /** Events, die im Zeitraum beginnen (Statistik). */
+    fun findByStartsAtBetween(from: Instant, until: Instant): List<EventEntity>
 }
 
 @Repository
@@ -116,6 +119,18 @@ interface EventParticipantRepository : JpaRepository<EventParticipantEntity, UUI
     fun findByUserId(userId: UUID): List<EventParticipantEntity>
     fun findByEventIdAndUserId(eventId: UUID, userId: UUID): Optional<EventParticipantEntity>
     fun countByEventId(eventId: UUID): Long
+
+    /** Teilnahmen samt Event und Person für Events, die im Zeitraum beginnen (Statistik). */
+    @Query(
+        """
+        select p from EventParticipantEntity p join fetch p.event e join fetch p.user u
+        where e.startsAt >= :from and e.startsAt <= :until
+        """
+    )
+    fun findForEventsStartingBetween(
+        @Param("from") from: Instant,
+        @Param("until") until: Instant
+    ): List<EventParticipantEntity>
 
     /** Eingeladene, die noch keine Einladung bekommen haben, bei veröffentlichten bzw. laufenden Events. */
     @Query(
@@ -352,6 +367,19 @@ interface ConversationMemberRepository : JpaRepository<ConversationMemberEntity,
 @Repository
 interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
     fun findByConversationIdOrderByCreatedAtAsc(conversationId: UUID): List<ChatMessageEntity>
+
+    /**
+     * Nachrichten im Zeitraum für die Statistik, ohne Inhalt (nichts wird
+     * entschlüsselt): Art und Id des Gesprächs, Id und Name der Absenderin.
+     */
+    @Query(
+        """
+        select c.type, c.id, s.id, s.displayName from ChatMessageEntity m
+        join m.conversation c left join m.sender s
+        where m.createdAt >= :from
+        """
+    )
+    fun findStatisticsRowsSince(@Param("from") from: Instant): List<Array<Any?>>
     fun findFirstByConversationIdOrderByCreatedAtDesc(conversationId: UUID): Optional<ChatMessageEntity>
 
     /** Ungelesene Nachrichten anderer (Mitglieder oder Gäste) seit `after`. */
@@ -397,6 +425,7 @@ interface MomentSessionRepository : JpaRepository<MomentSessionEntity, UUID> {
     fun findByActiveTrueOrderByCreatedAtDesc(): List<MomentSessionEntity>
     fun findByActiveFalseOrderByCreatedAtDesc(): List<MomentSessionEntity>
     fun findByConversationId(conversationId: UUID): Optional<MomentSessionEntity>
+    fun countByCreatedAtGreaterThanEqual(from: Instant): Long
 }
 
 @Repository
@@ -405,6 +434,7 @@ interface MomentResponseRepository : JpaRepository<MomentResponseEntity, UUID> {
     fun findByMomentId(momentId: UUID): List<MomentResponseEntity>
     fun findByUserId(userId: UUID): List<MomentResponseEntity>
     fun countByMomentId(momentId: UUID): Long
+    fun countByCreatedAtGreaterThanEqual(from: Instant): Long
 }
 
 @Repository
@@ -496,6 +526,7 @@ interface MomentMediaRepository : JpaRepository<MomentMediaEntity, UUID> {
     fun findByResponseIdIn(responseIds: Collection<UUID>): List<MomentMediaEntity>
     fun countByMomentIdAndOwnerId(momentId: UUID, ownerId: UUID): Long
     fun findByResponseIsNullAndCreatedAtBefore(cutoff: Instant): List<MomentMediaEntity>
+    fun countByCreatedAtGreaterThanEqual(from: Instant): Long
 
     /** Belegter Speicher aller Moment-Medien des Stammtischs. */
     @Query("select coalesce(sum(m.sizeBytes), 0) from MomentMediaEntity m")
