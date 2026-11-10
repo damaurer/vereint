@@ -36,7 +36,7 @@ import javax.imageio.ImageIO
  * Eigentümer, Zweck, Version, Status). Die Bilddaten werden vor dem Ablegen mit
  * dem [DataEncryptor] verschlüsselt; ausgeliefert werden sie deshalb nur über
  * [getImageContent], das die Berechtigung erneut prüft und entschlüsselt (siehe
- * `docs/architektur.md` und `docs/fachkonzept.md`).
+ * `docs/baseservice/06-integrations.md`).
  */
 @Service
 @Transactional

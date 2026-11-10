@@ -19,7 +19,7 @@ anderen Feature-Branch aufsetzt, bekommt CI erst, wenn er auf `develop` zeigt.
 | `baseservice CI/CD` | Tests (JDK 25), Docker-Image bauen, Trivy-Scan des Images |
 | `webservice CI/CD` | Tests, Docker-Image bauen, Trivy-Scan des Images |
 | `keycloak CI/CD` | Keycloak-Image mit Realm und Theme bauen und scannen (nur für den lokalen Stack und die E2E-Tests, wird nicht veröffentlicht) |
-| `Security` | Gitleaks (Secrets in der gesamten Historie), Trivy auf Abhängigkeiten und Konfiguration; zusätzlich jeden Montag |
+| `Security` | Gitleaks (Secrets in der gesamten Historie), Trivy auf Abhängigkeiten und Konfiguration, Verweise auf nicht vorhandene Markdown-Dateien; zusätzlich jeden Montag |
 | `E2E-Tests` | Playwright gegen den kompletten Stack ([E2E-Tests](../../e2e/README.md)) |
 
 GitHub Actions sind auf Commit-SHAs gepinnt, Images auf Digests. Dependabot hält

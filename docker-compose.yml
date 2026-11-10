@@ -2,9 +2,9 @@
 #
 # Diese Datei ist ausschliesslich fuer die lokale Entwicklung bestimmt:
 # Keycloak laeuft im Entwicklungsmodus (`start-dev`), TLS ist deaktiviert und
-# alle Ports sind auf localhost veroeffentlicht. Die Produktionsvariante
-# (`start --optimized`, `KC_HOSTNAME`, `KC_PROXY`, TLS) ist in
-# `docs/deployment.md` beschrieben.
+# alle Ports sind auf localhost veroeffentlicht. Den Betrieb mit TLS und
+# Keycloak im Produktionsmodus beschreibt `docs/betrieb/selbst-betreiben.md`;
+# ein vollstaendiges Beispiel ist `local/compose.yaml`.
 #
 # Alle Zugangsdaten sind Pflichtvariablen und stehen ausschliesslich in `.env`
 # (Vorlage: `.env.example`). Ohne gesetzte Werte bricht Compose bewusst ab.
@@ -52,7 +52,7 @@ services:
     image: quay.io/keycloak/keycloak:26.8.1
     container_name: keycloak
     # `start-dev` ist ausschliesslich lokal zulaessig. Produktion siehe
-    # docs/deployment.md ("Keycloak in Produktion").
+    # keycloak/Dockerfile (`start --optimized`) und docs/betrieb/selbst-betreiben.md.
     command: start-dev --import-realm
     environment:
       KC_DB: postgres
