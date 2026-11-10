@@ -62,7 +62,7 @@ services:
   # der Browser die App wie ein Mensch unter http://localhost:4200 aufruft.
   seed:
     profiles: ["seed"]
-    image: mcr.microsoft.com/playwright:v1.56.1-noble
+    image: mcr.microsoft.com/playwright:v1.65.0-noble
     network_mode: service:webservice
     working_dir: /work/local
     command: ["sh", "-c", "npm install --no-audit --no-fund --no-update-notifier --loglevel=error && node seed.mjs"]
