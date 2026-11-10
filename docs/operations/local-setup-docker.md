@@ -17,8 +17,8 @@ Die Datei `docker-compose.yml` startet die vollständige Infrastruktur für die 
 
 ```yaml
 services:
-  keycloak-db:      # PostgreSQL 17.6 Alpine auf Port 5433 (Keycloak Realm DB)
-  vereint-db:       # PostgreSQL 17.6 Alpine auf Port 5432 (Hauptanwendung)
+  keycloak-db:      # PostgreSQL 17.11 Alpine auf Port 5433 (Keycloak Realm DB)
+  vereint-db:       # PostgreSQL 17.11 Alpine auf Port 5432 (Hauptanwendung)
   keycloak:         # Keycloak 26.8.1 Dev Mode auf Port 8082 (importiert ./keycloak/dev, bindet ./keycloak/themes ein)
 ```
 

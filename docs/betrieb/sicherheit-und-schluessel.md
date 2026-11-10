@@ -99,7 +99,7 @@ rotiert man ebenso mit `SESSION_SECRET_PREVIOUS`.
 
 - Jeder Pull Request wird auf eingecheckte Secrets (Gitleaks) und bekannte
   Schwachstellen (Trivy) geprüft.
-- GitHub Actions sind auf Commit-SHAs gepinnt, Images auf Digests; Dependabot
-  hält beides aktuell.
+- GitHub Actions sind auf Commit-SHAs gepinnt, Images auf genaue Versionen
+  (teils zusätzlich auf Digests); Dependabot hält beides aktuell.
 
 Mehr: [docs/architecture/security-and-auth.md](../architecture/security-and-auth.md)

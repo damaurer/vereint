@@ -11,7 +11,7 @@
 
 services:
   keycloak-db:
-    image: postgres:17.6-alpine
+    image: postgres:17.11-alpine
     container_name: keycloak-db
     environment:
       POSTGRES_DB: ${KEYCLOAK_DB_NAME:?KEYCLOAK_DB_NAME fehlt in .env}
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
 
   vereint-db:
-    image: postgres:17.6-alpine
+    image: postgres:17.11-alpine
     container_name: vereint-db
     environment:
       POSTGRES_DB: ${VEREINT_DB_NAME:?VEREINT_DB_NAME fehlt in .env}
