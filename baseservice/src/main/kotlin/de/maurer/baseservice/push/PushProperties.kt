@@ -6,9 +6,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  * Konfiguration des Web-Push-Versands über VAPID (TICKET-020).
  *
  * Die Werte stammen aus den `VAPID_*`-Umgebungsvariablen (siehe
- * `docs/deployment.md`). Der private Schlüssel ist ein Secret und gelangt
- * ausschließlich in den Spring-Service, niemals in Browser-Bundles oder SSR-HTML;
- * nur der öffentliche Schlüssel wird an berechtigte Clients ausgeliefert.
+ * `docs/baseservice/06-integrations.md`). Der private Schlüssel ist ein Secret
+ * und gelangt ausschließlich in den Spring-Service, niemals in Browser-Bundles
+ * oder SSR-HTML; nur der öffentliche Schlüssel wird an berechtigte Clients
+ * ausgeliefert.
  *
  * Ist [enabled] `false` (Tests, lokale Läufe ohne VAPID-Schlüssel), wird der
  * [NoOpPushSender] verwendet: Benachrichtigungen werden weiterhin gespeichert,

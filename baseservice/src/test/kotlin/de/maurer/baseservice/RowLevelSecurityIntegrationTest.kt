@@ -173,7 +173,7 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
         @Container
         @JvmStatic
         val postgres: PostgreSQLContainer =
-            PostgreSQLContainer(DockerImageName.parse("postgres:17-alpine")).withInitScript("db/rls-init.sql")
+            PostgreSQLContainer(DockerImageName.parse("postgres:18-alpine")).withInitScript("db/rls-init.sql")
 
         @DynamicPropertySource
         @JvmStatic

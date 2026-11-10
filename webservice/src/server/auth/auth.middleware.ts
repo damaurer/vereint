@@ -1,4 +1,5 @@
 import type { RequestHandler } from 'express';
+import { migrateLegacyStammtischCookie } from '../stammtisch/stammtisch-cookie';
 import { verifyRequestSession } from './session.service';
 
 /**
@@ -6,6 +7,7 @@ import { verifyRequestSession } from './session.service';
  * Refresh-Token sofort im Session-Cookie persistieren kann.
  */
 export const attachIdentity: RequestHandler = (req, res, next) => {
+  migrateLegacyStammtischCookie(req, res);
   void verifyRequestSession(req, res)
     .then((identity) => {
       req.identity = identity;

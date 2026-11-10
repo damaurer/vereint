@@ -8,7 +8,7 @@ import java.util.UUID
  * Jede fachliche Tabelle trägt eine Spalte `stammtisch_id`. Hibernate filtert
  * über `@TenantId` automatisch auf den Stammtisch aus diesem Kontext, und
  * PostgreSQL erzwingt dieselbe Grenze zusätzlich per Row Level Security (siehe
- * `docs/baseservice/stammtische.md`).
+ * `docs/domains/stammtische.md`).
  *
  * Drei Zustände:
  * - [Scope.Stammtisch]: normale Anfragen eines Mitglieds.

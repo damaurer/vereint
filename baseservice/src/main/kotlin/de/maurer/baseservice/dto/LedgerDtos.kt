@@ -63,8 +63,8 @@ data class CorrectionRequest(
  *
  * Der Client liefert ausschließlich Event und gescannten Barcode; Käufer, Preis,
  * Währung, Getränk und Abrechnungsmodus bestimmt der Server anhand des Eventgetränks
- * (siehe `docs/fachkonzept.md`). Der belastete Käufer ist immer der angemeldete
- * Benutzer.
+ * (siehe `docs/domains/ledger-and-finance.md`). Der belastete Käufer ist immer
+ * der angemeldete Benutzer.
  */
 data class PurchaseRequest(
     @field:NotBlank(message = "eventId {validation.notBlank}")
@@ -107,7 +107,7 @@ data class PurchasePreviewDto(
     val balanceCurrency: String
 )
 
-/** Beleg-Snapshot eines Kaufs; unveränderlich (siehe `docs/fachkonzept.md`). */
+/** Beleg-Snapshot eines Kaufs; unveränderlich (siehe `docs/domains/ledger-and-finance.md`). */
 data class PurchaseSnapshotDto(
     val itemType: String = "DRINK",
     val drinkName: String? = null,

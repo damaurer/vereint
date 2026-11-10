@@ -300,7 +300,7 @@ function collectStrings(value: unknown, target: Set<string>): void {
 }
 
 /**
- * Setzt den verbindlichen Claim-Vertrag aus `docs/authentifizierung.md` um.
+ * Setzt den verbindlichen Claim-Vertrag aus `docs/baseservice/03-security-and-authorization.md` um.
  * Unbekannte Rollennamen werden verworfen (`deny by default`).
  */
 export function extractIdentityFromTokenClaims(claims: Record<string, unknown>): RequestIdentity {

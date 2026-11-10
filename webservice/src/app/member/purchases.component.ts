@@ -17,7 +17,7 @@ import { activeLocale, translate } from '../i18n/i18n.service';
  * Bild, Barcode, Preis, Katalogversion) als Belegkarten und teilt die
  * Katalogversion über das geteilte `StatusBadge`-Primitiv. Der Snapshot bleibt
  * auch bei späteren Katalog- oder Preisänderungen unverändert (siehe
- * `docs/fachkonzept.md`).
+ * `docs/domains/ledger-and-finance.md`).
  */
 @Component({
   selector: 'app-member-purchases',

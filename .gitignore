@@ -7,3 +7,7 @@
 
 # Dateispeicher der lokalen Entwicklung (STORAGE_DIRECTORY in .env.example)
 /.data/
+
+# IDE-Einstellungen (persoenlich, nicht versionieren)
+/.idea/
+*.iml

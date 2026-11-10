@@ -56,6 +56,11 @@ rotiert man ebenso mit `SESSION_SECRET_PREVIOUS`.
 
 - Login über den BFF mit OIDC und PKCE; der Browser sieht nie ein Token, nur ein
   HttpOnly-Cookie.
+- Die Cookies heißen unter HTTPS `__Host-…` (`__Host-vereint_session`,
+  `__Host-oidc_state`, `__Host-vereint.stammtisch`). Andere Anwendungen unter
+  derselben Domain (etwa `*.maurercloud.de`) können sie nicht setzen und Nutzer
+  damit nicht aussperren. Ein Cookie mit kaputter Kodierung zählt als nicht
+  vorhanden statt einen Fehler 500 auszulösen.
 - **Zwei-Faktor-Anmeldung freiwillig:** Im Profil führt „Zwei-Faktor-Anmeldung
   einrichten“ zur Keycloak-Kontoverwaltung. Wer eine Authenticator-App
   hinterlegt, wird beim Login nach dem Code gefragt. Für Vorstand und
@@ -63,7 +68,7 @@ rotiert man ebenso mit `SESSION_SECRET_PREVIOUS`.
 - Passwörter mit 10 bis 128 Zeichen, nicht gleich Benutzername oder E-Mail,
   nicht eines der letzten drei. Nach 5 Fehlversuchen wachsende Sperre.
 - Keine offene Selbstregistrierung in Keycloak (Konten entstehen nur über
-  Einladungslinks oder „Gruppe eröffnen“, abschaltbar mit `SIGNUP_ENABLED`),
+  Einladungslinks oder „Gruppe eröffnen“, nur mit `SIGNUP_ENABLED=true`),
   kein „Passwort vergessen“ ohne Mailserver, keine Wildcard-Redirects, keine Direct
   Access Grants, Refresh-Token-Rotation. Login- und Admin-Ereignisse werden 90
   Tage gespeichert.
@@ -99,7 +104,7 @@ rotiert man ebenso mit `SESSION_SECRET_PREVIOUS`.
 
 - Jeder Pull Request wird auf eingecheckte Secrets (Gitleaks) und bekannte
   Schwachstellen (Trivy) geprüft.
-- GitHub Actions sind auf Commit-SHAs gepinnt, Images auf Digests; Dependabot
-  hält beides aktuell.
+- GitHub Actions sind auf Commit-SHAs gepinnt, Images auf genaue Versionen
+  (teils zusätzlich auf Digests); Dependabot hält beides aktuell.
 
 Mehr: [docs/architecture/security-and-auth.md](../architecture/security-and-auth.md)
