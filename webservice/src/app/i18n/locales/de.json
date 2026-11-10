@@ -21,7 +21,8 @@
       "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen.",
       "stammtischRequired": "Bitte zuerst eine Gruppe wählen.",
       "stammtischDenied": "Du gehörst dieser Gruppe nicht (mehr) an.",
-      "stammtischLimit": "Du hast bereits drei eigene Gruppen eröffnet. Mehr sind pro Person nicht möglich."
+      "stammtischLimit": "Du hast bereits drei eigene Gruppen eröffnet. Mehr sind pro Person nicht möglich.",
+      "termsRequired": "Bitte stimme zuerst den aktuellen AGB zu."
     }
   },
   "member": {
@@ -516,7 +517,7 @@
     },
     "statistics": {
       "title": "Statistik",
-      "description": "Konsum, Anwesenheit, Ausgaben-Verlauf und Ranglisten deiner Gruppe."
+      "description": "Striche, Rangliste und Zusagequote deiner Gruppe."
     },
     "eventCreate": {
       "title": "Event anlegen",
@@ -565,6 +566,18 @@
     "friends": {
       "title": "Freunde",
       "description": "Deine Freundesliste über alle Gruppen."
+    },
+    "drinkStatistics": {
+      "title": "Getränkestatistik",
+      "description": "Wer hat wie viel von was getrunken, mit Litern und Kalorien."
+    },
+    "statisticsOverview": {
+      "title": "Statistik-Übersicht",
+      "description": "Alle Kennzahlen der Gruppe auf einer Seite."
+    },
+    "termsConsent": {
+      "title": "AGB zustimmen",
+      "description": "Der aktuellen Fassung der AGB zustimmen."
     }
   },
   "chat": {
@@ -944,7 +957,12 @@
       "similarName": "Es gibt schon ein Getränk namens „{name}“. Bitte prüfe, ob es dasselbe ist.",
       "barcodeTaken": "Der Barcode {barcode} gehört schon zu „{name}“.",
       "barcodeNotAdded": "Der eingegebene Barcode ist noch nicht hinzugefügt. Bitte auf „+ Barcode hinzufügen“ tippen oder das Feld leeren.",
-      "activeLabel": "Im Sortiment (abwählen, um das Getränk aus dem Verkauf zu nehmen)"
+      "activeLabel": "Im Sortiment (abwählen, um das Getränk aus dem Verkauf zu nehmen)",
+      "volumeMl": "Füllmenge (ml)",
+      "volumePlaceholder": "z. B. 500",
+      "kcal": "Kalorien je Portion (kcal)",
+      "kcalPlaceholder": "z. B. 210",
+      "nutritionHint": "Für Liter und Kalorien in der Statistik. Leer lassen, wenn unbekannt."
     },
     "detail": {
       "fallbackTitle": "Getränkedetails",
@@ -1684,29 +1702,21 @@
       "mine": "Du",
       "myRank": "Dein Platz",
       "rankValue": "{rank}.",
-      "noRank": "Noch kein Platz",
+      "noRank": "noch kein Strich",
       "you": "Du",
       "count": {
         "one": "{count} Strich",
         "other": "{count} Striche"
       },
       "empty": "In diesem Zeitraum gibt es noch keine Striche.",
-      "unit": "Striche"
+      "unit": "Striche",
+      "ofMembers": "von {count}"
     },
     "attendance": {
       "title": "Zusagequote",
       "ringLabel": "Zusagequote {percent} Prozent",
-      "hint": "Anteil der Zusagen an allen beantworteten Einladungen.",
+      "hint": "Anteil der Einladungen, auf die Mitglieder mit „Zusagen“ geantwortet haben.",
       "empty": "Noch keine Zusagen erfasst. Sobald Einladungen beantwortet sind, siehst du hier die Quote."
-    },
-    "spending": {
-      "title": "Umsatz 30 Tage",
-      "thisMonth": "Ausgaben diesen Monat",
-      "trendHint": "{change}% gegenüber den 30 Tagen davor",
-      "total": "Umsatz der letzten 30 Tage",
-      "weekly": "Verlauf der letzten 8 Wochen",
-      "weeklyLabel": "Umsatz je Woche, älteste zuerst: {values}",
-      "empty": "In den letzten 8 Wochen gab es keinen Umsatz."
     },
     "topRounds": {
       "title": "Top-Rundengeber",
@@ -1715,19 +1725,157 @@
         "other": "{count} Runden"
       }
     },
-    "drinkRanking": {
-      "title": "Getränke-Ranking",
-      "share": "{percent}% Beliebtheit"
-    },
     "intro": "Auswertungen der letzten {days} Tage.",
-    "items": {
-      "title": "Beliebteste Artikel",
-      "share": "{percent}% ({count} Stück)",
-      "empty": "Noch keine Artikel verkauft."
+    "links": {
+      "label": "Weitere Statistiken",
+      "drinks": "Getränkestatistik: wer, was, wie viel, kcal",
+      "overview": "Alle Statistiken im Überblick"
     },
-    "topEvents": {
-      "title": "Events mit den meisten Strichen",
-      "empty": "Noch keine Striche bei Events."
+    "period": {
+      "label": "Zeitraum",
+      "days30": "30 Tage",
+      "days90": "90 Tage",
+      "year": "Dieses Jahr",
+      "lastDays": "Letzte {days} Tage",
+      "thisYear": "Dieses Jahr"
+    },
+    "categories": {
+      "legend": "Kategorien",
+      "beer": "Bier",
+      "nonAlcoholic": "Alkoholfrei",
+      "spirits": "Schnaps",
+      "wineSparkling": "Wein & Sekt",
+      "other": "Sonstiges"
+    },
+    "drinks": {
+      "eyebrow": "Ganze Gruppe · alle Mitglieder",
+      "title": "Getränkestatistik",
+      "total": "Getränke",
+      "liters": "Liter",
+      "kcal": "Kalorien",
+      "without": {
+        "one": "ohne Angabe bei {count} Getränk",
+        "other": "ohne Angabe bei {count} Getränken"
+      },
+      "averages": "Ø Getränke der Gruppe",
+      "perEvent": "je Event",
+      "perDay": "je Tag",
+      "perWeek": "je Woche",
+      "perMonth": "je Monat",
+      "viewLabel": "Ansicht",
+      "byMember": "Nach Mitglied",
+      "byDrink": "Nach Getränk",
+      "sortCount": "Nach Anzahl",
+      "sortKcal": "Nach Kalorien",
+      "perEventWeek": "Ø je Event · je Woche",
+      "noValue": "ohne Angabe",
+      "drinkDetails": "{members} Personen · {liters} l",
+      "empty": "In diesem Zeitraum wurden noch keine Getränke gebucht."
+    },
+    "overview": {
+      "eyebrow": "Meine Gruppe",
+      "title": "Statistik-Übersicht",
+      "intro": "Mitglieder, Events, Zusagen und Trinkverhalten auf einen Blick. Sichtbar für alle Mitglieder der Gruppe.",
+      "kpi": {
+        "members": "Mitglieder",
+        "membersHint": "{active} aktiv · {new} neu",
+        "events": "Events",
+        "eventsHint": "Ø {avg} Teilnehmende",
+        "attendanceHint": "aller Einladungen",
+        "perEvent": "Ø {value} je Event",
+        "perWeek": "Ø {value} je Woche",
+        "perMember": "Ø {value} je Mitglied",
+        "revenue": "Umsatz",
+        "perMonth": "Je Monat",
+        "perMonthHint": "Getränke im Schnitt"
+      },
+      "withoutValues": "Ohne Füllmenge: {volume} Getränke, ohne Kalorien: {kcal} Getränke. Sie zählen bei Litern bzw. Kalorien nicht mit.",
+      "sections": {
+        "events": "Events & Zusagen",
+        "drinking": "Trinkverhalten",
+        "drinks": "Getränke",
+        "community": "Gemeinschaft"
+      },
+      "rsvpByEvent": "Antworten je Event",
+      "rsvpByMember": "Zusagen je Mitglied",
+      "rsvp": {
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt",
+        "noAnswer": "Keine Antwort"
+      },
+      "acceptedOf": "{accepted} von {invited} zugesagt",
+      "noEvents": "In diesem Zeitraum gibt es keine Einladungen.",
+      "table": {
+        "member": "Mitglied",
+        "yes": "Zu",
+        "no": "Ab",
+        "attended": "Da gewesen",
+        "quote": "Quote",
+        "category": "Kategorie",
+        "share": "Anteil"
+      },
+      "attendedHint": "„Da gewesen“ zählt Events, bei denen das Mitglied mindestens einen Strich oder Kauf hatte.",
+      "weekly": "Getränke je Woche",
+      "weeklyAvg": "Ø {value} je Woche",
+      "weeklyValue": "{value} in dieser Woche",
+      "weeklyLabel": "Getränke je Woche, älteste zuerst: {values}",
+      "weeksAgo": {
+        "one": "vor {count} Woche",
+        "other": "vor {count} Wochen"
+      },
+      "thisWeek": "diese Woche",
+      "when": "Wann wird getrunken?",
+      "byWeekday": "Nach Wochentag",
+      "byHour": "Nach Uhrzeit",
+      "weekdays": {
+        "1": "Mo",
+        "2": "Di",
+        "3": "Mi",
+        "4": "Do",
+        "5": "Fr",
+        "6": "Sa",
+        "7": "So"
+      },
+      "hours": {
+        "lt18": "bis 18",
+        "18": "18–19",
+        "19": "19–20",
+        "20": "20–21",
+        "21": "21–22",
+        "22": "22–23",
+        "ge23": "ab 23"
+      },
+      "whoDrinksWhat": "Wer trinkt was? · Getränke je Mitglied nach Kategorie",
+      "drinksKcal": "{count} Getränke · {kcal} kcal",
+      "topDrinks": "Beliebteste Getränke",
+      "countPerEvent": "{count} · Ø {value}/Event",
+      "categoryShare": "Anteil nach Kategorie",
+      "noRounds": "Noch keine Runden ausgegeben.",
+      "moments": {
+        "title": "Moments",
+        "started": "Moments gestartet",
+        "reactions": "Reaktionen",
+        "media": "Fotos & Videos"
+      },
+      "chat": {
+        "title": "Chat",
+        "messages": "Nachrichten",
+        "mostActive": "Aktivste Person",
+        "eventChats": "Event-Chats"
+      },
+      "records": {
+        "title": "Rekorde",
+        "mostDrinks": "Meiste Getränke an einem Abend",
+        "mostDrinksValue": "{label} · {count} Getränke",
+        "streak": "Längste Serie dabei",
+        "streakValue": {
+          "one": "{label} · {count} Event",
+          "other": "{label} · {count} Events"
+        },
+        "fastest": "Schnellste Zusage",
+        "fastestValue": "{label} · nach {count} Min"
+      }
     }
   },
   "guest": {
@@ -2005,6 +2153,18 @@
     "acceptPrefix": "Ich habe die",
     "acceptLink": "AGB",
     "acceptSuffix": " gelesen und stimme ihnen zu.",
-    "acceptRequired": "Bitte stimme den AGB zu."
+    "acceptRequired": "Bitte stimme den AGB zu.",
+    "consent": {
+      "eyebrow": "Neue Fassung der AGB",
+      "title": "Bitte stimme den AGB zu",
+      "intro": "Bevor du Vereint weiter nutzt, brauchen wir deine Zustimmung zur aktuellen Fassung der AGB vom {date}.",
+      "statistics": "Neu ist der Abschnitt „Statistiken“: Striche, Käufe, Zusagen, Anwesenheit und Getränke mit Menge und Kalorien werden den Mitgliedern deiner Gruppe mit Namen angezeigt. Das ist nur zur Unterhaltung, keine Gesundheitsangabe, und bleibt innerhalb der Gruppe.",
+      "readTerms": "AGB lesen",
+      "accept": "Zustimmen",
+      "accepting": "Wird gespeichert …",
+      "decline": "Nicht zustimmen und abmelden",
+      "deleteHint": "Wenn du nicht zustimmen möchtest, melde dich ab. Dein Konto löschen wir auf Wunsch: Schreib dazu eine E-Mail an {email} (AGB § 10 Abs. 3).",
+      "failed": "Die Zustimmung konnte nicht gespeichert werden. Bitte versuche es noch einmal."
+    }
   }
 }

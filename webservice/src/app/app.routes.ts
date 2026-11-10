@@ -9,7 +9,9 @@ import {
   permissionGuard,
   platformGuard,
   signedInGuard,
+  termsConsentGuard,
 } from './auth/auth.guards';
+import { TERMS_CONSENT_PATH } from './legal/terms-status.service';
 import { kioskGuard } from './kiosk/kiosk.guard';
 
 /** Sichtbare Adressen der Gruppen-Seiten (im Code weiterhin „Stammtisch“). */
@@ -87,6 +89,13 @@ export const routes: Routes = [
     path: 'agb',
     data: { title: 'routes.terms.title', description: 'routes.terms.description', access: 'routes.access.public' },
     loadComponent: () => import('./legal/agb.component').then((m) => m.AgbComponent),
+  },
+  {
+    // AGB-Sperre nach dem Login: der aktuellen Fassung zustimmen oder abmelden.
+    path: TERMS_CONSENT_PATH,
+    canActivate: [kioskGuard, termsConsentGuard],
+    data: { title: 'routes.termsConsent.title', description: 'routes.termsConsent.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./legal/terms-gate.component').then((m) => m.TermsGateComponent),
   },
   {
     path: '403',
@@ -335,6 +344,30 @@ export const routes: Routes = [
     },
     loadComponent: () =>
       import('./statistics/statistics.component').then((m) => m.StatisticsComponent),
+  },
+  {
+    path: 'statistik/getraenke',
+    canActivate: [authGuard],
+    data: {
+      back: '/statistik',
+      title: 'routes.drinkStatistics.title',
+      description: 'routes.drinkStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/drink-statistics.component').then((m) => m.DrinkStatisticsComponent),
+  },
+  {
+    path: 'statistik/uebersicht',
+    canActivate: [authGuard],
+    data: {
+      back: '/statistik',
+      title: 'routes.statisticsOverview.title',
+      description: 'routes.statisticsOverview.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/statistics-overview.component').then((m) => m.StatisticsOverviewComponent),
   },
     ],
   },

@@ -68,6 +68,8 @@ export function describeApiError(error: unknown): string {
     case 'validation_error':
     case 'invalid_request':
       return translate('errors.api.invalid');
+    case 'terms_required':
+      return translate('errors.api.termsRequired');
     case 'stammtisch_required':
       return translate('errors.api.stammtischRequired');
     case 'stammtisch_access_denied':

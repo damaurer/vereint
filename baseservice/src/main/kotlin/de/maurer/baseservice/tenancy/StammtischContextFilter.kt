@@ -174,7 +174,7 @@ class StammtischContextFilter(
             "/actuator/"
         )
 
-        private val STAMMTISCH_FREE_EXACT = setOf("/api/v1/auth", "/api/v1/users/me")
+        private val STAMMTISCH_FREE_EXACT = setOf("/api/v1/auth", "/api/v1/users/me", "/api/v1/users/me/terms")
 
         /** Gast-Chat: der Controller wählt den Stammtisch über das Event. */
         private val GUEST_CHAT = Regex("^/api/v1/events/[^/]+/chat/guest(/.*)?$")

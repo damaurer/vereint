@@ -5,6 +5,7 @@ import { defaultRouteForSession, STAMMTISCH_CHOICE_ROUTE } from './app-context';
 import { AuthService } from './auth.service';
 import { AuthSessionUser } from './auth.types';
 import { RememberedLoginService } from './remembered-login.service';
+import { TERMS_CONSENT_PATH } from '../legal/terms-status.service';
 
 /**
  * Zentrale App-Kontext-Navigation nach Login und Logout (TICKET-023).
@@ -63,6 +64,12 @@ export class AuthNavigationService {
   stammtischChoiceUrlTree(returnTo?: string): UrlTree {
     const safe = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : undefined;
     return this.router.createUrlTree([STAMMTISCH_CHOICE_ROUTE], safe ? { queryParams: { returnTo: safe } } : {});
+  }
+
+  /** Ohne Zustimmung zur gültigen AGB-Fassung: erst zustimmen. */
+  termsConsentUrlTree(returnTo?: string): UrlTree {
+    const safe = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : undefined;
+    return this.router.createUrlTree([`/${TERMS_CONSENT_PATH}`], safe ? { queryParams: { returnTo: safe } } : {});
   }
 
   forbiddenUrlTree(): UrlTree {

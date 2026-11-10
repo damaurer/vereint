@@ -9,6 +9,8 @@ import {
 import { AuthNavigationService } from './auth-navigation.service';
 import { AuthService } from './auth.service';
 import { AppContext, UserRole } from './auth.types';
+import { KioskModeService } from '../kiosk/kiosk-mode.service';
+import { TermsStatusService } from '../legal/terms-status.service';
 
 /**
  * Clientseitige Navigations-Guards (TICKET-023).
@@ -26,6 +28,23 @@ import { AppContext, UserRole } from './auth.types';
 
 function isBrowser(): boolean {
   return isPlatformBrowser(inject(PLATFORM_ID));
+}
+
+/**
+ * AGB-Sperre nach dem Login: Hat das Konto der gültigen Fassung nicht
+ * zugestimmt, führt jede geschützte Seite auf die Zustimmungsseite. Erreichbar
+ * bleiben nur Abmelden, Impressum und AGB. Liefert `null`, wenn zugestimmt ist.
+ */
+function termsGate(): (returnTo: string) => Promise<GuardResult | null> {
+  // `inject` nur vor dem ersten `await`: alles hier holen.
+  const terms = inject(TermsStatusService);
+  const navigation = inject(AuthNavigationService);
+  const kiosk = inject(KioskModeService);
+  return async (returnTo) => {
+    // Im Kiosk-Modus bleibt das Gerät auf dem Thekenterminal; dort wird nicht gefragt.
+    if (kiosk.active()) return null;
+    return (await terms.isAccepted()) ? null : navigation.termsConsentUrlTree(returnTo);
+  };
 }
 
 /**
@@ -55,11 +74,32 @@ export const authGuard: CanActivateFn = async (
 
   const auth = inject(AuthService);
   const navigation = inject(AuthNavigationService);
+  const gate = termsGate();
 
   const session = await auth.getSession();
   if (!session) return navigation.redirectToLogin(state.url);
+  const consent = await gate(state.url);
+  if (consent) return consent;
   if (session.stammtisch === null) return navigation.stammtischChoiceUrlTree(state.url);
   return true;
+};
+
+/**
+ * Zustimmungsseite: nur angemeldet erreichbar; wer schon zugestimmt hat, kommt
+ * auf die Startseite.
+ */
+export const termsConsentGuard: CanActivateFn = async (
+  _route: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot,
+): Promise<GuardResult> => {
+  if (!isBrowser()) return true;
+
+  const auth = inject(AuthService);
+  const navigation = inject(AuthNavigationService);
+  const terms = inject(TermsStatusService);
+  const session = await auth.getSession();
+  if (!session) return navigation.redirectToLogin(state.url);
+  return (await terms.isAccepted()) ? navigation.defaultRouteUrlTree(session) : true;
 };
 
 /**
@@ -74,8 +114,10 @@ export const signedInGuard: CanActivateFn = async (
 
   const auth = inject(AuthService);
   const navigation = inject(AuthNavigationService);
+  const gate = termsGate();
   const session = await auth.getSession();
-  return session ? true : navigation.redirectToLogin(state.url);
+  if (!session) return navigation.redirectToLogin(state.url);
+  return (await gate(state.url)) ?? true;
 };
 
 /**
@@ -114,8 +156,11 @@ export const platformGuard: CanActivateFn = async (
 
   const auth = inject(AuthService);
   const navigation = inject(AuthNavigationService);
+  const gate = termsGate();
   const session = await auth.getSession();
   if (!session) return navigation.redirectToLogin(state.url);
+  const consent = await gate(state.url);
+  if (consent) return consent;
   return session.platformAdmin ? true : navigation.forbiddenUrlTree();
 };
 

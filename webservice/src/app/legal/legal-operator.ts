@@ -43,10 +43,10 @@ export const LEGAL_OPERATOR: LegalOperator = {
  * `vereint.legal.terms-version` im Fachservice gleichziehen; der Fachservice
  * speichert diese Fassung zur Zustimmung jedes Kontos.
  */
-export const TERMS_VERSION = '2026-10-28';
+export const TERMS_VERSION = '2026-11-10';
 
 /** Datum der AGB-Fassung für die Anzeige („28. Oktober 2026“). */
-export const TERMS_DATE_LABEL = '28. Oktober 2026';
+export const TERMS_DATE_LABEL = '10. November 2026';
 
 /** Aufbewahrung der Datenbanksicherungen (`backup_retention_days`). */
 export const LEGAL_BACKUP_RETENTION_DAYS = 30;

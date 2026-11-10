@@ -52,6 +52,9 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'admin', renderMode: RenderMode.Client },
   { path: 'tablet', renderMode: RenderMode.Client },
   { path: 'statistik', renderMode: RenderMode.Client },
+  { path: 'statistik/getraenke', renderMode: RenderMode.Client },
+  { path: 'statistik/uebersicht', renderMode: RenderMode.Client },
+  { path: 'agb-zustimmen', renderMode: RenderMode.Client },
 
   // Deny by default: unbekannte Pfade werden nicht serverseitig gerendert.
   { path: '**', renderMode: RenderMode.Client },

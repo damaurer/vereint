@@ -21,7 +21,8 @@
       "generic": "The action could not be completed. Please try again later.",
       "stammtischRequired": "Please choose a group first.",
       "stammtischDenied": "You are not (or no longer) a member of this group.",
-      "stammtischLimit": "You have already opened three groups of your own. That is the maximum per person."
+      "stammtischLimit": "You have already opened three groups of your own. That is the maximum per person.",
+      "termsRequired": "Please accept the current terms first."
     }
   },
   "member": {
@@ -522,7 +523,7 @@
     },
     "statistics": {
       "title": "Statistics",
-      "description": "Consumption, attendance, spending history and rankings for your group."
+      "description": "Tallies, leaderboard and RSVP rate of your group."
     },
     "eventCreate": {
       "title": "Create event",
@@ -571,6 +572,18 @@
     "friends": {
       "title": "Friends",
       "description": "Your friends list across all groups."
+    },
+    "drinkStatistics": {
+      "title": "Drink statistics",
+      "description": "Who drank how much of what, with litres and calories."
+    },
+    "statisticsOverview": {
+      "title": "Statistics overview",
+      "description": "All figures of the group on one page."
+    },
+    "termsConsent": {
+      "title": "Accept the terms",
+      "description": "Accept the current version of the terms."
     }
   },
   "chat": {
@@ -977,7 +990,12 @@
       "similarName": "A drink called “{name}” already exists. Please check whether it is the same one.",
       "barcodeTaken": "Barcode {barcode} already belongs to “{name}”.",
       "barcodeNotAdded": "The barcode you entered has not been added yet. Tap “+ Add barcode” or clear the field.",
-      "activeLabel": "In stock (untick to take the drink off sale)"
+      "activeLabel": "In stock (untick to take the drink off sale)",
+      "volumeMl": "Volume (ml)",
+      "volumePlaceholder": "e.g. 500",
+      "kcal": "Calories per serving (kcal)",
+      "kcalPlaceholder": "e.g. 210",
+      "nutritionHint": "For litres and calories in the statistics. Leave empty if unknown."
     },
     "detail": {
       "fallbackTitle": "Drink details",
@@ -1717,29 +1735,21 @@
       "mine": "You",
       "myRank": "Your rank",
       "rankValue": "#{rank}",
-      "noRank": "No rank yet",
+      "noRank": "no tally yet",
       "you": "You",
       "count": {
         "one": "{count} tally",
         "other": "{count} tallies"
       },
       "empty": "No tallies in this period yet.",
-      "unit": "tallies"
+      "unit": "tallies",
+      "ofMembers": "of {count}"
     },
     "attendance": {
       "title": "Acceptance rate",
       "ringLabel": "Acceptance rate {percent} percent",
-      "hint": "Share of acceptances among answered invitations.",
+      "hint": "Share of invitations that members answered with “Attend”.",
       "empty": "No RSVPs yet. Once invitations are answered, the rate shows up here."
-    },
-    "spending": {
-      "title": "Sales 30 days",
-      "thisMonth": "Spending this month",
-      "trendHint": "{change}% vs. the previous 30 days",
-      "total": "Sales in the last 30 days",
-      "weekly": "Last 8 weeks",
-      "weeklyLabel": "Sales per week, oldest first: {values}",
-      "empty": "No sales in the last 8 weeks."
     },
     "topRounds": {
       "title": "Top round buyers",
@@ -1748,19 +1758,157 @@
         "other": "{count} rounds"
       }
     },
-    "drinkRanking": {
-      "title": "Drinks ranking",
-      "share": "{percent}% popularity"
+    "intro": "Figures of the last {days} days.",
+    "links": {
+      "label": "More statistics",
+      "drinks": "Drink statistics: who, what, how much, kcal",
+      "overview": "All statistics at a glance"
     },
-    "intro": "Figures for the last {days} days.",
-    "items": {
-      "title": "Most popular items",
-      "share": "{percent}% ({count} sold)",
-      "empty": "No items sold yet."
+    "period": {
+      "label": "Period",
+      "days30": "30 days",
+      "days90": "90 days",
+      "year": "This year",
+      "lastDays": "Last {days} days",
+      "thisYear": "This year"
     },
-    "topEvents": {
-      "title": "Events with the most tallies",
-      "empty": "No tallies at events yet."
+    "categories": {
+      "legend": "Categories",
+      "beer": "Beer",
+      "nonAlcoholic": "Non-alcoholic",
+      "spirits": "Spirits",
+      "wineSparkling": "Wine & sparkling",
+      "other": "Other"
+    },
+    "drinks": {
+      "eyebrow": "Whole group · all members",
+      "title": "Drink statistics",
+      "total": "Drinks",
+      "liters": "Litres",
+      "kcal": "Calories",
+      "without": {
+        "one": "no value for {count} drink",
+        "other": "no value for {count} drinks"
+      },
+      "averages": "Ø drinks of the group",
+      "perEvent": "per event",
+      "perDay": "per day",
+      "perWeek": "per week",
+      "perMonth": "per month",
+      "viewLabel": "View",
+      "byMember": "By member",
+      "byDrink": "By drink",
+      "sortCount": "By count",
+      "sortKcal": "By calories",
+      "perEventWeek": "Ø per event · per week",
+      "noValue": "no value",
+      "drinkDetails": "{members} people · {liters} l",
+      "empty": "No drinks were booked in this period yet."
+    },
+    "overview": {
+      "eyebrow": "My group",
+      "title": "Statistics overview",
+      "intro": "Members, events, RSVPs and drinking habits at a glance. Visible to all members of the group.",
+      "kpi": {
+        "members": "Members",
+        "membersHint": "{active} active · {new} new",
+        "events": "Events",
+        "eventsHint": "Ø {avg} attendees",
+        "attendanceHint": "of all invitations",
+        "perEvent": "Ø {value} per event",
+        "perWeek": "Ø {value} per week",
+        "perMember": "Ø {value} per member",
+        "revenue": "Revenue",
+        "perMonth": "Per month",
+        "perMonthHint": "drinks on average"
+      },
+      "withoutValues": "Without volume: {volume} drinks, without calories: {kcal} drinks. They do not count towards litres or calories.",
+      "sections": {
+        "events": "Events & RSVPs",
+        "drinking": "Drinking habits",
+        "drinks": "Drinks",
+        "community": "Community"
+      },
+      "rsvpByEvent": "Answers per event",
+      "rsvpByMember": "RSVPs per member",
+      "rsvp": {
+        "accepted": "Attending",
+        "maybe": "Maybe",
+        "declined": "Declined",
+        "noAnswer": "No answer"
+      },
+      "acceptedOf": "{accepted} of {invited} attending",
+      "noEvents": "There are no invitations in this period.",
+      "table": {
+        "member": "Member",
+        "yes": "Yes",
+        "no": "No",
+        "attended": "Attended",
+        "quote": "Rate",
+        "category": "Category",
+        "share": "Share"
+      },
+      "attendedHint": "“Attended” counts events where the member had at least one tally or purchase.",
+      "weekly": "Drinks per week",
+      "weeklyAvg": "Ø {value} per week",
+      "weeklyValue": "{value} in this week",
+      "weeklyLabel": "Drinks per week, oldest first: {values}",
+      "weeksAgo": {
+        "one": "{count} week ago",
+        "other": "{count} weeks ago"
+      },
+      "thisWeek": "this week",
+      "when": "When do people drink?",
+      "byWeekday": "By weekday",
+      "byHour": "By time",
+      "weekdays": {
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat",
+        "7": "Sun"
+      },
+      "hours": {
+        "lt18": "until 6 pm",
+        "18": "6–7 pm",
+        "19": "7–8 pm",
+        "20": "8–9 pm",
+        "21": "9–10 pm",
+        "22": "10–11 pm",
+        "ge23": "from 11 pm"
+      },
+      "whoDrinksWhat": "Who drinks what? · Drinks per member by category",
+      "drinksKcal": "{count} drinks · {kcal} kcal",
+      "topDrinks": "Most popular drinks",
+      "countPerEvent": "{count} · Ø {value}/event",
+      "categoryShare": "Share by category",
+      "noRounds": "No rounds given yet.",
+      "moments": {
+        "title": "Moments",
+        "started": "Moments started",
+        "reactions": "Reactions",
+        "media": "Photos & videos"
+      },
+      "chat": {
+        "title": "Chat",
+        "messages": "Messages",
+        "mostActive": "Most active",
+        "eventChats": "Event chats"
+      },
+      "records": {
+        "title": "Records",
+        "mostDrinks": "Most drinks in one evening",
+        "mostDrinksValue": "{label} · {count} drinks",
+        "streak": "Longest attendance streak",
+        "streakValue": {
+          "one": "{label} · {count} event",
+          "other": "{label} · {count} events"
+        },
+        "fastest": "Fastest RSVP",
+        "fastestValue": "{label} · after {count} min"
+      }
     }
   },
   "guest": {
@@ -2038,6 +2186,18 @@
     "acceptPrefix": "I have read and accept the",
     "acceptLink": "terms and conditions",
     "acceptSuffix": ".",
-    "acceptRequired": "Please accept the terms and conditions."
+    "acceptRequired": "Please accept the terms and conditions.",
+    "consent": {
+      "eyebrow": "New version of the terms",
+      "title": "Please accept the terms",
+      "intro": "Before you continue using Vereint, we need your consent to the current version of the terms dated {date}.",
+      "statistics": "New is the section “Statistics”: tallies, purchases, RSVPs, attendance and drinks with amount and calories are shown by name to the members of your group. This is just for fun, not a health statement, and stays within the group.",
+      "readTerms": "Read the terms",
+      "accept": "Accept",
+      "accepting": "Saving …",
+      "decline": "Do not accept and sign out",
+      "deleteHint": "If you do not want to accept, sign out. We delete your account on request: just send an email to {email} (terms § 10 (3)).",
+      "failed": "Your consent could not be saved. Please try again."
+    }
   }
 }
