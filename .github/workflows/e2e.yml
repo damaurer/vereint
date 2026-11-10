@@ -31,7 +31,8 @@ concurrency:
 jobs:
   e2e:
     name: Playwright gegen den echten Stack
-    runs-on: ubuntu-latest
+    # Fest auf 24.04: ubuntu-latest ist seit November 2026 Ubuntu 26.04, dort installiert Playwright 1.56 keinen Chromium.
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     defaults:
       run:
