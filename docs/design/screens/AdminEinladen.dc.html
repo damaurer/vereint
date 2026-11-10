@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Administration: Mitglied einladen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 100%; min-height: 960px; box-sizing: border-box; display: flex; flex-wrap: wrap; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans)">
+  <dc-import name="Sidebar" active="admin" hint-size="260px,960px"></dc-import>
+  <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="height: 60px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+      <span style="font-size: 18px; font-weight: 800">Administration</span>
+    </header>
+    <div style="padding: 28px 24px"><h2 style="margin: 0; font-size: 30px; font-weight: 800">Mitglieder &amp; Rollen</h2></div>
+  </div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background-color: rgba(15, 23, 42, 0.4)"></div>
+
+  <section role="dialog" aria-modal="true" aria-labelledby="it" style="position: absolute; left: 50%; top: 96px; width: min(560px, calc(100% - 32px)); transform: translateX(-50%); display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 16px; background-color: var(--color-surface); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)">
+    <header style="display: flex; align-items: center; justify-content: space-between; padding: 16px 12px 16px 24px; border-bottom: 1px solid var(--color-border)">
+      <h1 id="it" style="margin: 0; font-size: 20px; font-weight: 800">Mitglied einladen</h1>
+      <a href="AdminMitglieder.dc.html" aria-label="Schließen" style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; color: var(--color-text-muted)">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      </a>
+    </header>
+    <div style="display: flex; flex-direction: column; gap: 16px; padding: 20px 24px 24px">
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 15px; line-height: 1.5">Schick den Link per Messenger oder E-Mail. Er wird nur einmal angezeigt und kann einmal benutzt werden.</p>
+      <div style="display: grid; grid-template-columns: 1fr 160px; gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="nm" style="font-size: 14px; font-weight: 600">Für (optional)</label>
+          <input id="nm" value="{{who}}" onChange="{{onWho}}" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="gv" style="font-size: 14px; font-weight: 600">Gültig</label>
+          <select id="gv" style="height: 44px; padding: 0 10px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px"><option>7 Tage</option><option>24 Stunden</option><option>30 Tage</option></select>
+        </div>
+      </div>
+      <button type="button" onClick="{{create}}" style="height: 44px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">Einladungslink erstellen</button>
+
+      <sc-if value="{{hasLink}}" hint-placeholder-val="{{ true }}">
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 12px; background-color: var(--color-brand-soft)">
+          <span style="font-size: 14px; font-weight: 700">Link für {{linkFor}}</span>
+          <div style="display: flex; gap: 8px">
+            <code style="flex: 1; min-width: 0; padding: 10px 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; border-radius: 8px; background-color: var(--color-surface); font-size: 13px">https://vereint.app/register#Tk9xQ0A6t6dmAWIgf</code>
+            <button type="button" onClick="{{copy}}" style="height: 40px; padding: 0 14px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 14px; font-weight: 700">{{copyLabel}}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <section style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 700">Offene Einladungen ({{count}})</h2>
+        <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px">
+          <sc-for list="{{invites}}" as="i" hint-placeholder-count="2">
+            <li style="{{i.row}}">
+              <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 700">{{i.label}}</span><span style="color: var(--color-text-muted); font-size: 12px">{{i.meta}}</span></span>
+              <span class="ui-badge ui-badge-warning">Offen</span>
+              <button type="button" onClick="{{i.revoke}}" style="height: 36px; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 600">Zurückziehen</button>
+            </li>
+          </sc-for>
+        </ul>
+      </section>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { who: 'Anna Neumann', link: 'Anna Neumann', copied: false, list: [{ id: 1, label: 'Anna Neumann', meta: '0 von 1 benutzt · gültig bis 24.10.2026' }] };
+  }
+  renderVals() {
+    const s = this.state;
+    return {
+      theme: this.props.theme ?? 'light',
+      who: s.who,
+      onWho: (e) => this.setState({ who: e.target.value }),
+      hasLink: !!s.link,
+      linkFor: s.link,
+      copyLabel: s.copied ? 'Kopiert' : 'Link kopieren',
+      copy: () => this.setState({ copied: true }),
+      create: () => {
+        const name = s.who.trim() || 'ohne Namen';
+        const id = s.list.reduce((m, x) => Math.max(m, x.id), 0) + 1;
+        this.setState({ link: name, copied: false, list: [{ id, label: name, meta: '0 von 1 benutzt · gültig 7 Tage' }].concat(s.list).slice(0, 3) });
+      },
+      count: String(s.list.length),
+      invites: s.list.map((i, n) => ({ label: i.label, meta: i.meta, revoke: () => this.setState({ list: s.list.filter((x) => x.id !== i.id) }), row: 'display: flex; align-items: center; gap: 10px; padding: 10px 14px' + (n ? '; border-top: 1px solid var(--color-border)' : '') }))
+    };
+  }
+}
+</script>
+</body>
+</html>

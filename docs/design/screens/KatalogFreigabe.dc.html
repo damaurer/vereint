@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Katalog-Freigabe</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Katalog-Freigabe" back-href="Vorstand.dc.html" bell="1" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Gruppenkatalog</p>
+      <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">Vorschläge prüfen</h2>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Offen ({{openCount}})</h3>
+      <sc-for list="{{open}}" as="o" hint-placeholder-count="2">
+        <article style="display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px">
+            <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 700">{{o.label}}</span><span style="color: var(--color-text-muted); font-size: 13px">{{o.meta}}</span></span>
+            <span style="font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums">{{o.price}}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px">
+            <button type="button" onClick="{{o.approve}}" style="height: 40px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 14px; font-weight: 700">Freigeben</button>
+            <a href="GetraenkBearbeiten.dc.html" style="display: grid; place-items: center; height: 40px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 14px; font-weight: 600; text-decoration: none">Bearbeiten</a>
+            <button type="button" onClick="{{o.reject}}" style="height: 40px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-danger); font: inherit; font-size: 14px; font-weight: 700">Ablehnen</button>
+          </div>
+        </article>
+      </sc-for>
+      <sc-if value="{{noneOpen}}" hint-placeholder-val="{{ false }}">
+        <p style="margin: 0; padding: 14px; border: 1px dashed var(--color-border-dark); border-radius: 12px; color: var(--color-text-muted); font-size: 14px; text-align: center">Alles erledigt. Keine offenen Vorschläge.</p>
+      </sc-if>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Im Sortiment ({{doneCount}})</h3>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <sc-for list="{{done}}" as="d" hint-placeholder-count="4">
+          <li style="{{d.row}}">
+            <span style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 15px; font-weight: 600">{{d.label}}</span><span style="color: var(--color-text-muted); font-size: 12px">{{d.meta}}</span></span>
+            <span style="font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums">{{d.price}}</span>
+            <a href="GetraenkBearbeiten.dc.html" aria-label="{{d.edit}}" style="display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; color: var(--color-text-muted)">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 19.5l1-4.5L15.6 4.9a2.1 2.1 0 0 1 3 3L8.5 18z"/><line x1="13.5" y1="7" x2="16.5" y2="10"/></svg>
+            </a>
+          </li>
+        </sc-for>
+      </ul>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { status: {} };
+  }
+  renderVals() {
+    const O = [['Cola Zero 0,33 l', 'Alkoholfrei · vorgeschlagen von Mia Schulz', '2,00 €'], ['Wiener Würstl', 'Brotzeit · vorgeschlagen von Jonas Keller', '3,80 €']];
+    const D = [['Helles 0,5 l', 'Bier · Marge 2,40 €', '3,50 €'], ['Obstler 2 cl', 'Schnaps · Marge 1,40 €', '2,00 €'], ['Radler 0,5 l', 'Bier · Marge 2,20 €', '3,20 €']];
+    const st = this.state.status;
+    const set = (k, v) => () => this.setState({ status: { ...st, [k]: v } });
+    const open = O.filter(([l]) => !st[l]);
+    const done = O.filter(([l]) => st[l] === 'ok').map(([l, m, p]) => [l, m.split(' · ')[0] + ' · gerade freigegeben', p]).concat(D);
+    return {
+      theme: this.props.theme ?? 'light',
+      openCount: String(open.length),
+      noneOpen: open.length === 0,
+      open: open.map(([label, meta, price]) => ({ label, meta, price, approve: set(label, 'ok'), reject: set(label, 'no') })),
+      doneCount: String(done.length),
+      done: done.slice(0, 4).map(([label, meta, price], i) => ({ label, meta, price, edit: label + ' bearbeiten', row: 'display: flex; align-items: center; gap: 10px; padding: 8px 6px 8px 14px' + (i ? '; border-top: 1px solid var(--color-border)' : '') }))
+    };
+  }
+}
+</script>
+</body>
+</html>
