@@ -2,6 +2,8 @@
 
 Für Administratorinnen und Administratoren einer Gruppe. Du hast alle Rechte des Vorstands (siehe [Leitfaden Vorstand](03-vorstand.md)) und zusätzlich die **Administration** und die **Gruppeneinstellungen**. Alles hier gilt nur für die Gruppe, die gerade offen ist. Diese Arbeit erledigst du am besten am Rechner; die Bilder zeigen deshalb die Rechneransicht.
 
+Jeden Bildschirm der Administration einzeln erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#administration).
+
 ## Mitgliederliste
 
 <img src="bilder/a-mitglieder.png" alt="Mitgliederliste" width="720">

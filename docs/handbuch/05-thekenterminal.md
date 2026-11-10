@@ -2,6 +2,8 @@
 
 Für den Thekendienst. Das Thekenterminal ist die digitale Strichliste: Ein Tablet liegt an der Theke, und wer ausschenkt, tippt für jedes Getränk einen Strich beim richtigen Namen. Der Betrag wird automatisch vom Guthaben des Mitglieds abgebucht.
 
+**Geplant**: Die Strichliste bekommt eine Spalte je Getränkekategorie mit echten Strichen, und Runden gibt jede Person nur noch am eigenen Handy aus; das Terminal zeigt sie dann nur an. Wie das aussieht, steht unter [Thekenterminal im Entwurf](07-alle-screens.md#thekenterminal). Bis dahin gilt dieser Leitfaden.
+
 Voraussetzung: Das Tablet ist mit dem Thekenkonto angemeldet (siehe [Thekentablet einrichten](04-administration.md#thekentablet-einrichten)), und der Vorstand hat das Event auf **Aktiv** gestellt.
 
 ## Abend auswählen

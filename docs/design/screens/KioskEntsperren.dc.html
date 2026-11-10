@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kiosk-Modus verlassen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="position: relative; width: 1180px; height: 820px; box-sizing: border-box; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <header style="height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 24px; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <span style="flex: 1; font-size: 20px; font-weight: 800">Thekenterminal · Stammtisch Oktober</span>
+    <span class="ui-badge ui-badge-success" style="font-size: 13px">Kiosk-Modus aktiv</span>
+  </header>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background-color: rgba(15, 23, 42, 0.4)"></div>
+
+  <section role="dialog" aria-modal="true" aria-labelledby="ut" style="position: absolute; left: 50%; top: 50%; width: 420px; margin-left: -210px; margin-top: -330px; display: flex; flex-direction: column; gap: 16px; padding: 24px; border: 1px solid var(--color-border); border-radius: 16px; background-color: var(--color-surface); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <h1 id="ut" style="margin: 0; font-size: 20px; font-weight: 800">Kiosk-Modus verlassen</h1>
+      <a href="StrichRueckgaengig.dc.html" aria-label="Abbrechen" style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; color: var(--color-text-muted)">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      </a>
+    </div>
+    <p style="margin: 0; color: var(--color-text-muted); font-size: 15px">Gib die Kiosk-PIN ein. In dieser Vorschau: 2468.</p>
+    <div aria-live="polite" aria-label="{{dotsLabel}}" style="display: flex; justify-content: center; gap: 14px; padding: 8px 0">
+      <sc-for list="{{dots}}" as="d" hint-placeholder-count="4">
+        <span style="{{d.style}}"></span>
+      </sc-for>
+    </div>
+    <p role="status" style="{{msgStyle}}">{{msg}}</p>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+      <sc-for list="{{keys}}" as="k" hint-placeholder-count="12">
+        <button type="button" onClick="{{k.press}}" aria-label="{{k.aria}}" style="{{k.style}}">{{k.label}}</button>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1180,"height":820}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { pin: '', result: '' };
+  }
+  renderVals() {
+    const s = this.state;
+    const press = (k) => () => {
+      if (s.result === 'ok') return;
+      if (k === 'del') return this.setState({ pin: s.pin.slice(0, -1), result: '' });
+      if (k === 'ok') return this.setState({ result: s.pin === '2468' ? 'ok' : 'bad', pin: s.pin === '2468' ? s.pin : '' });
+      if (s.pin.length < 8) this.setState({ pin: s.pin + k, result: '' });
+    };
+    const keyBase = 'height: 64px; border-radius: 12px; font: inherit; font-size: 24px; font-weight: 700; ';
+    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', 'ok'].map((k) => ({
+      label: k === 'del' ? '⌫' : k === 'ok' ? 'OK' : k,
+      aria: k === 'del' ? 'Löschen' : k === 'ok' ? 'Entsperren' : k,
+      press: press(k),
+      style: keyBase + (k === 'ok' ? 'border: none; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 18px' : 'border: 1px solid var(--color-border); background-color: var(--color-bg); color: var(--color-text)')
+    }));
+    const n = Math.max(4, s.pin.length);
+    const msgs = { ok: 'Entsperrt. Das Gerät verlässt den Kiosk-Modus.', bad: 'Falsche PIN. Bitte erneut versuchen.', '': ' ' };
+    return {
+      theme: this.props.theme ?? 'light',
+      dots: Array.from({ length: n }, (_, i) => ({ style: 'width: 16px; height: 16px; border-radius: 999px; ' + (i < s.pin.length ? 'background-color: var(--color-brand)' : 'border: 2px solid var(--color-border-dark)') })),
+      dotsLabel: s.pin.length + ' Ziffern eingegeben',
+      keys,
+      msg: msgs[s.result],
+      msgStyle: 'margin: 0; min-height: 20px; text-align: center; font-size: 14px; font-weight: 700; color: ' + (s.result === 'ok' ? 'var(--color-success)' : 'var(--color-danger)')
+    };
+  }
+}
+</script>
+</body>
+</html>

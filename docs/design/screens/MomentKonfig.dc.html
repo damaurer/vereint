@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Moments: Typen und Reaktionen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Moments" back-href="Vorstand.dc.html" bell="1" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Vorstand</p>
+      <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">Typen &amp; Reaktionen</h2>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 14px; line-height: 1.45">Ausgeschaltete Einträge verschwinden für neue Moments, alte behalten sie.</p>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <h3 style="margin: 0; font-size: 15px; font-weight: 700">Moment-Typen</h3>
+        <button type="button" style="height: 36px; padding: 0 12px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 14px; font-weight: 700">Neuer Typ</button>
+      </div>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <sc-for list="{{types}}" as="t" hint-placeholder-count="4">
+          <li style="{{t.row}}">
+            <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="{{t.nameStyle}}">{{t.label}}</span><span style="color: var(--color-text-muted); font-size: 12px">{{t.hint}}</span></span>
+            <button type="button" role="switch" aria-checked="{{t.checked}}" aria-label="{{t.label}} aktiv" onClick="{{t.flip}}" style="{{t.track}}"><span style="{{t.knob}}"></span></button>
+          </li>
+        </sc-for>
+      </ul>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Reaktionen</h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <sc-for list="{{reactions}}" as="r" hint-placeholder-count="6">
+          <button type="button" aria-pressed="{{r.pressed}}" onClick="{{r.flip}}" style="{{r.style}}">{{r.label}}</button>
+        </sc-for>
+        <button type="button" style="height: 36px; padding: 0 12px; border: 1px dashed var(--color-border-dark); border-radius: 999px; background: transparent; color: var(--color-brand); font: inherit; font-size: 14px; font-weight: 700">Neue Reaktion</button>
+      </div>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 12px">Tippen schaltet eine Reaktion aus oder wieder ein.</p>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { off: { 'Gebet & Fürbitte': true, Herz: true } };
+  }
+  renderVals() {
+    const off = this.state.off;
+    const flip = (k) => () => this.setState({ off: { ...off, [k]: !off[k] } });
+    const T = [['Gemeinsames Anstoßen', 'Für Stammtische und Feste'], ['Gebet & Fürbitte', 'Für Glaubensgemeinschaften'], ['Jubeln & Anfeuern', 'Für Sport- und Fanclubs'], ['Spontaner Check-in', 'Präsenz und Standort teilen']];
+    const R = ['Anstoßen', 'Gebet', 'Jubel', 'Daumen hoch', 'Feiern', 'Herz'];
+    return {
+      theme: this.props.theme ?? 'light',
+      types: T.map(([label, hint], i) => {
+        const on = !off[label];
+        return {
+          label, hint: on ? hint : 'Ausgemustert · ' + hint,
+          checked: on ? 'true' : 'false', flip: flip(label),
+          row: 'display: flex; align-items: center; gap: 12px; padding: 10px 14px' + (i ? '; border-top: 1px solid var(--color-border)' : ''),
+          nameStyle: 'font-size: 15px; font-weight: 700; color: ' + (on ? 'var(--color-text)' : 'var(--color-text-muted)'),
+          track: 'position: relative; width: 48px; height: 28px; flex-shrink: 0; border: none; border-radius: 999px; padding: 0; background-color: ' + (on ? 'var(--color-brand)' : 'var(--color-border-dark)'),
+          knob: 'position: absolute; top: 3px; left: ' + (on ? '23px' : '3px') + '; width: 22px; height: 22px; border-radius: 999px; background-color: #ffffff'
+        };
+      }),
+      reactions: R.map((label) => {
+        const on = !off[label];
+        return {
+          label: on ? label : label + ' (aus)', pressed: on ? 'true' : 'false', flip: flip(label),
+          style: 'height: 36px; padding: 0 12px; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 600; ' + (on ? 'border: 1px solid transparent; background-color: var(--color-brand-soft); color: var(--color-brand)' : 'border: 1px solid var(--color-border); background-color: var(--color-surface); color: var(--color-text-muted); text-decoration: line-through')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

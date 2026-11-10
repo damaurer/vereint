@@ -1,0 +1,609 @@
+/* vereint components: copied verbatim from webservice/src/styles.css (state card, member form/buttons, UI primitives). Tokens come from tokens.css. */
+
+body { margin: 0; font-family: var(--font-sans); color: var(--color-text); background-color: var(--color-bg); -webkit-font-smoothing: antialiased; }
+*, *::before, *::after { box-sizing: border-box; }
+p { color: var(--color-text-muted); line-height: 1.6; }
+
+.state-card {
+  display: grid;
+  gap: .35rem;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-left: .25rem solid var(--color-brand);
+  background-color: var(--color-brand-soft);
+}
+
+.state-card strong {
+  color: var(--color-text);
+}
+
+.state-card span {
+  color: var(--color-text-muted);
+}
+
+a {
+  color: var(--color-brand);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--color-brand-strong);
+  text-decoration: underline;
+}
+
+/* Mitglieder-PWA-Ansichten (TICKET-024): mobil-first, ein Karteninhalt. */
+.page-shell {
+  align-items: start;
+}
+
+.member-card h1 {
+  margin-top: 0.35rem;
+}
+
+.member-back {
+  /* Eigene Zeile, damit die folgende Eyebrow nicht direkt anschließt. */
+  display: block;
+  width: fit-content;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.state-card.state-error {
+  border-left-color: var(--color-danger);
+  background-color: var(--color-danger-light);
+}
+
+/* Gemeinsame Lade-/Leer-/Fehleranzeige (vereint-state). */
+.ui-state {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.ui-state-empty {
+  border-left-color: var(--color-border-dark);
+  background-color: var(--color-surface);
+}
+
+.ui-state .ui-state-visual {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background-color: var(--color-surface);
+  color: var(--color-brand);
+}
+
+.ui-state.state-error .ui-state-visual {
+  color: var(--color-danger);
+}
+
+.ui-state.ui-state-empty .ui-state-visual {
+  background-color: var(--color-brand-soft);
+}
+
+.ui-state-text {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.ui-state-spinner {
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2.5px solid var(--color-brand-soft);
+  border-top-color: var(--color-brand);
+  border-radius: 999px;
+  animation: ui-state-spin 0.8s linear infinite;
+}
+
+@keyframes ui-state-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-state-spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+.state-card button {
+  justify-self: start;
+  margin-top: 0.5rem;
+}
+
+.member-form {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.member-field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.member-field input {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.member-field input:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
+
+.member-button {
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem;
+  border: none;
+  background-color: var(--color-brand);
+  color: var(--color-on-brand);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.member-button:hover:not(:disabled) {
+  background-color: var(--color-brand-strong);
+}
+
+.member-button-ghost {
+  background-color: transparent;
+  color: var(--color-brand);
+  border: 1px solid var(--color-border);
+}
+
+.member-button-ghost:hover:not(:disabled) {
+  background-color: var(--color-brand-soft);
+}
+
+.member-button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.member-hint {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.member-hint-success {
+  color: var(--color-success);
+}
+
+.member-hint-error {
+  color: var(--color-danger);
+}
+
+.ui-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+/* --- UI-Primitive --- */
+.ui-button {
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--color-brand);
+  color: var(--color-on-brand);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ui-button:hover:not(:disabled) {
+  background-color: var(--color-brand-strong);
+}
+
+.ui-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ui-icon-button {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.ui-avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.ui-avatar-fallback {
+  display: grid;
+  place-items: center;
+  background-color: var(--color-brand);
+  color: var(--color-on-brand);
+  font-weight: 800;
+}
+
+.ui-chip {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.ui-chip-accent {
+  background-color: var(--color-brand-soft);
+  color: var(--color-brand);
+  border-color: transparent;
+}
+
+.ui-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.ui-badge-neutral {
+  background-color: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.ui-badge-success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.ui-badge-warning {
+  background-color: var(--color-warning-light);
+  color: #92400e;
+}
+
+.ui-badge-danger {
+  background-color: var(--color-danger-light);
+  color: #991b1b;
+}
+
+.ui-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.ui-hero-eyebrow {
+  margin: 0;
+  color: var(--color-brand);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ui-hero-title {
+  margin: 0.1rem 0;
+}
+
+.ui-hero-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.ui-stat-card,
+.ui-event-card,
+.ui-balance-card,
+.ui-info-panel {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.ui-stat-icon {
+  font-size: 1.4rem;
+}
+
+.ui-stat-label,
+.ui-balance-label {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ui-stat-value {
+  margin: 0.2rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.ui-stat-hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+}
+
+.ui-event-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.ui-event-title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+
+.ui-event-meta {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+}
+
+.ui-balance-value {
+  margin: 0.2rem 0 var(--space-2);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-brand);
+}
+
+.ui-balance-negative {
+  color: var(--color-danger);
+}
+
+.ui-info-panel {
+  border-left: 0.25rem solid var(--color-brand);
+  background-color: var(--color-brand-soft);
+}
+
+.ui-info-title {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ui-info-body {
+  color: var(--color-text-muted);
+}
+
+/* --- Stepper --- */
+.ui-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ui-stepper-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.ui-stepper-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ui-stepper-value {
+  min-width: 2rem;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* Thekenterminal: große Touch-Ziele (56px), „+“ als Hauptaktion. */
+.tally-row .ui-stepper {
+  gap: 0.5rem;
+}
+
+.tally-row .ui-stepper-btn {
+  width: 3.5rem;
+  height: 3.5rem;
+  min-width: 56px;
+  min-height: 56px;
+  border-radius: 999px;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.tally-row .ui-stepper-btn:last-child {
+  border-color: var(--color-brand);
+  background-color: var(--color-brand);
+  color: var(--color-on-brand);
+}
+
+.tally-row .ui-stepper-btn:last-child:disabled {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* --- Daten-Tabelle --- */
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ui-table th,
+.ui-table td {
+  padding: 0.65rem var(--space-2);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ui-table th {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ui-table-empty {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-4);
+}
+
+/* --- Overlay / Modal / Bottom-Sheet --- */
+.ui-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background-color: rgba(15, 23, 42, 0.4);
+}
+
+.ui-overlay-bottom {
+  align-items: end;
+  padding: 0;
+}
+
+.ui-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 32rem);
+  max-height: 90dvh;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+.ui-modal-head,
+.ui-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ui-modal-title,
+.ui-sheet-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.ui-modal-head,
+.ui-sheet-head,
+.ui-sheet-grabber {
+  flex-shrink: 0;
+}
+
+/* Kopf bleibt stehen; gescrollt wird nur der Inhalt, und zwar nur vertikal. */
+.ui-modal-body,
+.ui-sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  padding: var(--space-4);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: break-word;
+}
+
+.ui-modal-head {
+  gap: var(--space-2);
+}
+
+.ui-modal-title {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.ui-sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 85dvh;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.ui-sheet-grabber {
+  width: 2.5rem;
+  height: 0.3rem;
+  margin: var(--space-2) auto 0;
+  border-radius: 999px;
+  background-color: var(--color-border-dark);
+}
+
+/* Griff und Kopf sind die Wischfläche zum Schließen; dort scrollt der Browser nicht. */
+.ui-sheet-grabber,
+.ui-sheet-head {
+  touch-action: none;
+}
+
+.ui-sheet-grabber {
+  /* Größere unsichtbare Trefferfläche für den Daumen. */
+  box-sizing: content-box;
+  padding: var(--space-1) var(--space-4);
+  background-clip: content-box;
+  margin-top: var(--space-1);
+}
+
+/* Mobil nimmt ein Modal den ganzen Bildschirm ein. */
+@media (max-width: 640px) {
+  .ui-overlay:not(.ui-overlay-bottom) {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .ui-modal {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .ui-modal-head {
+    padding-top: calc(var(--space-3) + env(safe-area-inset-top));
+  }
+
+  .ui-modal-body {
+    padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom));
+  }
+}
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+[data-theme='dark'] .ui-badge-warning { color: var(--color-warning); }
+[data-theme='dark'] .ui-badge-danger { color: var(--color-danger); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }

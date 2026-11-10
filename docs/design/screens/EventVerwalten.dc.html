@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Event verwalten</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Event verwalten" back-href="Vorstand.dc.html" bell="1" hint-size="100%,56px"></dc-import>
+  <nav aria-label="Bereiche" style="flex-shrink: 0; display: flex; gap: 4px; padding: 8px 16px 0; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <a href="EventVerwalten.dc.html" aria-current="page" style="padding: 10px 10px 12px; border-bottom: 3px solid var(--color-brand); color: var(--color-brand); font-size: 14px; font-weight: 700; text-decoration: none">Stammdaten</a>
+    <a href="EventTeilnehmer.dc.html" style="padding: 10px 10px 12px; border-bottom: 3px solid transparent; color: var(--color-text-muted); font-size: 14px; font-weight: 600; text-decoration: none">Teilnehmer</a>
+    <a href="EventTeilnehmer.dc.html" style="padding: 10px 10px 12px; border-bottom: 3px solid transparent; color: var(--color-text-muted); font-size: 14px; font-weight: 600; text-decoration: none">Getränke</a>
+    <a href="Eventabrechnung.dc.html" style="padding: 10px 10px 12px; border-bottom: 3px solid transparent; color: var(--color-text-muted); font-size: 14px; font-weight: 600; text-decoration: none">Abrechnung</a>
+  </nav>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; overflow: hidden">
+    <div style="display: flex; align-items: center; gap: 8px">
+      <h2 style="margin: 0; flex: 1; font-size: 22px; font-weight: 800; letter-spacing: -0.01em">Stammtisch Oktober</h2>
+      <span class="ui-badge ui-badge-success">Aktiv</span>
+    </div>
+    <form style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <label for="t" style="font-size: 13px; font-weight: 600">Titel</label>
+        <input id="t" value="Stammtisch Oktober" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <label for="o" style="font-size: 13px; font-weight: 600">Ort</label>
+        <input id="o" value="Vereinsheim, Hauptstraße 12" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <label for="b" style="font-size: 13px; font-weight: 600">Beginn</label>
+          <input id="b" type="datetime-local" value="2026-10-17T18:30" style="height: 44px; box-sizing: border-box; padding: 0 8px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 14px">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <label for="s" style="font-size: 13px; font-weight: 600">Status</label>
+          <select id="s" style="height: 44px; padding: 0 8px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 14px">
+            <option>Aktiv</option><option>Veröffentlicht</option><option>Abgeschlossen</option><option>Abgesagt</option>
+          </select>
+        </div>
+      </div>
+      <button type="button" style="height: 44px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">Änderungen speichern</button>
+    </form>
+
+    <section style="display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Gasteinladungen</h3>
+      <sc-for list="{{invites}}" as="i" hint-placeholder-count="1">
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 700">{{i.label}}</span><span style="color: var(--color-text-muted); font-size: 12px">{{i.meta}}</span></span>
+          <button type="button" onClick="{{i.revoke}}" style="height: 36px; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-danger); font: inherit; font-size: 14px; font-weight: 700">Widerrufen</button>
+        </div>
+      </sc-for>
+      <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <label for="gm" style="font-size: 12px; font-weight: 600">Gültig (Tage)</label>
+          <input id="gm" value="7" inputmode="numeric" style="height: 40px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <label for="mn" style="font-size: 12px; font-weight: 600">Max. Personen</label>
+          <input id="mn" value="5" inputmode="numeric" style="height: 40px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px">
+        </div>
+        <button type="button" onClick="{{create}}" style="height: 40px; padding: 0 12px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 14px; font-weight: 700">Erzeugen</button>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { list: [{ id: 1, label: 'Gastlink #1', meta: 'aktiv · 0 von 5 genutzt · bis 24.10.' }] };
+  }
+  renderVals() {
+    return {
+      theme: this.props.theme ?? 'light',
+      create: () => {
+        const id = this.state.list.length ? this.state.list[this.state.list.length - 1].id + 1 : 1;
+        this.setState({ list: this.state.list.concat([{ id, label: 'Gastlink #' + id, meta: 'neu · 0 von 5 genutzt · Link kopiert' }]).slice(-2) });
+      },
+      invites: this.state.list.map((i) => ({ label: i.label, meta: i.meta, revoke: () => this.setState({ list: this.state.list.filter((x) => x.id !== i.id) }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

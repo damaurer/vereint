@@ -2,6 +2,8 @@
 
 Dieser Teil gilt für alle, die ein Konto bei Vereint haben. Gäste ohne Konto lesen den [Leitfaden Gast](06-gast.md).
 
+Jeden Bildschirm rund um Anmeldung, Registrierung und Gruppenwahl erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#einstieg-und-konto) im Detail.
+
 ## Mit einem Einladungslink registrieren
 
 <img src="bilder/g-registrieren.png" alt="Registrierung über den Einladungslink" width="300" align="right">
