@@ -1,5 +1,5 @@
 /* =============================================================
-   Vereint Login-Theme (Keycloak 26.1.4, Basis keycloak.v2 / PF5)
+   Vereint Login-Theme (Keycloak 26.8.1, Basis keycloak.v2 / PF5)
    Optimus Design-Tokens aus webservice/src/styles.css, Markenverlauf
    Teal -> Blau -> Violett aus webservice/public/vereint-*.svg.
    ============================================================= */
@@ -223,6 +223,8 @@ body.vereint-body {
   gap: 0.5rem;
   padding: 0;
   margin-bottom: 1.25rem;
+  /* keycloak.v2 (ab 26.x) setzt hier einen blauen Kartenrand oben. */
+  border-top: 0;
 }
 
 .vereint-card .vereint-title {

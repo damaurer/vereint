@@ -27,7 +27,7 @@ Secrets und Passwörter gehören niemals in dieses Verzeichnis.
 
 ## Login-Theme `vereint`
 
-Beide Realm-Exports setzen `loginTheme: "vereint"` sowie Deutsch als Standardsprache (`internationalizationEnabled`, `supportedLocales: de,en`, `defaultLocale: de`). Das Theme liegt unter `themes/vereint/login` und erbt von `keycloak.v2` (PatternFly 5, Keycloak 26.1.4). Es rendert alle Login-Seiten im Split-Screen-Layout der Vereint-App (Optimus-Design-Tokens aus `webservice/src/styles.css`, Markenverlauf und Logos aus `webservice/public`), ist von 320 px bis 4K responsiv und folgt automatisch dem Dark-Mode des Systems.
+Beide Realm-Exports setzen `loginTheme: "vereint"` sowie Deutsch als Standardsprache (`internationalizationEnabled`, `supportedLocales: de,en`, `defaultLocale: de`). Das Theme liegt unter `themes/vereint/login` und erbt von `keycloak.v2` (PatternFly 5, abgeglichen mit Keycloak 26.8.1). Es rendert alle Login-Seiten im Split-Screen-Layout der Vereint-App (Optimus-Design-Tokens aus `webservice/src/styles.css`, Markenverlauf und Logos aus `webservice/public`), ist von 320 px bis 4K responsiv und folgt automatisch dem Dark-Mode des Systems.
 
 ```text
 themes/vereint/login/
@@ -42,7 +42,7 @@ themes/vereint/login/
     └── img/                      vereint-logo.svg, vereint-logo-mono.svg, vereint-icon.svg, favicon.svg
 ```
 
-Die drei überschriebenen Seiten-Templates und `template.ftl` sind Kopien der `keycloak.v2`-Originale aus Keycloak 26.1.4 mit minimalen Anpassungen (Kopfkommentar in jeder Datei). Alle übrigen Seiten (OTP, Fehler, Info, Passwort aktualisieren, E-Mail-Verifikation, …) werden unverändert geerbt und erhalten über `template.ftl` und `vereint.css` automatisch das Branding. Beim Keycloak-Upgrade die vier FTL-Dateien mit den neuen Originalen aus `org.keycloak.keycloak-themes-<version>.jar` (Pfad `theme/keycloak.v2/login/`) abgleichen.
+Die drei überschriebenen Seiten-Templates und `template.ftl` sind Kopien der `keycloak.v2`-Originale aus Keycloak 26.8.1 (`org.keycloak:keycloak-themes:26.8.1`) mit minimalen Anpassungen (Kopfkommentar in jeder Datei). Alle übrigen Seiten (OTP, Fehler, Info, Passwort aktualisieren, E-Mail-Verifikation, …) werden unverändert geerbt und erhalten über `template.ftl` und `vereint.css` automatisch das Branding. Beim Keycloak-Upgrade die vier FTL-Dateien mit den neuen Originalen aus `org.keycloak.keycloak-themes-<version>.jar` (Pfad `theme/keycloak.v2/login/`) abgleichen.
 
 ### Lokale Entwicklung
 
@@ -52,13 +52,13 @@ Die drei überschriebenen Seiten-Templates und `template.ftl` sind Kopien der `k
 http://localhost:8082/realms/vereint/protocol/openid-connect/auth?client_id=vereint-web&response_type=code&scope=openid&redirect_uri=http://localhost:8080/api/auth/callback&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256
 ```
 
-Prüfschritte nach Änderungen: Seite rendert mit `<html class="login-pf vereint-html" lang="de">`, `css/vereint.css` und `img/*.svg` liefern HTTP 200, `?kc_locale=en` schaltet auf Englisch, kein horizontales Scrollen bei 320/375/768/1024/1440/1920 px, Buttons und Eingabefelder sind mindestens 44 px hoch, im Dark-Mode erhält `<html>` die Klasse `pf-v5-theme-dark` und die Karte den Hintergrund `#1e293b`. Das Container-Log darf keine Meldung `Theme vereint not found` enthalten.
+Prüfschritte nach Änderungen: Seite rendert mit `<html class="login-pf vereint-html" lang="de">`, `css/vereint.css` und `img/*.svg` liefern HTTP 200, `&ui_locales=en` an der Auth-URL bzw. der Sprachumschalter schaltet auf Englisch, kein horizontales Scrollen bei 320/375/768/1024/1440/1920 px, Buttons und Eingabefelder sind mindestens 44 px hoch, im Dark-Mode erhält `<html>` die Klasse `pf-v5-theme-dark` und die Karte den Hintergrund `#1e293b`. Das Container-Log darf keine Meldung `Theme vereint not found` enthalten.
 
 ### Produktion
 
 `keycloak/Dockerfile` baut ein Image mit dem Produktionsrealm (Keycloak 26.8.1): Realm-Import (`realm-export.json`) und Theme sind eingebaut, die Konfiguration ist vorab optimiert, Keycloak läuft unter dem Pfad `/kc`. Es läuft im lokalen Stack (`local/`) und in den E2E-Tests; CI baut und prüft es bei jeder Änderung, veröffentlicht es aber nicht.
 
-Laufzeit ist seit dem Produktions-Setup Keycloak 26.8.1 (26.1.4 hatte zahlreiche bekannte Schwachstellen); die FTL-Vorlagen basieren weiterhin auf 26.1.4 und rendern unter 26.8.1 (Login, Passwort zurücksetzen und Fehlermeldungen geprüft). Beim nächsten Theme-Umbau die Vorlagen mit den 26.8.1-Originalen abgleichen.
+Laufzeit und Vorlagen sind Keycloak 26.8.1, dieselbe Version wie im Keycloak der Plattform (LinuxServerSetup, `ansible/roles/keycloak/defaults/main.yml`, `keycloak_image`). Geprüft unter 26.8.1 in hell und dunkel: Anmeldung (auch mit Fehler und auf 375 px), Passwort zurücksetzen, Registrierung (auch mit Fehlern), OTP-Einrichtung, Fehlerseite und Sprachumschaltung. Ändert sich die Version in LinuxServerSetup, hier `Dockerfile` und `docker-compose.yml` mitziehen und die vier FTL-Dateien erneut abgleichen.
 
 Das Theme benötigt keinen Build-Schritt (`kc.sh build` ist nicht erforderlich). Den Ordner `keycloak/themes/vereint` entweder in das Image kopieren (`COPY keycloak/themes /opt/keycloak/themes`) oder wie lokal nach `/opt/keycloak/themes` mounten. Die Cache-Variablen aus `docker-compose.yml` **nicht** übernehmen: Keycloak cached Themes und Templates standardmäßig, was in Produktion gewünscht ist.
 
@@ -72,3 +72,15 @@ als Theme einbinden; API und BFF lesen die Adresse nur aus
 noch nicht gibt; spätere Änderungen am laufenden Realm macht man in der
 Admin-Konsole. Wer eine Kopie von Realm oder Theme woanders pflegt, zieht
 Änderungen an `realm-export.json` und `themes/vereint` dort nach.
+
+Auf der Strato-Plattform ist das genau so: LinuxServerSetup führt eine Kopie
+des Themes (`ansible/roles/keycloak/files/themes/vereint`) und des Realms
+(`ansible/roles/keycloak/templates/realms/vereint-realm.json.j2`). Das Theme
+muss dort identisch sein (`diff -r` leer); der Realm unterscheidet sich nur
+in den Platzhaltern (`${PUBLIC_BASE_URL}` → `https://{{ vereint_host }}`,
+Secrets aus dem Vault, `${SPRING_API_BASE_URL}` → `http://vereint-api:8081`).
+Weil Keycloak dort unter einer eigenen Domain (`auth.DOMAIN`) läuft, zeigen
+die Links des Themes (Eigene Gruppe eröffnen, Impressum, Datenschutz, AGB) auf
+die Root-URL des Clients (`client.baseUrl`) und nicht auf relative Pfade.
+`/datenschutz` liefert auf dem Server die Plattform aus (Rolle `legal`); die
+App selbst hat keine solche Seite, lokal führt der Link daher ins Leere.

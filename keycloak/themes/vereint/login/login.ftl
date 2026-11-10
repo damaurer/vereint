@@ -1,15 +1,19 @@
 <#--
   Vereint Login-Theme: Anmeldeseite.
-  Basis: keycloak.v2/login/login.ftl aus Keycloak 26.1.4.
+  Basis: keycloak.v2/login/login.ftl aus Keycloak 26.8.1.
   Aenderungen: Eyebrow/Untertitel, "Angemeldet bleiben" und "Passwort vergessen?"
-  als gemeinsame Zeile (.vereint-form-row); Link "Eigene Gruppe eroeffnen" im
-  Info-Bereich (immer sichtbar); alle Keycloak-Variablen unveraendert.
+  als gemeinsame Zeile (.vereint-form-row) statt im Hilfetext des Passwortfelds;
+  Info-Bereich immer sichtbar mit Link "Eigene Gruppe eroeffnen" zur App des
+  Clients; alle Keycloak-Variablen, Passkeys und Social-Login unveraendert.
 -->
 <#import "template.ftl" as layout>
 <#import "field.ftl" as field>
 <#import "buttons.ftl" as buttons>
 <#import "social-providers.ftl" as identityProviders>
+<#import "passkeys.ftl" as passkeys>
 <@layout.registrationLayout displayMessage=!messagesPerField.existsError('username','password') displayInfo=true; section>
+<!-- template: login.ftl -->
+
     <#if section = "eyebrow">
         ${msg("vereintEyebrow")}
     <#elseif section = "header">
@@ -24,7 +28,8 @@
                         <#assign label>
                             <#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if>
                         </#assign>
-                        <@field.input name="username" label=label error=kcSanitize(messagesPerField.getFirstError('username','password'))?no_esc autofocus=true autocomplete="username" value=login.username!'' />
+                        <@field.input name="username" label=label error=messagesPerField.getFirstError('username','password')
+                            autofocus=true autocomplete="${(enableWebAuthnConditionalUI?has_content)?then('username webauthn', 'username')}" value=login.username!'' />
                         <@field.password name="password" label=msg("password") error="" forgotPassword=false autofocus=usernameHidden?? autocomplete="current-password" />
                     <#else>
                         <@field.password name="password" label=msg("password") forgotPassword=false autofocus=usernameHidden?? autocomplete="current-password" />
@@ -47,6 +52,11 @@
             </#if>
             </div>
         </div>
+        <@passkeys.conditionalUIData />
+    <#elseif section = "socialProviders" >
+        <#if realm.password && social.providers?? && social.providers?has_content>
+            <@identityProviders.show social=social/>
+        </#if>
     <#elseif section = "info" >
         <#if realm.password && realm.registrationAllowed && !registrationDisabled??>
             <div id="kc-registration-container" class="${properties.kcLoginFooterBand!}">
@@ -55,16 +65,18 @@
                 </div>
             </div>
         </#if>
-        <#-- Keycloak laeuft unter /kc auf demselben Host wie die App: Wurzelpfad der App. -->
+        <#-- Keycloak liegt auf dem Server unter einer eigenen Domain (auth.DOMAIN),
+             lokal unter /kc oder einem eigenen Port. Der Link zeigt deshalb auf
+             die App des Clients (Root-URL); ohne Client bleibt er relativ. -->
+        <#assign appBase = "">
+        <#if client?? && client.baseUrl?has_content>
+            <#assign appBase = client.baseUrl?remove_ending("/")>
+        </#if>
         <div id="vereint-open-group" class="${properties.kcLoginFooterBand!}">
             <div class="${properties.kcLoginFooterBandItem!}">
-                <span>${msg("vereintNoGroup")} <a id="vereint-open-group-link" href="/gruppe-eroeffnen">${msg("vereintOpenOwnGroup")}</a></span>
+                <span>${msg("vereintNoGroup")} <a id="vereint-open-group-link" href="${appBase}/gruppe-eroeffnen">${msg("vereintOpenOwnGroup")}</a></span>
             </div>
         </div>
-    <#elseif section = "socialProviders" >
-        <#if realm.password && social.providers?? && social.providers?has_content>
-            <@identityProviders.show social=social/>
-        </#if>
     </#if>
 
 </@layout.registrationLayout>
