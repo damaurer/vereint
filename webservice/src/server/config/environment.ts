@@ -40,7 +40,7 @@ interface NodeProcess {
 
 /**
  * Express-Session-TTL. Muss identisch zu `ssoSessionMaxLifespan` im
- * Keycloak-Realm (86400 s) bleiben, siehe `docs/authentifizierung.md`.
+ * Keycloak-Realm (86400 s) bleiben, siehe `docs/backend-for-frontend/01-overview-and-setup.md`.
  */
 const DEFAULT_SESSION_DURATION_MINUTES = 24 * 60;
 

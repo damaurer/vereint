@@ -6,7 +6,7 @@ import type { Request } from 'express';
  *
  * Es werden ausschließlich Metadaten geschrieben. Tokens, Authorization Codes,
  * PKCE-Verifier, Nonces, Cookie-Inhalte und Klartext-Secrets dürfen niemals in
- * einen Logeintrag gelangen (`docs/authentifizierung.md`).
+ * einen Logeintrag gelangen (`docs/backend-for-frontend/03-authentication-and-session.md`).
  */
 
 export type SecurityEventOutcome = 'denied' | 'failed' | 'allowed';

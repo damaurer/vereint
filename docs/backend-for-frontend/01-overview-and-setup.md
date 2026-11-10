@@ -41,7 +41,7 @@ Der BFF basiert auf modernen Node.js- und TypeScript-Technologien:
 
 | Komponente / Bibliothek | Version (Auszug aus `package.json`) | Zweck & Einsatzbereich |
 | :--- | :--- | :--- |
-| **Node.js** | `22` (Image `node:22-alpine`) | Serverseitige JavaScript-Laufzeitumgebung. |
+| **Node.js** | `22` (Image `node:22.23.3-alpine`) | Serverseitige JavaScript-Laufzeitumgebung. |
 | **Express** | `^5.1.0` | HTTP-Server-Framework (Routing, Middlewares, Static Files). |
 | **@angular/ssr** | `^22.2.2` | Angular Server-Side Rendering (`AngularNodeAppEngine`). |
 | **@angular/core / platform-server** | `^22.2.2` | Angular 22 Server-Plattform und Hydration. |

@@ -6,6 +6,8 @@ name: Security
 #     eingecheckten Secrets (Passwoerter, Tokens, Schluessel).
 #   - Trivy (Dateisystem): prueft Lockfiles auf bekannte Schwachstellen und
 #     Dockerfiles bzw. Infrastruktur-Code auf unsichere Konfiguration.
+#   - Doku-Verweise: findet Pfade auf Markdown-Dateien (in Code-Kommentaren,
+#     Konfigurationen und Doku), die es im Repository nicht mehr gibt.
 # Zusaetzlich laeuft der Workflow woechentlich, damit neu veroeffentlichte
 # Schwachstellen auch ohne Code-Aenderung auffallen.
 #
@@ -65,3 +67,21 @@ jobs:
             --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \
             --ignorefile .trivyignore \
             .
+
+  doc-references:
+    name: Doku-Verweise pruefen
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Tote Verweise auf Markdown-Dateien suchen
+        run: |
+          missing=$(git grep -noE "(docs|deploy|infra)/[A-Za-z0-9_./-]+\.md" \
+            | while IFS=: read -r f l p; do [ -e "$p" ] || echo "$f:$l $p"; done)
+          if [ -n "$missing" ]; then
+            echo "Verweise auf nicht vorhandene Dateien:"
+            echo "$missing"
+            exit 1
+          fi

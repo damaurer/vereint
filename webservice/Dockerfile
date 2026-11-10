@@ -35,7 +35,7 @@ RUN npm ci --omit=dev --ignore-scripts
 FROM ${NODE_IMAGE} AS runtime
 
 # Nicht vertrauliche Vorgaben. Reale Werte kommen aus Compose bzw. der
-# Secret-Verwaltung der Zielplattform (siehe docs/deployment.md).
+# Secret-Verwaltung der Zielplattform (siehe docs/betrieb/selbst-betreiben.md).
 ENV NODE_ENV=production \
     PORT=8080 \
     HOST=0.0.0.0 \

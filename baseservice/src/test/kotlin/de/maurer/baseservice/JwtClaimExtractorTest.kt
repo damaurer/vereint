@@ -7,7 +7,7 @@ import org.springframework.security.oauth2.jwt.Jwt
 import java.time.Instant
 
 /**
- * Absicherung des Claim-Vertrags aus `docs/authentifizierung.md`.
+ * Absicherung des Claim-Vertrags aus `docs/baseservice/03-security-and-authorization.md`.
  */
 class JwtClaimExtractorTest {
 

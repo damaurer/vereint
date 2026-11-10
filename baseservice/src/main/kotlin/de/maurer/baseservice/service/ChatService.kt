@@ -45,8 +45,7 @@ import kotlin.jvm.optionals.getOrNull
  * serverseitig geprüft (`deny by default`): Mitglieder erreichen einen Event-Chat
  * nur als Owner, Teilnehmer oder Vorstand/Administration; Gäste erreichen
  * ausschließlich den ihrem eventgebundenen Gast-Token zugewiesenen Chat und kein
- * anderes Event (siehe `docs/fachkonzept.md`, Abschnitt „Chat, Notifications und
- * Moments"). Der Rohwert eines Gast-Tokens wird nur über seinen SHA-256-Hash
+ * anderes Event (siehe `docs/domains/chat-and-push-notifications.md`). Der Rohwert eines Gast-Tokens wird nur über seinen SHA-256-Hash
  * aufgelöst, formatgleich mit [AccessResolverService].
  */
 @Service

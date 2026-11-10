@@ -92,7 +92,7 @@ export const attachCspNonce: RequestHandler = (_req, res, next) => {
  * Komponentenstile ist `'unsafe-inline'` in `style-src` erforderlich; Angular
  * versieht diese `<style>`-Elemente in dieser Konfiguration nicht mit einer
  * Nonce. HSTS wird ausschließlich bei aktivem TLS gesetzt
- * (siehe `docs/deployment.md`).
+ * (siehe `docs/backend-for-frontend/02-request-pipeline.md`).
  */
 export const securityHeaders: RequestHandler = helmet({
   contentSecurityPolicy: {

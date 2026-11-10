@@ -157,7 +157,7 @@ function testBackend() {
   // Testcontainers startet PostgreSQL über den Docker-Socket des Rechners.
   return containerTest(
     'backend',
-    'eclipse-temurin:25-jdk',
+    'eclipse-temurin:25.0.5_8-jdk',
     { dirs: ['baseservice'], exclude: ['build', '.gradle'] },
     './gradlew test --no-daemon --console=plain; rc=$?; cp -r build/reports/tests/test/. /out/ 2>/dev/null; exit $rc',
     [

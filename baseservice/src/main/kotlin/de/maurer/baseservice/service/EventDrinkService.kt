@@ -32,7 +32,7 @@ import java.util.UUID
  * Bildreferenz werden zum Zeitpunkt der Aufnahme als Snapshot festgehalten
  * (`event_drinks`). Beim Zuweisen einer Sublist werden deren Einträge in die
  * Eventauswahl kopiert; spätere Änderungen an Vorlage oder globalem Katalog wirken
- * nicht rückwirkend (siehe `docs/fachkonzept.md`).
+ * nicht rückwirkend (siehe `docs/domains/drink-catalog-and-sublists.md`).
  *
  * Owner-Rechte werden objektbezogen und serverseitig geprüft; jeder Aufruf folgt
  * dem Prinzip `deny by default`. Verwalten darf nur der Event-Owner sowie Vorstand

@@ -7,7 +7,7 @@ import { serverEnvironment } from '../config/environment';
  * Signatur, `iss`, `aud`/`azp` und `exp` werden gegen den JWKS des Realms
  * geprüft. Ein Token, dessen Prüfung fehlschlägt, führt zum Abbruch des
  * Logins; ungeprüfte Claims werden niemals in eine Identität übersetzt
- * (`deny by default`, siehe `docs/authentifizierung.md`).
+ * (`deny by default`, siehe `docs/backend-for-frontend/03-authentication-and-session.md`).
  */
 
 export const ID_TOKEN_CLOCK_TOLERANCE_SECONDS = 60;

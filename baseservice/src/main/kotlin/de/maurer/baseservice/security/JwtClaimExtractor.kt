@@ -6,7 +6,8 @@ import org.springframework.stereotype.Component
 /**
  * Einzige Quelle für die Auswertung der Keycloak-Token-Claims im Fachservice.
  *
- * Die unterstützten Claim-Namen sind in `docs/authentifizierung.md` als verbindlicher
+ * Die unterstützten Claim-Namen sind in
+ * `docs/baseservice/03-security-and-authorization.md` als verbindlicher
  * Vertrag dokumentiert und müssen mit `src/server/auth/oidc.service.ts` übereinstimmen:
  * `sub`, `email`, `name`, `preferred_username`, `realm_access.roles`,
  * `resource_access.<client>.roles`, `roles`, `permissions`, `scope`, `board_role`,

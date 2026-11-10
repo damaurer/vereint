@@ -19,12 +19,16 @@ anderen Feature-Branch aufsetzt, bekommt CI erst, wenn er auf `develop` zeigt.
 | `baseservice CI/CD` | Tests (JDK 25), Docker-Image bauen, Trivy-Scan des Images |
 | `webservice CI/CD` | Tests, Docker-Image bauen, Trivy-Scan des Images |
 | `keycloak CI/CD` | Keycloak-Image mit Realm und Theme bauen und scannen (nur für den lokalen Stack und die E2E-Tests, wird nicht veröffentlicht) |
-| `Security` | Gitleaks (Secrets in der gesamten Historie), Trivy auf Abhängigkeiten und Konfiguration; zusätzlich jeden Montag |
+| `Security` | Gitleaks (Secrets in der gesamten Historie), Trivy auf Abhängigkeiten und Konfiguration, Verweise auf nicht vorhandene Markdown-Dateien; zusätzlich jeden Montag |
 | `E2E-Tests` | Playwright gegen den kompletten Stack ([E2E-Tests](../../e2e/README.md)) |
 
-GitHub Actions sind auf Commit-SHAs gepinnt, Images auf Digests. Dependabot hält
-beides und die Abhängigkeiten aktuell
-([.github/dependabot.yml](../../.github/dependabot.yml)).
+GitHub Actions sind auf Commit-SHAs gepinnt, Images auf genaue Versionen (die
+Basis-Images des baseservice zusätzlich auf Digests). Dependabot hält beides und
+die Abhängigkeiten aktuell: Gradle, npm (webservice, e2e), alle Dockerfiles und
+die Compose-Dateien ([.github/dependabot.yml](../../.github/dependabot.yml)).
+Ausgenommen ist das Playwright-Image des Seed-Dienstes in
+`local/compose.local.yaml`; es wird zusammen mit `local/seed.package.json` von
+Hand angehoben.
 
 Für `main`, `qs` und `develop` sollte in GitHub ein Branch-Schutz gelten: Pull
 Request vor dem Merge, die CI-Checks als Pflicht, kein Force-Push und kein

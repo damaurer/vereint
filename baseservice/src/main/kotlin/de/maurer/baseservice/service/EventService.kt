@@ -28,7 +28,7 @@ import java.util.UUID
  * Alle Owner- und Verwaltungsrechte werden objektbezogen und serverseitig
  * geprüft; jeder Aufruf folgt dem Prinzip `deny by default`. Ein Mitglied darf
  * ausschließlich eigene Events verwalten, während Vorstand und Administration
- * fremde Events moderieren dürfen (siehe `docs/fachkonzept.md`).
+ * fremde Events moderieren dürfen (siehe `docs/domains/events-and-invites.md`).
  */
 @Service
 @Transactional
