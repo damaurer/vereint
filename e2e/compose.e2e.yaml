@@ -46,6 +46,8 @@ services:
       VEREIN_CORS_ALLOWED_ORIGINS: https://vereint.test:8443
       # Testbenutzer aus Keycloak treten ohne Einladungslink „Meine Gruppe" bei.
       TENANCY_BOOTSTRAP_REALM_ROLES: "true"
+      # Die Tests prüfen „Gruppe eröffnen“ (Standard ist aus).
+      SIGNUP_ENABLED: "true"
 
   webservice:
     environment:

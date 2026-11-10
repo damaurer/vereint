@@ -63,7 +63,7 @@ rotiert man ebenso mit `SESSION_SECRET_PREVIOUS`.
 - Passwörter mit 10 bis 128 Zeichen, nicht gleich Benutzername oder E-Mail,
   nicht eines der letzten drei. Nach 5 Fehlversuchen wachsende Sperre.
 - Keine offene Selbstregistrierung in Keycloak (Konten entstehen nur über
-  Einladungslinks oder „Gruppe eröffnen“, abschaltbar mit `SIGNUP_ENABLED`),
+  Einladungslinks oder „Gruppe eröffnen“, nur mit `SIGNUP_ENABLED=true`),
   kein „Passwort vergessen“ ohne Mailserver, keine Wildcard-Redirects, keine Direct
   Access Grants, Refresh-Token-Rotation. Login- und Admin-Ereignisse werden 90
   Tage gespeichert.

@@ -58,7 +58,8 @@ docker compose down -v
 | `STORAGE_BACKEND`, `STORAGE_DIRECTORY` | Bilder und Videos in einem Verzeichnis wie in Produktion; mit `memory` nur im Arbeitsspeicher des Fachservice | `filesystem`, `../.data/files` (relativ zu `baseservice/`) |
 | `API_DOCS_ENABLED` | Swagger UI unter `http://localhost:8081/swagger-ui.html` | `true` (Produktion `false`) |
 | `TENANCY_BOOTSTRAP_REALM_ROLES` | Testkonten ohne Mitgliedschaft treten „Meine Gruppe“ bei, Realmrollen werden Gruppenrollen. Nur lokal und in E2E, in Produktion nie | `true` |
-| `SIGNUP_ENABLED`, `SIGNUP_MAX_OWNED` | Eigene Gruppen eröffnen (`/gruppe-eroeffnen`) an/aus, Höchstzahl eigener Gruppen | `true`, `3` |
+| `SIGNUP_ENABLED`, `SIGNUP_MAX_OWNED` | Eigene Gruppen eröffnen (`/gruppe-eroeffnen`) an/aus, Höchstzahl eigener Gruppen. Ohne Angabe aus | `true`, `3` |
+| `EV_LIQUIBASE_CONTEXTS`, `DATA_ENCRYPTION_ENABLED` | Kontext `dev`: Klartext und der Superuser `vereint` aus `docker-compose.yml` lösen nur Warnungen aus. Mit `prod` bricht der Start ab (Startprüfungen, [selbst-betreiben.md](../betrieb/selbst-betreiben.md#startprüfungen)) | `dev`, `false` |
 
 ---
 

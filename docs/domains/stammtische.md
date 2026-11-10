@@ -125,7 +125,8 @@ Rolle „Kasse“ mit `ledger.read` sieht so die Kasse, aber nicht den Adminbere
   per Einladungslink ein. Angemeldete
   Personen eröffnen weitere Gruppen unter `/gruppen` (`POST /api/v1/stammtische`),
   höchstens drei eigene aktive (`SIGNUP_MAX_OWNED`, Fehler `stammtisch_limit`).
-  `SIGNUP_ENABLED=false` schaltet das Eröffnen ab.
+  Das Eröffnen ist standardmäßig aus und braucht `SIGNUP_ENABLED=true`
+  (lokal und in E2E gesetzt).
 - **Anlegen (Vereint-Team):** Die Plattform-Administration legt unter
   `/plattform` Gruppen an. Optional wird ein bestehendes Konto per E-Mail Admin
   der neuen Gruppe, sonst die anlegende Person. Dort lassen sich Gruppen auch
@@ -179,6 +180,11 @@ sofern sie noch „Mein Stammtisch“ hieß; der Name lässt sich unter **Gruppe
   dafür, dass die Policy auch für den Eigentümer gilt. Lokal mit
   `docker compose` verbindet sich der Dienst als Superuser, dort ist RLS wirksam
   ausgeschaltet; die Trennung in der Anwendung bleibt.
+- Beim Start prüft `StartupSafetyChecks` die Rechte des Datenbankbenutzers
+  (`pg_roles.rolsuper`, `rolbypassrls`). Mit dem Kontext `prod` bricht der Start
+  bei Superuser oder `BYPASSRLS` ab, sonst (lokal `dev`, Tests) nur eine Warnung.
+  Ohne PostgreSQL bzw. mit `vereint.tenancy.row-level-security=false` entfällt
+  die Prüfung.
 - Backups laufen als `postgres` (Superuser) und enthalten alle Gruppen.
 - `TENANCY_BOOTSTRAP_REALM_ROLES=true` (nur lokal und in den E2E-Tests): Konten
   ohne Mitgliedschaft treten beim ersten Aufruf „Meine Gruppe“ bei, mit den
