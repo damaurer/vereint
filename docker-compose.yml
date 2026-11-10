@@ -11,7 +11,7 @@
 
 services:
   keycloak-db:
-    image: postgres:17.11-alpine
+    image: postgres:18.6-alpine
     container_name: keycloak-db
     environment:
       POSTGRES_DB: ${KEYCLOAK_DB_NAME:?KEYCLOAK_DB_NAME fehlt in .env}
@@ -20,7 +20,7 @@ services:
     ports:
       - "${KEYCLOAK_DB_PORT:-5433}:5432"
     volumes:
-      - keycloak-db-data:/var/lib/postgresql/data
+      - keycloak-db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s
@@ -30,7 +30,7 @@ services:
     restart: unless-stopped
 
   vereint-db:
-    image: postgres:17.11-alpine
+    image: postgres:18.6-alpine
     container_name: vereint-db
     environment:
       POSTGRES_DB: ${VEREINT_DB_NAME:?VEREINT_DB_NAME fehlt in .env}
@@ -39,7 +39,7 @@ services:
     ports:
       - "${VEREINT_DB_PORT:-5432}:5432"
     volumes:
-      - vereint-db-data:/var/lib/postgresql/data
+      - vereint-db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s

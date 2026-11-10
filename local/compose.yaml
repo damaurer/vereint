@@ -53,7 +53,7 @@ services:
 
   postgres:
     <<: *defaults
-    image: postgres:17.11-alpine
+    image: postgres:18.6-alpine
     # Der Entrypoint uebergibt das Datenverzeichnis an den Benutzer postgres
     # und wechselt dann zu ihm; dafuer braucht er genau diese Rechte.
     cap_add:
@@ -69,7 +69,7 @@ services:
       KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?KEYCLOAK_DB_PASSWORD fehlt}
       VEREINT_DB_PASSWORD: ${VEREINT_DB_PASSWORD:?VEREINT_DB_PASSWORD fehlt}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
       - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/10-init-databases.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
