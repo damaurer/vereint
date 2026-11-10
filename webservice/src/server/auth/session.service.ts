@@ -1,13 +1,16 @@
 import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } from 'node:crypto';
 import type { Request, Response } from 'express';
 import { serverEnvironment } from '../config/environment';
-import { sessionCookieName, sessionDurationMs } from '../config/server-config';
+import { sessionDurationMs } from '../config/server-config';
 import type { KeycloakTokenResponse, RequestIdentity, SessionData } from './auth.types';
 import {
   MAX_SESSION_COOKIE_CHUNKS,
   SESSION_COOKIE_CHUNK_SIZE,
+  clearLegacySessionCookie,
   clearSessionCookie,
+  readLegacySessionCookie,
   readSessionCookie,
+  sessionCookieName,
   setSessionCookie,
 } from './cookie.service';
 import {
@@ -161,7 +164,7 @@ export function decryptSessionData(raw: string, secret?: string): SessionData | 
 /** Gesamtlänge des Cookies inklusive Name und Attributen. */
 export function estimateSessionCookieBytes(encryptedValue: string): number {
   const value = encodeURIComponent(encryptedValue);
-  const attributes = `${sessionCookieName}=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${Math.floor(
+  const attributes = `${sessionCookieName()}=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${Math.floor(
     sessionDurationMs / 1000,
   )}`;
   return Buffer.byteLength(`${attributes}${value}`, 'utf8');
@@ -299,7 +302,12 @@ export async function verifyRequestSession(
   req: Request,
   res?: Response,
 ): Promise<RequestIdentity | undefined> {
-  const cookie = readSessionCookie(req);
+  let cookie = readSessionCookie(req);
+  // Umstellung auf `__Host-`: Eine Session unter dem früheren Namen wird
+  // einmalig gelesen, unter dem neuen Namen geschrieben und alt gelöscht.
+  const legacy = cookie ? undefined : readLegacySessionCookie(req);
+  if (legacy && res) clearLegacySessionCookie(res);
+  cookie ??= legacy;
   if (!cookie) return undefined;
 
   const session = decryptSessionData(cookie);
@@ -311,6 +319,13 @@ export async function verifyRequestSession(
   }
 
   if (!needsRefresh(session, now)) {
+    if (legacy && res) {
+      try {
+        writeSessionCookie(res, session, true);
+      } catch {
+        return undefined;
+      }
+    }
     req.sessionData = session;
     return session.identity;
   }
@@ -335,7 +350,7 @@ export async function verifyRequestSession(
 
 export async function destroySession(req: Request, res: Response): Promise<boolean> {
   const correlationId = createCorrelationId();
-  const cookie = readSessionCookie(req);
+  const cookie = readSessionCookie(req) ?? readLegacySessionCookie(req);
   let backchannelLogout = true;
 
   if (cookie) {
@@ -346,6 +361,7 @@ export async function destroySession(req: Request, res: Response): Promise<boole
   }
 
   clearSessionCookie(res);
+  clearLegacySessionCookie(res);
   req.identity = undefined;
   req.sessionData = undefined;
 

@@ -23,4 +23,5 @@ Issues. Stand 05.11.2026.
 | :--- | :--- |
 | Push aus einer anderen Gruppe | Kommt eine Mitteilung aus einer anderen als der gerade gewählten Gruppe, zeigt das Gerät nur die neueste Mitteilung der gewählten Gruppe oder „Du hast eine neue Mitteilung“. |
 | BeerWithMe Status | Im Profil nur eine Vorschau, wird nicht an andere übertragen. |
+| Umstellung der Cookie-Namen auf `__Host-` | Der BFF liest Sitzung und Gruppenwahl noch unter den alten Namen ohne Präfix und schreibt sie um ([03-authentication-and-session.md](backend-for-frontend/03-authentication-and-session.md#cookie-namen-mit-__host-)). Solange gilt ein von einer anderen Anwendung unter derselben Domain gesetztes altes Cookie, wenn noch kein neues existiert. Nach dem Deployment und einer vollen Sitzungsdauer `readLegacySessionCookie` und `migrateLegacyStammtischCookie` entfernen. |
 | Push für Chat-Nachrichten | Einzelne Chat-Nachrichten lösen keinen Push aus; neue Nachrichten zeigt der Ungelesen-Zähler am Chat. |

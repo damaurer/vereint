@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Event: Stammtisch Oktober</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <header style="height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 8px; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <a href="Events.dc.html" aria-label="Zu den Events" style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; color: var(--color-text)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
+    </a>
+    <h1 style="margin: 0; flex: 1; font-size: 17px; font-weight: 800; letter-spacing: -0.01em">Event</h1>
+    <button type="button" aria-label="Mitteilungen, 4 ungelesen" style="position: relative; display: grid; place-items: center; width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; color: var(--color-text-muted)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><circle cx="12" cy="21" r="1.6" fill="currentColor" stroke="none"/></svg>
+      <span style="position: absolute; top: 6px; right: 6px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--color-surface); border-radius: 999px; background-color: var(--color-danger); color: #ffffff; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center">4</span>
+    </button>
+  </header>
+
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 18px; padding: 20px 16px; overflow: hidden">
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Event</p>
+        <span class="ui-badge ui-badge-success">Aktiv</span>
+      </div>
+      <h2 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15">Stammtisch Oktober</h2>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 15px">
+        <li style="display: flex; align-items: center; gap: 10px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--color-text-muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+          Fr, 17. Okt · 18:30 – 23:30
+        </li>
+        <li style="display: flex; align-items: center; gap: 10px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--color-text-muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.2" fill="var(--color-text-muted)" stroke="none"/></svg>
+          <span style="flex: 1">Vereinsheim, Hauptstraße 12</span>
+          <a href="https://maps.google.com" style="font-size: 14px; font-weight: 600; text-decoration: none">Route</a>
+        </li>
+        <li style="display: flex; align-items: center; gap: 10px">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--color-text-muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>
+          Organisiert von Thomas Berger
+        </li>
+      </ul>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 15px; line-height: 1.55">Unser monatlicher Vereinsabend im Vereinsheim. Es gibt Käsespätzle!</p>
+      <div style="display: flex; gap: 8px">
+        <a href="EventChat.dc.html" style="display: inline-grid; place-items: center; height: 40px; padding: 0 14px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 14px; font-weight: 600; text-decoration: none">Event-Chat</a>
+        <a href="Moments.dc.html" style="display: inline-grid; place-items: center; height: 40px; padding: 0 14px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 14px; font-weight: 600; text-decoration: none">Moments (1 aktiv)</a>
+        <a href="RundeHandy.dc.html" style="display: inline-grid; place-items: center; height: 40px; padding: 0 14px; border-radius: 8px; background-color: var(--color-brand-soft); color: var(--color-brand); font-size: 14px; font-weight: 700; text-decoration: none">Runde ausgeben</a>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <h3 style="margin: 0; font-size: 17px; font-weight: 700">Deine Antwort</h3>
+      <div role="group" aria-label="Deine Antwort" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{options}}" as="o" hint-placeholder-count="3">
+          <button type="button" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+        </sc-for>
+      </div>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 14px">{{answerText}}</p>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between">
+        <h3 style="margin: 0; font-size: 17px; font-weight: 700">Anwesenheit</h3>
+        <span style="color: var(--color-text-muted); font-size: 14px">5 zugesagt · 1 offen</span>
+      </div>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <li style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--color-border)">
+          <span style="display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 13px; font-weight: 800">FB</span>
+          <span style="flex: 1; font-size: 15px; font-weight: 600">Felix Braun</span>
+          <span class="ui-badge ui-badge-success">Zugesagt</span>
+        </li>
+        <li style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--color-border)">
+          <span style="display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 13px; font-weight: 800">JK</span>
+          <span style="flex: 1; font-size: 15px; font-weight: 600">Jonas Keller</span>
+          <span class="ui-badge ui-badge-success">Zugesagt</span>
+        </li>
+        <li style="display: flex; align-items: center; gap: 12px; padding: 10px 14px">
+          <span style="display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 13px; font-weight: 800">SW</span>
+          <span style="flex: 1; font-size: 15px; font-weight: 600">Sabine Wolf</span>
+          <span class="ui-badge ui-badge-neutral">Offen</span>
+        </li>
+      </ul>
+    </section>
+  </main>
+
+  <nav aria-label="Hauptnavigation" style="height: 64px; flex-shrink: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <a href="Main.dc.html" style="display: grid; place-content: center; justify-items: center; gap: 2px; color: var(--color-text-muted); font-size: 11px; font-weight: 600; text-decoration: none">
+      <span style="display: grid; place-items: center; width: 52px; height: 30px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.4 12 4l8 6.4V18a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18z"/><circle cx="12" cy="15.2" r="2" fill="currentColor" stroke="none"/></svg></span>
+      Start
+    </a>
+    <a href="Events.dc.html" aria-current="page" style="display: grid; place-content: center; justify-items: center; gap: 2px; color: var(--color-brand); font-size: 11px; font-weight: 800; text-decoration: none">
+      <span style="display: grid; place-items: center; width: 52px; height: 30px; border-radius: 999px; background-color: var(--color-brand-soft)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="15" rx="3.5"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="8.5" y1="3.5" x2="8.5" y2="7"/><line x1="15.5" y1="3.5" x2="15.5" y2="7"/><circle cx="15" cy="15" r="1.6" fill="currentColor" stroke="none"/></svg></span>
+      Events
+    </a>
+    <a href="Chat.dc.html" style="display: grid; place-content: center; justify-items: center; gap: 2px; color: var(--color-text-muted); font-size: 11px; font-weight: 600; text-decoration: none">
+      <span style="position: relative; display: grid; place-items: center; width: 52px; height: 30px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 4.5h11a3.5 3.5 0 0 1 3.5 3.5v6a3.5 3.5 0 0 1-3.5 3.5H12l-4.5 3.5v-3.5h-1A3.5 3.5 0 0 1 3 14V8a3.5 3.5 0 0 1 3.5-3.5z"/><circle cx="8" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="11" r="1.2" fill="currentColor" stroke="none"/></svg><span style="position: absolute; top: -2px; right: 6px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--color-surface); border-radius: 999px; background-color: var(--color-danger); color: #ffffff; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center">6</span></span>
+      Chat
+    </a>
+    <a href="Guthaben.dc.html" style="display: grid; place-content: center; justify-items: center; gap: 2px; color: var(--color-text-muted); font-size: 11px; font-weight: 600; text-decoration: none">
+      <span style="display: grid; place-items: center; width: 52px; height: 30px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="7" width="17" height="13" rx="3"/><path d="M6 7 15.6 3.9a1.5 1.5 0 0 1 1.9 1.4V7"/><path d="M20.5 11h-3.5a2.5 2.5 0 0 0 0 5h3.5"/><circle cx="17" cy="13.5" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+      Guthaben
+    </a>
+    <a href="Mehr.dc.html" style="display: grid; place-content: center; justify-items: center; gap: 2px; color: var(--color-text-muted); font-size: 11px; font-weight: 600; text-decoration: none">
+      <span style="display: grid; place-items: center; width: 52px; height: 30px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="12" r="1.9" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.9" fill="currentColor" stroke="none"/></svg></span>
+      Mehr
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { answer: 'yes' };
+  }
+  renderVals() {
+    const base = 'height: 44px; border-radius: 8px; font: inherit; font-size: 15px; ';
+    const on = base + 'border: 2px solid var(--color-brand); background-color: var(--color-brand-soft); color: var(--color-brand); font-weight: 800';
+    const off = base + 'border: 1px solid var(--color-border-dark); background-color: var(--color-surface); color: var(--color-text); font-weight: 600';
+    const texts = { yes: 'Du hast zugesagt.', maybe: 'Du hast mit Vielleicht geantwortet.', no: 'Du hast abgesagt.' };
+    const opts = [
+      { id: 'yes', label: 'Zusagen' },
+      { id: 'maybe', label: 'Vielleicht' },
+      { id: 'no', label: 'Absagen' }
+    ];
+    return {
+      theme: this.props.theme ?? 'light',
+      answerText: texts[this.state.answer],
+      options: opts.map((o) => ({
+        label: o.label,
+        pressed: this.state.answer === o.id ? 'true' : 'false',
+        style: this.state.answer === o.id ? on : off,
+        pick: () => this.setState({ answer: o.id })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

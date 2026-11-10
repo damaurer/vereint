@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Profil</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Profil" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 16px; overflow: hidden">
+    <div style="display: flex; align-items: center; gap: 14px">
+      <span style="display: grid; place-items: center; width: 56px; height: 56px; flex-shrink: 0; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 20px; font-weight: 800">LH</span>
+      <div style="display: flex; flex-direction: column; gap: 3px">
+        <h2 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.01em">Lena Hoffmann</h2>
+        <span style="color: var(--color-text-muted); font-size: 14px">lena.hoffmann@example.de</span>
+        <span style="display: flex; gap: 6px"><span class="ui-chip">Mitglied</span><span class="ui-chip">seit 17.10.2026</span></span>
+      </div>
+    </div>
+
+    <form style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <label for="dn" style="font-size: 13px; font-weight: 600">Anzeigename</label>
+      <div style="display: flex; gap: 8px">
+        <input id="dn" value="Lena Hoffmann" style="flex: 1; min-width: 0; height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+        <button type="button" style="height: 44px; padding: 0 14px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">Speichern</button>
+      </div>
+    </form>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Darstellung</h3>
+      <div role="group" aria-label="Darstellung" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 10px; background-color: var(--color-surface-muted)">
+        <sc-for list="{{modes}}" as="m" hint-placeholder-count="3">
+          <button type="button" aria-pressed="{{m.pressed}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Sprache</h3>
+      <div role="group" aria-label="Sprache" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 10px; background-color: var(--color-surface-muted)">
+        <sc-for list="{{langs}}" as="m" hint-placeholder-count="2">
+          <button type="button" aria-pressed="{{m.pressed}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button>
+        </sc-for>
+      </div>
+    </section>
+
+    <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <sc-for list="{{toggles}}" as="t" hint-placeholder-count="2">
+        <li style="{{t.row}}">
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 15px; font-weight: 600">{{t.label}}</span>
+            <span style="color: var(--color-text-muted); font-size: 13px">{{t.hint}}</span>
+          </div>
+          <button type="button" role="switch" aria-checked="{{t.checked}}" aria-label="{{t.label}}" onClick="{{t.flip}}" style="{{t.track}}"><span style="{{t.knob}}"></span></button>
+        </li>
+      </sc-for>
+      <li style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--color-border)">
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 15px; font-weight: 600">App auf diesem Gerät</span>
+          <span style="color: var(--color-text-muted); font-size: 13px">Zum Startbildschirm hinzufügen</span>
+        </div>
+        <button type="button" style="height: 36px; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 600">Installieren</button>
+      </li>
+    </ul>
+  </main>
+  <dc-import name="TabBar" active="mehr" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: 'system', lang: 'de', push: true, beer: false };
+  }
+  renderVals() {
+    const seg = (on) => 'height: 40px; border: none; border-radius: 8px; font: inherit; font-size: 14px; ' + (on ? 'background-color: var(--color-surface); color: var(--color-text); font-weight: 700' : 'background: transparent; color: var(--color-text-muted); font-weight: 600');
+    const s = this.state;
+    const theme = s.mode === 'dark' ? 'dark' : s.mode === 'light' ? 'light' : (this.props.theme ?? 'light');
+    const sw = (key, label, hint, first) => ({
+      label, hint,
+      checked: s[key] ? 'true' : 'false',
+      flip: () => this.setState({ [key]: !s[key] }),
+      row: 'display: flex; align-items: center; gap: 12px; padding: 12px 14px' + (first ? '' : '; border-top: 1px solid var(--color-border)'),
+      track: 'position: relative; width: 48px; height: 28px; flex-shrink: 0; border: none; border-radius: 999px; padding: 0; background-color: ' + (s[key] ? 'var(--color-brand)' : 'var(--color-border-dark)'),
+      knob: 'position: absolute; top: 3px; left: ' + (s[key] ? '23px' : '3px') + '; width: 22px; height: 22px; border-radius: 999px; background-color: #ffffff'
+    });
+    return {
+      theme,
+      modes: [['system', 'System'], ['light', 'Hell'], ['dark', 'Dunkel']].map(([id, label]) => ({ label, pressed: s.mode === id ? 'true' : 'false', style: seg(s.mode === id), pick: () => this.setState({ mode: id }) })),
+      langs: [['de', 'Deutsch'], ['en', 'English']].map(([id, label]) => ({ label, pressed: s.lang === id ? 'true' : 'false', style: seg(s.lang === id), pick: () => this.setState({ lang: id }) })),
+      toggles: [sw('push', 'Mitteilungen auf diesem Gerät', 'Auch bei geschlossener App', true), sw('beer', 'Spontanes Bier', 'Freunde sehen, dass du Zeit hast', false)]
+    };
+  }
+}
+</script>
+</body>
+</html>

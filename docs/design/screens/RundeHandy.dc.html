@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Runde ausgeben</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Runde ausgeben" back-href="Event.dc.html" hint-size="100%,56px"></dc-import>
+
+  <sc-if value="{{editing}}" hint-placeholder-val="{{ true }}">
+    <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; overflow: hidden">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+        <span style="display: flex; flex-direction: column; gap: 2px"><span style="color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Stammtisch Oktober</span><span style="font-size: 14px; color: var(--color-text-muted)">Von deinem Guthaben: <strong style="color: var(--color-text)">33,00 €</strong></span></span>
+      </div>
+
+      <div role="group" aria-label="Art" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 10px; background-color: var(--color-surface-muted)">
+        <sc-for list="{{modes}}" as="m" hint-placeholder-count="2">
+          <button type="button" aria-pressed="{{m.pressed}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button>
+        </sc-for>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <label for="item" style="font-size: 13px; font-weight: 600">{{itemLabel}}</label>
+          <select id="item" style="height: 44px; padding: 0 8px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 14px">
+            <option>{{itemDefault}}</option><option>Weißbier 0,5 l · 3,80 €</option><option>Alle Getränke</option>
+          </select>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <label for="valid" style="font-size: 13px; font-weight: 600">Gültig</label>
+          <select id="valid" value="{{valid}}" onChange="{{onValid}}" style="height: 44px; padding: 0 8px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 14px">
+            <option value="30 Min">30 Minuten</option><option value="1 Stunde">1 Stunde</option><option value="bis Event-Ende">Bis Event-Ende (23:30)</option>
+          </select>
+        </div>
+      </div>
+
+      <fieldset style="margin: 0; display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <legend style="padding: 0 4px; font-size: 14px; font-weight: 700">Für wen? · {{count}} ausgewählt</legend>
+        <sc-for list="{{people}}" as="p" hint-placeholder-count="5">
+          <label style="display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 15px">
+            <input type="checkbox" checked="{{p.checked}}" onChange="{{p.flip}}" style="width: 20px; height: 20px; accent-color: var(--color-brand)">
+            <span style="flex: 1">{{p.label}}</span>
+            <span style="color: var(--color-text-muted); font-size: 12px">{{p.hint}}</span>
+          </label>
+        </sc-for>
+      </fieldset>
+
+      <div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 12px; background-color: var(--color-brand-soft)">
+        <span style="font-size: 15px">Höchstens <strong style="font-variant-numeric: tabular-nums">{{total}}</strong> von deinem Guthaben</span>
+        <span style="color: var(--color-text-muted); font-size: 13px; line-height: 1.4">Abgebucht wird nur, was die Eingeladenen an der Theke wirklich nehmen. Das Thekenterminal zeigt deine Runde an, bis sie abläuft.</span>
+      </div>
+    </main>
+    <div style="flex-shrink: 0; padding: 12px 16px 20px; border-top: 1px solid var(--color-border); background-color: var(--color-surface)">
+      <button type="button" onClick="{{confirm}}" disabled="{{none}}" style="width: 100%; height: 52px; border: none; border-radius: 10px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 16px; font-weight: 700">{{cta}}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+    <main style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: 24px">
+      <span style="display: grid; place-items: center; width: 72px; height: 72px; align-self: center; border-radius: 999px; background-color: var(--color-success-light); color: var(--color-success)">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 9.5 17 19 7.5"/></svg>
+      </span>
+      <div role="status" style="display: flex; flex-direction: column; gap: 6px; text-align: center">
+        <h2 style="margin: 0; font-size: 26px; font-weight: 800">{{doneTitle}}</h2>
+        <p style="margin: 0; color: var(--color-text-muted); font-size: 15px; line-height: 1.5">{{doneText}}</p>
+      </div>
+      <button type="button" onClick="{{stop}}" style="height: 48px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-danger); font: inherit; font-size: 15px; font-weight: 700">Runde vorzeitig beenden</button>
+      <a href="Event.dc.html" style="display: grid; place-items: center; height: 48px; font-size: 15px; font-weight: 600; text-decoration: none">Zum Event</a>
+    </main>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: 'round', valid: '30 Min', off: {}, done: false };
+  }
+  renderVals() {
+    const P = [['Felix Braun', 'zugesagt'], ['Jonas Keller', 'zugesagt'], ['Mia Schulz', 'zugesagt'], ['Sabine Wolf', 'zugesagt'], ['Thomas Berger', 'vor Ort']];
+    const s = this.state;
+    const n = P.filter(([l]) => !s.off[l]).length;
+    const round = s.mode === 'round';
+    const eur = (v) => v.toFixed(2).replace('.', ',') + ' €';
+    const total = round ? eur(n * 3.5) : eur(n * 15);
+    const seg = (on) => 'height: 40px; border: none; border-radius: 8px; font: inherit; font-size: 14px; ' + (on ? 'background-color: var(--color-surface); color: var(--color-text); font-weight: 700' : 'background: transparent; color: var(--color-text-muted); font-weight: 600');
+    return {
+      theme: this.props.theme ?? 'light',
+      editing: !s.done,
+      done: s.done,
+      modes: [['round', 'Eine Runde'], ['night', 'Ganzen Abend']].map(([id, label]) => ({ label, pressed: s.mode === id ? 'true' : 'false', style: seg(s.mode === id), pick: () => this.setState({ mode: id }) })),
+      itemLabel: round ? 'Getränk' : 'Was ist frei?',
+      itemDefault: round ? 'Helles 0,5 l · 3,50 €' : 'Alle Getränke · bis 15 € pro Person',
+      valid: s.valid,
+      onValid: (e) => this.setState({ valid: e.target.value }),
+      count: String(n),
+      none: n === 0,
+      people: P.map(([label, hint]) => ({ label, hint, checked: !s.off[label], flip: () => this.setState({ off: { ...s.off, [label]: !s.off[label] } }) })),
+      total,
+      cta: round ? 'Runde für ' + n + ' ausgeben' : 'Abend für ' + n + ' stiften',
+      confirm: () => this.setState({ done: true }),
+      stop: () => this.setState({ done: false }),
+      doneTitle: round ? 'Deine Runde läuft' : 'Du stiftest den Abend',
+      doneText: n + ' Personen sind eingeladen, höchstens ' + total + ', gültig ' + (s.valid === 'bis Event-Ende' ? 'bis Event-Ende' : s.valid) + '. Das Thekenterminal zeigt deine Runde jetzt an.'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@ Dieses Dokumentationszentrum bietet eine lückenlose, hochdetaillierte fachliche
 
 ## 📘 Benutzerhandbuch
 
-Das Handbuch für Mitglieder, Vorstand, Administration, Thekendienst und Gäste mit echten Screenshots liegt unter [`handbuch/`](handbuch/README.md).
+Das Handbuch für Mitglieder, Vorstand, Administration, Thekendienst und Gäste mit echten Screenshots liegt unter [`handbuch/`](handbuch/README.md). Jeden einzelnen Bildschirm erklärt [Die App Bildschirm für Bildschirm](handbuch/07-alle-screens.md), bebildert mit dem Design-Entwurf aus [`design/screens/`](design/screens/README.md).
 
 Kurzüberblick ohne Bildschirmfotos: [Funktionen](funktionen.md), [Rollen und Berechtigungen](rollen-und-berechtigungen.md) und [Offene Punkte](offene-punkte.md).
 
@@ -22,6 +22,7 @@ docs/
 ├── rollen-und-berechtigungen.md          # Rollen je Gruppe, eigene Rollen, Plattform-Admin
 ├── offene-punkte.md                      # Bekannte Lücken und nächste Schritte
 ├── handbuch/                             # Benutzerhandbuch je Rolle mit Bildschirmfotos
+├── design/screens/                       # Design-Entwurf: alle Bildschirme als Quelldateien
 │
 ├── betrieb/                              # Images, Selbstbetrieb, CI, Schlüssel
 │   ├── selbst-betreiben.md               # Images, Konfiguration, erster Start, Updates
