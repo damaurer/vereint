@@ -56,6 +56,11 @@ rotiert man ebenso mit `SESSION_SECRET_PREVIOUS`.
 
 - Login über den BFF mit OIDC und PKCE; der Browser sieht nie ein Token, nur ein
   HttpOnly-Cookie.
+- Die Cookies heißen unter HTTPS `__Host-…` (`__Host-vereint_session`,
+  `__Host-oidc_state`, `__Host-vereint.stammtisch`). Andere Anwendungen unter
+  derselben Domain (etwa `*.maurercloud.de`) können sie nicht setzen und Nutzer
+  damit nicht aussperren. Ein Cookie mit kaputter Kodierung zählt als nicht
+  vorhanden statt einen Fehler 500 auszulösen.
 - **Zwei-Faktor-Anmeldung freiwillig:** Im Profil führt „Zwei-Faktor-Anmeldung
   einrichten“ zur Keycloak-Kontoverwaltung. Wer eine Authenticator-App
   hinterlegt, wird beim Login nach dem Code gefragt. Für Vorstand und

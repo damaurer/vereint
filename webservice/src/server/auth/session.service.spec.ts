@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { applyTestEnvironmentOverrides } from '../config/environment';
+import { applyTestEnvironmentOverrides, serverEnvironment } from '../config/environment';
 import type { SessionData } from './auth.types';
 import {
   MAX_SESSION_COOKIE_BYTES,
@@ -271,6 +271,60 @@ describe('session.service', () => {
     it('returns undefined when the session cookie is missing or corrupted', async () => {
       expect(await verifyRequestSession(createMockRequest())).toBeUndefined();
       expect(await verifyRequestSession(createMockRequest('vereint_session=corrupt.data.here.now'))).toBeUndefined();
+    });
+
+    it('treats a session cookie with invalid percent-encoding as missing', async () => {
+      expect(await verifyRequestSession(createMockRequest('vereint_session=%E0'), createMockResponse())).toBeUndefined();
+    });
+
+    describe('migration to the __Host- name', () => {
+      const original = {
+        hostPrefixedCookies: serverEnvironment.hostPrefixedCookies,
+        sessionCookieSecure: serverEnvironment.sessionCookieSecure,
+      };
+
+      beforeEach(() => applyTestEnvironmentOverrides({ hostPrefixedCookies: true, sessionCookieSecure: true }));
+      afterEach(() => applyTestEnvironmentOverrides(original));
+
+      it('keeps a session under the old name, rewrites it under __Host- and deletes the old cookies', async () => {
+        const res = createMockResponse();
+        const req = cookieRequest(encryptSessionData(sampleSession));
+
+        const identity = await verifyRequestSession(req, res);
+        expect(identity?.uid).toBe(sampleSession.uid);
+
+        const setCookie = res.getHeader('set-cookie') as string[];
+        const written = setCookie.find((cookie) => cookie.startsWith('__Host-vereint_session=') && !cookie.includes('Max-Age=0'));
+        expect(written).toBeDefined();
+        expect(setCookie.some((cookie) => /^vereint_session=;/.test(cookie) && cookie.includes('Max-Age=0'))).toBe(true);
+
+        const migrated = createMockRequest(written!.split(';')[0]);
+        expect((await verifyRequestSession(migrated))?.uid).toBe(sampleSession.uid);
+      });
+
+      it('leaves the response untouched when the session already uses the new name', async () => {
+        const res = createMockResponse();
+        const req = createMockRequest(`__Host-vereint_session=${encodeURIComponent(encryptSessionData(sampleSession))}`);
+
+        expect((await verifyRequestSession(req, res))?.uid).toBe(sampleSession.uid);
+        expect(res.getHeader('set-cookie')).toBeUndefined();
+      });
+
+      it('ignores an old-name cookie when a __Host- session exists', async () => {
+        const res = createMockResponse();
+        const own = encodeURIComponent(encryptSessionData(sampleSession));
+        const req = createMockRequest(`vereint_session=%E0; __Host-vereint_session=${own}`);
+
+        expect((await verifyRequestSession(req, res))?.uid).toBe(sampleSession.uid);
+        expect(res.getHeader('set-cookie')).toBeUndefined();
+      });
+
+      it('deletes an unreadable old-name cookie and reports no session', async () => {
+        const res = createMockResponse();
+        expect(await verifyRequestSession(createMockRequest('vereint_session=corrupt'), res)).toBeUndefined();
+        const setCookie = res.getHeader('set-cookie') as string[];
+        expect(setCookie.every((cookie) => cookie.includes('Max-Age=0'))).toBe(true);
+      });
     });
 
     it('denies an expired session', async () => {

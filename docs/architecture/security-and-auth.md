@@ -25,7 +25,7 @@ sequenceDiagram
     BFF->>KC: POST /protocol/openid-connect/token (Code + code_verifier)
     KC-->>BFF: 200 OK (Access Token JWT, Refresh Token, ID Token)
     Note over BFF: Verschlüsselt die Tokens (AES-256-GCM) & setzt HTTP-Only, SameSite Cookies
-    BFF-->>User: 302 Redirect to / (App Dashboard) + Set-Cookie: vereint_session
+    BFF-->>User: 302 Redirect to / (App Dashboard) + Set-Cookie: __Host-vereint_session
 
     Note over User, Spring: Nachfolgender API-Aufruf
     User->>BFF: GET /api/v1/users/me (Cookie)

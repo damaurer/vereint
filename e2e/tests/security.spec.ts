@@ -96,8 +96,12 @@ test.describe('Auslieferung und Sicherheit', () => {
   test('Session-Cookie ist HttpOnly, Secure und SameSite', async ({ as }) => {
     const { context } = await as('member');
     const cookies = await context.cookies();
-    const session = cookies.find((c) => c.name === 'vereint_session');
+    // Unter HTTPS tragen die Cookies das Praefix __Host- (Issue #87).
+    const session = cookies.find((c) => c.name === '__Host-vereint_session');
     expect(session).toBeDefined();
+    expect(cookies.some((c) => c.name === 'vereint_session')).toBe(false);
+    expect(session!.path).toBe('/');
+    expect(session!.domain.startsWith('.')).toBe(false);
     expect(session!.httpOnly).toBe(true);
     expect(session!.secure).toBe(true);
     expect(['Lax', 'Strict']).toContain(session!.sameSite);
