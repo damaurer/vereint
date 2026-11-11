@@ -108,7 +108,7 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
               }
             </a>
             @if (view.event.status === 'active') {
-              <a class="detail-chip detail-chip-strong" [routerLink]="['/events', view.event.id, 'runde']">
+              <a class="detail-chip detail-chip-round" [routerLink]="['/events', view.event.id, 'runde']">
                 <vereint-icon name="beer" /> {{ 'rounds.eventChip' | t }}
               </a>
             }
@@ -331,7 +331,8 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
         border-color: var(--color-brand);
         text-decoration: none;
       }
-      .detail-chip-strong {
+      .detail-chip-strong,
+      .detail-chip-round {
         border-color: transparent;
         background-color: var(--color-brand-soft);
         color: var(--color-brand);

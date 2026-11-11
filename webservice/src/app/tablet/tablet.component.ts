@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { IconComponent } from '../ui/icon.component';
-import { forkJoin, type Observable } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
 import { eventStatusLabel, formatMoney } from '../member/member-format';
@@ -9,22 +9,25 @@ import { TabletApiService } from './tablet-api.service';
 import type { KioskSession } from '../kiosk/kiosk-api.service';
 import { KioskStartDialogComponent } from '../kiosk/kiosk-start-dialog.component';
 import { KioskModeService } from '../kiosk/kiosk-mode.service';
-import { DrinkOverlayComponent } from './drink-overlay.component';
-import { RevenueSheetComponent, type RevenueKind } from './revenue-sheet.component';
 import { TallyGridComponent, type TallyCell } from './tally-grid.component';
 import { TallyPickerComponent, type TallyPickItem } from './tally-picker.component';
-import { StatusBadgeComponent } from '../ui';
+import { ModalComponent, StatusBadgeComponent } from '../ui';
+import { RoundCardComponent } from '../rounds/round-card.component';
+import { describeRound, payerLabel, validityText } from '../rounds/round-format';
 import type { EventDrink, EventFood } from '../events/event-manage.types';
 import type {
   LedgerEntry,
   TabletBoard,
   TabletEvent,
   TabletMember,
-  TabletRevenuePayload,
+  Round,
 } from '../api/api.types';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
+
+/** Abstand, in dem das Terminal Strichliste und Runden nachlädt. */
+export const BOARD_REFRESH_MS = 30_000;
 
 interface EventContext {
   members: TabletMember[];
@@ -57,8 +60,10 @@ interface PickerState {
  * in der Kategorie, wählt der Thekendienst eines aus. Preis, Währung,
  * Abrechnungsmodus und Herkunft bestimmt ausschließlich der Fachservice; die
  * Berechtigung `purchase.tablet` prüft er bei jedem Aufruf (`deny by default`).
- * Jeder Schreibvorgang trägt einen Idempotency-Key. Die Ansicht wird
- * ausschließlich im Browser gerendert.
+ * Jeder Schreibvorgang trägt einen Idempotency-Key. Runden gibt jede Person
+ * am eigenen Handy aus (Issue #81); das Terminal zeigt im Zeilenkopf, auf
+ * wessen Kosten getrunken wird, und rechts die laufenden Runden. Die Ansicht
+ * wird ausschließlich im Browser gerendert.
  */
 @Component({
   selector: 'app-tablet',
@@ -68,8 +73,8 @@ interface PickerState {
     StatusBadgeComponent,
     TallyGridComponent,
     TallyPickerComponent,
-    DrinkOverlayComponent,
-    RevenueSheetComponent,
+    ModalComponent,
+    RoundCardComponent,
     KioskStartDialogComponent,
     TranslatePipe,
   ],
@@ -189,24 +194,6 @@ interface PickerState {
                       (cellTap)="onCellTap($event)"
                     />
 
-                    <div class="tally-actions">
-                      <button
-                        type="button"
-                        class="member-button"
-                        [disabled]="busy()"
-                        (click)="openRevenueSheet('round', ctx.members)"
-                      >
-                        <vereint-icon name="beer" /> {{ 'tablet.tally.round' | t }}
-                      </button>
-                      <button
-                        type="button"
-                        class="member-button ghost"
-                        [disabled]="busy()"
-                        (click)="openRevenueSheet('evening', ctx.members)"
-                      >
-                        <vereint-icon name="crown" /> {{ 'tablet.tally.evening' | t }}
-                      </button>
-                    </div>
                   </div>
 
                   <aside class="terminal-side" [attr.aria-label]="'tablet.board.todayTitle' | t">
@@ -221,6 +208,27 @@ interface PickerState {
                         <span class="side-value is-money">{{ formatMoney(b.revenue + '', b.currency) }}</span>
                       </div>
                     </div>
+
+                    <h3 class="side-subtitle">{{ 'rounds.terminal.title' | t }}</h3>
+                    @if (rounds().length === 0) {
+                      <p class="side-muted">{{ 'rounds.terminal.none' | t }}</p>
+                    } @else {
+                      <ul class="side-rounds">
+                        @for (round of rounds(); track round.id) {
+                          <li class="side-round">
+                            <span class="side-round-who">{{ round.sponsorName }}</span>
+                            <span class="side-round-what">{{ roundSummary(round) }}</span>
+                            <span class="side-round-sum">
+                              {{ 'rounds.card.upTo' | t: { amount: formatMoney(round.maxAmount, round.currency) } }}
+                            </span>
+                          </li>
+                        }
+                      </ul>
+                      <button type="button" class="member-button ghost side-all" (click)="roundsOpen.set(true)">
+                        {{ 'rounds.terminal.showAll' | t }}
+                      </button>
+                    }
+                    <p class="side-muted side-hint">{{ 'rounds.terminal.hint' | t }}</p>
                   </aside>
                 </div>
 
@@ -243,27 +251,21 @@ interface PickerState {
                   (closed)="picker.set(null)"
                 />
 
-                <app-drink-overlay
-                  [open]="drinkOverlayOpen()"
-                  [drinks]="ctx.drinks"
-                  [foods]="ctx.food"
-                  [selectedId]="activeDrinkId()"
-                  (itemSelect)="selectActiveDrink($event)"
-                  (confirm)="confirmDrink()"
-                  (closed)="closeDrinkOverlay()"
-                />
-
-                <app-revenue-sheet
-                  [open]="revenueSheetOpen()"
-                  [kind]="revenueForm.kind"
-                  [members]="ctx.members"
-                  [selection]="revenueSelection"
-                  [disabled]="busy() || !hasRevenueSelection()"
-                  (kindChange)="setRevenueKind($event)"
-                  (toggle)="toggleRevenueMember($event)"
-                  (confirm)="confirmRevenue()"
-                  (closed)="closeRevenueSheet()"
-                />
+                <vereint-modal
+                  [open]="roundsOpen()"
+                  [title]="'rounds.terminal.overviewTitle' | t"
+                  [dismissible]="true"
+                  (closed)="roundsOpen.set(false)"
+                >
+                  <p class="rounds-hint">
+                    <strong>{{ 'rounds.terminal.displayOnly' | t }}</strong> · {{ 'rounds.terminal.overviewHint' | t }}
+                  </p>
+                  <div class="rounds-grid">
+                    @for (round of rounds(); track round.id) {
+                      <app-round-card [round]="round" />
+                    }
+                  </div>
+                </vereint-modal>
               }
             }
           }
@@ -382,14 +384,54 @@ interface PickerState {
         white-space: nowrap;
         cursor: pointer;
       }
-      .tally-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-top: var(--space-3);
+      .side-subtitle {
+        margin: var(--space-3) 0 var(--space-1);
+        font-size: 1rem;
       }
-      .tally-actions .member-button {
+      .side-muted {
+        margin: 0;
+        color: var(--color-text-muted);
+      }
+      .side-hint {
+        margin-top: var(--space-2);
+        font-size: 0.85rem;
+      }
+      .side-rounds {
+        display: grid;
+        gap: var(--space-1);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .side-round {
+        display: grid;
+        gap: 0.1rem;
+        padding: var(--space-2);
+        border-radius: var(--radius-md);
+        background: var(--color-surface-subtle);
+      }
+      .side-round-who {
+        font-weight: 800;
+      }
+      .side-round-what {
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+      }
+      .side-round-sum {
+        color: var(--color-brand);
+        font-weight: 700;
+      }
+      .side-all {
+        margin-top: var(--space-1);
         min-height: 44px;
+      }
+      .rounds-hint {
+        margin: 0 0 var(--space-2);
+        color: var(--color-text-muted);
+      }
+      .rounds-grid {
+        display: grid;
+        gap: var(--space-2);
       }
       .member-button.ghost {
         background: transparent;
@@ -447,7 +489,18 @@ export class TabletComponent implements OnInit, OnDestroy {
   protected readonly picker = signal<PickerState | null>(null);
 
   /** Auf wessen Kosten je Mitglied getrunken wird; ohne Eintrag die eigene Rechnung. */
-  protected readonly payers = computed<Record<string, string>>(() => ({}));
+  protected readonly payers = computed<Record<string, string>>(() => {
+    const result: Record<string, string> = {};
+    for (const row of this.board()?.members ?? []) {
+      if (row.fundedBy) result[row.memberId] = payerLabel(row.fundedBy);
+    }
+    return result;
+  });
+
+  /** Laufende Runden (nur Anzeige; ausgegeben wird am eigenen Handy). */
+  protected readonly rounds = computed<Round[]>(() => this.board()?.rounds ?? []);
+  protected readonly roundsOpen = signal(false);
+  private refreshTimer: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Schlüssel für Striche. Bricht eine Buchung ab (z. B. nach einer
@@ -455,33 +508,28 @@ export class TabletComponent implements OnInit, OnDestroy {
    * Schlüssel, damit eine schon gespeicherte Buchung nicht doppelt entsteht.
    */
   private readonly purchaseKey = new RetryableIdempotencyKey();
-  private readonly revenueKey = new RetryableIdempotencyKey();
   /** In dieser Sitzung gebuchte Striche, der letzte zuoberst (für Rückgängig). */
   private readonly booked = signal<BookedTally[]>([]);
   /** Letzter erfasster Strich für die Rückgängig-Leiste. */
   protected readonly lastBooking = signal<BookedTally | null>(null);
-
-  // Runde/Abend am Terminal (bis zur Umstellung auf Runden am eigenen Handy).
-  protected readonly activeDrinkId = signal<string | null>(null);
-  protected readonly drinkOverlayOpen = signal(false);
-  protected readonly revenueSheetOpen = signal(false);
-  protected revenueForm: { eventDrinkId?: string; eventFoodId?: string; kind: RevenueKind } = {
-    eventDrinkId: '',
-    eventFoodId: '',
-    kind: 'round',
-  };
-  protected revenueSelection: Record<string, boolean> = {};
 
   protected readonly formatMoney = formatMoney;
   protected readonly eventStatusLabel = eventStatusLabel;
 
   ngOnInit(): void {
     this.reload();
+    // Neue Runden vom Handy und Striche anderer Geräte regelmäßig nachladen.
+    if (typeof window !== 'undefined') {
+      this.refreshTimer = setInterval(() => {
+        if (!this.busy()) this.refreshBoard();
+      }, BOARD_REFRESH_MS);
+    }
   }
 
   ngOnDestroy(): void {
     this.events.destroy();
     this.context.destroy();
+    if (this.refreshTimer) clearInterval(this.refreshTimer);
   }
 
   protected reload(): void {
@@ -497,11 +545,7 @@ export class TabletComponent implements OnInit, OnDestroy {
   protected selectEvent(eventId: string): void {
     this.selectedEventId.set(eventId);
     this.kiosk.rememberEvent(eventId);
-    this.revenueForm = { eventDrinkId: '', eventFoodId: '', kind: 'round' };
-    this.revenueSelection = {};
-    this.activeDrinkId.set(null);
-    this.drinkOverlayOpen.set(false);
-    this.revenueSheetOpen.set(false);
+    this.roundsOpen.set(false);
     this.picker.set(null);
     this.board.set(null);
     this.booked.set([]);
@@ -727,120 +771,13 @@ export class TabletComponent implements OnInit, OnDestroy {
     });
   }
 
-  // --- Runde/Abend am Terminal -------------------------------------------
-
-  protected closeDrinkOverlay(): void {
-    this.drinkOverlayOpen.set(false);
-  }
-
-  protected selectActiveDrink(eventDrinkId: string): void {
-    this.activeDrinkId.set(eventDrinkId);
-  }
-
-  protected confirmDrink(): void {
-    if (!this.activeDrinkId()) return;
-    this.drinkOverlayOpen.set(false);
-  }
-
-  /** Öffnet das Runden-/Abend-Sheet und wählt zunächst alle Mitglieder vor. */
-  protected openRevenueSheet(kind: RevenueKind, members: TabletMember[]): void {
-    this.revenueForm = { ...this.revenueForm, kind };
-    this.revenueSelection = members.reduce<Record<string, boolean>>((acc, member) => {
-      acc[member.memberId] = true;
-      return acc;
-    }, {});
-    this.revenueSheetOpen.set(true);
-  }
-
-  protected closeRevenueSheet(): void {
-    this.revenueSheetOpen.set(false);
-  }
-
-  protected setRevenueKind(kind: RevenueKind): void {
-    this.revenueForm = { ...this.revenueForm, kind };
-  }
-
-  protected toggleRevenueMember(memberId: string): void {
-    this.revenueSelection = {
-      ...this.revenueSelection,
-      [memberId]: !this.revenueSelection[memberId],
-    };
-  }
-
-  protected hasRevenueSelection(): boolean {
-    return Object.values(this.revenueSelection).some(Boolean);
-  }
-
-  /** Bestätigt das Sheet; fehlt noch ein Artikel, öffnet sich zuerst die Auswahl. */
-  protected confirmRevenue(): void {
-    const itemId = this.activeDrinkId() ?? '';
-    const ctx = this.context.data();
-    const isFood = ctx?.food.some((f) => f.id === itemId) ?? false;
-    this.revenueForm = {
-      ...this.revenueForm,
-      eventDrinkId: isFood ? '' : itemId,
-      eventFoodId: isFood ? itemId : '',
-    };
-    if (!this.revenueForm.eventDrinkId && !this.revenueForm.eventFoodId) {
-      this.drinkOverlayOpen.set(true);
-      return;
-    }
-    this.recordRevenue();
-    this.revenueSheetOpen.set(false);
-  }
-
-  private runAction(
-    source: Observable<unknown>,
-    successInfo: string,
-    onSuccess?: () => void,
-    onError?: () => void,
-  ): void {
-    this.busy.set(true);
-    this.actionError.set(null);
-    this.actionInfo.set(null);
-    source.subscribe({
-      next: () => {
-        this.busy.set(false);
-        onSuccess?.();
-        this.actionInfo.set(successInfo);
-        this.refreshBoard();
-      },
-      error: (error: unknown) => {
-        this.busy.set(false);
-        onError?.();
-        this.actionError.set(describeApiError(error));
-      },
+  /** Kurzform einer Runde in der Spalte „Heute an der Theke“. */
+  protected roundSummary(round: Round): string {
+    return translate('rounds.terminal.summary', {
+      what: describeRound(round),
+      redeemed: round.invitees.filter((person) => person.redeemed).length,
+      total: round.invitees.length,
+      validity: validityText(round),
     });
-  }
-
-  protected recordRevenue(): void {
-    const eventId = this.selectedEventId();
-    const { eventDrinkId, eventFoodId } = this.revenueForm;
-    const memberIds = Object.keys(this.revenueSelection).filter((id) => this.revenueSelection[id]);
-    if (!eventId || (!eventDrinkId && !eventFoodId) || memberIds.length === 0) return;
-    const payload: TabletRevenuePayload = {
-      eventDrinkId: eventDrinkId || undefined,
-      eventFoodId: eventFoodId || undefined,
-      memberIds,
-    };
-    const keyData = {
-      eventId,
-      kind: this.revenueForm.kind,
-      ...payload,
-      memberIds: [...memberIds].sort(),
-    };
-    const key = this.revenueKey.for(keyData);
-    const source: Observable<LedgerEntry[]> =
-      this.revenueForm.kind === 'evening'
-        ? this.api.recordEvening(eventId, payload, key)
-        : this.api.recordRound(eventId, payload, key);
-    this.runAction(
-      source,
-      translate(this.revenueForm.kind === 'evening' ? 'tablet.messages.eveningBooked' : 'tablet.messages.roundBooked'),
-      () => this.revenueKey.reset(),
-      () => this.revenueKey.failed(keyData, key),
-    );
-    this.revenueForm = { eventDrinkId: '', eventFoodId: '', kind: this.revenueForm.kind };
-    this.revenueSelection = {};
   }
 }

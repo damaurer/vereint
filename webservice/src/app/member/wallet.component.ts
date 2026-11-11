@@ -273,6 +273,10 @@ export class WalletComponent implements OnInit, OnDestroy {
    */
   protected entryTitle(entry: LedgerEntry, entries: LedgerEntry[]): string {
     const own = itemName(entry.snapshot);
+    // Strich auf eine eigene Runde: „Runde: Felix Braun · Helles“.
+    if (own && entry.roundId && entry.beneficiaryDisplayName) {
+      return translate('member.wallet.roundTitle', { name: entry.beneficiaryDisplayName, item: own });
+    }
     if (own) return own;
     const reversed = itemName(this.reversedEntry(entry, entries)?.snapshot ?? null);
     if (reversed) return translate('member.wallet.reversal', { name: reversed });
