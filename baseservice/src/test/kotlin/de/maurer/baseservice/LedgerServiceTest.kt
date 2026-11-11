@@ -678,70 +678,7 @@ class LedgerServiceTest {
     }
 
     @Test
-    fun `round purchase is booked revenue only with source and receipt snapshot`() {
-        `when`(ledgerEntryRepository.save(anyLedgerEntry())).thenAnswer { it.arguments[0] }
-        `when`(purchaseSnapshotRepository.save(anyPurchaseSnapshot())).thenAnswer { it.arguments[0] }
-
-        val dto = ledgerService.recordEventRevenuePurchase(
-            event = activeEvent(),
-            member = member(),
-            drink = approvedDrink(),
-            eventDrink = eventDrink(),
-            actor = admin(),
-            source = PurchaseSource.round,
-            idempotencyKey = "round-1"
-        )
-
-        assertEquals(LedgerEntryType.purchase.name, dto.entryType)
-        assertEquals(PurchaseSource.round.name, dto.source)
-        assertEquals(AccountingMode.revenueOnly.name, dto.accountingMode)
-        assertEquals(memberId.toString(), dto.memberId)
-        assertEquals(adminId.toString(), dto.actorId)
-        assertEquals(0, BigDecimal("2.50").compareTo(dto.amount))
-        assertNull(dto.snapshot?.barcode)
-        assertEquals("Cola", dto.snapshot?.drinkName)
-        verify(ledgerEntryRepository).save(anyLedgerEntry())
-        verify(purchaseSnapshotRepository).save(anyPurchaseSnapshot())
-    }
-
-    @Test
-    fun `evening purchase is booked revenue only with the evening source`() {
-        `when`(ledgerEntryRepository.save(anyLedgerEntry())).thenAnswer { it.arguments[0] }
-        `when`(purchaseSnapshotRepository.save(anyPurchaseSnapshot())).thenAnswer { it.arguments[0] }
-
-        val dto = ledgerService.recordEventRevenuePurchase(
-            event = activeEvent(),
-            member = member(),
-            drink = approvedDrink(),
-            eventDrink = eventDrink(),
-            actor = admin(),
-            source = PurchaseSource.evening,
-            idempotencyKey = "evening-1"
-        )
-
-        assertEquals(PurchaseSource.evening.name, dto.source)
-        assertEquals(AccountingMode.revenueOnly.name, dto.accountingMode)
-    }
-
-    @Test
-    fun `revenue only purchase rejects a non round or evening source`() {
-        val ex = assertThrows(InvalidRequestException::class.java) {
-            ledgerService.recordEventRevenuePurchase(
-                event = activeEvent(),
-                member = member(),
-                drink = approvedDrink(),
-                eventDrink = eventDrink(),
-                actor = admin(),
-                source = PurchaseSource.tabletManual,
-                idempotencyKey = "bad-source"
-            )
-        }
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.errorCode)
-        verify(ledgerEntryRepository, never()).save(anyLedgerEntry())
-    }
-
-    @Test
-    fun `revenue only purchases do not change the credit balance`() {
+    fun `old revenue only round purchases do not change the credit balance`() {
         `when`(userService.getOrCreateUser(memberPrincipal())).thenReturn(member())
         `when`(userRepository.findById(memberId)).thenReturn(Optional.of(member()))
 

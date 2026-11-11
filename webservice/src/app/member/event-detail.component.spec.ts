@@ -219,6 +219,17 @@ describe('EventDetailComponent', () => {
     expect(link.getAttribute('href')).toBe('/events/e-1/manage');
   });
 
+  it('offers to buy a round only while the event is running', async () => {
+    let fixture = await create();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('.detail-chip-round') as HTMLAnchorElement;
+    expect(link.textContent).toContain('Runde ausgeben');
+    expect(link.getAttribute('href')).toBe('/events/e-1/runde');
+    TestBed.resetTestingModule();
+    api.getEvent.mockReturnValue(of({ ...event, status: 'published' }));
+    fixture = await create();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.detail-chip-round')).toBeNull();
+  });
+
   it('shows the event chat, marks it read and sends messages', async () => {
     const fixture = await create();
     expect(api.getEventConversation).toHaveBeenCalledWith('e-1');

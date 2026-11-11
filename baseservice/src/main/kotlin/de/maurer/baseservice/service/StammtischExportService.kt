@@ -128,6 +128,8 @@ class StammtischExportService(
                         "drink" to it.drink?.name,
                         "food" to it.food?.name,
                         "tallyCategory" to it.tallyCategory?.name,
+                        "roundId" to it.round?.id,
+                        "beneficiaryId" to it.beneficiary?.id,
                         "amount" to it.amount,
                         "currency" to it.currency,
                         "source" to it.source?.name,

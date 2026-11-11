@@ -84,6 +84,20 @@ Thekenterminals.
 - Technisch ein unveränderliches Kassenbuch mit Idempotenzschlüssel gegen
   Doppelbuchungen: [docs/domains/ledger-and-finance.md](domains/ledger-and-finance.md)
 
+## Runden
+
+- Im laufenden Event gibt jede Person **am eigenen Handy** eine Runde aus
+  (*Event → Runde ausgeben*): **Eine Runde** (ein Getränk je Person) oder
+  **Ganzen Abend** (bis zu einer Höchstsumme), für ein Getränk oder alle,
+  gültig 30 Minuten, 1 Stunde oder bis Event-Ende, für angehakte Personen.
+- Abgebucht wird erst, was die Eingeladenen an der Theke wirklich nehmen, und
+  zwar vom Guthaben des Gebers (darf ins Minus gehen). Sind Personen in
+  mehreren Runden, gilt die zuerst gestartete. Eine Runde auf ein Getränk gilt
+  auch für Getränke derselben Strich-Kategorie.
+- Eingeladene bekommen eine Mitteilung. Eigene Runden lassen sich vorzeitig
+  beenden; Rückgängig am Terminal bucht dem Geber zurück und gibt den Platz
+  wieder frei. Im Kontoauszug des Gebers steht „Runde: Name · Getränk“.
+
 ## Bezahlen per Barcode
 
 - Unter *Bezahlen* (Menü und Dashboard) scannt das Mitglied den EAN-Barcode des
@@ -129,6 +143,9 @@ Thekenterminals.
   unter *Getränkekatalog → Strich-Kategorien*. Im Event gilt: Kategoriepreis,
   sonst Preis aus dem Event (Getränkeliste), sonst Preis des Getränks. Das gilt
   am Terminal und beim Bezahlen per Barcode.
+- **Runden** zeigt das Terminal nur an: im Zeilenkopf „Runde von …“ bzw.
+  „Abend von …“ und rechts die laufenden Runden mit Höchstsumme, Verbrauch,
+  Eingelösten und Restzeit. Ausgegeben wird am eigenen Handy (siehe *Runden*).
 - **Kiosk-Modus**: Beim Start vergibt das Gerät eine eigene PIN (4 bis 8 Ziffern).
   Danach bleibt es auf der Strichliste, auch nach Neuladen oder Neustart der App,
   und lässt sich nur mit dieser PIN verlassen. Nach 5 Fehlversuchen ist die

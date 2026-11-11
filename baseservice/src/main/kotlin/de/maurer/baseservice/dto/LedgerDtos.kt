@@ -141,7 +141,12 @@ data class LedgerEntryDto(
     val snapshot: PurchaseSnapshotDto?,
     /** Strich-Kategorie, zu deren Preis gebucht wurde (Issue #80). */
     val tallyCategoryId: String? = null,
-    val tallyCategoryName: String? = null
+    val tallyCategoryName: String? = null,
+    /** Runde, auf die der Strich ging; `memberId` ist dann der Geber (Issue #81). */
+    val roundId: String? = null,
+    /** Wer getrunken hat, wenn die Buchung auf eine Runde ging. */
+    val beneficiaryId: String? = null,
+    val beneficiaryDisplayName: String? = null
 )
 
 /**

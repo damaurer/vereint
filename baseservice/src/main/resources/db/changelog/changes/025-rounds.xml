@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 280. Runden am eigenen Handy (Issue #81): Eine Person gibt im laufenden
+         Event mit dem eigenen Guthaben eine Runde (ein Getränk je Eingeladenem)
+         oder den ganzen Abend (bis zur Höchstsumme) aus. Abgebucht wird erst,
+         wenn Eingeladene an der Theke wirklich etwas nehmen. Der Stand (läuft,
+         abgelaufen, beendet, aufgebraucht) ergibt sich aus valid_until,
+         ended_at und den Buchungen mit round_id. -->
+    <changeSet id="280-create-rounds" author="claude">
+        <createTable tableName="rounds">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_rounds_stammtisch" references="stammtische(id)"/>
+            </column>
+            <column name="event_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_rounds_event" references="events(id)"/>
+            </column>
+            <column name="sponsor_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_rounds_sponsor" references="users(id)"/>
+            </column>
+            <column name="kind" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- NULL = alle Getränke -->
+            <column name="event_drink_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_rounds_event_drink" references="event_drinks(id)"/>
+            </column>
+            <column name="max_amount" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)" defaultValue="EUR">
+                <constraints nullable="false"/>
+            </column>
+            <!-- NULL = bis Event-Ende -->
+            <column name="valid_until" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="ended_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>ALTER TABLE rounds ADD CONSTRAINT ck_rounds_kind CHECK (kind IN ('round', 'evening'))</sql>
+        <sql>ALTER TABLE rounds ADD CONSTRAINT ck_rounds_max_amount CHECK (max_amount &gt;= 0)</sql>
+        <createIndex tableName="rounds" indexName="idx_rounds_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <createIndex tableName="rounds" indexName="idx_rounds_event">
+            <column name="event_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="rounds"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 281. Eingeladene einer Runde. -->
+    <changeSet id="281-create-round-invitees" author="claude">
+        <createTable tableName="round_invitees">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_round_invitees_stammtisch" references="stammtische(id)"/>
+            </column>
+            <column name="round_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_round_invitees_round" references="rounds(id)"/>
+            </column>
+            <column name="member_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_round_invitees_member" references="users(id)"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="round_invitees" columnNames="round_id, member_id"
+                             constraintName="uk_round_invitees_round_member"/>
+        <createIndex tableName="round_invitees" indexName="idx_round_invitees_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <createIndex tableName="round_invitees" indexName="idx_round_invitees_member">
+            <column name="member_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="round_invitees"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 282. Buchungen, die auf eine Runde gehen: member_id ist der Geber (sein
+         Guthaben wird belastet), beneficiary_id die Person, die getrunken hat.
+         Gegenbuchungen übernehmen beide Verweise. Bestehende Buchungen bleiben
+         unverändert (NULL). -->
+    <changeSet id="282-ledger-round-reference" author="claude">
+        <addColumn tableName="ledger_entries">
+            <column name="round_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_ledger_entries_round" references="rounds(id)"/>
+            </column>
+            <column name="beneficiary_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_ledger_entries_beneficiary" references="users(id)"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="ledger_entries" indexName="idx_ledger_entries_round">
+            <column name="round_id"/>
+        </createIndex>
+        <rollback>
+            <dropColumn tableName="ledger_entries" columnName="beneficiary_id"/>
+            <dropColumn tableName="ledger_entries" columnName="round_id"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 283. Row Level Security für die neuen Tabellen wie in Changeset 165. -->
+    <changeSet id="283-rounds-row-level-security" author="claude" dbms="postgresql">
+        <sql splitStatements="false">
+            ALTER TABLE rounds ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE rounds FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON rounds
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+            ALTER TABLE round_invitees ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE round_invitees FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON round_invitees
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <rollback>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON rounds; ALTER TABLE rounds NO FORCE ROW LEVEL SECURITY; ALTER TABLE rounds DISABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS stammtisch_isolation ON round_invitees; ALTER TABLE round_invitees NO FORCE ROW LEVEL SECURITY; ALTER TABLE round_invitees DISABLE ROW LEVEL SECURITY</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
