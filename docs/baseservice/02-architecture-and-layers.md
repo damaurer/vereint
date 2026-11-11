@@ -201,7 +201,8 @@ Unter `de.maurer.baseservice` sind alle Controller und Services modular organisi
 - **`NotificationService`**: Benachrichtigungen und Web-Push-Abonnements.
 - **`StammtischService`, `StammtischSignupService`, `MembershipService` & `PlatformService`**: Gruppen, Selbstregistrierung, Mitgliedschaften und Rollen, Plattform-Administration.
 - **`StatisticsService`**: Kennzahlen.
-- **`TabletRecorderService`**: Buchungen am Thekenterminal, Runden und Abendabrechnung.
+- **`TabletRecorderService`**: Buchungen am Thekenterminal und Strichliste.
+- **`RoundService`**: Runden am eigenen Handy; prüft beim Strich, ob eine Runde greift, und sperrt sie dabei.
 - **`UserProvisioningService` & `UserService`**: Anlage lokaler Konten aus dem Keycloak-Token, Profile und Mitgliederverwaltung.
 - **`StammtischExportService`**: Datenexport einer Gruppe als JSON.
 - **`StammtischContextFilter`, `StammtischAccess`, `StammtischMemberships`** (Paket `tenancy`): Gruppenkontext, Rechteprüfung, Mitgliedschaften je Konto.

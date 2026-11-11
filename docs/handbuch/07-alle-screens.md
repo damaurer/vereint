@@ -10,7 +10,7 @@ Dieses Kapitel geht jeden Bildschirm von Vereint einzeln durch: was du darauf si
 
 > **Neu im Entwurf**: Beschreibt geplantes Verhalten. Bis es umgesetzt ist, gilt der jeweilige Leitfaden.
 
-Das betrifft vor allem **Runden nur über das eigene Handy** und die **Statistiken** zu Getränken, Kalorien, Events und Zusagen.
+Das betrifft vor allem die **Statistiken** zu Getränken, Kalorien, Events und Zusagen.
 
 ## Inhalt
 
@@ -441,19 +441,18 @@ Alle Getränke und Speisen der Gruppe.
 
 ### Runde ausgeben
 
-> **Neu im Entwurf**: In der App wird eine Runde derzeit am Thekenterminal gebucht (siehe [Leitfaden Thekenterminal](05-thekenterminal.md#runde-ausgeben-oder-ganzen-abend-stiften)).
-
 <img src="screens/runde-handy.png" alt="Runde am eigenen Handy ausgeben" width="300" align="right">
 
 Eine Runde gibt jede Person **nur am eigenen Handy** und **mit dem eigenen Guthaben** aus. Erreichbar über **Runde ausgeben** im [Event](#event).
 
 - Oben: das Event und **Von deinem Guthaben** mit dem aktuellen Stand.
-- **Eine Runde** (ein Getränk je Person) oder **Ganzen Abend** (alles bis zum Ende).
+- **Eine Runde** (ein Getränk je Person) oder **Ganzen Abend** (alles bis zur Höchstsumme, die du einträgst).
 - **Getränk**: ein bestimmtes Getränk mit Preis oder **Alle Getränke**.
 - **Gültig**: **30 Minuten**, **1 Stunde** oder **Bis Event-Ende**.
 - **Für wen?**: Personen anhaken; neben dem Namen steht, ob sie zugesagt haben oder vor Ort sind.
 - Unten die **Höchstsumme**, die vom Guthaben abgehen kann, und der Hinweis: Abgebucht wird nur, was die Eingeladenen an der Theke wirklich nehmen.
 - **Runde für … ausgeben** startet die Runde. Das Thekenterminal zeigt sie an, bis sie abläuft.
+- Darunter **Deine Runden in diesem Event** mit Verbrauch und Eingelösten; **Beenden** stoppt eine Runde vorzeitig.
 
 <br clear="right">
 
@@ -736,8 +735,6 @@ Rechts die Spalte **Heute an der Theke**:
 - **Laufende Runden**: Wer ausgibt, was (Getränk oder alles), bis zu welcher Summe, wie viele schon eingelöst haben und wie lange die Runde noch gilt. **Alle ansehen** öffnet die [Rundenübersicht](#laufende-runden).
 - Hinweis: Runden gibt jede Person in der App am eigenen Handy aus. Am Terminal werden sie nur angezeigt.
 
-> **Neu im Entwurf**: Die Zeile „Runde von …“ und der Bereich **Laufende Runden** kommen mit den Runden am eigenen Handy. Bis dahin wird eine Runde am Terminal gebucht (siehe [Leitfaden Thekenterminal](05-thekenterminal.md#runde-ausgeben-oder-ganzen-abend-stiften)).
-
 ### Strich rückgängig
 
 <img src="screens/strich-rueckgaengig.png" alt="Strich rückgängig" width="720">
@@ -745,8 +742,6 @@ Rechts die Spalte **Heute an der Theke**:
 Nach jedem Strich erscheint unten ein Balken mit dem letzten Strich, etwa „Strich: Felix Braun · Bier (Helles 0,5 l)“, und **Rückgängig**. Der Tipp darauf nimmt den Strich sofort zurück und bucht das Geld zurück. Das geht für Striche dieses Terminals **innerhalb von 10 Minuten**; ältere Fehler korrigiert der Kassenwart.
 
 ### Laufende Runden
-
-> **Neu im Entwurf**
 
 <img src="screens/runde-ausgeben.png" alt="Laufende Runden, nur Anzeige" width="720">
 

@@ -38,6 +38,10 @@ erDiagram
     drink_catalog ||--o{ drink_barcodes : "identifies"
     tally_categories ||--o{ drink_catalog : "groups"
     tally_categories ||--o{ ledger_entries : "tallied_as"
+    events ||--o{ rounds : "has"
+    users ||--o{ rounds : "sponsors"
+    rounds ||--o{ round_invitees : "invites"
+    rounds ||--o{ ledger_entries : "pays"
     drink_catalog ||--o{ drink_sublist_items : "included_in"
     drink_catalog ||--o{ event_drinks : "offered_as"
     drink_catalog ||--o{ ledger_entries : "purchased_as"
@@ -95,7 +99,15 @@ erDiagram
   - `actor_id` (`UUID`, FK `users.id`)
   - `idempotency_key` (`VARCHAR(128)`, Unique je Gruppe)
   - `reverses_entry_id` (`UUID`, FK `ledger_entries.id`, RESTRICT delete, eindeutig) – Für Stornierungen
+  - `round_id` (`UUID`, FK `rounds.id`, nullable) – Strich, der auf eine Runde ging; `member_id` ist dann der Geber
+  - `beneficiary_id` (`UUID`, FK `users.id`, nullable) – wer bei einer Runde getrunken hat
   - `created_at` (`TIMESTAMPTZ`)
+- **`rounds`** (Runden am eigenen Handy, Migration 025):
+  - `id` (`UUID`, PK), `event_id` (FK `events.id`), `sponsor_id` (FK `users.id`)
+  - `kind` (`VARCHAR(16)`, Check: `round`, `evening`), `event_drink_id` (FK `event_drinks.id`, nullable = alle Getränke)
+  - `max_amount` (`DECIMAL(10,2)`), `currency`, `valid_until` (nullable = bis Event-Ende), `ended_at` (nullable)
+  - `created_at`, `updated_at`, `version`; Verbrauch und Stand werden aus den Buchungen mit `round_id` berechnet
+- **`round_invitees`**: `id` (`UUID`, PK), `round_id` (FK `rounds.id`), `member_id` (FK `users.id`), Unique `(round_id, member_id)`
 - **`purchase_snapshots`**:
   - `id` (`UUID`, PK)
   - `ledger_entry_id` (`UUID`, FK `ledger_entries.id`, Unique, RESTRICT delete) – 1:1 Zuordnung zur Buchung

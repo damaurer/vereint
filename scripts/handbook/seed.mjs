@@ -325,6 +325,21 @@ export async function seedAppData(sessions) {
     for (const [key, prefix] of tallies) {
       await tablet.postIdempotent(`/tablet/events/${stammtisch.id}/purchases`, { memberId: ids[key], eventDrinkId: drinkByName(prefix).id });
     }
+    // Runden am eigenen Handy: Jonas gibt eine Runde Helles aus, der Vorstand
+    // den Abend für Felix. Der nächste Strich von Lena geht auf Jonas.
+    await api.jonas.post(`/events/${stammtisch.id}/rounds`, {
+      kind: 'round',
+      eventDrinkId: drinkByName('Helles').id,
+      validity: '1h',
+      memberIds: [ids.member, ids.mia, ids.felix],
+    });
+    await api.board.post(`/events/${stammtisch.id}/rounds`, {
+      kind: 'evening',
+      validity: 'eventEnd',
+      memberIds: [ids.felix],
+      maxAmount: 30,
+    });
+    await tablet.postIdempotent(`/tablet/events/${stammtisch.id}/purchases`, { memberId: ids.member, eventDrinkId: drinkByName('Helles').id });
     const spaetzle = eventFood.find((f) => (f.foodName ?? f.name ?? '').startsWith('Käsespätzle'));
     if (spaetzle) {
       await tablet.postIdempotent(`/tablet/events/${stammtisch.id}/purchases`, { memberId: ids.member, eventFoodId: spaetzle.id });

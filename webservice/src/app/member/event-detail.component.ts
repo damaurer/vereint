@@ -107,6 +107,11 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
                 {{ 'member.eventDetail.momentsChip' | t }}
               }
             </a>
+            @if (view.event.status === 'active') {
+              <a class="detail-chip detail-chip-round" [routerLink]="['/events', view.event.id, 'runde']">
+                <vereint-icon name="beer" /> {{ 'rounds.eventChip' | t }}
+              </a>
+            }
             @if (view.event.canManage) {
               <a class="detail-chip detail-chip-strong" [routerLink]="['/events', view.event.id, 'manage']">
                 <vereint-icon name="edit" /> {{ 'member.eventDetail.manage' | t }}
@@ -326,7 +331,8 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
         border-color: var(--color-brand);
         text-decoration: none;
       }
-      .detail-chip-strong {
+      .detail-chip-strong,
+      .detail-chip-round {
         border-color: transparent;
         background-color: var(--color-brand-soft);
         color: var(--color-brand);
