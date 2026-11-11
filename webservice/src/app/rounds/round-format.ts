@@ -7,13 +7,18 @@ import type { StatusTone } from '../ui';
 export function describeRound(round: Pick<Round, 'kind' | 'drinkName'>): string {
   const evening = round.kind === 'evening';
   if (round.drinkName) {
-    return translate(evening ? 'rounds.card.eveningOf' : 'rounds.card.roundOf', { drink: round.drinkName });
+    return translate(evening ? 'rounds.card.eveningOf' : 'rounds.card.roundOf', {
+      drink: round.drinkName,
+    });
   }
   return translate(evening ? 'rounds.card.eveningAll' : 'rounds.card.roundAll');
 }
 
 /** Restzeit („noch 18 Min“), Uhrzeit des Endes oder „bis Event-Ende“. */
-export function validityText(round: Pick<Round, 'validUntil' | 'status'>, now: Date = new Date()): string {
+export function validityText(
+  round: Pick<Round, 'validUntil' | 'status'>,
+  now: Date = new Date(),
+): string {
   if (!round.validUntil) return translate('rounds.card.untilEventEnd');
   const end = new Date(round.validUntil);
   const minutes = Math.ceil((end.getTime() - now.getTime()) / 60_000);

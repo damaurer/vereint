@@ -58,7 +58,12 @@ import { describeRound, roundStatusLabel, roundStatusTone, validityText } from '
         }
       </ul>
       @if (endable) {
-        <button type="button" class="member-button ghost round-end" [disabled]="busy" (click)="end.emit(round)">
+        <button
+          type="button"
+          class="member-button ghost round-end"
+          [disabled]="busy"
+          (click)="end.emit(round)"
+        >
           {{ 'rounds.end' | t }}
         </button>
       }

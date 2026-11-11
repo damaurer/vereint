@@ -35,7 +35,11 @@ interface RoundGiveView {
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="round-title">
         @if (load.isLoading()) {
-          <vereint-state kind="loading" [title]="'common.loading' | t" [message]="'rounds.loading' | t" />
+          <vereint-state
+            kind="loading"
+            [title]="'common.loading' | t"
+            [message]="'rounds.loading' | t"
+          />
         } @else if (load.isError()) {
           <vereint-state
             kind="error"
@@ -79,13 +83,19 @@ interface RoundGiveView {
                 <select name="drink" [ngModel]="drinkId()" (ngModelChange)="drinkId.set($event)">
                   <option value="">{{ 'rounds.allDrinks' | t }}</option>
                   @for (drink of view.options.drinks; track drink.eventDrinkId) {
-                    <option [value]="drink.eventDrinkId">{{ drink.drinkName }} · {{ money(drink.price, drink.currency) }}</option>
+                    <option [value]="drink.eventDrinkId">
+                      {{ drink.drinkName }} · {{ money(drink.price, drink.currency) }}
+                    </option>
                   }
                 </select>
               </label>
               <label class="round-field">
                 <span>{{ 'rounds.validity' | t }}</span>
-                <select name="validity" [ngModel]="validity()" (ngModelChange)="validity.set($event)">
+                <select
+                  name="validity"
+                  [ngModel]="validity()"
+                  (ngModelChange)="validity.set($event)"
+                >
                   <option value="30m">{{ 'rounds.validity30m' | t }}</option>
                   <option value="1h">{{ 'rounds.validity1h' | t }}</option>
                   <option value="eventEnd">{{ 'rounds.validityEventEnd' | t }}</option>
@@ -135,7 +145,10 @@ interface RoundGiveView {
 
             <div class="round-sum">
               <p class="round-sum-main">
-                {{ 'rounds.maxHint' | t: { amount: money(maxTotal(view) + '', view.options.currency) } }}
+                {{
+                  'rounds.maxHint'
+                    | t: { amount: money(maxTotal(view) + '', view.options.currency) }
+                }}
               </p>
               <p class="round-sum-hint">{{ 'rounds.chargeHint' | t }}</p>
             </div>
@@ -147,8 +160,15 @@ interface RoundGiveView {
               <p class="round-info" role="status">{{ message }}</p>
             }
 
-            <button type="submit" class="member-button round-submit" [disabled]="busy() || !canSubmit()">
-              {{ (kind() === 'evening' ? 'rounds.submitEvening' : 'rounds.submit') | t: { count: selectedIds().length } }}
+            <button
+              type="submit"
+              class="member-button round-submit"
+              [disabled]="busy() || !canSubmit()"
+            >
+              {{
+                (kind() === 'evening' ? 'rounds.submitEvening' : 'rounds.submit')
+                  | t: { count: selectedIds().length }
+              }}
             </button>
           </form>
 
@@ -394,7 +414,10 @@ export class RoundGiveComponent implements OnInit, OnDestroy {
         this.info.set(translate('rounds.endedInfo'));
         const current = this.load.data();
         if (current) {
-          this.load.data.set({ ...current, rounds: current.rounds.map((r) => (r.id === updated.id ? updated : r)) });
+          this.load.data.set({
+            ...current,
+            rounds: current.rounds.map((r) => (r.id === updated.id ? updated : r)),
+          });
         }
       },
       error: (err: unknown) => {

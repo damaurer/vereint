@@ -69,8 +69,14 @@ describe('RoundGiveComponent', () => {
       providers: [
         provideRouter([]),
         { provide: RoundApiService, useValue: api },
-        { provide: MemberApiService, useValue: { loadProfile: () => of({ id: 'm-1' } as MemberProfile) } },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ eventId: 'e-1' }) } } },
+        {
+          provide: MemberApiService,
+          useValue: { loadProfile: () => of({ id: 'm-1' } as MemberProfile) },
+        },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ eventId: 'e-1' }) } },
+        },
       ],
     });
     const fixture = TestBed.createComponent(RoundGiveComponent);
@@ -84,7 +90,9 @@ describe('RoundGiveComponent', () => {
   beforeEach(() => {
     api = {
       options: vi.fn(() => of(options)),
-      list: vi.fn(() => of([round(), round({ id: 'r-2', sponsorId: 'm-9', sponsorName: 'Sabine' })])),
+      list: vi.fn(() =>
+        of([round(), round({ id: 'r-2', sponsorId: 'm-9', sponsorName: 'Sabine' })]),
+      ),
       create: vi.fn(() => of(round({ id: 'r-3' }))),
       end: vi.fn(() => of(round({ status: 'ended' }))),
     };
@@ -138,11 +146,19 @@ describe('RoundGiveComponent', () => {
     expect(cmp.canSubmit()).toBe(true);
     expect(cmp.maxTotal(view)).toBe(30);
     cmp.submit(view);
-    expect(api.create.mock.calls[0][1]).toMatchObject({ kind: 'evening', eventDrinkId: null, maxAmount: 30 });
+    expect(api.create.mock.calls[0][1]).toMatchObject({
+      kind: 'evening',
+      eventDrinkId: null,
+      maxAmount: 30,
+    });
   });
 
   it('shows the server error and ends my round', async () => {
-    api.create.mockReturnValue(throwError(() => new ApiError(409, 'event_not_active', 'Runden gibt es nur, solange das Event läuft')));
+    api.create.mockReturnValue(
+      throwError(
+        () => new ApiError(409, 'event_not_active', 'Runden gibt es nur, solange das Event läuft'),
+      ),
+    );
     const { cmp } = await create();
     cmp.toggle('m-2');
     cmp.submit(cmp.load.data());
