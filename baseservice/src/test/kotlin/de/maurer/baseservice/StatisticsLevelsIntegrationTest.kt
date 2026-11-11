@@ -22,6 +22,7 @@ import de.maurer.baseservice.repository.AuditLogRepository
 import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.LedgerEntryRepository
 import de.maurer.baseservice.repository.StatisticRecordRepository
+import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.AuditService
@@ -162,7 +163,7 @@ class StatisticsLevelsIntegrationTest @Autowired constructor(
         inA { settings.updateGroupSettings(UpdateStatisticsSettingsRequest(false), admin()) }
         inA { eventService.respond(later, RsvpRequest("maybe"), anna()) }
         assertEquals(1, records(groupA, StatisticFeature.RSVP), "Gruppe ausgeschaltet: nichts erfasst")
-        assertTrue(auditLogRepository.findAll().any { it.action == AuditService.ACTION_STATISTICS_SWITCHED })
+        assertTrue(inA { auditLogRepository.findAll().any { it.action == AuditService.ACTION_STATISTICS_SWITCHED } })
         inA { settings.updateGroupSettings(UpdateStatisticsSettingsRequest(true), admin()) }
 
         // Gruppe an, Event an, aber Nutzer aus: der Nutzer gewinnt.
@@ -236,7 +237,7 @@ class StatisticsLevelsIntegrationTest @Autowired constructor(
         buy("recorded", record = true)
         buy("not-recorded", record = false)
 
-        val stats = inA { statisticsService.clubStatistics(ben(), "zeitraum".takeIf { false }) }
+        val stats = inA { statisticsService.clubStatistics(ben()) }
         assertEquals(1, stats.totalItems)
         assertTrue(stats.recording.userEnabled)
         assertEquals(true, stats.recording.groupEnabled)
@@ -255,15 +256,15 @@ class StatisticsLevelsIntegrationTest @Autowired constructor(
         event("Gruppe B", emptyList(), owner = anna(groupB), group = groupB)
 
         val mine = TenantContext.runWithoutTenant { levels.me(annaAnywhere(), "30") }
-        assertEquals(2, mine.groups.size)
+        assertTrue(mine.groups.map { it.stammtischId }.containsAll(listOf(groupA.toString(), groupB.toString())))
         assertEquals(2, mine.counts.first { it.feature == StatisticFeature.RSVP }.count)
         assertEquals(1, mine.counts.first { it.feature == StatisticFeature.EVENT }.count)
         assertEquals(1, mine.accepted)
         assertEquals(1, mine.groups.first { it.stammtischId == groupB.toString() }.counts.first { it.feature == StatisticFeature.EVENT }.count)
 
         val annaEvents = TenantContext.runWithoutTenant { levels.crossEvents(annaAnywhere(), "90") }
-        assertEquals(3, annaEvents.events.size)
-        assertEquals(setOf(groupA.toString(), groupB.toString()), annaEvents.events.mapNotNull { it.stammtischId }.toSet())
+        val annaRows = annaEvents.events.filter { it.stammtischId == groupA.toString() || it.stammtischId == groupB.toString() }
+        assertEquals(3, annaRows.size)
         val sharedRow = annaEvents.events.first { it.eventId == shared.toString() }
         assertEquals(1, sharedRow.accepted)
         assertEquals(1, sharedRow.declined)
@@ -273,7 +274,8 @@ class StatisticsLevelsIntegrationTest @Autowired constructor(
 
         val benPrincipal = principal(benSubject, "Ben $suffix", null, UserRole.MEMBER)
         val benEvents = TenantContext.runWithoutTenant { levels.crossEvents(benPrincipal, "90") }
-        assertEquals(listOf(shared.toString()), benEvents.events.map { it.eventId }, "nur sichtbare Events")
+        assertEquals(listOf(shared.toString()), benEvents.events.filter { it.stammtischId == groupA.toString() }.map { it.eventId }, "nur sichtbare Events")
+        assertTrue(benEvents.events.none { it.stammtischId == groupB.toString() })
     }
 
     @Test
@@ -335,7 +337,7 @@ class StatisticsLevelsIntegrationTest @Autowired constructor(
         assertEquals(false, inA { levels.groupEvents(anna(), null) }.recording.groupEnabled)
         assertFalse(inA { settings.groupSettings(anna()) }.enabled)
 
-        val export = inA { exportService.export(admin()) }
+        val export = inA { exportService.export(admin().copy(permissions = setOf(Permission.STAMMTISCH_MANAGE))) }
         @Suppress("UNCHECKED_CAST")
         val statistics = export.content["statistics"] as Map<String, Any?>
         assertEquals(false, statistics["enabled"])

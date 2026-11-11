@@ -20,10 +20,10 @@
         </or>
     </preConditions>
 
-    <!-- 290. Schalter für die Statistik-Erfassung auf drei Ebenen (Issue #104).
+    <!-- 300. Schalter für die Statistik-Erfassung auf drei Ebenen (Issue #104).
          Gewichtung Nutzer > Gruppe > Event: erfasst wird nur, wenn keine
          dieser Ebenen ausgeschaltet hat (StatisticsRecorder). -->
-    <changeSet id="290-statistics-switches" author="claude">
+    <changeSet id="300-statistics-switches" author="claude">
         <addColumn tableName="users">
             <column name="statistics_enabled" type="BOOLEAN" defaultValueBoolean="true">
                 <constraints nullable="false"/>
@@ -46,13 +46,13 @@
         </rollback>
     </changeSet>
 
-    <!-- 291. Statistikeinträge: nur Zählwerte, keine Inhalte. Jede Zeile gehört
+    <!-- 301. Statistikeinträge: nur Zählwerte, keine Inhalte. Jede Zeile gehört
          genau einer Gruppe. `source_id` ist die Zeile, die den Eintrag ausgelöst
          hat (Buchung, Moment, Nachricht, …), `responds_to` das Objekt, auf das
          geantwortet wurde (Event, Moment, Nachricht, Einladungslink). Ohne
          Fremdschlüssel auf die Fachtabellen: Einträge bleiben, auch wenn die
          Quelle wegfällt, und lassen sich je Person oder Gruppe löschen. -->
-    <changeSet id="291-create-statistic-records" author="claude">
+    <changeSet id="301-create-statistic-records" author="claude">
         <createTable tableName="statistic_records">
             <column name="id" type="${uuid.type}">
                 <constraints primaryKey="true" nullable="false"/>
@@ -103,14 +103,14 @@
         </rollback>
     </changeSet>
 
-    <!-- 292. Einmalige Übernahme der bisherigen Historie: Käufe (ohne
+    <!-- 302. Einmalige Übernahme der bisherigen Historie: Käufe (ohne
          stornierte), Aufladungen, Runden, Antworten auf Einladungen, Events,
          Moments, Reaktionen und Bilder in Moments, Nachrichten und Reaktionen in
          Gruppen- und Event-Chats (ohne Direktnachrichten), Einladungslinks und
          Beitritte. Alle Schalter stehen zu diesem Zeitpunkt auf „an“.
          Die Quelltabellen haben Row-Level-Security, daher der Bypass für diese
          Transaktion. -->
-    <changeSet id="292-backfill-statistic-records" author="claude">
+    <changeSet id="302-backfill-statistic-records" author="claude">
         <sql dbms="postgresql">SELECT set_config('vereint.rls_bypass', 'on', true)</sql>
         <sql splitStatements="true">
             INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
@@ -180,8 +180,8 @@
         </rollback>
     </changeSet>
 
-    <!-- 293. Row-Level-Security wie bei allen Gruppentabellen (siehe 165). -->
-    <changeSet id="293-statistic-records-rls" author="claude" dbms="postgresql">
+    <!-- 303. Row-Level-Security wie bei allen Gruppentabellen (siehe 165). -->
+    <changeSet id="303-statistic-records-rls" author="claude" dbms="postgresql">
         <sql splitStatements="false">
             ALTER TABLE statistic_records ENABLE ROW LEVEL SECURITY;
             ALTER TABLE statistic_records FORCE ROW LEVEL SECURITY;

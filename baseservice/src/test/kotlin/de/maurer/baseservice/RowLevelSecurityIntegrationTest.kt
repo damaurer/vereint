@@ -143,6 +143,24 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
         )
     }
 
+    @Test
+    fun `statistic records of one Stammtisch are invisible from another`() {
+        val stammtischB = newStammtisch()
+        val id = UUID.randomUUID()
+        TenantContext.runIn(stammtischB) {
+            jdbcTemplate.update(
+                "insert into statistic_records (id, stammtisch_id, feature, kind, quantity, occurred_at) values (?, ?, 'event', 'triggered', 1, ?)",
+                id,
+                stammtischB,
+                Timestamp.from(Instant.now())
+            )
+        }
+        val count = "select count(*) from statistic_records where id = ?"
+        assertEquals(1, TenantContext.runIn(stammtischB) { jdbcTemplate.queryForObject(count, Int::class.java, id) })
+        assertEquals(0, TenantContext.runIn(DEFAULT_STAMMTISCH_ID) { jdbcTemplate.queryForObject(count, Int::class.java, id) })
+        assertEquals(0, TenantContext.runWithoutTenant { jdbcTemplate.queryForObject(count, Int::class.java, id) })
+    }
+
     companion object {
         @Container
         @JvmStatic

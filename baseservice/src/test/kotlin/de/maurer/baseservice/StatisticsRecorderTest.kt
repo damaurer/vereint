@@ -5,8 +5,10 @@ import de.maurer.baseservice.domain.StammtischEntity
 import de.maurer.baseservice.domain.StatisticFeature
 import de.maurer.baseservice.domain.StatisticRecordEntity
 import de.maurer.baseservice.domain.UserEntity
+import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.StammtischRepository
 import de.maurer.baseservice.repository.StatisticRecordRepository
+import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.service.StatisticsRecorder
 import de.maurer.baseservice.service.StatisticsRecorder.Decision
 import de.maurer.baseservice.tenancy.TenantContext
@@ -69,10 +71,19 @@ class StatisticsRecorderTest {
 
     private val groupId = UUID.randomUUID()
 
-    private fun recorder(groupEnabled: Boolean, repository: StatisticRecordRepository): StatisticsRecorder {
+    private fun recorder(
+        groupEnabled: Boolean,
+        repository: StatisticRecordRepository,
+        user: UserEntity? = null,
+        event: EventEntity? = null
+    ): StatisticsRecorder {
+        val events = mock(EventRepository::class.java)
+        if (event != null) `when`(events.findById(event.id)).thenReturn(Optional.of(event))
+        val users = mock(UserRepository::class.java)
+        if (user != null) `when`(users.findById(user.id)).thenReturn(Optional.of(user))
         val stammtische = mock(StammtischRepository::class.java)
         `when`(stammtische.findById(groupId)).thenReturn(Optional.of(StammtischEntity(id = groupId, name = "G", statisticsEnabled = groupEnabled)))
-        return StatisticsRecorder(repository, stammtische)
+        return StatisticsRecorder(repository, stammtische, users, events)
     }
 
     @Test
@@ -80,11 +91,13 @@ class StatisticsRecorderTest {
         val combinations = listOf(true, false).flatMap { u -> listOf(true, false).flatMap { g -> listOf(true, false).map { e -> Triple(u, g, e) } } }
         combinations.forEach { (userOn, groupOn, eventOn) ->
             val repository = mock(StatisticRecordRepository::class.java)
+            val actor = UserEntity(statisticsEnabled = userOn)
+            val event = EventEntity(statisticsEnabled = eventOn)
             val written = TenantContext.runIn(groupId) {
-                recorder(groupOn, repository).record(
+                recorder(groupOn, repository, actor, event).record(
                     StatisticFeature.CHAT_MESSAGE,
-                    actor = UserEntity(statisticsEnabled = userOn),
-                    event = EventEntity(statisticsEnabled = eventOn)
+                    actor = actor,
+                    event = event
                 )
             }
             assertEquals(userOn && groupOn && eventOn, written, "Nutzer=$userOn Gruppe=$groupOn Event=$eventOn")

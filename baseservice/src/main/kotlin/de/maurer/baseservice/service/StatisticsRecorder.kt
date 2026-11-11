@@ -7,8 +7,10 @@ import de.maurer.baseservice.domain.StatisticFeature
 import de.maurer.baseservice.domain.StatisticKind
 import de.maurer.baseservice.domain.StatisticRecordEntity
 import de.maurer.baseservice.domain.UserEntity
+import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.StammtischRepository
 import de.maurer.baseservice.repository.StatisticRecordRepository
+import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.tenancy.TenantContext
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -31,7 +33,9 @@ import java.util.UUID
 @Service
 class StatisticsRecorder(
     private val recordRepository: StatisticRecordRepository,
-    private val stammtischRepository: StammtischRepository
+    private val stammtischRepository: StammtischRepository,
+    private val userRepository: UserRepository,
+    private val eventRepository: EventRepository
 ) {
 
     /** Ergebnis der Prüfung; nur [RECORD] schreibt einen Eintrag. */
@@ -56,7 +60,10 @@ class StatisticsRecorder(
     ): Boolean {
         val stammtischId = TenantContext.stammtischId() ?: return false
         val groupEnabled = stammtischRepository.findById(stammtischId).map { it.statisticsEnabled }.orElse(false)
-        if (decide(actor?.statisticsEnabled, groupEnabled, event?.statisticsEnabled) != Decision.RECORD) return false
+        // Aktueller Stand aus der Datenbank: es zählt die Einstellung zum Zeitpunkt der Erfassung.
+        val userEnabled = actor?.let { user -> userRepository.findById(user.id).map { it.statisticsEnabled }.orElse(true) }
+        val eventEnabled = event?.let { e -> eventRepository.findById(e.id).map { it.statisticsEnabled }.orElse(true) }
+        if (decide(userEnabled, groupEnabled, eventEnabled) != Decision.RECORD) return false
         recordRepository.save(
             StatisticRecordEntity(
                 eventId = event?.id,
