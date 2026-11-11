@@ -7,7 +7,7 @@ Die Getränkeverwaltung in **Vereint** bildet das Sortiment einer Gruppe ab: vom
 ## 🎯 Fachliche Sicht (Business Domain)
 
 ### 1. Getränkekatalog der Gruppe & Vorschlagsworkflow
-- **Katalog**: Verzeichnis aller in der Gruppe verfügbaren Getränke mit Name, Beschreibung, Kategorie (z. B. Bier, Softdrinks, Heißgetränke), Standard-Verkaufspreis (`defaultPrice: BigDecimal`), Einkaufspreis (`costPrice: BigDecimal`), Währung (`currency: String`, z. B. `EUR`), Bildreferenz und Barcode(s).
+- **Katalog**: Verzeichnis aller in der Gruppe verfügbaren Getränke mit Name, Beschreibung, Kategorie (z. B. Bier, Softdrinks, Heißgetränke), Standard-Verkaufspreis (`defaultPrice: BigDecimal`), Einkaufspreis (`costPrice: BigDecimal`), Währung (`currency: String`, z. B. `EUR`), Bildreferenz und Barcode(s). Dazu freiwillig Füllmenge (`volumeMl`, 1–10000 ml) und Kalorien je Portion (`kcalPerServing`) für Liter und Kalorien in der [Statistik](statistics-and-analytics.md); bei Übernahme aus der Getränkedatenbank werden deren Werte übernommen, solange keine eigenen angegeben sind. Die Startdaten der Datenbank sind aus Open Food Facts vorbefüllt (`024-drink-nutrition.xml`, `data/drink-library-nutrition.csv`, erzeugt mit `scripts/drink-library/build_nutrition.py`).
 - **Einkaufspreise & Wirtschaftlichkeit**: Die Pflege von `costPrice` ermöglicht exakte Deckungsbeitrags- und Gewinnrechnungen (`profit = unitPrice - costPrice`) pro Event und Verkaufskanal.
 - **Vorschlags- & Freigabeprozess**:
   1. Wer `catalog.propose` hat (Startwert: alle Mitglieder), schlägt neue Getränke vor (`status = proposed`, erfasst `proposed_by`).

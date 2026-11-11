@@ -29,16 +29,27 @@ Backups beim Betreiber passen.
 
 Vereint ist unentgeltlich: keine Tarife, keine Zahlung. Die AGB enthalten
 deshalb keine Preise, keine Widerrufsbelehrung und keine Regeln zu Abos; die
-Haftung ist wie bei einer Schenkung bzw. Leihe beschränkt (AGB § 11).
+Haftung ist wie bei einer Schenkung bzw. Leihe beschränkt (AGB § 12).
 
 ## Zustimmung
 
 Registrierung per Einladungslink, „Gruppe eröffnen“ (mit und ohne Konto)
 verlangen ein Häkchen „AGB gelesen und zugestimmt“. Der Fachservice prüft das
 Feld `acceptTerms` (sonst `400 terms_not_accepted`) und speichert am Konto
-`users.terms_version` und `users.terms_accepted_at`. Konten von vor dieser
-Änderung haben dort nichts stehen; sie stimmen spätestens beim Eröffnen einer
-weiteren Gruppe zu.
+`users.terms_version` und `users.terms_accepted_at`.
+
+Seit der Fassung vom 10. November 2026 (Abschnitt § 11 „Statistiken“) fragt die
+App nach jedem Login, ob das Konto der gültigen Fassung zugestimmt hat
+(`GET /api/v1/users/me/terms`). Fehlt die Zustimmung oder ist sie älter (vom
+Admin angelegte und bestehende Konten, jede neue Fassung), führen die Guards
+auf `/agb-zustimmen`; erreichbar bleiben nur Abmelden, Impressum und AGB.
+„Zustimmen“ speichert Fassung und Zeitpunkt (`POST /api/v1/users/me/terms`
+mit `acceptTerms: true`). Die Seite nennt, wie man das Konto löschen lässt.
+Im Kiosk-Modus wird nicht gefragt. Der Fachservice sperrt namentliche
+Auswertungen (Statistik) ohne Zustimmung mit `403 terms_required`.
+
+Lokaler Seed (`scripts/handbook/seed.mjs`) und E2E-Anmeldung
+(`e2e/support/login.ts`) stimmen für ihre Konten nach dem Login zu.
 
 ## AGB ändern
 
@@ -46,7 +57,9 @@ weiteren Gruppe zu.
 2. `TERMS_VERSION` und `TERMS_DATE_LABEL` in `legal-operator.ts` und
    `vereint.legal.terms-version` (`TERMS_VERSION`) im Fachservice auf das neue
    Datum setzen.
-3. Nutzer nach § 13 der AGB mindestens sechs Wochen vorher informieren.
+3. Nutzer nach § 14 der AGB mindestens sechs Wochen vorher informieren.
+4. Alle Konten werden nach dem nächsten Login um Zustimmung zur neuen Fassung
+   gebeten.
 
 ## Vor dem Freischalten der Registrierung
 
