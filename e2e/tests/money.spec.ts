@@ -119,4 +119,54 @@ test.describe('Guthaben und Thekenterminal', () => {
       await expect.poll(() => member.api.balance(memberId)).toBe(start);
     });
   });
+
+  test('Mitglied gibt am Handy eine Runde aus, die Theke bucht, der Geber zahlt', async ({ as }) => {
+    const board = await as('board');
+    const sponsor = await as('member');
+    const guest = await as('member2');
+    const terminal = await as('terminal');
+    const sponsorId = (await sponsor.api.me()).id;
+    const guestId = (await guest.api.me()).id;
+
+    const title = unique('Rundenabend');
+    const event = await board.api.createEvent(title, 0);
+    await board.api.addParticipant(event.id, sponsorId);
+    await board.api.addParticipant(event.id, guestId);
+    const drink = await board.api.approvedDrink(unique('Dunkel'), 3.5);
+    await board.api.addEventDrink(event.id, drink.id, 3.5);
+    await board.api.setEventStatus(event.id, 'active');
+    await board.api.topup(sponsorId, 10);
+    const sponsorStart = await sponsor.api.balance(sponsorId);
+    const guestStart = await guest.api.balance(guestId);
+
+    await test.step('Runde am eigenen Handy ausgeben', async () => {
+      const { page } = sponsor;
+      await page.goto(`/events/${event.id}`);
+      await page.getByRole('link', { name: /Runde ausgeben/ }).click();
+      await expect(page.getByRole('heading', { name: 'Runde ausgeben' })).toBeVisible();
+      await page.getByRole('checkbox', { name: /Max Mitglied/ }).check();
+      await page.getByRole('button', { name: 'Runde für 1 ausgeben' }).click();
+      await expect(page.getByText('Deine Runde läuft.')).toBeVisible();
+      // Abgebucht wird erst an der Theke.
+      expect(await sponsor.api.balance(sponsorId)).toBe(sponsorStart);
+    });
+
+    await test.step('Theke zeigt die Runde und bucht den Strich auf den Geber', async () => {
+      const { page } = terminal;
+      await page.goto('/tablet');
+      await page.getByRole('listitem').filter({ hasText: title }).getByRole('button', { name: 'Auswählen' }).click();
+      await expect(page.getByText('Runde von Mia Mitglied')).toBeVisible();
+      await expect(page.getByRole('button', { name: /Runde ausgeben|Ganzen Abend/ })).toHaveCount(0);
+      await page.getByRole('button', { name: /^Max Mitglied, Sonstiges:/ }).click();
+      await expect(page.getByText(new RegExp(`Strich: Max Mitglied · ${drink.name}`))).toBeVisible();
+      await expect.poll(() => sponsor.api.balance(sponsorId)).toBe(sponsorStart - 3.5);
+      expect(await guest.api.balance(guestId)).toBe(guestStart);
+    });
+
+    await test.step('Geber sieht im Kontoauszug, wer getrunken hat', async () => {
+      const { page } = sponsor;
+      await page.goto('/wallet');
+      await expect(page.locator('.member-list-title').first()).toHaveText(`Runde: Max Mitglied · ${drink.name}`);
+    });
+  });
 });

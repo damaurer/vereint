@@ -101,6 +101,16 @@ const SHOTS = [
     run: async (page, data) => open(page, `/events/${data.events.stammtisch.id}`),
   },
   {
+    id: 'm-runde',
+    who: 'member',
+    device: PHONE,
+    run: async (page, data) => {
+      await open(page, `/events/${data.events.stammtisch.id}/runde`);
+      await page.getByRole('checkbox', { name: /Jonas/ }).check();
+      await page.getByRole('checkbox', { name: /Mia/ }).check();
+    },
+  },
+  {
     id: 'm-event-chat',
     who: 'member',
     device: PHONE,
@@ -360,12 +370,13 @@ const SHOTS = [
     },
   },
   {
+    // Laufende Runden: nur Anzeige, ausgegeben wird am eigenen Handy.
     id: 't-runde',
     who: 'theke',
     device: TABLET,
     run: async (page) => {
       await openTerminal(page);
-      await page.getByRole('button', { name: /Runde ausgeben/ }).click();
+      await page.getByRole('button', { name: 'Alle ansehen' }).click();
       await page.waitForTimeout(500);
     },
   },
