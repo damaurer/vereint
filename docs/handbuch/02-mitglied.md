@@ -193,7 +193,7 @@ Wird ein Strichcode nicht erkannt, ist das Getränk noch nicht im Katalog oder h
 
 ## Eine Runde ausgeben
 
-<img src="bilder/m-runde.png" alt="Runde am eigenen Handy ausgeben" width="300" align="right">
+<img src="screens/runde-handy.png" alt="Runde am eigenen Handy ausgeben" width="300" align="right">
 
 Eine Runde gibst du **an deinem eigenen Handy** aus, bezahlt wird **von deinem Guthaben**. Das geht, solange ein Event läuft, zu dem du gehörst. Öffne das Event und tippe auf **Runde ausgeben**.
 
