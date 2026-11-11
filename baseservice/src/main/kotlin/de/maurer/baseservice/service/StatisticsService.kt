@@ -1,12 +1,12 @@
 package de.maurer.baseservice.service
 
 import de.maurer.baseservice.domain.EventEntity
-import de.maurer.baseservice.domain.EventParticipantEntity
 import de.maurer.baseservice.domain.EventStatus
 import de.maurer.baseservice.domain.LedgerEntryEntity
 import de.maurer.baseservice.domain.LedgerEntryType
 import de.maurer.baseservice.domain.PurchaseSource
 import de.maurer.baseservice.domain.RsvpStatus
+import de.maurer.baseservice.domain.StatisticFeature
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.BucketCountDto
 import de.maurer.baseservice.dto.CategoryCountDto
@@ -26,21 +26,22 @@ import de.maurer.baseservice.dto.OverviewKpisDto
 import de.maurer.baseservice.dto.RecordDto
 import de.maurer.baseservice.dto.RecordsDto
 import de.maurer.baseservice.dto.StatisticsOverviewDto
+import de.maurer.baseservice.dto.StatisticsRecordingDto
 import de.maurer.baseservice.dto.TopDrinkDto
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
-import de.maurer.baseservice.repository.ChatMessageRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.LedgerEntryRepository
-import de.maurer.baseservice.repository.MomentMediaRepository
-import de.maurer.baseservice.repository.MomentResponseRepository
-import de.maurer.baseservice.repository.MomentSessionRepository
 import de.maurer.baseservice.repository.StammtischMemberRepository
+import de.maurer.baseservice.repository.StammtischRepository
+import de.maurer.baseservice.repository.StatisticRecordRepository
+import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.tenancy.StammtischAccess
+import de.maurer.baseservice.tenancy.TenantContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -52,8 +53,13 @@ import java.util.UUID
 /**
  * Statistik der Gruppe: Einstieg, Getränkestatistik und Übersicht.
  *
- * Grundlage sind die nicht stornierten Käufe im Zeitraum ([StatisticsPeriod]),
- * Einladungen und Zusagen, Moments und Chats der aktuellen Gruppe. Die
+ * Grundlage sind die Statistikeinträge (`statistic_records`) der aktuellen
+ * Gruppe im Zeitraum ([StatisticsPeriod]): erfasste Käufe (Stornos entfernen
+ * ihren Eintrag), Antworten auf Einladungen, Moments und Chat-Nachrichten.
+ * Was bei ausgeschalteter Erfassung ([StatisticsRecorder]) nicht erfasst
+ * wurde, taucht damit nirgends auf. Getränkedetails (Füllmenge, Kalorien)
+ * liest die Statistik zu den erfassten Käufen aus dem Kassenbuch; der Umsatz
+ * kommt für die Kasse weiter vollständig aus dem Kassenbuch. Die
  * Abfragen laufen im Stammtisch-Kontext (Hibernate-Mandant und Row-Level-
  * Security); an den Client gehen nur Aggregate. Alle Auswertungen sind für alle
  * Mitglieder namentlich sichtbar, setzen aber die Zustimmung zur gültigen
@@ -71,10 +77,9 @@ class StatisticsService(
     private val eventParticipantRepository: EventParticipantRepository,
     private val eventRepository: EventRepository,
     private val memberRepository: StammtischMemberRepository,
-    private val chatMessageRepository: ChatMessageRepository,
-    private val momentSessionRepository: MomentSessionRepository,
-    private val momentResponseRepository: MomentResponseRepository,
-    private val momentMediaRepository: MomentMediaRepository,
+    private val recordRepository: StatisticRecordRepository,
+    private val stammtischRepository: StammtischRepository,
+    private val userRepository: UserRepository,
     private val userService: UserService,
     private val snapshots: LedgerSnapshots,
     private val termsConsent: TermsConsent,
@@ -100,6 +105,18 @@ class StatisticsService(
         val currency: String
     )
 
+    /**
+     * Eine Einladung, wie die Statistik sie sieht: die zuletzt erfasste Antwort
+     * der Person, ohne erfasste Antwort nur, wenn sie noch nicht geantwortet hat.
+     */
+    private class Invitation(
+        val event: EventEntity,
+        val user: UserEntity,
+        val rsvp: RsvpStatus,
+        val invitationSentAt: Instant?,
+        val rsvpAt: Instant?
+    )
+
     private class Window(val period: StatisticsPeriod, val from: Instant, val now: Instant) {
         val days: Int = maxOf(1, Math.ceil(Duration.between(from, now).toMinutes() / MINUTES_PER_DAY).toInt())
         val weeks: Double get() = days / 7.0
@@ -116,6 +133,13 @@ class StatisticsService(
         termsConsent.requireAccepted(caller)
         return caller
     }
+
+    private fun recording(caller: UserEntity): StatisticsRecordingDto = StatisticsRecordingDto(
+        userEnabled = caller.statisticsEnabled,
+        groupEnabled = TenantContext.stammtischId()?.let { id ->
+            stammtischRepository.findById(id).map { it.statisticsEnabled }.orElse(false)
+        } ?: false
+    )
 
     // --- Einstieg ---
 
@@ -134,6 +158,7 @@ class StatisticsService(
             period = window.period.code,
             from = window.from,
             days = window.days,
+            recording = recording(caller),
             totalItems = purchases.size,
             myItems = if (myIndex >= 0) ranking[myIndex].count else 0,
             myRank = if (myIndex >= 0) myIndex + 1 else null,
@@ -151,7 +176,7 @@ class StatisticsService(
         by: String? = null,
         now: Instant = Instant.now()
     ): DrinkStatisticsDto {
-        caller(principal)
+        val caller = caller(principal)
         val window = window(period, now)
         val view = when (by?.trim()?.lowercase()) {
             null, "", BY_MEMBER -> BY_MEMBER
@@ -165,6 +190,7 @@ class StatisticsService(
             period = window.period.code,
             from = window.from,
             days = window.days,
+            recording = recording(caller),
             totalDrinks = drinks.size,
             liters = liters(drinks),
             kcal = kcal(drinks),
@@ -242,13 +268,15 @@ class StatisticsService(
         val eventsWithDrinks = drinks.mapNotNull { it.eventId }.toSet().size
 
         val members = memberRepository.findAllBy().filter { it.active && it.user != null }
-        val acceptedMembers = invitations.filter { it.rsvp == RsvpStatus.accepted }.mapNotNull { it.user?.id }.toSet()
+        val acceptedMembers = invitations.filter { it.rsvp == RsvpStatus.accepted }.map { it.user.id }.toSet()
         val activeIds = purchases.map { it.memberId }.toSet() + acceptedMembers
         val drinkers = drinks.map { it.memberId }.toSet().size
 
         val revenueVisible = access.has(principal, caller, Permission.LEDGER_READ)
-        val revenue = purchases.fold(BigDecimal.ZERO) { acc, p -> acc + p.amount.abs() }
-        val eventPurchases = purchases.filter { it.eventId != null }
+        // Umsatz für die Kasse aus dem Kassenbuch, unabhängig von den Schaltern.
+        val ledger = if (revenueVisible) purchases(window.from, recordedOnly = false) else emptyList()
+        val revenue = ledger.fold(BigDecimal.ZERO) { acc, p -> acc + p.amount.abs() }
+        val eventPurchases = ledger.filter { it.eventId != null }
         val revenuePerEvent = eventPurchases.map { it.eventId }.toSet().size.takeIf { it > 0 }?.let { count ->
             eventPurchases.fold(BigDecimal.ZERO) { acc, p -> acc + p.amount.abs() }
                 .divide(BigDecimal(count), 2, RoundingMode.HALF_UP)
@@ -271,7 +299,7 @@ class StatisticsService(
             kcalPerMember = if (drinkers == 0) null else Math.round(kcal.toDouble() / drinkers).toInt(),
             revenue = if (revenueVisible) revenue.setScale(2, RoundingMode.HALF_UP) else null,
             revenuePerEvent = if (revenueVisible) revenuePerEvent else null,
-            currency = purchases.firstOrNull()?.currency ?: DEFAULT_CURRENCY,
+            currency = ledger.firstOrNull()?.currency ?: purchases.firstOrNull()?.currency ?: DEFAULT_CURRENCY,
             drinksPerMonth = decimal(drinks.size / window.months),
             withoutVolume = drinks.count { it.volumeMl == null },
             withoutKcal = drinks.count { it.kcal == null }
@@ -281,6 +309,7 @@ class StatisticsService(
             period = window.period.code,
             from = window.from,
             days = window.days,
+            recording = recording(caller),
             kpis = kpis,
             rsvpByEvent = rsvpByEvent(invitations),
             rsvpByMember = rsvpByMember(invitations, attendance),
@@ -296,19 +325,19 @@ class StatisticsService(
             categories = categoryShares(drinks),
             roundGivers = roundGivers(purchases),
             moments = MomentStatsDto(
-                started = momentSessionRepository.countByCreatedAtGreaterThanEqual(window.from).toInt(),
-                reactions = momentResponseRepository.countByCreatedAtGreaterThanEqual(window.from).toInt(),
-                media = momentMediaRepository.countByCreatedAtGreaterThanEqual(window.from).toInt()
+                started = recordedQuantity(StatisticFeature.MOMENT, window.from),
+                reactions = recordedQuantity(StatisticFeature.MOMENT_REACTION, window.from),
+                media = recordedQuantity(StatisticFeature.MOMENT_MEDIA, window.from)
             ),
             chat = chat(window),
             records = records(drinks, events, attendance, invitations)
         )
     }
 
-    private fun rsvpByEvent(invitations: List<EventParticipantEntity>): List<EventRsvpDto> =
-        invitations.groupBy { it.event!!.id }.values
+    private fun rsvpByEvent(invitations: List<Invitation>): List<EventRsvpDto> =
+        invitations.groupBy { it.event.id }.values
             .map { list ->
-                val event = list.first().event!!
+                val event = list.first().event
                 EventRsvpDto(
                     eventId = event.id.toString(),
                     title = event.title,
@@ -324,19 +353,19 @@ class StatisticsService(
             .take(TOP_EVENTS)
 
     private fun rsvpByMember(
-        invitations: List<EventParticipantEntity>,
+        invitations: List<Invitation>,
         attendance: Map<UUID, Set<UUID>>
     ): List<MemberRsvpDto> =
-        invitations.filter { it.user != null }.groupBy { it.user!!.id }.entries
+        invitations.groupBy { it.user.id }.entries
             .map { (userId, list) ->
                 val accepted = list.count { it.rsvp == RsvpStatus.accepted }
                 MemberRsvpDto(
                     memberId = userId.toString(),
-                    displayName = list.first().user!!.displayName,
+                    displayName = list.first().user.displayName,
                     accepted = accepted,
                     maybe = list.count { it.rsvp == RsvpStatus.maybe },
                     declined = list.count { it.rsvp == RsvpStatus.declined },
-                    attended = list.count { attendance[it.event!!.id]?.contains(userId) == true },
+                    attended = list.count { attendance[it.event.id]?.contains(userId) == true },
                     invited = list.size,
                     quotePercent = percent(accepted, list.size)
                 )
@@ -376,33 +405,38 @@ class StatisticsService(
             .sortedWith(compareByDescending<MemberCountDto> { it.count }.thenBy { it.displayName })
             .take(TOP_GIVERS)
 
-    /** Nachrichten im Gruppen- und in Event-Chats; Direktnachrichten zählen nicht. */
+    /** Erfasste Nachrichten im Gruppen-, Event- und Moment-Chat; Direktnachrichten zählen nicht. */
     private fun chat(window: Window): ChatStatsDto {
-        val rows = chatMessageRepository.findStatisticsRowsSince(window.from)
-            .filter { it[0] != ConversationService.TYPE_DIRECT }
-        val mostActive = rows.filter { it[2] != null }
-            .groupBy { it[2] as UUID }.values
-            .maxWithOrNull(compareBy<List<Array<Any?>>> { it.size }.thenByDescending { it.first()[3] as String? ?: "" })
-            ?.first()?.get(3) as String?
+        val rows = recordRepository.breakdownSince(StatisticFeature.CHAT_MESSAGE, window.from)
+        val byActor = rows.filter { it[0] != null }
+            .groupBy { it[0] as UUID }
+            .mapValues { (_, list) -> list.sumOf { (it[3] as Number).toInt() } }
+        val names = userRepository.findAllById(byActor.keys).associate { it.id to it.displayName }
+        val mostActive = byActor.entries
+            .maxWithOrNull(compareBy<Map.Entry<UUID, Int>> { it.value }.thenByDescending { names[it.key].orEmpty() })
+            ?.let { names[it.key] }
         return ChatStatsDto(
-            messages = rows.size,
+            messages = rows.sumOf { (it[3] as Number).toInt() },
             mostActive = mostActive,
-            eventChats = rows.filter { it[0] == ConversationService.TYPE_EVENT }.map { it[1] }.toSet().size
+            eventChats = rows.filter { it[1] == ConversationService.TYPE_EVENT && it[2] != null }.map { it[2] }.toSet().size
         )
     }
+
+    private fun recordedQuantity(feature: String, from: Instant): Int =
+        recordRepository.breakdownSince(feature, from).sumOf { (it[3] as Number).toInt() }
 
     private fun records(
         drinks: List<Purchase>,
         events: List<EventEntity>,
         attendance: Map<UUID, Set<UUID>>,
-        invitations: List<EventParticipantEntity>
+        invitations: List<Invitation>
     ): RecordsDto {
         val evening = drinks.filter { it.eventId != null }.groupBy { it.eventId }.values
             .maxWithOrNull(compareBy<List<Purchase>> { it.size }.thenBy { it.first().createdAt })
             ?.let { RecordDto(it.first().eventTitle ?: "", it.size) }
 
         val names = drinks.associate { it.memberId to it.memberName } +
-            invitations.mapNotNull { p -> p.user?.let { it.id to it.displayName } }
+            invitations.map { it.user.id to it.user.displayName }
         var streak: RecordDto? = null
         attendance.values.flatten().toSet().forEach { memberId ->
             var run = 0
@@ -418,21 +452,28 @@ class StatisticsService(
         }
 
         val fastest = invitations
-            .filter { it.rsvp == RsvpStatus.accepted && it.rsvpAt != null && it.invitationSentAt != null && it.user != null }
+            .filter { it.rsvp == RsvpStatus.accepted && it.rsvpAt != null && it.invitationSentAt != null }
             .filter { !it.rsvpAt!!.isBefore(it.invitationSentAt!!) }
             .minByOrNull { Duration.between(it.invitationSentAt, it.rsvpAt) }
-            ?.let { RecordDto(it.user!!.displayName, Duration.between(it.invitationSentAt, it.rsvpAt).toMinutes().toInt()) }
+            ?.let { RecordDto(it.user.displayName, Duration.between(it.invitationSentAt, it.rsvpAt).toMinutes().toInt()) }
 
         return RecordsDto(mostDrinksEvening = evening, longestStreak = streak, fastestRsvp = fastest)
     }
 
     // --- Daten ---
 
-    private fun purchases(from: Instant): List<Purchase> {
+    /**
+     * Käufe im Zeitraum. Mit [recordedOnly] (Standard) nur die erfassten, also
+     * die mit Statistikeintrag; sonst alle nicht stornierten Käufe des
+     * Kassenbuchs (Umsatz).
+     */
+    private fun purchases(from: Instant, recordedOnly: Boolean = true): List<Purchase> {
         val entries = snapshots.attach(ledgerEntryRepository.findByCreatedAtGreaterThanEqual(from))
         val reversed = entries.mapNotNull { it.reversesEntry?.id }.toSet()
+        val recorded = if (recordedOnly) recordRepository.sourceIdsSince(StatisticFeature.PURCHASE, from).toSet() else emptySet()
         return entries
             .filter { it.entryType == LedgerEntryType.purchase && it.id !in reversed && it.member != null }
+            .filter { !recordedOnly || it.id in recorded }
             .map { toPurchase(it) }
     }
 
@@ -467,13 +508,34 @@ class StatisticsService(
 
     /**
      * Einladungen zu Events, die im Zeitraum (bis 30 Tage voraus) beginnen;
-     * ohne Entwürfe und abgesagte Events. Wer schon geantwortet hat, gilt auch
-     * ohne Versandzeitpunkt als eingeladen.
+     * ohne Entwürfe und abgesagte Events. Es zählt die zuletzt erfasste Antwort
+     * der Person; wer geantwortet hat, ohne dass es erfasst wurde, zählt nicht.
+     * Noch offene Einladungen zählen nur, wenn weder Person noch Event die
+     * Statistik ausgeschaltet haben. Wer schon geantwortet hat, gilt auch ohne
+     * Versandzeitpunkt als eingeladen.
      */
-    private fun invitations(window: Window): List<EventParticipantEntity> =
-        eventParticipantRepository.findForEventsStartingBetween(window.from, window.now.plus(UPCOMING))
-            .filter { it.event!!.status !in HIDDEN_EVENT_STATUSES }
-            .filter { it.invitationSentAt != null || it.rsvp != RsvpStatus.invited }
+    private fun invitations(window: Window): List<Invitation> {
+        val participants = eventParticipantRepository.findForEventsStartingBetween(window.from, window.now.plus(UPCOMING))
+            .filter { it.event!!.status !in HIDDEN_EVENT_STATUSES && it.user != null }
+        if (participants.isEmpty()) return emptyList()
+        val answers = recordRepository.answersForEvents(StatisticFeature.RSVP, participants.map { it.event!!.id }.toSet())
+            .filter { it[0] != null && it[1] != null && it[2] != null }
+            .groupBy { (it[0] as UUID) to (it[1] as UUID) }
+            .mapValues { (_, list) -> list.maxBy { it[3] as Instant } }
+        return participants.mapNotNull { participant ->
+            val event = participant.event!!
+            val user = participant.user!!
+            val answer = answers[event.id to user.id]
+            val status = answer?.let { RsvpStatus.fromValue(it[2] as String) }
+            when {
+                status != null -> Invitation(event, user, status, participant.invitationSentAt, answer[3] as Instant)
+                participant.rsvp == RsvpStatus.invited && participant.invitationSentAt != null &&
+                    event.statisticsEnabled && user.statisticsEnabled ->
+                    Invitation(event, user, RsvpStatus.invited, participant.invitationSentAt, null)
+                else -> null
+            }
+        }
+    }
 
     private fun liters(list: List<Purchase>): BigDecimal =
         BigDecimal(list.sumOf { it.volumeMl ?: 0 }).divide(BigDecimal(1000), 1, RoundingMode.HALF_UP)

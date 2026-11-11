@@ -4,6 +4,8 @@ import de.maurer.baseservice.domain.EventEntity
 import de.maurer.baseservice.domain.EventParticipantEntity
 import de.maurer.baseservice.domain.EventStatus
 import de.maurer.baseservice.domain.RsvpStatus
+import de.maurer.baseservice.domain.StatisticFeature
+import de.maurer.baseservice.domain.StatisticKind
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.AccessDeniedException
@@ -38,7 +40,8 @@ class EventService(
     private val members: StammtischMembers,
     private val access: StammtischAccess,
     private val userService: UserService,
-    private val eventInvitationService: EventInvitationService
+    private val eventInvitationService: EventInvitationService,
+    private val statisticsRecorder: StatisticsRecorder
 ) {
 
     fun createEvent(request: CreateEventRequest, principal: UserPrincipal): EventDto {
@@ -69,9 +72,11 @@ class EventService(
             status = if (request.status == EventStatus.published.name) EventStatus.published else EventStatus.draft,
             owner = caller,
             invitationNotifyAt = request.invitationNotifyAt,
-            reminderHoursBefore = request.reminderHoursBefore
+            reminderHoursBefore = request.reminderHoursBefore,
+            statisticsEnabled = request.statisticsEnabled ?: true
         )
         val saved = eventRepository.save(event)
+        statisticsRecorder.record(StatisticFeature.EVENT, actor = caller, event = saved, sourceId = saved.id)
         invite(saved, request.inviteUserIds, request.inviteAllMembers == true)
         eventInvitationService.dispatchDue()
         return toEventDto(saved, caller, principal)
@@ -105,6 +110,15 @@ class EventService(
         participant.rsvp = status
         participant.rsvpAt = Instant.now()
         eventParticipantRepository.save(participant)
+        statisticsRecorder.record(
+            StatisticFeature.RSVP,
+            kind = StatisticKind.RESPONSE,
+            actor = caller,
+            event = event,
+            variant = status.name,
+            respondsTo = event.id,
+            sourceId = participant.id
+        )
         return toEventDto(event, caller, principal)
     }
 
@@ -188,6 +202,9 @@ class EventService(
         }
         if (request.reminderHoursBefore != null) {
             event.reminderHoursBefore = request.reminderHoursBefore.takeIf { it > 0 }
+        }
+        if (request.statisticsEnabled != null) {
+            event.statisticsEnabled = request.statisticsEnabled
         }
         val previousStatus = event.status
         if (request.status != null) {
@@ -283,6 +300,20 @@ class EventService(
     private fun canManageEvent(caller: UserEntity, principal: UserPrincipal, event: EventEntity): Boolean =
         isBoardOrAdmin(caller, principal) || event.owner?.id == caller.id
 
+    /**
+     * Das Event, sofern die Person es sehen darf (gleiche Regel wie
+     * [getEvent]); sonst `403`, unbekannt `404`.
+     */
+    @Transactional(readOnly = true)
+    fun requireViewableEvent(id: UUID, principal: UserPrincipal): EventEntity {
+        val caller = userService.getOrCreateUser(principal)
+        val event = requireEvent(id)
+        if (!canViewEvent(caller, principal, event)) {
+            throw AccessDeniedException(Msg("error.event.viewDenied"), ErrorCode.ACCESS_DENIED)
+        }
+        return event
+    }
+
     private fun canViewEvent(caller: UserEntity, principal: UserPrincipal, event: EventEntity): Boolean {
         if (isBoardOrAdmin(caller, principal)) return true
         if (event.owner?.id == caller.id) return true
@@ -334,7 +365,8 @@ class EventService(
                 maybe = counts[RsvpStatus.maybe] ?: 0,
                 declined = counts[RsvpStatus.declined] ?: 0
             ),
-            canManage = canManageEvent(caller, principal, event)
+            canManage = canManageEvent(caller, principal, event),
+            statisticsEnabled = event.statisticsEnabled
         )
     }
 

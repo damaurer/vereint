@@ -12,6 +12,7 @@ import de.maurer.baseservice.repository.MomentSessionRepository
 import de.maurer.baseservice.repository.StammtischMemberRepository
 import de.maurer.baseservice.repository.StammtischRepository
 import de.maurer.baseservice.repository.StammtischRoleRepository
+import de.maurer.baseservice.repository.StatisticRecordRepository
 import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
@@ -23,7 +24,7 @@ import java.time.Instant
 
 /**
  * Datenexport eines Stammtischs als JSON: Mitglieder, Rollen, Events,
- * Katalog, Buchungen, Chats und Moments. Verschlüsselte Inhalte (Chat,
+ * Katalog, Buchungen, Chats, Moments und Statistikeinträge. Verschlüsselte Inhalte (Chat,
  * Moments) liest JPA entschlüsselt. Bilder und Videos sind nicht enthalten,
  * nur ihre Zahl je Moment.
  *
@@ -43,6 +44,7 @@ class StammtischExportService(
     private val conversationRepository: ConversationRepository,
     private val chatMessageRepository: ChatMessageRepository,
     private val momentSessionRepository: MomentSessionRepository,
+    private val statisticRecordRepository: StatisticRecordRepository,
     private val tenantTransactions: TenantTransactions,
     private val clock: Clock = Clock.systemUTC()
 ) {
@@ -163,7 +165,24 @@ class StammtischExportService(
                         "summary" to it.summary,
                         "createdAt" to it.createdAt
                     )
-                }
+                },
+                "statistics" to mapOf(
+                    "enabled" to stammtisch.statisticsEnabled,
+                    "records" to statisticRecordRepository.findAllByOrderByOccurredAtAsc().map {
+                        mapOf(
+                            "id" to it.id,
+                            "feature" to it.feature,
+                            "kind" to it.kind,
+                            "variant" to it.variant,
+                            "eventId" to it.eventId,
+                            "actorId" to it.actorUserId,
+                            "respondsTo" to it.respondsTo,
+                            "sourceId" to it.sourceId,
+                            "quantity" to it.quantity,
+                            "occurredAt" to it.occurredAt
+                        )
+                    }
+                )
             )
             val safeName = stammtisch.name.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').ifBlank { "stammtisch" }
             Export("vereint-$safeName-${now.toString().take(10)}.json", content)

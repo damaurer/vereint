@@ -102,7 +102,7 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
                 String::class.java
             )
         }
-        assertEquals(33, tables.size, "Tabellen mit Policy: $tables")
+        assertEquals(34, tables.size, "Tabellen mit Policy: $tables")
     }
 
     @Test

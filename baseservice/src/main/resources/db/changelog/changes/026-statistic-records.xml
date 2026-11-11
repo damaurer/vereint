@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+    <property name="uuid.fn" value="gen_random_uuid()" dbms="postgresql"/>
+    <property name="uuid.fn" value="RANDOM_UUID()" dbms="h2"/>
+    <!-- Vorgang einer Runde: Teil des Idempotency-Keys vor dem ersten '#'. -->
+    <property name="batch.key" value="split_part(l.idempotency_key, '#', 1)" dbms="postgresql"/>
+    <property name="batch.key" value="SUBSTRING(l.idempotency_key, 1, LOCATE('#', l.idempotency_key) - 1)" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 290. Schalter für die Statistik-Erfassung auf drei Ebenen (Issue #104).
+         Gewichtung Nutzer > Gruppe > Event: erfasst wird nur, wenn keine
+         dieser Ebenen ausgeschaltet hat (StatisticsRecorder). -->
+    <changeSet id="290-statistics-switches" author="claude">
+        <addColumn tableName="users">
+            <column name="statistics_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="stammtische">
+            <column name="statistics_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="events">
+            <column name="statistics_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="users" columnName="statistics_enabled"/>
+            <dropColumn tableName="stammtische" columnName="statistics_enabled"/>
+            <dropColumn tableName="events" columnName="statistics_enabled"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 291. Statistikeinträge: nur Zählwerte, keine Inhalte. Jede Zeile gehört
+         genau einer Gruppe. `source_id` ist die Zeile, die den Eintrag ausgelöst
+         hat (Buchung, Moment, Nachricht, …), `responds_to` das Objekt, auf das
+         geantwortet wurde (Event, Moment, Nachricht, Einladungslink). Ohne
+         Fremdschlüssel auf die Fachtabellen: Einträge bleiben, auch wenn die
+         Quelle wegfällt, und lassen sich je Person oder Gruppe löschen. -->
+    <changeSet id="291-create-statistic-records" author="claude">
+        <createTable tableName="statistic_records">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_statistic_records_stammtisch" references="stammtische(id)"/>
+            </column>
+            <column name="event_id" type="${uuid.type}"/>
+            <column name="actor_user_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_statistic_records_actor" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="feature" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="kind" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="variant" type="VARCHAR(32)"/>
+            <column name="responds_to" type="${uuid.type}"/>
+            <column name="source_id" type="${uuid.type}"/>
+            <column name="quantity" type="INTEGER" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="occurred_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>
+            ALTER TABLE statistic_records ADD CONSTRAINT ck_statistic_records_kind CHECK (kind IN ('triggered', 'response'));
+            ALTER TABLE statistic_records ADD CONSTRAINT ck_statistic_records_quantity CHECK (quantity >= 0);
+        </sql>
+        <createIndex tableName="statistic_records" indexName="idx_statistic_records_stammtisch_occurred">
+            <column name="stammtisch_id"/>
+            <column name="occurred_at"/>
+        </createIndex>
+        <createIndex tableName="statistic_records" indexName="idx_statistic_records_event">
+            <column name="event_id"/>
+        </createIndex>
+        <createIndex tableName="statistic_records" indexName="idx_statistic_records_actor_occurred">
+            <column name="actor_user_id"/>
+            <column name="occurred_at"/>
+        </createIndex>
+        <createIndex tableName="statistic_records" indexName="idx_statistic_records_source">
+            <column name="source_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="statistic_records"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 292. Einmalige Übernahme der bisherigen Historie: Käufe (ohne
+         stornierte), Aufladungen, Runden, Antworten auf Einladungen, Events,
+         Moments, Reaktionen und Bilder in Moments, Nachrichten und Reaktionen in
+         Gruppen- und Event-Chats (ohne Direktnachrichten), Einladungslinks und
+         Beitritte. Alle Schalter stehen zu diesem Zeitpunkt auf „an“.
+         Die Quelltabellen haben Row-Level-Security, daher der Bypass für diese
+         Transaktion. -->
+    <changeSet id="292-backfill-statistic-records" author="claude">
+        <sql dbms="postgresql">SELECT set_config('vereint.rls_bypass', 'on', true)</sql>
+        <sql splitStatements="true">
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, l.stammtisch_id, l.event_id, l.member_id, 'purchase', 'triggered', l.source, NULL, l.id, 1, l.created_at
+            FROM ledger_entries l
+            WHERE l.entry_type = 'purchase'
+              AND NOT EXISTS (SELECT 1 FROM ledger_entries c WHERE c.reverses_entry_id = l.id);
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, l.stammtisch_id, NULL, l.member_id, 'top_up', 'triggered', NULL, NULL, l.id, 1, l.created_at
+            FROM ledger_entries l
+            WHERE l.entry_type = 'topup'
+              AND NOT EXISTS (SELECT 1 FROM ledger_entries c WHERE c.reverses_entry_id = l.id);
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, b.stammtisch_id, b.event_id, b.actor_id, 'round', 'triggered', b.source, NULL, NULL, b.members, b.occurred_at
+            FROM (
+                SELECT l.stammtisch_id AS stammtisch_id, l.event_id AS event_id, l.actor_id AS actor_id, l.source AS source,
+                       ${batch.key} AS batch_key, COUNT(*) AS members, MIN(l.created_at) AS occurred_at
+                FROM ledger_entries l
+                WHERE l.entry_type = 'purchase' AND l.source IN ('round', 'evening')
+                  AND NOT EXISTS (SELECT 1 FROM ledger_entries c WHERE c.reverses_entry_id = l.id)
+                GROUP BY l.stammtisch_id, l.event_id, l.actor_id, l.source, ${batch.key}
+            ) b;
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, e.stammtisch_id, e.id, e.owner_id, 'event', 'triggered', NULL, NULL, e.id, 1, e.created_at
+            FROM events e;
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, p.stammtisch_id, p.event_id, p.user_id, 'rsvp', 'response', p.rsvp, p.event_id, p.id, 1, COALESCE(p.rsvp_at, p.joined_at)
+            FROM event_participants p
+            WHERE p.rsvp IN ('accepted', 'maybe', 'declined') AND p.user_id IS NOT NULL;
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, s.stammtisch_id, s.event_id, s.creator_user_id, 'moment', 'triggered', s.topic_type, NULL, s.id, 1, s.created_at
+            FROM moment_sessions s;
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, r.stammtisch_id, s.event_id, r.user_id, 'moment_reaction', 'response', NULL, s.id, r.id, 1, r.created_at
+            FROM moment_responses r JOIN moment_sessions s ON s.id = r.moment_id;
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, m.stammtisch_id, s.event_id, m.owner_id, 'moment_media', 'response', m.kind, s.id, m.id, 1, m.created_at
+            FROM moment_media m JOIN moment_sessions s ON s.id = m.moment_id;
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, m.stammtisch_id, c.event_id, m.sender_id, 'chat_message', 'triggered', c.type, NULL, m.id, 1, m.created_at
+            FROM chat_messages m JOIN conversations c ON c.id = m.conversation_id
+            WHERE c.type &lt;&gt; 'direct';
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, r.stammtisch_id, c.event_id, r.user_id, 'chat_reaction', 'response', c.type, m.id, r.id, 1, r.created_at
+            FROM chat_reactions r JOIN chat_messages m ON m.id = r.message_id JOIN conversations c ON c.id = m.conversation_id
+            WHERE c.type &lt;&gt; 'direct';
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, i.stammtisch_id, NULL, i.created_by, 'invite_link', 'triggered', NULL, NULL, i.id, 1, i.created_at
+            FROM member_invites i;
+
+            INSERT INTO statistic_records (id, stammtisch_id, event_id, actor_user_id, feature, kind, variant, responds_to, source_id, quantity, occurred_at)
+            SELECT ${uuid.fn}, r.stammtisch_id, NULL, r.user_id, 'invite_join', 'response', NULL, r.invite_id, r.id, 1, r.redeemed_at
+            FROM member_invite_redemptions r;
+        </sql>
+        <rollback>
+            <delete tableName="statistic_records"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 293. Row-Level-Security wie bei allen Gruppentabellen (siehe 165). -->
+    <changeSet id="293-statistic-records-rls" author="claude" dbms="postgresql">
+        <sql splitStatements="false">
+            ALTER TABLE statistic_records ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE statistic_records FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON statistic_records
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <rollback>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON statistic_records; ALTER TABLE statistic_records NO FORCE ROW LEVEL SECURITY; ALTER TABLE statistic_records DISABLE ROW LEVEL SECURITY</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

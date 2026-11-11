@@ -50,6 +50,10 @@ class EventEntity(
     @Column(name = "reminder_hours_before")
     var reminderHoursBefore: Int? = null,
 
+    /** „Statistik für dieses Event“: aus heißt, im Event wird nichts erfasst. */
+    @Column(name = "statistics_enabled", nullable = false)
+    var statisticsEnabled: Boolean = true,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),

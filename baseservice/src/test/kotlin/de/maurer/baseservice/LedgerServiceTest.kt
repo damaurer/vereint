@@ -153,7 +153,8 @@ class LedgerServiceTest {
             eventParticipantRepository,
             userService,
             auditService,
-            LedgerSnapshots(purchaseSnapshotRepository)
+            LedgerSnapshots(purchaseSnapshotRepository),
+            mock(de.maurer.baseservice.service.StatisticsRecorder::class.java)
         )
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: adminId)).thenReturn(emptyList())
         `when`(idempotencyRecordRepository.findByScopeAndIdempotencyKey(anyString(), anyString()))

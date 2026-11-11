@@ -120,7 +120,8 @@ class TabletRecorderServiceTest {
             StammtischTestSupport.access(userRoleRepository),
             StammtischTestSupport.members(userRepository),
             userService,
-            ledgerService
+            ledgerService,
+            mock(de.maurer.baseservice.service.StatisticsRecorder::class.java)
         )
     }
 

@@ -55,7 +55,8 @@ class LedgerService(
     private val eventParticipantRepository: EventParticipantRepository,
     private val userService: UserService,
     private val auditService: AuditService,
-    private val snapshots: LedgerSnapshots
+    private val snapshots: LedgerSnapshots,
+    private val statisticsRecorder: StatisticsRecorder
 ) {
 
     /**
@@ -820,6 +821,8 @@ class LedgerService(
             saved.purchaseSnapshot = snapshot
         }
         recordIdempotency(cmd.scope, cmd.key)
+        val reversed = cmd.reversesEntry
+        if (reversed != null) statisticsRecorder.reverse(reversed) else statisticsRecorder.ledgerEntry(saved)
         auditService.recordLedgerEntry(
             cmd.actor,
             cmd.auditAction,

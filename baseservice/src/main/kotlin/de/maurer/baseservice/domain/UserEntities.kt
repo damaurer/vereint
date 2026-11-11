@@ -36,6 +36,10 @@ class UserEntity(
     @Column(name = "terms_accepted_at")
     var termsAcceptedAt: Instant? = null,
 
+    /** „Meine Statistik erfassen“: aus heißt, über diese Person wird nirgends etwas erfasst. */
+    @Column(name = "statistics_enabled", nullable = false)
+    var statisticsEnabled: Boolean = true,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),

@@ -174,7 +174,16 @@ class StammtischContextFilter(
             "/actuator/"
         )
 
-        private val STAMMTISCH_FREE_EXACT = setOf("/api/v1/auth", "/api/v1/users/me", "/api/v1/users/me/terms")
+        private val STAMMTISCH_FREE_EXACT = setOf(
+            "/api/v1/auth",
+            "/api/v1/users/me",
+            "/api/v1/users/me/terms",
+            // Eigene und übergreifende Statistik lesen je Gruppe selbst (wie der Kalender).
+            "/api/v1/statistics/me",
+            "/api/v1/statistics/events",
+            "/api/v1/me/statistics-settings",
+            "/api/v1/me/statistics"
+        )
 
         /** Gast-Chat: der Controller wählt den Stammtisch über das Event. */
         private val GUEST_CHAT = Regex("^/api/v1/events/[^/]+/chat/guest(/.*)?$")

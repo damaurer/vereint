@@ -10,6 +10,8 @@ import de.maurer.baseservice.domain.LedgerEntryEntity
 import de.maurer.baseservice.domain.LedgerEntryType
 import de.maurer.baseservice.domain.PurchaseSource
 import de.maurer.baseservice.domain.RsvpStatus
+import de.maurer.baseservice.domain.StatisticFeature
+import de.maurer.baseservice.domain.StatisticKind
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.AcceptTermsRequest
 import de.maurer.baseservice.dto.CreateStammtischRequest
@@ -25,6 +27,7 @@ import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.MembershipService
 import de.maurer.baseservice.service.PlatformService
 import de.maurer.baseservice.service.StatisticsPeriod
+import de.maurer.baseservice.service.StatisticsRecorder
 import de.maurer.baseservice.service.StatisticsService
 import de.maurer.baseservice.service.TermsService
 import de.maurer.baseservice.service.UserService
@@ -66,7 +69,8 @@ class StatisticsServiceIntegrationTest @Autowired constructor(
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
     private val ledgerEntryRepository: LedgerEntryRepository,
-    private val jdbcTemplate: JdbcTemplate
+    private val jdbcTemplate: JdbcTemplate,
+    private val statisticsRecorder: StatisticsRecorder
 ) {
 
     private lateinit var group: UUID
@@ -120,13 +124,24 @@ class StatisticsServiceIntegrationTest @Autowired constructor(
             )
         )
         jdbcTemplate.update("UPDATE ledger_entries SET created_at = ? WHERE id = ?", Timestamp.from(at), entry.id)
+        // Wie LedgerService: der Kauf wird erfasst (Schalter stehen auf an).
+        statisticsRecorder.ledgerEntry(entry)
+        jdbcTemplate.update("UPDATE statistic_records SET occurred_at = ? WHERE source_id = ?", Timestamp.from(at), entry.id)
         entry
     }
 
     private fun invite(event: EventEntity, user: UserEntity, rsvp: RsvpStatus, sentAt: Instant, answeredAt: Instant? = null) = inGroup {
-        eventParticipantRepository.saveAndFlush(
+        val participant = eventParticipantRepository.saveAndFlush(
             EventParticipantEntity(event = event, user = user, rsvp = rsvp, invitationSentAt = sentAt, rsvpAt = answeredAt)
         )
+        if (rsvp != RsvpStatus.invited) {
+            // Wie EventService.respond: die Antwort wird erfasst.
+            statisticsRecorder.record(
+                StatisticFeature.RSVP, kind = StatisticKind.RESPONSE, actor = user, event = event,
+                variant = rsvp.name, respondsTo = event.id, sourceId = participant.id, occurredAt = answeredAt ?: sentAt
+            )
+        }
+        participant
     }
 
     @BeforeEach

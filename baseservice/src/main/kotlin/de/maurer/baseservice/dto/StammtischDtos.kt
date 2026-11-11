@@ -18,7 +18,9 @@ data class StammtischDto(
     val myPermissions: Set<String>,
     val createdAt: Instant,
     @Schema(description = "Version des Gruppenbilds; fehlt ohne Bild")
-    val imageVersion: Int? = null
+    val imageVersion: Int? = null,
+    @Schema(description = "„Statistik in dieser Gruppe“")
+    val statisticsEnabled: Boolean = true
 )
 
 data class UpdateStammtischRequest(

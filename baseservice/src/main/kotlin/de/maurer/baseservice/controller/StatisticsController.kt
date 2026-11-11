@@ -30,21 +30,27 @@ class StatisticsController(
     @Operation(summary = "Statistik (Einstieg)", description = "Striche der Gruppe, eigene Striche, Platz, Rangliste und Zusagequote")
     fun statistics(
         @Parameter(description = "Zeitraum: 30, 90 (Standard) oder year (laufendes Kalenderjahr)")
-        @RequestParam(required = false) period: String?
+        @RequestParam(required = false) period: String?,
+        @Parameter(description = "Gleichbedeutend mit period: 30, 90 oder jahr")
+        @RequestParam(required = false) zeitraum: String?
     ): ResponseEntity<ClubStatisticsDto> =
-        ResponseEntity.ok(statisticsService.clubStatistics(authContext.getRequiredPrincipal(), period))
+        ResponseEntity.ok(statisticsService.clubStatistics(authContext.getRequiredPrincipal(), zeitraum ?: period))
 
     @GetMapping("/drinks")
     @Operation(summary = "Getränkestatistik", description = "Getränke, Liter und Kalorien der Gruppe, nach Mitglied oder nach Getränk")
     fun drinks(
         @RequestParam(required = false) period: String?,
+        @RequestParam(required = false) zeitraum: String?,
         @Parameter(description = "member (Standard) oder drink")
         @RequestParam(required = false) by: String?
     ): ResponseEntity<DrinkStatisticsDto> =
-        ResponseEntity.ok(statisticsService.drinkStatistics(authContext.getRequiredPrincipal(), period, by))
+        ResponseEntity.ok(statisticsService.drinkStatistics(authContext.getRequiredPrincipal(), zeitraum ?: period, by))
 
     @GetMapping("/overview")
     @Operation(summary = "Statistik-Übersicht", description = "Alle Kennzahlen zu Events, Zusagen, Trinkverhalten, Getränken und Gemeinschaft; Umsatz nur mit Leserecht auf die Finanzen")
-    fun overview(@RequestParam(required = false) period: String?): ResponseEntity<StatisticsOverviewDto> =
-        ResponseEntity.ok(statisticsService.overview(authContext.getRequiredPrincipal(), period))
+    fun overview(
+        @RequestParam(required = false) period: String?,
+        @RequestParam(required = false) zeitraum: String?
+    ): ResponseEntity<StatisticsOverviewDto> =
+        ResponseEntity.ok(statisticsService.overview(authContext.getRequiredPrincipal(), zeitraum ?: period))
 }

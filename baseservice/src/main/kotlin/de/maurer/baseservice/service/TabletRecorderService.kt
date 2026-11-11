@@ -54,7 +54,8 @@ class TabletRecorderService(
     private val access: StammtischAccess,
     private val members: StammtischMembers,
     private val userService: UserService,
-    private val ledgerService: LedgerService
+    private val ledgerService: LedgerService,
+    private val statisticsRecorder: StatisticsRecorder
 ) {
 
     @Transactional(readOnly = true)
@@ -256,7 +257,7 @@ class TabletRecorderService(
         }
         val memberIds = rawIds.map { Identifiers.parseUuid(it, "memberIds") }.distinct()
 
-        return if (hasDrink) {
+        val entries = if (hasDrink) {
             val eventDrinkId = Identifiers.parseUuid(request.eventDrinkId, "eventDrinkId")
             val eventDrink = requireEventDrink(eventId, eventDrinkId)
             val drink = eventDrink.drink
@@ -301,6 +302,10 @@ class TabletRecorderService(
                 )
             }
         }
+        entries.firstOrNull()?.let {
+            statisticsRecorder.round(actor, event, source.name, UUID.fromString(it.id), entries.size)
+        }
+        return entries
     }
 
     private fun requireTabletRecorder(principal: UserPrincipal): UserEntity {
