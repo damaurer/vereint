@@ -51,8 +51,9 @@ Für die eigene Person lehnt der Fachservice Rollen-, Berechtigungs- und Status�
 | `GET` | `/api/v1/ledger/members/{memberId}/balance` | Guthaben und Kennzahlen eines Mitglieds (`MemberBalanceDto`) | eigenes Konto oder `ledger.read` |
 | `GET` | `/api/v1/ledger/members/{memberId}/entries` | Buchungen eines Mitglieds (`List<LedgerEntryDto>`) | eigenes Konto oder `ledger.read` |
 | `GET` | `/api/v1/ledger/events/{eventId}/summary` | Abrechnung eines Events (`EventLedgerSummaryDto`) | `ledger.read` oder `event.manage` |
-| `POST` | `/api/v1/ledger/purchases/preview` | Preis und Event zu einem Barcode vorab ermitteln | `purchase.self` |
+| `POST` | `/api/v1/ledger/purchases/preview` | Preis und Event zu einem Barcode vorab ermitteln; ohne laufendes Event mit Selbstbedienung stattdessen `creditPurchase` (Katalogpreis oder `null`) und `foreignDrink` (Fremdgetränk möglich), `drinkId` ist `null` bei Getränken nur aus der Getränkedatenbank | `purchase.self` |
 | `POST` | `/api/v1/ledger/purchases` | Barcode-Kauf ausführen (`PurchaseRequest` + `Idempotency-Key`) | `purchase.self` |
+| `POST` | `/api/v1/ledger/purchases/credit` | Guthabenkauf ohne Event zum Katalogpreis (`{ barcode, recordStatistics }` + `Idempotency-Key`); `409 credit_purchase_at_event` bei Teilnahme an einem laufenden Event mit Selbstbedienung, `404 no_catalog_price` ohne Preis | `purchase.self` |
 | `POST` | `/api/v1/ledger/purchases/{entryId}/undo` | Eigenen Barcode-Kauf innerhalb von 10 Minuten zurücknehmen (+ `Idempotency-Key`) | `purchase.self` |
 | `POST` | `/api/v1/ledger/topups` | Guthaben aufladen (`TopupRequest` + `Idempotency-Key`) | `ledger.correct` |
 | `POST` | `/api/v1/ledger/payouts` | Guthaben auszahlen (`PayoutRequest` + `Idempotency-Key`) | `ledger.correct` |
@@ -246,6 +247,8 @@ Gruppenübergreifend und ohne gewählte Gruppe, siehe [Kalender, Freunde und Dir
 | `GET` | `/api/v1/statistics/events` | Übergreifende Event-Statistik über alle sichtbaren Events der eigenen Gruppen, ohne fremde Namen (`zeitraum`); ohne gewählte Gruppe | angemeldet |
 | `GET` | `/api/v1/statistics/group-events` | Events der Gruppe zusammengefasst und im Vergleich (`zeitraum`) | Mitglied |
 | `GET` | `/api/v1/statistics/features` | Je Funktion ausgelöst und beantwortet (`zeitraum`) | Mitglied |
+| `POST` | `/api/v1/statistics/foreign-drinks` | Fremdgetränk nur für die Statistik erfassen, ohne Buchung und ohne Event (`{ barcode }` + `Idempotency-Key`); `409 statistics_disabled` bei ausgeschalteter Statistik, `409 credit_purchase_at_event` bei Teilnahme an einem laufenden Event mit Selbstbedienung | `purchase.self` |
+| `DELETE` | `/api/v1/statistics/foreign-drinks/{id}` | Eigenes Fremdgetränk innerhalb von 10 Minuten entfernen (`204`) | `purchase.self` |
 | `GET` | `/api/v1/events/{id}/statistics` | Statistik eines Events | wer das Event sehen darf |
 | `GET`, `PUT` | `/api/v1/me/statistics-settings` | Schalter „Meine Statistik erfassen“ (`{ "enabled": true }`) | angemeldet |
 | `DELETE` | `/api/v1/me/statistics` | Eigene Statistikdaten in allen Gruppen löschen; Audit-Eintrag | angemeldet |

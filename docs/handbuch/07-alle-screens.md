@@ -387,7 +387,7 @@ Dein Konto in der Bierkasse der Gruppe.
 
 <img src="screens/bezahlen.png" alt="Getränk scannen" width="300" align="right">
 
-Ein Getränk selbst mit Guthaben bezahlen, etwa am Kühlschrank ohne Thekendienst. Das geht während eines laufenden Events, zu dem du gehörst.
+Ein Getränk selbst mit Guthaben bezahlen, etwa am Kühlschrank ohne Thekendienst. Bei einem laufenden Event mit Selbstbedienung, an dem du teilnimmst, läuft der Kauf über das Event. Sonst wählst du nach dem Scan **Mit Guthaben bezahlen** (Katalogpreis, wahlweise ohne Statistik) oder **Nur in die Statistik (Fremdgetränk)**; Einzelheiten im [Handbuch für Mitglieder](02-mitglied.md#ohne-laufendes-event-bezahlen-oder-nur-erfassen).
 
 - Oben rechts steht dein **Guthaben**.
 - **Kamerafenster**: Strichcode in den Rahmen halten. Die Kamera fragt beim ersten Mal nach Erlaubnis.

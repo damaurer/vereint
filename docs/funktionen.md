@@ -104,7 +104,18 @@ Thekenterminals.
   Getränks mit der Handykamera, alternativ per Eingabe.
 - Nach Bestätigung von Getränk und Preis wird vom Guthaben abgebucht.
 - Ein eigener Kauf lässt sich 10 Minuten lang rückgängig machen.
-- Scannen geht nur bei einem laufenden Event, an dem das Mitglied teilnimmt.
+- Bei einem laufenden Event mit Selbstbedienung, an dem das Mitglied
+  teilnimmt, läuft der Kauf über das Event (Event- oder Kategoriepreis).
+- Sonst wählt das Mitglied nach dem Scan:
+  - *Mit Guthaben bezahlen*: Preis aus dem Katalog der Gruppe, ohne Event;
+    nur, wenn das Getränk dort einen Preis hat. Mit dem Haken *In die
+    Statistik aufnehmen* lässt sich der Kauf aus der Statistik heraushalten.
+  - *Nur in die Statistik (Fremdgetränk)*: Es wird nichts abgebucht. Das
+    Getränk zählt in der eigenen und der Gruppenstatistik, bei keinem Event.
+    Es darf auch nur in der Getränkedatenbank stehen. Entfernen geht
+    10 Minuten lang.
+- Ist die Statistik für die Person oder die Gruppe aus, gibt es das
+  Fremdgetränk nicht; bezahlen geht weiter.
 - Die Kamera braucht HTTPS; lokal ohne Zertifikat funktioniert nur die Eingabe.
 
 ## Getränke- und Speisenkatalog
@@ -199,7 +210,8 @@ Thekenterminals.
     die das Event sehen dürfen.
   - *Funktionen* (`/statistik/funktionen`): je Funktion, wie oft sie
     ausgelöst und wie darauf geantwortet wurde.
-- Erfasst werden Käufe und Striche (auch Kiosk, Barcode, Runden), Aufladungen,
+- Erfasst werden Käufe und Striche (auch Kiosk, Barcode, Runden, Guthabenkäufe
+  ohne Event), Fremdgetränke (nur Statistik, ohne Event), Aufladungen,
   Events, Zusagen, Moments mit Reaktionen und Bildern, Chatnachrichten und
   Chat-Reaktionen in Gruppen- und Event-Chats, Einladungslinks und Beitritte.
   Direktnachrichten werden nicht erfasst. Ein stornierter Kauf verschwindet

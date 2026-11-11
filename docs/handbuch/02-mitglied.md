@@ -18,7 +18,7 @@ Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm
 | sehen, wer was getrunken hat, mit Litern und Kalorien | **Mehr → Statistik** → **Getränkestatistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
 | eine Runde ausgeben | Im laufenden Event **Runde ausgeben** → Personen anhaken → **Runde für … ausgeben** |
-| ein Getränk selbst bezahlen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen |
+| ein Getränk selbst bezahlen oder nur für die Statistik erfassen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
 | beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments** |
@@ -163,7 +163,10 @@ Ein Guthaben kann auch ins Minus gehen. Dann bitte zeitnah beim Kassenwart ausgl
 
 ## Getränk selbst bezahlen
 
-Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst mit deinem Guthaben. Das geht während eines laufenden Events, zu dem du gehörst.
+Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst mit deinem Guthaben. Was nach dem Scannen passiert, hängt davon ab, ob du gerade bei einem Event bist:
+
+- **Du nimmst an einem laufenden Event mit Selbstbedienung teil**: Das Getränk wird über das Event gebucht, zum Preis des Events. Eine andere Wahl gibt es dann nicht.
+- **Sonst** entscheidest du selbst (siehe [Ohne laufendes Event](#ohne-laufendes-event-bezahlen-oder-nur-erfassen)): mit Guthaben bezahlen oder das Getränk nur in die Statistik aufnehmen.
 
 <img src="bilder/m-bezahlen.png" alt="Getränk scannen" width="300" align="right">
 
@@ -188,7 +191,18 @@ Reicht dein Guthaben nicht, warnt Vereint dich vorher. Du kannst trotzdem bezahl
 
 Vertippt oder das falsche Getränk erwischt? Mit **Rückgängig** nimmst du den Kauf innerhalb von **10 Minuten** selbst zurück. Danach hilft der Kassenwart. **Nächstes Getränk scannen** startet gleich den nächsten Kauf.
 
-Wird ein Strichcode nicht erkannt, ist das Getränk noch nicht im Katalog oder hat noch keinen Strichcode. Sag dem Vorstand Bescheid.
+Wird ein Strichcode nicht erkannt, ist das Getränk weder im Katalog noch in der Getränkedatenbank oder hat noch keinen Strichcode. Sag dem Vorstand Bescheid.
+
+### Ohne laufendes Event: bezahlen oder nur erfassen
+
+Bist du gerade bei keinem laufenden Event mit Selbstbedienung, fragt Vereint nach dem Scannen, was mit dem Getränk passieren soll:
+
+- **Mit Guthaben bezahlen**: Es gilt der Preis aus dem Getränkekatalog der Gruppe. Vereint zeigt Preis und dein Guthaben vorher und nachher; erst **… bezahlen** bucht ab. Der Haken **In die Statistik aufnehmen** ist gesetzt. Nimmst du ihn weg, wird nur bezahlt und der Kauf zählt in keiner Statistik. Hat das Getränk im Katalog keinen Preis, kannst du es nicht bezahlen.
+- **Nur in die Statistik (Fremdgetränk)**: Für ein Getränk, das du woanders gekauft hast. Es wird nichts abgebucht. Mit **In die Statistik aufnehmen** zählt es in deiner Statistik und in der Statistik der Gruppe, die du gerade gewählt hast, aber bei keinem Event. Das geht auch mit Getränken, die nur in der gemeinsamen Getränkedatenbank stehen.
+
+Wie bei einem Kauf kannst du dich 10 Minuten lang korrigieren: **Rückgängig** nimmt einen Kauf zurück, **Entfernen** nimmt ein Fremdgetränk wieder aus der Statistik.
+
+Hast du **Meine Statistik erfassen** ausgeschaltet oder hat die Gruppe ihre Statistik aus, gibt es **Nur in die Statistik** nicht. Bezahlen geht trotzdem; erfasst wird dann nichts.
 
 <br clear="right">
 
@@ -309,7 +323,7 @@ In **Mein Konto** steht der Abschnitt **Statistik**:
 - **Meine Statistik erfassen**: Schaltest du ihn aus, wird über dich in keiner Gruppe und keinem Event mehr etwas erfasst. Das gilt auch, wenn die Gruppe ihre Statistik an hat. Ausschalten löscht nichts.
 - **Meine erfassten Statistikdaten löschen**: löscht nach einer Rückfrage alles, was über dich erfasst wurde, in allen Gruppen. Deine Buchungen und dein Guthaben bleiben. Das Löschen steht im Protokoll der Gruppe.
 
-Direktnachrichten werden nie erfasst. Ein storniertes Getränk verschwindet wieder aus der Statistik.
+Direktnachrichten werden nie erfasst. Ein storniertes Getränk verschwindet wieder aus der Statistik. Fremdgetränke (siehe [Ohne laufendes Event](#ohne-laufendes-event-bezahlen-oder-nur-erfassen)) zählen in deiner Statistik und in der Gruppenstatistik, aber in keiner Event-Statistik.
 
 ## Eine Gruppe verlassen
 
