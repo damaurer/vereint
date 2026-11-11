@@ -68,6 +68,8 @@ describe('legal pages', () => {
     const text = page.textContent ?? '';
     expect(text).toContain('mit Namen');
     expect(text).toContain('keine Gesundheitsangabe');
-    expect(text).toContain('gruppenübergreifend');
+    expect(text).toContain('Gruppenübergreifend sieht jeder Nutzer nur seine eigenen Werte');
+    expect(text).toContain('Die Erfassung lässt sich abschalten');
+    expect(text).toContain('Direktnachrichten werden nicht erfasst');
   });
 });

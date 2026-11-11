@@ -6,6 +6,7 @@ import { AuthService } from '../auth/auth.service';
 import { TranslatePipe, translate } from '../i18n';
 import { ModalComponent } from '../ui/modal.component';
 import { StateComponent } from '../ui/state.component';
+import { StatisticsSettingsComponent } from '../statistics/statistics-settings.component';
 import { GroupAvatarComponent } from './group-avatar.component';
 import { GroupImageError, GroupImagePreparer, type PreparedGroupImage } from './group-image';
 import {
@@ -45,7 +46,7 @@ export function groupPermissions(permissions: readonly string[]): PermissionGrou
  */
 @Component({
   selector: 'app-stammtisch-settings',
-  imports: [FormsModule, RouterLink, TranslatePipe, StateComponent, ModalComponent, GroupAvatarComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, StateComponent, ModalComponent, GroupAvatarComponent, StatisticsSettingsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './stammtisch.css',
   template: `
@@ -142,6 +143,10 @@ export function groupPermissions(permissions: readonly string[]): PermissionGrou
                   {{ 'stammtisch.export.button' | t }}
                 </a>
               </div>
+            </section>
+
+            <section class="st-section">
+              <app-statistics-settings scope="group" />
             </section>
           }
 

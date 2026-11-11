@@ -154,7 +154,10 @@ class StatisticsLevelService(
     fun groupEvents(principal: UserPrincipal, period: String? = null, now: Instant = Instant.now()): GroupEventStatisticsDto {
         val caller = caller(principal)
         val window = window(period, now)
-        val events = eventRepository.findByStartsAtBetween(window.from, window.now).filter { inWindow(it, window) }
+        // Nur Events, die die Person auch in der Eventliste sieht (eigene, Einladungen, mit event.manage alle).
+        val visible = eventVisibility.visibleEvents(principal, caller).map { it.id }.toSet()
+        val events = eventRepository.findByStartsAtBetween(window.from, window.now)
+            .filter { inWindow(it, window) && it.id in visible }
         val rows = comparison(events, mine = null, group = null).sortedByDescending { it.startsAt }
         return GroupEventStatisticsDto(
             period = window.period.code,

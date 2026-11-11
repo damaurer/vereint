@@ -284,7 +284,9 @@ class StatisticsLevelsIntegrationTest @Autowired constructor(
         val private = event("Privat", listOf(annaUser))
         inA { eventService.respond(shared, RsvpRequest("accepted"), anna()) }
 
-        val groupEvents = inA { levels.groupEvents(ben(), "90") }
+        // Ben ist nur zu „Abend“ eingeladen und sieht „Privat“ auch in der Statistik nicht.
+        assertEquals(listOf(shared.toString()), inA { levels.groupEvents(ben(), "90") }.events.map { it.eventId })
+        val groupEvents = inA { levels.groupEvents(admin(), "90") }
         assertEquals(2, groupEvents.events.size)
         assertEquals(1, groupEvents.events.first { it.eventId == shared.toString() }.accepted)
         assertEquals(1, groupEvents.events.first { it.eventId == shared.toString() }.noAnswer)

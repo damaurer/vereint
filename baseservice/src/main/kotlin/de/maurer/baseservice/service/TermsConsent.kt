@@ -24,7 +24,7 @@ import java.time.Instant
  */
 @Component
 class TermsConsent(
-    @Value("\${vereint.legal.terms-version:2026-11-10}") val termsVersion: String,
+    @Value("\${vereint.legal.terms-version:2026-11-11}") val termsVersion: String,
     private val clock: Clock = Clock.systemUTC()
 ) {
 

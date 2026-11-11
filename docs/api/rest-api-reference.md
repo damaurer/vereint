@@ -226,7 +226,17 @@ Gruppenübergreifend und ohne gewählte Gruppe, siehe [Kalender, Freunde und Dir
 | `GET` | `/api/v1/images/{id}` | Bildmetadaten; die URL zeigt auf `/content`, nicht direkt auf S3 | Mitglied |
 | `GET` | `/api/v1/images/{id}/content` | Entschlüsselte Bilddaten | Mitglied |
 | `DELETE` | `/api/v1/images/{id}` | Bild löschen | Eigentümer, `event.manage` oder `catalog.approve` |
-| `GET` | `/api/v1/statistics` | Kennzahlen der Gruppe für die letzten 90 Tage, eigene Platzierung | Mitglied |
+| `GET` | `/api/v1/statistics` | Kennzahlen der Gruppe im Zeitraum (`period=30\|90\|year` oder `zeitraum=30\|90\|jahr`, Standard 90), eigene Platzierung | Mitglied |
+| `GET` | `/api/v1/statistics/me` | Eigene Statistik über alle eigenen Gruppen (`zeitraum`); ohne gewählte Gruppe | angemeldet |
+| `GET` | `/api/v1/statistics/events` | Übergreifende Event-Statistik über alle sichtbaren Events der eigenen Gruppen, ohne fremde Namen (`zeitraum`); ohne gewählte Gruppe | angemeldet |
+| `GET` | `/api/v1/statistics/group-events` | Events der Gruppe zusammengefasst und im Vergleich (`zeitraum`) | Mitglied |
+| `GET` | `/api/v1/statistics/features` | Je Funktion ausgelöst und beantwortet (`zeitraum`) | Mitglied |
+| `GET` | `/api/v1/events/{id}/statistics` | Statistik eines Events | wer das Event sehen darf |
+| `GET`, `PUT` | `/api/v1/me/statistics-settings` | Schalter „Meine Statistik erfassen“ (`{ "enabled": true }`) | angemeldet |
+| `DELETE` | `/api/v1/me/statistics` | Eigene Statistikdaten in allen Gruppen löschen; Audit-Eintrag | angemeldet |
+| `GET` | `/api/v1/stammtisch/statistics-settings` | Schalter „Statistik in dieser Gruppe“ lesen | Mitglied |
+| `PUT` | `/api/v1/stammtisch/statistics-settings` | Schalter der Gruppe setzen; Audit-Eintrag | `stammtisch.manage` |
+| `DELETE` | `/api/v1/stammtisch/statistics` | Statistikdaten der Gruppe löschen; Audit-Eintrag | `stammtisch.manage` |
 | `GET` | `/api/v1/audit-logs` | Revisionsprotokoll mit Filtern `targetEntity`, `action`, `actorId`, `targetId`; sichtbare Bereiche hängen von `audit.read`, `audit.read.all` und der Vorstandsrolle ab | `audit.read` |
 
 ### 9. Gruppen, Datenexport & Getränkedatenbank (`StammtischController`, `StammtischExportController`, `DrinkLibraryController`)

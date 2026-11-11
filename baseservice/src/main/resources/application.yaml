@@ -114,7 +114,7 @@ vereint:
     # Gültige Fassung der AGB (Datum wie `TERMS_VERSION` im Frontend). Wer ein
     # Konto anlegt oder eine Gruppe eröffnet, stimmt dieser Fassung zu; alle
     # anderen Konten werden nach dem Login gefragt, bevor die App nutzbar ist.
-    terms-version: ${TERMS_VERSION:2026-11-10}
+    terms-version: ${TERMS_VERSION:2026-11-11}
 management:
   endpoints:
     web:

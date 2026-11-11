@@ -81,7 +81,7 @@ Oben stehen Status, Zeit und Ort. Darunter teilen Reiter die Seite in **Stammdat
 
 <img src="bilder/v-event-verwalten.png" alt="Event verwalten" width="300" align="right">
 
-Reiter **Stammdaten**: Titel, Ort, Beschreibung, Beginn und Ende ändern, dazu wann die Eingeladenen benachrichtigt werden und ob es eine Erinnerung gibt. Dann **Stammdaten speichern**.
+Reiter **Stammdaten**: Titel, Ort, Beschreibung, Beginn und Ende ändern, dazu wann die Eingeladenen benachrichtigt werden, ob es eine Erinnerung gibt und ob es eine **Statistik für dieses Event** gibt. Dann **Stammdaten speichern**.
 
 Über **Status** steuerst du den Ablauf:
 
@@ -223,6 +223,18 @@ Ein Thekenterminal im Kiosk-Modus lässt sich am Gerät nur mit seiner PIN verla
 2. Beim richtigen Gerät **Entsperren** tippen.
 
 Das Gerät verlässt den Kiosk-Modus innerhalb weniger Sekunden. Start, Fernentsperrung und PIN-Sperren stehen in **Letzte Aktionen**.
+
+## Statistik der Gruppe
+
+Unter **Mehr → Statistik** seht ihr die Gruppenstatistik, **Events der Gruppe** und **Funktionen**. Den **Umsatz** sehen nur Vorstand, Kasse und Admin; er kommt immer aus der Kasse, auch wenn die Statistik aus ist.
+
+Drei Schalter steuern, was erfasst wird. Alle sind zunächst an:
+
+- **Statistik für dieses Event** beim Anlegen oder unter **Verwalten → Stammdaten**: Aus heißt, im Event wird nichts Neues erfasst, weder Zusagen noch Striche, Moments oder Chat.
+- **Statistik in dieser Gruppe** unter **Mehr → Gruppeneinstellungen** (nur mit dem Recht, die Gruppe zu verwalten, meist Admin): Aus heißt, in der Gruppe und allen ihren Events wird nichts erfasst, auch wenn ein Event an ist.
+- **Meine Statistik erfassen** stellt jede Person selbst in **Mein Konto** ein. Er geht der Gruppe vor: Wer aus ist, wird nirgends erfasst.
+
+Ausschalten wirkt ab sofort und löscht nichts. **Statistikdaten der Gruppe löschen** in den Gruppeneinstellungen löscht nach einer Rückfrage alle erfassten Statistikdaten der Gruppe; Buchungen und Guthaben bleiben. Umschalten und Löschen stehen in **Letzte Aktionen**. Der Datenexport der Gruppe enthält die Statistikdaten.
 
 ## Moments: Typen & Reaktionen
 

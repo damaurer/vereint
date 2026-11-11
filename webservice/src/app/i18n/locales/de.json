@@ -308,7 +308,8 @@
       "scan": "Bezahlen",
       "stammtisch": "Gruppeneinstellungen",
       "calendar": "Kalender",
-      "friends": "Freunde"
+      "friends": "Freunde",
+      "myStatistics": "Meine Statistik"
     },
     "sections": {
       "club": "Gruppe",
@@ -578,6 +579,26 @@
     "termsConsent": {
       "title": "AGB zustimmen",
       "description": "Der aktuellen Fassung der AGB zustimmen."
+    },
+    "myStatistics": {
+      "title": "Meine Statistik",
+      "description": "Alles, was du ausgelöst hast, über alle deine Gruppen."
+    },
+    "crossEventStatistics": {
+      "title": "Events übergreifend",
+      "description": "Alle sichtbaren Events aus deinen Gruppen im Vergleich."
+    },
+    "groupEventStatistics": {
+      "title": "Events der Gruppe",
+      "description": "Alle Events der Gruppe zusammengefasst und im Vergleich."
+    },
+    "featureStatistics": {
+      "title": "Funktionen",
+      "description": "Wie oft Funktionen ausgelöst und wie darauf geantwortet wurde."
+    },
+    "eventStatistics": {
+      "title": "Event-Statistik",
+      "description": "Antworten, Anwesende, Striche, Moments und Chat eines Events."
     }
   },
   "chat": {
@@ -1679,6 +1700,11 @@
         "end": "Das Ende muss nach dem Beginn liegen.",
         "notifyAt": "Bitte gib den Zeitpunkt der Benachrichtigung an."
       }
+    },
+    "statistics": {
+      "tab": "Statistik",
+      "switch": "Statistik für dieses Event",
+      "hint": "Aus heißt: In diesem Event wird nichts erfasst."
     }
   },
   "statistics": {
@@ -1729,7 +1755,11 @@
     "links": {
       "label": "Weitere Statistiken",
       "drinks": "Getränkestatistik: wer, was, wie viel, kcal",
-      "overview": "Alle Statistiken im Überblick"
+      "overview": "Alle Statistiken im Überblick",
+      "groupEvents": "Events der Gruppe im Vergleich",
+      "features": "Funktionen: ausgelöst und Antworten",
+      "mine": "Meine Statistik",
+      "crossEvents": "Alle meine Events (gruppenübergreifend)"
     },
     "period": {
       "label": "Zeitraum",
@@ -1876,6 +1906,121 @@
         "fastest": "Schnellste Zusage",
         "fastestValue": "{label} · nach {count} Min"
       }
+    },
+    "recording": {
+      "groupOff": "Die Statistik ist in dieser Gruppe ausgeschaltet.",
+      "groupOffHint": "Neue Aktivitäten werden nicht erfasst. Bereits erfasste Zahlen bleiben, bis sie gelöscht werden.",
+      "eventOff": "Die Statistik ist für dieses Event ausgeschaltet.",
+      "eventOffHint": "Im Event wird nichts Neues erfasst.",
+      "userOff": "Du hast deine Statistik ausgeschaltet.",
+      "userOffHint": "Über dich wird in keiner Gruppe etwas Neues erfasst.",
+      "toAccount": "Zu Mein Konto"
+    },
+    "features": {
+      "purchase": "Striche und Käufe",
+      "round": "Runden",
+      "top_up": "Aufladungen",
+      "event": "Events erstellt",
+      "rsvp": "Antworten auf Einladungen",
+      "moment": "Moments gestartet",
+      "moment_reaction": "Reaktionen auf Moments",
+      "moment_media": "Bilder und Videos in Moments",
+      "chat_message": "Chat-Nachrichten",
+      "chat_reaction": "Reaktionen im Chat",
+      "invite_link": "Einladungslinks",
+      "invite_join": "Beitritte über Einladungslink"
+    },
+    "mine": {
+      "eyebrow": "Mein Konto",
+      "title": "Meine Statistik",
+      "intro": "Alles, was du ausgelöst hast, über alle deine Gruppen und Events. Nur du siehst diese Seite.",
+      "empty": "Im Zeitraum ist noch nichts von dir erfasst.",
+      "accepted": "Zusagen",
+      "attended": "Teilnahmen",
+      "byFeature": "Nach Funktion",
+      "byGroup": "Nach Gruppe",
+      "groupOff": "Statistik aus"
+    },
+    "events": {
+      "empty": "Im Zeitraum gibt es keine Events.",
+      "off": "Statistik aus",
+      "purchases": "Striche",
+      "attendees": "Teilnehmende",
+      "moments": "Moments",
+      "chat": "Chat-Nachrichten",
+      "mine": "Meine Striche",
+      "myAnswer": "Meine Antwort",
+      "answer": {
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt"
+      },
+      "count": "Events",
+      "attendances": "Teilnahmen",
+      "perEvent": "{{value}} je Event",
+      "compare": "Events im Vergleich"
+    },
+    "crossEvents": {
+      "eyebrow": "Alle meine Gruppen",
+      "title": "Events übergreifend",
+      "intro": "Alle Events aus deinen Gruppen, die du sehen darfst. Gezeigt werden Summen, Durchschnitte und deine eigenen Werte, keine Namen anderer Personen.",
+      "mine": "Du warst bei {{attended}} Events dabei und hast {{purchases}} Striche gemacht."
+    },
+    "groupEvents": {
+      "title": "Events der Gruppe"
+    },
+    "featureStats": {
+      "title": "Funktionen",
+      "intro": "Wie oft jede Funktion der Gruppe ausgelöst wurde und wie darauf geantwortet wurde.",
+      "triggered": "ausgelöst",
+      "response": {
+        "rsvp": "Antworten",
+        "moment_reaction": "Reaktionen",
+        "chat_reaction": "Reaktionen",
+        "invite_join": "Beitritte",
+        "round_members": "bedachte Personen"
+      },
+      "variant": {
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt",
+        "moment_reaction": "Reaktionen",
+        "moment_media": "Bilder und Videos",
+        "club": "Gruppenchat",
+        "event": "Event-Chat",
+        "moment": "Moment-Chat",
+        "round": "Runde",
+        "evening": "Abendaktion",
+        "pwaBarcode": "Barcode-Kauf",
+        "tabletManual": "Strichliste",
+        "other": "Sonstige"
+      }
+    },
+    "eventStats": {
+      "title": "Event-Statistik",
+      "back": "Zurück zum Event",
+      "answers": "Antworten auf die Einladung",
+      "reactions": "{{reactions}} Reaktionen, {{media}} Bilder/Videos",
+      "chatReactions": "{{count}} Reaktionen",
+      "consumers": "Striche je Person"
+    },
+    "settings": {
+      "mine": {
+        "title": "Statistik",
+        "switch": "Meine Statistik erfassen",
+        "hint": "Aus heißt: Über dich wird in keiner Gruppe und keinem Event etwas erfasst. Ausschalten löscht nichts.",
+        "delete": "Meine erfassten Statistikdaten löschen",
+        "confirm": "Wirklich alle über dich erfassten Statistikdaten in allen Gruppen löschen? Das lässt sich nicht rückgängig machen."
+      },
+      "group": {
+        "title": "Statistik",
+        "switch": "Statistik in dieser Gruppe",
+        "hint": "Aus heißt: In der Gruppe und ihren Events wird nichts erfasst. Ausschalten löscht nichts.",
+        "delete": "Statistikdaten der Gruppe löschen",
+        "confirm": "Wirklich alle Statistikdaten dieser Gruppe löschen? Das lässt sich nicht rückgängig machen."
+      },
+      "confirmDelete": "Ja, endgültig löschen",
+      "deleted": "{{count}} Einträge gelöscht."
     }
   },
   "guest": {

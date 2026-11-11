@@ -157,6 +157,35 @@ Thekenterminals.
 - Füllmenge und Kalorien je Portion stehen am Getränk (Katalog und
   Getränkedatenbank, für die Startdaten aus Open Food Facts vorbefüllt);
   Getränke ohne Angabe zählen bei Litern bzw. Kalorien nicht mit.
+- Sechs Ebenen, alle mit Zeitraum außer der Event-Statistik:
+  - *Meine Statistik* (`/statistik/ich`): alles, was ich ausgelöst habe, über
+    alle meine Gruppen, aufgeschlüsselt nach Funktion und Gruppe. Nur für mich.
+  - *Events übergreifend* (`/statistik/events`): alle Events meiner Gruppen,
+    die ich sehen darf, mit Summen, Durchschnitten und meinen eigenen Werten,
+    ohne Namen anderer Personen.
+  - *Gruppenstatistik* (`/statistik` mit Getränkestatistik und Übersicht).
+  - *Events der Gruppe* (`/statistik/gruppe/events`): alle Events der Gruppe
+    zusammengefasst und im Vergleich.
+  - *Event-Statistik* (`/events/:id/statistik`): Antworten, Anwesende,
+    Striche, Runden, Moments, Reaktionen und Event-Chat eines Events, für alle,
+    die das Event sehen dürfen.
+  - *Funktionen* (`/statistik/funktionen`): je Funktion, wie oft sie
+    ausgelöst und wie darauf geantwortet wurde.
+- Erfasst werden Käufe und Striche (auch Kiosk, Barcode, Runden), Aufladungen,
+  Events, Zusagen, Moments mit Reaktionen und Bildern, Chatnachrichten und
+  Chat-Reaktionen in Gruppen- und Event-Chats, Einladungslinks und Beitritte.
+  Direktnachrichten werden nicht erfasst. Ein stornierter Kauf verschwindet
+  wieder aus der Statistik.
+- Drei Schalter, alle standardmäßig an: *Meine Statistik erfassen*
+  (Mein Konto), *Statistik in dieser Gruppe* (Gruppeneinstellungen, Recht
+  `stammtisch.manage`) und *Statistik für dieses Event* (Event anlegen und
+  verwalten). Es gilt Nutzer vor Gruppe vor Event: Ist einer aus, wird nichts
+  erfasst. Ausschalten wirkt ab sofort und löscht nichts.
+- Löschen: *Meine erfassten Statistikdaten löschen* (Mein Konto, alle
+  Gruppen) und *Statistikdaten der Gruppe löschen* (Gruppeneinstellungen).
+  Beides verlangt eine Bestätigung und steht im Protokoll der Gruppe. Buchungen
+  der Kasse und der Umsatz bleiben unberührt.
+- Die Statistikdaten sind Teil des Gruppen-Exports.
 - Details: [docs/domains/statistics-and-analytics.md](domains/statistics-and-analytics.md)
 
 ## Mitglieder per Einladungslink

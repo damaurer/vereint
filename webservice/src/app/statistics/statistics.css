@@ -429,7 +429,76 @@
   background: var(--color-surface-subtle);
 }
 
+/* Statistik-Ebenen: Events im Vergleich, Funktionen, Schalter */
+.compare-list {
+  gap: 1rem;
+}
+
+.compare-row {
+  display: grid;
+  gap: 0.4rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.compare-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.compare-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+}
+
+.compare-head a {
+  color: inherit;
+  font-weight: 700;
+}
+
+.compare-kv {
+  grid-template-columns: repeat(2, minmax(0, 1fr) auto);
+  font-size: 0.85rem;
+}
+
+.feature-card {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.feature-numbers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  font-size: 0.9rem;
+}
+
+.feature-numbers strong {
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.stats-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 @media (max-width: 30rem) {
+  .compare-kv {
+    grid-template-columns: 1fr auto;
+  }
+
   .stats-kpi-value {
     font-size: 1.3rem;
   }

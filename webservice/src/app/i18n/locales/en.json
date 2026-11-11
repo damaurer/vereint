@@ -314,7 +314,8 @@
       "scan": "Pay",
       "stammtisch": "Group settings",
       "calendar": "Calendar",
-      "friends": "Friends"
+      "friends": "Friends",
+      "myStatistics": "My statistics"
     },
     "sections": {
       "club": "Group",
@@ -584,6 +585,26 @@
     "termsConsent": {
       "title": "Accept the terms",
       "description": "Accept the current version of the terms."
+    },
+    "myStatistics": {
+      "title": "My statistics",
+      "description": "Everything you triggered, across all your groups."
+    },
+    "crossEventStatistics": {
+      "title": "Events across groups",
+      "description": "All visible events from your groups compared."
+    },
+    "groupEventStatistics": {
+      "title": "Group events",
+      "description": "All events of the group summarised and compared."
+    },
+    "featureStatistics": {
+      "title": "Features",
+      "description": "How often features were triggered and how people replied."
+    },
+    "eventStatistics": {
+      "title": "Event statistics",
+      "description": "Replies, attendees, tallies, moments and chat of an event."
     }
   },
   "chat": {
@@ -1712,6 +1733,11 @@
         "end": "The end must be after the start.",
         "notifyAt": "Please enter the notification time."
       }
+    },
+    "statistics": {
+      "tab": "Statistics",
+      "switch": "Statistics for this event",
+      "hint": "Off means nothing is recorded in this event."
     }
   },
   "statistics": {
@@ -1762,7 +1788,11 @@
     "links": {
       "label": "More statistics",
       "drinks": "Drink statistics: who, what, how much, kcal",
-      "overview": "All statistics at a glance"
+      "overview": "All statistics at a glance",
+      "groupEvents": "Group events compared",
+      "features": "Features: triggered and replies",
+      "mine": "My statistics",
+      "crossEvents": "All my events (across groups)"
     },
     "period": {
       "label": "Period",
@@ -1909,6 +1939,121 @@
         "fastest": "Fastest RSVP",
         "fastestValue": "{label} · after {count} min"
       }
+    },
+    "recording": {
+      "groupOff": "Statistics are switched off in this group.",
+      "groupOffHint": "New activity is not recorded. Numbers already recorded stay until they are deleted.",
+      "eventOff": "Statistics are switched off for this event.",
+      "eventOffHint": "Nothing new is recorded in this event.",
+      "userOff": "You switched off your statistics.",
+      "userOffHint": "Nothing new about you is recorded in any group.",
+      "toAccount": "Go to My account"
+    },
+    "features": {
+      "purchase": "Tallies and purchases",
+      "round": "Rounds",
+      "top_up": "Top-ups",
+      "event": "Events created",
+      "rsvp": "Replies to invitations",
+      "moment": "Moments started",
+      "moment_reaction": "Reactions to moments",
+      "moment_media": "Photos and videos in moments",
+      "chat_message": "Chat messages",
+      "chat_reaction": "Chat reactions",
+      "invite_link": "Invite links",
+      "invite_join": "Joins via invite link"
+    },
+    "mine": {
+      "eyebrow": "My account",
+      "title": "My statistics",
+      "intro": "Everything you triggered, across all your groups and events. Only you can see this page.",
+      "empty": "Nothing of yours has been recorded in this period yet.",
+      "accepted": "Acceptances",
+      "attended": "Attendances",
+      "byFeature": "By feature",
+      "byGroup": "By group",
+      "groupOff": "statistics off"
+    },
+    "events": {
+      "empty": "There are no events in this period.",
+      "off": "statistics off",
+      "purchases": "Tallies",
+      "attendees": "Attendees",
+      "moments": "Moments",
+      "chat": "Chat messages",
+      "mine": "My tallies",
+      "myAnswer": "My reply",
+      "answer": {
+        "accepted": "Accepted",
+        "maybe": "Maybe",
+        "declined": "Declined"
+      },
+      "count": "Events",
+      "attendances": "Attendances",
+      "perEvent": "{{value}} per event",
+      "compare": "Events compared"
+    },
+    "crossEvents": {
+      "eyebrow": "All my groups",
+      "title": "Events across groups",
+      "intro": "All events from your groups that you may see. Shows totals, averages and your own values, no names of other people.",
+      "mine": "You attended {{attended}} events and made {{purchases}} tallies."
+    },
+    "groupEvents": {
+      "title": "Group events"
+    },
+    "featureStats": {
+      "title": "Features",
+      "intro": "How often each feature of the group was triggered and how people replied.",
+      "triggered": "triggered",
+      "response": {
+        "rsvp": "replies",
+        "moment_reaction": "reactions",
+        "chat_reaction": "reactions",
+        "invite_join": "joins",
+        "round_members": "people treated"
+      },
+      "variant": {
+        "accepted": "Accepted",
+        "maybe": "Maybe",
+        "declined": "Declined",
+        "moment_reaction": "Reactions",
+        "moment_media": "Photos and videos",
+        "club": "Group chat",
+        "event": "Event chat",
+        "moment": "Moment chat",
+        "round": "Round",
+        "evening": "Evening special",
+        "pwaBarcode": "Barcode purchase",
+        "tabletManual": "Tally sheet",
+        "other": "Other"
+      }
+    },
+    "eventStats": {
+      "title": "Event statistics",
+      "back": "Back to the event",
+      "answers": "Replies to the invitation",
+      "reactions": "{{reactions}} reactions, {{media}} photos/videos",
+      "chatReactions": "{{count}} reactions",
+      "consumers": "Tallies per person"
+    },
+    "settings": {
+      "mine": {
+        "title": "Statistics",
+        "switch": "Record my statistics",
+        "hint": "Off means nothing about you is recorded in any group or event. Switching off deletes nothing.",
+        "delete": "Delete my recorded statistics",
+        "confirm": "Really delete all statistics recorded about you in all groups? This cannot be undone."
+      },
+      "group": {
+        "title": "Statistics",
+        "switch": "Statistics in this group",
+        "hint": "Off means nothing is recorded in the group and its events. Switching off deletes nothing.",
+        "delete": "Delete the group statistics",
+        "confirm": "Really delete all statistics of this group? This cannot be undone."
+      },
+      "confirmDelete": "Yes, delete permanently",
+      "deleted": "{{count}} entries deleted."
     }
   },
   "guest": {

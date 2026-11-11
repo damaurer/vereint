@@ -270,7 +270,22 @@ Oben wählst du den **Zeitraum**: **30 Tage**, **90 Tage** oder **Jahr** (das la
 
 **Alle Statistiken im Überblick** fasst alles auf einer Seite zusammen, am besten am Rechner: Mitglieder, Events, Zusagen je Event und je Mitglied (mit **Da gewesen**: Events mit mindestens einem Strich oder Kauf), Getränke je Woche, nach Wochentag und Uhrzeit, **Wer trinkt was?** nach Bier, Alkoholfrei, Schnaps, Wein & Sekt, die beliebtesten Getränke, Rundengeber, Moments, Chat und Rekorde. Den **Umsatz** sehen dort nur Vorstand und Kasse.
 
+**Events der Gruppe** vergleicht alle Events der Gruppe im Zeitraum: Antworten als Balken (Zugesagt, Vielleicht, Abgesagt, Keine Antwort), Teilnehmende, Striche, Moments und Chat. Ein Tipp auf ein Event öffnet seine **Event-Statistik**; die erreichst du auch auf der Eventseite über **Statistik**. **Funktionen** zeigt je Funktion, wie oft sie benutzt und wie darauf geantwortet wurde, zum Beispiel Events und Zusagen, Moments und Reaktionen, Einladungslinks und Beitritte.
+
 <br clear="right">
+
+### Meine Statistik
+
+Unter **Mehr → Meine Statistik** siehst du nur für dich, was du ausgelöst hast, über alle deine Gruppen: Striche, Zusagen, Teilnahmen, Moments, Chatnachrichten und mehr, aufgeschlüsselt nach Funktion und nach Gruppe. **Events übergreifend** vergleicht alle Events deiner Gruppen, die du sehen darfst, mit Summen, Durchschnitten und deinen eigenen Werten. Namen anderer Personen stehen dort nicht.
+
+### Statistik ausschalten oder löschen
+
+In **Mein Konto** steht der Abschnitt **Statistik**:
+
+- **Meine Statistik erfassen**: Schaltest du ihn aus, wird über dich in keiner Gruppe und keinem Event mehr etwas erfasst. Das gilt auch, wenn die Gruppe ihre Statistik an hat. Ausschalten löscht nichts.
+- **Meine erfassten Statistikdaten löschen**: löscht nach einer Rückfrage alles, was über dich erfasst wurde, in allen Gruppen. Deine Buchungen und dein Guthaben bleiben. Das Löschen steht im Protokoll der Gruppe.
+
+Direktnachrichten werden nie erfasst. Ein storniertes Getränk verschwindet wieder aus der Statistik.
 
 ## Eine Gruppe verlassen
 

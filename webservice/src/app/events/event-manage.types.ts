@@ -25,6 +25,7 @@ export interface UpdateEventPayload {
   inviteOnPublish?: boolean;
   /** Erinnerung so viele Stunden vor Beginn; `0` = keine. */
   reminderHoursBefore?: number;
+  statisticsEnabled?: boolean;
 }
 
 /** Teilnehmerrolle innerhalb eines Events. */

@@ -53,6 +53,11 @@ const PRIVATE_CLIENT_PATHS: readonly string[] = [
   'statistik',
   'statistik/getraenke',
   'statistik/uebersicht',
+  'statistik/ich',
+  'statistik/events',
+  'statistik/gruppe/events',
+  'statistik/funktionen',
+  'events/:eventId/statistik',
   'agb-zustimmen',
 ];
 

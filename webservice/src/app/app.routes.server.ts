@@ -54,6 +54,11 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'statistik', renderMode: RenderMode.Client },
   { path: 'statistik/getraenke', renderMode: RenderMode.Client },
   { path: 'statistik/uebersicht', renderMode: RenderMode.Client },
+  { path: 'statistik/ich', renderMode: RenderMode.Client },
+  { path: 'statistik/events', renderMode: RenderMode.Client },
+  { path: 'statistik/gruppe/events', renderMode: RenderMode.Client },
+  { path: 'statistik/funktionen', renderMode: RenderMode.Client },
+  { path: 'events/:eventId/statistik', renderMode: RenderMode.Client },
   { path: 'agb-zustimmen', renderMode: RenderMode.Client },
 
   // Deny by default: unbekannte Pfade werden nicht serverseitig gerendert.

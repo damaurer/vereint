@@ -11,6 +11,7 @@ import { StateComponent } from '../ui/state.component';
 import { ThemeService, type ThemePreference } from '../shell/theme.service';
 import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
 import { I18nService, TranslatePipe } from '../i18n';
+import { StatisticsSettingsComponent } from '../statistics/statistics-settings.component';
 
 /**
  * Persönliches Profil eines Mitglieds (TICKET-024, Redesign TICKET-033).
@@ -31,6 +32,7 @@ import { I18nService, TranslatePipe } from '../i18n';
     StateComponent,
     TranslatePipe,
     PwaSettingsComponent,
+    StatisticsSettingsComponent,
   ],
   templateUrl: './profile.component.html',
   styles: [

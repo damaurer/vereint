@@ -219,6 +219,12 @@ describe('EventDetailComponent', () => {
     expect(link.getAttribute('href')).toBe('/events/e-1/manage');
   });
 
+  it('links to the event statistics', async () => {
+    const fixture = await create();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="event-statistics-link"]') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/events/e-1/statistik');
+  });
+
   it('shows the event chat, marks it read and sends messages', async () => {
     const fixture = await create();
     expect(api.getEventConversation).toHaveBeenCalledWith('e-1');
