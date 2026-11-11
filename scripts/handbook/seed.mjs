@@ -16,6 +16,9 @@ export const APP_URL = process.env.HANDBOOK_APP_URL ?? 'http://localhost:4200';
 const KEYCLOAK_URL = process.env.HANDBOOK_KEYCLOAK_URL ?? 'http://localhost:8082';
 const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM ?? 'vereint';
 
+/** Zweite Gruppe für die Seite „Gruppe wählen“; Felix leitet sie, Jonas ist Mitglied. */
+export const SECOND_GROUP_NAME = 'Kegelclub Alle Neune';
+
 /** Demo-Personen; die Passwörter existieren nur lokal. */
 export const PEOPLE = {
   member: { username: 'member', password: process.env.KEYCLOAK_SEED_MEMBER_PASSWORD, firstName: 'Lena', lastName: 'Hoffmann' },
@@ -121,7 +124,49 @@ export function apiFor(context) {
     post: (path, body) => request('POST', path, body ?? {}),
     postIdempotent: (path, body) => request('POST', path, body ?? {}, { 'Idempotency-Key': randomUUID() }),
     put: (path, body) => request('PUT', path, body ?? {}),
+    /** Lädt eine Datei als rohen Request-Körper hoch (Bilder und Videos eines Moments). */
+    upload: (path, data, contentType) => request('POST', path, data, { 'content-type': contentType }),
   };
+}
+
+/** Zwei gezeichnete Demo-Fotos (JPEG), damit keine echten Bilder im Repository liegen müssen. */
+async function demoPhotos(context) {
+  const mug = (x, tilt) => `
+    <g transform="translate(${x} 150) rotate(${tilt} 60 110)">
+      <rect x="0" y="40" width="120" height="170" rx="14" fill="#f2b23a" stroke="#fff7e0" stroke-width="8"/>
+      <path d="M120 80 h28 a22 22 0 0 1 22 22 v46 a22 22 0 0 1 -22 22 h-28" fill="none" stroke="#fff7e0" stroke-width="12"/>
+      <path d="M-8 52 q10 -40 40 -26 q14 -30 44 -10 q30 -14 44 14 q14 20 -4 34 h-116 q-18 -2 -8 -12z" fill="#fffdf5"/>
+      <rect x="26" y="96" width="12" height="90" rx="6" fill="#f7cd72"/><rect x="56" y="96" width="12" height="90" rx="6" fill="#f7cd72"/>
+    </g>`;
+  const scenes = [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+      <defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b2a20"/><stop offset="1" stop-color="#8a4b25"/></linearGradient></defs>
+      <rect width="800" height="600" fill="url(#a)"/>
+      <circle cx="140" cy="90" r="46" fill="#ffd98a" opacity=".55"/><circle cx="400" cy="60" r="34" fill="#ffd98a" opacity=".45"/><circle cx="660" cy="100" r="50" fill="#ffd98a" opacity=".5"/>
+      <rect y="470" width="800" height="130" fill="#5a3418"/><rect y="470" width="800" height="14" fill="#74451f"/>
+      ${mug(210, 14)}${mug(440, -14)}
+      <path d="M392 150 l8 -34 M420 160 l22 -26 M368 162 l-18 -28" stroke="#fffdf5" stroke-width="8" stroke-linecap="round"/>
+    </svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+      <defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fc7ee"/><stop offset="1" stop-color="#e9f4fb"/></linearGradient></defs>
+      <rect width="800" height="600" fill="url(#b)"/>
+      <circle cx="640" cy="120" r="56" fill="#ffe08a"/>
+      <path d="M0 420 L170 210 L300 340 L450 150 L620 330 L800 230 V600 H0z" fill="#6f8f6a"/>
+      <path d="M450 150 l38 40 l-30 -6 l-18 22 l-22 -24z" fill="#f7fbfd"/>
+      <path d="M0 470 Q200 400 400 460 T800 440 V600 H0z" fill="#3f7a44"/>
+      <rect x="250" y="440" width="300" height="20" rx="6" fill="#8a5a2b"/><rect x="280" y="460" width="16" height="80" fill="#6e4520"/><rect x="504" y="460" width="16" height="80" fill="#6e4520"/>
+      <rect x="230" y="500" width="340" height="14" rx="6" fill="#8a5a2b"/>
+    </svg>`,
+  ];
+  const page = await context.newPage();
+  await page.setViewportSize({ width: 800, height: 600 });
+  const photos = [];
+  for (const svg of scenes) {
+    await page.setContent(`<body style="margin:0">${svg}</body>`);
+    photos.push(await page.screenshot({ type: 'jpeg', quality: 82 }));
+  }
+  await page.close();
+  return photos;
 }
 
 const day = 24 * 60 * 60 * 1000;
@@ -317,10 +362,18 @@ export async function seedAppData(sessions) {
       title: 'Prost auf den Vereinsabend!',
       topicType: 'toast',
       message: 'Alle Gläser hoch 🍻',
+      // Lang genug, damit der Moment auch bei späteren Aufnahmen mit `--reuse` noch läuft.
+      durationMinutes: 240,
     });
-    for (const key of ['member', 'jonas', 'mia']) {
-      await api[key].post(`/moments/${moment.id}/responses`, { reaction: 'TOAST', statusText: 'Prost!' });
-    }
+    // Lena und Jonas hängen je ein Foto an ihre Reaktion, Mia stößt nur an.
+    const [toastPhoto, viewPhoto] = await demoPhotos(sessions.member.context);
+    const respond = async (key, statusText, photo) => {
+      const mediaIds = photo ? [(await api[key].upload(`/moments/${moment.id}/media`, photo, 'image/jpeg')).id] : [];
+      await api[key].post(`/moments/${moment.id}/responses`, { reaction: 'TOAST', statusText, mediaIds });
+    };
+    await respond('mia', 'Prost!');
+    await respond('jonas', 'Gruß von der Terrasse', viewPhoto);
+    await respond('member', 'Prost aus dem Vereinsheim!', toastPhoto);
   } catch (error) {
     console.warn(`Moment konnte nicht angelegt werden: ${error.message}`);
   }
@@ -348,5 +401,23 @@ export async function seedAppData(sessions) {
   // Gast-Einladung für den Stammtisch (Link für die Gast-Anleitung).
   const invite = await api.board.post(`/events/${stammtisch.id}/invites`, { maxUses: 5, expiresInMinutes: 7 * 24 * 60, role: 'guest' });
 
-  return { ids, events: { stammtisch, wanderung, weihnachten }, inviteAcceptPath: invite.acceptPath };
+  // Zweite Gruppe: Felix eröffnet sie, Jonas tritt per Einladungslink bei. Beide
+  // sehen danach nach der Anmeldung die Seite „Gruppe wählen“. Steht am Ende,
+  // weil Anfragen mit zwei Gruppen ohne Auswahl nicht mehr eindeutig sind.
+  // Der Link bleibt gültig und zeigt den Beitritt mit bestehendem Konto.
+  let groupJoinPath = null;
+  try {
+    const secondGroup = await api.felix.post('/stammtische', { name: SECOND_GROUP_NAME, acceptTerms: true });
+    const selected = await sessions.felix.context.request.post(`${APP_URL}/api/auth/stammtisch`, {
+      data: { stammtischId: secondGroup.id },
+    });
+    if (!selected.ok()) throw new Error(`Gruppe wählen: ${selected.status()}`);
+    const groupInvite = await api.felix.post('/member-invites', { label: 'Neue Kegelfreunde', maxUses: 20, expiresInDays: 30 });
+    await api.jonas.post('/member-invites/join', { token: groupInvite.token });
+    groupJoinPath = groupInvite.registerPath;
+  } catch (error) {
+    console.warn(`Zweite Gruppe konnte nicht angelegt werden: ${error.message}`);
+  }
+
+  return { ids, events: { stammtisch, wanderung, weihnachten }, inviteAcceptPath: invite.acceptPath, groupJoinPath };
 }
