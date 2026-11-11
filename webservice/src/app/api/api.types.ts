@@ -808,16 +808,145 @@ export interface CalendarResponse {
   entries: CalendarEntry[];
 }
 
-// --- Statistik (`GET /api/v1/statistics`, alle Angemeldeten) ---
+// --- Statistik (`GET /api/v1/statistics…`, alle Mitglieder nach Zustimmung zu den AGB) ---
 
+/** Zeitraum der Statistik: letzte 30 bzw. 90 Tage oder laufendes Kalenderjahr. */
+export type StatisticsPeriodCode = '30' | '90' | 'year';
+
+/** Feste Kategoriegruppen für „Wer trinkt was?“. */
+export type DrinkCategoryGroup = 'beer' | 'nonAlcoholic' | 'spirits' | 'wineSparkling' | 'other';
+
+export interface MemberCount {
+  memberId: string;
+  displayName: string;
+  count: number;
+}
+
+/** Einstieg (`GET /api/v1/statistics?period=`). */
 export interface ClubStatistics {
-  periodDays: number;
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
   totalItems: number;
   myItems: number;
   myRank: number | null;
-  topConsumers: { memberId: string; displayName: string; count: number }[];
+  rankedMembers: number;
+  topConsumers: MemberCount[];
   attendancePercent: number | null;
-  spending: { total: string; currency: string; changePercent: number | null; weekly: string[] };
-  itemRanking: { name: string; count: number; sharePercent: number }[];
-  topEvents: { eventId: string; title: string; count: number }[];
+}
+
+export interface MemberDrinkStats {
+  rank: number;
+  memberId: string;
+  displayName: string;
+  count: number;
+  kcal: number;
+  liters: number;
+  perEvent: number | null;
+  perWeek: number;
+  categories: { category: DrinkCategoryGroup; count: number }[];
+  drinks: { name: string; volumeMl: number | null; count: number; kcal: number | null }[];
+}
+
+export interface DrinkTotals {
+  rank: number;
+  name: string;
+  category: DrinkCategoryGroup;
+  volumeMl: number | null;
+  count: number;
+  liters: number | null;
+  kcal: number | null;
+  members: number;
+  perEvent: number | null;
+}
+
+/** Getränkestatistik (`GET /api/v1/statistics/drinks?period=&by=`). */
+export interface DrinkStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  totalDrinks: number;
+  liters: number;
+  kcal: number;
+  withoutVolume: number;
+  withoutKcal: number;
+  averages: { perEvent: number | null; perDay: number; perWeek: number; perMonth: number };
+  by: 'member' | 'drink';
+  members: MemberDrinkStats[];
+  drinks: DrinkTotals[];
+}
+
+export interface StatisticsRecord {
+  label: string;
+  value: number;
+}
+
+/** Statistik-Übersicht (`GET /api/v1/statistics/overview?period=`). */
+export interface StatisticsOverview {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  kpis: {
+    members: number;
+    activeMembers: number;
+    newMembers: number;
+    events: number;
+    avgParticipants: number | null;
+    attendancePercent: number | null;
+    drinks: number;
+    drinksPerEvent: number | null;
+    liters: number;
+    litersPerWeek: number;
+    kcal: number;
+    kcalPerMember: number | null;
+    /** Nur für Vorstand/Kasse, sonst `null`. */
+    revenue: number | null;
+    revenuePerEvent: number | null;
+    currency: string;
+    drinksPerMonth: number;
+    withoutVolume: number;
+    withoutKcal: number;
+  };
+  rsvpByEvent: {
+    eventId: string;
+    title: string;
+    startsAt: string;
+    accepted: number;
+    maybe: number;
+    declined: number;
+    noAnswer: number;
+    invited: number;
+  }[];
+  rsvpByMember: {
+    memberId: string;
+    displayName: string;
+    accepted: number;
+    maybe: number;
+    declined: number;
+    attended: number;
+    invited: number;
+    quotePercent: number | null;
+  }[];
+  weekly: number[];
+  weekdays: { key: string; count: number }[];
+  hours: { key: string; count: number }[];
+  whoDrinksWhat: MemberDrinkStats[];
+  topDrinks: { name: string; count: number; perEvent: number | null }[];
+  categories: { category: DrinkCategoryGroup; count: number; sharePercent: number; liters: number; kcal: number }[];
+  roundGivers: MemberCount[];
+  moments: { started: number; reactions: number; media: number };
+  chat: { messages: number; mostActive: string | null; eventChats: number };
+  records: {
+    mostDrinksEvening: StatisticsRecord | null;
+    longestStreak: StatisticsRecord | null;
+    fastestRsvp: StatisticsRecord | null;
+  };
+}
+
+/** Stand der AGB-Zustimmung (`GET/POST /api/v1/users/me/terms`). */
+export interface TermsStatus {
+  currentVersion: string;
+  acceptedVersion: string | null;
+  acceptedAt: string | null;
+  accepted: boolean;
 }

@@ -102,7 +102,27 @@ export async function login(browser, person, contextOptions = {}) {
   await page.click('#kc-login');
   await page.waitForURL((url) => url.origin === new URL(APP_URL).origin && !url.pathname.startsWith('/api/'));
   await page.waitForLoadState('networkidle');
+  await acceptTerms(context, page);
   return { context, page };
+}
+
+/**
+ * Demo-Konten stimmen der gültigen AGB-Fassung zu, sonst hält die App sie nach
+ * dem Login auf der Zustimmungsseite fest. Wiederholt aufgerufen ändert das
+ * nichts.
+ */
+async function acceptTerms(context, page) {
+  const response = await context.request.post(`${APP_URL}/api/v1/users/me/terms`, {
+    headers: { accept: 'application/json' },
+    data: { acceptTerms: true },
+  });
+  if (!response.ok()) {
+    throw new Error(`AGB-Zustimmung: ${response.status()} ${await response.text()}`);
+  }
+  if (new URL(page.url()).pathname === '/agb-zustimmen') {
+    await page.goto(`${APP_URL}/`);
+    await page.waitForLoadState('networkidle');
+  }
 }
 
 /** Kleiner API-Client über die Session-Cookies einer angemeldeten Person. */

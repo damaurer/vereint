@@ -12,7 +12,7 @@ Dieses Handbuch erklärt Vereint aus Sicht der Menschen, die die App im Alltag i
 | **Administrator** | Mitglieder einladen und verwalten, Rollen vergeben und zuschneiden, Mitgliedschaften beenden, Name und Bild der Gruppe, Datenexport, Passwörter zurücksetzen | [Leitfaden Administration](04-administration.md) |
 | **Thekendienst** (Tablet an der Theke) | Kiosk-Modus starten, Striche erfassen, korrigieren, laufende Runden sehen | [Leitfaden Thekenterminal](05-thekenterminal.md) |
 | **Gast** ohne Konto | Über einen Einladungslink am Event-Chat teilnehmen | [Leitfaden Gast](06-gast.md) |
-| **Alle, zum Nachschlagen** | Jeden Bildschirm einzeln erklärt: was darauf steht, was jeder Knopf tut, wohin es weitergeht. Mit Entwürfen geplanter Funktionen (Statistiken) | [Die App Bildschirm für Bildschirm](07-alle-screens.md) |
+| **Alle, zum Nachschlagen** | Jeden Bildschirm einzeln erklärt: was darauf steht, was jeder Knopf tut, wohin es weitergeht. | [Die App Bildschirm für Bildschirm](07-alle-screens.md) |
 
 Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mitglieder und finden alles aus dem Mitglieder-Leitfaden auch bei sich. Was eine Person sieht, hängt allein von ihren Rollen in der gerade offenen Gruppe ab. In einer anderen Gruppe kann sie andere Rollen haben. Menüpunkte, die jemand nicht nutzen darf, erscheinen gar nicht erst.
 

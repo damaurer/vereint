@@ -3,7 +3,16 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { describe, expect, it, vi } from 'vitest';
 import { AuthNavigationService } from './auth-navigation.service';
-import { authGuard, guestGuard, homeGuard, permissionGuard, roleGuard } from './auth.guards';
+import {
+  authGuard,
+  guestGuard,
+  homeGuard,
+  permissionGuard,
+  roleGuard,
+  signedInGuard,
+  termsConsentGuard,
+} from './auth.guards';
+import { TermsStatusService } from '../legal/terms-status.service';
 import { AuthService } from './auth.service';
 import { AuthSessionUser } from './auth.types';
 
@@ -11,7 +20,11 @@ type NavStub = {
   redirectToLogin: ReturnType<typeof vi.fn>;
   forbiddenUrlTree: ReturnType<typeof vi.fn>;
   defaultRouteUrlTree: ReturnType<typeof vi.fn>;
+  termsConsentUrlTree: ReturnType<typeof vi.fn>;
+  stammtischChoiceUrlTree: ReturnType<typeof vi.fn>;
 };
+
+const TERMS_TREE = { redirect: 'terms' } as unknown;
 
 const FORBIDDEN_TREE = { redirect: '403' } as unknown;
 const DEFAULT_TREE = { redirect: 'default' } as unknown;
@@ -28,18 +41,21 @@ describe('auth navigation guards', () => {
   let authStub: { getSession: ReturnType<typeof vi.fn> };
   let navStub: NavStub;
 
-  const configure = (platform: 'browser' | 'server', session: AuthSessionUser | null) => {
+  const configure = (platform: 'browser' | 'server', session: AuthSessionUser | null, termsAccepted = true) => {
     authStub = { getSession: vi.fn(async () => session) };
     navStub = {
       redirectToLogin: vi.fn(() => false),
       forbiddenUrlTree: vi.fn(() => FORBIDDEN_TREE),
       defaultRouteUrlTree: vi.fn(() => DEFAULT_TREE),
+      termsConsentUrlTree: vi.fn(() => TERMS_TREE),
+      stammtischChoiceUrlTree: vi.fn(() => false),
     };
     TestBed.configureTestingModule({
       providers: [
         { provide: PLATFORM_ID, useValue: platform },
         { provide: AuthService, useValue: authStub },
         { provide: AuthNavigationService, useValue: navStub },
+        { provide: TermsStatusService, useValue: { isAccepted: vi.fn(async () => termsAccepted) } },
       ],
     });
   };
@@ -53,6 +69,41 @@ describe('auth navigation guards', () => {
     provider: 'keycloak',
     roles,
     permissions,
+  });
+
+  describe('terms consent after login', () => {
+    it('sends signed-in accounts without consent to the consent page', async () => {
+      configure('browser', member(['member']), false);
+      const result = await run(() => authGuard(routeWith(), stateWith('/statistik')));
+      expect(result).toBe(TERMS_TREE);
+      expect(navStub.termsConsentUrlTree).toHaveBeenCalledWith('/statistik');
+    });
+
+    it('also blocks the pages that need no selected group', async () => {
+      configure('browser', member(['member']), false);
+      expect(await run(() => signedInGuard(routeWith(), stateWith('/gruppen')))).toBe(TERMS_TREE);
+    });
+
+    it('lets accounts with consent pass', async () => {
+      configure('browser', member(['member']), true);
+      expect(await run(() => signedInGuard(routeWith(), stateWith('/gruppen')))).toBe(true);
+      expect(navStub.termsConsentUrlTree).not.toHaveBeenCalled();
+    });
+
+    it('asks for the login first when there is no session', async () => {
+      configure('browser', null, false);
+      await run(() => authGuard(routeWith(), stateWith('/dashboard')));
+      expect(navStub.redirectToLogin).toHaveBeenCalledWith('/dashboard');
+      expect(navStub.termsConsentUrlTree).not.toHaveBeenCalled();
+    });
+
+    it('shows the consent page only while consent is missing', async () => {
+      configure('browser', member(['member']), false);
+      expect(await run(() => termsConsentGuard(routeWith(), stateWith('/agb-zustimmen')))).toBe(true);
+      TestBed.resetTestingModule();
+      configure('browser', member(['member']), true);
+      expect(await run(() => termsConsentGuard(routeWith(), stateWith('/agb-zustimmen')))).toBe(DEFAULT_TREE);
+    });
   });
 
   describe('authGuard', () => {

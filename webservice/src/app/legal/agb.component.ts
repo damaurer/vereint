@@ -28,6 +28,7 @@ import { LEGAL_BACKUP_RETENTION_DAYS, LEGAL_OPERATOR, TERMS_DATE_LABEL } from '.
           <li><a routerLink="/agb" fragment="sperrung">Sperrung und Ausschluss</a></li>
           <li><a routerLink="/agb" fragment="verfuegbarkeit">Verfügbarkeit und Änderungen</a></li>
           <li><a routerLink="/agb" fragment="daten">Daten, Sicherung, Export und Löschung</a></li>
+          <li><a routerLink="/agb" fragment="statistiken">Statistiken</a></li>
           <li><a routerLink="/agb" fragment="haftung">Haftung</a></li>
           <li><a routerLink="/agb" fragment="maengel">Mängel</a></li>
           <li><a routerLink="/agb" fragment="aenderungen">Änderungen dieser AGB</a></li>
@@ -289,7 +290,32 @@ import { LEGAL_BACKUP_RETENTION_DAYS, LEGAL_OPERATOR, TERMS_DATE_LABEL } from '.
         ergänzend unser Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO.
       </p>
 
-      <h2 id="haftung">§ 11 Haftung</h2>
+      <h2 id="statistiken">§ 11 Statistiken</h2>
+      <p>
+        (1) Vereint wertet zur Unterhaltung aus, was in einer Gruppe passiert, und zeigt die
+        Ergebnisse allen Mitgliedern derselben Gruppe <strong>mit Namen</strong> an: Striche und
+        Käufe, Zusagen und Absagen zu Events, die Anwesenheit bei Events (mindestens ein Strich oder
+        Kauf), welche Getränke jemand wie oft genommen hat, mit Menge und Kalorien, sowie Ranglisten
+        und Rekorde daraus. Den Umsatz der Gruppe sehen nur Mitglieder mit Zugriff auf die Kasse.
+      </p>
+      <p>
+        (2) Die Statistiken sind Spaß-Fakten. Insbesondere Mengen und Kalorien beruhen auf
+        Angaben je Portion aus dem Katalog der Gruppe oder aus Open Food Facts, können ungenau sein
+        und sind <strong>keine Gesundheitsangabe</strong> und keine Ernährungs- oder medizinische
+        Beratung.
+      </p>
+      <p>
+        (3) Die Statistiken bleiben innerhalb der jeweiligen Gruppe. Wir werten Daten nicht
+        gruppenübergreifend über einzelne Personen aus und zeigen keiner Gruppe Daten aus einer
+        anderen.
+      </p>
+      <p>
+        (4) Mit der Zustimmung zu diesen AGB willigt der Nutzer in diese Anzeige ein. Wer nicht
+        zustimmen möchte, kann sich abmelden und die Löschung seines Kontos nach § 10 Abs. 3
+        verlangen.
+      </p>
+
+      <h2 id="haftung">§ 12 Haftung</h2>
       <p>
         (1) Wir haften unbeschränkt bei Vorsatz und grober Fahrlässigkeit, bei der Verletzung von
         Leben, Körper oder Gesundheit, nach dem Produkthaftungsgesetz und soweit wir eine Garantie
@@ -305,13 +331,13 @@ import { LEGAL_BACKUP_RETENTION_DAYS, LEGAL_OPERATOR, TERMS_DATE_LABEL } from '.
       </p>
       <p>(4) Diese Regeln gelten auch für unsere Erfüllungsgehilfen.</p>
 
-      <h2 id="maengel">§ 12 Mängel</h2>
+      <h2 id="maengel">§ 13 Mängel</h2>
       <p>
         Bitte melden Sie Fehler an {{ operator.email }}; wir bemühen uns, sie in angemessener Frist
-        zu beheben. Ansprüche wegen Mängeln richten sich nach § 11.
+        zu beheben. Ansprüche wegen Mängeln richten sich nach § 12.
       </p>
 
-      <h2 id="aenderungen">§ 13 Änderungen dieser AGB</h2>
+      <h2 id="aenderungen">§ 14 Änderungen dieser AGB</h2>
       <p>
         (1) Wir dürfen diese AGB mit Wirkung für die Zukunft ändern, wenn dafür ein triftiger Grund
         besteht, insbesondere eine Änderung der Rechtslage oder Rechtsprechung, neue Funktionen oder
@@ -328,7 +354,7 @@ import { LEGAL_BACKUP_RETENTION_DAYS, LEGAL_OPERATOR, TERMS_DATE_LABEL } from '.
         können den Vertrag dann mit der Frist nach § 5 Abs. 1 kündigen.
       </p>
 
-      <h2 id="schluss">§ 14 Schlussbestimmungen</h2>
+      <h2 id="schluss">§ 15 Schlussbestimmungen</h2>
       <p>
         (1) Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts. Bei
         Verbrauchern gilt diese Rechtswahl nur, soweit dadurch nicht der Schutz durch zwingende

@@ -19,7 +19,9 @@ data class UserProfileDto(
     val roles: Set<String>,
     val permissions: Set<String>,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    /** Fassung der AGB, der das Konto zuletzt zugestimmt hat. */
+    val termsVersion: String? = null
 )
 
 data class UpdateProfileRequest(
@@ -108,4 +110,19 @@ data class MemberDirectoryEntryDto(
     val displayName: String,
     val boardRole: String?,
     val roles: Set<String>
+)
+
+/** Stand der AGB-Zustimmung des angemeldeten Kontos (`GET/POST /api/v1/users/me/terms`). */
+data class TermsStatusDto(
+    /** Gültige Fassung der AGB. */
+    val currentVersion: String,
+    /** Fassung, der das Konto zuletzt zugestimmt hat; `null` ohne Zustimmung. */
+    val acceptedVersion: String?,
+    val acceptedAt: Instant?,
+    /** Hat das Konto der gültigen Fassung zugestimmt? */
+    val accepted: Boolean
+)
+
+data class AcceptTermsRequest(
+    val acceptTerms: Boolean? = null
 )

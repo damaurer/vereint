@@ -50,6 +50,8 @@ Weitere Möglichkeiten auf dieser Seite:
 
 Nach der Anmeldung landest du auf der Startseite. Bist du in mehreren Gruppen, wählst du vorher eine aus (siehe [Gruppe wählen und wechseln](#gruppe-wählen-und-wechseln)).
 
+**Neue Fassung der AGB**: Hast du der aktuellen Fassung der AGB noch nicht zugestimmt (etwa weil dein Konto vom Admin angelegt wurde oder die AGB geändert wurden), zeigt Vereint nach der Anmeldung zuerst die Seite **Bitte stimme den AGB zu**. Dort liest du mit **AGB lesen** den vollen Text und tippst **Zustimmen**; danach geht es weiter wie gewohnt. Bis dahin sind nur Abmelden, Impressum und AGB erreichbar. Mit **Nicht zustimmen und abmelden** meldest du dich ab; dein Konto löscht der Betreiber auf Wunsch, die Adresse steht auf der Seite.
+
 Unter der Anmeldung steht außerdem „Noch keine Gruppe? **Eigene Gruppe eröffnen**“ (siehe [Eine eigene Gruppe eröffnen](#eine-eigene-gruppe-eröffnen)). Ganz unten führen **Impressum** und **AGB** zu den Rechtstexten.
 
 <br clear="right">

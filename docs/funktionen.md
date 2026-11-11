@@ -168,8 +168,23 @@ Thekenterminals.
 
 ## Statistiken
 
-- Für alle angemeldeten Mitglieder erreichbar: Verbrauch, Top-Listen,
-  Anwesenheit.
+- Für alle Mitglieder der Gruppe sichtbar, mit Namen (AGB-Abschnitt
+  „Statistiken“; setzt die Zustimmung zur aktuellen AGB-Fassung voraus).
+- Zeitraum 30 Tage, 90 Tage oder laufendes Kalenderjahr, gilt für alle drei
+  Seiten (`?zeitraum=30|90|jahr`).
+- *Statistik*: Striche der Gruppe, eigene Striche, Platz, Rangliste,
+  Zusagequote.
+- *Getränkestatistik*: Getränke, Liter, Kalorien, Durchschnitte je Event, Tag,
+  Woche und Monat; nach Mitglied (aufklappbar je Getränk) oder nach Getränk,
+  sortiert nach Anzahl oder Kalorien.
+- *Statistik-Übersicht*: Kennzahlen, Zusagen je Event und je Mitglied (mit
+  „Da gewesen“), Getränke je Woche, Wochentag und Uhrzeit, „Wer trinkt was?“
+  nach Kategoriegruppe, beliebteste Getränke, Anteil je Kategorie,
+  Rundengeber, Moments, Chat und Rekorde. Umsatz nur mit Leserecht auf die
+  Kasse (Vorstand, Kasse, Admin).
+- Füllmenge und Kalorien je Portion stehen am Getränk (Katalog und
+  Getränkedatenbank, für die Startdaten aus Open Food Facts vorbefüllt);
+  Getränke ohne Angabe zählen bei Litern bzw. Kalorien nicht mit.
 - Details: [docs/domains/statistics-and-analytics.md](domains/statistics-and-analytics.md)
 
 ## Mitglieder per Einladungslink
@@ -192,6 +207,10 @@ Thekenterminals.
   öffentlichen Seiten, unten in der Seitenleiste und im Menü *Mehr*.
 - Wer sich per Einladungslink registriert oder eine Gruppe eröffnet, stimmt
   den AGB per Häkchen zu; Fassung und Zeitpunkt werden am Konto gespeichert.
+- Fehlt einem Konto die Zustimmung zur aktuellen Fassung (vom Admin angelegte
+  oder ältere Konten, neue AGB-Fassung), zeigt die App nach dem Login zuerst
+  die Seite „Bitte stimme den AGB zu“; bis dahin sind nur Abmelden, Impressum
+  und AGB erreichbar.
 - Die Betreiberangaben sind noch Platzhalter; solange zeigen beide Seiten den
   Hinweis „Entwurf“. Datenschutzerklärung und Auftragsverarbeitung fehlen noch.
 - Details: [docs/domains/rechtliches.md](domains/rechtliches.md)

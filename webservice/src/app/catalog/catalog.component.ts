@@ -362,6 +362,36 @@ type CatalogTab = 'drinks' | 'food';
             </p>
           }
 
+          <div class="form-row">
+            <label class="form-field">
+              <span>{{ 'catalog.form.volumeMl' | t }}</span>
+              <input
+                type="number"
+                inputmode="numeric"
+                step="1"
+                min="1"
+                max="10000"
+                [(ngModel)]="drinkVolumeMl"
+                name="volumeMl"
+                [placeholder]="'catalog.form.volumePlaceholder' | t"
+              />
+            </label>
+            <label class="form-field">
+              <span>{{ 'catalog.form.kcal' | t }}</span>
+              <input
+                type="number"
+                inputmode="numeric"
+                step="1"
+                min="0"
+                max="10000"
+                [(ngModel)]="drinkKcal"
+                name="kcalPerServing"
+                [placeholder]="'catalog.form.kcalPlaceholder' | t"
+              />
+            </label>
+          </div>
+          <p class="form-hint">{{ 'catalog.form.nutritionHint' | t }}</p>
+
           <label class="form-field">
             <span>{{ 'catalog.form.description' | t }}</span>
             <textarea
@@ -988,6 +1018,9 @@ export class CatalogComponent implements OnInit, OnDestroy {
   protected drinkCategory = '';
   protected drinkPrice: number | null = null;
   protected drinkCostPrice: number | null = null;
+  /** Füllmenge (ml) und Kalorien je Portion für Liter und Kalorien in der Statistik. */
+  protected drinkVolumeMl: number | null = null;
+  protected drinkKcal: number | null = null;
   protected drinkDescription = '';
   protected drinkActive = true;
   /** Strich-Kategorie des Getränks; leer = ohne Kategorie (Issue #80). */
@@ -1191,6 +1224,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
         this.drinkCategory = drink.category ?? '';
         this.drinkPrice = Number(drink.defaultPrice);
         this.drinkCostPrice = drink.costPrice ? Number(drink.costPrice) : null;
+        this.drinkVolumeMl = drink.volumeMl ?? null;
+        this.drinkKcal = drink.kcalPerServing ?? null;
         this.drinkDescription = drink.description ?? '';
         this.drinkActive = drink.active;
         this.drinkTallyCategoryId = drink.tallyCategoryId ?? '';
@@ -1206,6 +1241,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.drinkCategory = '';
     this.drinkPrice = null;
     this.drinkCostPrice = null;
+    this.drinkVolumeMl = null;
+    this.drinkKcal = null;
     this.drinkDescription = '';
     this.drinkActive = true;
     this.drinkTallyCategoryId = '';
@@ -1228,6 +1265,8 @@ export class CatalogComponent implements OnInit, OnDestroy {
     this.drinkName = entry.name;
     this.drinkCategory = entry.category ?? '';
     this.drinkDescription = entry.description ?? '';
+    this.drinkVolumeMl = entry.volumeMl ?? null;
+    this.drinkKcal = entry.kcalPerServing ?? null;
     this.pendingBarcodes.update((list) => [...new Set([...list, ...freeBarcodes])]);
     this.formInfo.set(translate('catalog.lookup.fromLibrary', { name: entry.name }));
   }
@@ -1376,6 +1415,7 @@ export class CatalogComponent implements OnInit, OnDestroy {
       defaultPrice: this.drinkPrice,
       description: this.drinkDescription.trim() || null,
       ...(this.isBoardOrAdmin() ? { costPrice: this.drinkCostPrice ?? 0 } : {}),
+      nutrition: { volumeMl: wholeNumber(this.drinkVolumeMl), kcalPerServing: wholeNumber(this.drinkKcal, 0) },
     };
 
     if (editing) {
@@ -1636,4 +1676,11 @@ export class CatalogComponent implements OnInit, OnDestroy {
       });
     }
   }
+}
+
+/** Ganze Zahl ab `min` oder `null` (leeres Feld, ungültige Eingabe). */
+function wholeNumber(value: number | null, min = 1): number | null {
+  if (value === null || value === undefined || (value as unknown) === '') return null;
+  const rounded = Math.round(Number(value));
+  return Number.isFinite(rounded) && rounded >= min ? rounded : null;
 }

@@ -42,6 +42,9 @@ export interface DrinkDto {
   updatedAt: string;
   /** Herkunft aus der gemeinsamen Getränkedatenbank (`null` = nicht geteilt). */
   libraryDrinkId?: string | null;
+  /** Füllmenge einer Portion in ml und Kalorien je Portion (für die Statistik). */
+  volumeMl?: number | null;
+  kcalPerServing?: number | null;
   /** Strich-Kategorie; ihr Preis überschreibt im Event den Verkaufspreis. */
   tallyCategoryId?: string | null;
   tallyCategoryName?: string | null;
@@ -66,6 +69,12 @@ export interface TallyCategoryDto {
   drinks: TallyCategoryDrinkDto[];
 }
 
+/** Füllmenge und Kalorien; beim Ändern ersetzt das Objekt beide Werte (`null` = keine Angabe). */
+export interface DrinkNutrition {
+  volumeMl: number | null;
+  kcalPerServing: number | null;
+}
+
 /** Eintrag der stammtischübergreifenden Getränkedatenbank (ohne Preise). */
 export interface DrinkLibraryEntryDto {
   id: string;
@@ -75,6 +84,8 @@ export interface DrinkLibraryEntryDto {
   barcodes: string[];
   /** Katalogeintrag dieses Stammtischs, falls schon übernommen. */
   catalogDrinkId: string | null;
+  volumeMl?: number | null;
+  kcalPerServing?: number | null;
 }
 
 export interface ProposeDrinkRequest {
@@ -88,6 +99,7 @@ export interface ProposeDrinkRequest {
   barcodes?: string[] | null;
   /** Eintrag der Getränkedatenbank, aus dem das Getränk übernommen wird. */
   libraryDrinkId?: string | null;
+  nutrition?: DrinkNutrition | null;
   /** Strich-Kategorie (nur wer den Katalog pflegt). */
   tallyCategoryId?: string | null;
 }
@@ -101,6 +113,7 @@ export interface UpdateDrinkRequest {
   currency?: string | null;
   imageReference?: string | null;
   active?: boolean | null;
+  nutrition?: DrinkNutrition | null;
   /** Strich-Kategorie; leer = ohne Kategorie, weglassen = unverändert. */
   tallyCategoryId?: string | null;
 }
