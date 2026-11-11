@@ -172,6 +172,13 @@ export const routes: Routes = [
     loadComponent: () => import('./events/event-manage.component').then((m) => m.EventManageComponent),
   },
   {
+    // Runde am eigenen Handy ausgeben (Issue #81).
+    path: 'events/:eventId/runde',
+    canActivate: [authGuard],
+    data: { back: '/events/:eventId', title: 'routes.roundGive.title', description: 'routes.roundGive.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./rounds/round-give.component').then((m) => m.RoundGiveComponent),
+  },
+  {
     path: 'guest/:eventId',
     canActivate: [guestGuard],
     data: { title: 'routes.guestEvent.title', description: 'routes.guestEvent.description', access: 'routes.access.guestToken' },

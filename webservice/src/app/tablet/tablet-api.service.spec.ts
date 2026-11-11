@@ -52,25 +52,4 @@ describe('TabletApiService', () => {
     expect(req.request.headers.get('Idempotency-Key')).toBe('key-1');
     req.flush({});
   });
-
-  it('records a round via POST with an Idempotency-Key header', () => {
-    service
-      .recordRound('e-1', { eventDrinkId: 'd-1', memberIds: ['m-1', 'm-2'] }, 'key-2')
-      .subscribe();
-    const req = http.expectOne('/api/v1/tablet/events/e-1/rounds');
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ eventDrinkId: 'd-1', memberIds: ['m-1', 'm-2'] });
-    expect(req.request.headers.get('Idempotency-Key')).toBe('key-2');
-    req.flush([]);
-  });
-
-  it('records an evening action via POST with an Idempotency-Key header', () => {
-    service
-      .recordEvening('e-1', { eventDrinkId: 'd-1', memberIds: ['m-1'] }, 'key-3')
-      .subscribe();
-    const req = http.expectOne('/api/v1/tablet/events/e-1/evening');
-    expect(req.request.method).toBe('POST');
-    expect(req.request.headers.get('Idempotency-Key')).toBe('key-3');
-    req.flush([]);
-  });
 });

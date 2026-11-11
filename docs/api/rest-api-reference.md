@@ -8,7 +8,7 @@ Die **Vereint Backend API** (`baseservice`) folgt REST-Prinzipien, verwendet JSO
 
 - **Authorization**: `Bearer <Keycloak_OIDC_JWT>` (bei geschützten Endpunkten). Im Browser setzt der BFF den Header; das Token verlässt den Server nicht.
 - **X-Stammtisch-Id**: gewählte Gruppe. Der BFF setzt ihn aus dem HttpOnly-Cookie `vereint.stammtisch`; Rollen und Berechtigungen gelten immer für diese Gruppe.
-- **Idempotency-Key**: Pflicht bei allen Buchungen (Käufe, Rückgängig, Aufladungen, Auszahlungen, Korrekturen, Tablet-Buchungen), höchstens 128 Zeichen, bei Runde und Abend höchstens 80. Details: [Fehlerbehandlung & Idempotenz](error-handling-and-idempotency.md).
+- **Idempotency-Key**: Pflicht bei allen Buchungen (Käufe, Rückgängig, Aufladungen, Auszahlungen, Korrekturen, Tablet-Buchungen), höchstens 128 Zeichen. Details: [Fehlerbehandlung & Idempotenz](error-handling-and-idempotency.md).
 - **X-Guest-Token**: Gast-Token für die Gast-Endpunkte des Event-Chats (`/api/v1/events/{eventId}/chat/guest/**`).
 - **X-Request-Id**: Korrelations-ID (wird in Problem Details als `traceId` zurückgegeben).
 
@@ -69,8 +69,17 @@ Für die eigene Person lehnt der Fachservice Rollen-, Berechtigungs- und Status�
 | `GET` | `/api/v1/tablet/events/{eventId}/items` | Getränke und Speisen zusammen (`TabletItemsDto`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/purchases` | Buchung für Getränk oder Speise (`TabletPurchaseRequest` + `Idempotency-Key`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/purchases/{entryId}/undo` | Tablet-Buchung innerhalb von 10 Minuten zurücknehmen (+ `Idempotency-Key`) | `purchase.tablet` |
-| `POST` | `/api/v1/tablet/events/{eventId}/rounds` | Runde (`TabletRevenuePurchaseRequest` + `Idempotency-Key`) | `purchase.tablet` |
-| `POST` | `/api/v1/tablet/events/{eventId}/evening` | Abendabrechnung (`TabletRevenuePurchaseRequest` + `Idempotency-Key`) | `purchase.tablet` |
+
+Ein Strich für eine Person, die in einer laufenden Runde eingeladen ist, geht automatisch auf den Geber der Runde (siehe [Thekenterminal](../domains/tablet-strichliste-recorder.md)). Die früheren Endpunkte `…/rounds` und `…/evening` am Terminal gibt es nicht mehr.
+
+**Runden am eigenen Handy (`RoundController`)**
+
+| Methode | Pfad | Beschreibung | Berechtigung |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/events/{eventId}/rounds` | Runden des Events mit Höchstsumme, Verbrauch, Stand und Eingeladenen (`RoundDto`) | Person des Events, Event-Verwaltung oder `purchase.tablet` |
+| `GET` | `/api/v1/events/{eventId}/rounds/options` | Eigenes Guthaben, Getränke mit Preis und Personen für das Formular (`RoundOptionsDto`) | Person des laufenden Events |
+| `POST` | `/api/v1/events/{eventId}/rounds` | Runde oder ganzen Abend ausgeben (`CreateRoundRequest`); abgebucht wird erst an der Theke | Person des laufenden Events |
+| `POST` | `/api/v1/events/{eventId}/rounds/{roundId}/end` | Eigene Runde vorzeitig beenden | Geber oder `event.manage` |
 
 **Kiosk-Modus (`KioskController`)**
 

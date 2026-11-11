@@ -10,7 +10,6 @@ import type {
   TabletItems,
   TabletMember,
   TabletPurchasePayload,
-  TabletRevenuePayload,
 } from '../api/api.types';
 
 /** Header-Name für idempotente finanzielle Schreibvorgänge. */
@@ -20,8 +19,8 @@ const IDEMPOTENCY_HEADER = 'Idempotency-Key';
  * Fachlicher Datenzugriff des Tablet-Kontexts / Drink-Recorders (TICKET-026).
  *
  * Bündelt die Endpunkte der manuellen Erfassung: aktive Events, deren Mitglieder
- * und tabletfähige Getränke sowie das Erfassen einzelner Käufe, Runden und
- * Abendaktionen. Preis, Währung, Modus und Herkunft bestimmt ausschließlich der
+ * und tabletfähige Getränke sowie das Erfassen einzelner Käufe. Runden gibt
+ * jede Person am eigenen Handy aus; das Terminal zeigt sie nur an. Preis, Währung, Modus und Herkunft bestimmt ausschließlich der
  * Fachservice; die Berechtigung `purchase.tablet` wird serverseitig geprüft
  * (`deny by default`). Der Service formuliert nur die Aufrufe an `/api/v1`.
  */
@@ -93,32 +92,6 @@ export class TabletApiService {
     return this.api.post<LedgerEntry>(
       `${this.eventPath(eventId)}/purchases/${encodeURIComponent(entryId)}/undo`,
       {},
-      this.idempotency(idempotencyKey),
-    );
-  }
-
-  /** Runde als Revenue-Only buchen (`POST /tablet/events/{id}/rounds`). */
-  recordRound(
-    eventId: string,
-    payload: TabletRevenuePayload,
-    idempotencyKey: string,
-  ): Observable<LedgerEntry[]> {
-    return this.api.post<LedgerEntry[]>(
-      `${this.eventPath(eventId)}/rounds`,
-      payload,
-      this.idempotency(idempotencyKey),
-    );
-  }
-
-  /** Abendaktion als Revenue-Only buchen (`POST /tablet/events/{id}/evening`). */
-  recordEvening(
-    eventId: string,
-    payload: TabletRevenuePayload,
-    idempotencyKey: string,
-  ): Observable<LedgerEntry[]> {
-    return this.api.post<LedgerEntry[]>(
-      `${this.eventPath(eventId)}/evening`,
-      payload,
       this.idempotency(idempotencyKey),
     );
   }

@@ -228,11 +228,27 @@ class LedgerService(
                 actor = caller,
                 reversesEntry = original,
                 tallyCategory = original.tallyCategory,
+                round = original.round,
+                beneficiary = original.beneficiary,
                 auditAction = AuditService.ACTION_LEDGER_CORRECTION,
                 note = request.reason
             )
         )
     }
+
+    /**
+     * Bereits gespeicherte Buchung zu einem Idempotency-Key, damit ein wiederholter
+     * Strich nicht erneut auf eine Runde geprüft wird (Issue #81).
+     */
+    @Transactional(readOnly = true)
+    fun findByIdempotencyKey(idempotencyKey: String?): LedgerEntryEntity? {
+        val key = idempotencyKey?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        return ledgerEntryRepository.findByIdempotencyKey(key).orElse(null)
+    }
+
+    /** DTO einer gespeicherten Buchung samt Beleg. */
+    @Transactional(readOnly = true)
+    fun describe(entry: LedgerEntryEntity): LedgerEntryDto = toDto(snapshots.attach(entry))
 
     /**
      * Macht einen eben erfassten Strichlisten-Kauf am Tablet rückgängig.
@@ -261,8 +277,10 @@ class LedgerService(
         if (replay != null && replay.reversesEntry?.id == original.id) {
             return toDto(snapshots.attach(replay))
         }
+        val tabletSource = original.source == PurchaseSource.tabletManual ||
+            (original.round != null && (original.source == PurchaseSource.round || original.source == PurchaseSource.evening))
         if (original.entryType != LedgerEntryType.purchase ||
-            original.source != PurchaseSource.tabletManual ||
+            !tabletSource ||
             original.event?.id != eventId
         ) {
             throw InvalidRequestException(
@@ -307,6 +325,8 @@ class LedgerService(
                 actor = actor,
                 reversesEntry = original,
                 tallyCategory = original.tallyCategory,
+                round = original.round,
+                beneficiary = original.beneficiary,
                 auditAction = AuditService.ACTION_LEDGER_CORRECTION,
                 note = "tablet-undo; event=$eventId"
             )
@@ -519,6 +539,8 @@ class LedgerService(
                 actor = caller,
                 reversesEntry = original,
                 tallyCategory = original.tallyCategory,
+                round = original.round,
+                beneficiary = original.beneficiary,
                 auditAction = AuditService.ACTION_LEDGER_CORRECTION,
                 note = "member-undo; event=${original.event?.id ?: "-"}"
             )
@@ -543,9 +565,17 @@ class LedgerService(
         drink: DrinkCatalogEntity,
         eventDrink: EventDrinkEntity,
         actor: UserEntity,
-        idempotencyKey: String?
+        idempotencyKey: String?,
+        round: RoundEntity? = null
     ): LedgerEntryDto {
         val key = requireIdempotencyKey(idempotencyKey)
+        // Geht der Strich auf eine Runde, zahlt der Geber; getrunken hat [member].
+        val payer = round?.sponsor ?: member
+        val source = when (round?.kind) {
+            null -> PurchaseSource.tabletManual
+            RoundKind.round -> PurchaseSource.round
+            RoundKind.evening -> PurchaseSource.evening
+        }
         val pricing = EventDrinkPricing.resolve(eventDrink)
         val currency = pricing.currency
         val unitPrice = pricing.unitPrice
@@ -558,18 +588,20 @@ class LedgerService(
                 key = key,
                 entryType = LedgerEntryType.purchase,
                 tallyCategory = pricing.tallyCategory,
-                member = member,
+                round = round,
+                beneficiary = if (round != null) member else null,
+                member = payer,
                 event = event,
                 drink = drink,
                 food = null,
                 amount = unitPrice,
                 currency = currency,
                 accountingMode = AccountingMode.credit,
-                source = PurchaseSource.tabletManual,
+                source = source,
                 actor = actor,
                 reversesEntry = null,
                 auditAction = AuditService.ACTION_LEDGER_PURCHASE,
-                note = "event=${event.id}; tablet; member=${member.id}",
+                note = "event=${event.id}; tablet; member=${member.id}; round=${round?.id ?: "-"}",
                 snapshotFactory = {
                     PurchaseSnapshotEntity(
                         ledgerEntry = it,
@@ -642,137 +674,6 @@ class LedgerService(
         )
     }
 
-    /**
-     * Buchung einer Runde oder Abendaktion (TICKET-018). Getränk, Preis, Währung und
-     * Herkunft (`round`/`evening`) werden serverseitig vorgegeben; der Abrechnungsmodus
-     * ist stets `revenueOnly`, sodass kein persönliches Guthaben belastet wird und
-     * ausschließlich der Eventumsatz steigt (siehe `docs/domains/tablet-strichliste-recorder.md`).
-     *
-     * Die fachliche Berechtigung (`purchase.tablet`), der aktive Eventstatus, die
-     * Teilnahme des Begünstigten und die Tablet-Freigabe des Getränks werden im
-     * [de.maurer.baseservice.service.TabletRecorderService] geprüft; hier entsteht
-     * ausschließlich die unveränderliche Buchung samt Beleg-Snapshot. Wiederholungen
-     * mit demselben Idempotency-Key erzeugen keine Doppelbuchung.
-     */
-    fun recordEventRevenuePurchase(
-        event: EventEntity,
-        member: UserEntity,
-        drink: DrinkCatalogEntity,
-        eventDrink: EventDrinkEntity,
-        actor: UserEntity,
-        source: PurchaseSource,
-        idempotencyKey: String?
-    ): LedgerEntryDto {
-        if (source != PurchaseSource.round && source != PurchaseSource.evening) {
-            throw InvalidRequestException(
-                Msg("error.ledger.invalidSource"),
-                ErrorCode.INVALID_REQUEST
-            )
-        }
-        val key = requireIdempotencyKey(idempotencyKey)
-        val pricing = EventDrinkPricing.resolve(eventDrink)
-        val currency = pricing.currency
-        val unitPrice = pricing.unitPrice
-        val costPrice = (eventDrink.costPrice ?: drink.costPrice).setScale(2)
-        val profit = (unitPrice - costPrice).setScale(2)
-
-        return appendWrite(
-            AppendWriteCommand(
-                scope = SCOPE_PURCHASE,
-                key = key,
-                entryType = LedgerEntryType.purchase,
-                tallyCategory = pricing.tallyCategory,
-                member = member,
-                event = event,
-                drink = drink,
-                food = null,
-                amount = unitPrice,
-                currency = currency,
-                accountingMode = AccountingMode.revenueOnly,
-                source = source,
-                actor = actor,
-                reversesEntry = null,
-                auditAction = AuditService.ACTION_LEDGER_PURCHASE,
-                note = "event=${event.id}; ${source.name}; member=${member.id}",
-                snapshotFactory = {
-                    PurchaseSnapshotEntity(
-                        ledgerEntry = it,
-                        itemType = "DRINK",
-                        drinkName = drink.name,
-                        foodName = null,
-                        imageReference = eventDrink.imageSnapshot ?: drink.imageReference,
-                        barcode = null,
-                        unitPrice = unitPrice,
-                        costPrice = costPrice,
-                        profit = profit,
-                        currency = currency,
-                        catalogVersion = eventDrink.catalogVersion
-                    )
-                }
-            )
-        )
-    }
-
-    /**
-     * Buchung einer Speisen-Runde oder Abendaktion als Revenue-Only-Buchung.
-     */
-    fun recordEventRevenueFoodPurchase(
-        event: EventEntity,
-        member: UserEntity,
-        food: FoodCatalogEntity,
-        eventFood: EventFoodEntity,
-        actor: UserEntity,
-        source: PurchaseSource,
-        idempotencyKey: String?
-    ): LedgerEntryDto {
-        if (source != PurchaseSource.round && source != PurchaseSource.evening) {
-            throw InvalidRequestException(
-                Msg("error.ledger.invalidSource"),
-                ErrorCode.INVALID_REQUEST
-            )
-        }
-        val key = requireIdempotencyKey(idempotencyKey)
-        val currency = eventFood.currency
-        val unitPrice = (eventFood.price ?: food.defaultPrice).setScale(2)
-        val costPrice = (eventFood.costPrice ?: food.costPrice).setScale(2)
-        val profit = (unitPrice - costPrice).setScale(2)
-
-        return appendWrite(
-            AppendWriteCommand(
-                scope = SCOPE_PURCHASE,
-                key = key,
-                entryType = LedgerEntryType.purchase,
-                member = member,
-                event = event,
-                drink = null,
-                food = food,
-                amount = unitPrice,
-                currency = currency,
-                accountingMode = AccountingMode.revenueOnly,
-                source = source,
-                actor = actor,
-                reversesEntry = null,
-                auditAction = AuditService.ACTION_LEDGER_PURCHASE,
-                note = "event=${event.id}; ${source.name}; food; member=${member.id}",
-                snapshotFactory = {
-                    PurchaseSnapshotEntity(
-                        ledgerEntry = it,
-                        itemType = "FOOD",
-                        drinkName = null,
-                        foodName = food.name,
-                        imageReference = null,
-                        barcode = null,
-                        unitPrice = unitPrice,
-                        costPrice = costPrice,
-                        profit = profit,
-                        currency = currency,
-                        catalogVersion = null
-                    )
-                }
-            )
-        )
-    }
-
     private data class AppendWriteCommand(
         val scope: String,
         val key: String,
@@ -788,6 +689,8 @@ class LedgerService(
         val actor: UserEntity,
         val reversesEntry: LedgerEntryEntity? = null,
         val tallyCategory: TallyCategoryEntity? = null,
+        val round: RoundEntity? = null,
+        val beneficiary: UserEntity? = null,
         val auditAction: String,
         val note: String? = null,
         val snapshotFactory: ((LedgerEntryEntity) -> PurchaseSnapshotEntity)? = null
@@ -826,7 +729,9 @@ class LedgerService(
             actor = cmd.actor,
             reversesEntry = cmd.reversesEntry,
             idempotencyKey = cmd.key,
-            tallyCategory = cmd.tallyCategory
+            tallyCategory = cmd.tallyCategory,
+            round = cmd.round,
+            beneficiary = cmd.beneficiary
         )
         val saved = ledgerEntryRepository.save(entry)
         cmd.snapshotFactory?.let {
@@ -1056,7 +961,10 @@ class LedgerService(
             createdAt = entry.createdAt,
             snapshot = snapshot,
             tallyCategoryId = entry.tallyCategory?.id?.toString(),
-            tallyCategoryName = entry.tallyCategory?.name
+            tallyCategoryName = entry.tallyCategory?.name,
+            roundId = entry.round?.id?.toString(),
+            beneficiaryId = entry.beneficiary?.id?.toString(),
+            beneficiaryDisplayName = entry.beneficiary?.displayName
         )
     }
 

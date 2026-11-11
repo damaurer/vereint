@@ -41,6 +41,7 @@
     <include file="db/changelog/changes/022-unique-ledger-correction.xml"/>
     <include file="db/changelog/changes/023-tally-categories.xml"/>
     <include file="db/changelog/changes/024-drink-nutrition.xml"/>
+    <include file="db/changelog/changes/025-rounds.xml"/>
     <include file="db/changelog/changes/026-statistic-records.xml"/>
 
 </databaseChangeLog>

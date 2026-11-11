@@ -204,7 +204,8 @@
         "empty": "No transactions for this filter."
       },
       "reversal": "Reversal: {name}",
-      "asOf": "As of {date}"
+      "asOf": "As of {date}",
+      "roundTitle": "Round: {name} · {item}"
     }
   },
   "profile": {
@@ -609,6 +610,10 @@
     "tallyCategories": {
       "title": "Tally categories",
       "description": "Set the columns of the tally sheet and their price per mark."
+    },
+    "roundGive": {
+      "title": "Buy a round",
+      "description": "Buy a round or the whole evening from your own balance."
     }
   },
   "chat": {
@@ -1188,28 +1193,6 @@
     }
   },
   "tablet": {
-    "revenue": {
-      "eveningTitle": "Sponsor the whole evening",
-      "roundTitle": "Buy a round",
-      "scope": "Scope",
-      "oneRound": "One round",
-      "recipients": "Recipients",
-      "hint": "Valid until everyone has taken a drink. If someone accidentally taps twice, it is still only booked once.",
-      "confirmEvening": "Sponsor evening",
-      "confirmRound": "Buy round"
-    },
-    "overlay": {
-      "title": "Drinks menu & food",
-      "hint": "Choose the item for the tally sheet.",
-      "categories": "Categories",
-      "drinksChip": "Drinks ({count})",
-      "foodChip": "Food ({count})",
-      "drinks": "Drinks",
-      "food": "Food",
-      "selected": "Currently selected: {name}",
-      "noneSelected": "No item selected yet.",
-      "confirm": "Confirm selection"
-    },
     "terminal": {
       "kioskActive": "Kiosk mode active",
       "startKiosk": "Start kiosk mode",
@@ -1237,15 +1220,11 @@
     },
     "tally": {
       "booked": "Mark: {label}",
-      "undo": "Undo",
-      "round": "Buy a round",
-      "evening": "Sponsor the whole evening"
+      "undo": "Undo"
     },
     "messages": {
       "undoNotPossible": "Only marks from this session can be undone here. The board corrects older bookings.",
       "undone": "Mark undone.",
-      "eveningBooked": "Evening sponsorship booked.",
-      "roundBooked": "Round booked.",
       "noDrinksInCategory": "No drink of {name} is available at this event."
     },
     "fallback": {
@@ -2383,6 +2362,72 @@
       "decline": "Do not accept and sign out",
       "deleteHint": "If you do not want to accept, sign out. We delete your account on request: just send an email to {email} (terms § 10 (3)).",
       "failed": "Your consent could not be saved. Please try again."
+    }
+  },
+  "rounds": {
+    "title": "Buy a round",
+    "loading": "Loading event and drinks.",
+    "unavailable": "Buying a round is not possible",
+    "eventChip": "Buy a round",
+    "fromBalance": "From your balance:",
+    "kindLabel": "Kind of round",
+    "kind": {
+      "round": "One round",
+      "evening": "Whole evening"
+    },
+    "drink": "Drink",
+    "allDrinks": "All drinks",
+    "validity": "Valid",
+    "validity30m": "30 minutes",
+    "validity1h": "1 hour",
+    "validityEventEnd": "Until the event ends",
+    "maxAmount": "Maximum in euros",
+    "forWhom": "For whom? · {count} selected",
+    "accepted": "accepted",
+    "present": "here",
+    "noMembers": "Nobody else is at the event right now.",
+    "maxHint": "At most {amount} from your balance",
+    "chargeHint": "Only what the invited people actually take at the bar is charged. The bar terminal shows your round until it expires.",
+    "submit": "Buy a round for {count}",
+    "submitEvening": "Buy the evening for {count}",
+    "started": "Your round is running. The invited people get a notification.",
+    "mine": "Your rounds at this event",
+    "end": "End",
+    "endedInfo": "Round ended.",
+    "card": {
+      "gives": "Buys",
+      "used": "Used",
+      "valid": "Valid",
+      "upTo": "up to {amount}",
+      "remaining": "{minutes} min left",
+      "until": "until {time}",
+      "untilEventEnd": "until the event ends",
+      "redeemed": "{count} of {total} redeemed",
+      "invited": "Invited",
+      "roundOf": "One round of {drink}",
+      "roundAll": "One round · all drinks",
+      "eveningOf": "Whole evening · {drink}",
+      "eveningAll": "Whole evening · all drinks"
+    },
+    "status": {
+      "running": "Running",
+      "usedUp": "Used up",
+      "expired": "Expired",
+      "ended": "Ended"
+    },
+    "payer": {
+      "round": "Round from {name}",
+      "evening": "Evening from {name}"
+    },
+    "terminal": {
+      "title": "Running rounds",
+      "none": "No round is running right now.",
+      "showAll": "Show all",
+      "hint": "Everyone buys rounds in the app on their own phone. The terminal only shows them.",
+      "summary": "{what} · {redeemed} of {total} · {validity}",
+      "overviewTitle": "Running rounds",
+      "displayOnly": "Display only",
+      "overviewHint": "Everyone buys a round in the app on their own phone and pays from their own balance. Nothing is bought at the terminal. Invited people get their mark as usual, and it goes on the round."
     }
   }
 }

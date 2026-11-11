@@ -90,6 +90,9 @@ class StatisticsService(
     private class Purchase(
         val memberId: UUID,
         val memberName: String,
+        val giverId: UUID,
+        val giverName: String,
+        val roundKey: String?,
         val key: String,
         val name: String,
         val drink: Boolean,
@@ -395,13 +398,14 @@ class StatisticsService(
         }
 
     /**
-     * Top-Rundengeber aus Buchungen mit `source = round|evening`: je Person die
-     * Zahl der Runden (Buchungen eines Vorgangs zählen einmal).
+     * Top-Rundengeber aus Buchungen mit `source = round|evening`: je Geber die
+     * Zahl der Runden. Striche derselben Runde zählen einmal; alte Buchungen
+     * ohne Runde zählen je Vorgang.
      */
     private fun roundGivers(purchases: List<Purchase>): List<MemberCountDto> =
         purchases.filter { it.source == PurchaseSource.round || it.source == PurchaseSource.evening }
-            .groupBy { it.memberId }.values
-            .map { list -> MemberCountDto(list.first().memberId.toString(), list.first().memberName, list.map { it.batchKey }.toSet().size) }
+            .groupBy { it.giverId }.values
+            .map { list -> MemberCountDto(list.first().giverId.toString(), list.first().giverName, list.map { it.roundKey ?: it.batchKey }.toSet().size) }
             .sortedWith(compareByDescending<MemberCountDto> { it.count }.thenBy { it.displayName })
             .take(TOP_GIVERS)
 
@@ -478,11 +482,12 @@ class StatisticsService(
     }
 
     /**
-     * Wer getrunken hat, ist das Mitglied der Buchung. Sobald Runden einen
-     * eigenen Begünstigten speichern, zählt dieser.
+     * Wer getrunken hat: bei Runden die eingeladene Person (`beneficiary`),
+     * sonst das Mitglied der Buchung. Bezahlt hat immer das Mitglied der Buchung.
      */
     private fun toPurchase(entry: LedgerEntryEntity): Purchase {
-        val member = entry.member!!
+        val giver = entry.member!!
+        val member = entry.beneficiary ?: giver
         val drink = entry.drink
         val snapshot = entry.purchaseSnapshot
         val name = snapshot?.drinkName ?: drink?.name ?: snapshot?.foodName ?: entry.food?.name ?: UNKNOWN_ITEM
@@ -490,6 +495,9 @@ class StatisticsService(
         return Purchase(
             memberId = member.id,
             memberName = member.displayName,
+            giverId = giver.id,
+            giverName = giver.displayName,
+            roundKey = entry.round?.id?.toString(),
             key = drink?.id?.toString() ?: "name:$name",
             name = drink?.name ?: name,
             drink = isDrink,

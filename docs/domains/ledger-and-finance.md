@@ -25,9 +25,12 @@ Das System unterscheidet vier elementare Buchungstypen (`entryType`):
    - Da Einträge niemals gelöscht werden dürfen (*Append-Only*), hebt ein Storno den Ursprungsbetrag über einen referenzierten Gegeneintrag auf (`reverses_entry_id`). Eine Buchung lässt sich nur einmal stornieren (`409 ledger_already_corrected`).
    - **Rückgängig**: Eigene Barcode-Käufe und Tablet-Buchungen lassen sich innerhalb von 10 Minuten selbst zurücknehmen; auch das ist eine Korrekturbuchung.
 
+### Runden
+- Gibt jemand am eigenen Handy eine Runde aus, gehen die Striche der Eingeladenen an der Theke auf **sein** Guthaben: Die Buchung hat `member_id` = Geber, `beneficiary_id` = wer getrunken hat, `round_id` und `source = round` bzw. `evening` (Modus `credit`). Im Kontoauszug des Gebers steht „Runde: Felix Braun · Helles“. Das Guthaben des Gebers darf dabei ins Minus gehen. Statistiken zählen das Getränk bei der Person, die getrunken hat. Einzelheiten: [Thekenterminal](tablet-strichliste-recorder.md).
+
 ### Abrechnungsmodi (`accountingMode`)
 - **`credit`**: Der Kaufbetrag wird direkt dem persönlichen Guthabenkonto des Mitglieds belastet.
-- **`revenueOnly`**: Der Umsatz wird statistisch und kassenmäßig erfasst (z. B. bei Barzahlung auf Events oder Pauschal-/Rundenbuchungen), ohne ein Mitgliedskonto zu belasten.
+- **`revenueOnly`**: Der Umsatz wird statistisch und kassenmäßig erfasst (z. B. bei Barzahlung auf Events oder den früheren Rundenbuchungen am Terminal), ohne ein Mitgliedskonto zu belasten.
 
 ---
 

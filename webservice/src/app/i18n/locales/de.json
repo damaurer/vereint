@@ -198,7 +198,8 @@
         "empty": "Keine Buchungen für diesen Filter."
       },
       "reversal": "Storno: {name}",
-      "asOf": "Stand {date}"
+      "asOf": "Stand {date}",
+      "roundTitle": "Runde: {name} · {item}"
     }
   },
   "profile": {
@@ -603,6 +604,10 @@
     "tallyCategories": {
       "title": "Strich-Kategorien",
       "description": "Spalten der Strichliste mit Preis je Strich festlegen."
+    },
+    "roundGive": {
+      "title": "Runde ausgeben",
+      "description": "Eine Runde oder den ganzen Abend mit dem eigenen Guthaben ausgeben."
     }
   },
   "chat": {
@@ -1155,28 +1160,6 @@
     }
   },
   "tablet": {
-    "revenue": {
-      "eveningTitle": "Ganzen Abend stiften",
-      "roundTitle": "Runde ausgeben",
-      "scope": "Umfang",
-      "oneRound": "Eine Runde",
-      "recipients": "Empfänger",
-      "hint": "Gültig, bis alle ein Getränk genommen haben. Tippt jemand versehentlich doppelt, wird trotzdem nur einmal gebucht.",
-      "confirmEvening": "Abend stiften",
-      "confirmRound": "Runde ausgeben"
-    },
-    "overlay": {
-      "title": "Getränkekarte & Speiseangebot",
-      "hint": "Wähle den Verkaufsartikel für die Strichliste.",
-      "categories": "Kategorien",
-      "drinksChip": "Getränke ({count})",
-      "foodChip": "Speisen ({count})",
-      "drinks": "Getränke",
-      "food": "Speisen",
-      "selected": "Aktuell ausgewählt: {name}",
-      "noneSelected": "Noch kein Artikel gewählt.",
-      "confirm": "Auswahl bestätigen"
-    },
     "terminal": {
       "kioskActive": "Kiosk-Modus aktiv",
       "startKiosk": "Kiosk-Modus starten",
@@ -1204,15 +1187,11 @@
     },
     "tally": {
       "booked": "Strich: {label}",
-      "undo": "Rückgängig",
-      "round": "Runde ausgeben",
-      "evening": "Ganzen Abend stiften"
+      "undo": "Rückgängig"
     },
     "messages": {
       "undoNotPossible": "Hier lassen sich nur Striche dieser Sitzung zurücknehmen. Ältere Buchungen korrigiert der Vorstand.",
       "undone": "Strich zurückgenommen.",
-      "eveningBooked": "Abendaktion gebucht.",
-      "roundBooked": "Runde gebucht.",
       "noDrinksInCategory": "Für {name} ist in diesem Event kein Getränk freigegeben."
     },
     "fallback": {
@@ -2350,6 +2329,72 @@
       "decline": "Nicht zustimmen und abmelden",
       "deleteHint": "Wenn du nicht zustimmen möchtest, melde dich ab. Dein Konto löschen wir auf Wunsch: Schreib dazu eine E-Mail an {email} (AGB § 10 Abs. 3).",
       "failed": "Die Zustimmung konnte nicht gespeichert werden. Bitte versuche es noch einmal."
+    }
+  },
+  "rounds": {
+    "title": "Runde ausgeben",
+    "loading": "Event und Getränke werden abgerufen.",
+    "unavailable": "Runde ausgeben nicht möglich",
+    "eventChip": "Runde ausgeben",
+    "fromBalance": "Von deinem Guthaben:",
+    "kindLabel": "Art der Runde",
+    "kind": {
+      "round": "Eine Runde",
+      "evening": "Ganzen Abend"
+    },
+    "drink": "Getränk",
+    "allDrinks": "Alle Getränke",
+    "validity": "Gültig",
+    "validity30m": "30 Minuten",
+    "validity1h": "1 Stunde",
+    "validityEventEnd": "Bis Event-Ende",
+    "maxAmount": "Höchstsumme in Euro",
+    "forWhom": "Für wen? · {count} ausgewählt",
+    "accepted": "zugesagt",
+    "present": "vor Ort",
+    "noMembers": "Außer dir ist gerade niemand im Event.",
+    "maxHint": "Höchstens {amount} von deinem Guthaben",
+    "chargeHint": "Abgebucht wird nur, was die Eingeladenen an der Theke wirklich nehmen. Das Thekenterminal zeigt deine Runde an, bis sie abläuft.",
+    "submit": "Runde für {count} ausgeben",
+    "submitEvening": "Abend für {count} ausgeben",
+    "started": "Deine Runde läuft. Die Eingeladenen bekommen eine Mitteilung.",
+    "mine": "Deine Runden in diesem Event",
+    "end": "Beenden",
+    "endedInfo": "Runde beendet.",
+    "card": {
+      "gives": "Gibt aus",
+      "used": "Verbraucht",
+      "valid": "Gültig",
+      "upTo": "bis {amount}",
+      "remaining": "noch {minutes} Min",
+      "until": "bis {time}",
+      "untilEventEnd": "bis Event-Ende",
+      "redeemed": "{count} von {total} eingelöst",
+      "invited": "Eingeladen",
+      "roundOf": "Eine Runde {drink}",
+      "roundAll": "Eine Runde · alle Getränke",
+      "eveningOf": "Ganzer Abend · {drink}",
+      "eveningAll": "Ganzer Abend · alle Getränke"
+    },
+    "status": {
+      "running": "Läuft",
+      "usedUp": "Aufgebraucht",
+      "expired": "Abgelaufen",
+      "ended": "Beendet"
+    },
+    "payer": {
+      "round": "Runde von {name}",
+      "evening": "Abend von {name}"
+    },
+    "terminal": {
+      "title": "Laufende Runden",
+      "none": "Gerade läuft keine Runde.",
+      "showAll": "Alle ansehen",
+      "hint": "Runden gibt jede Person in der App am eigenen Handy aus. Am Terminal werden sie nur angezeigt.",
+      "summary": "{what} · {redeemed} von {total} · {validity}",
+      "overviewTitle": "Laufende Runden",
+      "displayOnly": "Nur Anzeige",
+      "overviewHint": "Eine Runde gibt jede Person in der App am eigenen Handy aus und zahlt mit ihrem eigenen Guthaben. Am Terminal wird nichts ausgegeben. Wer eingeladen ist, bekommt wie gewohnt einen Strich, er geht dann auf die Runde."
     }
   }
 }

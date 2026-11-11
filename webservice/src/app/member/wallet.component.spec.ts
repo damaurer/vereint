@@ -183,6 +183,28 @@ describe('WalletComponent', () => {
     expect(titles).toEqual(['Storno: Helles', 'Helles', 'Aufladung']);
   });
 
+  it('names who drank on my round', async () => {
+    const roundEntry: LedgerEntry = {
+      ...entries[1],
+      source: 'round',
+      roundId: 'r-1',
+      beneficiaryId: 'm-2',
+      beneficiaryDisplayName: 'Felix Braun',
+      snapshot: {
+        itemType: 'DRINK',
+        drinkName: 'Helles',
+        imageReference: null,
+        barcode: null,
+        unitPrice: '3.50',
+        currency: 'EUR',
+        catalogVersion: 1,
+      },
+    };
+    api.listEntries.mockReturnValue(of([roundEntry]));
+    const fixture = await create();
+    expect(html(fixture)).toContain('Runde: Felix Braun · Helles');
+  });
+
   it('shows an empty state when there are no entries', async () => {
     api.listEntries.mockReturnValue(of([]));
     const fixture = await create();

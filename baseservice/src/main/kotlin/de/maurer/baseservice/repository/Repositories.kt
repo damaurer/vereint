@@ -201,6 +201,24 @@ interface DrinkCatalogRepository : JpaRepository<DrinkCatalogEntity, UUID> {
     fun findByTallyCategoryId(tallyCategoryId: UUID): List<DrinkCatalogEntity>
 }
 
+/** Runden im Event (Issue #81). */
+@Repository
+interface RoundRepository : JpaRepository<RoundEntity, UUID> {
+    @EntityGraph(attributePaths = ["sponsor", "event", "eventDrink"])
+    fun findByEventIdOrderByCreatedAtAsc(eventId: UUID): List<RoundEntity>
+
+    /** Sperrt die Runde, damit parallele Striche die Höchstsumme nicht überschreiten. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from RoundEntity r where r.id = :id")
+    fun findByIdForUpdate(@Param("id") id: UUID): Optional<RoundEntity>
+}
+
+@Repository
+interface RoundInviteeRepository : JpaRepository<RoundInviteeEntity, UUID> {
+    @EntityGraph(attributePaths = ["member", "round"])
+    fun findByRoundIdIn(roundIds: Collection<UUID>): List<RoundInviteeEntity>
+}
+
 /** Strich-Kategorien der Gruppe (Spalten der Strichliste, Issue #80). */
 @Repository
 interface TallyCategoryRepository : JpaRepository<TallyCategoryEntity, UUID> {
@@ -280,6 +298,10 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
     /** Mehrere Buchungen samt Mitglied, z. B. um Audit-Einträge mit Namen anzuzeigen. */
     @EntityGraph(attributePaths = ["member"])
     fun findByIdIn(ids: Collection<UUID>): List<LedgerEntryEntity>
+
+    /** Buchungen, die auf Runden gingen (Verbrauch und Einlösungen, Issue #81). */
+    @EntityGraph(attributePaths = ["round", "member", "beneficiary", "reversesEntry"])
+    fun findByRoundIdIn(roundIds: Collection<UUID>): List<LedgerEntryEntity>
 
     /** Bereits vorhandene Gegenbuchungen zu einer Ursprungsbuchung (Doppelkorrektur vermeiden). */
     fun findByReversesEntryId(reversesEntryId: UUID): List<LedgerEntryEntity>

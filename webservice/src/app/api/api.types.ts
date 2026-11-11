@@ -205,6 +205,11 @@ export interface LedgerEntry {
   /** Strich-Kategorie, zu deren Preis das Getränk gebucht wurde. */
   tallyCategoryId?: string | null;
   tallyCategoryName?: string | null;
+  /** Runde, auf die der Strich ging; `memberId` ist dann der Geber. */
+  roundId?: string | null;
+  /** Wer getrunken hat, wenn die Buchung auf eine Runde ging. */
+  beneficiaryId?: string | null;
+  beneficiaryDisplayName?: string | null;
 }
 
 /** Ein laufendes Event, an dem das gescannte Getränk gekauft werden kann. */
@@ -345,6 +350,8 @@ export interface TabletBoardMember {
   displayName: string;
   counts: Record<string, number>;
   otherCount: number;
+  /** Laufende Runde, auf die der nächste Strich geht; fehlt = eigene Rechnung. */
+  fundedBy?: RoundFunding | null;
 }
 
 /** Strichliste eines Events (`GET /api/v1/tablet/events/{id}/board`). */
@@ -354,16 +361,72 @@ export interface TabletBoard {
   tallyCount: number;
   revenue: string;
   currency: string;
+  /** Laufende Runden, nur zur Anzeige. */
+  rounds?: Round[];
 }
 
-/**
- * Runde oder Abendaktion als Revenue-Only-Buchung
- * (`POST /api/v1/tablet/events/{id}/rounds` bzw. `/evening`).
- */
-export interface TabletRevenuePayload {
+/** Art einer Runde: ein Getränk je Person oder alles bis zur Höchstsumme. */
+export type RoundKind = 'round' | 'evening';
+
+/** Stand einer Runde. */
+export type RoundStatus = 'running' | 'usedUp' | 'expired' | 'ended';
+
+/** Wer gerade für eine Person an der Theke zahlt. */
+export interface RoundFunding {
+  roundId: string;
+  sponsorName: string;
+  kind: RoundKind;
+}
+
+export interface RoundInvitee {
+  memberId: string;
+  displayName: string;
+  redeemedCount: number;
+  redeemed: boolean;
+}
+
+/** Runde im Event (`GET /api/v1/events/{id}/rounds`). */
+export interface Round {
+  id: string;
+  eventId: string;
+  sponsorId: string;
+  sponsorName: string;
+  kind: RoundKind;
+  /** fehlt = alle Getränke */
+  eventDrinkId: string | null;
+  drinkName: string | null;
+  maxAmount: string;
+  usedAmount: string;
+  currency: string;
+  /** fehlt = bis Event-Ende */
+  validUntil: string | null;
+  endedAt: string | null;
+  status: RoundStatus;
+  createdAt: string;
+  invitees: RoundInvitee[];
+}
+
+/** Gültigkeit beim Ausgeben. */
+export type RoundValidity = '30m' | '1h' | 'eventEnd';
+
+/** Runde ausgeben (`POST /api/v1/events/{id}/rounds`). */
+export interface CreateRoundPayload {
+  kind: RoundKind;
   eventDrinkId?: string | null;
-  eventFoodId?: string | null;
+  validity: RoundValidity;
   memberIds: string[];
+  /** nur bei `evening` */
+  maxAmount?: number | null;
+}
+
+/** Formular „Runde ausgeben“ (`GET /api/v1/events/{id}/rounds/options`). */
+export interface RoundOptions {
+  eventId: string;
+  eventTitle: string;
+  creditBalance: string;
+  currency: string;
+  drinks: { eventDrinkId: string; drinkName: string; price: string; currency: string }[];
+  members: { memberId: string; displayName: string; accepted: boolean; present: boolean }[];
 }
 
 /** Globaler Speisenkatalog (`GET /api/v1/food`). */

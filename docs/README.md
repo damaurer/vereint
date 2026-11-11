@@ -105,7 +105,7 @@ docs/
 | **Einkaufspreis & Deckungsbeitrag** | `costPrice`, `profit = unitPrice - costPrice` | Erfassung des Wareneinsatzes zur automatischen Ermittlung der Gewinnmarge im Beleg-Snapshot und Kassenbuch. |
 | **Moments & Rituale** | `MomentSessionEntity`, `MomentResponseEntity` | Ereignisgesteuerte Kollaborationsfunktion für spontane Momente gemeinsamer Aktivität (Toasts, Gebete, Jubelrufe, Check-ins) mit Multi-Status-Updates, Welt-Karten und 24h-Linked-Chats. |
 | **Gast-Einladungstoken** | `EventInviteEntity`, `token_hash` | Krypto-Token (SHA-256 gehasht) für passwortlose Registrierung externer Gäste zu Events. |
-| **Abendabrechnung** | `POST /api/v1/tablet/events/{eventId}/evening` | Abschlussbuchung von Bareinnahmen oder pauschalen Event-Umsätzen (`revenueOnly`). |
+| **Runde** | `RoundEntity`, `RoundService`, `/api/v1/events/{eventId}/rounds` | Eine Person gibt am eigenen Handy eine Runde oder den ganzen Abend aus; Striche der Eingeladenen gehen auf ihr Guthaben. |
 | **Optimus Design System** | `styles.css`, CSS Custom Properties | Zentrales Design-Token-System für konsistente Abstände, Farben, Elevation und Typografie. |
 | **BFF (Backend-for-Frontend)** | `webservice/src/server.ts` | Node.js / Express Server für SSR-Rendering, Cookie-Session-Verwaltung und API-Proxy. |
 

@@ -2,7 +2,7 @@
 
 Für alle Mitglieder einer Gruppe. Anmeldung, Navigation und Profil stehen in den [Ersten Schritten](01-erste-schritte.md).
 
-Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#mitglied). Dort steht auch die geplante Runde am eigenen Handy.
+Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#mitglied).
 
 ## Auf einen Blick
 
@@ -17,6 +17,7 @@ Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm
 | sehen, wer am meisten Striche hat | **Mehr → Statistik** |
 | sehen, wer was getrunken hat, mit Litern und Kalorien | **Mehr → Statistik** → **Getränkestatistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
+| eine Runde ausgeben | Im laufenden Event **Runde ausgeben** → Personen anhaken → **Runde für … ausgeben** |
 | ein Getränk selbst bezahlen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
@@ -50,7 +51,7 @@ Deine Antwort kannst du bis zum Event jederzeit ändern. Die Karten zeigen auße
 Tippe auf ein Event, um die Details zu sehen:
 
 - Datum, Uhrzeit, Ort und wer das Event organisiert. **Route** startet die Navigation zum Treffpunkt.
-- Darunter führen **Event-Chat** und **Moments** (mit der Zahl laufender Moments) weiter; Gastgeber und Vorstand sehen zusätzlich **Verwalten**.
+- Darunter führen **Event-Chat** und **Moments** (mit der Zahl laufender Moments) weiter. Läuft das Event, steht dort auch **Runde ausgeben** (siehe [Eine Runde ausgeben](#eine-runde-ausgeben)); Gastgeber und Vorstand sehen zusätzlich **Verwalten**.
 - **Deine Antwort**: Deine aktuelle Wahl ist hervorgehoben.
 - **Anwesenheit**: wie viele zugesagt, vielleicht gesagt, abgesagt oder noch nicht geantwortet haben, darunter die Eingeladenen nach ihrer Antwort gruppiert.
 
@@ -188,6 +189,25 @@ Reicht dein Guthaben nicht, warnt Vereint dich vorher. Du kannst trotzdem bezahl
 Vertippt oder das falsche Getränk erwischt? Mit **Rückgängig** nimmst du den Kauf innerhalb von **10 Minuten** selbst zurück. Danach hilft der Kassenwart. **Nächstes Getränk scannen** startet gleich den nächsten Kauf.
 
 Wird ein Strichcode nicht erkannt, ist das Getränk noch nicht im Katalog oder hat noch keinen Strichcode. Sag dem Vorstand Bescheid.
+
+<br clear="right">
+
+## Eine Runde ausgeben
+
+<img src="screens/runde-handy.png" alt="Runde am eigenen Handy ausgeben" width="300" align="right">
+
+Eine Runde gibst du **an deinem eigenen Handy** aus, bezahlt wird **von deinem Guthaben**. Das geht, solange ein Event läuft, zu dem du gehörst. Öffne das Event und tippe auf **Runde ausgeben**.
+
+1. Oben steht das Event und **Von deinem Guthaben** mit deinem aktuellen Stand.
+2. Wähle **Eine Runde** (jede eingeladene Person bekommt ein Getränk) oder **Ganzen Abend** (alles, bis die Höchstsumme erreicht ist; die Höchstsumme trägst du selbst ein).
+3. **Getränk**: ein bestimmtes Getränk oder **Alle Getränke**. Eine Runde auf ein Getränk gilt auch für die anderen Getränke derselben Spalte der Strichliste, etwa alle Biere.
+4. **Gültig**: **30 Minuten**, **1 Stunde** oder **Bis Event-Ende**.
+5. **Für wen?**: Personen anhaken. Neben dem Namen steht „zugesagt“ oder „vor Ort“ (hatte heute schon einen Strich).
+6. Unten steht, wie viel **höchstens** von deinem Guthaben abgehen kann. **Runde für … ausgeben** startet die Runde.
+
+Abgebucht wird nur, was die Eingeladenen an der Theke wirklich nehmen: Bekommt eine eingeladene Person einen Strich, geht der Betrag von deinem Guthaben ab statt von ihrem. Dein Guthaben darf dabei ins Minus gehen. Die Eingeladenen bekommen eine Mitteilung, und das Thekenterminal zeigt deine Runde an, bis sie aufgebraucht oder abgelaufen ist. Ist jemand in mehreren Runden eingeladen, gilt die zuerst gestartete.
+
+Unter **Deine Runden in diesem Event** siehst du, wie viel schon verbraucht ist und wer eingelöst hat. **Beenden** stoppt eine Runde vorzeitig. In deinem **Guthaben** steht jeder eingelöste Strich als „Runde: Name · Getränk“.
 
 <br clear="right">
 

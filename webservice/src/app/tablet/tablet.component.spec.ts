@@ -4,7 +4,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
 import type { EventDrink, EventFood } from '../events/event-manage.types';
-import type { LedgerEntry, TabletBoard, TabletEvent, TabletMember } from '../api/api.types';
+import type { LedgerEntry, Round, TabletBoard, TabletEvent, TabletMember } from '../api/api.types';
 import { TabletApiService } from './tablet-api.service';
 import { KioskModeService } from '../kiosk/kiosk-mode.service';
 import { TabletComponent } from './tablet.component';
@@ -99,14 +99,8 @@ interface TabletInternals {
   undoLast(): void;
   lastBooking: () => { entryId: string; label: string; cell: TallyCell } | null;
   actionError: () => string | null;
-  revenueForm: { eventDrinkId: string; kind: 'round' | 'evening' };
-  revenueSelection: Record<string, boolean>;
-  recordRevenue(): void;
-  selectActiveDrink(eventDrinkId: string): void;
-  openRevenueSheet(kind: 'round' | 'evening', members: TabletMember[]): void;
-  confirmRevenue(): void;
-  revenueSheetOpen: () => boolean;
-  drinkOverlayOpen: () => boolean;
+  payers: () => Record<string, string>;
+  roundsOpen: { (): boolean; set(value: boolean): void };
   standalone: () => boolean;
   toggleStandalone(): void;
   kioskStartOpen: () => boolean;
@@ -121,8 +115,6 @@ describe('TabletComponent', () => {
     listFood: ReturnType<typeof vi.fn>;
     loadBoard: ReturnType<typeof vi.fn>;
     recordPurchase: ReturnType<typeof vi.fn>;
-    recordRound: ReturnType<typeof vi.fn>;
-    recordEvening: ReturnType<typeof vi.fn>;
     undoPurchase: ReturnType<typeof vi.fn>;
   };
 
@@ -161,8 +153,6 @@ describe('TabletComponent', () => {
       listFood: vi.fn(() => of(food)),
       loadBoard: vi.fn(() => of(board())),
       recordPurchase: vi.fn(() => of(entry)),
-      recordRound: vi.fn(() => of([entry])),
-      recordEvening: vi.fn(() => of([entry])),
       undoPurchase: vi.fn(() => of({ id: 'l-2' } as LedgerEntry)),
     };
   });
@@ -298,23 +288,49 @@ describe('TabletComponent', () => {
     expect(html(fixture)).toContain('Erfassung nicht möglich');
   });
 
-  it('books a round via the revenue sheet for the preselected members', async () => {
-    const { cmp } = await open();
-    cmp.selectActiveDrink('d-1');
-    cmp.openRevenueSheet('round', members);
-    cmp.confirmRevenue();
-    expect(api.recordRound).toHaveBeenCalledTimes(1);
-    expect(api.recordRound.mock.calls[0][1]).toEqual({ eventDrinkId: 'd-1', memberIds: ['m-1', 'm-2'] });
-    expect(cmp.revenueSheetOpen()).toBe(false);
+  it('shows running rounds and who pays in the row header, without buttons to buy a round', async () => {
+    const round: Round = {
+      id: 'r-1',
+      eventId: 'e-1',
+      sponsorId: 'm-3',
+      sponsorName: 'Thomas',
+      kind: 'round',
+      eventDrinkId: 'd-1',
+      drinkName: 'Helles',
+      maxAmount: '7.00',
+      usedAmount: '3.50',
+      currency: 'EUR',
+      validUntil: new Date(Date.now() + 18 * 60_000).toISOString(),
+      endedAt: null,
+      status: 'running',
+      createdAt: '2026-06-01T18:00:00Z',
+      invitees: [
+        { memberId: 'm-1', displayName: 'Alice', redeemedCount: 1, redeemed: true },
+        { memberId: 'm-2', displayName: 'Bob', redeemedCount: 0, redeemed: false },
+      ],
+    };
+    const withRound = board();
+    withRound.members[1] = { ...withRound.members[1], fundedBy: { roundId: 'r-1', sponsorName: 'Thomas', kind: 'round' } };
+    api.loadBoard.mockReturnValue(of({ ...withRound, rounds: [round] }));
+    const { fixture, cmp } = await open();
+    const text = html(fixture);
+    expect(cmp.payers()).toEqual({ 'm-2': 'Runde von Thomas' });
+    expect(text).toContain('Runde von Thomas');
+    expect(text).toContain('Eigene Rechnung');
+    expect(text).toContain('Laufende Runden');
+    expect(text).toContain('Eine Runde Helles');
+    expect(text).toContain('1 von 2');
+    expect(text).not.toContain('Ganzen Abend stiften');
+
+    cmp.roundsOpen.set(true);
+    fixture.detectChanges();
+    expect(html(fixture)).toContain('Gibt aus');
+    expect(html(fixture)).toContain('noch 18 Min');
   });
 
-  it('records an evening action for the selected members', async () => {
-    const { cmp } = await open();
-    cmp.revenueForm = { eventDrinkId: 'd-1', kind: 'evening' };
-    cmp.revenueSelection = { 'm-1': true };
-    cmp.recordRevenue();
-    expect(api.recordEvening).toHaveBeenCalledTimes(1);
-    expect(api.recordEvening.mock.calls[0][1]).toEqual({ eventDrinkId: 'd-1', memberIds: ['m-1'] });
+  it('says that no round is running', async () => {
+    const { fixture } = await open();
+    expect(html(fixture)).toContain('Gerade läuft keine Runde.');
   });
 
   it('starts kiosk mode after the device chose its PIN and keeps it on the device', async () => {
