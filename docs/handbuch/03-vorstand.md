@@ -156,6 +156,7 @@ Das klappt auch, wenn du schon in **Getränk anlegen** bist: Scannst du dort bei
 
 - **Name**, **Kategorie** und **Standardpreis** (Pflicht beim Preis),
 - **Einkaufspreis**: Darunter rechnet Vereint die Marge pro Verkauf aus.
+- **Füllmenge (ml)** und **Kalorien je Portion (kcal)**: freiwillig, für Liter und Kalorien in der Getränkestatistik. Aus der Getränkedatenbank übernommene Getränke bringen die Werte oft schon mit.
 - **Barcodes**: einen oder mehrere Strichcodes per Kamera oder Eingabe hinzufügen. Erst mit Strichcode können Mitglieder das Getränk selbst bezahlen.
 - **Im Sortiment**: Abwählen nimmt ein Getränk aus dem Verkauf, ohne es zu löschen. Alte Käufe behalten so ihren Namen und Preis.
 

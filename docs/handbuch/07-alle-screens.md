@@ -459,14 +459,12 @@ Eine Runde gibt jede Person **nur am eigenen Handy** und **mit dem eigenen Gutha
 
 ### Statistik
 
-> **Neu im Entwurf**: Die Links zur Getränkestatistik und zur Übersicht sowie die Zeitraum-Auswahl gibt es in der App noch nicht.
-
 <img src="screens/statistik.png" alt="Statistik" width="300" align="right">
 
 Der Einstieg in die Auswertungen der Gruppe. Alle Statistiken sind **für alle Mitglieder sichtbar**.
 
 - **Getränkestatistik: wer, was, wie viel, kcal** und **Alle Statistiken im Überblick** führen zu den ausführlichen Auswertungen.
-- **Zeitraum**: **30 Tage**, **90 Tage** oder **Jahr**.
+- **Zeitraum**: **30 Tage**, **90 Tage** oder **Jahr** (das laufende Kalenderjahr ab 1. Januar). Der Zeitraum gilt auch auf den beiden anderen Statistikseiten.
 - Kennzahlen: Striche der **Gruppe**, **deine** Striche und **dein Platz**.
 - **Rangliste** mit Balken; dein Eintrag ist hervorgehoben.
 - **Zusagequote**: Anteil der Einladungen, auf die mit „Zusagen“ geantwortet wurde.
@@ -474,8 +472,6 @@ Der Einstieg in die Auswertungen der Gruppe. Alle Statistiken sind **für alle M
 <br clear="right">
 
 ### Getränkestatistik
-
-> **Neu im Entwurf**
 
 <img src="screens/getraenkestatistik.png" alt="Getränkestatistik" width="300" align="right">
 
@@ -486,19 +482,17 @@ Wer hat wie viel von was getrunken, über die ganze Gruppe.
 - **Ø Getränke der Gruppe** **je Event**, **je Tag**, **je Woche** und **je Monat**.
 - Ansicht **Nach Mitglied** oder **Nach Getränk**, sortiert **Nach Anzahl** oder nach Kalorien.
 - Je Mitglied: Platz, Anzahl, Kalorien, Durchschnitt je Event und je Woche und aufgeklappt die einzelnen Getränke mit Menge und Kalorien.
-- Die Kalorien je Portion stammen aus der Getränkedatenbank.
+- Füllmenge und Kalorien je Portion stehen am Getränk im Katalog (siehe [Getränk bearbeiten](#getränk-bearbeiten)); übernommene Getränke bringen sie aus der Getränkedatenbank mit. Getränke ohne Angabe zählen bei Litern bzw. Kalorien nicht mit; darauf weist die Seite hin.
 
 <br clear="right">
 
 ### Statistik-Übersicht
 
-> **Neu im Entwurf**
-
 <img src="screens/statistik-uebersicht.png" alt="Statistik-Übersicht" width="720">
 
 Alle Kennzahlen der Gruppe auf einer Seite, gedacht für den Rechner. Sichtbar für alle Mitglieder. Oben rechts der **Zeitraum** (30 Tage, 90 Tage, Jahr).
 
-**Kennzahlen**: **Mitglieder** (aktiv und neu), **Events** mit Ø Teilnehmenden, **Zusagequote**, **Getränke** mit Ø je Event, **Liter** mit Ø je Woche, **Kalorien** mit Ø je Mitglied, **Umsatz** mit Ø je Event und **Getränke je Monat**.
+**Kennzahlen**: **Mitglieder** (aktiv und neu), **Events** mit Ø Teilnehmenden, **Zusagequote**, **Getränke** mit Ø je Event, **Liter** mit Ø je Woche, **Kalorien** mit Ø je Mitglied, **Umsatz** mit Ø je Event (nur für Vorstand und Kasse) und **Getränke je Monat**.
 
 **Events & Zusagen**
 
@@ -509,14 +503,16 @@ Alle Kennzahlen der Gruppe auf einer Seite, gedacht für den Rechner. Sichtbar f
 
 - **Getränke je Woche** als Säulen; mit der Maus auf eine Säule zeigt den Wert der Woche, sonst steht dort der Wochendurchschnitt.
 - **Wann wird getrunken?**: Verteilung **nach Wochentag** und **nach Uhrzeit**.
-- **Wer trinkt was?**: je Mitglied ein Balken nach Kategorie (**Bier**, **Alkoholfrei**, **Schnaps**, **Wein & Sekt**) mit Gesamtzahl und Kalorien.
+- **Wer trinkt was?**: je Mitglied ein Balken nach Kategorie (**Bier**, **Alkoholfrei**, **Schnaps**, **Wein & Sekt**, **Sonstiges**) mit Gesamtzahl und Kalorien. Die Gruppe ergibt sich aus der Kategorie und dem Namen des Getränks.
 
 **Getränke**
 
 - **Beliebteste Getränke** mit Anzahl und Ø je Event.
 - **Anteil nach Kategorie**: Balken und Tabelle mit Getränken, Anteil, Litern und Kalorien.
 
-**Gemeinschaft**: **Top-Rundengeber**, **Moments** (gestartet, Reaktionen, Fotos und Videos), **Chat** (Nachrichten, aktivste Person, Event-Chats) und **Rekorde** (meiste Getränke an einem Abend, längste Serie dabei, schnellste Zusage).
+**Gemeinschaft**: **Top-Rundengeber**, **Moments** (gestartet, Reaktionen, Fotos und Videos), **Chat** (Nachrichten, aktivste Person, Event-Chats) und **Rekorde** (meiste Getränke an einem Abend, längste Serie dabei, schnellste Zusage). Rundengeber zählt, wer eine Runde oder einen ganzen Abend ausgegeben hat.
+
+Auf dem Handy stehen die Abschnitte untereinander.
 
 ---
 
@@ -652,6 +648,7 @@ Ein Getränk anlegen oder ändern.
 
 - **Name** (Pflicht).
 - **Strich-Kategorie**: in welcher Spalte der Strichliste das Getränk gezählt wird, oder **Ohne**. *Neu im Entwurf.*
+- **Füllmenge (ml)** und **Kalorien je Portion (kcal)**, beide freiwillig. Sie zählen für Liter und Kalorien in der [Getränkestatistik](#getränkestatistik).
 - **Verkaufspreis** (Pflicht) und **Einkaufspreis**. Darunter der Preis, der an der Theke wirklich gilt: Hat das Getränk eine Kategorie, **überschreibt der Kategoriepreis den Verkaufspreis**. Dazu die Marge.
 - **Barcodes**: vorhandene Strichcodes und **Neuer Barcode** mit **Hinzufügen**. Damit funktioniert [Bezahlen per Scan](#bezahlen).
 - **Im Sortiment**: abwählen, um das Getränk aus dem Verkauf zu nehmen, ohne es zu löschen.

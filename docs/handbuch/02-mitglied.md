@@ -2,7 +2,7 @@
 
 Für alle Mitglieder einer Gruppe. Anmeldung, Navigation und Profil stehen in den [Ersten Schritten](01-erste-schritte.md).
 
-Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#mitglied). Dort stehen auch die geplanten Statistiken (Getränke, Kalorien, Zusagen) und die Runde am eigenen Handy.
+Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#mitglied). Dort steht auch die geplante Runde am eigenen Handy.
 
 ## Auf einen Blick
 
@@ -15,6 +15,7 @@ Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm
 | alle Termine aus allen meinen Gruppen sehen | **Mehr → Kalender** |
 | jemanden als Freund hinzufügen | **Mehr → Freunde** → **Anfragen** |
 | sehen, wer am meisten Striche hat | **Mehr → Statistik** |
+| sehen, wer was getrunken hat, mit Litern und Kalorien | **Mehr → Statistik** → **Getränkestatistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
 | ein Getränk selbst bezahlen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
@@ -257,12 +258,17 @@ Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, K
 
 <img src="bilder/m-statistik.png" alt="Statistik" width="300" align="right">
 
-Unter **Mehr → Statistik** siehst du Auswertungen der letzten 90 Tage:
+Unter **Mehr → Statistik** siehst du Auswertungen deiner Gruppe. Alle Mitglieder sehen dieselben Zahlen, mit Namen. Die Statistiken sind Spaß-Fakten, keine Gesundheitsangabe, und bleiben in der Gruppe (siehe AGB, Abschnitt „Statistiken“).
 
-- **Rangliste**: Striche in der ganzen Gruppe, deine eigenen Striche und dein Platz.
-- **Zusagequote**: wie viele Einladungen mit Zusage beantwortet wurden.
-- **Umsatz 30 Tage** mit dem Verlauf der letzten acht Wochen.
-- **Beliebteste Artikel** und **Events mit den meisten Strichen**.
+Oben wählst du den **Zeitraum**: **30 Tage**, **90 Tage** oder **Jahr** (das laufende Kalenderjahr ab 1. Januar). Er bleibt erhalten, wenn du zwischen den Statistikseiten wechselst.
+
+- **Gruppe**, **Du** und **Dein Platz**: Striche der ganzen Gruppe, deine eigenen und dein Platz in der Rangliste.
+- **Rangliste** mit Balken; dein Eintrag ist hervorgehoben.
+- **Zusagequote**: wie viele Einladungen mit „Zusagen“ beantwortet wurden.
+
+**Getränkestatistik: wer, was, wie viel, kcal** zeigt Getränke, Liter und Kalorien der Gruppe und den Durchschnitt je Event, Tag, Woche und Monat. Darunter wechselst du zwischen **Nach Mitglied** und **Nach Getränk** und sortierst **Nach Anzahl** oder **Nach Kalorien**. Ein Tipp auf ein Mitglied klappt seine Getränke mit Menge und Kalorien auf. Liter und Kalorien kommen aus den Angaben am Getränk im Katalog; Getränke ohne Angabe zählen dort nicht mit, die Seite nennt ihre Zahl.
+
+**Alle Statistiken im Überblick** fasst alles auf einer Seite zusammen, am besten am Rechner: Mitglieder, Events, Zusagen je Event und je Mitglied (mit **Da gewesen**: Events mit mindestens einem Strich oder Kauf), Getränke je Woche, nach Wochentag und Uhrzeit, **Wer trinkt was?** nach Bier, Alkoholfrei, Schnaps, Wein & Sekt, die beliebtesten Getränke, Rundengeber, Moments, Chat und Rekorde. Den **Umsatz** sehen dort nur Vorstand und Kasse.
 
 <br clear="right">
 
