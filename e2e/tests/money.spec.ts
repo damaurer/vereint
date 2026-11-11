@@ -8,12 +8,16 @@ test.describe('Guthaben und Thekenterminal', () => {
     const terminal = await as('terminal');
     const memberId = (await member.api.me()).id;
 
-    // Event mit einem Getraenk, aktiv geschaltet (Events haben noch keine Anlege-Oberflaeche).
+    // Event mit zwei Getraenken einer Strich-Kategorie, aktiv geschaltet. Der
+    // Kategoriepreis (3,00 €) schlaegt im Event den Preis des Getraenks (3,50 €).
     const title = unique('Thekenabend');
     const event = await board.api.createEvent(title, 0);
     await board.api.addParticipant(event.id, memberId);
     const drink = await board.api.approvedDrink(unique('Helles'), 3.5);
+    const second = await board.api.approvedDrink(unique('Pils'), 3.8);
+    const category = await board.api.tallyCategory(unique('Bier'), 3, [drink.id, second.id]);
     await board.api.addEventDrink(event.id, drink.id, 3.5);
+    await board.api.addEventDrink(event.id, second.id, 3.8);
     await board.api.setEventStatus(event.id, 'active');
 
     const start = await member.api.balance(memberId);
@@ -45,17 +49,15 @@ test.describe('Guthaben und Thekenterminal', () => {
       const { page } = terminal;
       await page.goto('/tablet');
       await page.getByRole('listitem').filter({ hasText: title }).getByRole('button', { name: 'Auswählen' }).click();
-      const row = page.getByRole('group', { name: 'Striche für Mia Mitglied' });
-      await row.getByRole('button', { name: 'Erhöhen' }).click();
-      // Ohne gewaehlten Artikel fragt die Theke zuerst nach dem Getraenk.
-      await page.getByRole('option', { name: new RegExp(drink.name) }).click();
-      await page.getByRole('button', { name: 'Auswahl bestätigen' }).click();
-      // Das Overlay waehlt nur den Artikel; gebucht wurde noch nichts.
-      await expect(row.getByText('0', { exact: true })).toBeVisible();
-      await row.getByRole('button', { name: 'Erhöhen' }).click();
-      await expect(row.getByText('1', { exact: true })).toBeVisible();
-      await expect(page.getByText(/Strich erfasst/)).toBeVisible();
-      await expect.poll(() => member.api.balance(memberId)).toBe(start + 20 - 3.5);
+      const cell = page.getByRole('button', { name: new RegExp(`^Mia Mitglied, ${category.name}:`) });
+      await expect(cell).toHaveAccessibleName(/: 0 Striche/);
+      await cell.click();
+      // Zwei Getraenke in der Kategorie: die Theke fragt, welches es war.
+      await page.getByRole('listitem').filter({ hasText: drink.name }).click();
+      await expect(cell).toHaveAccessibleName(/: 1 Striche/);
+      await expect(page.getByText(new RegExp(`Strich: .*${drink.name}`))).toBeVisible();
+      // Gebucht wird der Kategoriepreis, nicht der Preis des Getraenks.
+      await expect.poll(() => member.api.balance(memberId)).toBe(start + 20 - 3);
     });
 
     await test.step('Rueckgaengig nimmt den Strich zurueck', async () => {
@@ -72,6 +74,7 @@ test.describe('Guthaben und Thekenterminal', () => {
       await expect(items.nth(0).locator('.member-list-meta')).toContainText('Korrektur');
       await expect(items.nth(1).locator('.member-list-title')).toHaveText(drink.name);
       await expect(items.nth(1).locator('.member-list-meta')).toContainText('Kauf');
+      await expect(items.nth(1).locator('.member-list-meta')).toContainText(category.name);
     });
   });
 

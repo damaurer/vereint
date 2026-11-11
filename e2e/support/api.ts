@@ -69,6 +69,18 @@ export class Api {
     return drink;
   }
 
+  /** Legt eine Strich-Kategorie an und ordnet ihr die Getraenke zu (Vorstand). */
+  async tallyCategory(name: string, price: number, drinkIds: string[]): Promise<{ id: string; name: string }> {
+    const category = await this.post<{ id: string; name: string }>('/tally-categories', {
+      name,
+      price: price.toFixed(2),
+    });
+    for (const drinkId of drinkIds) {
+      await this.put(`/drinks/${drinkId}`, { tallyCategoryId: category.id });
+    }
+    return category;
+  }
+
   async addBarcode(drinkId: string, barcode: string): Promise<void> {
     await this.post(`/drinks/${drinkId}/barcodes`, { barcode });
   }

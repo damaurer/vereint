@@ -18,6 +18,7 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltu
 | einen Gast einladen | Event verwalten → Reiter **Gäste** → **Gasteinladung erzeugen** |
 | ein vorgeschlagenes Getränk freigeben | **Getränkekatalog** → Vorschlag → **Freigeben** |
 | ein Getränk anlegen oder den Preis ändern | **Getränkekatalog** → **Getränk anlegen** oder **Bearbeiten** |
+| die Spalten und Preise der Strichliste festlegen | **Getränkekatalog** → **Strich-Kategorien** |
 | ein Getränk aus der gemeinsamen Datenbank holen | **Getränkekatalog** → **Aus der Getränkedatenbank** → **Übernehmen** |
 | ein eigenes Getränk mit anderen Gruppen teilen | **Getränkekatalog** → Getränk → **Bearbeiten** → **In die Getränkedatenbank teilen** |
 | ein neues Mitglied einladen | **Vorstand** → **Mitglied einladen** (siehe [Leitfaden Administration](04-administration.md#neue-mitglieder-einladen)) |
@@ -156,10 +157,34 @@ Das klappt auch, wenn du schon in **Getränk anlegen** bist: Scannst du dort bei
 
 - **Name**, **Kategorie** und **Standardpreis** (Pflicht beim Preis),
 - **Einkaufspreis**: Darunter rechnet Vereint die Marge pro Verkauf aus.
+- **Strich-Kategorie**: die Spalte, unter der das Getränk an der Theke gestrichen wird. Ist eine Kategorie gewählt, steht darunter „An der Theke: 3,00 € (Kategorie Bier, überschreibt den Verkaufspreis)“, und die Marge rechnet mit diesem Preis.
 - **Barcodes**: einen oder mehrere Strichcodes per Kamera oder Eingabe hinzufügen. Erst mit Strichcode können Mitglieder das Getränk selbst bezahlen.
 - **Im Sortiment**: Abwählen nimmt ein Getränk aus dem Verkauf, ohne es zu löschen. Alte Käufe behalten so ihren Namen und Preis.
 
 Vereint warnt, wenn ein Name oder Strichcode schon vergeben ist. **Speichern** übernimmt die Änderung.
+
+<br clear="right">
+
+### Strich-Kategorien
+
+<img src="screens/strich-kategorien.png" alt="Strich-Kategorien" width="300" align="right">
+
+Unter **Getränkekatalog → Strich-Kategorien** legst du fest, welche Spalten die Strichliste am Thekenterminal hat. Eine Strich-Kategorie fasst Getränke zusammen, die an der Theke gleich viel kosten, zum Beispiel „Bier“ für 3,00 € oder „Alkoholfrei“ für 2,00 €.
+
+- **Neue Kategorie**: **Name** und **Preis je Strich** eintragen und speichern.
+- Name und Preis änderst du direkt in der Karte der Kategorie. Der neue Preis gilt ab dem nächsten Strich; schon gebuchte Striche behalten ihren Preis.
+- **Nach links** und **Nach rechts** ändern die Reihenfolge. Sie ist die Reihenfolge der Spalten am Terminal.
+- **Getränke zuordnen**: Unter **Ohne Kategorie · eigener Preis** stehen alle Getränke ohne Spalte; über **Zuordnen …** kommen sie in eine Kategorie. Dasselbe geht im Getränk selbst über das Feld **Strich-Kategorie**. Ein Getränk gehört zu höchstens einer Kategorie. Das Kreuz neben einem Getränk nimmt es wieder heraus.
+- Weicht der eigene Preis eines Getränks vom Kategoriepreis ab, steht er durchgestrichen daneben.
+- **Löschen** entfernt die Kategorie; ihre Getränke stehen danach ohne Kategorie da und kosten wieder ihren eigenen Preis. Alte Buchungen behalten den Namen der Kategorie.
+
+**Welcher Preis gilt?** Die Kategorie zählt nur im Event:
+
+1. Hat das Getränk eine Strich-Kategorie, gilt im Event der **Kategoriepreis**, am Terminal ebenso wie beim Bezahlen per Strichcode am Handy.
+2. Sonst gilt der **Preis aus dem Event** (aus der Getränkeliste oder im Event eingetragen).
+3. Sonst der **Standardpreis** des Getränks.
+
+Getränke ohne Kategorie und Speisen stehen am Terminal in der Spalte **Sonstiges** mit ihrem eigenen Preis.
 
 <br clear="right">
 

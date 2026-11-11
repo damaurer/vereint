@@ -47,17 +47,16 @@ const scrollToHeading = async (page, text, offset = 72) => {
   await page.waitForTimeout(300);
 };
 
-/** Öffnet am Terminal den Stammtisch und wählt optional einen Artikel. */
-const openTerminal = async (page, article) => {
+/** Öffnet am Terminal das laufende Event mit der Strichliste. */
+const openTerminal = async (page) => {
   await open(page, '/tablet');
   await page.getByRole('button', { name: 'Auswählen' }).first().click();
   await settle(page);
-  if (!article) return;
-  await page.locator('.quickbook-drink').click();
-  await page.locator('.overlay-card').filter({ hasText: article }).first().click();
-  await page.getByRole('button', { name: 'Auswahl bestätigen' }).click();
-  await page.waitForTimeout(300);
 };
+
+/** Feld der Strichliste: Zeile des Mitglieds, Spalte der Kategorie. */
+const tallyCell = (page, member, column) =>
+  page.getByRole('button', { name: new RegExp(`^${member}, ${column}:`) });
 
 /**
  * Bildliste. `who` ist die angemeldete Person, `device` die Bildschirmgröße,
@@ -338,34 +337,26 @@ const SHOTS = [
   // Thekenterminal (Tablet quer)
   { id: 't-event-waehlen', who: 'theke', device: TABLET, run: async (page) => open(page, '/tablet') },
   {
+    // Mehrere Getränke in der Kategorie: die Theke fragt, welches es war.
     id: 't-artikel',
     who: 'theke',
     device: TABLET,
     run: async (page) => {
       await openTerminal(page);
-      await page.locator('.quickbook-drink').click();
-      await page.locator('.overlay-card').filter({ hasText: 'Helles' }).first().click();
+      await tallyCell(page, 'Felix Braun', 'Bier').click();
       await page.waitForTimeout(300);
     },
   },
-  {
-    id: 't-strichliste',
-    who: 'theke',
-    device: TABLET,
-    run: async (page) => {
-      await openTerminal(page, 'Helles');
-      await scrollToHeading(page, 'Strichliste', 120);
-    },
-  },
+  { id: 't-strichliste', who: 'theke', device: TABLET, run: async (page) => openTerminal(page) },
   {
     id: 't-strich-rueckgaengig',
     who: 'theke',
     device: TABLET,
     run: async (page) => {
-      await openTerminal(page, 'Helles');
-      await page.locator('app-strichliste-row').filter({ hasText: 'Felix Braun' }).getByRole('button').last().click();
+      await openTerminal(page);
+      await tallyCell(page, 'Felix Braun', 'Bier').click();
+      await page.getByRole('listitem').filter({ hasText: 'Helles' }).click();
       await settle(page);
-      await scrollToHeading(page, 'Strichliste', 120);
     },
   },
   {
@@ -373,7 +364,7 @@ const SHOTS = [
     who: 'theke',
     device: TABLET,
     run: async (page) => {
-      await openTerminal(page, 'Helles');
+      await openTerminal(page);
       await page.getByRole('button', { name: /Runde ausgeben/ }).click();
       await page.waitForTimeout(500);
     },

@@ -110,6 +110,7 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
                   <span class="member-list-title">{{ entryTitle(entry, view.entries) }}</span>
                   <span class="member-list-meta">
                     @if (hasItemTitle(entry, view.entries)) { {{ entryTypeLabel(entry.entryType) }} · }
+                    @if (entry.tallyCategoryName) { {{ entry.tallyCategoryName }} · }
                     {{ formatShortDateTime(entry.createdAt) }}
                   </span>
                   <span

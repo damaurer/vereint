@@ -36,6 +36,8 @@ erDiagram
     drink_library ||--o{ drink_library_barcodes : "identifies"
     drink_library ||--o{ drink_catalog : "copied_into"
     drink_catalog ||--o{ drink_barcodes : "identifies"
+    tally_categories ||--o{ drink_catalog : "groups"
+    tally_categories ||--o{ ledger_entries : "tallied_as"
     drink_catalog ||--o{ drink_sublist_items : "included_in"
     drink_catalog ||--o{ event_drinks : "offered_as"
     drink_catalog ||--o{ ledger_entries : "purchased_as"
