@@ -40,5 +40,6 @@
     <include file="db/changelog/changes/021-remove-plans-and-billing.xml"/>
     <include file="db/changelog/changes/022-unique-ledger-correction.xml"/>
     <include file="db/changelog/changes/023-tally-categories.xml"/>
+    <include file="db/changelog/changes/025-rounds.xml"/>
 
 </databaseChangeLog>

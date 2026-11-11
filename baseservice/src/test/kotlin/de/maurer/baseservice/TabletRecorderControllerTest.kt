@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import de.maurer.baseservice.dto.LedgerEntryDto
 import de.maurer.baseservice.dto.TabletEventDto
 import de.maurer.baseservice.dto.TabletPurchaseRequest
-import de.maurer.baseservice.dto.TabletRevenuePurchaseRequest
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.service.TabletRecorderService
 import org.junit.jupiter.api.BeforeEach
@@ -152,92 +151,18 @@ class TabletRecorderControllerTest {
             .andExpect(jsonPath("$.traceId").exists())
     }
 
-    private fun anyRevenueRequest(): TabletRevenuePurchaseRequest {
-        any(TabletRevenuePurchaseRequest::class.java)
-        return TabletRevenuePurchaseRequest()
-    }
-
     @Test
-    fun `POST rounds books a revenue only round and returns 201`() {
-        `when`(tabletRecorderService.recordRound(anyUuid(), anyRevenueRequest(), anyKey(), anyPrincipal()))
-            .thenReturn(listOf(sampleEntry().copy(accountingMode = "revenueOnly", source = "round")))
-
-        mockMvc.perform(
-            post("/api/v1/tablet/events/$eventId/rounds")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Idempotency-Key", "round-1")
-                .content(
-                    objectMapper.writeValueAsString(
-                        TabletRevenuePurchaseRequest(
-                            eventDrinkId = eventDrinkId.toString(),
-                            memberIds = listOf(memberId.toString())
-                        )
-                    )
-                )
-                .with(jwt().jwt { it.subject("sub-tablet").claim("realm_access", mapOf("roles" to listOf("tabletRecorder"))) })
-        )
-            .andExpect(status().isCreated)
-            .andExpect(jsonPath("$[0].source").value("round"))
-            .andExpect(jsonPath("$[0].accountingMode").value("revenueOnly"))
-    }
-
-    @Test
-    fun `POST evening books a revenue only evening action and returns 201`() {
-        `when`(tabletRecorderService.recordEvening(anyUuid(), anyRevenueRequest(), anyKey(), anyPrincipal()))
-            .thenReturn(listOf(sampleEntry().copy(accountingMode = "revenueOnly", source = "evening")))
-
-        mockMvc.perform(
-            post("/api/v1/tablet/events/$eventId/evening")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Idempotency-Key", "evening-1")
-                .content(
-                    objectMapper.writeValueAsString(
-                        TabletRevenuePurchaseRequest(
-                            eventDrinkId = eventDrinkId.toString(),
-                            memberIds = listOf(memberId.toString())
-                        )
-                    )
-                )
-                .with(jwt().jwt { it.subject("sub-tablet").claim("realm_access", mapOf("roles" to listOf("tabletRecorder"))) })
-        )
-            .andExpect(status().isCreated)
-            .andExpect(jsonPath("$[0].source").value("evening"))
-    }
-
-    @Test
-    fun `POST rounds rejects an empty member list with 400`() {
-        mockMvc.perform(
-            post("/api/v1/tablet/events/$eventId/rounds")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Idempotency-Key", "round-1")
-                .content(
-                    objectMapper.writeValueAsString(
-                        TabletRevenuePurchaseRequest(eventDrinkId = eventDrinkId.toString(), memberIds = emptyList())
-                    )
-                )
-                .with(jwt().jwt { it.subject("sub-tablet") })
-        )
-            .andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.code").value("validation_failed"))
-            .andExpect(jsonPath("$.traceId").exists())
-    }
-
-    @Test
-    fun `POST rounds returns 401 when unauthenticated`() {
-        mockMvc.perform(
-            post("/api/v1/tablet/events/$eventId/rounds")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("Idempotency-Key", "round-1")
-                .content(
-                    objectMapper.writeValueAsString(
-                        TabletRevenuePurchaseRequest(
-                            eventDrinkId = eventDrinkId.toString(),
-                            memberIds = listOf(memberId.toString())
-                        )
-                    )
-                )
-        )
-            .andExpect(status().isUnauthorized)
+    fun `the old terminal endpoints for rounds and evenings are gone`() {
+        listOf("rounds", "evening").forEach { path ->
+            mockMvc.perform(
+                post("/api/v1/tablet/events/$eventId/$path")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Idempotency-Key", "round-1")
+                    .content("""{"eventDrinkId":"$eventDrinkId","memberIds":["$memberId"]}""")
+                    .with(jwt().jwt { it.subject("sub-tablet").claim("realm_access", mapOf("roles" to listOf("tabletRecorder"))) })
+            )
+                .andExpect(status().isNotFound)
+        }
     }
 
     @Test

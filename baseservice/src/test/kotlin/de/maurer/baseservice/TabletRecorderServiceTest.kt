@@ -10,6 +10,7 @@ import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.*
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.service.LedgerService
+import de.maurer.baseservice.service.RoundService
 import de.maurer.baseservice.service.TabletRecorderService
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.StammtischTestSupport
@@ -61,6 +62,9 @@ class TabletRecorderServiceTest {
 
     @Mock
     private lateinit var tallyCategoryRepository: TallyCategoryRepository
+
+    @Mock
+    private lateinit var roundService: RoundService
 
     private lateinit var service: TabletRecorderService
 
@@ -128,7 +132,8 @@ class TabletRecorderServiceTest {
             userService,
             ledgerService,
             ledgerEntryRepository,
-            tallyCategoryRepository
+            tallyCategoryRepository,
+            roundService
         )
     }
 
@@ -147,7 +152,8 @@ class TabletRecorderServiceTest {
                 any(DrinkCatalogEntity::class.java) ?: drink(),
                 any(EventDrinkEntity::class.java) ?: eventDrink(),
                 any(UserEntity::class.java) ?: recorder(),
-                anyString()
+                anyString(),
+                isNull()
             )
         ).thenReturn(sampleEntry())
 
@@ -167,152 +173,9 @@ class TabletRecorderServiceTest {
             any(DrinkCatalogEntity::class.java) ?: drink(),
             any(EventDrinkEntity::class.java) ?: eventDrink(),
             any(UserEntity::class.java) ?: recorder(),
-            anyString()
+            anyString(),
+            isNull()
         )
-    }
-
-    private fun revenueEntry(source: PurchaseSource, member: UUID) = LedgerEntryDto(
-        id = UUID.randomUUID().toString(),
-        entryType = "purchase",
-        eventId = eventId.toString(),
-        memberId = member.toString(),
-        memberDisplayName = "X",
-        drinkId = drinkId.toString(),
-        amount = BigDecimal("2.50"),
-        currency = "EUR",
-        accountingMode = "revenueOnly",
-        source = source.name,
-        actorId = recorderId.toString(),
-        reversesEntryId = null,
-        idempotencyKey = "idem",
-        createdAt = Instant.now(),
-        snapshot = null
-    )
-
-    @Test
-    fun `records a round as revenue only for every event member`() {
-        `when`(userService.getOrCreateUser(recorderPrincipal())).thenReturn(recorder())
-        `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(activeEvent()))
-        `when`(userRepository.findById(memberId)).thenReturn(Optional.of(member()))
-        `when`(userRepository.findById(ownerId)).thenReturn(Optional.of(owner()))
-        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, memberId))
-            .thenReturn(Optional.of(EventParticipantEntity(event = activeEvent(), user = member())))
-        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, ownerId)).thenReturn(Optional.empty())
-        `when`(eventDrinkRepository.findById(eventDrinkId)).thenReturn(Optional.of(eventDrink()))
-        `when`(
-            ledgerService.recordEventRevenuePurchase(
-                any(EventEntity::class.java) ?: activeEvent(),
-                any(UserEntity::class.java) ?: member(),
-                any(DrinkCatalogEntity::class.java) ?: drink(),
-                any(EventDrinkEntity::class.java) ?: eventDrink(),
-                any(UserEntity::class.java) ?: recorder(),
-                any(PurchaseSource::class.java) ?: PurchaseSource.round,
-                anyString()
-            )
-        ).thenReturn(revenueEntry(PurchaseSource.round, memberId), revenueEntry(PurchaseSource.round, ownerId))
-
-        val entries = service.recordRound(
-            eventId,
-            TabletRevenuePurchaseRequest(
-                eventDrinkId = eventDrinkId.toString(),
-                memberIds = listOf(memberId.toString(), ownerId.toString())
-            ),
-            "round-key",
-            recorderPrincipal()
-        )
-
-        assertEquals(2, entries.size)
-        assertTrue(entries.all { it.accountingMode == "revenueOnly" })
-        assertTrue(entries.all { it.source == "round" })
-        verify(ledgerService, times(2)).recordEventRevenuePurchase(
-            any(EventEntity::class.java) ?: activeEvent(),
-            any(UserEntity::class.java) ?: member(),
-            any(DrinkCatalogEntity::class.java) ?: drink(),
-            any(EventDrinkEntity::class.java) ?: eventDrink(),
-            any(UserEntity::class.java) ?: recorder(),
-            eq(PurchaseSource.round) ?: PurchaseSource.round,
-            anyString()
-        )
-    }
-
-    @Test
-    fun `records an evening action with the evening source`() {
-        `when`(userService.getOrCreateUser(recorderPrincipal())).thenReturn(recorder())
-        `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(activeEvent()))
-        `when`(userRepository.findById(memberId)).thenReturn(Optional.of(member()))
-        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, memberId))
-            .thenReturn(Optional.of(EventParticipantEntity(event = activeEvent(), user = member())))
-        `when`(eventDrinkRepository.findById(eventDrinkId)).thenReturn(Optional.of(eventDrink()))
-        `when`(
-            ledgerService.recordEventRevenuePurchase(
-                any(EventEntity::class.java) ?: activeEvent(),
-                any(UserEntity::class.java) ?: member(),
-                any(DrinkCatalogEntity::class.java) ?: drink(),
-                any(EventDrinkEntity::class.java) ?: eventDrink(),
-                any(UserEntity::class.java) ?: recorder(),
-                any(PurchaseSource::class.java) ?: PurchaseSource.evening,
-                anyString()
-            )
-        ).thenReturn(revenueEntry(PurchaseSource.evening, memberId))
-
-        val entries = service.recordEvening(
-            eventId,
-            TabletRevenuePurchaseRequest(
-                eventDrinkId = eventDrinkId.toString(),
-                memberIds = listOf(memberId.toString())
-            ),
-            "evening-key",
-            recorderPrincipal()
-        )
-
-        assertEquals(1, entries.size)
-        assertEquals("evening", entries[0].source)
-        verify(ledgerService).recordEventRevenuePurchase(
-            any(EventEntity::class.java) ?: activeEvent(),
-            any(UserEntity::class.java) ?: member(),
-            any(DrinkCatalogEntity::class.java) ?: drink(),
-            any(EventDrinkEntity::class.java) ?: eventDrink(),
-            any(UserEntity::class.java) ?: recorder(),
-            eq(PurchaseSource.evening) ?: PurchaseSource.evening,
-            anyString()
-        )
-    }
-
-    @Test
-    fun `round is denied for a caller without the tablet permission`() {
-        `when`(userService.getOrCreateUser(memberPrincipal())).thenReturn(member())
-
-        val ex = assertThrows(AccessDeniedException::class.java) {
-            service.recordRound(
-                eventId,
-                TabletRevenuePurchaseRequest(
-                    eventDrinkId = eventDrinkId.toString(),
-                    memberIds = listOf(memberId.toString())
-                ),
-                "round-key",
-                memberPrincipal()
-            )
-        }
-        assertEquals(ErrorCode.ACCESS_DENIED, ex.errorCode)
-        verifyNoInteractions(ledgerService)
-    }
-
-    @Test
-    fun `round is rejected when no members are given`() {
-        `when`(userService.getOrCreateUser(recorderPrincipal())).thenReturn(recorder())
-        `when`(eventRepository.findById(eventId)).thenReturn(Optional.of(activeEvent()))
-        `when`(eventDrinkRepository.findById(eventDrinkId)).thenReturn(Optional.of(eventDrink()))
-
-        val ex = assertThrows(InvalidRequestException::class.java) {
-            service.recordRound(
-                eventId,
-                TabletRevenuePurchaseRequest(eventDrinkId = eventDrinkId.toString(), memberIds = emptyList()),
-                "round-key",
-                recorderPrincipal()
-            )
-        }
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.errorCode)
-        verifyNoInteractions(ledgerService)
     }
 
     @Test

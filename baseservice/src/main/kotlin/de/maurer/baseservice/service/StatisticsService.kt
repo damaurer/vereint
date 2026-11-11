@@ -39,9 +39,10 @@ class StatisticsService(
         val reversed = entries.mapNotNull { it.reversesEntry?.id }.toSet()
         val purchases = entries.filter { it.entryType == LedgerEntryType.purchase && it.id !in reversed }
 
-        val byMember = purchases.filter { it.member != null }.groupBy { it.member!!.id }
+        // Wer getrunken hat: bei Runden die eingeladene Person, sonst das Mitglied der Buchung.
+        val byMember = purchases.filter { consumer(it) != null }.groupBy { consumer(it)!!.id }
         val ranking = byMember.entries
-            .map { (id, list) -> MemberCountDto(id.toString(), list.first().member!!.displayName, list.size) }
+            .map { (id, list) -> MemberCountDto(id.toString(), consumer(list.first())!!.displayName, list.size) }
             .sortedWith(compareByDescending<MemberCountDto> { it.count }.thenBy { it.displayName })
         val myIndex = ranking.indexOfFirst { it.memberId == caller.id.toString() }
 
@@ -103,6 +104,8 @@ class StatisticsService(
             weekly = weekly.map { it.setScale(2, RoundingMode.HALF_UP) }
         )
     }
+
+    private fun consumer(entry: LedgerEntryEntity) = entry.beneficiary ?: entry.member
 
     private fun itemName(entry: LedgerEntryEntity): String =
         entry.purchaseSnapshot?.drinkName

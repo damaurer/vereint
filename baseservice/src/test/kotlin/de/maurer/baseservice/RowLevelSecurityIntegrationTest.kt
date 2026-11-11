@@ -102,8 +102,9 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
                 String::class.java
             )
         }
-        assertEquals(34, tables.size, "Tabellen mit Policy: $tables")
+        assertEquals(36, tables.size, "Tabellen mit Policy: $tables")
         assertTrue("tally_categories" in tables, "Strich-Kategorien brauchen eine Policy: $tables")
+        assertTrue("rounds" in tables && "round_invitees" in tables, "Runden brauchen eine Policy: $tables")
     }
 
     @Test
@@ -137,6 +138,47 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
                     "insert into tally_categories (id, stammtisch_id, name, price) values (?, ?, 'Eingeschmuggelt', 1.00)",
                     UUID.randomUUID(),
                     stammtischB
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `rounds and their invitees of one Stammtisch are invisible from another`() {
+        val stammtischB = newStammtisch()
+        val eventId = newEventInDefault()
+        val owner = jdbcTemplate.queryForObject("select owner_id from events where id = ?", UUID::class.java, eventId)
+        val roundId = UUID.randomUUID()
+        jdbcTemplate.update(
+            "insert into rounds (id, stammtisch_id, event_id, sponsor_id, kind, max_amount) values (?, ?, ?, ?, 'round', 7.00)",
+            roundId,
+            DEFAULT_STAMMTISCH_ID,
+            eventId,
+            owner
+        )
+        jdbcTemplate.update(
+            "insert into round_invitees (id, stammtisch_id, round_id, member_id) values (?, ?, ?, ?)",
+            UUID.randomUUID(),
+            DEFAULT_STAMMTISCH_ID,
+            roundId,
+            owner
+        )
+        val rounds = { jdbcTemplate.queryForObject("select count(*) from rounds where id = ?", Int::class.java, roundId)!! }
+        val invitees = { jdbcTemplate.queryForObject("select count(*) from round_invitees where round_id = ?", Int::class.java, roundId)!! }
+
+        assertEquals(1, rounds())
+        assertEquals(1, invitees())
+        assertEquals(0, TenantContext.runIn(stammtischB) { rounds() })
+        assertEquals(0, TenantContext.runIn(stammtischB) { invitees() })
+        assertEquals(0, TenantContext.runWithoutTenant { rounds() + invitees() })
+        assertThrows(DataAccessException::class.java) {
+            TenantContext.runIn(DEFAULT_STAMMTISCH_ID) {
+                jdbcTemplate.update(
+                    "insert into rounds (id, stammtisch_id, event_id, sponsor_id, kind, max_amount) values (?, ?, ?, ?, 'evening', 1.00)",
+                    UUID.randomUUID(),
+                    stammtischB,
+                    eventId,
+                    owner
                 )
             }
         }
