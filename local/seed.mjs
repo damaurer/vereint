@@ -7,6 +7,7 @@
 // typischen Vereinsabend. Läuft nur, solange es die Demo-Person `jonas` noch
 // nicht gibt, ein zweiter Aufruf ändert also nichts.
 
+import { writeFile } from 'node:fs/promises';
 import { chromium } from 'playwright';
 import { PEOPLE, login, seedAppData, seedKeycloakUsers } from '../scripts/handbook/seed.mjs';
 
@@ -83,7 +84,9 @@ const browser = await chromium.launch();
 try {
   const sessions = {};
   for (const [key, person] of Object.entries(PEOPLE)) sessions[key] = await login(browser, person);
-  await seedAppData(sessions);
+  const data = await seedAppData(sessions);
+  // Für die Handbuch-Bilder: `capture.mjs --reuse` liest die IDs aus dieser Datei.
+  if (process.env.HANDBOOK_SEED_FILE) await writeFile(process.env.HANDBOOK_SEED_FILE, JSON.stringify(data));
 } finally {
   await browser.close();
 }

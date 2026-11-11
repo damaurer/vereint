@@ -15,7 +15,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { APP_URL, PEOPLE, login, seedAppData, seedKeycloakUsers } from './seed.mjs';
+import { APP_URL, PEOPLE, SECOND_GROUP_NAME, login, seedAppData, seedKeycloakUsers } from './seed.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(HERE, '../../docs/handbuch/bilder');
@@ -47,17 +47,16 @@ const scrollToHeading = async (page, text, offset = 72) => {
   await page.waitForTimeout(300);
 };
 
-/** Öffnet am Terminal den Stammtisch und wählt optional einen Artikel. */
-const openTerminal = async (page, article) => {
+/** Öffnet am Terminal das laufende Event mit der Strichliste. */
+const openTerminal = async (page) => {
   await open(page, '/tablet');
   await page.getByRole('button', { name: 'Auswählen' }).first().click();
   await settle(page);
-  if (!article) return;
-  await page.locator('.quickbook-drink').click();
-  await page.locator('.overlay-card').filter({ hasText: article }).first().click();
-  await page.getByRole('button', { name: 'Auswahl bestätigen' }).click();
-  await page.waitForTimeout(300);
 };
+
+/** Feld der Strichliste: Zeile des Mitglieds, Spalte der Kategorie. */
+const tallyCell = (page, member, column) =>
+  page.getByRole('button', { name: new RegExp(`^${member}, ${column}:`) });
 
 /**
  * Bildliste. `who` ist die angemeldete Person, `device` die Bildschirmgröße,
@@ -166,6 +165,22 @@ const SHOTS = [
       await scrollToHeading(page, 'Prost auf den Vereinsabend!');
       await page.getByText('Schnell reagieren:').first().evaluate((el) => {
         window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 200, behavior: 'instant' });
+      });
+      await page.waitForTimeout(300);
+    },
+  },
+  {
+    // Timeline mit den Fotos, die der Seed an zwei Reaktionen gehängt hat.
+    id: 'm-moment-medien',
+    who: 'member',
+    device: PHONE,
+    run: async (page, data) => {
+      await open(page, `/events/${data.events.stammtisch.id}/moments`);
+      const photos = page.locator('.timeline-media img');
+      await photos.first().waitFor();
+      await photos.evaluateAll((images) => Promise.all(images.map((img) => img.decode().catch(() => {}))));
+      await page.locator('.moment-timeline').evaluate((el) => {
+        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'instant' });
       });
       await page.waitForTimeout(300);
     },
@@ -338,34 +353,26 @@ const SHOTS = [
   // Thekenterminal (Tablet quer)
   { id: 't-event-waehlen', who: 'theke', device: TABLET, run: async (page) => open(page, '/tablet') },
   {
+    // Mehrere Getränke in der Kategorie: die Theke fragt, welches es war.
     id: 't-artikel',
     who: 'theke',
     device: TABLET,
     run: async (page) => {
       await openTerminal(page);
-      await page.locator('.quickbook-drink').click();
-      await page.locator('.overlay-card').filter({ hasText: 'Helles' }).first().click();
+      await tallyCell(page, 'Felix Braun', 'Bier').click();
       await page.waitForTimeout(300);
     },
   },
-  {
-    id: 't-strichliste',
-    who: 'theke',
-    device: TABLET,
-    run: async (page) => {
-      await openTerminal(page, 'Helles');
-      await scrollToHeading(page, 'Strichliste', 120);
-    },
-  },
+  { id: 't-strichliste', who: 'theke', device: TABLET, run: async (page) => openTerminal(page) },
   {
     id: 't-strich-rueckgaengig',
     who: 'theke',
     device: TABLET,
     run: async (page) => {
-      await openTerminal(page, 'Helles');
-      await page.locator('app-strichliste-row').filter({ hasText: 'Felix Braun' }).getByRole('button').last().click();
+      await openTerminal(page);
+      await tallyCell(page, 'Felix Braun', 'Bier').click();
+      await page.getByRole('listitem').filter({ hasText: 'Helles' }).click();
       await settle(page);
-      await scrollToHeading(page, 'Strichliste', 120);
     },
   },
   {
@@ -373,7 +380,7 @@ const SHOTS = [
     who: 'theke',
     device: TABLET,
     run: async (page) => {
-      await openTerminal(page, 'Helles');
+      await openTerminal(page);
       await page.getByRole('button', { name: /Runde ausgeben/ }).click();
       await page.waitForTimeout(500);
     },
@@ -398,6 +405,30 @@ const SHOTS = [
     run: async (page, data) => {
       await page.goto(`${APP_URL}${data.inviteAcceptPath}`);
       await page.waitForURL(/\/guest\//);
+      await settle(page);
+    },
+  },
+
+  // Mehrere Gruppen: Jonas ist in zwei Gruppen, Mia öffnet den Einladungslink der zweiten.
+  {
+    id: 'gruppe-waehlen',
+    who: 'jonas',
+    device: PHONE,
+    run: async (page) => {
+      // Erst eine Gruppe öffnen, damit die Auswahl sie als „Aktuell“ kennzeichnet.
+      await open(page, '/gruppen');
+      await page.locator('button.st-choice').filter({ hasNotText: SECOND_GROUP_NAME }).first().click();
+      await page.waitForURL((url) => !url.pathname.startsWith('/gruppen'));
+      await open(page, '/gruppen');
+    },
+  },
+  {
+    id: 'g-beitreten-konto',
+    who: 'mia',
+    device: PHONE,
+    run: async (page, data) => {
+      await page.goto(`${APP_URL}${data.groupJoinPath}`);
+      await page.getByRole('button', { name: 'Dieser Gruppe beitreten' }).waitFor();
       await settle(page);
     },
   },

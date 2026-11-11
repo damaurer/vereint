@@ -605,6 +605,10 @@
     "eventStatistics": {
       "title": "Event statistics",
       "description": "Replies, attendees, tallies, moments and chat of an event."
+    },
+    "tallyCategories": {
+      "title": "Tally categories",
+      "description": "Set the columns of the tally sheet and their price per mark."
     }
   },
   "chat": {
@@ -1097,6 +1101,32 @@
       "share": "Share to drinks database",
       "shared": "This drink is linked to the drinks database.",
       "sharedInfo": "“{name}” is now in the drinks database (without price)."
+    },
+    "tally": {
+      "open": "Tally categories",
+      "field": "Tally category",
+      "none": "None",
+      "effectivePrice": "At the bar: {price} (category {name}, overrides the sales price)",
+      "eyebrow": "Tally sheet",
+      "title": "Categories",
+      "create": "New category",
+      "intro": "Each category is a column of the tally sheet. At events its price applies to all assigned drinks and overrides the drink price.",
+      "name": "Name",
+      "pricePerTally": "Price per mark",
+      "loadError": "Categories unavailable",
+      "emptyTitle": "No categories yet",
+      "emptyMessage": "Use “New category” to add the first column, for example Beer.",
+      "unassign": "Remove {name} from the category",
+      "noDrinks": "No drinks assigned yet.",
+      "moveUp": "Move left",
+      "moveDown": "Move right",
+      "delete": "Delete",
+      "confirmDelete": "Delete category “{name}”? Its drinks then keep their own price.",
+      "withoutTitle": "Without category · own price",
+      "assign": "Assign …",
+      "assignTo": "Assign {name} to a category",
+      "allAssigned": "Every drink in the range has a category.",
+      "required": "Please enter a name and a price of 0 or more."
     }
   },
   "sublists": {
@@ -1158,9 +1188,6 @@
     }
   },
   "tablet": {
-    "row": {
-      "strokesFor": "Tally marks for {name}"
-    },
     "revenue": {
       "eveningTitle": "Sponsor the whole evening",
       "roundTitle": "Buy a round",
@@ -1209,26 +1236,39 @@
       "select": "Select"
     },
     "tally": {
-      "heading": "Tally sheet",
-      "activeItem": "Item: {name} · {price}",
-      "activeDrink": "Drink: {name} · {price}",
-      "chooseItem": "Choose item",
-      "booked": "Mark recorded: {label}",
+      "booked": "Mark: {label}",
       "undo": "Undo",
-      "quickbookLabel": "Active item for quick booking:",
       "round": "Buy a round",
       "evening": "Sponsor the whole evening"
     },
     "messages": {
       "undoNotPossible": "Only marks from this session can be undone here. The board corrects older bookings.",
       "undone": "Mark undone.",
-      "purchaseRecorded": "Purchase recorded.",
       "eveningBooked": "Evening sponsorship booked.",
-      "roundBooked": "Round booked."
+      "roundBooked": "Round booked.",
+      "noDrinksInCategory": "No drink of {name} is available at this event."
     },
     "fallback": {
       "member": "Member",
       "item": "Item"
+    },
+    "board": {
+      "hint": "Tap the cell under a category to add a tally mark.",
+      "member": "Member",
+      "perTally": "{price} per mark",
+      "other": "Other",
+      "otherHint": "More drinks & food",
+      "ownTab": "Own tab",
+      "cellLabel": "{name}, {column}: {count} marks. Tap to add one.",
+      "todayTitle": "Today at the bar",
+      "tallies": "Marks",
+      "revenue": "Revenue"
+    },
+    "picker": {
+      "categoryTitle": "{name}: which drink?",
+      "otherTitle": "Other: what is being booked?",
+      "forMember": "Mark for {name}",
+      "empty": "Nothing is available for this cell at the event."
     }
   },
   "admin": {

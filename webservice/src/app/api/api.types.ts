@@ -202,6 +202,9 @@ export interface LedgerEntry {
   idempotencyKey: string;
   createdAt: string;
   snapshot: PurchaseSnapshot | null;
+  /** Strich-Kategorie, zu deren Preis das Getränk gebucht wurde. */
+  tallyCategoryId?: string | null;
+  tallyCategoryName?: string | null;
 }
 
 /** Ein laufendes Event, an dem das gescannte Getränk gekauft werden kann. */
@@ -319,6 +322,38 @@ export interface TabletPurchasePayload {
   memberId: string;
   eventDrinkId?: string | null;
   eventFoodId?: string | null;
+}
+
+/** Buchbares Eventgetränk einer Spalte der Strichliste. */
+export interface TabletBoardDrink {
+  eventDrinkId: string;
+  drinkName: string;
+}
+
+/** Spalte der Strichliste: Strich-Kategorie mit Preis je Strich. */
+export interface TabletBoardColumn {
+  categoryId: string;
+  name: string;
+  price: string;
+  currency: string;
+  drinks: TabletBoardDrink[];
+}
+
+/** Zeile der Strichliste: Striche des Abends je Kategorie-ID. */
+export interface TabletBoardMember {
+  memberId: string;
+  displayName: string;
+  counts: Record<string, number>;
+  otherCount: number;
+}
+
+/** Strichliste eines Events (`GET /api/v1/tablet/events/{id}/board`). */
+export interface TabletBoard {
+  columns: TabletBoardColumn[];
+  members: TabletBoardMember[];
+  tallyCount: number;
+  revenue: string;
+  currency: string;
 }
 
 /**

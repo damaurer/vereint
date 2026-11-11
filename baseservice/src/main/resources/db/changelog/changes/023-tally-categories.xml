@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 260. Strich-Kategorien (Issue #80): die Spalten der Strichliste am
+         Thekenterminal, z. B. Bier, Alkoholfrei, Schnaps. Jede Kategorie hat
+         einen Preis je Strich, der den Verkaufspreis der zugeordneten Getränke
+         überschreibt. Gelöschte Kategorien werden nur archiviert, weil
+         Buchungen (append-only) auf sie verweisen. -->
+    <changeSet id="260-create-tally-categories" author="claude">
+        <createTable tableName="tally_categories">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_tally_categories_stammtisch" references="stammtische(id)"/>
+            </column>
+            <column name="name" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(3)" defaultValue="EUR">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sort_order" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="archived" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="tally_categories" indexName="idx_tally_categories_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="tally_categories"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 261. Zuordnung Getränk → Strich-Kategorie (optional, „Ohne“ = NULL). -->
+    <changeSet id="261-drink-tally-category" author="claude">
+        <addColumn tableName="drink_catalog">
+            <column name="tally_category_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_drink_catalog_tally_category" references="tally_categories(id)"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="drink_catalog" indexName="idx_drink_catalog_tally_category">
+            <column name="tally_category_id"/>
+        </createIndex>
+        <rollback>
+            <dropColumn tableName="drink_catalog" columnName="tally_category_id"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 262. Buchungen eines Getränks mit Kategorie merken sich die Kategorie,
+         zu deren Preis gebucht wurde (Strich am Terminal oder Kauf per Scan im
+         Event). Getränk und Kategorie stehen beide in der Buchung. Für Kontoauszug,
+         Strichliste und Statistik. Die Spalte kommt per DDL dazu; bestehende
+         Buchungen bleiben unverändert (NULL). -->
+    <changeSet id="262-ledger-tally-category" author="claude">
+        <addColumn tableName="ledger_entries">
+            <column name="tally_category_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_ledger_entries_tally_category" references="tally_categories(id)"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="ledger_entries" indexName="idx_ledger_entries_tally_category">
+            <column name="tally_category_id"/>
+        </createIndex>
+        <rollback>
+            <dropColumn tableName="ledger_entries" columnName="tally_category_id"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 263. Row Level Security für die neue Tabelle wie in Changeset 165. -->
+    <changeSet id="263-tally-categories-row-level-security" author="claude" dbms="postgresql">
+        <sql splitStatements="false">
+            ALTER TABLE tally_categories ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE tally_categories FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON tally_categories
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <rollback>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON tally_categories; ALTER TABLE tally_categories NO FORCE ROW LEVEL SECURITY; ALTER TABLE tally_categories DISABLE ROW LEVEL SECURITY</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

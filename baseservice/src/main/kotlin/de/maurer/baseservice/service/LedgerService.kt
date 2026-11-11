@@ -227,6 +227,7 @@ class LedgerService(
                 source = null,
                 actor = caller,
                 reversesEntry = original,
+                tallyCategory = original.tallyCategory,
                 auditAction = AuditService.ACTION_LEDGER_CORRECTION,
                 note = request.reason
             )
@@ -305,6 +306,7 @@ class LedgerService(
                 source = null,
                 actor = actor,
                 reversesEntry = original,
+                tallyCategory = original.tallyCategory,
                 auditAction = AuditService.ACTION_LEDGER_CORRECTION,
                 note = "tablet-undo; event=$eventId"
             )
@@ -315,7 +317,8 @@ class LedgerService(
      * PWA-Barcodekauf eines Mitglieds (TICKET-016). Der Client liefert nur Event und
      * gescannten Barcode; Käufer, Preis, Währung, Getränk und Abrechnungsmodus werden
      * serverseitig bestimmt: Käufer ist stets der angemeldete Benutzer, Preis/Währung
-     * stammen aus dem Eventgetränk, der Modus ist `credit` (persönliches Verzehrbudget).
+     * ermittelt [EventDrinkPricing] (Kategoriepreis > Event-Preis > Getränkepreis), der
+     * Modus ist `credit` (persönliches Verzehrbudget).
      *
      * Der Kauf ist nur an einem aktiven Event, zu dem der Käufer gehört (eingeladen,
      * Veranstalter oder Vorstand/Admin), und für ein dort selbstbedienbares,
@@ -362,8 +365,9 @@ class LedgerService(
             )
         }
 
-        val currency = eventDrink.currency
-        val unitPrice = eventDrink.price.setScale(2)
+        val pricing = EventDrinkPricing.resolve(eventDrink)
+        val currency = pricing.currency
+        val unitPrice = pricing.unitPrice
         val costPrice = (eventDrink.costPrice ?: drink.costPrice).setScale(2)
         val profit = (unitPrice - costPrice).setScale(2)
 
@@ -372,6 +376,7 @@ class LedgerService(
                 scope = SCOPE_PURCHASE,
                 key = key,
                 entryType = LedgerEntryType.purchase,
+                tallyCategory = pricing.tallyCategory,
                 member = caller,
                 event = event,
                 drink = drink,
@@ -426,11 +431,12 @@ class LedgerService(
             }
             .sortedByDescending { (event, _) -> event.startsAt }
             .map { (event, eventDrink) ->
+                val pricing = EventDrinkPricing.resolve(eventDrink)
                 PurchaseOptionDto(
                     eventId = event.id.toString(),
                     eventTitle = event.title,
-                    unitPrice = eventDrink.price.setScale(2),
-                    currency = eventDrink.currency
+                    unitPrice = pricing.unitPrice,
+                    currency = pricing.currency
                 )
             }
         if (options.isEmpty()) {
@@ -512,6 +518,7 @@ class LedgerService(
                 source = null,
                 actor = caller,
                 reversesEntry = original,
+                tallyCategory = original.tallyCategory,
                 auditAction = AuditService.ACTION_LEDGER_CORRECTION,
                 note = "member-undo; event=${original.event?.id ?: "-"}"
             )
@@ -521,8 +528,8 @@ class LedgerService(
     /**
      * Manueller Tablet-Kauf über die Strichliste (TICKET-017). Käufer, Getränk,
      * Preis, Währung und Abrechnungsmodus werden serverseitig vorgegeben: Der Käufer
-     * ist ein bereits aufgelöstes Eventmitglied, Preis/Währung stammen aus dem
-     * Eventgetränk, der Modus ist `credit` und die Herkunft `tabletManual`.
+     * ist ein bereits aufgelöstes Eventmitglied, Preis/Währung ermittelt
+     * [EventDrinkPricing] (Kategoriepreis > Event-Preis > Getränkepreis), der Modus ist `credit` und die Herkunft `tabletManual`.
      *
      * Die fachliche Berechtigung (`purchase.tablet`), der aktive Eventstatus, die
      * Teilnahme des Käufers und die Tablet-Freigabe des Getränks werden im
@@ -539,8 +546,9 @@ class LedgerService(
         idempotencyKey: String?
     ): LedgerEntryDto {
         val key = requireIdempotencyKey(idempotencyKey)
-        val currency = eventDrink.currency
-        val unitPrice = eventDrink.price.setScale(2)
+        val pricing = EventDrinkPricing.resolve(eventDrink)
+        val currency = pricing.currency
+        val unitPrice = pricing.unitPrice
         val costPrice = (eventDrink.costPrice ?: drink.costPrice).setScale(2)
         val profit = (unitPrice - costPrice).setScale(2)
 
@@ -549,6 +557,7 @@ class LedgerService(
                 scope = SCOPE_PURCHASE,
                 key = key,
                 entryType = LedgerEntryType.purchase,
+                tallyCategory = pricing.tallyCategory,
                 member = member,
                 event = event,
                 drink = drink,
@@ -661,8 +670,9 @@ class LedgerService(
             )
         }
         val key = requireIdempotencyKey(idempotencyKey)
-        val currency = eventDrink.currency
-        val unitPrice = eventDrink.price.setScale(2)
+        val pricing = EventDrinkPricing.resolve(eventDrink)
+        val currency = pricing.currency
+        val unitPrice = pricing.unitPrice
         val costPrice = (eventDrink.costPrice ?: drink.costPrice).setScale(2)
         val profit = (unitPrice - costPrice).setScale(2)
 
@@ -671,6 +681,7 @@ class LedgerService(
                 scope = SCOPE_PURCHASE,
                 key = key,
                 entryType = LedgerEntryType.purchase,
+                tallyCategory = pricing.tallyCategory,
                 member = member,
                 event = event,
                 drink = drink,
@@ -776,6 +787,7 @@ class LedgerService(
         val source: PurchaseSource? = null,
         val actor: UserEntity,
         val reversesEntry: LedgerEntryEntity? = null,
+        val tallyCategory: TallyCategoryEntity? = null,
         val auditAction: String,
         val note: String? = null,
         val snapshotFactory: ((LedgerEntryEntity) -> PurchaseSnapshotEntity)? = null
@@ -813,7 +825,8 @@ class LedgerService(
             source = cmd.source,
             actor = cmd.actor,
             reversesEntry = cmd.reversesEntry,
-            idempotencyKey = cmd.key
+            idempotencyKey = cmd.key,
+            tallyCategory = cmd.tallyCategory
         )
         val saved = ledgerEntryRepository.save(entry)
         cmd.snapshotFactory?.let {
@@ -1041,7 +1054,9 @@ class LedgerService(
             reversesEntryId = entry.reversesEntry?.id?.toString(),
             idempotencyKey = entry.idempotencyKey,
             createdAt = entry.createdAt,
-            snapshot = snapshot
+            snapshot = snapshot,
+            tallyCategoryId = entry.tallyCategory?.id?.toString(),
+            tallyCategoryName = entry.tallyCategory?.name
         )
     }
 

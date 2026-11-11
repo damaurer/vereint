@@ -56,6 +56,12 @@ class TabletRecorderServiceTest {
     @Mock
     private lateinit var ledgerService: LedgerService
 
+    @Mock
+    private lateinit var ledgerEntryRepository: LedgerEntryRepository
+
+    @Mock
+    private lateinit var tallyCategoryRepository: TallyCategoryRepository
+
     private lateinit var service: TabletRecorderService
 
     private val recorderId: UUID = UUID.randomUUID()
@@ -121,7 +127,9 @@ class TabletRecorderServiceTest {
             StammtischTestSupport.members(userRepository),
             userService,
             ledgerService,
-            mock(de.maurer.baseservice.service.StatisticsRecorder::class.java)
+            mock(de.maurer.baseservice.service.StatisticsRecorder::class.java),
+            ledgerEntryRepository,
+            tallyCategoryRepository
         )
     }
 

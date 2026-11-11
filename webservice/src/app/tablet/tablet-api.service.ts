@@ -5,6 +5,7 @@ import type { EventDrink, EventFood } from '../events/event-manage.types';
 import type {
   LedgerEntry,
   MemberProfile,
+  TabletBoard,
   TabletEvent,
   TabletItems,
   TabletMember,
@@ -49,6 +50,11 @@ export class TabletApiService {
   /** Freigegebene Eventmitglieder (`GET /tablet/events/{id}/members`). */
   listMembers(eventId: string): Observable<TabletMember[]> {
     return this.api.get<TabletMember[]>(`${this.eventPath(eventId)}/members`);
+  }
+
+  /** Strichliste nach Kategorien (`GET /tablet/events/{id}/board`). */
+  loadBoard(eventId: string): Observable<TabletBoard> {
+    return this.api.get<TabletBoard>(`${this.eventPath(eventId)}/board`);
   }
 
   /** Tabletfähige Eventgetränke (`GET /tablet/events/{id}/drinks`). */

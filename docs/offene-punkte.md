@@ -14,7 +14,7 @@ Issues. Stand 10.11.2026.
 | Prüfen nach dem ersten Deployment: Barcode-Kamera, Web Push, Zwei-Faktor-Anmeldung und Video-Upload gehen erst unter echtem HTTPS am Handy | [#62](https://github.com/damaurer/vereint/issues/62) |
 | Rechtliches vor dem Öffnen für andere: Betreiberangaben in `webservice/src/app/legal/legal-operator.ts`, Datenschutzerklärung, AV-Vertrag ([rechtliches.md](domains/rechtliches.md#vor-dem-freischalten-der-registrierung)). Bis dahin bleibt `SIGNUP_ENABLED=false`; Einladungslinks funktionieren trotzdem | [#63](https://github.com/damaurer/vereint/issues/63) |
 | Regel für Barcode-Käufe (Scannen nur bei laufenden Events, an denen das Mitglied teilnimmt) bestätigen | [#67](https://github.com/damaurer/vereint/issues/67) |
-| Bildschirmfotos im Handbuch erneuern und ergänzen (aufnehmen mit [`scripts/handbook`](../scripts/handbook/)) | [#70](https://github.com/damaurer/vereint/issues/70) |
+| Handbuch-Bilder für die neuen Seiten aus #80, #81 und #82 aufnehmen, sobald sie da sind: Strichliste nach Kategorien, Runde am Handy, Statistiken (aufnehmen mit [`scripts/handbook`](../scripts/handbook/)) | [#70](https://github.com/damaurer/vereint/issues/70) |
 
 ## Bekannte Grenzen der App
 
