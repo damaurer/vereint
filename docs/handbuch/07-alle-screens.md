@@ -10,7 +10,7 @@ Dieses Kapitel geht jeden Bildschirm von Vereint einzeln durch: was du darauf si
 
 > **Neu im Entwurf**: Beschreibt geplantes Verhalten. Bis es umgesetzt ist, gilt der jeweilige Leitfaden.
 
-Das betrifft vor allem die **Strichliste nach Kategorien**, **Runden nur über das eigene Handy** und die **Statistiken** zu Getränken, Kalorien, Events und Zusagen.
+Das betrifft vor allem **Runden nur über das eigene Handy** und die **Statistiken** zu Getränken, Kalorien, Events und Zusagen.
 
 ## Inhalt
 
@@ -651,7 +651,7 @@ Vorschläge der Mitglieder prüfen.
 Ein Getränk anlegen oder ändern.
 
 - **Name** (Pflicht).
-- **Strich-Kategorie**: in welcher Spalte der Strichliste das Getränk gezählt wird, oder **Ohne**. *Neu im Entwurf.*
+- **Strich-Kategorie**: in welcher Spalte der Strichliste das Getränk gezählt wird, oder **Ohne**.
 - **Verkaufspreis** (Pflicht) und **Einkaufspreis**. Darunter der Preis, der an der Theke wirklich gilt: Hat das Getränk eine Kategorie, **überschreibt der Kategoriepreis den Verkaufspreis**. Dazu die Marge.
 - **Barcodes**: vorhandene Strichcodes und **Neuer Barcode** mit **Hinzufügen**. Damit funktioniert [Bezahlen per Scan](#bezahlen).
 - **Im Sortiment**: abwählen, um das Getränk aus dem Verkauf zu nehmen, ohne es zu löschen.
@@ -686,8 +686,6 @@ Für die Vorbereitung wiederkehrender Events.
 
 ### Strich-Kategorien
 
-> **Neu im Entwurf**: In der App wählt der Thekendienst derzeit einen einzelnen Artikel und bucht Striche darauf (siehe [Leitfaden Thekenterminal](05-thekenterminal.md#getränk-wählen)).
-
 <img src="screens/strich-kategorien.png" alt="Strich-Kategorien" width="300" align="right">
 
 Der Vorstand legt die **Spalten der Strichliste** fest.
@@ -696,7 +694,10 @@ Der Vorstand legt die **Spalten der Strichliste** fest.
 - **Preis je Strich**: Er gilt für alle Getränke der Kategorie und **überschreibt deren eigenen Preis**. Getränke mit abweichendem Preis zeigen ihn durchgestrichen daneben.
 - Unter jeder Kategorie die **zugeordneten Getränke**.
 - **Ohne Kategorie · eigener Preis**: Getränke ohne Spalte. Über **Zuordnen …** kommen sie in eine Kategorie.
-- **Neue Kategorie** legt eine weitere Spalte an.
+- **Neue Kategorie** legt eine weitere Spalte an; **Nach links** und **Nach rechts** ändern die Reihenfolge der Spalten.
+- Der Kategoriepreis gilt **im Event**, am Terminal wie beim Bezahlen per Scan. Reihenfolge: Kategoriepreis, sonst Preis aus dem Event (Getränkeliste), sonst Preis des Getränks.
+
+Mehr dazu im [Leitfaden Vorstand](03-vorstand.md#strich-kategorien).
 
 <br clear="right">
 
@@ -718,15 +719,15 @@ Das Thekenterminal läuft quer auf einem Tablet an der Theke, angemeldet mit dem
 
 ### Strichliste
 
-> **Neu im Entwurf**: Die Strichliste mit Spalten je Kategorie und echten Strichen ersetzt die bisherige Zeile mit Minus, Zähler und Plus für einen gewählten Artikel.
-
 <img src="screens/theke.png" alt="Strichliste nach Kategorien" width="720">
 
 Die Strichliste sieht aus wie die auf Papier: eine Zeile je Mitglied, eine Spalte je [Strich-Kategorie](#strich-kategorien).
 
 - **Spaltenkopf**: Name der Kategorie und **Preis je Strich**.
-- **Zeilenkopf**: Kürzel und Name des Mitglieds. Darunter steht, auf wessen Kosten gerade getrunken wird: die Gruppe („Meine Gruppe“) oder eine laufende Runde („Runde von Thomas“, „Abend von Sabine“).
+- **Zeilenkopf**: Kürzel und Name des Mitglieds. Darunter steht, auf wessen Kosten gerade getrunken wird: die eigene Rechnung oder eine laufende Runde („Runde von Thomas“, „Abend von Sabine“).
 - **Ein Tipp in ein Feld** macht einen Strich. Striche erscheinen als Bündel: vier senkrechte, der fünfte quer. Rechts im Feld steht die Zahl. Leere Felder zeigen ein **+**.
+- Enthält die Kategorie im Event mehrere Getränke, fragt das Terminal nach dem Tipp, **welches Getränk** es war; bei nur einem bucht es sofort. Gebucht werden Getränk und Kategorie zum Kategoriepreis.
+- Die Spalte **Sonstiges** ganz rechts öffnet die Auswahl der Getränke ohne Kategorie und der Speisen, jeweils mit eigenem Preis.
 - Der Betrag geht vom Guthaben des Mitglieds ab, oder vom Guthaben des Rundengebers, wenn die Person in einer laufenden Runde eingeladen ist.
 
 Rechts die Spalte **Heute an der Theke**:
@@ -735,11 +736,13 @@ Rechts die Spalte **Heute an der Theke**:
 - **Laufende Runden**: Wer ausgibt, was (Getränk oder alles), bis zu welcher Summe, wie viele schon eingelöst haben und wie lange die Runde noch gilt. **Alle ansehen** öffnet die [Rundenübersicht](#laufende-runden).
 - Hinweis: Runden gibt jede Person in der App am eigenen Handy aus. Am Terminal werden sie nur angezeigt.
 
+> **Neu im Entwurf**: Die Zeile „Runde von …“ und der Bereich **Laufende Runden** kommen mit den Runden am eigenen Handy. Bis dahin wird eine Runde am Terminal gebucht (siehe [Leitfaden Thekenterminal](05-thekenterminal.md#runde-ausgeben-oder-ganzen-abend-stiften)).
+
 ### Strich rückgängig
 
 <img src="screens/strich-rueckgaengig.png" alt="Strich rückgängig" width="720">
 
-Nach jedem Strich erscheint unten ein Balken mit dem letzten Strich, etwa „Strich: Felix Braun · Bier“, und **Rückgängig**. Der Tipp darauf nimmt den Strich sofort zurück und bucht das Geld zurück. Das geht für Striche dieses Terminals **innerhalb von 10 Minuten**; ältere Fehler korrigiert der Kassenwart.
+Nach jedem Strich erscheint unten ein Balken mit dem letzten Strich, etwa „Strich: Felix Braun · Bier (Helles 0,5 l)“, und **Rückgängig**. Der Tipp darauf nimmt den Strich sofort zurück und bucht das Geld zurück. Das geht für Striche dieses Terminals **innerhalb von 10 Minuten**; ältere Fehler korrigiert der Kassenwart.
 
 ### Laufende Runden
 

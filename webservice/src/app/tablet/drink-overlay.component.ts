@@ -58,7 +58,7 @@ export interface SelectedItem {
               (click)="onSelectDrink(drink)"
             >
               <span class="overlay-card-name">{{ drink.drinkName }}</span>
-              <span class="overlay-card-price">{{ formatMoney(drink.price, drink.currency) }}</span>
+              <span class="overlay-card-price">{{ formatMoney(drink.effectivePrice ?? drink.price, drink.currency) }}</span>
             </button>
           }
         </div>

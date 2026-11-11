@@ -205,6 +205,18 @@ export async function seedAppData(sessions) {
     await api.board.post(`/drinks/${drink.id}/barcodes`, { barcode });
     drinks.push(drink);
   }
+  // Strich-Kategorien: die Spalten der Strichliste am Thekenterminal. Der
+  // Obstler bleibt ohne Kategorie und steht deshalb unter „Sonstiges“.
+  const tallySpecs = [
+    ['Bier', '3.00', ['Helles', 'Weißbier', 'Radler']],
+    ['Alkoholfrei', '2.00', ['Apfelschorle', 'Spezi', 'Wasser']],
+  ];
+  for (const [name, price, prefixes] of tallySpecs) {
+    const category = await api.board.post('/tally-categories', { name, price });
+    for (const drink of drinks.filter((d) => prefixes.some((prefix) => d.name.startsWith(prefix)))) {
+      await api.board.put(`/drinks/${drink.id}`, { tallyCategoryId: category.id });
+    }
+  }
   // Ein offener Vorschlag eines Mitglieds für die Freigabe-Ansicht.
   await api.member.post('/drinks', { name: 'Cola Zero 0,33 l', category: 'Alkoholfrei', defaultPrice: '2.00', description: 'Wäre schön für die Fahrer.' });
 

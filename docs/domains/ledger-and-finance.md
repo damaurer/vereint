@@ -16,6 +16,7 @@ Das System unterscheidet vier elementare Buchungstypen (`entryType`):
    - Abbuchung für konsumierte Getränke (`drink_id`) oder Speisen (`food_id`) am Theken-Tablet oder via PWA-Barcodescan.
    - Verringert das Guthaben im Modus `credit` oder wird als Bareinnahme im Modus `revenueOnly` verbucht.
    - Erzeugt einen unveränderlichen Beleg-Snapshot (`PurchaseSnapshot`) mit Verkaufs- und Einkaufspreis zur exakten Deckungsbeitragsermittlung.
+   - Gehört das Getränk zu einer Strich-Kategorie, steht sie zusätzlich am Eintrag (`tally_category_id`, im DTO `tallyCategoryId`/`tallyCategoryName`), und der Betrag ist der Kategoriepreis. Der Eintrag nennt also immer Getränk **und** Kategorie. Korrekturen übernehmen die Kategorie des Ursprungseintrags.
 3. **Guthaben-Auszahlung (`payout`)**:
    - Rückzahlung von Guthaben, z. B. beim Verlassen der Gruppe.
    - Verringert das Guthaben.

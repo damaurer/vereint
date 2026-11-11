@@ -318,6 +318,19 @@ export const routes: Routes = [
     loadComponent: () => import('./stammtisch/stammtisch-settings.component').then((m) => m.StammtischSettingsComponent),
   },
   {
+    // Strich-Kategorien: Spalten der Strichliste mit Preis je Strich (Katalogpflege).
+    path: 'catalog/categories',
+    canActivate: [authGuard, permissionGuard],
+    data: {
+      back: '/catalog',
+      title: 'routes.tallyCategories.title',
+      description: 'routes.tallyCategories.description',
+      access: 'routes.access.protected',
+      permissions: ['catalog.approve'],
+    },
+    loadComponent: () => import('./catalog/tally-categories.component').then((m) => m.TallyCategoriesComponent),
+  },
+  {
     // Übergreifende Getränkedatenbank: Getränke in den eigenen Katalog übernehmen.
     path: 'catalog/library',
     canActivate: [authGuard],

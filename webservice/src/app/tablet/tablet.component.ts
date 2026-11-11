@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { IconComponent } from '../ui/icon.component';
 import { forkJoin, type Observable } from 'rxjs';
 import { AsyncState } from '../member/async-state';
@@ -9,12 +9,19 @@ import { TabletApiService } from './tablet-api.service';
 import type { KioskSession } from '../kiosk/kiosk-api.service';
 import { KioskStartDialogComponent } from '../kiosk/kiosk-start-dialog.component';
 import { KioskModeService } from '../kiosk/kiosk-mode.service';
-import { StrichlisteRowComponent } from './strichliste-row.component';
 import { DrinkOverlayComponent } from './drink-overlay.component';
 import { RevenueSheetComponent, type RevenueKind } from './revenue-sheet.component';
+import { TallyGridComponent, type TallyCell } from './tally-grid.component';
+import { TallyPickerComponent, type TallyPickItem } from './tally-picker.component';
 import { StatusBadgeComponent } from '../ui';
 import type { EventDrink, EventFood } from '../events/event-manage.types';
-import type { LedgerEntry, TabletEvent, TabletMember, TabletRevenuePayload } from '../api/api.types';
+import type {
+  LedgerEntry,
+  TabletBoard,
+  TabletEvent,
+  TabletMember,
+  TabletRevenuePayload,
+} from '../api/api.types';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
@@ -23,19 +30,35 @@ interface EventContext {
   members: TabletMember[];
   drinks: EventDrink[];
   food: EventFood[];
+  board: TabletBoard;
+}
+
+/** Ein in dieser Sitzung gebuchter Strich (für die Rückgängig-Leiste). */
+interface BookedTally {
+  entryId: string;
+  cell: TallyCell;
+  label: string;
+}
+
+/** Offene Auswahl, wenn ein Feld mehrere Artikel umfasst. */
+interface PickerState {
+  cell: TallyCell;
+  title: string;
+  subtitle: string;
+  items: TallyPickItem[];
 }
 
 /**
- * Tablet-Erfassung / Drink-Recorder (TICKET-026, Redesign TICKET-034).
+ * Thekenterminal mit der Strichliste nach Kategorien (Issue #80).
  *
- * Der Recorder wählt ein aktives Event, ein tabletfähiges Getränk und erfasst
- * darüber die Strichliste je Mitglied sowie Runden und Abendaktionen. Preis,
- * Währung, Abrechnungsmodus und Herkunft bestimmt ausschließlich der
- * Fachservice; die Berechtigung `purchase.tablet` prüft er bei jedem Aufruf
- * (`deny by default`), unberechtigte Aufrufe erhalten `403`. Jeder
- * Schreibvorgang trägt einen Idempotency-Key; das Getränke-Overlay und das
- * Runden-/Abend-Sheet sind reine Client-UI vor den bestehenden
- * Buchungsaufrufen. Die Ansicht wird ausschließlich im Browser gerendert.
+ * Eine Zeile je Mitglied, eine Spalte je Strich-Kategorie, rechts „Sonstiges“
+ * für Getränke ohne Kategorie und Speisen. Ein Tipp in ein Feld bucht ein
+ * konkretes Getränk der Kategorie zum Kategoriepreis; liegen mehrere Getränke
+ * in der Kategorie, wählt der Thekendienst eines aus. Preis, Währung,
+ * Abrechnungsmodus und Herkunft bestimmt ausschließlich der Fachservice; die
+ * Berechtigung `purchase.tablet` prüft er bei jedem Aufruf (`deny by default`).
+ * Jeder Schreibvorgang trägt einen Idempotency-Key. Die Ansicht wird
+ * ausschließlich im Browser gerendert.
  */
 @Component({
   selector: 'app-tablet',
@@ -43,7 +66,8 @@ interface EventContext {
     StateComponent,
     IconComponent,
     StatusBadgeComponent,
-    StrichlisteRowComponent,
+    TallyGridComponent,
+    TallyPickerComponent,
     DrinkOverlayComponent,
     RevenueSheetComponent,
     KioskStartDialogComponent,
@@ -51,7 +75,7 @@ interface EventContext {
   ],
   template: `
     <main class="page-shell" [class.terminal-standalone]="standalone()">
-      <section class="page-card member-card" aria-labelledby="tablet-title">
+      <section class="page-card member-card terminal-card" aria-labelledby="tablet-title">
         @if (standalone()) {
           <div class="terminal-bar">
             <span class="terminal-flag">
@@ -144,104 +168,103 @@ interface EventContext {
           } @else if (context.isError()) {
             <p class="manage-action-error" role="alert">{{ context.errorMessage() }}</p>
           } @else if (context.data(); as ctx) {
-            @if (ctx.members.length === 0 || ctx.drinks.length === 0) {
-              <vereint-state
-                kind="empty"
-                [title]="'tablet.state.notPossibleTitle' | t"
-                [message]="'tablet.state.notPossibleMessage' | t"
-              />
-            } @else {
-              <div class="tally-head">
-                <h2 class="member-subtitle">{{ 'tablet.tally.heading' | t }}</h2>
-                <button type="button" class="member-button ghost" (click)="openDrinkOverlay()">
-                  @if (activeItem(ctx); as item) {
-                    {{ 'tablet.tally.activeItem' | t: { name: item.name, price: formatMoney(item.price, item.currency) } }}
-                  } @else if (activeDrink(ctx); as drink) {
-                    {{ 'tablet.tally.activeDrink' | t: { name: drink.drinkName, price: formatMoney(drink.price, drink.currency) } }}
-                  } @else {
-                    {{ 'tablet.tally.chooseItem' | t }}
-                  }
-                </button>
-              </div>
+            @if (board(); as b) {
+              @if (b.members.length === 0 || !hasBookableItems(b, ctx)) {
+                <vereint-state
+                  kind="empty"
+                  [title]="'tablet.state.notPossibleTitle' | t"
+                  [message]="'tablet.state.notPossibleMessage' | t"
+                />
+              } @else {
+                <div class="terminal-layout">
+                  <div class="terminal-main">
+                    <p class="tally-hint">{{ 'tablet.board.hint' | t }}</p>
+                    <app-tally-grid
+                      [columns]="b.columns"
+                      [rows]="b.members"
+                      [showOther]="otherItems(ctx).length > 0"
+                      [disabled]="busy()"
+                      [payers]="payers()"
+                      [last]="lastBooking()?.cell ?? null"
+                      (cellTap)="onCellTap($event)"
+                    />
 
-              <div class="tally-list">
-                @for (member of ctx.members; track member.memberId) {
-                  <app-strichliste-row
-                    [name]="member.displayName"
-                    [count]="tallyFor(member.memberId)"
-                    (increment)="quickBook(member.memberId)"
-                    (decrement)="onTallyDecrease(member.memberId)"
-                  />
-                }
-              </div>
+                    <div class="tally-actions">
+                      <button
+                        type="button"
+                        class="member-button"
+                        [disabled]="busy()"
+                        (click)="openRevenueSheet('round', ctx.members)"
+                      >
+                        <vereint-icon name="beer" /> {{ 'tablet.tally.round' | t }}
+                      </button>
+                      <button
+                        type="button"
+                        class="member-button ghost"
+                        [disabled]="busy()"
+                        (click)="openRevenueSheet('evening', ctx.members)"
+                      >
+                        <vereint-icon name="crown" /> {{ 'tablet.tally.evening' | t }}
+                      </button>
+                    </div>
+                  </div>
 
-              @if (lastBooking(); as last) {
-                <div class="undo-bar" role="status">
-                  <vereint-icon name="check" />
-                  <span class="undo-text">{{ 'tablet.tally.booked' | t: { label: last.label } }}</span>
-                  <button type="button" class="undo-button" [disabled]="busy()" (click)="undoLast()">
-                    <vereint-icon name="arrow-left" /> {{ 'tablet.tally.undo' | t }}
-                  </button>
+                  <aside class="terminal-side" [attr.aria-label]="'tablet.board.todayTitle' | t">
+                    <h2 class="side-title">{{ 'tablet.board.todayTitle' | t }}</h2>
+                    <div class="side-stats">
+                      <div class="side-stat">
+                        <span class="side-label">{{ 'tablet.board.tallies' | t }}</span>
+                        <span class="side-value">{{ b.tallyCount }}</span>
+                      </div>
+                      <div class="side-stat">
+                        <span class="side-label">{{ 'tablet.board.revenue' | t }}</span>
+                        <span class="side-value is-money">{{ formatMoney(b.revenue + '', b.currency) }}</span>
+                      </div>
+                    </div>
+                  </aside>
                 </div>
+
+                @if (lastBooking(); as last) {
+                  <div class="undo-bar" role="status">
+                    <vereint-icon name="check" />
+                    <span class="undo-text">{{ 'tablet.tally.booked' | t: { label: last.label } }}</span>
+                    <button type="button" class="undo-button" [disabled]="busy()" (click)="undoLast()">
+                      <vereint-icon name="arrow-left" /> {{ 'tablet.tally.undo' | t }}
+                    </button>
+                  </div>
+                }
+
+                <app-tally-picker
+                  [open]="!!picker()"
+                  [title]="picker()?.title ?? ''"
+                  [subtitle]="picker()?.subtitle ?? ''"
+                  [items]="picker()?.items ?? []"
+                  (pick)="onPick($event)"
+                  (closed)="picker.set(null)"
+                />
+
+                <app-drink-overlay
+                  [open]="drinkOverlayOpen()"
+                  [drinks]="ctx.drinks"
+                  [foods]="ctx.food"
+                  [selectedId]="activeDrinkId()"
+                  (itemSelect)="selectActiveDrink($event)"
+                  (confirm)="confirmDrink()"
+                  (closed)="closeDrinkOverlay()"
+                />
+
+                <app-revenue-sheet
+                  [open]="revenueSheetOpen()"
+                  [kind]="revenueForm.kind"
+                  [members]="ctx.members"
+                  [selection]="revenueSelection"
+                  [disabled]="busy() || !hasRevenueSelection()"
+                  (kindChange)="setRevenueKind($event)"
+                  (toggle)="toggleRevenueMember($event)"
+                  (confirm)="confirmRevenue()"
+                  (closed)="closeRevenueSheet()"
+                />
               }
-
-              <div class="quickbook-bar">
-                <span class="quickbook-label">{{ 'tablet.tally.quickbookLabel' | t }}</span>
-                <button
-                  type="button"
-                  class="member-button quickbook-drink"
-                  (click)="openDrinkOverlay()"
-                >
-                  @if (activeItem(ctx); as item) {
-                    {{ item.name }} · {{ formatMoney(item.price, item.currency) }}
-                  } @else if (activeDrink(ctx); as drink) {
-                    {{ drink.drinkName }} · {{ formatMoney(drink.price, drink.currency) }}
-                  } @else {
-                    {{ 'tablet.tally.chooseItem' | t }}
-                  }
-                </button>
-              </div>
-
-              <div class="tally-actions">
-                <button
-                  type="button"
-                  class="member-button"
-                  [disabled]="busy()"
-                  (click)="openRevenueSheet('round', ctx.members)"
-                >
-                  <vereint-icon name="beer" /> {{ 'tablet.tally.round' | t }}
-                </button>
-                <button
-                  type="button"
-                  class="member-button ghost"
-                  [disabled]="busy()"
-                  (click)="openRevenueSheet('evening', ctx.members)"
-                >
-                  <vereint-icon name="crown" /> {{ 'tablet.tally.evening' | t }}
-                </button>
-              </div>
-
-              <app-drink-overlay
-                [open]="drinkOverlayOpen()"
-                [drinks]="ctx.drinks"
-                [foods]="ctx.food"
-                [selectedId]="activeDrinkId()"
-                (itemSelect)="selectActiveDrink($event)"
-                (confirm)="confirmDrink()"
-                (closed)="closeDrinkOverlay()"
-              />
-
-              <app-revenue-sheet
-                [open]="revenueSheetOpen()"
-                [kind]="revenueForm.kind"
-                [members]="ctx.members"
-                [selection]="revenueSelection"
-                [disabled]="busy() || !hasRevenueSelection()"
-                (kindChange)="setRevenueKind($event)"
-                (toggle)="toggleRevenueMember($event)"
-                (confirm)="confirmRevenue()"
-                (closed)="closeRevenueSheet()"
-              />
             }
           }
         }
@@ -258,25 +281,66 @@ interface EventContext {
         justify-content: space-between;
       }
       .manage-action-error {
-        color: #b91c1c;
+        color: var(--color-danger);
         font-weight: 600;
       }
       .manage-action-info {
-        color: #15803d;
+        color: var(--color-success);
         font-weight: 600;
       }
-      .tally-head {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
+      .terminal-card {
+        max-width: none;
       }
-      .tally-list {
+      .terminal-layout {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
-        gap: 0.6rem;
-        margin: 0.75rem 0 1.25rem;
+        gap: var(--space-3);
+        margin: var(--space-2) 0 var(--space-3);
+      }
+      @media (min-width: 1000px) {
+        .terminal-layout {
+          grid-template-columns: minmax(0, 1fr) 20rem;
+          align-items: start;
+        }
+      }
+      .tally-hint {
+        margin: 0 0 var(--space-2);
+        color: var(--color-text-muted);
+      }
+      .terminal-side {
+        padding: var(--space-3);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background: var(--color-surface-raised);
+      }
+      .side-title {
+        margin: 0 0 var(--space-2);
+        font-size: 1.15rem;
+      }
+      .side-stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-1);
+      }
+      .side-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        padding: var(--space-2);
+        border-radius: var(--radius-md);
+        background: var(--color-surface-subtle);
+      }
+      .side-label {
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+      }
+      .side-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+      }
+      .side-value.is-money {
+        color: var(--color-brand);
       }
       .undo-bar {
         position: sticky;
@@ -287,10 +351,10 @@ interface EventContext {
         gap: 0.6rem;
         margin: 0 0 1rem;
         padding: 0.6rem 0.6rem 0.6rem 1rem;
-        border-radius: var(--radius-md, 0.75rem);
-        background: var(--vereint-ink, #1b1f3b);
-        color: #ffffff;
-        box-shadow: 0 10px 24px -10px rgba(15, 23, 42, 0.5);
+        border-radius: var(--radius-md);
+        background: var(--vereint-ink);
+        color: var(--color-on-brand);
+        box-shadow: var(--vereint-shadow);
       }
       :host-context([data-viewport='mobile']) .undo-bar {
         bottom: calc(var(--shell-bottom-height) + env(safe-area-inset-bottom) + 0.5rem);
@@ -309,10 +373,10 @@ interface EventContext {
         gap: 0.35rem;
         min-height: 3rem;
         padding: 0 1rem;
-        border: 1px solid rgba(255, 255, 255, 0.4);
+        border: 1px solid currentColor;
         border-radius: 999px;
         background: transparent;
-        color: #ffffff;
+        color: inherit;
         font: inherit;
         font-weight: 700;
         white-space: nowrap;
@@ -322,10 +386,14 @@ interface EventContext {
         display: flex;
         flex-wrap: wrap;
         gap: 0.75rem;
+        margin-top: var(--space-3);
+      }
+      .tally-actions .member-button {
+        min-height: 44px;
       }
       .member-button.ghost {
         background: transparent;
-        border: 1px solid rgba(148, 163, 184, 0.5);
+        border: 1px solid var(--color-border-dark);
         color: inherit;
       }
       .member-button.is-active {
@@ -350,44 +418,11 @@ interface EventContext {
         width: 0.6rem;
         height: 0.6rem;
         border-radius: 50%;
-        background: var(--color-brand, #f59e0b);
+        background: var(--color-brand);
       }
       .terminal-toggle {
         align-self: flex-start;
         min-height: 44px;
-      }
-      .quickbook-bar {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.6rem 0.75rem;
-        margin: 0 0 1.25rem;
-        border: 1px solid rgba(148, 163, 184, 0.4);
-        border-radius: var(--radius-md, 0.75rem);
-      }
-      .quickbook-label {
-        font-weight: 600;
-        opacity: 0.8;
-      }
-      .quickbook-drink {
-        min-height: 44px;
-        font-weight: 700;
-      }
-      .tally-actions .member-button {
-        min-height: 44px;
-      }
-      /* Landscape-Optimierung: breites Grid und feste Aktionsleiste. */
-      @media (min-width: 900px) and (orientation: landscape) {
-        .tally-list {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 0.75rem;
-        }
-        .quickbook-drink {
-          font-size: 1.05rem;
-          padding-block: 0.75rem;
-        }
       }
     `,
   ],
@@ -398,37 +433,38 @@ export class TabletComponent implements OnInit, OnDestroy {
 
   protected readonly events = new AsyncState<TabletEvent[]>();
   protected readonly context = new AsyncState<EventContext>();
+  /** Strichliste des gewählten Events; wird nach jeder Buchung neu geladen. */
+  protected readonly board = signal<TabletBoard | null>(null);
 
   protected readonly selectedEventId = signal<string | null>(null);
   protected readonly busy = signal(false);
   protected readonly actionError = signal<string | null>(null);
   protected readonly actionInfo = signal<string | null>(null);
 
-  protected readonly activeDrinkId = signal<string | null>(null);
   /** Kiosk-Modus dieses Geräts; bleibt über Neuladen und Neustart erhalten. */
   protected readonly standalone = this.kiosk.active;
   protected readonly kioskStartOpen = signal(false);
-  protected readonly drinkOverlayOpen = signal(false);
-  protected readonly revenueSheetOpen = signal(false);
-  protected readonly tallies = signal<Record<string, number>>({});
+  protected readonly picker = signal<PickerState | null>(null);
+
+  /** Auf wessen Kosten je Mitglied getrunken wird; ohne Eintrag die eigene Rechnung. */
+  protected readonly payers = computed<Record<string, string>>(() => ({}));
 
   /**
-   * Schlüssel für Striche und Runden. Bricht eine Buchung ab (z. B. nach einer
+   * Schlüssel für Striche. Bricht eine Buchung ab (z. B. nach einer
    * Zeitüberschreitung), schickt ein erneuter Tipp mit denselben Daten denselben
    * Schlüssel, damit eine schon gespeicherte Buchung nicht doppelt entsteht.
    */
   private readonly purchaseKey = new RetryableIdempotencyKey();
   private readonly revenueKey = new RetryableIdempotencyKey();
-  /** Buchungs-IDs der in dieser Sitzung erfassten Striche je Mitglied (für „−“/Rückgängig). */
-  private readonly booked = signal<Record<string, string[]>>({});
+  /** In dieser Sitzung gebuchte Striche, der letzte zuoberst (für Rückgängig). */
+  private readonly booked = signal<BookedTally[]>([]);
   /** Letzter erfasster Strich für die Rückgängig-Leiste. */
-  protected readonly lastBooking = signal<{ memberId: string; label: string } | null>(null);
+  protected readonly lastBooking = signal<BookedTally | null>(null);
 
-  protected purchaseForm: { memberId: string; eventDrinkId?: string; eventFoodId?: string } = {
-    memberId: '',
-    eventDrinkId: '',
-    eventFoodId: '',
-  };
+  // Runde/Abend am Terminal (bis zur Umstellung auf Runden am eigenen Handy).
+  protected readonly activeDrinkId = signal<string | null>(null);
+  protected readonly drinkOverlayOpen = signal(false);
+  protected readonly revenueSheetOpen = signal(false);
   protected revenueForm: { eventDrinkId?: string; eventFoodId?: string; kind: RevenueKind } = {
     eventDrinkId: '',
     eventFoodId: '',
@@ -461,13 +497,15 @@ export class TabletComponent implements OnInit, OnDestroy {
   protected selectEvent(eventId: string): void {
     this.selectedEventId.set(eventId);
     this.kiosk.rememberEvent(eventId);
-    this.purchaseForm = { memberId: '', eventDrinkId: '', eventFoodId: '' };
     this.revenueForm = { eventDrinkId: '', eventFoodId: '', kind: 'round' };
     this.revenueSelection = {};
     this.activeDrinkId.set(null);
     this.drinkOverlayOpen.set(false);
     this.revenueSheetOpen.set(false);
-    this.tallies.set({});
+    this.picker.set(null);
+    this.board.set(null);
+    this.booked.set([]);
+    this.lastBooking.set(null);
     this.actionError.set(null);
     this.actionInfo.set(null);
     this.context.run(
@@ -475,7 +513,9 @@ export class TabletComponent implements OnInit, OnDestroy {
         members: this.api.listMembers(eventId),
         drinks: this.api.listDrinks(eventId),
         food: this.api.listFood(eventId),
+        board: this.api.loadBoard(eventId),
       }),
+      (data) => this.board.set(data.board),
     );
   }
 
@@ -498,41 +538,196 @@ export class TabletComponent implements OnInit, OnDestroy {
     this.kiosk.activate(session.id, this.selectedEventId());
   }
 
+  /** Getränke ohne Kategorie und Speisen: Spalte „Sonstiges“. */
+  protected otherItems(ctx: EventContext): TallyPickItem[] {
+    const drinks = ctx.drinks
+      .filter((drink) => !drink.tallyCategoryId)
+      .map<TallyPickItem>((drink) => ({
+        kind: 'drink',
+        id: drink.id,
+        name: drink.drinkName,
+        price: String(drink.effectivePrice ?? drink.price),
+        currency: drink.currency,
+      }));
+    const food = ctx.food.map<TallyPickItem>((item) => ({
+      kind: 'food',
+      id: item.id,
+      name: item.foodName,
+      price: String(item.effectivePrice),
+      currency: item.currency,
+    }));
+    return [...drinks, ...food];
+  }
+
+  /** Buchbar ist das Terminal, sobald eine Spalte ein Getränk hat oder „Sonstiges“ etwas anbietet. */
+  protected hasBookableItems(board: TabletBoard, ctx: EventContext): boolean {
+    return board.columns.some((column) => column.drinks.length > 0) || this.otherItems(ctx).length > 0;
+  }
+
   /**
-   * Schnellbuchung: bucht das aktive Getränk oder die Speise mit genau einem Aufruf für ein
-   * Mitglied. Nutzt die bestehende Strichlisten-/Buchungslogik aus TICKET-034
-   * wieder (inkl. Idempotency-Key) und dupliziert sie nicht.
+   * Tipp in ein Feld: Liegt in der Kategorie genau ein Getränk des Events,
+   * wird es sofort gebucht; bei mehreren öffnet sich die Auswahl, damit die
+   * Statistik das richtige Getränk zählt. „Sonstiges“ öffnet die Auswahl der
+   * Getränke ohne Kategorie und der Speisen.
    */
-  protected quickBook(memberId: string): void {
-    this.onTallyIncrease(memberId);
+  protected onCellTap(cell: TallyCell): void {
+    const ctx = this.context.data();
+    const board = this.board();
+    if (!ctx || !board) return;
+    const member = board.members.find((m) => m.memberId === cell.memberId);
+    const memberName = member?.displayName ?? translate('tablet.fallback.member');
+    this.actionError.set(null);
+
+    if (cell.categoryId) {
+      const column = board.columns.find((c) => c.categoryId === cell.categoryId);
+      if (!column) return;
+      const items = column.drinks.map<TallyPickItem>((drink) => ({
+        kind: 'drink',
+        id: drink.eventDrinkId,
+        name: drink.drinkName,
+        price: String(column.price),
+        currency: column.currency,
+      }));
+      if (items.length === 0) {
+        this.actionError.set(translate('tablet.messages.noDrinksInCategory', { name: column.name }));
+        return;
+      }
+      if (items.length === 1) {
+        this.book(cell, items[0]);
+        return;
+      }
+      this.picker.set({
+        cell,
+        title: translate('tablet.picker.categoryTitle', { name: column.name }),
+        subtitle: translate('tablet.picker.forMember', { name: memberName }),
+        items,
+      });
+      return;
+    }
+
+    const items = this.otherItems(ctx);
+    if (items.length === 1) {
+      this.book(cell, items[0]);
+      return;
+    }
+    this.picker.set({
+      cell,
+      title: translate('tablet.picker.otherTitle'),
+      subtitle: translate('tablet.picker.forMember', { name: memberName }),
+      items,
+    });
   }
 
-  /** Aktuell für die Strichliste gewählter Artikel (Getränk oder Speise) aus dem Kontext. */
-  protected activeItem(ctx: EventContext): { name: string; price: string; currency: string } | null {
-    const id = this.activeDrinkId();
-    if (!id) return null;
-    const drink = ctx.drinks.find((d) => d.id === id);
-    if (drink) return { name: drink.drinkName, price: drink.price, currency: drink.currency };
-    const food = ctx.food.find((f) => f.id === id);
-    if (food) return { name: food.foodName, price: food.effectivePrice, currency: food.currency };
-    return null;
+  protected onPick(item: TallyPickItem): void {
+    const state = this.picker();
+    this.picker.set(null);
+    if (state) this.book(state.cell, item);
   }
 
-  /** Aktuell für die Strichliste gewähltes Getränk aus dem Kontext. */
-  protected activeDrink(ctx: EventContext): EventDrink | null {
-    const id = this.activeDrinkId();
-    return ctx.drinks.find((drink) => drink.id === id) ?? null;
+  /** Zählt den Strich sofort im Feld; der Server bestätigt oder es wird zurückgenommen. */
+  private adjustCount(cell: TallyCell, delta: number): void {
+    this.board.update((board) => {
+      if (!board) return board;
+      const members = board.members.map((row) => {
+        if (row.memberId !== cell.memberId) return row;
+        if (!cell.categoryId) return { ...row, otherCount: Math.max(0, row.otherCount + delta) };
+        const current = row.counts?.[cell.categoryId] ?? 0;
+        return { ...row, counts: { ...row.counts, [cell.categoryId]: Math.max(0, current + delta) } };
+      });
+      return { ...board, members, tallyCount: Math.max(0, board.tallyCount + delta) };
+    });
   }
 
-  /** Aktuelle Strichanzahl eines Mitglieds. */
-  protected tallyFor(memberId: string): number {
-    return this.tallies()[memberId] ?? 0;
+  /** Bucht genau einen Strich (Idempotency-Key, Wiederholung nach Abbruch mit gleichem Schlüssel). */
+  private book(cell: TallyCell, item: TallyPickItem): void {
+    const eventId = this.selectedEventId();
+    if (!eventId) return;
+    const member =
+      this.board()?.members.find((m) => m.memberId === cell.memberId)?.displayName ?? translate('tablet.fallback.member');
+    const column = cell.categoryId
+      ? this.board()?.columns.find((c) => c.categoryId === cell.categoryId)?.name
+      : null;
+    const label = column ? `${member} · ${column} (${item.name})` : `${member} · ${item.name}`;
+    const payload = {
+      memberId: cell.memberId,
+      eventDrinkId: item.kind === 'drink' ? item.id : undefined,
+      eventFoodId: item.kind === 'food' ? item.id : undefined,
+    };
+    const keyData = { eventId, ...payload };
+    const key = this.purchaseKey.for(keyData);
+    this.adjustCount(cell, 1);
+    this.busy.set(true);
+    this.actionInfo.set(null);
+    this.api.recordPurchase(eventId, payload, key).subscribe({
+      next: (entry: LedgerEntry) => {
+        this.busy.set(false);
+        this.purchaseKey.reset();
+        if (entry?.id && this.booked().some((b) => b.entryId === entry.id)) {
+          // Der Server hat eine schon gezählte Buchung als Wiederholung geliefert.
+          this.adjustCount(cell, -1);
+          return;
+        }
+        if (entry?.id) {
+          const booking: BookedTally = { entryId: entry.id, cell, label };
+          this.booked.update((list) => [booking, ...list]);
+          this.lastBooking.set(booking);
+        }
+        this.refreshBoard();
+      },
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.purchaseKey.failed(keyData, key);
+        this.adjustCount(cell, -1);
+        this.actionError.set(describeApiError(error));
+      },
+    });
   }
 
-  /** Öffnet das Getränke-Overlay. */
-  protected openDrinkOverlay(): void {
-    this.drinkOverlayOpen.set(true);
+  /**
+   * Rückgängig-Leiste: nimmt den zuletzt erfassten Strich zurück. Der Server
+   * bucht eine Gegenbuchung (nur eigene Striche dieses Terminals, 10 Minuten).
+   */
+  protected undoLast(): void {
+    const eventId = this.selectedEventId();
+    const last = this.lastBooking();
+    if (!eventId || !last) {
+      this.actionError.set(translate('tablet.messages.undoNotPossible'));
+      return;
+    }
+    this.adjustCount(last.cell, -1);
+    this.busy.set(true);
+    this.actionError.set(null);
+    this.actionInfo.set(null);
+    this.api.undoPurchase(eventId, last.entryId, newIdempotencyKey()).subscribe({
+      next: () => {
+        this.busy.set(false);
+        const rest = this.booked().filter((b) => b.entryId !== last.entryId);
+        this.booked.set(rest);
+        this.lastBooking.set(rest[0] ?? null);
+        this.actionInfo.set(translate('tablet.messages.undone'));
+        this.refreshBoard();
+      },
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.adjustCount(last.cell, 1);
+        this.actionError.set(describeApiError(error));
+      },
+    });
   }
+
+  /** Lädt Striche und Umsatz still nach; Fehler lassen die bisherige Anzeige stehen. */
+  private refreshBoard(): void {
+    const eventId = this.selectedEventId();
+    if (!eventId) return;
+    this.api.loadBoard(eventId).subscribe({
+      next: (board) => {
+        if (this.selectedEventId() === eventId) this.board.set(board);
+      },
+      error: () => undefined,
+    });
+  }
+
+  // --- Runde/Abend am Terminal -------------------------------------------
 
   protected closeDrinkOverlay(): void {
     this.drinkOverlayOpen.set(false);
@@ -547,84 +742,9 @@ export class TabletComponent implements OnInit, OnDestroy {
     this.drinkOverlayOpen.set(false);
   }
 
-  /**
-   * Erhöht die Striche eines Mitglieds um eins und löst genau einen
-   * Buchungsaufruf mit dem aktiven Artikel aus. Fehlt noch ein Artikel, öffnet
-   * sich das Auswahl-Overlay statt einer Buchung.
-   */
-  protected onTallyIncrease(memberId: string): void {
-    const itemId = this.activeDrinkId();
-    if (!itemId) {
-      this.drinkOverlayOpen.set(true);
-      return;
-    }
-    const ctx = this.context.data();
-    const isFood = ctx?.food.some((f) => f.id === itemId) ?? false;
-    this.tallies.update((current) => ({
-      ...current,
-      [memberId]: (current[memberId] ?? 0) + 1,
-    }));
-    this.purchaseForm = isFood
-      ? { memberId, eventDrinkId: '', eventFoodId: itemId }
-      : { memberId, eventDrinkId: itemId, eventFoodId: '' };
-    this.recordPurchase();
-  }
-
-  /**
-   * Nimmt den letzten in dieser Sitzung erfassten Strich eines Mitglieds zurück.
-   * Der Server bucht dafür eine Gegenbuchung (nur eigene, frische Striche).
-   * Ohne eigenen Strich in dieser Sitzung bleibt die Anzeige unverändert und es
-   * erscheint ein Hinweis auf die Korrektur durch den Vorstand.
-   */
-  protected onTallyDecrease(memberId: string): void {
-    const eventId = this.selectedEventId();
-    const stack = this.booked()[memberId] ?? [];
-    const entryId = stack[stack.length - 1];
-    if (!eventId || !entryId) {
-      this.actionError.set(
-        translate('tablet.messages.undoNotPossible'),
-      );
-      return;
-    }
-    this.booked.update((current) => ({ ...current, [memberId]: stack.slice(0, -1) }));
-    this.tallies.update((current) => ({
-      ...current,
-      [memberId]: Math.max(0, (current[memberId] ?? 0) - 1),
-    }));
-    if (this.lastBooking()?.memberId === memberId) this.lastBooking.set(null);
-    this.busy.set(true);
-    this.actionError.set(null);
-    this.actionInfo.set(null);
-    this.api.undoPurchase(eventId, entryId, newIdempotencyKey()).subscribe({
-      next: () => {
-        this.busy.set(false);
-        this.actionInfo.set(translate('tablet.messages.undone'));
-      },
-      error: (error: unknown) => {
-        this.busy.set(false);
-        this.booked.update((current) => ({ ...current, [memberId]: [...(current[memberId] ?? []), entryId] }));
-        this.tallies.update((current) => ({ ...current, [memberId]: (current[memberId] ?? 0) + 1 }));
-        this.actionError.set(describeApiError(error));
-      },
-    });
-  }
-
-  /** Rückgängig-Leiste: nimmt den zuletzt erfassten Strich zurück. */
-  protected undoLast(): void {
-    const last = this.lastBooking();
-    if (last) this.onTallyDecrease(last.memberId);
-  }
-
   /** Öffnet das Runden-/Abend-Sheet und wählt zunächst alle Mitglieder vor. */
   protected openRevenueSheet(kind: RevenueKind, members: TabletMember[]): void {
-    const itemId = this.activeDrinkId() ?? '';
-    const ctx = this.context.data();
-    const isFood = ctx?.food.some((f) => f.id === itemId) ?? false;
-    this.revenueForm = {
-      eventDrinkId: isFood ? '' : itemId,
-      eventFoodId: isFood ? itemId : '',
-      kind,
-    };
+    this.revenueForm = { ...this.revenueForm, kind };
     this.revenueSelection = members.reduce<Record<string, boolean>>((acc, member) => {
       acc[member.memberId] = true;
       return acc;
@@ -651,7 +771,7 @@ export class TabletComponent implements OnInit, OnDestroy {
     return Object.values(this.revenueSelection).some(Boolean);
   }
 
-  /** Bestätigt das Sheet: setzt das aktive Getränk/Speise und bucht die Aktion. */
+  /** Bestätigt das Sheet; fehlt noch ein Artikel, öffnet sich zuerst die Auswahl. */
   protected confirmRevenue(): void {
     const itemId = this.activeDrinkId() ?? '';
     const ctx = this.context.data();
@@ -683,6 +803,7 @@ export class TabletComponent implements OnInit, OnDestroy {
         this.busy.set(false);
         onSuccess?.();
         this.actionInfo.set(successInfo);
+        this.refreshBoard();
       },
       error: (error: unknown) => {
         this.busy.set(false);
@@ -690,70 +811,6 @@ export class TabletComponent implements OnInit, OnDestroy {
         this.actionError.set(describeApiError(error));
       },
     });
-  }
-
-  protected recordPurchase(): void {
-    const eventId = this.selectedEventId();
-    const { memberId, eventDrinkId, eventFoodId } = this.purchaseForm;
-    if (!eventId || !memberId || (!eventDrinkId && !eventFoodId)) return;
-    const label = this.bookingLabel(memberId, eventDrinkId || eventFoodId || '');
-    this.busy.set(true);
-    this.actionError.set(null);
-    this.actionInfo.set(null);
-    const payload = {
-      memberId,
-      eventDrinkId: eventDrinkId || undefined,
-      eventFoodId: eventFoodId || undefined,
-    };
-    const keyData = { eventId, ...payload };
-    const key = this.purchaseKey.for(keyData);
-    this.api
-      .recordPurchase(eventId, payload, key)
-      .subscribe({
-        next: (entry) => {
-          this.busy.set(false);
-          this.purchaseKey.reset();
-          if (entry?.id && this.booked()[memberId]?.includes(entry.id)) {
-            // Der Server hat eine schon gezählte Buchung als Wiederholung
-            // zurückgegeben: den eben optimistisch gesetzten Strich zurücknehmen.
-            this.tallies.update((current) => ({
-              ...current,
-              [memberId]: Math.max(0, (current[memberId] ?? 0) - 1),
-            }));
-            return;
-          }
-          if (entry?.id) {
-            this.booked.update((current) => ({
-              ...current,
-              [memberId]: [...(current[memberId] ?? []), entry.id],
-            }));
-            this.lastBooking.set({ memberId, label });
-          }
-          this.actionInfo.set(translate('tablet.messages.purchaseRecorded'));
-        },
-        error: (error: unknown) => {
-          this.busy.set(false);
-          this.purchaseKey.failed(keyData, key);
-          // Fehlgeschlagene Buchung: den optimistisch gezählten Strich wieder entfernen.
-          this.tallies.update((current) => ({
-            ...current,
-            [memberId]: Math.max(0, (current[memberId] ?? 0) - 1),
-          }));
-          this.actionError.set(describeApiError(error));
-        },
-      });
-    this.purchaseForm = { memberId: '', eventDrinkId: '', eventFoodId: '' };
-  }
-
-  /** „Bob · Helles“ für die Rückgängig-Leiste. */
-  private bookingLabel(memberId: string, itemId: string): string {
-    const ctx = this.context.data();
-    const member = ctx?.members.find((m) => m.memberId === memberId)?.displayName ?? translate('tablet.fallback.member');
-    const item =
-      ctx?.drinks.find((d) => d.id === itemId)?.drinkName ??
-      ctx?.food.find((f) => f.id === itemId)?.foodName ??
-      translate('tablet.fallback.item');
-    return `${member} · ${item}`;
   }
 
   protected recordRevenue(): void {

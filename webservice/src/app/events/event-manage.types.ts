@@ -52,6 +52,10 @@ export interface EventDrink {
   imageSnapshot: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Preis, der im Event gilt: Kategoriepreis > Event-Preis > Getränkepreis. */
+  effectivePrice?: string;
+  tallyCategoryId?: string | null;
+  tallyCategoryName?: string | null;
 }
 
 /** Hinzufügen eines Eventgetränks (`POST /events/{id}/drinks`). */

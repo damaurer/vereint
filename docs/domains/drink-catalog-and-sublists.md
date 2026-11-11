@@ -28,6 +28,16 @@ Die Getränkeverwaltung in **Vereint** bildet das Sortiment einer Gruppe ab: vom
 - Innerhalb einer Subliste können Katalogpreise mit einem eigenen `default_price` überschrieben werden.
 - Über `EventDrinkController` (`/api/v1/events/{eventId}/drinks/assign-sublist`) werden Sublisten an Events gekoppelt oder Einzelgetränke (`AddEventDrinkRequest`) mit festen Eventpreisen (`price`, `costPrice`), `selfServiceEnabled` und `tabletEnabled` zugewiesen. Das dürfen Veranstalter des Events und wer `event.manage` hat.
 
+### 3. Strich-Kategorien (Spalten der Strichliste)
+- Eine **Strich-Kategorie** (`tally_categories`: Name, Preis je Strich, Reihenfolge) ist eine Spalte der Strichliste am Thekenterminal. Sie ist unabhängig vom freien Textfeld „Kategorie“ des Getränks.
+- Ein Getränk gehört zu höchstens einer Strich-Kategorie (`drink_catalog.tally_category_id`). Zuordnen darf nur, wer `catalog.approve` hat: im Formular „Getränk bearbeiten“ (Feld **Strich-Kategorie**) oder auf der Seite `/catalog/categories`.
+- **Preis im Event** (`EventDrinkPricing`), in dieser Reihenfolge:
+  1. Preis der Strich-Kategorie des Getränks,
+  2. Preis des Eventgetränks (aus der Getränkeliste oder im Event gesetzt),
+  3. Preis des Getränks (er wird beim Hinzufügen zum Event als Eventpreis übernommen).
+- Der Kategoriepreis gilt für alle Käufe im Event: Strich am Terminal, Barcode-Kauf am Handy (auch die Vorschau), Runden. Außerhalb von Events gibt es keine Käufe und damit keine Kategorien. `EventDrinkDto.effectivePrice` nennt den geltenden Preis.
+- Der Name ist je Gruppe eindeutig (ohne Groß-/Kleinschreibung). Löschen archiviert die Kategorie (`archived = true`) und löst die Zuordnung der Getränke; alte Buchungen verweisen weiter auf sie.
+- Preisänderungen wirken ab der nächsten Buchung; gebuchte Einträge und ihre Belege bleiben unverändert.
 
 ---
 
