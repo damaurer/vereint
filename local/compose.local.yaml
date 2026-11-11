@@ -74,10 +74,13 @@ services:
       KEYCLOAK_SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
       KEYCLOAK_SEED_BOARD_PASSWORD: ${SEED_BOARD_PASSWORD}
       KEYCLOAK_SEED_MEMBER_PASSWORD: ${SEED_MEMBER_PASSWORD}
+      # Optional: Datei im Container fuer die IDs der Demo-Daten (scripts/handbook/README.md).
+      HANDBOOK_SEED_FILE: ${HANDBOOK_SEED_FILE:-}
     volumes:
       - ../local/seed.mjs:/work/local/seed.mjs:ro
       - ../local/seed.package.json:/work/local/package.json:ro
-      - ../scripts/handbook/seed.mjs:/work/scripts/handbook/seed.mjs:ro
+      # Beschreibbar, damit HANDBOOK_SEED_FILE die IDs fuer die Handbuch-Bilder ablegen kann.
+      - ../scripts/handbook:/work/scripts/handbook
       - seed-node-modules:/work/local/node_modules
 
 volumes:

@@ -41,4 +41,4 @@ Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mit
 
 Die Bilder entstehen automatisch mit einem Skript, damit sie nach Änderungen an der Oberfläche schnell aktualisiert werden können. Anleitung: [`scripts/handbook/README.md`](../../scripts/handbook/README.md).
 
-Alle Bilder zeigen den aktuellen Stand der App mit Demo-Daten. Für Moments mit Fotos und Videos, die Seite **Gruppe wählen** und den Beitritt mit bestehendem Konto gibt es noch keine Bilder; dort beschreibt nur der Text den Ablauf.
+Alle Bilder zeigen den aktuellen Stand der App mit Demo-Daten.
