@@ -219,6 +219,12 @@ describe('EventDetailComponent', () => {
     expect(link.getAttribute('href')).toBe('/events/e-1/manage');
   });
 
+  it('links to the event statistics', async () => {
+    const fixture = await create();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="event-statistics-link"]') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/events/e-1/statistik');
+  });
+
   it('offers to buy a round only while the event is running', async () => {
     let fixture = await create();
     const link = (fixture.nativeElement as HTMLElement).querySelector('.detail-chip-round') as HTMLAnchorElement;

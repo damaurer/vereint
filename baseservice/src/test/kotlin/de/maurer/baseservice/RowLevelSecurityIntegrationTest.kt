@@ -102,7 +102,7 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
                 String::class.java
             )
         }
-        assertEquals(36, tables.size, "Tabellen mit Policy: $tables")
+        assertEquals(37, tables.size, "Tabellen mit Policy: $tables")
         assertTrue("tally_categories" in tables, "Strich-Kategorien brauchen eine Policy: $tables")
         assertTrue("rounds" in tables && "round_invitees" in tables, "Runden brauchen eine Policy: $tables")
     }
@@ -209,6 +209,24 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
                 jdbcTemplate.queryForObject("select count(*) from events where title = 'Eingeschmuggelt'", Int::class.java)
             }
         )
+    }
+
+    @Test
+    fun `statistic records of one Stammtisch are invisible from another`() {
+        val stammtischB = newStammtisch()
+        val id = UUID.randomUUID()
+        TenantContext.runIn(stammtischB) {
+            jdbcTemplate.update(
+                "insert into statistic_records (id, stammtisch_id, feature, kind, quantity, occurred_at) values (?, ?, 'event', 'triggered', 1, ?)",
+                id,
+                stammtischB,
+                Timestamp.from(Instant.now())
+            )
+        }
+        val count = "select count(*) from statistic_records where id = ?"
+        assertEquals(1, TenantContext.runIn(stammtischB) { jdbcTemplate.queryForObject(count, Int::class.java, id) })
+        assertEquals(0, TenantContext.runIn(DEFAULT_STAMMTISCH_ID) { jdbcTemplate.queryForObject(count, Int::class.java, id) })
+        assertEquals(0, TenantContext.runWithoutTenant { jdbcTemplate.queryForObject(count, Int::class.java, id) })
     }
 
     companion object {

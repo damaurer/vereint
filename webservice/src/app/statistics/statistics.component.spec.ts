@@ -204,7 +204,14 @@ describe('statistics pages', () => {
       expect(root(fixture).querySelectorAll('.bar-fill').length).toBe(2);
       expect(root(fixture).querySelector('.ring')?.getAttribute('aria-label')).toContain('83');
       const links = [...root(fixture).querySelectorAll<HTMLAnchorElement>('a.stats-link')].map((a) => a.getAttribute('href'));
-      expect(links).toEqual(['/statistik/getraenke?zeitraum=90', '/statistik/uebersicht?zeitraum=90']);
+      expect(links).toEqual([
+        '/statistik/getraenke?zeitraum=90',
+        '/statistik/uebersicht?zeitraum=90',
+        '/statistik/gruppe/events?zeitraum=90',
+        '/statistik/funktionen?zeitraum=90',
+        '/statistik/ich?zeitraum=90',
+        '/statistik/events?zeitraum=90',
+      ]);
     });
 
     it('highlights the own row', async () => {

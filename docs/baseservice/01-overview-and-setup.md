@@ -170,7 +170,7 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `KEYCLOAK_REGISTRATION_CLIENT_SECRET` | `vereint.registration.client-secret` | String | *leer* | Secret dieses Clients (Geheimnis). |
 | `SIGNUP_ENABLED` | `vereint.signup.enabled` | Boolean | `false` | Öffentliches Eröffnen neuer Gruppen (`/api/v1/signup`, `/gruppe-eroeffnen`). Ohne `true` antworten Eröffnen und Registrieren mit `503`; Einladungslinks funktionieren weiter. Lokal (`.env.example`, `local/`) und in E2E an. |
 | `SIGNUP_MAX_OWNED` | `vereint.signup.max-owned` | Integer | `3` | Höchstzahl aktiver Gruppen, die eine Person selbst eröffnet. |
-| `TERMS_VERSION` | `vereint.legal.terms-version` | String | `2026-11-10` | Gültige Fassung der AGB, der bei Registrierung und Eröffnung zugestimmt wird; alle übrigen Konten stimmen nach dem Login zu. |
+| `TERMS_VERSION` | `vereint.legal.terms-version` | String | `2026-11-11` | Gültige Fassung der AGB, der bei Registrierung und Eröffnung zugestimmt wird; alle übrigen Konten stimmen nach dem Login zu. |
 | `API_DOCS_ENABLED` | `springdoc.api-docs.enabled`, `springdoc.swagger-ui.enabled` | Boolean | `false` | OpenAPI und Swagger UI; in Produktion aus. |
 
 ---

@@ -233,4 +233,17 @@ describe('EventManageComponent', () => {
     expect(payload.invitationNotifyAt).toBeUndefined();
     expect(payload.reminderHoursBefore).toBe(0);
   });
+
+  it('loads and saves the statistics switch of the event', async () => {
+    serviceStub['getEvent'] = vi.fn(() => of(event({ statisticsEnabled: false })));
+    const fixture = await createFixture();
+    const component = fixture.componentInstance as unknown as {
+      form: { statisticsEnabled: boolean };
+      saveEvent(): void;
+    };
+    expect(component.form.statisticsEnabled).toBe(false);
+    component.form.statisticsEnabled = true;
+    component.saveEvent();
+    expect(serviceStub['updateEvent'].mock.calls[0][1].statisticsEnabled).toBe(true);
+  });
 });

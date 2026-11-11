@@ -44,7 +44,10 @@ data class CreateEventRequest(
     /** Einzuladende Mitglieder; mit `inviteAllMembers` alle aktiven Mitglieder. */
     val inviteUserIds: List<String>? = null,
 
-    val inviteAllMembers: Boolean? = null
+    val inviteAllMembers: Boolean? = null,
+
+    /** „Statistik für dieses Event“; Standard an. */
+    val statisticsEnabled: Boolean? = null
 )
 
 data class UpdateEventRequest(
@@ -75,7 +78,10 @@ data class UpdateEventRequest(
     /** Stunden vor Beginn für die Erinnerung; `0` schaltet die Erinnerung ab. */
     @field:Min(value = 0, message = "reminderHoursBefore {validation.min}")
     @field:Max(value = 720, message = "reminderHoursBefore {validation.max}")
-    val reminderHoursBefore: Int? = null
+    val reminderHoursBefore: Int? = null,
+
+    /** „Statistik für dieses Event“ ein- oder ausschalten. */
+    val statisticsEnabled: Boolean? = null
 )
 
 data class EventDto(
@@ -96,7 +102,9 @@ data class EventDto(
     /** Eigene Antwort des Aufrufers, falls eingeladen. */
     val myRsvp: String? = null,
     val rsvpCounts: RsvpCountsDto = RsvpCountsDto(),
-    val canManage: Boolean = false
+    val canManage: Boolean = false,
+    /** „Statistik für dieses Event“. */
+    val statisticsEnabled: Boolean = true
 )
 
 data class RsvpCountsDto(

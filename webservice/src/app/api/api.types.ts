@@ -84,6 +84,8 @@ export interface EventDetail {
   myRsvp?: RsvpStatus | null;
   rsvpCounts?: RsvpCounts;
   canManage?: boolean;
+  /** „Statistik für dieses Event“; fehlt bei älteren Antworten (dann an). */
+  statisticsEnabled?: boolean;
 }
 
 /** Neues Event (`POST /api/v1/events`). */
@@ -98,6 +100,8 @@ export interface CreateEventPayload {
   reminderHoursBefore?: number | null;
   inviteUserIds?: string[];
   inviteAllMembers?: boolean;
+  /** „Statistik für dieses Event“; Standard an. */
+  statisticsEnabled?: boolean;
 }
 
 /** Mitglieder einladen (`POST /api/v1/events/{id}/invitations`). */
@@ -216,15 +220,41 @@ export interface PurchaseOption {
   currency: string;
 }
 
-/** Vorschau eines Barcodekaufs (`POST /api/v1/ledger/purchases/preview`); bucht nichts. */
+/** Guthabenkauf ohne Event zum Katalogpreis der Gruppe. */
+export interface CreditPurchaseOption {
+  unitPrice: string;
+  currency: string;
+}
+
+/**
+ * Vorschau nach einem Scan (`POST /api/v1/ledger/purchases/preview`); bucht nichts.
+ * Mit `options` gilt nur der Kauf über das laufende Event. Ohne `options` darf
+ * die Person wählen: `creditPurchase` (Guthaben zum Katalogpreis) und, wenn die
+ * Statistik an ist, `foreignDrink` (nur Statistik).
+ */
 export interface PurchasePreview {
   barcode: string;
-  drinkId: string;
+  /** `null`, wenn das Getränk nur in der Getränkedatenbank steht. */
+  drinkId: string | null;
   drinkName: string;
   imageReference: string | null;
   options: PurchaseOption[];
   creditBalance: string;
   balanceCurrency: string;
+  creditPurchase?: CreditPurchaseOption | null;
+  /** Fremdgetränk möglich; zugleich: ein Guthabenkauf ginge in die Statistik ein. */
+  foreignDrink?: boolean;
+  libraryDrinkId?: string | null;
+}
+
+/** Erfasstes Fremdgetränk (`POST /api/v1/statistics/foreign-drinks`): nur Statistik, ohne Buchung. */
+export interface ForeignDrink {
+  id: string;
+  drinkName: string;
+  drinkId: string | null;
+  libraryDrinkId: string | null;
+  occurredAt: string;
+  removableUntil: string;
 }
 
 /**
@@ -833,6 +863,7 @@ export interface ClubStatistics {
   rankedMembers: number;
   topConsumers: MemberCount[];
   attendancePercent: number | null;
+  recording?: StatisticsRecording;
 }
 
 export interface MemberDrinkStats {
@@ -949,4 +980,159 @@ export interface TermsStatus {
   acceptedVersion: string | null;
   acceptedAt: string | null;
   accepted: boolean;
+}
+
+// --- Statistik-Ebenen und Schalter (Issue #104) ---
+
+/** Stand der Schalter Nutzer > Gruppe > Event. */
+export interface StatisticsRecording {
+  userEnabled: boolean;
+  /** `null` auf gruppenübergreifenden Seiten. */
+  groupEnabled?: boolean | null;
+  /** Nur auf der Event-Statistik. */
+  eventEnabled?: boolean | null;
+}
+
+/** Funktionen, die die Statistik zählt. */
+export type StatisticFeature =
+  | 'purchase'
+  | 'foreign_drink'
+  | 'round'
+  | 'top_up'
+  | 'event'
+  | 'rsvp'
+  | 'moment'
+  | 'moment_reaction'
+  | 'moment_media'
+  | 'chat_message'
+  | 'chat_reaction'
+  | 'invite_link'
+  | 'invite_join';
+
+export interface FeatureCount {
+  feature: StatisticFeature;
+  count: number;
+}
+
+/** Eigene Statistik (`GET /api/v1/statistics/me?zeitraum=`). */
+export interface MyStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  recording: StatisticsRecording;
+  total: number;
+  counts: FeatureCount[];
+  accepted: number;
+  attended: number;
+  groups: {
+    stammtischId: string;
+    stammtischName: string;
+    groupEnabled: boolean;
+    total: number;
+    counts: FeatureCount[];
+  }[];
+}
+
+/** Ein Event im Vergleich; gruppenübergreifend ohne Namen anderer Personen. */
+export interface EventComparison {
+  eventId: string;
+  title: string;
+  startsAt: string;
+  status: string;
+  statisticsEnabled: boolean;
+  stammtischId?: string | null;
+  stammtischName?: string | null;
+  accepted: number;
+  maybe: number;
+  declined: number;
+  noAnswer: number;
+  invited: number;
+  attendees: number;
+  purchases: number;
+  rounds: number;
+  moments: number;
+  reactions: number;
+  chatMessages: number;
+  myPurchases?: number | null;
+  myRsvp?: string | null;
+}
+
+export interface EventTotals {
+  events: number;
+  attendances: number;
+  avgAttendees: number | null;
+  attendancePercent: number | null;
+  purchases: number;
+  purchasesPerEvent: number | null;
+  moments: number;
+}
+
+/** Übergreifende Event-Statistik (`GET /api/v1/statistics/events?zeitraum=`). */
+export interface CrossEventStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  recording: StatisticsRecording;
+  totals: EventTotals;
+  myAttended: number;
+  myPurchases: number;
+  events: EventComparison[];
+}
+
+/** Gruppen-Event-Statistik (`GET /api/v1/statistics/group-events?zeitraum=`). */
+export interface GroupEventStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  recording: StatisticsRecording;
+  totals: EventTotals;
+  events: EventComparison[];
+}
+
+/** Event-Statistik (`GET /api/v1/events/{id}/statistics`). */
+export interface EventStatistics {
+  eventId: string;
+  title: string;
+  startsAt: string;
+  recording: StatisticsRecording;
+  accepted: number;
+  maybe: number;
+  declined: number;
+  noAnswer: number;
+  invited: number;
+  attendees: number;
+  purchases: number;
+  rounds: number;
+  moments: number;
+  reactions: number;
+  media: number;
+  chatMessages: number;
+  chatReactions: number;
+  topConsumers: MemberCount[];
+}
+
+export interface FeatureStat {
+  feature: StatisticFeature;
+  triggered: number;
+  responseFeature: string | null;
+  responses: number;
+  breakdown: { key: string; count: number }[];
+}
+
+/** Funktions-Statistik (`GET /api/v1/statistics/features?zeitraum=`). */
+export interface FeatureStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  recording: StatisticsRecording;
+  features: FeatureStat[];
+}
+
+/** Schalter (`/api/v1/me/statistics-settings`, `/api/v1/stammtisch/statistics-settings`). */
+export interface StatisticsSettings {
+  enabled: boolean;
+}
+
+export interface StatisticsDeleted {
+  deleted: number;
 }

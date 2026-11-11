@@ -70,7 +70,8 @@ class RoundService(
     private val notificationService: NotificationService,
     private val userService: UserService,
     private val access: StammtischAccess,
-    private val members: StammtischMembers
+    private val members: StammtischMembers,
+    private val statisticsRecorder: StatisticsRecorder
 ) {
 
     fun create(eventId: UUID, request: CreateRoundRequest, principal: UserPrincipal, now: Instant = Instant.now()): RoundDto {
@@ -131,6 +132,7 @@ class RoundService(
         )
         val saved = invitees.map { roundInviteeRepository.save(RoundInviteeEntity(round = round, member = it)) }
         notifyInvitees(round, invitees.filter { it.id != caller.id })
+        statisticsRecorder.round(caller, event, kind.name, round.id, invitees.size)
         return toDto(round, saved, emptyList(), now)
     }
 

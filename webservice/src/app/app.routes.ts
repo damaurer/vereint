@@ -389,6 +389,66 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./statistics/statistics-overview.component').then((m) => m.StatisticsOverviewComponent),
   },
+  {
+    path: 'statistik/ich',
+    canActivate: [authGuard],
+    data: {
+      back: '/profile',
+      title: 'routes.myStatistics.title',
+      description: 'routes.myStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/my-statistics.component').then((m) => m.MyStatisticsComponent),
+  },
+  {
+    path: 'statistik/events',
+    canActivate: [authGuard],
+    data: {
+      back: '/statistik',
+      title: 'routes.crossEventStatistics.title',
+      description: 'routes.crossEventStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/event-level-statistics.component').then((m) => m.CrossEventStatisticsComponent),
+  },
+  {
+    path: 'statistik/gruppe/events',
+    canActivate: [authGuard],
+    data: {
+      back: '/statistik',
+      title: 'routes.groupEventStatistics.title',
+      description: 'routes.groupEventStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/event-level-statistics.component').then((m) => m.GroupEventStatisticsComponent),
+  },
+  {
+    path: 'statistik/funktionen',
+    canActivate: [authGuard],
+    data: {
+      back: '/statistik',
+      title: 'routes.featureStatistics.title',
+      description: 'routes.featureStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/feature-statistics.component').then((m) => m.FeatureStatisticsComponent),
+  },
+  {
+    path: 'events/:eventId/statistik',
+    canActivate: [authGuard],
+    data: {
+      back: '/events/:eventId',
+      title: 'routes.eventStatistics.title',
+      description: 'routes.eventStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/feature-statistics.component').then((m) => m.EventStatisticsComponent),
+  },
     ],
   },
   { path: '**', redirectTo: '404' },

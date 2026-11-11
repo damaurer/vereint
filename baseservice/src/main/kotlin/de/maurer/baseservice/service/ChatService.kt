@@ -7,6 +7,7 @@ import de.maurer.baseservice.domain.EventEntity
 import de.maurer.baseservice.domain.EventGuestEntity
 import de.maurer.baseservice.domain.EventStatus
 import de.maurer.baseservice.domain.GuestStatus
+import de.maurer.baseservice.domain.StatisticFeature
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.ChatMessageDto
 import de.maurer.baseservice.dto.ConversationDto
@@ -60,7 +61,8 @@ class ChatService(
     private val access: StammtischAccess,
     private val userService: UserService,
     private val momentSessionRepository: MomentSessionRepository,
-    private val momentAccessPolicy: MomentAccessPolicy
+    private val momentAccessPolicy: MomentAccessPolicy,
+    private val statisticsRecorder: StatisticsRecorder
 ) {
 
     // --- Mitglieder (authentifiziert per JWT) ---
@@ -98,7 +100,9 @@ class ChatService(
             message = requireMessageText(request.message),
             imageUrl = normalizeImageUrl(request.imageUrl)
         )
-        return toMessageDto(chatMessageRepository.save(message))
+        val saved = chatMessageRepository.save(message)
+        recordMessage(saved, caller, event)
+        return toMessageDto(saved)
     }
 
     // --- Gäste (Gast-Token statt JWT) ---
@@ -125,7 +129,9 @@ class ChatService(
             message = requireMessageText(request.message),
             imageUrl = normalizeImageUrl(request.imageUrl)
         )
-        return toMessageDto(chatMessageRepository.save(message))
+        val saved = chatMessageRepository.save(message)
+        recordMessage(saved, null, event)
+        return toMessageDto(saved)
     }
 
     /**
@@ -175,7 +181,8 @@ class ChatService(
     ): ChatMessageDto {
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireActiveConversation(conversationId)
-        requireConversationAccess(conversation, caller, principal)?.let { requireEventOpenForChat(it) }
+        val event = requireConversationAccess(conversation, caller, principal)
+        event?.let { requireEventOpenForChat(it) }
         ensureMember(conversation, caller)
 
         val message = ChatMessageEntity(
@@ -185,7 +192,23 @@ class ChatService(
             message = requireMessageText(request.message),
             imageUrl = normalizeImageUrl(request.imageUrl)
         )
-        return toMessageDto(chatMessageRepository.save(message))
+        val saved = chatMessageRepository.save(message)
+        recordMessage(saved, caller, event)
+        return toMessageDto(saved)
+    }
+
+    /** Zählt eine Nachricht für die Statistik; Direktnachrichten zählen nicht. */
+    fun recordMessage(message: ChatMessageEntity, sender: UserEntity?, event: EventEntity?) {
+        val type = message.conversation?.type
+        if (type == ConversationService.TYPE_DIRECT) return
+        statisticsRecorder.record(
+            StatisticFeature.CHAT_MESSAGE,
+            actor = sender,
+            event = event,
+            variant = type,
+            sourceId = message.id,
+            occurredAt = message.createdAt
+        )
     }
 
     /**

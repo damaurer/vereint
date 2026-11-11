@@ -2,6 +2,8 @@ package de.maurer.baseservice.service
 
 import de.maurer.baseservice.domain.MemberInviteEntity
 import de.maurer.baseservice.domain.MemberInviteRedemptionEntity
+import de.maurer.baseservice.domain.StatisticFeature
+import de.maurer.baseservice.domain.StatisticKind
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.CreateMemberInviteRequest
 import de.maurer.baseservice.dto.CreateMemberInviteResponse
@@ -74,6 +76,7 @@ class MemberInviteService(
     private val identityProvisioner: IdentityProvisioner,
     private val termsConsent: TermsConsent,
     transactionManager: PlatformTransactionManager,
+    private val statisticsRecorder: StatisticsRecorder,
     private val clock: Clock = Clock.systemUTC()
 ) {
 
@@ -97,6 +100,7 @@ class MemberInviteService(
             )
         )
         log.info("member_invite created id={} by={} maxUses={} expiresAt={}", invite.id, caller.id, invite.maxUses, invite.expiresAt)
+        statisticsRecorder.record(StatisticFeature.INVITE_LINK, actor = caller, sourceId = invite.id)
 
         return CreateMemberInviteResponse(
             invite = toDto(invite, emptyList()),
@@ -174,6 +178,12 @@ class MemberInviteService(
                 }
                 invite.usesCount += 1
                 memberInviteRepository.save(invite)
+                statisticsRecorder.record(
+                    StatisticFeature.INVITE_JOIN,
+                    kind = StatisticKind.RESPONSE,
+                    actor = user,
+                    respondsTo = invite.id
+                )
                 auditService.recordUserChange(
                     invite.createdBy,
                     AuditService.ACTION_MEMBER_JOINED,
@@ -241,6 +251,12 @@ class MemberInviteService(
                 )
                 invite.usesCount += 1
                 memberInviteRepository.save(invite)
+                statisticsRecorder.record(
+                    StatisticFeature.INVITE_JOIN,
+                    kind = StatisticKind.RESPONSE,
+                    actor = user,
+                    respondsTo = invite.id
+                )
 
                 auditService.recordUserChange(
                     invite.createdBy,

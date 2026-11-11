@@ -17,6 +17,7 @@ import { AsyncState } from '../member/async-state';
 import { IconComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { StatisticsDataService } from './statistics-data.service';
+import { StatisticsRecordingComponent } from './statistics-levels';
 import {
   StatisticsPeriodComponent,
   periodFromParams,
@@ -42,7 +43,7 @@ export type StatisticsView = ClubStatistics;
   selector: 'app-statistics',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [StateComponent, RouterLink, TranslatePipe, IconComponent, StatisticsPeriodComponent],
+  imports: [StateComponent, RouterLink, TranslatePipe, IconComponent, StatisticsPeriodComponent, StatisticsRecordingComponent],
   styleUrl: './statistics.css',
   template: `
     <main class="page-shell">
@@ -61,6 +62,22 @@ export type StatisticsView = ClubStatistics;
             <span>{{ 'statistics.links.overview' | t }}</span>
             <vereint-icon name="chevron-right" />
           </a>
+          <a class="stats-link" routerLink="/statistik/gruppe/events" [queryParams]="query()">
+            <span>{{ 'statistics.links.groupEvents' | t }}</span>
+            <vereint-icon name="chevron-right" />
+          </a>
+          <a class="stats-link" routerLink="/statistik/funktionen" [queryParams]="query()">
+            <span>{{ 'statistics.links.features' | t }}</span>
+            <vereint-icon name="chevron-right" />
+          </a>
+          <a class="stats-link" routerLink="/statistik/ich" [queryParams]="query()">
+            <span>{{ 'statistics.links.mine' | t }}</span>
+            <vereint-icon name="chevron-right" />
+          </a>
+          <a class="stats-link" routerLink="/statistik/events" [queryParams]="query()">
+            <span>{{ 'statistics.links.crossEvents' | t }}</span>
+            <vereint-icon name="chevron-right" />
+          </a>
         </nav>
 
         <app-statistics-period [period]="period()" />
@@ -75,6 +92,7 @@ export type StatisticsView = ClubStatistics;
         } @else if (load.isError()) {
           <vereint-state kind="error" [title]="'statistics.unavailable' | t" [message]="load.errorMessage()" (retry)="reload()" />
         } @else if (load.data(); as view) {
+          <app-statistics-recording [recording]="view.recording" />
           <p class="stats-intro">{{ periodLabelKey(view.period) | t: { days: view.days } }}</p>
           <div class="stats-kpis">
             <article class="stats-kpi">

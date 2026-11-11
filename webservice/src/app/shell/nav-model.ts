@@ -67,6 +67,12 @@ export const SECONDARY_NAV: readonly NavItem[] = [
     icon: 'stats',
     route: '/statistik',
   },
+  {
+    id: 'meine-statistik',
+    labelKey: 'nav.items.myStatistics',
+    icon: 'stats',
+    route: '/statistik/ich',
+  },
   { id: 'profil', labelKey: 'nav.items.profil', icon: 'user', route: '/profile' },
   { id: 'stammtisch', labelKey: 'nav.items.stammtisch', icon: 'users', route: '/gruppe' },
 ];
@@ -132,7 +138,7 @@ const SECTION_LAYOUT: readonly { id: NavSection['id']; labelKey: string; ids: re
     id: 'account',
     labelKey: 'nav.sections.account',
     // Kalender und Freunde sind persönlich und gruppenübergreifend.
-    ids: ['calendar', 'friends', 'wallet', 'scan', 'purchases', 'notifications', 'profil'],
+    ids: ['calendar', 'friends', 'wallet', 'scan', 'purchases', 'meine-statistik', 'notifications', 'profil'],
   },
   { id: 'bar', labelKey: 'nav.sections.bar', ids: ['catalog', 'sublists', 'tablet'] },
   {

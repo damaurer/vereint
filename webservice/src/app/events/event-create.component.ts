@@ -94,6 +94,14 @@ export type InvitationTiming = 'onPublish' | 'at';
             </select>
           </label>
 
+          <label class="create-field create-check">
+            <input type="checkbox" name="statisticsEnabled" data-testid="event-statistics-switch" [(ngModel)]="form.statisticsEnabled" />
+            <span>
+              {{ 'events.statistics.switch' | t }}<br />
+              <small>{{ 'events.statistics.hint' | t }}</small>
+            </span>
+          </label>
+
           @if (error(); as message) {
             <p class="create-error" role="alert">{{ message }}</p>
           }
@@ -137,6 +145,16 @@ export type InvitationTiming = 'onPublish' | 'at';
         border-radius: 0.5rem;
         font: inherit;
         min-height: 2.75rem;
+      }
+      .create-field.create-check {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .create-field.create-check input {
+        min-height: 1.25rem;
+        width: 1.25rem;
+        flex: none;
       }
       .create-fieldset {
         display: flex;
@@ -208,6 +226,7 @@ export class EventCreateComponent implements OnInit {
     timing: 'onPublish' as InvitationTiming,
     notifyAt: '',
     reminderHours: null as number | null,
+    statisticsEnabled: true,
   };
 
   ngOnInit(): void {
@@ -244,6 +263,7 @@ export class EventCreateComponent implements OnInit {
       status,
       invitationNotifyAt,
       reminderHoursBefore: this.form.reminderHours,
+      statisticsEnabled: this.form.statisticsEnabled,
     };
     if (this.inviteAll) payload.inviteAllMembers = true;
     else if (this.selectedIds.length > 0) payload.inviteUserIds = [...this.selectedIds];

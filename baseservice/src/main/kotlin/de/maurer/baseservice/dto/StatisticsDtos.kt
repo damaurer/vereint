@@ -16,6 +16,8 @@ data class ClubStatisticsDto(
     val period: String,
     val from: Instant,
     val days: Int,
+    @Schema(description = "Stand der Schalter von Nutzer und Gruppe")
+    val recording: StatisticsRecordingDto,
     val totalItems: Int,
     val myItems: Int,
     val myRank: Int?,
@@ -83,6 +85,8 @@ data class DrinkStatisticsDto(
     val period: String,
     val from: Instant,
     val days: Int,
+    @Schema(description = "Stand der Schalter von Nutzer und Gruppe")
+    val recording: StatisticsRecordingDto,
     val totalDrinks: Int,
     val liters: BigDecimal,
     val kcal: Int,
@@ -193,6 +197,8 @@ data class StatisticsOverviewDto(
     val period: String,
     val from: Instant,
     val days: Int,
+    @Schema(description = "Stand der Schalter von Nutzer und Gruppe")
+    val recording: StatisticsRecordingDto,
     val kpis: OverviewKpisDto,
     val rsvpByEvent: List<EventRsvpDto>,
     val rsvpByMember: List<MemberRsvpDto>,

@@ -12,6 +12,7 @@ import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.IdempotencyConflictException
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
+import de.maurer.baseservice.repository.DrinkLibraryBarcodeRepository
 import de.maurer.baseservice.repository.EventDrinkRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
@@ -23,6 +24,7 @@ import de.maurer.baseservice.repository.UserRoleRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.AuditService
+import de.maurer.baseservice.service.BarcodeScanRules
 import de.maurer.baseservice.service.LedgerService
 import de.maurer.baseservice.service.LedgerSnapshots
 import de.maurer.baseservice.service.UserService
@@ -148,12 +150,19 @@ class LedgerServiceTest {
             StammtischTestSupport.access(userRoleRepository),
             StammtischTestSupport.members(userRepository),
             eventRepository,
-            drinkBarcodeRepository,
             eventDrinkRepository,
             eventParticipantRepository,
             userService,
             auditService,
-            LedgerSnapshots(purchaseSnapshotRepository)
+            LedgerSnapshots(purchaseSnapshotRepository),
+            mock(de.maurer.baseservice.service.StatisticsRecorder::class.java),
+            BarcodeScanRules(
+                drinkBarcodeRepository,
+                mock(DrinkLibraryBarcodeRepository::class.java),
+                eventRepository,
+                eventParticipantRepository,
+                eventDrinkRepository
+            )
         )
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: adminId)).thenReturn(emptyList())
         `when`(idempotencyRecordRepository.findByScopeAndIdempotencyKey(anyString(), anyString()))

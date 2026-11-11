@@ -5,6 +5,8 @@ import de.maurer.baseservice.domain.ChatReactionEntity
 import de.maurer.baseservice.domain.ConversationEntity
 import de.maurer.baseservice.domain.ConversationMemberEntity
 import de.maurer.baseservice.domain.EventStatus
+import de.maurer.baseservice.domain.StatisticFeature
+import de.maurer.baseservice.domain.StatisticKind
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.ChatMessageDto
 import de.maurer.baseservice.dto.ChatMessagePreviewDto
@@ -58,7 +60,8 @@ class ConversationService(
     private val eventParticipantRepository: EventParticipantRepository,
     private val userService: UserService,
     private val chatService: ChatService,
-    private val directMessageService: DirectMessageService
+    private val directMessageService: DirectMessageService,
+    private val statisticsRecorder: StatisticsRecorder
 ) {
 
     fun listConversations(principal: UserPrincipal): List<ConversationSummaryDto> {
@@ -102,6 +105,7 @@ class ConversationService(
                 imageUrl = chatService.normalizeImageUrl(request.imageUrl)
             )
         )
+        chatService.recordMessage(saved, caller, conversation.event)
         // Eigene Nachrichten gelten als gelesen.
         membership(conversation, caller).lastReadAt = saved.createdAt
         return chatService.toMessageDto(saved)
@@ -133,7 +137,18 @@ class ConversationService(
         if (existing.isPresent) {
             chatReactionRepository.delete(existing.get())
         } else {
-            chatReactionRepository.save(ChatReactionEntity(message = message, user = caller, emoji = emoji))
+            val reaction = chatReactionRepository.save(ChatReactionEntity(message = message, user = caller, emoji = emoji))
+            if (conversation.type != TYPE_DIRECT) {
+                statisticsRecorder.record(
+                    StatisticFeature.CHAT_REACTION,
+                    kind = StatisticKind.RESPONSE,
+                    actor = caller,
+                    event = conversation.event,
+                    variant = conversation.type,
+                    respondsTo = message.id,
+                    sourceId = reaction.id
+                )
+            }
         }
         chatReactionRepository.flush()
         return withReactions(listOf(message), caller).first()

@@ -191,6 +191,13 @@ type ManageTab = (typeof MANAGE_TABS)[number];
                   }
                 </select>
               </label>
+              <label class="manage-field manage-check">
+                <input type="checkbox" name="statisticsEnabled" data-testid="event-statistics-switch" [(ngModel)]="form.statisticsEnabled" />
+                <span>
+                  {{ 'events.statistics.switch' | t }}<br />
+                  <small>{{ 'events.statistics.hint' | t }}</small>
+                </span>
+              </label>
               <button type="submit" class="member-button" [disabled]="busy()">{{ 'events.manage.details.save' | t }}</button>
             </form>
 
@@ -507,6 +514,17 @@ type ManageTab = (typeof MANAGE_TABS)[number];
         font: inherit;
         font-weight: 400;
       }
+      .manage-field.manage-check {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 0.5rem;
+        font-weight: 400;
+      }
+      .manage-field.manage-check input {
+        min-height: 1.25rem;
+        width: 1.25rem;
+        flex: none;
+      }
       .manage-fieldset {
         display: flex;
         flex-direction: column;
@@ -593,6 +611,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
     timing: 'onPublish' as 'onPublish' | 'at',
     notifyAt: '',
     reminderHours: null as number | null,
+    statisticsEnabled: true,
   };
   protected readonly reminderOptions = REMINDER_HOUR_OPTIONS;
   protected inviteIds: string[] = [];
@@ -683,6 +702,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
         this.form.timing = head.event.invitationNotifyAt ? 'at' : 'onPublish';
         this.form.notifyAt = isoToLocalInput(head.event.invitationNotifyAt);
         this.form.reminderHours = head.event.reminderHoursBefore || null;
+        this.form.statisticsEnabled = head.event.statisticsEnabled ?? true;
         if (this.isManager()) {
           this.loadSections();
         }
@@ -741,6 +761,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
       endsAt,
       status: this.form.status,
       reminderHoursBefore: this.form.reminderHours ?? 0,
+      statisticsEnabled: this.form.statisticsEnabled,
     };
     if (this.form.timing === 'at') {
       const notifyAt = localInputToIso(this.form.notifyAt);

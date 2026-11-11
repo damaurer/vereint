@@ -107,6 +107,9 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
                 {{ 'member.eventDetail.momentsChip' | t }}
               }
             </a>
+            <a class="detail-chip" data-testid="event-statistics-link" [routerLink]="['/events', view.event.id, 'statistik']">
+              {{ 'events.statistics.tab' | t }}
+            </a>
             @if (view.event.status === 'active') {
               <a class="detail-chip detail-chip-round" [routerLink]="['/events', view.event.id, 'runde']">
                 <vereint-icon name="beer" /> {{ 'rounds.eventChip' | t }}

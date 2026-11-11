@@ -39,6 +39,7 @@ describe('EventCreateComponent', () => {
     timing: 'onPublish' | 'at';
     notifyAt: string;
     reminderHours: number | null;
+    statisticsEnabled: boolean;
   };
   const cmp = (fixture: { componentInstance: unknown }) =>
     fixture.componentInstance as unknown as {
@@ -100,6 +101,7 @@ describe('EventCreateComponent', () => {
       status: 'published',
       invitationNotifyAt: null,
       reminderHoursBefore: 24,
+      statisticsEnabled: true,
       inviteUserIds: ['u-1'],
     });
     expect(navigate).toHaveBeenCalledWith(['/events', 'e-42', 'manage']);
@@ -121,6 +123,18 @@ describe('EventCreateComponent', () => {
     expect(payload.inviteUserIds).toBeUndefined();
     expect(payload.invitationNotifyAt).toBe(new Date('2026-11-20T09:00').toISOString());
     expect(payload.reminderHoursBefore).toBeNull();
+  });
+
+  it('sends the statistics switch of the event', async () => {
+    const fixture = await create();
+    const c = cmp(fixture);
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="event-statistics-switch"]')).not.toBeNull();
+    c.form.title = 'Ohne Statistik';
+    c.form.startsAt = '2026-11-20T19:00';
+    c.form.statisticsEnabled = false;
+    c.submit('draft');
+
+    expect(api.createEvent.mock.calls[0][0].statisticsEnabled).toBe(false);
   });
 
   it('validates title, start and the end time before sending', async () => {

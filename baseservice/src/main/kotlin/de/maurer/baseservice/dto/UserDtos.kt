@@ -21,7 +21,9 @@ data class UserProfileDto(
     val createdAt: Instant,
     val updatedAt: Instant,
     /** Fassung der AGB, der das Konto zuletzt zugestimmt hat. */
-    val termsVersion: String? = null
+    val termsVersion: String? = null,
+    /** „Meine Statistik erfassen“. */
+    val statisticsEnabled: Boolean = true
 )
 
 data class UpdateProfileRequest(

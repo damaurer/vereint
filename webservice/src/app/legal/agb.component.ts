@@ -305,14 +305,28 @@ import { LEGAL_BACKUP_RETENTION_DAYS, LEGAL_OPERATOR, TERMS_DATE_LABEL } from '.
         Beratung.
       </p>
       <p>
-        (3) Die Statistiken bleiben innerhalb der jeweiligen Gruppe. Wir werten Daten nicht
-        gruppenübergreifend über einzelne Personen aus und zeigen keiner Gruppe Daten aus einer
-        anderen.
+        (3) Die Statistiken bleiben innerhalb der jeweiligen Gruppe. Wir zeigen keiner Gruppe Daten
+        aus einer anderen. Gruppenübergreifend sieht jeder Nutzer nur seine eigenen Werte und
+        Summen ohne Namen anderer Personen über die Events, die er ohnehin sehen darf.
       </p>
       <p>
-        (4) Mit der Zustimmung zu diesen AGB willigt der Nutzer in diese Anzeige ein. Wer nicht
-        zustimmen möchte, kann sich abmelden und die Löschung seines Kontos nach § 10 Abs. 3
-        verlangen.
+        (4) Für die Statistiken hält Vereint fest, welche Funktion jemand ausgelöst oder worauf er
+        geantwortet hat, etwa einen Kauf, eine Zusage, einen Moment oder eine Chatnachricht, mit
+        Gruppe, Event und Zeitpunkt. Direktnachrichten werden nicht erfasst.
+      </p>
+      <p>
+        (5) Die Erfassung lässt sich abschalten: jeder Nutzer für sich in „Mein Konto“, die
+        Verwaltung einer Gruppe für die ganze Gruppe und die Organisation eines Events für dieses
+        Event. Ist einer dieser Schalter aus, wird nichts erfasst; der Schalter des Nutzers geht dem
+        der Gruppe vor, der der Gruppe dem des Events. Abschalten wirkt nur für die Zukunft. Jeder
+        Nutzer kann seine erfassten Statistikdaten jederzeit löschen, die Verwaltung einer Gruppe
+        die der ganzen Gruppe; das Löschen wird im Protokoll der Gruppe vermerkt. Buchungen der
+        Kasse bleiben davon unberührt.
+      </p>
+      <p>
+        (6) Mit der Zustimmung zu diesen AGB willigt der Nutzer in diese Anzeige ein. Wer nicht
+        zustimmen möchte, kann die Erfassung nach Abs. 5 abschalten, sich abmelden und die Löschung
+        seines Kontos nach § 10 Abs. 3 verlangen.
       </p>
 
       <h2 id="haftung">§ 12 Haftung</h2>

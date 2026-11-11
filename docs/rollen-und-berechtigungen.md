@@ -37,7 +37,7 @@ Adminbereich. Rechte für die Verwaltung:
 | `members.invite` | Einladungslinks erstellen |
 | `members.manage` | Mitglieder deaktivieren, Vorstandsamt setzen |
 | `roles.manage` | Rollen anlegen, ändern, zuweisen |
-| `stammtisch.manage` | Gruppe umbenennen, Bild, Daten exportieren |
+| `stammtisch.manage` | Gruppe umbenennen, Bild, Daten exportieren, Statistik der Gruppe ein- und ausschalten und ihre Statistikdaten löschen |
 | `moments.manage` | Moment-Typen und Reaktionen verwalten |
 | `kiosk.manage` | Kiosk-Geräte entsperren |
 | `notifications.broadcast` | Rundschreiben senden |
@@ -63,6 +63,13 @@ ihren Realmrollen der Gruppe „Meine Gruppe“ bei.
 - Mitglieder können ihr eigenes Guthaben nicht aufladen und sehen diese Option
   auch nicht.
 - Der Vorstand darf IDs sehen, arbeitet in Formularen aber mit Namen.
+- Statistik: Alle Mitglieder sehen die Gruppen-, Event- und
+  Funktions-Statistik ihrer Gruppe mit Namen. Den Umsatz sehen nur Rollen mit
+  `ledger.read` (Vorstand, Kasse, Admin). Die eigene und die übergreifende
+  Statistik sieht nur die Person selbst; übergreifend erscheinen keine Namen
+  anderer Personen und nur Events, die sie sehen darf. Den eigenen Schalter
+  und das Löschen der eigenen Daten hat jede Person selbst, den Schalter eines
+  Events, wer das Event verwalten darf.
 
 Rechtematrix und technische Umsetzung:
 [docs/domains/stammtische.md](domains/stammtische.md),
