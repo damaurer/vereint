@@ -50,7 +50,7 @@ Guthaben, Striche, Chats, Moments, Rundbrief und Infotafel.
 | `admin` | `admin-demo-2026` | Administration, Vorstand, Mitglied |
 | `board` | `board-demo-2026` | Vorstand und Kasse |
 | `member` | `member-demo-2026` | Mitglied |
-| `jonas`, `mia`, `felix` | `<name>-demo-2026` | weitere Mitglieder |
+| `jonas`, `mia`, `felix` | `<name>-demo-2026` | weitere Mitglieder; `jonas` und `felix` sind zusätzlich im „Kegelclub Alle Neune“ und wählen nach der Anmeldung ihre Gruppe |
 | `theke` | `theke-demo-2026` | Thekentablet |
 
 Die Konten gibt es nur in diesem lokalen Stack. Chrome, Edge oder Firefox

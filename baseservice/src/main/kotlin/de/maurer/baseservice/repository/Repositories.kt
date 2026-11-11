@@ -185,6 +185,13 @@ interface DrinkCatalogRepository : JpaRepository<DrinkCatalogEntity, UUID> {
     fun findByStatusOrderByNameAsc(status: DrinkStatus): List<DrinkCatalogEntity>
     fun findAllByOrderByNameAsc(): List<DrinkCatalogEntity>
     fun findByLibraryDrinkIdIn(libraryDrinkIds: Collection<UUID>): List<DrinkCatalogEntity>
+    fun findByTallyCategoryId(tallyCategoryId: UUID): List<DrinkCatalogEntity>
+}
+
+/** Strich-Kategorien der Gruppe (Spalten der Strichliste, Issue #80). */
+@Repository
+interface TallyCategoryRepository : JpaRepository<TallyCategoryEntity, UUID> {
+    fun findByArchivedFalseOrderBySortOrderAscNameAsc(): List<TallyCategoryEntity>
 }
 
 @Repository

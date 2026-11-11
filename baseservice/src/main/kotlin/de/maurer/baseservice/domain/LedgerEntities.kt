@@ -77,6 +77,15 @@ class LedgerEntryEntity(
     var createdAt: Instant = Instant.now(),
 
     /**
+     * Strich-Kategorie, zu deren Preis das Getränk gebucht wurde (Strich am
+     * Terminal oder Kauf per Scan im Event). Gegenbuchungen übernehmen sie von
+     * der Ursprungsbuchung.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tally_category_id")
+    var tallyCategory: TallyCategoryEntity? = null,
+
+    /**
      * Der Beleg-Snapshot ist eigenständig und wird nicht mit der Buchung
      * gelöscht (Fremdschlüssel auf `RESTRICT`).
      *

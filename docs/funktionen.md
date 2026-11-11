@@ -104,6 +104,8 @@ Thekenterminals.
 - Statt Löschen gibt es den Schalter *Im Sortiment*. Warnungen bei doppeltem
   Barcode oder Namen.
 - Je Event eine Auswahl aus dem Katalog (Subliste) mit eigenen Preisen.
+- Jedes Getränk kann einer Strich-Kategorie zugeordnet werden; deren Preis
+  überschreibt im Event den Preis des Getränks (siehe Thekenterminal).
 - Gemeinsame **Getränkedatenbank** aller Gruppen (ohne Preise und Bilder): unter
   *Aus der Getränkedatenbank* übernimmt man ein Getränk und setzt den eigenen
   Preis; eigene freigegebene Getränke lassen sich dorthin teilen. *Barcode
@@ -116,8 +118,17 @@ Thekenterminals.
 
 ## Thekenterminal (Strichliste)
 
-- Ein Tablet an der Theke mit eigenem Konto (Rolle *Terminal*): Mitglied wählen,
-  Getränk antippen, fertig.
+- Ein Tablet an der Theke mit eigenem Konto (Rolle *Terminal*). Die Strichliste
+  sieht aus wie auf Papier: eine Zeile je Mitglied, eine Spalte je
+  **Strich-Kategorie** (z. B. Bier, Alkoholfrei). Ein Tipp ins Feld bucht einen
+  Strich; die Striche stehen als Fünferbündel mit Zahl im Feld.
+- Jeder Strich nennt Getränk und Kategorie: Bei mehreren Getränken in der
+  Kategorie fragt das Terminal kurz nach, bei nur einem bucht es sofort. Die
+  Spalte *Sonstiges* öffnet Getränke ohne Kategorie und Speisen.
+- Strich-Kategorien mit Preis je Strich und Reihenfolge pflegt der Vorstand
+  unter *Getränkekatalog → Strich-Kategorien*. Im Event gilt: Kategoriepreis,
+  sonst Preis aus dem Event (Getränkeliste), sonst Preis des Getränks. Das gilt
+  am Terminal und beim Bezahlen per Barcode.
 - **Kiosk-Modus**: Beim Start vergibt das Gerät eine eigene PIN (4 bis 8 Ziffern).
   Danach bleibt es auf der Strichliste, auch nach Neuladen oder Neustart der App,
   und lässt sich nur mit dieser PIN verlassen. Nach 5 Fehlversuchen ist die

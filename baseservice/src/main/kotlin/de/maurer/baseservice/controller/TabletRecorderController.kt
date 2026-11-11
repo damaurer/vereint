@@ -3,6 +3,7 @@ package de.maurer.baseservice.controller
 import de.maurer.baseservice.dto.EventDrinkDto
 import de.maurer.baseservice.dto.EventFoodDto
 import de.maurer.baseservice.dto.LedgerEntryDto
+import de.maurer.baseservice.dto.TabletBoardDto
 import de.maurer.baseservice.dto.TabletEventDto
 import de.maurer.baseservice.dto.TabletItemsDto
 import de.maurer.baseservice.dto.TabletMemberDto
@@ -50,6 +51,16 @@ class TabletRecorderController(
     fun listMembers(@PathVariable("eventId") id: String): ResponseEntity<List<TabletMemberDto>> {
         val principal = authContext.getRequiredPrincipal()
         return ResponseEntity.ok(tabletRecorderService.listEventMembers(eventId(id), principal))
+    }
+
+    @GetMapping("/events/{eventId}/board")
+    @Operation(
+        summary = "Strichliste nach Kategorien",
+        description = "Spalten je Strich-Kategorie, Zeilen je Eventmitglied mit den Strichen des Abends, Striche und Umsatz"
+    )
+    fun board(@PathVariable("eventId") id: String): ResponseEntity<TabletBoardDto> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(tabletRecorderService.board(eventId(id), principal))
     }
 
     @GetMapping("/events/{eventId}/drinks")

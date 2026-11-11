@@ -65,6 +65,7 @@ Für die eigene Person lehnt der Fachservice Rollen-, Berechtigungs- und Status�
 | `GET` | `/api/v1/tablet/events/{eventId}/members` | Teilnehmende für die Touch-Ansicht | `purchase.tablet` |
 | `GET` | `/api/v1/tablet/events/{eventId}/drinks` | Getränke des Events | `purchase.tablet` |
 | `GET` | `/api/v1/tablet/events/{eventId}/food` | Speisen des Events | `purchase.tablet` |
+| `GET` | `/api/v1/tablet/events/{eventId}/board` | Strichliste des Abends (`TabletBoardDto`): Spalten je Strich-Kategorie mit Preis und Getränken, je Mitglied die Striche pro Spalte und unter „Sonstiges“, dazu Zahl der Striche und Umsatz | `purchase.tablet` |
 | `GET` | `/api/v1/tablet/events/{eventId}/items` | Getränke und Speisen zusammen (`TabletItemsDto`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/purchases` | Buchung für Getränk oder Speise (`TabletPurchaseRequest` + `Idempotency-Key`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/purchases/{entryId}/undo` | Tablet-Buchung innerhalb von 10 Minuten zurücknehmen (+ `Idempotency-Key`) | `purchase.tablet` |
@@ -88,11 +89,16 @@ Für die eigene Person lehnt der Fachservice Rollen-, Berechtigungs- und Status�
 | `GET` | `/api/v1/drinks/{id}` | Ein Getränk | Mitglied |
 | `GET` | `/api/v1/drinks/barcode/{barcode}` | Getränk zu einem Barcode | Mitglied |
 | `POST` | `/api/v1/drinks` | Getränk vorschlagen (`ProposeDrinkRequest`); mit `catalog.approve` sofort freigegeben | `catalog.propose` |
-| `PUT` | `/api/v1/drinks/{id}` | Getränk ändern (`UpdateDrinkRequest`) | `catalog.approve` oder eigener Vorschlag |
+| `PUT` | `/api/v1/drinks/{id}` | Getränk ändern (`UpdateDrinkRequest`); `tallyCategoryId` ordnet eine Strich-Kategorie zu (`""` = keine) und braucht `catalog.approve` | `catalog.approve` oder eigener Vorschlag |
 | `POST` | `/api/v1/drinks/{id}/approve` | Vorschlag freigeben | `catalog.approve` |
 | `POST` | `/api/v1/drinks/{id}/reject` | Vorschlag ablehnen | `catalog.approve` |
 | `POST` | `/api/v1/drinks/{id}/barcodes` | Barcode zuweisen (`AddBarcodeRequest`) | `catalog.approve` oder eigener Vorschlag |
 | `DELETE` | `/api/v1/drinks/{id}/barcodes/{barcodeId}` | Barcode entfernen | `catalog.approve` oder eigener Vorschlag |
+| `GET` | `/api/v1/tally-categories` | Strich-Kategorien der Gruppe in Spaltenreihenfolge, mit zugeordneten Getränken (`TallyCategoryDto`) | `catalog.propose`, `catalog.approve` oder `purchase.tablet` |
+| `POST` | `/api/v1/tally-categories` | Strich-Kategorie anlegen (`CreateTallyCategoryRequest`: `name`, `price`); `409`, wenn der Name vergeben ist | `catalog.approve` |
+| `PUT` | `/api/v1/tally-categories/order` | Reihenfolge festlegen (`{ "ids": [...] }`) | `catalog.approve` |
+| `PUT` | `/api/v1/tally-categories/{id}` | Name oder Preis ändern (`UpdateTallyCategoryRequest`) | `catalog.approve` |
+| `DELETE` | `/api/v1/tally-categories/{id}` | Kategorie archivieren; ihre Getränke stehen danach ohne Kategorie da | `catalog.approve` |
 | `GET` | `/api/v1/sublists` | Sublisten | Mitglied |
 | `GET` | `/api/v1/sublists/{id}` | Eine Subliste | Mitglied |
 | `POST` | `/api/v1/sublists` | Subliste anlegen (`CreateSublistRequest`) | Mitglied |

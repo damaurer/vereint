@@ -5,11 +5,16 @@ import de.maurer.baseservice.domain.EventEntity
 import de.maurer.baseservice.domain.EventFoodEntity
 import de.maurer.baseservice.domain.EventStatus
 import de.maurer.baseservice.domain.FoodCatalogEntity
+import de.maurer.baseservice.domain.LedgerEntryType
 import de.maurer.baseservice.domain.PurchaseSource
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.EventDrinkDto
 import de.maurer.baseservice.dto.EventFoodDto
 import de.maurer.baseservice.dto.LedgerEntryDto
+import de.maurer.baseservice.dto.TabletBoardColumnDto
+import de.maurer.baseservice.dto.TabletBoardDrinkDto
+import de.maurer.baseservice.dto.TabletBoardDto
+import de.maurer.baseservice.dto.TabletBoardMemberDto
 import de.maurer.baseservice.dto.TabletEventDto
 import de.maurer.baseservice.dto.TabletItemsDto
 import de.maurer.baseservice.dto.TabletMemberDto
@@ -25,6 +30,8 @@ import de.maurer.baseservice.repository.EventDrinkRepository
 import de.maurer.baseservice.repository.EventFoodRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
+import de.maurer.baseservice.repository.LedgerEntryRepository
+import de.maurer.baseservice.repository.TallyCategoryRepository
 import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
@@ -54,7 +61,9 @@ class TabletRecorderService(
     private val access: StammtischAccess,
     private val members: StammtischMembers,
     private val userService: UserService,
-    private val ledgerService: LedgerService
+    private val ledgerService: LedgerService,
+    private val ledgerEntryRepository: LedgerEntryRepository,
+    private val tallyCategoryRepository: TallyCategoryRepository
 ) {
 
     @Transactional(readOnly = true)
@@ -80,6 +89,57 @@ class TabletRecorderService(
         return members.values
             .sortedBy { it.displayName.lowercase() }
             .map { TabletMemberDto(memberId = it.id.toString(), displayName = it.displayName) }
+    }
+
+    /**
+     * Strichliste nach Kategorien (Issue #80): eine Spalte je Strich-Kategorie
+     * der Gruppe mit den dazu buchbaren Eventgetränken, eine Zeile je
+     * Eventmitglied mit den Strichen des Abends, dazu Striche und Umsatz des
+     * Events. Zurückgenommene Käufe zählen nicht.
+     */
+    @Transactional(readOnly = true)
+    fun board(eventId: UUID, principal: UserPrincipal): TabletBoardDto {
+        requireTabletRecorder(principal)
+        requireActiveEvent(eventId)
+        val tabletDrinks = eventDrinkRepository.findByEventId(eventId)
+            .filter { it.tabletEnabled }
+            .sortedBy { it.drink?.name?.lowercase().orEmpty() }
+        val columns = tallyCategoryRepository.findByArchivedFalseOrderBySortOrderAscNameAsc().map { category ->
+            TabletBoardColumnDto(
+                categoryId = category.id.toString(),
+                name = category.name,
+                price = category.price.setScale(2),
+                currency = category.currency,
+                drinks = tabletDrinks
+                    .filter { EventDrinkPricing.activeCategory(it)?.id == category.id }
+                    .map { TabletBoardDrinkDto(eventDrinkId = it.id.toString(), drinkName = it.drink?.name.orEmpty()) }
+            )
+        }
+
+        val entries = ledgerEntryRepository.findByEventId(eventId)
+        val reversed = entries.mapNotNull { it.reversesEntry?.id }.toSet()
+        val purchases = entries.filter { it.entryType == LedgerEntryType.purchase && it.id !in reversed }
+        val byMember = purchases.groupBy { it.member?.id }
+
+        val members = listEventMembers(eventId, principal).map { member ->
+            val own = byMember[UUID.fromString(member.memberId)].orEmpty()
+            val counts = own.mapNotNull { it.tallyCategory?.id?.toString() }
+                .groupingBy { it }
+                .eachCount()
+            TabletBoardMemberDto(
+                memberId = member.memberId,
+                displayName = member.displayName,
+                counts = counts,
+                otherCount = own.count { it.tallyCategory == null }
+            )
+        }
+        return TabletBoardDto(
+            columns = columns,
+            members = members,
+            tallyCount = purchases.size,
+            revenue = purchases.fold(BigDecimal.ZERO) { acc, entry -> acc + entry.amount }.setScale(2),
+            currency = purchases.firstOrNull()?.currency ?: columns.firstOrNull()?.currency ?: DEFAULT_CURRENCY
+        )
     }
 
     @Transactional(readOnly = true)
@@ -425,7 +485,10 @@ class TabletRecorderService(
             catalogVersion = eventDrink.catalogVersion,
             imageSnapshot = eventDrink.imageSnapshot,
             createdAt = eventDrink.createdAt,
-            updatedAt = eventDrink.updatedAt
+            updatedAt = eventDrink.updatedAt,
+            effectivePrice = EventDrinkPricing.resolve(eventDrink).unitPrice,
+            tallyCategoryId = EventDrinkPricing.activeCategory(eventDrink)?.id?.toString(),
+            tallyCategoryName = EventDrinkPricing.activeCategory(eventDrink)?.name
         )
     }
 
@@ -455,5 +518,6 @@ class TabletRecorderService(
 
     companion object {
         const val MAX_BATCH_IDEMPOTENCY_KEY_LENGTH = 80
+        const val DEFAULT_CURRENCY = "EUR"
     }
 }

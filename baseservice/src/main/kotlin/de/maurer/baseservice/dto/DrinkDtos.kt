@@ -64,7 +64,9 @@ data class ProposeDrinkRequest(
 
     @field:Valid
     @Schema(description = "Füllmenge und Kalorien; ohne Angabe gelten die Werte der Getränkedatenbank")
-    val nutrition: DrinkNutritionRequest? = null
+    val nutrition: DrinkNutritionRequest? = null,
+    @Schema(description = "Strich-Kategorie (nur Vorstand/Admin); leer = ohne Kategorie")
+    val tallyCategoryId: String? = null
 )
 
 data class UpdateDrinkRequest(
@@ -95,7 +97,9 @@ data class UpdateDrinkRequest(
 
     @field:Valid
     @Schema(description = "Füllmenge und Kalorien; ersetzt beide Werte, fehlt es, bleiben sie unverändert")
-    val nutrition: DrinkNutritionRequest? = null
+    val nutrition: DrinkNutritionRequest? = null,
+    @Schema(description = "Strich-Kategorie (nur Vorstand/Admin); null = unverändert, leer = ohne Kategorie")
+    val tallyCategoryId: String? = null
 )
 
 data class AddBarcodeRequest(
@@ -132,7 +136,11 @@ data class DrinkDto(
     @Schema(description = "Füllmenge einer Portion in ml")
     val volumeMl: Int? = null,
     @Schema(description = "Kalorien je Portion")
-    val kcalPerServing: Int? = null
+    val kcalPerServing: Int? = null,
+    val tallyCategoryId: String? = null,
+    val tallyCategoryName: String? = null,
+    @Schema(description = "Preis je Strich der Kategorie; überschreibt den Verkaufspreis")
+    val tallyCategoryPrice: BigDecimal? = null
 )
 
 data class DrinkSummaryDto(
@@ -144,7 +152,10 @@ data class DrinkSummaryDto(
     val currency: String,
     val status: String,
     val active: Boolean,
-    val catalogVersion: Int
+    val catalogVersion: Int,
+    val tallyCategoryId: String? = null,
+    val tallyCategoryName: String? = null,
+    val tallyCategoryPrice: BigDecimal? = null
 )
 
 @Schema(description = "Eintrag der gemeinsamen Getränkedatenbank (ohne Preis)")

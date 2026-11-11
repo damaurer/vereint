@@ -22,6 +22,8 @@ Funktioniert der Link nicht, ist er abgelaufen, schon verwendet oder zurückgezo
 
 ## Mit einem bestehenden Konto beitreten
 
+<img src="bilder/g-beitreten-konto.png" alt="Gruppe beitreten mit bestehendem Konto" width="300" align="right">
+
 Du hast schon ein Konto, etwa weil du in einer anderen Gruppe bist? Dann brauchst du kein neues.
 
 1. Melde dich in diesem Browser an.
@@ -29,6 +31,8 @@ Du hast schon ein Konto, etwa weil du in einer anderen Gruppe bist? Dann brauchs
 3. Tippe auf **Dieser Gruppe beitreten**.
 
 Du bist sofort Mitglied und landest auf der Startseite der neuen Gruppe. Dein Konto, dein Name und deine Einstellungen bleiben gleich.
+
+<br clear="right">
 
 ## Anmelden
 
@@ -89,6 +93,8 @@ Das Mehr-Menü schließt du, indem du es mit dem Finger nach unten wischst, dane
 
 ## Gruppe wählen und wechseln
 
+<img src="bilder/gruppe-waehlen.png" alt="Gruppe wählen" width="300" align="right">
+
 Vereint kann mehrere Gruppen tragen, zum Beispiel einen Stammtisch, einen Verein oder ein Team. Mit einem Konto kannst du Mitglied in mehreren Gruppen sein. Events, Chat, Guthaben, Katalog und Mitteilungen gehören immer zu genau einer Gruppe. Du siehst immer nur die Daten der Gruppe, die gerade offen ist.
 
 - Bist du nur in einer Gruppe, öffnet Vereint sie von selbst.
@@ -98,6 +104,8 @@ Vereint kann mehrere Gruppen tragen, zum Beispiel einen Stammtisch, einen Verein
 Die Auswahl erreichst du auch direkt unter der Adresse `/gruppen`. Bist du noch in keiner Gruppe, steht dort „Noch keine Gruppe“. Bitte dann den Vorstand um einen Einladungslink oder eröffne eine eigene Gruppe.
 
 Wie du eine Gruppe verlässt, steht im [Leitfaden Mitglied](02-mitglied.md#eine-gruppe-verlassen).
+
+<br clear="right">
 
 ## Eine eigene Gruppe eröffnen
 

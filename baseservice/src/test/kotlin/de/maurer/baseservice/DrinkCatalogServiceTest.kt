@@ -14,6 +14,7 @@ import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.UserRoleRepository
+import de.maurer.baseservice.repository.TallyCategoryRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.DrinkCatalogService
@@ -48,6 +49,9 @@ class DrinkCatalogServiceTest {
     @Mock
     private lateinit var userService: UserService
 
+    @Mock
+    private lateinit var tallyCategoryRepository: TallyCategoryRepository
+
     private lateinit var service: DrinkCatalogService
 
     private val proposerId: UUID = UUID.randomUUID()
@@ -61,6 +65,7 @@ class DrinkCatalogServiceTest {
             drinkCatalogRepository,
             drinkBarcodeRepository,
             StammtischTestSupport.lenientMock(),
+            tallyCategoryRepository,
             StammtischTestSupport.access(userRoleRepository),
             userService
         )

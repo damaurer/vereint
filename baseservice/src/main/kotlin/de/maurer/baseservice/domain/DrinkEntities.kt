@@ -72,6 +72,11 @@ class DrinkCatalogEntity(
     @JoinColumn(name = "approved_by")
     var approvedBy: UserEntity? = null,
 
+    /** Spalte der Strichliste; `null` = „Ohne“, das Getränk behält seinen eigenen Preis. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tally_category_id")
+    var tallyCategory: TallyCategoryEntity? = null,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),
@@ -208,6 +213,48 @@ class EventDrinkEntity(
 
     @Column(name = "image_snapshot", length = 512)
     var imageSnapshot: String? = null,
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: Instant = Instant.now(),
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: Instant = Instant.now(),
+
+    @Version
+    @Column(name = "version", nullable = false)
+    var version: Long = 0
+) : StammtischScoped()
+
+/**
+ * Strich-Kategorie (Issue #80): eine Spalte der Strichliste am Thekenterminal.
+ * Ihr Preis je Strich gilt für alle zugeordneten Getränke und überschreibt deren
+ * Verkaufspreis. Gelöschte Kategorien werden nur archiviert, weil Buchungen
+ * (append-only) auf sie verweisen.
+ */
+@Entity
+@Table(name = "tally_categories")
+@EntityListeners(AuditingEntityListener::class)
+class TallyCategoryEntity(
+    @Id
+    @Column(name = "id", nullable = false)
+    var id: UUID = UUID.randomUUID(),
+
+    @Column(name = "name", length = 64, nullable = false)
+    var name: String = "",
+
+    @Column(name = "price", precision = 10, scale = 2, nullable = false)
+    var price: BigDecimal = BigDecimal.ZERO,
+
+    @Column(name = "currency", length = 3, nullable = false)
+    var currency: String = "EUR",
+
+    @Column(name = "sort_order", nullable = false)
+    var sortOrder: Int = 0,
+
+    @Column(name = "archived", nullable = false)
+    var archived: Boolean = false,
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
