@@ -15,6 +15,7 @@ export const RSVP_SEGMENTS: readonly { key: 'accepted' | 'maybe' | 'declined' | 
 /** Reihenfolge der Funktionen auf der eigenen Statistik. */
 export const MY_FEATURES: readonly FeatureCount['feature'][] = [
   'purchase',
+  'foreign_drink',
   'round',
   'rsvp',
   'event',

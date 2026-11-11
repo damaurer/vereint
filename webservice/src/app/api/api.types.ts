@@ -220,15 +220,41 @@ export interface PurchaseOption {
   currency: string;
 }
 
-/** Vorschau eines Barcodekaufs (`POST /api/v1/ledger/purchases/preview`); bucht nichts. */
+/** Guthabenkauf ohne Event zum Katalogpreis der Gruppe. */
+export interface CreditPurchaseOption {
+  unitPrice: string;
+  currency: string;
+}
+
+/**
+ * Vorschau nach einem Scan (`POST /api/v1/ledger/purchases/preview`); bucht nichts.
+ * Mit `options` gilt nur der Kauf über das laufende Event. Ohne `options` darf
+ * die Person wählen: `creditPurchase` (Guthaben zum Katalogpreis) und, wenn die
+ * Statistik an ist, `foreignDrink` (nur Statistik).
+ */
 export interface PurchasePreview {
   barcode: string;
-  drinkId: string;
+  /** `null`, wenn das Getränk nur in der Getränkedatenbank steht. */
+  drinkId: string | null;
   drinkName: string;
   imageReference: string | null;
   options: PurchaseOption[];
   creditBalance: string;
   balanceCurrency: string;
+  creditPurchase?: CreditPurchaseOption | null;
+  /** Fremdgetränk möglich; zugleich: ein Guthabenkauf ginge in die Statistik ein. */
+  foreignDrink?: boolean;
+  libraryDrinkId?: string | null;
+}
+
+/** Erfasstes Fremdgetränk (`POST /api/v1/statistics/foreign-drinks`): nur Statistik, ohne Buchung. */
+export interface ForeignDrink {
+  id: string;
+  drinkName: string;
+  drinkId: string | null;
+  libraryDrinkId: string | null;
+  occurredAt: string;
+  removableUntil: string;
 }
 
 /**
@@ -970,6 +996,7 @@ export interface StatisticsRecording {
 /** Funktionen, die die Statistik zählt. */
 export type StatisticFeature =
   | 'purchase'
+  | 'foreign_drink'
   | 'round'
   | 'top_up'
   | 'event'

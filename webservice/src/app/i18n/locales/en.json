@@ -533,7 +533,7 @@
     },
     "scan": {
       "title": "Pay for a drink",
-      "description": "Scan a barcode and pay with your credit."
+      "description": "Scan a barcode and pay with your credit or add it to statistics."
     },
     "boardMoments": {
       "title": "Moment topics & reactions",
@@ -1970,6 +1970,7 @@
     },
     "features": {
       "purchase": "Tallies and purchases",
+      "foreign_drink": "Drinks from elsewhere",
       "round": "Rounds",
       "top_up": "Top-ups",
       "event": "Events created",
@@ -2045,6 +2046,8 @@
         "evening": "Evening special",
         "pwaBarcode": "Barcode purchase",
         "tabletManual": "Tally sheet",
+        "catalog": "From the catalogue",
+        "library": "Drink database only",
         "other": "Other"
       }
     },
@@ -2136,9 +2139,9 @@
     }
   },
   "scan": {
-    "eyebrow": "Pay with credit",
+    "eyebrow": "Pay or record",
     "title": "Scan a drink",
-    "intro": "Hold the bottle's barcode inside the frame. You will see the drink and price before anything is charged.",
+    "intro": "Hold the bottle's barcode inside the frame. Before anything is charged or recorded, you see the drink and choose what should happen.",
     "camera": {
       "label": "Camera view for scanning",
       "starting": "Starting camera …",
@@ -2172,7 +2175,8 @@
       "undoHint": "Made a mistake? You can undo the purchase for 10 minutes.",
       "undo": "Undo",
       "next": "Scan next drink",
-      "toWallet": "Go to credit"
+      "toWallet": "Go to credit",
+      "noStatistics": "The purchase counts in no statistics."
     },
     "undone": {
       "title": "Purchase undone",
@@ -2181,7 +2185,31 @@
     "errors": {
       "lookup": "The drink could not be looked up.",
       "pay": "Payment failed.",
-      "undo": "Undo failed."
+      "undo": "Undo failed.",
+      "record": "Recording failed.",
+      "remove": "Removing failed."
+    },
+    "choice": {
+      "intro": "You are not at a running event with self-service right now. Choose what should happen with the drink.",
+      "legend": "What should happen?",
+      "credit": "Pay with credit",
+      "creditHint": "The price from the group's drink catalogue applies, without an event.",
+      "foreign": "Statistics only (drink from elsewhere)",
+      "foreignHint": "Nothing is charged. The drink counts in your statistics and in the group statistics, but not at any event.",
+      "noPrice": "Paying is not possible here: the drink has no price in the group's catalogue.",
+      "recordStatistics": "Include in statistics",
+      "recordStatisticsHint": "Without the tick, you only pay. The purchase then counts in no statistics.",
+      "statisticsOff": "Statistics are switched off. You can still pay; nothing is recorded.",
+      "submitForeign": "Add to statistics"
+    },
+    "recording": "Recording …",
+    "foreign": {
+      "title": "Recorded",
+      "message": "{drink} now counts in your statistics and in the group statistics. Nothing was charged.",
+      "removeHint": "Made a mistake? You can remove the drink for 10 minutes.",
+      "remove": "Remove",
+      "removedTitle": "Drink removed",
+      "removedMessage": "{drink} no longer counts in the statistics."
     }
   },
   "kiosk": {
