@@ -15,7 +15,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { APP_URL, PEOPLE, login, seedAppData, seedKeycloakUsers } from './seed.mjs';
+import { APP_URL, PEOPLE, SECOND_GROUP_NAME, login, seedAppData, seedKeycloakUsers } from './seed.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(HERE, '../../docs/handbuch/bilder');
@@ -166,6 +166,22 @@ const SHOTS = [
       await scrollToHeading(page, 'Prost auf den Vereinsabend!');
       await page.getByText('Schnell reagieren:').first().evaluate((el) => {
         window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 200, behavior: 'instant' });
+      });
+      await page.waitForTimeout(300);
+    },
+  },
+  {
+    // Timeline mit den Fotos, die der Seed an zwei Reaktionen gehängt hat.
+    id: 'm-moment-medien',
+    who: 'member',
+    device: PHONE,
+    run: async (page, data) => {
+      await open(page, `/events/${data.events.stammtisch.id}/moments`);
+      const photos = page.locator('.timeline-media img');
+      await photos.first().waitFor();
+      await photos.evaluateAll((images) => Promise.all(images.map((img) => img.decode().catch(() => {}))));
+      await page.locator('.moment-timeline').evaluate((el) => {
+        window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'instant' });
       });
       await page.waitForTimeout(300);
     },
@@ -398,6 +414,30 @@ const SHOTS = [
     run: async (page, data) => {
       await page.goto(`${APP_URL}${data.inviteAcceptPath}`);
       await page.waitForURL(/\/guest\//);
+      await settle(page);
+    },
+  },
+
+  // Mehrere Gruppen: Jonas ist in zwei Gruppen, Mia öffnet den Einladungslink der zweiten.
+  {
+    id: 'gruppe-waehlen',
+    who: 'jonas',
+    device: PHONE,
+    run: async (page) => {
+      // Erst eine Gruppe öffnen, damit die Auswahl sie als „Aktuell“ kennzeichnet.
+      await open(page, '/gruppen');
+      await page.locator('button.st-choice').filter({ hasNotText: SECOND_GROUP_NAME }).first().click();
+      await page.waitForURL((url) => !url.pathname.startsWith('/gruppen'));
+      await open(page, '/gruppen');
+    },
+  },
+  {
+    id: 'g-beitreten-konto',
+    who: 'mia',
+    device: PHONE,
+    run: async (page, data) => {
+      await page.goto(`${APP_URL}${data.groupJoinPath}`);
+      await page.getByRole('button', { name: 'Dieser Gruppe beitreten' }).waitFor();
       await settle(page);
     },
   },
