@@ -80,7 +80,7 @@ graph TD
   - **Getränke- & Speisenkatalog**: Stammdatenverwaltung (`DrinkCatalogService`, `FoodCatalogService`) mit Standardpreisen und Einkaufspreisen (`costPrice`).
   - **Event-Angebote**: Granulare Zuordnung von Getränken (`EventDrinkService`) und Speisen (`EventFoodService`) zu Events mit individueller Preisgestaltung und Tablet-/Kiosk-Freigabe.
   - **Revisionssicheres Kassenbuch & Gewinnermittlung**: Transaktionsjournal (`LedgerService`) mit Beleg-Snapshots (`PurchaseSnapshot`), Einkaufspreiserfassung und Deckungsbeitragsberechnung (`profit = unit_price - cost_price`).
-  - **Tablet Strichlisten-Recorder**: Thekenterminal-API (`TabletRecorderService`) für Getränke und Speisen mit kombinierten Katalogen (`/items`), Runden- und Abendbuchungen; Kiosk-Modus mit PIN (`KioskService`).
+  - **Tablet Strichlisten-Recorder**: Thekenterminal-API (`TabletRecorderService`) für Getränke und Speisen mit kombinierten Katalogen (`/items`), Anzeige laufender Runden (ausgegeben am eigenen Handy, `RoundService`); Kiosk-Modus mit PIN (`KioskService`).
   - **Gemeinsame Getränkedatenbank**: gruppenübergreifende Stammdaten ohne Preise (`DrinkLibraryService`).
 - **Storage & Push**:
   - Integrierter S3-Client (`S3ObjectStorage`) für Bilder sowie Fotos und Videos aus Moments. Alle Dateien werden vor dem Speichern mit `DATA_ENCRYPTION_KEY` verschlüsselt und nur über berechtigungsgeprüfte Endpunkte des baseservice ausgeliefert, nie über direkte S3-Links.

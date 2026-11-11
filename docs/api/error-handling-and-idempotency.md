@@ -88,12 +88,12 @@ Der Schlüssel ist bei allen Buchungen Pflicht (`400 idempotency_key_required`) 
 ### 2. Endpunkte und Scopes
 | Scope | Endpunkte |
 | :--- | :--- |
-| `ledger-purchase` | `POST /api/v1/ledger/purchases`, `POST /api/v1/tablet/events/{id}/purchases`, `.../rounds`, `.../evening` |
+| `ledger-purchase` | `POST /api/v1/ledger/purchases`, `POST /api/v1/tablet/events/{id}/purchases` |
 | `ledger-topup` | `POST /api/v1/ledger/topups` |
 | `ledger-payout` | `POST /api/v1/ledger/payouts` |
 | `ledger-correction` | `POST /api/v1/ledger/corrections`, `POST /api/v1/ledger/purchases/{entryId}/undo`, `POST /api/v1/tablet/events/{id}/purchases/{entryId}/undo` |
 
-Runde und Abend buchen mehrere Einträge auf einmal. Ihr Schlüssel darf höchstens 80 Zeichen haben; der Server leitet daraus je Mitglied und Artikel einen eigenen Schlüssel ab (`<schlüssel>#<quelle>#<mitglied>`).
+Geht ein Strich am Terminal auf eine Runde, steht die Buchung beim Geber. Ein wiederholter Strich mit demselben Schlüssel liefert diese Buchung, ohne die Runde erneut zu prüfen.
 
 ### 3. Ablauf im Server
 1. Der Schlüssel steht an der Buchung selbst (`ledger_entries.idempotency_key`).
