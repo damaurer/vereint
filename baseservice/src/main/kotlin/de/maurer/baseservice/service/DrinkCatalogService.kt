@@ -29,7 +29,7 @@ import java.util.UUID
  * (TICKET-013). Neue Getränke werden vorgeschlagen (`proposed`) und ausschließlich
  * durch Vorstand und Administration freigegeben (`approved`) oder abgelehnt
  * (`rejected`). Alle Berechtigungen werden serverseitig geprüft; jeder Aufruf
- * folgt dem Prinzip `deny by default` (siehe `docs/fachkonzept.md`).
+ * folgt dem Prinzip `deny by default` (siehe `docs/domains/drink-catalog-and-sublists.md`).
  */
 @Service
 @Transactional

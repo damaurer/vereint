@@ -36,7 +36,7 @@ import java.util.UUID
  * Das Ledger ist append-only: Topup, Payout und Korrektur erzeugen ausschließlich
  * neue Buchungen; Korrekturen sind Gegenbuchungen auf die Ursprungszeile. Jeder
  * finanzielle Schreibvorgang trägt einen Idempotency-Key; Wiederholungen liefern
- * dasselbe Ergebnis oder einen kontrollierten Konflikt (siehe `docs/fachkonzept.md`).
+ * dasselbe Ergebnis oder einen kontrollierten Konflikt (siehe `docs/domains/ledger-and-finance.md`).
  *
  * Alle Aufrufe folgen `deny by default`: Mitglieder sehen ausschließlich das eigene
  * Guthaben, Vorstand und Administration lesen und buchen (LEDGER_READ/LEDGER_CORRECT).
@@ -636,7 +636,7 @@ class LedgerService(
      * Buchung einer Runde oder Abendaktion (TICKET-018). Getränk, Preis, Währung und
      * Herkunft (`round`/`evening`) werden serverseitig vorgegeben; der Abrechnungsmodus
      * ist stets `revenueOnly`, sodass kein persönliches Guthaben belastet wird und
-     * ausschließlich der Eventumsatz steigt (siehe `docs/fachkonzept.md`).
+     * ausschließlich der Eventumsatz steigt (siehe `docs/domains/tablet-strichliste-recorder.md`).
      *
      * Die fachliche Berechtigung (`purchase.tablet`), der aktive Eventstatus, die
      * Teilnahme des Begünstigten und die Tablet-Freigabe des Getränks werden im

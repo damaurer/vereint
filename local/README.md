@@ -13,6 +13,13 @@ Wer den Stack schon vor dem Umstieg auf den Dateispeicher genutzt hat
 (November 2026), startet einmal mit `node local/vereint.mjs down --clean` und
 `up` neu, sonst fehlen die Bilder der Demo-Daten.
 
+Dasselbe gilt nach dem Umstieg auf **PostgreSQL 18** (November 2026): Ein
+Daten-Volume von PostgreSQL 17 startet mit dem neuen Image nicht. Lokal
+einmal `node local/vereint.mjs down --clean` (beim Root-`docker-compose.yml`:
+`docker compose down -v`) und neu starten. Wer eine echte Datenbank betreibt,
+migriert sie vor dem Wechsel der Hauptversion (`pg_upgrade` oder Dump und
+Restore).
+
 ## Voraussetzungen
 
 | Für | Braucht |

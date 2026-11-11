@@ -42,7 +42,7 @@ env:
 jobs:
   docker:
     name: Docker Image bauen und pruefen
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read

@@ -19,7 +19,7 @@ import { TermsStatusService } from '../legal/terms-status.service';
  * passenden Login, verweigern unpassende Kontexte mit `/403` und halten Gäste
  * am Eventkontext. Sie sind ausdrücklich keine Sicherheitsgrenze — Express und
  * der Spring-Boot-Fachservice entscheiden jede Anfrage erneut (`deny by
- * default`, `docs/authentifizierung.md`, Abschnitt „Guards und SSR").
+ * default`, `docs/backend-for-frontend/04-authorization.md`).
  *
  * Beim serverseitigen Rendern lassen die Guards passieren: Die Express-Middleware
  * hat den Zugriff dort bereits geprüft, und private Kontexte werden ohnehin im

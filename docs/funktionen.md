@@ -16,8 +16,8 @@ Anleitungen im [Benutzerhandbuch](handbuch/README.md).
 - Eigene Gruppe eröffnen unter *Eigene Gruppe eröffnen* (`/gruppe-eroeffnen`):
   Gruppenname und Konto in einem Schritt, die Person wird Admin. Höchstens drei
   eigene Gruppen pro Person.
-  Der Betreiber kann das Eröffnen abschalten (`SIGNUP_ENABLED`); Einladungslinks
-  funktionieren dann weiter.
+  Der Betreiber schaltet das Eröffnen bewusst ein (`SIGNUP_ENABLED=true`,
+  standardmäßig aus); Einladungslinks funktionieren auch ohne.
 - *Gruppeneinstellungen*: Name und Bild der Gruppe, Rollen und Berechtigungen,
   Datenexport, Gruppe verlassen.
 - Die Plattform-Administration (Vereint-Team) legt unter `/plattform` Gruppen an,

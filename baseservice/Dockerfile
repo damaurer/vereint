@@ -1,10 +1,11 @@
 # syntax=docker/dockerfile:1
 
-# Temurin 25 (LTS-Zug seit September 2025), zusaetzlich per Digest gepinnt.
+# Temurin 25 (LTS-Zug seit September 2025), auf ein Patch-Release und per
+# Digest gepinnt (reproduzierbarer Build); Dependabot haelt beides aktuell.
 # Java 21 ist hier nicht moeglich: `baseservice/build.gradle.kts` legt die
 # Toolchain auf `JavaLanguageVersion.of(25)` fest (siehe TICKET-002).
-ARG JDK_IMAGE=eclipse-temurin:25-jdk
-ARG JRE_IMAGE=eclipse-temurin:25-jre
+ARG JDK_IMAGE=eclipse-temurin:25.0.5_8-jdk@sha256:83f4a7fc27df94dcc7b8de04d14cbbba8da14406f921e966969c3b09000aa507
+ARG JRE_IMAGE=eclipse-temurin:25.0.5_8-jre@sha256:ecdc0adb37bde1a281c4d245a3cd535004b1fc8322d560f5b09463b248c81df0
 
 # ---------- Build ----------
 # Der Build laeuft nativ auf der Plattform des Runners; das Jar ist

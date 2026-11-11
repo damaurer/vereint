@@ -41,7 +41,7 @@ import java.util.UUID
  * gebunden und kann eine Nutzungsgrenze besitzen. Die Verwaltung folgt der
  * objektbezogenen Owner-/Board-Prüfung (`deny by default`); das Einlösen ist
  * bewusst ohne Authentifizierung möglich, weil das Token selbst das Geheimnis
- * ist (siehe `docs/authentifizierung.md`, Abschnitt „Magic-Link-Gäste").
+ * ist (siehe `docs/baseservice/03-security-and-authorization.md`, Abschnitt „Gast-Token").
  */
 @Service
 @Transactional

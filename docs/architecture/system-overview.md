@@ -31,7 +31,7 @@ graph TD
     end
 
     subgraph InfraLayer ["4. Infrastructure & Persistence"]
-        PG["PostgreSQL 17 (vereint-db:5432)"]
+        PG["PostgreSQL 18 (vereint-db:5432)"]
         KC["Keycloak 26 (keycloak:8082)"]
         S3["Dateispeicher (Verzeichnis)"]
     end
@@ -87,7 +87,7 @@ graph TD
   - VAPID Web Push Sender (`VapidPushSender`, RFC 8292) ohne Nutzlast: Der Push weckt nur den Service Worker, die Inhalte lädt der Client berechtigt aus `notifications` nach.
 
 ### 4. Daten- & Infrastrukturschicht
-- **PostgreSQL 17**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.
+- **PostgreSQL 18**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.
 - **Liquibase**: Versionskontrollierte Datenbankmigrationen (`db.changelog-master.xml`).
 - **Keycloak 26.8.1**: Identity & Access Management (OIDC Provider). Lokal mit Testbenutzern (`keycloak/dev/realm-export-dev.json`), in Produktion ohne Seed-Benutzer (`keycloak/realm-export.json`).
 - **Dateispeicher**: Überall ein Verzeichnis (`STORAGE_BACKEND=filesystem`): in Produktion ein dauerhaftes Volume, im lokalen Stack und in den E2E-Tests das Volume `files`, bei `./gradlew bootRun` `<Repo>/.data/files`. Ein S3-kompatibler Speicher ist optional möglich (`STORAGE_BACKEND=s3`).
@@ -103,7 +103,7 @@ sequenceDiagram
     actor User as Benutzer / Tablet-Kiosk
     participant BFF as Express BFF
     participant Spring as Spring Boot
-    participant DB as PostgreSQL 17
+    participant DB as PostgreSQL 18
 
     User->>BFF: POST /api/v1/tablet/events/{id}/purchases (Cookie-Session)
     Note over BFF: attachIdentity entschlüsselt die Session & erneuert bei Bedarf das Keycloak-JWT
@@ -126,7 +126,7 @@ sequenceDiagram
 | **Frontend / BFF** | Node.js Express (`npm start`) | `4200` | `4200` | HTTP / SSR & BFF API Proxy |
 | **Backend Core** | Spring Boot Kotlin | `8081` | `8081` | HTTP / REST API & Actuator |
 | **Keycloak IAM** | Keycloak 26 Dev | `8082` | `8080` | HTTP / OIDC Provider & Admin-Console |
-| **Keycloak DB** | PostgreSQL 17 | `5433` | `5432` | PostgreSQL JDBC (Keycloak Realm DB) |
-| **Vereint DB** | PostgreSQL 17 | `5432` | `5432` | PostgreSQL JDBC (Hauptanwendung) |
+| **Keycloak DB** | PostgreSQL 18 | `5433` | `5432` | PostgreSQL JDBC (Keycloak Realm DB) |
+| **Vereint DB** | PostgreSQL 18 | `5432` | `5432` | PostgreSQL JDBC (Hauptanwendung) |
 
 In Produktion sollte von außen nur der Reverse Proxy auf Port 80/443 erreichbar sein; alle anderen Dienste sprechen nur im internen Container-Netz miteinander ([Vereint selbst betreiben](../betrieb/selbst-betreiben.md)).

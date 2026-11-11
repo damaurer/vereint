@@ -138,7 +138,7 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `VEREINT_DB_USERNAME` | `spring.datasource.username` | String | `vereint` | Datenbankbenutzer. |
 | `VEREINT_DB_PASSWORD` | `spring.datasource.password` | String | `change-me-vereint-db-password` | Datenbankpasswort. |
 | `EV_LIQUIBASE_ENABLED` | `spring.liquibase.enabled` | Boolean | `true` | Aktiviert die automatische Ausführung von Liquibase-Migrationen beim Start. |
-| `EV_LIQUIBASE_CONTEXTS` | `spring.liquibase.contexts` | String | `prod` | Aktiver Liquibase-Kontext (`prod`, lokal `dev`, in Tests `test`). |
+| `EV_LIQUIBASE_CONTEXTS` | `spring.liquibase.contexts` | String | `prod` | Aktiver Liquibase-Kontext (`prod`, lokal `dev`, in Tests `test`). `prod` (oder das Spring-Profil `prod`) schaltet die Startprüfungen scharf: ohne Verschlüsselung oder mit einem Datenbankbenutzer mit Superuser/`BYPASSRLS` startet der Service nicht. |
 | `KEYCLOAK_ISSUER_URI` | `spring.security.oauth2.resourceserver.jwt.issuer-uri` | URL | `http://localhost:8082/realms/vereint` | OIDC-Issuer-URI von Keycloak zur JWT-Validierung. |
 | `KEYCLOAK_JWK_SET_URI` | `spring.security.oauth2.resourceserver.jwt.jwk-set-uri` | URL | `http://localhost:8082/realms/vereint/protocol/openid-connect/certs` | JWK-Set-Endpunkt zum Abrufen öffentlicher Signierschlüssel. |
 | `VEREINT_I18N_SUPPORTED_LOCALES` | `vereint.i18n.supported-locales` | String (CSV) | `de,en` | Sprachen der Fehlertexte, siehe [i18n](i18n.md). |
@@ -159,7 +159,8 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `VAPID_PUBLIC_KEY` | `vereint.push.public-key` | String | *leer* | Öffentlicher Base64-VAPID-Schlüssel für den Client. |
 | `VAPID_PRIVATE_KEY` | `vereint.push.private-key` | String | *leer* | Privater Base64-VAPID-Schlüssel (Geheimnis). |
 | `VAPID_TTL_SECONDS` | `vereint.push.ttl-seconds` | Long | `2419200` | Time-to-Live für Push-Nachrichten (Standard: 28 Tage). |
-| `DATA_ENCRYPTION_ENABLED` | `vereint.encryption.enabled` | Boolean | `false` | Anwendungsverschlüsselung für Chat, Benachrichtigungen und Dateien (AES-256-GCM). In Produktion `true`; ohne Schlüssel startet der Service dann nicht. |
+| `DATA_ENCRYPTION_ENABLED` | `vereint.encryption.enabled` | Boolean | `false` | Anwendungsverschlüsselung für Chat, Benachrichtigungen und Dateien (AES-256-GCM). In Produktion Pflicht: mit Kontext `prod` startet der Service ohne `true` nicht; mit `true` und ohne Schlüssel ebenfalls nicht. |
+| `DATA_ENCRYPTION_ALLOW_PLAINTEXT` | `vereint.encryption.allow-plaintext` | Boolean | `false` | Erlaubt bewusst einen Produktionsstart ohne Verschlüsselung (Klartext in DB und Dateien). |
 | `DATA_ENCRYPTION_KEY` | `vereint.encryption.key` | String | *leer* | 32 Byte, Base64 (Geheimnis). |
 | `DATA_ENCRYPTION_KEY_PREVIOUS` | `vereint.encryption.previous-key` | String | *leer* | Vorgängerschlüssel, nur zum Entschlüsseln während einer Rotation. |
 | `REGISTRATION_ENABLED` | `vereint.registration.enabled` | Boolean | `false` | Kontoanlage über die Keycloak-Admin-API (Einladungslinks, Gruppe eröffnen). Ohne Secret antwortet die Registrierung mit `503`. |
@@ -167,7 +168,7 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `KEYCLOAK_REALM` | `vereint.registration.realm` | String | `vereint` | Realm, in dem Konten angelegt werden. |
 | `KEYCLOAK_REGISTRATION_CLIENT_ID` | `vereint.registration.client-id` | String | `vereint-registration` | Vertraulicher Client mit `manage-users`. |
 | `KEYCLOAK_REGISTRATION_CLIENT_SECRET` | `vereint.registration.client-secret` | String | *leer* | Secret dieses Clients (Geheimnis). |
-| `SIGNUP_ENABLED` | `vereint.signup.enabled` | Boolean | `true` | Öffentliches Eröffnen neuer Gruppen (`/api/v1/signup`). |
+| `SIGNUP_ENABLED` | `vereint.signup.enabled` | Boolean | `false` | Öffentliches Eröffnen neuer Gruppen (`/api/v1/signup`, `/gruppe-eroeffnen`). Ohne `true` antworten Eröffnen und Registrieren mit `503`; Einladungslinks funktionieren weiter. Lokal (`.env.example`, `local/`) und in E2E an. |
 | `SIGNUP_MAX_OWNED` | `vereint.signup.max-owned` | Integer | `3` | Höchstzahl aktiver Gruppen, die eine Person selbst eröffnet. |
 | `TERMS_VERSION` | `vereint.legal.terms-version` | String | `2026-11-10` | Gültige Fassung der AGB, der bei Registrierung und Eröffnung zugestimmt wird; alle übrigen Konten stimmen nach dem Login zu. |
 | `API_DOCS_ENABLED` | `springdoc.api-docs.enabled`, `springdoc.swagger-ui.enabled` | Boolean | `false` | OpenAPI und Swagger UI; in Produktion aus. |

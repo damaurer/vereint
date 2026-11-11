@@ -6,7 +6,7 @@
  * Muster/Regex; beide Dateien MÜSSEN synchron gehalten werden (der Service
  * Worker kann dieses TypeScript nicht importieren).
  *
- * Grundsatz (siehe docs/architektur.md und docs/deployment.md):
+ * Grundsatz (siehe docs/frontend/angular-ssr-and-pwa.md):
  * - Nur sichere, öffentliche, statische Assets werden gecacht (`deny by
  *   default`). HTML-Seiten nicht, weil das SSR persönliche Daten einbettet;
  *   ohne Netz zeigt der Worker stattdessen `/offline.html`.

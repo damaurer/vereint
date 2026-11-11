@@ -41,7 +41,7 @@ Der BFF basiert auf modernen Node.js- und TypeScript-Technologien:
 
 | Komponente / Bibliothek | Version (Auszug aus `package.json`) | Zweck & Einsatzbereich |
 | :--- | :--- | :--- |
-| **Node.js** | `22` (Image `node:22-alpine`) | Serverseitige JavaScript-Laufzeitumgebung. |
+| **Node.js** | `22` (Image `node:22.23.3-alpine`) | Serverseitige JavaScript-Laufzeitumgebung. |
 | **Express** | `^5.1.0` | HTTP-Server-Framework (Routing, Middlewares, Static Files). |
 | **@angular/ssr** | `^22.2.2` | Angular Server-Side Rendering (`AngularNodeAppEngine`). |
 | **@angular/core / platform-server** | `^22.2.2` | Angular 22 Server-Plattform und Hydration. |
@@ -169,10 +169,10 @@ In Produktions- oder Container-Umgebungen (Docker/Kubernetes) werden Umgebungsva
 | `KEYCLOAK_REQUEST_RETRIES` | `1` | Nein | Anzahl Wiederholungsversuche bei idempotentem Token-Abruf gegen Keycloak. |
 | `SESSION_SECRET` / `SESSION_SECRET_CURRENT` | *(kein Default)* | **Ja** | Hauptgeheimnis zur AES-256-GCM-Verschlüsselung der Session. **Mindestens 32 Byte**. |
 | `SESSION_SECRET_PREVIOUS` | `null` | Nein | Vorheriges Secret für unterbrechungsfreie Schlüsselrotation. Mindestens 32 Byte, darf nicht identisch mit dem aktuellen Secret sein. |
-| `SESSION_COOKIE_NAME` | `vereint_session` | Nein | Basisname des HttpOnly-Session-Cookies. |
+| `SESSION_COOKIE_NAME` | `vereint_session` | Nein | Basisname des HttpOnly-Session-Cookies. Unter HTTPS mit `SESSION_COOKIE_SECURE=true` stellt der BFF `__Host-` voran. |
 | `SESSION_DURATION_MINUTES` | `1440` (24h) | Nein | Session-Lebensdauer in Minuten (muss mit Keycloak `ssoSessionMaxLifespan` übereinstimmen). |
 | `SESSION_DURATION_DAYS` | `1` | Nein | Alternative Angabe der Session-Lebensdauer in Tagen. |
-| `SESSION_COOKIE_SECURE` | In Prod: `true`, sonst `false` | Nein | Erzwingt das `Secure`-Attribut am Cookie. In Produktion **Pflicht**. |
+| `SESSION_COOKIE_SECURE` | In Prod: `true`, sonst `false` | Nein | Erzwingt das `Secure`-Attribut am Cookie. In Produktion **Pflicht**. Zusammen mit einer `PUBLIC_BASE_URL` mit `https://` heißen alle Cookies `__Host-…` ([Cookie-Namen](03-authentication-and-session.md#cookie-namen-mit-__host-)). |
 | `NG_ALLOWED_HOSTS` | *(leer)* | Nein | Zusätzliche Hosts (kommagetrennt), für die Angular SSR rendern darf; Host aus `PUBLIC_BASE_URL` ist immer erlaubt. |
 
 ---

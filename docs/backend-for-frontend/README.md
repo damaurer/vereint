@@ -78,8 +78,8 @@ graph LR
 | **Deny by Default** | Sicherheitsgrundsatz: Jeder Request wird standardmäßig abgewiesen, es sei denn, er erfüllt explizit alle Kriterien für eine Freigabe. |
 | **Fail Closed** | Ist ein Upstream-Dienst (Keycloak oder Spring Boot) nicht erreichbar oder antwortet zu langsam, wird der Zugriff blockiert (`503 Service Unavailable`) statt unberechtigt freigegeben. |
 | **Transfer-State Sanitization** | Filterung des vom Angular SSR generierten `ng-state` auf eine explizite Positivliste unkritischer Felder vor Auslieferung des HTML an den Browser. |
-| **Cookie Chunking** | Aufteilung großer verschlüsselter Sitzungszustände auf bis zu 6 Teil-Cookies (`vereint_session`, `vereint_session.1` ...), um Browsergrenzen (4 KB) sicher einzuhalten. |
-| **Gruppen-Cookie** | HttpOnly-Cookie `vereint.stammtisch` mit der gewählten Gruppe; der Proxy setzt daraus den Header `X-Stammtisch-Id`. Er gewährt nichts, der Fachservice prüft die Mitgliedschaft. |
+| **Cookie Chunking** | Aufteilung großer verschlüsselter Sitzungszustände auf bis zu 6 Teil-Cookies (`vereint_session`, `vereint_session.1` ..., unter HTTPS mit Präfix `__Host-`), um Browsergrenzen (4 KB) sicher einzuhalten. |
+| **Gruppen-Cookie** | HttpOnly-Cookie `vereint.stammtisch` (unter HTTPS `__Host-vereint.stammtisch`) mit der gewählten Gruppe; der Proxy setzt daraus den Header `X-Stammtisch-Id`. Er gewährt nichts, der Fachservice prüft die Mitgliedschaft. |
 | **Stale Grace Period** | 60-sekündige Übergangsfrist, in der bei kurzzeitigem Spring-Ausfall eine abgelaufene Zugriffsentscheidung weiterverwendet werden darf, um Ladeabbrüche zu minimieren. |
 
 ---
