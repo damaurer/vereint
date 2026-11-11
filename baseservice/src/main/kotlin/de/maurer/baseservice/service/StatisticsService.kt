@@ -7,6 +7,7 @@ import de.maurer.baseservice.domain.LedgerEntryType
 import de.maurer.baseservice.domain.PurchaseSource
 import de.maurer.baseservice.domain.RsvpStatus
 import de.maurer.baseservice.domain.StatisticFeature
+import de.maurer.baseservice.domain.StatisticRecordEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.BucketCountDto
 import de.maurer.baseservice.dto.CategoryCountDto
@@ -31,6 +32,8 @@ import de.maurer.baseservice.dto.TopDrinkDto
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
+import de.maurer.baseservice.repository.DrinkCatalogRepository
+import de.maurer.baseservice.repository.DrinkLibraryRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.LedgerEntryRepository
@@ -83,7 +86,9 @@ class StatisticsService(
     private val userService: UserService,
     private val snapshots: LedgerSnapshots,
     private val termsConsent: TermsConsent,
-    private val access: StammtischAccess
+    private val access: StammtischAccess,
+    private val drinkCatalogRepository: DrinkCatalogRepository,
+    private val drinkLibraryRepository: DrinkLibraryRepository
 ) {
 
     /** Ein nicht stornierter Kauf, reduziert auf das, was die Statistik braucht. */
@@ -475,10 +480,63 @@ class StatisticsService(
         val entries = snapshots.attach(ledgerEntryRepository.findByCreatedAtGreaterThanEqual(from))
         val reversed = entries.mapNotNull { it.reversesEntry?.id }.toSet()
         val recorded = if (recordedOnly) recordRepository.sourceIdsSince(StatisticFeature.PURCHASE, from).toSet() else emptySet()
-        return entries
+        val booked = entries
             .filter { it.entryType == LedgerEntryType.purchase && it.id !in reversed && it.member != null }
             .filter { !recordedOnly || it.id in recorded }
             .map { toPurchase(it) }
+        return if (recordedOnly) booked + foreignDrinks(from) else booked
+    }
+
+    /**
+     * Fremdgetränke (Issue #110): nur in `statistic_records`, ohne Buchung und
+     * ohne Event. Sie zählen wie Getränke, aber nie bei einem Event und nie im
+     * Umsatz. Getränkedaten kommen aus dem Katalog der Gruppe oder, wenn das
+     * Getränk nur dort steht, aus der Getränkedatenbank; ein Katalogeintrag,
+     * der aus der Getränkedatenbank übernommen wurde, fasst beide zusammen.
+     */
+    private fun foreignDrinks(from: Instant): List<Purchase> {
+        val records = recordRepository.findByFeatureAndOccurredAtGreaterThanEqual(StatisticFeature.FOREIGN_DRINK, from)
+            .filter { it.actorUserId != null }
+        if (records.isEmpty()) return emptyList()
+        val catalog = drinkCatalogRepository.findAllById(records.mapNotNull { it.drinkId }.toSet()).associateBy { it.id }
+        val libraryIds = records.filter { it.drinkId == null }.mapNotNull { it.libraryDrinkId }.toSet()
+        val library = drinkLibraryRepository.findAllById(libraryIds).associateBy { it.id }
+        val adopted = if (libraryIds.isEmpty()) emptyMap() else
+            drinkCatalogRepository.findByLibraryDrinkIdIn(libraryIds).associateBy { it.libraryDrinkId }
+        val users = userRepository.findAllById(records.mapNotNull { it.actorUserId }.toSet()).associateBy { it.id }
+        return records.mapNotNull { record -> toForeignPurchase(record, users[record.actorUserId] ?: return@mapNotNull null, catalog, library, adopted) }
+    }
+
+    private fun toForeignPurchase(
+        record: StatisticRecordEntity,
+        user: UserEntity,
+        catalog: Map<UUID, de.maurer.baseservice.domain.DrinkCatalogEntity>,
+        library: Map<UUID, de.maurer.baseservice.domain.DrinkLibraryEntity>,
+        adopted: Map<UUID?, de.maurer.baseservice.domain.DrinkCatalogEntity>
+    ): Purchase {
+        val drink = record.drinkId?.let { catalog[it] } ?: record.libraryDrinkId?.let { adopted[it] }
+        val libraryDrink = if (drink == null) record.libraryDrinkId?.let { library[it] } else null
+        val name = drink?.name ?: libraryDrink?.name ?: UNKNOWN_ITEM
+        return Purchase(
+            memberId = user.id,
+            memberName = user.displayName,
+            giverId = user.id,
+            giverName = user.displayName,
+            roundKey = null,
+            key = drink?.id?.toString() ?: libraryDrink?.id?.let { "library:$it" } ?: "name:$name",
+            name = name,
+            drink = true,
+            category = categoryGroup(drink?.category ?: libraryDrink?.category, name),
+            volumeMl = drink?.volumeMl ?: libraryDrink?.volumeMl,
+            kcal = drink?.kcalPerServing ?: libraryDrink?.kcalPerServing,
+            eventId = null,
+            eventTitle = null,
+            createdAt = record.occurredAt,
+            source = null,
+            batchKey = record.id.toString(),
+            amount = BigDecimal.ZERO,
+            currency = DEFAULT_CURRENCY
+        )
     }
 
     /**

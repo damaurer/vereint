@@ -130,4 +130,28 @@ class StatisticsRecorderTest {
         verify(repository, never()).save(any(StatisticRecordEntity::class.java))
         assertTrue(StatisticsRecorder.decide(true, true, true) == Decision.RECORD)
     }
+
+    @Test
+    fun `a foreign drink has no event and follows user and group`() {
+        listOf(true to true, true to false, false to true).forEach { (userOn, groupOn) ->
+            val repository = mock(StatisticRecordRepository::class.java)
+            val actor = UserEntity(statisticsEnabled = userOn)
+            val drink = UUID.randomUUID()
+            val recorder = recorder(groupOn, repository, actor)
+            val record = TenantContext.runIn(groupId) {
+                recorder.foreignDrink(actor, drinkId = drink, libraryDrinkId = null, sourceId = UUID.randomUUID())
+            }
+            assertEquals(userOn && groupOn, TenantContext.runIn(groupId) { recorder.allows(actor) })
+            if (userOn && groupOn) {
+                assertEquals(StatisticFeature.FOREIGN_DRINK, record?.feature)
+                assertEquals(null, record?.eventId)
+                assertEquals(drink, record?.drinkId)
+                assertEquals(StatisticsRecorder.VARIANT_CATALOG, record?.variant)
+            } else {
+                assertEquals(null, record)
+                verify(repository, never()).save(any(StatisticRecordEntity::class.java))
+            }
+        }
+        assertFalse(TenantContext.runWithoutTenant { recorder(true, mock(StatisticRecordRepository::class.java)).allows(UserEntity()) })
+    }
 }

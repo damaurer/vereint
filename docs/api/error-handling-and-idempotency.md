@@ -53,6 +53,9 @@ Die Zuordnung zu den Exceptions beschreibt [Fehlerbehandlung im Fachservice](../
 | `account_disabled` | `403` | Das Konto ist gesperrt. |
 | `role_not_assigned`, `profile_not_found` | `403` | Rolle bzw. Benutzerprofil fehlt. |
 | `self_service_disabled` | `403` | Selbstbuchung für diesen Artikel oder dieses Event abgeschaltet. |
+| `credit_purchase_at_event` | `409` | Guthabenkauf ohne Event oder Fremdgetränk, obwohl die Person an einem laufenden Event mit Selbstbedienung teilnimmt; dort läuft der Kauf über das Event. |
+| `no_catalog_price` | `404` | Das Getränk hat im Katalog der Gruppe keinen Preis; ein Guthabenkauf ohne Event ist nicht möglich. |
+| `statistics_disabled` | `409` | Die Statistik ist für die Person oder die Gruppe ausgeschaltet; ein Fremdgetränk lässt sich nicht erfassen. |
 | `self_privilege_change_denied` | `403` | Eigene Rollen, Berechtigungen oder den eigenen Status darf man nicht ändern. |
 | `last_role_manager_protected` | `403` | Die Änderung nähme der Gruppe die letzte Person mit `members.manage` oder `roles.manage`. |
 | `last_admin_protected` | `403` | Konstante vorhanden, derzeit ohne Auslöser. |

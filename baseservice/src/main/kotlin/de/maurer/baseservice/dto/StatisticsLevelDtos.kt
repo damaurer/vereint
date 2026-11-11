@@ -163,3 +163,22 @@ data class UpdateStatisticsSettingsRequest(
 data class StatisticsDeletedDto(
     val deleted: Int
 )
+
+/** Fremdgetränk erfassen (Issue #110): nur der gescannte Strichcode. */
+data class ForeignDrinkRequest(
+    @field:jakarta.validation.constraints.NotBlank(message = "barcode {validation.notBlank}")
+    @field:jakarta.validation.constraints.Size(max = 128, message = "barcode {validation.size.max}")
+    val barcode: String? = null
+)
+
+@Schema(description = "Ein erfasstes Fremdgetränk: nur in der Statistik, ohne Buchung und ohne Event")
+data class ForeignDrinkDto(
+    val id: String,
+    val drinkName: String,
+    @Schema(description = "Getränk aus dem Katalog der Gruppe; `null`, wenn es nur in der Getränkedatenbank steht")
+    val drinkId: String?,
+    val libraryDrinkId: String?,
+    val occurredAt: Instant,
+    @Schema(description = "Bis wann es sich selbst wieder entfernen lässt")
+    val removableUntil: Instant
+)

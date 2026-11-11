@@ -10,7 +10,6 @@ import de.maurer.baseservice.error.IdempotencyConflictException
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
-import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.EventDrinkRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
@@ -50,13 +49,13 @@ class LedgerService(
     private val access: StammtischAccess,
     private val members: StammtischMembers,
     private val eventRepository: EventRepository,
-    private val drinkBarcodeRepository: DrinkBarcodeRepository,
     private val eventDrinkRepository: EventDrinkRepository,
     private val eventParticipantRepository: EventParticipantRepository,
     private val userService: UserService,
     private val auditService: AuditService,
     private val snapshots: LedgerSnapshots,
-    private val statisticsRecorder: StatisticsRecorder
+    private val statisticsRecorder: StatisticsRecorder,
+    private val scanRules: BarcodeScanRules
 ) {
 
     /**
@@ -429,19 +428,87 @@ class LedgerService(
     }
 
     /**
-     * Zeigt dem Mitglied vor dem Bezahlen, welches Getränk zum Barcode gehört, was
-     * es an welchem laufenden Event kostet und wie viel Guthaben vorhanden ist. Es
-     * gelten dieselben Regeln wie bei [purchaseByBarcode]; gebucht wird nichts.
+     * Zeigt dem Mitglied vor dem Bezahlen, welches Getränk zum Barcode gehört und
+     * was damit möglich ist; gebucht wird nichts.
+     *
+     * - Wird das Getränk an einem laufenden Event mit Selbstbedienung verkauft,
+     *   an dem das Mitglied kaufen darf, gelten dieselben Regeln wie bei
+     *   [purchaseByBarcode]: nur der Kauf über das Event (`options`).
+     * - Sonst, solange das Mitglied an keinem laufenden Event mit
+     *   Selbstbedienung teilnimmt (Issue #110): Kauf mit Guthaben zum
+     *   Katalogpreis ([purchaseWithCredit]), wenn das Getränk im Katalog einen
+     *   Preis hat, und Fremdgetränk ([ForeignDrinkService]), wenn die Statistik
+     *   für die Person und die Gruppe eingeschaltet ist. Für ein Fremdgetränk
+     *   reicht ein Eintrag in der Getränkedatenbank.
      */
     @Transactional(readOnly = true)
     fun previewBarcodePurchase(request: PurchasePreviewRequest, principal: UserPrincipal): PurchasePreviewDto {
         val caller = userService.getOrCreateUser(principal)
         requireMember(caller, principal)
         val barcode = normalizeBarcode(request.barcode)
-        val drink = resolveDrinkByBarcode(barcode)
+        val drink = scanRules.catalogDrink(barcode)
         val requestedEventId = request.eventId?.trim()?.ifBlank { null }?.let { parseId(it, "eventId") }
 
-        val options = eventDrinkRepository.findByDrinkId(drink.id)
+        val options = drink?.let { eventOptions(it, caller, principal, requestedEventId) }.orEmpty()
+        val balance = computeBalance(caller, ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(caller.id))
+        if (options.isNotEmpty()) {
+            return PurchasePreviewDto(
+                barcode = barcode,
+                drinkId = drink!!.id.toString(),
+                drinkName = drink.name,
+                imageReference = drink.imageReference,
+                options = options,
+                creditBalance = balance.creditBalance,
+                balanceCurrency = balance.currency,
+                libraryDrinkId = drink.libraryDrinkId?.toString()
+            )
+        }
+
+        val library = if (drink == null) scanRules.libraryDrink(barcode) else null
+        if (drink == null && library == null) {
+            throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", barcode), ErrorCode.NOT_FOUND)
+        }
+        val name = drink?.name ?: library!!.name
+        // Mit Event-Bezug oder während eines laufenden Events mit Selbstbedienung: kein Kauf ohne Event.
+        if (requestedEventId != null || scanRules.atSelfServiceEvent(caller)) {
+            throw ApiException(
+                ErrorCode.DRINK_NOT_IN_EVENT,
+                Msg("error.ledger.noOpenEventForDrink", name),
+                HttpStatus.NOT_FOUND
+            )
+        }
+        val credit = drink?.takeIf { it.defaultPrice.signum() > 0 }
+            ?.let { CreditPurchaseOptionDto(unitPrice = it.defaultPrice.setScale(2), currency = normalizeCurrency(it.currency)) }
+        val foreignDrink = statisticsRecorder.allows(caller)
+        if (credit == null && !foreignDrink) {
+            throw ApiException(
+                ErrorCode.DRINK_NOT_IN_EVENT,
+                Msg("error.ledger.noScanOption", name),
+                HttpStatus.NOT_FOUND
+            )
+        }
+        return PurchasePreviewDto(
+            barcode = barcode,
+            drinkId = drink?.id?.toString(),
+            drinkName = name,
+            imageReference = drink?.imageReference,
+            options = emptyList(),
+            creditBalance = balance.creditBalance,
+            balanceCurrency = balance.currency,
+            creditPurchase = credit,
+            foreignDrink = foreignDrink,
+            libraryDrinkId = (drink?.libraryDrinkId ?: library?.id)?.toString()
+        )
+    }
+
+    /** Laufende Events mit Selbstbedienung für [drink], an denen [caller] kaufen darf; neueste zuerst. */
+    private fun eventOptions(
+        drink: DrinkCatalogEntity,
+        caller: UserEntity,
+        principal: UserPrincipal,
+        requestedEventId: UUID?
+    ): List<PurchaseOptionDto> =
+        eventDrinkRepository.findByDrinkId(drink.id)
             .filter { it.selfServiceEnabled }
             .mapNotNull { eventDrink -> eventDrink.event?.let { it to eventDrink } }
             .filter { (event, _) ->
@@ -459,23 +526,80 @@ class LedgerService(
                     currency = pricing.currency
                 )
             }
-        if (options.isEmpty()) {
+
+    /**
+     * Kauf mit Guthaben ohne Event (Issue #110): nur, solange das Mitglied an
+     * keinem laufenden Event mit Selbstbedienung teilnimmt (dort gilt
+     * [purchaseByBarcode]). Es gilt der Preis aus dem Katalog der Gruppe; ohne
+     * Preis ist der Kauf nicht möglich. Die Buchung trägt die Herkunft
+     * `pwaBarcode` und lässt sich wie jeder eigene Barcodekauf 10 Minuten lang
+     * zurücknehmen ([undoBarcodePurchase]). Mit `recordStatistics = false`
+     * entsteht kein Statistikeintrag; sonst zählt der Kauf ohne Event-Bezug,
+     * sofern Nutzer und Gruppe die Erfassung nicht ausgeschaltet haben.
+     */
+    fun purchaseWithCredit(
+        request: CreditPurchaseRequest,
+        idempotencyKey: String?,
+        principal: UserPrincipal
+    ): LedgerEntryDto {
+        val caller = userService.getOrCreateUser(principal)
+        requireMember(caller, principal)
+        val key = requireIdempotencyKey(idempotencyKey)
+        val barcode = normalizeBarcode(request.barcode)
+        val drink = resolveDrinkByBarcode(barcode)
+        val replay = ledgerEntryRepository.findByIdempotencyKey(key).isPresent
+        if (!replay && scanRules.atSelfServiceEvent(caller)) {
             throw ApiException(
-                ErrorCode.DRINK_NOT_IN_EVENT,
-                Msg("error.ledger.noOpenEventForDrink", drink.name),
+                ErrorCode.CREDIT_PURCHASE_AT_EVENT,
+                Msg("error.ledger.creditPurchaseAtEvent"),
+                HttpStatus.CONFLICT
+            )
+        }
+        if (drink.defaultPrice.signum() <= 0) {
+            throw ApiException(
+                ErrorCode.NO_CATALOG_PRICE,
+                Msg("error.ledger.noCatalogPrice", drink.name),
                 HttpStatus.NOT_FOUND
             )
         }
+        val currency = normalizeCurrency(drink.currency)
+        val unitPrice = drink.defaultPrice.setScale(2)
+        val costPrice = drink.costPrice.setScale(2)
+        val profit = (unitPrice - costPrice).setScale(2)
+        val recordStatistics = request.recordStatistics != false
 
-        val balance = computeBalance(caller, ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(caller.id))
-        return PurchasePreviewDto(
-            barcode = barcode,
-            drinkId = drink.id.toString(),
-            drinkName = drink.name,
-            imageReference = drink.imageReference,
-            options = options,
-            creditBalance = balance.creditBalance,
-            balanceCurrency = balance.currency
+        return appendWrite(
+            AppendWriteCommand(
+                scope = SCOPE_PURCHASE,
+                key = key,
+                entryType = LedgerEntryType.purchase,
+                member = caller,
+                event = null,
+                drink = drink,
+                amount = unitPrice,
+                currency = currency,
+                accountingMode = AccountingMode.credit,
+                source = PurchaseSource.pwaBarcode,
+                actor = caller,
+                auditAction = AuditService.ACTION_LEDGER_PURCHASE,
+                note = "credit; barcode=$barcode; statistics=$recordStatistics",
+                recordStatistics = recordStatistics,
+                snapshotFactory = {
+                    PurchaseSnapshotEntity(
+                        ledgerEntry = it,
+                        itemType = "DRINK",
+                        drinkName = drink.name,
+                        foodName = null,
+                        imageReference = drink.imageReference,
+                        barcode = barcode,
+                        unitPrice = unitPrice,
+                        costPrice = costPrice,
+                        profit = profit,
+                        currency = currency,
+                        catalogVersion = drink.catalogVersion
+                    )
+                }
+            )
         )
     }
 
@@ -693,7 +817,9 @@ class LedgerService(
         val beneficiary: UserEntity? = null,
         val auditAction: String,
         val note: String? = null,
-        val snapshotFactory: ((LedgerEntryEntity) -> PurchaseSnapshotEntity)? = null
+        val snapshotFactory: ((LedgerEntryEntity) -> PurchaseSnapshotEntity)? = null,
+        /** `false`: Kauf ohne Statistikeintrag (Guthabenkauf ohne Event, Issue #110). */
+        val recordStatistics: Boolean = true
     )
 
     /**
@@ -740,7 +866,11 @@ class LedgerService(
         }
         recordIdempotency(cmd.scope, cmd.key)
         val reversed = cmd.reversesEntry
-        if (reversed != null) statisticsRecorder.reverse(reversed) else statisticsRecorder.ledgerEntry(saved)
+        if (reversed != null) {
+            statisticsRecorder.reverse(reversed)
+        } else if (cmd.recordStatistics) {
+            statisticsRecorder.ledgerEntry(saved)
+        }
         auditService.recordLedgerEntry(
             cmd.actor,
             cmd.auditAction,
@@ -864,33 +994,11 @@ class LedgerService(
      * Löst einen Barcode auf ein freigegebenes, aktives Getränk auf. Nicht freigegebene
      * oder inaktive Getränke werden wie ein unbekannter Barcode behandelt.
      */
-    private fun resolveDrinkByBarcode(barcode: String): DrinkCatalogEntity {
-        val barcodeEntity = drinkBarcodeRepository.findByBarcode(barcode)
-            .filter { it.active }
-            .orElseThrow {
-                ResourceNotFoundException(Msg("error.drink.barcodeNotFound", barcode), ErrorCode.NOT_FOUND)
-            }
-        val drink = barcodeEntity.drink
+    private fun resolveDrinkByBarcode(barcode: String): DrinkCatalogEntity =
+        scanRules.catalogDrink(barcode)
             ?: throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", barcode), ErrorCode.NOT_FOUND)
-        if (drink.status != DrinkStatus.approved || !drink.active) {
-            throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", barcode), ErrorCode.NOT_FOUND)
-        }
-        return drink
-    }
 
-    private fun normalizeBarcode(value: String?): String {
-        val normalized = value?.replace(WHITESPACE_REGEX, "").orEmpty()
-        if (normalized.isBlank()) {
-            throw InvalidRequestException(Msg("error.field.blank", "barcode"), ErrorCode.INVALID_REQUEST)
-        }
-        if (normalized.length > MAX_BARCODE_LENGTH) {
-            throw InvalidRequestException(
-                Msg("error.field.tooLong", "barcode", MAX_BARCODE_LENGTH),
-                ErrorCode.INVALID_REQUEST
-            )
-        }
-        return normalized
-    }
+    private fun normalizeBarcode(value: String?): String = BarcodeScanRules.normalizeBarcode(value)
 
     /** Auch frühere Mitglieder: Kontoauszüge bleiben nach dem Austritt lesbar. */
     private fun requireUser(id: UUID): UserEntity = members.requireKnownUser(id)
@@ -983,6 +1091,5 @@ class LedgerService(
 
         /** Wie lange ein Mitglied einen eigenen Barcodekauf selbst zurücknehmen darf. */
         val PURCHASE_UNDO_WINDOW: Duration = TABLET_UNDO_WINDOW
-        private val WHITESPACE_REGEX = Regex("\\s+")
     }
 }

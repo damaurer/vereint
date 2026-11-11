@@ -717,6 +717,11 @@ interface StatisticRecordRepository : JpaRepository<StatisticRecordEntity, UUID>
 
     fun existsByFeatureAndSourceId(feature: String, sourceId: UUID): Boolean
 
+    fun findFirstByFeatureAndSourceId(feature: String, sourceId: UUID): StatisticRecordEntity?
+
+    /** Einträge einer Funktion seit [from] (Fremdgetränke für die Getränkestatistik). */
+    fun findByFeatureAndOccurredAtGreaterThanEqual(feature: String, from: Instant): List<StatisticRecordEntity>
+
     /** Zeilen: eventId, variant, occurredAt der eigenen Antworten auf Einladungen seit [from]. */
     @Query(
         "select r.eventId, r.variant, r.occurredAt from StatisticRecordEntity r " +

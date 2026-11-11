@@ -57,27 +57,70 @@ class StatisticsRecorder(
         sourceId: UUID? = null,
         quantity: Int = 1,
         occurredAt: Instant = Instant.now()
-    ): Boolean {
-        val stammtischId = TenantContext.stammtischId() ?: return false
+    ): Boolean = write(
+        StatisticRecordEntity(
+            eventId = event?.id,
+            actorUserId = actor?.id,
+            feature = feature,
+            kind = kind,
+            variant = variant?.take(VARIANT_LENGTH),
+            respondsTo = respondsTo,
+            sourceId = sourceId,
+            quantity = quantity.coerceAtLeast(0),
+            occurredAt = occurredAt
+        ),
+        actor,
+        event
+    ) != null
+
+    /**
+     * Ob über [actor] in der aktuellen Gruppe ohne Event-Bezug etwas erfasst
+     * würde (Nutzer > Gruppe). Ohne Gruppenkontext immer `false`.
+     */
+    fun allows(actor: UserEntity): Boolean = decision(actor, null) == Decision.RECORD
+
+    /**
+     * Fremdgetränk (Issue #110): ein Getränk außerhalb eines laufenden Events,
+     * nur für die Statistik. Ohne Event und ohne Buchung; das Getränk steht im
+     * Katalog der Gruppe ([drinkId]) oder nur in der Getränkedatenbank
+     * ([libraryDrinkId]). [sourceId] macht Wiederholungen erkennbar.
+     *
+     * @return der neue Eintrag oder `null`, wenn die Schalter es nicht erlauben.
+     */
+    fun foreignDrink(
+        actor: UserEntity,
+        drinkId: UUID?,
+        libraryDrinkId: UUID?,
+        sourceId: UUID,
+        occurredAt: Instant = Instant.now()
+    ): StatisticRecordEntity? = write(
+        StatisticRecordEntity(
+            actorUserId = actor.id,
+            feature = StatisticFeature.FOREIGN_DRINK,
+            variant = if (drinkId != null) VARIANT_CATALOG else VARIANT_LIBRARY,
+            sourceId = sourceId,
+            drinkId = drinkId,
+            libraryDrinkId = libraryDrinkId,
+            occurredAt = occurredAt
+        ),
+        actor,
+        null
+    )
+
+    private fun decision(actor: UserEntity?, event: EventEntity?): Decision {
+        val stammtischId = TenantContext.stammtischId() ?: return Decision.GROUP_DISABLED
         val groupEnabled = stammtischRepository.findById(stammtischId).map { it.statisticsEnabled }.orElse(false)
         // Aktueller Stand aus der Datenbank: es zählt die Einstellung zum Zeitpunkt der Erfassung.
         val userEnabled = actor?.let { user -> userRepository.findById(user.id).map { it.statisticsEnabled }.orElse(true) }
         val eventEnabled = event?.let { e -> eventRepository.findById(e.id).map { it.statisticsEnabled }.orElse(true) }
-        if (decide(userEnabled, groupEnabled, eventEnabled) != Decision.RECORD) return false
-        recordRepository.save(
-            StatisticRecordEntity(
-                eventId = event?.id,
-                actorUserId = actor?.id,
-                feature = feature,
-                kind = kind,
-                variant = variant?.take(VARIANT_LENGTH),
-                respondsTo = respondsTo,
-                sourceId = sourceId,
-                quantity = quantity.coerceAtLeast(0),
-                occurredAt = occurredAt
-            )
-        )
-        return true
+        return decide(userEnabled, groupEnabled, eventEnabled)
+    }
+
+    private fun write(record: StatisticRecordEntity, actor: UserEntity?, event: EventEntity?): StatisticRecordEntity? {
+        if (TenantContext.stammtischId() == null) return null
+        if (decision(actor, event) != Decision.RECORD) return null
+        recordRepository.save(record)
+        return record
     }
 
     /** Kauf oder Aufladung aus dem Kassenbuch; Stornos über [removePurchase]. */
@@ -132,6 +175,10 @@ class StatisticsRecorder(
 
     companion object {
         private const val VARIANT_LENGTH = 32
+
+        /** `variant` eines Fremdgetränks: aus dem Katalog der Gruppe bzw. nur aus der Getränkedatenbank. */
+        const val VARIANT_CATALOG = "catalog"
+        const val VARIANT_LIBRARY = "library"
 
         /**
          * Gewichtung Nutzer > Gruppe > Event: Die höhere Ebene entscheidet

@@ -181,6 +181,8 @@ class StammtischExportService(
                             "actorId" to it.actorUserId,
                             "respondsTo" to it.respondsTo,
                             "sourceId" to it.sourceId,
+                            "drinkId" to it.drinkId,
+                            "libraryDrinkId" to it.libraryDrinkId,
                             "quantity" to it.quantity,
                             "occurredAt" to it.occurredAt
                         )

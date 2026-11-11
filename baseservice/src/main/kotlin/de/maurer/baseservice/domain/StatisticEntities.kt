@@ -22,6 +22,9 @@ import java.util.UUID
  * - [variant]: kurzer Code zur Unterscheidung, etwa die Antwort
  *   (`accepted`, `maybe`, `declined`), die Herkunft eines Kaufs oder die Art
  *   des Chats; nie freier Text.
+ * - [drinkId] / [libraryDrinkId]: nur bei Fremdgetränken
+ *   ([StatisticFeature.FOREIGN_DRINK]) das Getränk aus dem Katalog der Gruppe
+ *   bzw. aus der gemeinsamen Getränkedatenbank.
  */
 @Entity
 @Table(name = "statistic_records")
@@ -54,6 +57,12 @@ class StatisticRecordEntity(
     @Column(name = "quantity", nullable = false, updatable = false)
     var quantity: Int = 1,
 
+    @Column(name = "drink_id", updatable = false)
+    var drinkId: UUID? = null,
+
+    @Column(name = "library_drink_id", updatable = false)
+    var libraryDrinkId: UUID? = null,
+
     @Column(name = "occurred_at", nullable = false, updatable = false)
     var occurredAt: Instant = Instant.now()
 ) : StammtischScoped()
@@ -79,8 +88,15 @@ object StatisticFeature {
     const val INVITE_LINK = "invite_link"
     const val INVITE_JOIN = "invite_join"
 
+    /**
+     * Getränk außerhalb eines laufenden Events, nur für die Statistik erfasst
+     * (Issue #110): ohne Buchung und ohne Event, zählt in der eigenen und der
+     * Gruppenstatistik, in keiner Event-Statistik.
+     */
+    const val FOREIGN_DRINK = "foreign_drink"
+
     val ALL = listOf(
-        PURCHASE, ROUND, TOP_UP, EVENT, RSVP, MOMENT, MOMENT_REACTION, MOMENT_MEDIA,
+        PURCHASE, FOREIGN_DRINK, ROUND, TOP_UP, EVENT, RSVP, MOMENT, MOMENT_REACTION, MOMENT_MEDIA,
         CHAT_MESSAGE, CHAT_REACTION, INVITE_LINK, INVITE_JOIN
     )
 }

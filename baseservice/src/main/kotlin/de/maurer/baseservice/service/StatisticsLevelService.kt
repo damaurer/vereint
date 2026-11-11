@@ -42,7 +42,11 @@ import java.util.UUID
  * Event-Statistik und Funktions-Statistik.
  *
  * Alle Zahlen kommen aus `statistic_records` und werden in SQL summiert;
- * ausgeschaltete Erfassung taucht damit nirgends auf. Gruppenübergreifend
+ * ausgeschaltete Erfassung taucht damit nirgends auf. Fremdgetränke
+ * ([StatisticFeature.FOREIGN_DRINK], Issue #110) und Guthabenkäufe ohne Event
+ * haben keine `event_id`: Sie zählen in der eigenen Statistik und in der
+ * Funktions-Statistik der Gruppe, aber in keiner Event-Statistik, weil alle
+ * Event-Abfragen nach `event_id` filtern. Gruppenübergreifend
  * liest der Service wie der Kalender je Gruppe in einer eigenen Transaktion im
  * Kontext genau dieser Gruppe (Hibernate-Mandant und Row-Level-Security
  * bleiben aktiv) und zeigt dort keine Namen anderer Personen.
@@ -239,6 +243,7 @@ class StatisticsLevelService(
                 byVariant(StatisticFeature.ROUND, records = true)
             ),
             FeatureStatDto(StatisticFeature.PURCHASE, sum(StatisticFeature.PURCHASE), null, 0, byVariant(StatisticFeature.PURCHASE)),
+            FeatureStatDto(StatisticFeature.FOREIGN_DRINK, sum(StatisticFeature.FOREIGN_DRINK), null, 0, byVariant(StatisticFeature.FOREIGN_DRINK)),
             FeatureStatDto(StatisticFeature.TOP_UP, sum(StatisticFeature.TOP_UP), null, 0, emptyList())
         )
         return FeatureStatisticsDto(

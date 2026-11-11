@@ -96,15 +96,49 @@ data class PurchaseOptionDto(
     val currency: String
 )
 
-/** Was ein Barcodekauf kosten würde; es wird nichts gebucht. */
+/**
+ * Was nach einem Scan möglich ist; es wird nichts gebucht.
+ *
+ * - [options]: laufende Events mit Selbstbedienung, an denen das Getränk
+ *   gekauft werden kann. Ist die Liste nicht leer, gilt nur der Kauf über das
+ *   Event; [creditPurchase] ist dann `null` und [foreignDrink] `false`.
+ * - [creditPurchase]: Kauf mit Guthaben ohne Event zum Preis aus dem Katalog
+ *   der Gruppe; `null`, wenn das Getränk dort keinen Preis hat.
+ * - [foreignDrink]: das Getränk darf nur für die Statistik erfasst werden
+ *   (Fremdgetränk). Zugleich heißt es, dass ein Guthabenkauf in die Statistik
+ *   eingehen würde; nur dann lässt er sich davon ausnehmen.
+ * - [drinkId] ist `null`, wenn das Getränk nur in der Getränkedatenbank steht.
+ */
 data class PurchasePreviewDto(
     val barcode: String,
-    val drinkId: String,
+    val drinkId: String?,
     val drinkName: String,
     val imageReference: String?,
     val options: List<PurchaseOptionDto>,
     val creditBalance: BigDecimal,
-    val balanceCurrency: String
+    val balanceCurrency: String,
+    val creditPurchase: CreditPurchaseOptionDto? = null,
+    val foreignDrink: Boolean = false,
+    val libraryDrinkId: String? = null
+)
+
+/** Preis eines Guthabenkaufs ohne Event (Katalogpreis der Gruppe). */
+data class CreditPurchaseOptionDto(
+    val unitPrice: BigDecimal,
+    val currency: String
+)
+
+/**
+ * Kauf mit Guthaben ohne Event (Issue #110). Preis und Getränk bestimmt der
+ * Server aus dem Katalog der Gruppe. Mit `recordStatistics = false` entsteht
+ * kein Statistikeintrag.
+ */
+data class CreditPurchaseRequest(
+    @field:NotBlank(message = "barcode {validation.notBlank}")
+    @field:Size(max = 128, message = "barcode {validation.size.max}")
+    val barcode: String? = null,
+
+    val recordStatistics: Boolean? = true
 )
 
 /** Beleg-Snapshot eines Kaufs; unveränderlich (siehe `docs/domains/ledger-and-finance.md`). */
