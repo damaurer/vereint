@@ -21,6 +21,7 @@ import { AvatarBadgeComponent, StatusBadgeComponent, type StatusTone } from '../
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
+import { LiveUpdatesService } from '../live/live-updates.service';
 
 interface EventDetailView {
   event: EventDetail;
@@ -511,6 +512,8 @@ export class EventDetailComponent implements OnInit, OnDestroy {
   private lastReadMessageId: string | null = null;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private chatSubscription?: Subscription;
+  private readonly live = inject(LiveUpdatesService);
+  private liveSub?: Subscription;
 
   private get eventId(): string {
     return this.route.snapshot.paramMap.get('eventId') ?? '';
@@ -518,12 +521,18 @@ export class EventDetailComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.reload();
+    // Neue Nachrichten im Event-Chat kommen sofort an.
+    this.liveSub = this.live.on('chat').subscribe((event) => {
+      if (!this.conversationId) return;
+      if (event.type === 'resync' || event.conversationId === this.conversationId) this.refreshMessages();
+    });
   }
 
   ngOnDestroy(): void {
     this.load.destroy();
     this.stopPolling();
     this.chatSubscription?.unsubscribe();
+    this.liveSub?.unsubscribe();
   }
 
   protected reload(): void {
@@ -616,7 +625,10 @@ export class EventDetailComponent implements OnInit, OnDestroy {
         this.conversationId = conversation.id;
         this.refreshMessages();
         if (isPlatformBrowser(this.platformId)) {
-          this.pollTimer = setInterval(() => this.refreshMessages(), EVENT_CHAT_POLL_MS);
+          // Rückfall, solange keine Live-Verbindung steht.
+          this.pollTimer = setInterval(() => {
+            if (!this.live.connected()) this.refreshMessages();
+          }, EVENT_CHAT_POLL_MS);
         }
       },
       error: () => this.chatError.set(translate('member.eventDetail.chat.unavailable')),

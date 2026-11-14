@@ -4,12 +4,14 @@
  * Aufgaben:
  * - Offline: öffentliche statische Assets cachen und bei fehlendem Netz statt
  *   einer Fehlerseite des Browsers `/offline.html` zeigen.
- * - Web Push: Der Server sendet Pushes ohne Nutzlast. Der Worker lädt die
- *   eigentliche Mitteilung autorisiert über `/api/v1/notifications` nach und
- *   zeigt sie als Systembenachrichtigung an. Persönliche Mitteilungen
- *   (Direktnachrichten, Freundschaftsanfragen) kommen gruppenübergreifend aus
- *   `/api/v1/personal-notifications`; angezeigt wird die neueste. Einladungen
- *   zu Events tragen die Aktionen „Zusagen“/„Absagen“, die direkt `PUT /api/v1/events/{id}/rsvp` aufrufen.
+ * - Web Push: Der Server sendet Pushes ohne Nutzlast. Der Worker lädt das
+ *   Ungelesene aller Gruppen autorisiert über `/api/v1/personal-notifications`
+ *   nach (Mitteilungen, Gruppen- und Event-Chats, Direktnachrichten, Freunde)
+ *   und zeigt das Neueste als Systembenachrichtigung an. Chats und
+ *   Direktnachrichten teilen sich je Gespräch einen Tag, neue ersetzen ältere.
+ *   Gehört der Eintrag zu einer anderen Gruppe als der gewählten, wechselt ein
+ *   Tipp darauf zuerst in diese Gruppe. Einladungen zu Events tragen die
+ *   Aktionen „Zusagen“/„Absagen“, die direkt `PUT /api/v1/events/{id}/rsvp` aufrufen.
  *
  * Cache-Regeln (deny by default) spiegeln `src/app/pwa/service-worker-cache-policy.ts`;
  * beide Dateien synchron halten. Niemals gecacht werden `/api/`, Nicht-GET,
@@ -147,7 +149,10 @@ self.addEventListener('push', (event) => {
   event.waitUntil(showLatestNotification());
 });
 
-const NOTIFICATION_SOURCES = ['/api/v1/notifications', '/api/v1/personal-notifications'];
+// Gruppenübergreifend: Mitteilungen und Chats aller eigenen Gruppen samt Direktnachrichten und Freunden.
+const NOTIFICATION_SOURCES = ['/api/v1/personal-notifications'];
+/** Je Gespräch eine Benachrichtigung: neue Nachrichten ersetzen die vorige. */
+const CONVERSATION_TYPES = ['direct_message', 'chat_message'];
 
 async function loadUnread(path) {
   try {
@@ -172,9 +177,6 @@ async function showLatestNotification() {
   let actions;
 
   try {
-    // Mitteilungen der gewählten Gruppe und persönliche Mitteilungen
-    // (Direktnachrichten, Freunde) laufen getrennt; ein Fehler bei einer der
-    // beiden Quellen verhindert die Anzeige der anderen nicht.
     const lists = await Promise.all(NOTIFICATION_SOURCES.map(loadUnread));
     const unread = lists
       .flat()
@@ -184,9 +186,10 @@ async function showLatestNotification() {
     if (latest) {
       title = latest.title;
       body = truncate(latest.body, 180);
-      // Direktnachrichten je Gespräch unter einem Tag: neue ersetzen ältere.
-      tag = `vereint-${latest.type === 'direct_message' ? latest.link : latest.id}`;
+      // Chats und Direktnachrichten je Gespräch unter einem Tag: neue ersetzen ältere.
+      tag = `vereint-${CONVERSATION_TYPES.includes(latest.type) ? latest.link : latest.id}`;
       if (isAppLink(latest.link)) data = { url: latest.link };
+      if (typeof latest.stammtischId === 'string') data = { ...data, stammtischId: latest.stammtischId };
       const eventId = eventIdFromLink(latest.link);
       if (latest.type === 'event_invitation' && eventId) {
         data = { ...data, eventId, notificationId: latest.id };
@@ -204,6 +207,8 @@ async function showLatestNotification() {
   await self.registration.showNotification(title, {
     body,
     tag,
+    // Ersetzt eine Benachrichtigung desselben Gesprächs und meldet sich trotzdem erneut.
+    renotify: true,
     icon: NOTIFICATION_ICON,
     lang: 'de',
     data,
@@ -241,12 +246,33 @@ self.addEventListener('notificationclick', (event) => {
   const target = new URL(data.url || '/notifications', self.location.origin);
   if ((event.action === 'accept' || event.action === 'decline') && data.eventId) {
     event.waitUntil(
-      answerInvitation(data, event.action === 'accept' ? 'accepted' : 'declined', target.href),
+      selectGroup(data.stammtischId).then(() =>
+        answerInvitation(data, event.action === 'accept' ? 'accepted' : 'declined', target.href),
+      ),
     );
     return;
   }
-  event.waitUntil(openOrFocus(target.href));
+  event.waitUntil(selectGroup(data.stammtischId).then(() => openOrFocus(target.href)));
 });
+
+/**
+ * Wählt die Gruppe des Eintrags, damit Link und Antwort in der richtigen
+ * Gruppe landen. Ist sie schon gewählt, ändert sich nichts; schlägt es fehl,
+ * öffnet sich die App trotzdem.
+ */
+async function selectGroup(stammtischId) {
+  if (typeof stammtischId !== 'string' || !stammtischId) return;
+  try {
+    await fetch('/api/auth/stammtisch', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({ stammtischId }),
+    });
+  } catch {
+    // Ohne Netz bleibt die gewählte Gruppe.
+  }
+}
 
 // Antwort direkt aus der Benachrichtigung, ohne ein Fenster zu öffnen.
 async function answerInvitation(data, status, fallbackHref) {

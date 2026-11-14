@@ -5,6 +5,7 @@ import de.maurer.baseservice.security.RestAccessDeniedHandler
 import de.maurer.baseservice.security.RestAuthenticationEntryPoint
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.tenancy.StammtischContextFilter
+import jakarta.servlet.DispatcherType
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
@@ -48,6 +49,9 @@ class SecurityConfig(
             }
             .authorizeHttpRequests { authorize ->
                 authorize
+                    // Asynchrone Weiterleitungen (Live-Verbindung) folgen nur auf eine bereits
+                    // geprüfte Anfrage; ohne Session gäbe es dort sonst kein Principal mehr.
+                    .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                     // Compose- und Kubernetes-Healthchecks bleiben ohne Authentifizierung erreichbar
                     .requestMatchers(
                         "/actuator/health",

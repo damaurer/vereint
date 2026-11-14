@@ -62,7 +62,8 @@ class ChatService(
     private val userService: UserService,
     private val momentSessionRepository: MomentSessionRepository,
     private val momentAccessPolicy: MomentAccessPolicy,
-    private val statisticsRecorder: StatisticsRecorder
+    private val statisticsRecorder: StatisticsRecorder,
+    private val chatNotifier: ChatNotifier
 ) {
 
     // --- Mitglieder (authentifiziert per JWT) ---
@@ -197,10 +198,15 @@ class ChatService(
         return toMessageDto(saved)
     }
 
-    /** Zählt eine Nachricht für die Statistik; Direktnachrichten zählen nicht. */
+    /**
+     * Nach dem Speichern einer Nachricht: meldet sie sofort weiter (Live-Signal,
+     * Push; siehe [ChatNotifier]) und zählt sie für die Statistik.
+     * Direktnachrichten zählen nicht.
+     */
     fun recordMessage(message: ChatMessageEntity, sender: UserEntity?, event: EventEntity?) {
         val type = message.conversation?.type
         if (type == ConversationService.TYPE_DIRECT) return
+        chatNotifier.messageSent(message)
         statisticsRecorder.record(
             StatisticFeature.CHAT_MESSAGE,
             actor = sender,

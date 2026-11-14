@@ -99,7 +99,8 @@ Unter **Chat** (untere Leiste) stehen oben der **Gruppenchat** für alle Mitglie
 
 Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vorstand eine **Infotafel** anheften, etwa einen wichtigen Termin.
 
-- Unten Nachricht eintippen und senden.
+- Unten Nachricht eintippen und senden. Neue Nachrichten und Reaktionen der anderen erscheinen sofort, ohne Neuladen.
+- Mit eingeschaltetem Push bekommst du neue Nachrichten im Gruppenchat und in den Chats deiner Events aufs Handy, mit Name und Text. Je Chat gibt es eine Benachrichtigung, die neueste ersetzt die vorige.
 - Mit **+** unter einer Nachricht reagierst du mit einem Emoji.
 - **← Zurück** führt zur Liste.
 

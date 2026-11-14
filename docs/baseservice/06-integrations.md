@@ -90,7 +90,7 @@ sequenceDiagram
 
 ## 💬 Chat (`ChatService.kt`, `ConversationService.kt`)
 
-Chats laufen ausschließlich über REST; es gibt keine WebSocket-Endpunkte. Die Oberfläche fragt geöffnete Chats regelmäßig neu ab (`CHAT_POLL_INTERVAL_MS`, 10 Sekunden).
+Chats laufen über REST. Änderungen meldet der Server sofort über die Live-Verbindung `GET /api/v1/live` (Server-Sent Events, `LiveUpdateHub`); die Signale tragen keinen Inhalt, die Oberfläche lädt danach über REST nach. Steht keine Live-Verbindung, fragt die Oberfläche geöffnete Chats wie bisher alle 10 Sekunden ab (`CHAT_POLL_INTERVAL_MS`). Neue Nachrichten im Gruppen- und Event-Chat lösen außerdem einen Web Push aus (`ChatNotifier`). Details in [Kommunikation & Push](../domains/chat-and-push-notifications.md#3-live-verbindung-server-sent-events).
 
 - **Gruppenchat und Direktchats**: `/api/v1/conversations` (Lesestand, Reaktionen, Infotafel).
 - **Event-Chat**: `/api/v1/events/{eventId}/chat` für Owner, Teilnehmer sowie Personen mit `chat.moderate` oder `event.manage`.

@@ -21,7 +21,13 @@ import { sanitizeTransferState } from './server/authorization/transfer-state';
 import { assertServerEnvironment, serverEnvironment, ssrAllowedHosts } from './server/config/environment';
 import { authRoutes } from './server/routes/auth.routes';
 import { inviteRoutes } from './server/invites/invite.routes';
-import { API_PROXY_MAX_UPLOAD, apiProxy, mediaStreamProxy } from './server/api/api-proxy.middleware';
+import {
+  API_PROXY_MAX_UPLOAD,
+  apiProxy,
+  LIVE_PATH,
+  liveStreamProxy,
+  mediaStreamProxy,
+} from './server/api/api-proxy.middleware';
 import { apiRateLimits, crossSiteRequestGuard, loginRateLimit } from './server/security/request-guards';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
@@ -66,6 +72,8 @@ app.use('/api/invites', inviteRoutes);
 // an Spring weiter. Keine Fachlogik; `deny by default` ohne gültige Session.
 // Bilder und Videos in Moments strömen ungepuffert durch (eigener Weg, siehe mediaStreamProxy).
 app.use('/api/v1', mediaStreamProxy);
+// Live-Verbindung (Server-Sent Events): ungepuffert, ohne Zeitlimit von 8 Sekunden.
+app.use(LIVE_PATH, liveStreamProxy);
 app.use('/api/v1', express.raw({ type: 'multipart/form-data', limit: API_PROXY_MAX_UPLOAD }), apiProxy);
 app.use(authorizePages);
 // `cacheControl: false`: Die Cache-Regeln stammen ausschließlich aus

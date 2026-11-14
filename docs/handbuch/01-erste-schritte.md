@@ -150,7 +150,7 @@ Ist Vereint installiert, steht dort „Vereint ist installiert.“
 
 ## Mitteilungen aufs Handy (Push)
 
-Unter **Mitteilungen auf diesem Gerät** schaltest du Push-Nachrichten ein. Dann bekommst du Mitteilungen der Gruppe, Einladungen und Erinnerungen zu Events auch, wenn Vereint geschlossen ist.
+Unter **Mitteilungen auf diesem Gerät** schaltest du Push-Nachrichten ein. Dann bekommst du Mitteilungen der Gruppe, Einladungen und Erinnerungen zu Events, neue Chat- und Direktnachrichten auch, wenn Vereint geschlossen ist. Das gilt für alle deine Gruppen; ein Tipp auf die Nachricht wechselt bei Bedarf in die richtige Gruppe.
 
 1. Schalter einschalten.
 2. Das Handy fragt einmal, ob Vereint Mitteilungen senden darf. Mit **Erlauben** bestätigen.

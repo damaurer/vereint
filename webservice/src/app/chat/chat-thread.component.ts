@@ -27,6 +27,7 @@ import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
 import { ChatApiService } from './chat-api.service';
 import { ChatUnreadStore } from './chat-unread.store';
+import { LiveUpdatesService } from '../live/live-updates.service';
 
 /** Abstand der Abfrage neuer Nachrichten (es gibt keine Websockets). */
 export const CHAT_POLL_INTERVAL_MS = 10_000;
@@ -409,6 +410,8 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   private readonly unreadStore = inject(ChatUnreadStore);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly document = inject(DOCUMENT);
+  private readonly live = inject(LiveUpdatesService);
+  private liveSub?: Subscription;
 
   /** Die geöffnete Konversation. */
   @Input({ required: true }) conversation!: ConversationSummary;
@@ -448,8 +451,13 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit(): void {
     if (!this.browser) return;
+    // Neue Nachrichten und Reaktionen dieses Chats kommen sofort an.
+    this.liveSub = this.live.on('chat', 'direct').subscribe((event) => {
+      if (event.type === 'resync' || event.conversationId === this.conversation?.id) this.refresh();
+    });
+    // Rückfall, solange keine Live-Verbindung steht.
     this.pollTimer = setInterval(() => {
-      if (this.isVisible()) this.refresh();
+      if (!this.live.connected() && this.isVisible()) this.refresh();
     }, CHAT_POLL_INTERVAL_MS);
     this.document.addEventListener('visibilitychange', this.onVisibility);
   }
@@ -470,6 +478,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnDestroy(): void {
     this.loadSub?.unsubscribe();
+    this.liveSub?.unsubscribe();
     if (this.pollTimer !== null) clearInterval(this.pollTimer);
     this.pollTimer = null;
     if (this.browser) this.document.removeEventListener('visibilitychange', this.onVisibility);

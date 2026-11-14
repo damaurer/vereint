@@ -103,7 +103,7 @@ In `webservice/src/server.ts` ist die Pipeline wie folgt aufgebaut:
 - **Zweck**: Syntaktische Vorab-Validierung von Einladungstokens.
 
 ### 12. `/api/v1` (`mediaStreamProxy`, `apiProxy`)
-- **Zweck**: `mediaStreamProxy` reicht Uploads und Abrufe von Fotos und Videos in Moments ungepuffert durch. Alle übrigen fachlichen Aufrufe leitet `apiProxy` an Spring Boot weiter (Multipart bis `API_PROXY_MAX_UPLOAD`, 6 MB), injiziert das Bearer-Token und den Header `X-Stammtisch-Id`.
+- **Zweck**: `mediaStreamProxy` reicht Uploads und Abrufe von Fotos und Videos in Moments ungepuffert durch. `liveStreamProxy` reicht die Live-Verbindung `GET /api/v1/live` (Server-Sent Events) ungepuffert und mit `Cache-Control: no-transform` durch, damit die Kompression sie nicht puffert; ohne Lebenszeichen für 70 Sekunden bricht er ab. Alle übrigen fachlichen Aufrufe leitet `apiProxy` an Spring Boot weiter (Multipart bis `API_PROXY_MAX_UPLOAD`, 6 MB), injiziert das Bearer-Token und den Header `X-Stammtisch-Id`.
 - **Pfad-Prüfung**: Nur Pfade unter `/api/v1`; `..` und kodierte Schrägstriche werden verworfen.
 
 ### 13. `authorizePages`

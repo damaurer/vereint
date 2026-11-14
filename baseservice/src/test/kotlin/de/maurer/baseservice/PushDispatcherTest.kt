@@ -31,7 +31,7 @@ class PushDispatcherTest {
     private val repository = mock(PushSubscriptionRepository::class.java)
     private val sender = mock(PushSender::class.java)
     private val executor = DirectExecutor()
-    private val dispatcher = PushDispatcher(repository, sender, executor)
+    private val dispatcher = PushDispatcher(repository, sender, null, executor)
 
     private val userId: UUID = UUID.randomUUID()
     private val user = UserEntity(id = userId, keycloakSubject = "sub", displayName = "Mitglied")

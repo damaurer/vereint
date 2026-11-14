@@ -163,6 +163,7 @@ class StammtischContextFilter(
             "/api/v1/friends",
             "/api/v1/direct-conversations",
             "/api/v1/personal-notifications",
+            "/api/v1/live",
             "/api/v1/member-invites/preview",
             "/api/v1/member-invites/register",
             "/api/v1/member-invites/join",
