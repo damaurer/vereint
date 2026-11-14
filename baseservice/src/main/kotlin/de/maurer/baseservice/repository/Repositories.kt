@@ -108,6 +108,9 @@ interface UserPermissionRepository : JpaRepository<UserPermissionEntity, UserPer
 interface EventRepository : JpaRepository<EventEntity, UUID> {
     fun findByOwnerId(ownerId: UUID): List<EventEntity>
     fun findByStatus(status: EventStatus): List<EventEntity>
+
+    /** Events, die im Zeitraum beginnen (Statistik). */
+    fun findByStartsAtBetween(from: Instant, until: Instant): List<EventEntity>
 }
 
 @Repository
@@ -116,6 +119,31 @@ interface EventParticipantRepository : JpaRepository<EventParticipantEntity, UUI
     fun findByUserId(userId: UUID): List<EventParticipantEntity>
     fun findByEventIdAndUserId(eventId: UUID, userId: UUID): Optional<EventParticipantEntity>
     fun countByEventId(eventId: UUID): Long
+
+    /** Zeilen: eventId, Zahl der Eingeladenen ohne Antwort, die ihre Statistik nicht ausgeschaltet haben. */
+    @Query(
+        """
+        select p.event.id, count(p) from EventParticipantEntity p
+        where p.event.id in :eventIds and p.rsvp = :status and p.user.statisticsEnabled = true
+        group by p.event.id
+        """
+    )
+    fun countUnansweredByEvent(
+        @Param("eventIds") eventIds: Collection<UUID>,
+        @Param("status") status: RsvpStatus
+    ): List<Array<Any?>>
+
+    /** Teilnahmen samt Event und Person für Events, die im Zeitraum beginnen (Statistik). */
+    @Query(
+        """
+        select p from EventParticipantEntity p join fetch p.event e join fetch p.user u
+        where e.startsAt >= :from and e.startsAt <= :until
+        """
+    )
+    fun findForEventsStartingBetween(
+        @Param("from") from: Instant,
+        @Param("until") until: Instant
+    ): List<EventParticipantEntity>
 
     /** Eingeladene, die noch keine Einladung bekommen haben, bei veröffentlichten bzw. laufenden Events. */
     @Query(
@@ -170,6 +198,31 @@ interface DrinkCatalogRepository : JpaRepository<DrinkCatalogEntity, UUID> {
     fun findByStatusOrderByNameAsc(status: DrinkStatus): List<DrinkCatalogEntity>
     fun findAllByOrderByNameAsc(): List<DrinkCatalogEntity>
     fun findByLibraryDrinkIdIn(libraryDrinkIds: Collection<UUID>): List<DrinkCatalogEntity>
+    fun findByTallyCategoryId(tallyCategoryId: UUID): List<DrinkCatalogEntity>
+}
+
+/** Runden im Event (Issue #81). */
+@Repository
+interface RoundRepository : JpaRepository<RoundEntity, UUID> {
+    @EntityGraph(attributePaths = ["sponsor", "event", "eventDrink"])
+    fun findByEventIdOrderByCreatedAtAsc(eventId: UUID): List<RoundEntity>
+
+    /** Sperrt die Runde, damit parallele Striche die Höchstsumme nicht überschreiten. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from RoundEntity r where r.id = :id")
+    fun findByIdForUpdate(@Param("id") id: UUID): Optional<RoundEntity>
+}
+
+@Repository
+interface RoundInviteeRepository : JpaRepository<RoundInviteeEntity, UUID> {
+    @EntityGraph(attributePaths = ["member", "round"])
+    fun findByRoundIdIn(roundIds: Collection<UUID>): List<RoundInviteeEntity>
+}
+
+/** Strich-Kategorien der Gruppe (Spalten der Strichliste, Issue #80). */
+@Repository
+interface TallyCategoryRepository : JpaRepository<TallyCategoryEntity, UUID> {
+    fun findByArchivedFalseOrderBySortOrderAscNameAsc(): List<TallyCategoryEntity>
 }
 
 @Repository
@@ -245,6 +298,10 @@ interface LedgerEntryRepository : org.springframework.data.repository.Repository
     /** Mehrere Buchungen samt Mitglied, z. B. um Audit-Einträge mit Namen anzuzeigen. */
     @EntityGraph(attributePaths = ["member"])
     fun findByIdIn(ids: Collection<UUID>): List<LedgerEntryEntity>
+
+    /** Buchungen, die auf Runden gingen (Verbrauch und Einlösungen, Issue #81). */
+    @EntityGraph(attributePaths = ["round", "member", "beneficiary", "reversesEntry"])
+    fun findByRoundIdIn(roundIds: Collection<UUID>): List<LedgerEntryEntity>
 
     /** Bereits vorhandene Gegenbuchungen zu einer Ursprungsbuchung (Doppelkorrektur vermeiden). */
     fun findByReversesEntryId(reversesEntryId: UUID): List<LedgerEntryEntity>
@@ -352,6 +409,19 @@ interface ConversationMemberRepository : JpaRepository<ConversationMemberEntity,
 @Repository
 interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
     fun findByConversationIdOrderByCreatedAtAsc(conversationId: UUID): List<ChatMessageEntity>
+
+    /**
+     * Nachrichten im Zeitraum für die Statistik, ohne Inhalt (nichts wird
+     * entschlüsselt): Art und Id des Gesprächs, Id und Name der Absenderin.
+     */
+    @Query(
+        """
+        select c.type, c.id, s.id, s.displayName from ChatMessageEntity m
+        join m.conversation c left join m.sender s
+        where m.createdAt >= :from
+        """
+    )
+    fun findStatisticsRowsSince(@Param("from") from: Instant): List<Array<Any?>>
     fun findFirstByConversationIdOrderByCreatedAtDesc(conversationId: UUID): Optional<ChatMessageEntity>
 
     /** Ungelesene Nachrichten anderer (Mitglieder oder Gäste) seit `after`. */
@@ -397,6 +467,7 @@ interface MomentSessionRepository : JpaRepository<MomentSessionEntity, UUID> {
     fun findByActiveTrueOrderByCreatedAtDesc(): List<MomentSessionEntity>
     fun findByActiveFalseOrderByCreatedAtDesc(): List<MomentSessionEntity>
     fun findByConversationId(conversationId: UUID): Optional<MomentSessionEntity>
+    fun countByCreatedAtGreaterThanEqual(from: Instant): Long
 }
 
 @Repository
@@ -405,6 +476,7 @@ interface MomentResponseRepository : JpaRepository<MomentResponseEntity, UUID> {
     fun findByMomentId(momentId: UUID): List<MomentResponseEntity>
     fun findByUserId(userId: UUID): List<MomentResponseEntity>
     fun countByMomentId(momentId: UUID): Long
+    fun countByCreatedAtGreaterThanEqual(from: Instant): Long
 }
 
 @Repository
@@ -496,6 +568,7 @@ interface MomentMediaRepository : JpaRepository<MomentMediaEntity, UUID> {
     fun findByResponseIdIn(responseIds: Collection<UUID>): List<MomentMediaEntity>
     fun countByMomentIdAndOwnerId(momentId: UUID, ownerId: UUID): Long
     fun findByResponseIsNullAndCreatedAtBefore(cutoff: Instant): List<MomentMediaEntity>
+    fun countByCreatedAtGreaterThanEqual(from: Instant): Long
 
     /** Belegter Speicher aller Moment-Medien des Stammtischs. */
     @Query("select coalesce(sum(m.sizeBytes), 0) from MomentMediaEntity m")
@@ -562,4 +635,124 @@ interface DirectMessageRepository : JpaRepository<DirectMessageEntity, UUID> {
 interface DirectReactionRepository : JpaRepository<DirectReactionEntity, UUID> {
     fun findByMessageIdIn(messageIds: Collection<UUID>): List<DirectReactionEntity>
     fun findByMessageIdAndUserIdAndEmoji(messageId: UUID, userId: UUID, emoji: String): Optional<DirectReactionEntity>
+}
+
+/**
+ * Statistikeinträge der aktuellen Gruppe (Hibernate-Mandant und
+ * Row-Level-Security). Die Abfragen liefern Summen je Funktion, Event oder
+ * Person; Rohzeilen verlassen den Fachservice nicht.
+ */
+@Repository
+interface StatisticRecordRepository : JpaRepository<StatisticRecordEntity, UUID> {
+
+    /** Zeilen: feature, kind, variant, Anzahl Einträge, Summe quantity. */
+    @Query(
+        "select r.feature, r.kind, r.variant, count(r), sum(r.quantity) from StatisticRecordEntity r " +
+            "where r.occurredAt >= :from group by r.feature, r.kind, r.variant"
+    )
+    fun countByFeatureSince(@Param("from") from: Instant): List<Array<Any?>>
+
+    /** Wie [countByFeatureSince], nur Einträge einer Person. */
+    @Query(
+        "select r.feature, r.kind, r.variant, count(r), sum(r.quantity) from StatisticRecordEntity r " +
+            "where r.actorUserId = :actor and r.occurredAt >= :from group by r.feature, r.kind, r.variant"
+    )
+    fun countByFeatureForActorSince(@Param("actor") actor: UUID, @Param("from") from: Instant): List<Array<Any?>>
+
+    /** Zeilen: eventId, feature, variant, Anzahl Einträge, Summe quantity. */
+    @Query(
+        "select r.eventId, r.feature, r.variant, count(r), sum(r.quantity) from StatisticRecordEntity r " +
+            "where r.eventId in :eventIds group by r.eventId, r.feature, r.variant"
+    )
+    fun countByEvent(@Param("eventIds") eventIds: Collection<UUID>): List<Array<Any?>>
+
+    /** Zeilen: eventId, feature, Summe quantity – nur Einträge einer Person. */
+    @Query(
+        "select r.eventId, r.feature, sum(r.quantity) from StatisticRecordEntity r " +
+            "where r.eventId in :eventIds and r.actorUserId = :actor group by r.eventId, r.feature"
+    )
+    fun countByEventForActor(@Param("eventIds") eventIds: Collection<UUID>, @Param("actor") actor: UUID): List<Array<Any?>>
+
+    /** Zeilen: eventId, Zahl verschiedener Personen mit Einträgen dieser Funktion. */
+    @Query(
+        "select r.eventId, count(distinct r.actorUserId) from StatisticRecordEntity r " +
+            "where r.eventId in :eventIds and r.feature = :feature group by r.eventId"
+    )
+    fun countActorsByEvent(@Param("eventIds") eventIds: Collection<UUID>, @Param("feature") feature: String): List<Array<Any?>>
+
+    /** Zeilen: actorUserId, Summe quantity einer Funktion seit [from]. */
+    @Query(
+        "select r.actorUserId, sum(r.quantity) from StatisticRecordEntity r " +
+            "where r.feature = :feature and r.occurredAt >= :from and r.actorUserId is not null group by r.actorUserId"
+    )
+    fun sumByActor(@Param("feature") feature: String, @Param("from") from: Instant): List<Array<Any?>>
+
+    /** Zeilen: actorUserId, Summe quantity einer Funktion in einem Event. */
+    @Query(
+        "select r.actorUserId, sum(r.quantity) from StatisticRecordEntity r " +
+            "where r.feature = :feature and r.eventId = :eventId and r.actorUserId is not null group by r.actorUserId"
+    )
+    fun sumByActorInEvent(@Param("feature") feature: String, @Param("eventId") eventId: UUID): List<Array<Any?>>
+
+    /** Zeilen: eventId, actorUserId, variant, occurredAt der Antworten (je Person die letzte zählt). */
+    @Query(
+        "select r.eventId, r.actorUserId, r.variant, r.occurredAt from StatisticRecordEntity r " +
+            "where r.feature = :feature and r.eventId in :eventIds and r.actorUserId is not null"
+    )
+    fun answersForEvents(
+        @Param("feature") feature: String,
+        @Param("eventIds") eventIds: Collection<UUID>
+    ): List<Array<Any?>>
+
+    /** Quellen (z. B. Buchungen) mit Eintrag dieser Funktion seit [from]. */
+    @Query("select r.sourceId from StatisticRecordEntity r where r.feature = :feature and r.occurredAt >= :from and r.sourceId is not null")
+    fun sourceIdsSince(@Param("feature") feature: String, @Param("from") from: Instant): List<UUID>
+
+    /** Zeilen: actorUserId, variant, eventId, Summe quantity einer Funktion seit [from]. */
+    @Query(
+        "select r.actorUserId, r.variant, r.eventId, sum(r.quantity) from StatisticRecordEntity r " +
+            "where r.feature = :feature and r.occurredAt >= :from group by r.actorUserId, r.variant, r.eventId"
+    )
+    fun breakdownSince(@Param("feature") feature: String, @Param("from") from: Instant): List<Array<Any?>>
+
+    fun existsByFeatureAndSourceId(feature: String, sourceId: UUID): Boolean
+
+    fun findFirstByFeatureAndSourceId(feature: String, sourceId: UUID): StatisticRecordEntity?
+
+    /** Einträge einer Funktion seit [from] (Fremdgetränke für die Getränkestatistik). */
+    fun findByFeatureAndOccurredAtGreaterThanEqual(feature: String, from: Instant): List<StatisticRecordEntity>
+
+    /** Zeilen: eventId, variant, occurredAt der eigenen Antworten auf Einladungen seit [from]. */
+    @Query(
+        "select r.eventId, r.variant, r.occurredAt from StatisticRecordEntity r " +
+            "where r.feature = 'rsvp' and r.actorUserId = :actor and r.occurredAt >= :from and r.eventId is not null"
+    )
+    fun answersOfActorSince(@Param("actor") actor: UUID, @Param("from") from: Instant): List<Array<Any?>>
+
+    /** Zahl der Events mit mindestens einem Eintrag dieser Funktion einer Person seit [from]. */
+    @Query(
+        "select count(distinct r.eventId) from StatisticRecordEntity r " +
+            "where r.actorUserId = :actor and r.feature = :feature and r.occurredAt >= :from and r.eventId is not null"
+    )
+    fun countEventsOfActorSince(@Param("actor") actor: UUID, @Param("feature") feature: String, @Param("from") from: Instant): Long
+
+    /** Gruppen mit Einträgen einer Person; nur im System-Kontext sinnvoll (Löschen der eigenen Daten). */
+    @Query("select distinct r.stammtischId from StatisticRecordEntity r where r.actorUserId = :actor")
+    fun findStammtischIdsByActor(@Param("actor") actor: UUID): List<UUID>
+
+    fun countByStammtischId(stammtischId: UUID): Long
+
+    fun findAllByOrderByOccurredAtAsc(): List<StatisticRecordEntity>
+
+    @Modifying
+    @Query("delete from StatisticRecordEntity r where r.feature = :feature and r.sourceId = :sourceId")
+    fun deleteByFeatureAndSource(@Param("feature") feature: String, @Param("sourceId") sourceId: UUID): Int
+
+    @Modifying
+    @Query("delete from StatisticRecordEntity r where r.stammtischId = :stammtischId and r.actorUserId = :actor")
+    fun deleteByActor(@Param("stammtischId") stammtischId: UUID, @Param("actor") actor: UUID): Int
+
+    @Modifying
+    @Query("delete from StatisticRecordEntity r where r.stammtischId = :stammtischId")
+    fun deleteAllOfStammtisch(@Param("stammtischId") stammtischId: UUID): Int
 }

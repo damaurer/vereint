@@ -12,7 +12,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin, map, type Subscription } from 'rxjs';
 import type { ConversationSummary } from '../api/api.types';
 import { AsyncState } from '../member/async-state';
-import { formatDateTime } from '../member/member-format';
+import { formatChatTime, formatDateTime } from '../member/member-format';
 import { IconComponent } from '../ui/icon.component';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
@@ -68,48 +68,52 @@ interface ChatPageData {
         } @else if (data(); as page) {
           <div class="chat-layout" [class.is-thread]="mobileView() === 'thread'">
             <aside class="chat-aside" [attr.aria-label]="'chat.list.ariaLabel' | t">
-              <ul class="chat-conversations">
-                @for (row of rows(); track row.id) {
-                  @if (row.type === 'event' && row.id === firstEventId()) {
-                    <li><p class="chat-aside-title">{{ 'chat.list.eventChats' | t }}</p></li>
-                  }
-                  <li>
-                    <button
-                      type="button"
-                      class="chat-conversation"
-                      [class.is-active]="row.id === selectedId()"
-                      [attr.aria-current]="row.id === selectedId() ? 'true' : null"
-                      (click)="select(row.id)"
-                    >
-                      <span class="chat-conversation-icon" aria-hidden="true">
-                        <vereint-icon [name]="row.type === 'event' ? 'events' : 'chat'" />
-                      </span>
-                      <span class="chat-conversation-body">
-                        <span class="chat-conversation-top">
-                          <span class="chat-conversation-name">{{
-                            row.type === 'club' ? ('chat.list.clubChat' | t) : row.title
-                          }}</span>
-                          @if (row.lastMessage; as last) {
-                            <span class="chat-conversation-time">{{ formatDateTime(last.createdAt) }}</span>
-                          }
-                        </span>
-                        <span class="chat-conversation-preview">
-                          @if (row.lastMessage; as last) {
-                            {{ last.senderName }}: {{ last.message }}
-                          } @else {
-                            {{ 'chat.list.noMessages' | t }}
-                          }
-                        </span>
-                      </span>
-                      @if (row.unreadCount > 0) {
-                        <span class="chat-unread" [attr.aria-label]="'chat.unread' | t: { count: row.unreadCount }">
-                          {{ row.unreadCount }}
-                        </span>
-                      }
-                    </button>
-                  </li>
+              @for (group of groupedRows(); track group.kind) {
+                @if (group.kind === 'event') {
+                  <p class="chat-aside-title">{{ 'chat.list.eventChats' | t }}</p>
                 }
-              </ul>
+                <ul class="chat-conversations" [class.chat-conversations-club]="group.kind === 'club'">
+                  @for (row of group.rows; track row.id) {
+                    <li>
+                      <button
+                        type="button"
+                        class="chat-conversation"
+                        [class.is-active]="row.id === selectedId()"
+                        [attr.aria-current]="row.id === selectedId() ? 'true' : null"
+                        (click)="select(row.id)"
+                      >
+                        <span class="chat-conversation-icon" aria-hidden="true">
+                          <vereint-icon [name]="row.type === 'event' ? 'events' : 'chat'" />
+                        </span>
+                        <span class="chat-conversation-body">
+                          <span class="chat-conversation-top">
+                            <span class="chat-conversation-name">{{
+                              row.type === 'club' ? (row.title || ('chat.list.clubChat' | t)) : row.title
+                            }}</span>
+                            @if (row.lastMessage; as last) {
+                              <span class="chat-conversation-time">{{ formatChatTime(last.createdAt) }}</span>
+                            }
+                          </span>
+                          <span class="chat-conversation-bottom">
+                            <span class="chat-conversation-preview">
+                              @if (row.lastMessage; as last) {
+                                {{ last.senderName }}: {{ last.message }}
+                              } @else {
+                                {{ 'chat.list.noMessages' | t }}
+                              }
+                            </span>
+                            @if (row.unreadCount > 0) {
+                              <span class="chat-unread" [attr.aria-label]="'chat.unread' | t: { count: row.unreadCount }">
+                                {{ row.unreadCount }}
+                              </span>
+                            }
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
               @if (firstEventId() === null) {
                 <p class="chat-aside-hint">{{ 'chat.list.noEventChats' | t }}</p>
               }
@@ -162,6 +166,19 @@ export class ChatComponent implements OnInit, OnDestroy {
       (conversation) => conversation.type === 'club' || conversation.type === 'event',
     ),
   );
+
+  /** Gruppenchat oben als eigene Karte, darunter die Event-Chats als Liste. */
+  protected readonly groupedRows = computed(() => {
+    const rows = this.rows();
+    const club = rows.filter((row) => row.type !== 'event');
+    const events = rows.filter((row) => row.type === 'event');
+    return [
+      ...(club.length ? [{ kind: 'club' as const, rows: club }] : []),
+      ...(events.length ? [{ kind: 'event' as const, rows: events }] : []),
+    ];
+  });
+
+  protected readonly formatChatTime = formatChatTime;
 
   protected readonly firstEventId = computed(
     () => this.rows().find((conversation) => conversation.type === 'event')?.id ?? null,

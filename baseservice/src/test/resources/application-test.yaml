@@ -44,6 +44,9 @@ vereint:
   push:
     # In Tests standardmaessig No-Op-Push-Sender
     enabled: false
+  signup:
+    # Produktion: standardmäßig aus. Die Tests prüfen das Eröffnen.
+    enabled: true
 
 # Spiegelt die gehärtete Produktionskonfiguration, damit die Actuator-Tests aussagekräftig sind
 management:

@@ -5,7 +5,7 @@
 [![Angular](https://img.shields.io/badge/Angular-22_SSR-DD0031?logo=angular&logoColor=white)](https://angular.dev/)
 [![Keycloak](https://img.shields.io/badge/Keycloak-26.8-4D4D4D?logo=redhat&logoColor=white)](https://www.keycloak.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Strato VPS](https://img.shields.io/badge/Betrieb-Strato_VPS-003D8F)](docs/betrieb/strato.md)
+[![Images](https://img.shields.io/badge/Images-ghcr.io-2088FF?logo=github)](docs/betrieb/selbst-betreiben.md)
 
 **Vereint** ist die App für Gruppen aller Art, ob Stammtisch, Verein oder Team.
 Eine Installation trägt beliebig viele Gruppen; jede hat eigene Mitglieder,
@@ -36,7 +36,7 @@ direkt auf dem Rechner. Voraussetzungen: Docker mit Compose, Java 25, Node.js �
 # 1. Umgebungsvariablen anlegen; die Vorlage funktioniert ohne Änderungen
 cp .env.example .env
 
-# 2. PostgreSQL (2x), Keycloak und S3Mock (lokaler S3-Ersatz) starten
+# 2. PostgreSQL (2x) und Keycloak starten
 docker compose up -d
 
 # 3. Fachservice, Port 8081
@@ -60,22 +60,20 @@ E2E-Tests: [e2e/README.md](e2e/README.md).
 
 ```mermaid
 graph LR
-    Browser["Browser / PWA"] -->|HTTPS| Traefik
-    Traefik -->|"auth.*"| Keycloak
-    Traefik -->|"vereint.*"| Web["webservice<br/>Angular SSR + BFF"]
+    Browser["Browser / PWA"] -->|HTTPS| Proxy["Reverse Proxy"]
+    Proxy -->|Login| Keycloak
+    Proxy --> Web["webservice<br/>Angular SSR + BFF"]
     Web -->|"/api/v1"| Base["baseservice<br/>Spring Boot"]
     Base --> PG[("PostgreSQL")]
     Base -->|"verschlüsselte Dateien"| Files[("Datei-Volume")]
 ```
 
-Produktion: `https://vereint.maurercloud.de` auf einem Strato VPS, den
-[LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) per Ansible
-einrichtet (Traefik, Keycloak der Plattform, Backups nach HiDrive), siehe
-[Betrieb auf einem Strato VPS](docs/betrieb/strato.md). Die frühere AWS-Variante
-([infra/aws](infra/aws/README.md), [deploy](deploy/README.md)) bleibt im Repo. Chat-Nachrichten, Mitteilungen, Bilder und Videos
-verschlüsselt der baseservice mit AES-256-GCM, bevor sie gespeichert werden.
-Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` rollt mit
-Backup, Health Check und automatischem Rollback aus.
+Das Repository baut zwei Images, `ghcr.io/damaurer/baseservice` und
+`ghcr.io/damaurer/webservice`, und legt sie nach einem Merge auf `qs` oder
+`main` in GitHub Packages ab. Wie sie betrieben werden, beschreibt
+[Vereint selbst betreiben](docs/betrieb/selbst-betreiben.md).
+Chat-Nachrichten, Mitteilungen, Bilder und Videos verschlüsselt der
+baseservice mit AES-256-GCM, bevor sie gespeichert werden.
 
 ---
 
@@ -85,10 +83,9 @@ Backup, Health Check und automatischem Rollback aus.
 | :--- | :--- | :--- |
 | `baseservice/` | Kotlin 2.3, Spring Boot 4.1, Java 25 | REST-API, Fachlogik, Trennung der Gruppen (Row-Level-Security), PostgreSQL/Liquibase, Verschlüsselung, Dateispeicher (Verzeichnis oder S3), Web Push |
 | `webservice/` | Angular 22, Express 5, TypeScript 6 | Oberfläche, PWA, SSR, BFF mit Session-Cookie und API-Proxy |
-| `keycloak/` | Keycloak 26.8.1 | Realm-Definitionen, Login-Theme, Produktions-Image |
-| `deploy/` | Docker Compose, Caddy | Stack für die AWS-Variante, Backups, Deployment-Skripte |
-| `infra/aws/` | Terraform | AWS-Variante: Server, Buckets, Secrets, Alarme, GitHub-OIDC |
-| `e2e/` | Playwright | Tests gegen den kompletten Produktions-Stack |
+| `keycloak/` | Keycloak 26.8.1 | Realm-Definitionen und Login-Theme, Image für den lokalen Stack |
+| `local/` | Docker Compose, Caddy | Kompletter Stack für den lokalen Start und die E2E-Tests |
+| `e2e/` | Playwright | Tests gegen den kompletten Stack |
 | `scripts/handbook/` | Playwright | Bildschirmfotos für das Benutzerhandbuch |
 | `docs/` | Markdown | Technische und fachliche Dokumentation, Benutzerhandbuch |
 
@@ -98,25 +95,19 @@ Backup, Health Check und automatischem Rollback aus.
 
 - Gearbeitet wird auf `develop`. Jeder Pull Request nach `develop`, `qs` oder `main`
   muss Tests, Sicherheitsscans und E2E-Tests bestehen.
-- Ein Merge nach `main` mit neuen Images oder Änderungen in `deploy/` rollt
-  automatisch auf den Strato VPS aus (`deploy vereint <release-tag>` per SSH):
-  Datenbank-Dump vorher, Health Check danach, automatischer Rollback bei Fehlern.
+- Nach einem Merge auf `qs` oder `main` landen geänderte Images in GitHub
+  Packages (`:<commit>`, `:qs`, `:main`). Ausgerollt wird außerhalb dieses
+  Repositorys.
 - Chat-Nachrichten, Mitteilungen, Bilder und Videos werden in der App mit
   AES-256-GCM verschlüsselt, bevor sie in der Datenbank oder im Dateispeicher landen.
-- Backups macht LinuxServerSetup: Dump vor jedem Deployment, stündlich und
-  nachts, verschlüsselt mit restic nach HiDrive.
-- Den Datenschlüssel (`vault_vereint_data_encryption_key`) zusätzlich offline
-  aufbewahren, neben Vault-Passwort und restic-Passwort. Ohne ihn sind Chat,
-  Bilder und Videos auch aus einem intakten Backup nicht mehr lesbar.
+- Den Datenschlüssel (`DATA_ENCRYPTION_KEY`) zusätzlich offline aufbewahren.
+  Ohne ihn sind Chat, Bilder und Videos auch aus einem intakten Backup nicht
+  mehr lesbar.
 
 | Thema | Dokument |
 | :--- | :--- |
-| Betrieb auf Strato (eigener Server), Go-Live-Checkliste | [Betrieb auf einem Strato VPS](docs/betrieb/strato.md) |
-| Vor dem ersten Produktivbetrieb auf AWS | [Go-Live-Checkliste](docs/betrieb/go-live-checkliste.md) |
+| Images, Konfiguration, erster Start | [Vereint selbst betreiben](docs/betrieb/selbst-betreiben.md) |
 | Branches, CI, Images | [Branches und CI](docs/betrieb/branches-und-ci.md) |
-| AWS, Terraform, Kosten | [AWS und Kosten](docs/betrieb/aws-und-kosten.md) |
-| Ausrollen und Zurückrollen | [Deployment und Rollback](docs/betrieb/deployment-und-rollback.md) |
-| Backups und Restore | [Backups und Wiederherstellung](docs/betrieb/backups-und-wiederherstellung.md) |
 | Verschlüsselung, Schlüssel, Härtung | [Sicherheit und Schlüssel](docs/betrieb/sicherheit-und-schluessel.md) |
 | Lizenz, Öffentlichschalten, Selbstbetrieb | [Open Source](docs/betrieb/open-source.md) |
 
@@ -127,9 +118,8 @@ Backup, Health Check und automatischem Rollback aus.
 - [docs/README.md](docs/README.md) – Übersicht aller Dokumente und Glossar
 - [docs/handbuch/](docs/handbuch/README.md) – Benutzerhandbuch je Rolle
 - [docs/domains/stammtische.md](docs/domains/stammtische.md) – Mehrere Gruppen, Trennung der Daten, Rollen je Gruppe
-- [docs/betrieb/strato.md](docs/betrieb/strato.md) – Produktionsbetrieb auf Strato, Go-Live-Checkliste
-- [deploy/README.md](deploy/README.md) – AWS-Variante: Stack, Backups, Deployments
-- [infra/aws/README.md](infra/aws/README.md) – AWS-Variante mit Terraform
+- [docs/betrieb/selbst-betreiben.md](docs/betrieb/selbst-betreiben.md) – Images, Konfiguration, erster Start
+- [local/README.md](local/README.md) – Lokal ausführen und testen
 - [e2e/README.md](e2e/README.md) – E2E-Tests
 
 ---

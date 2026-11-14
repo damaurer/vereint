@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Gruppeneinstellungen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 100%; min-height: 960px; box-sizing: border-box; display: flex; flex-wrap: wrap; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans)">
+  <dc-import name="Sidebar" active="gruppe" hint-size="260px,960px"></dc-import>
+  <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="height: 60px; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+      <h1 style="margin: 0; flex: 1; font-size: 18px; font-weight: 800">Gruppe</h1>
+      <span style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px 0 4px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 14px; font-weight: 600"><span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background-image: var(--vereint-gradient); color: #ffffff; font-size: 12px; font-weight: 800">SW</span>Sabine Wolf</span>
+    </header>
+    <main style="width: 100%; max-width: 1120px; box-sizing: border-box; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; padding: 28px 24px">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+        <span style="display: grid; place-items: center; width: 72px; height: 72px; border-radius: 20px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 26px; font-weight: 800">MG</span>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+          <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Gruppe</p>
+          <h2 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">{{groupName}}</h2>
+          <span style="color: var(--color-text-muted); font-size: 15px">7 Mitglieder · <a href="GruppeWaehlen.dc.html" style="text-decoration: none">Gruppe wechseln</a></span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+        <section style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 16px; padding: 20px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+          <h3 style="margin: 0; font-size: 17px; font-weight: 700">Name</h3>
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="gn" style="font-size: 14px; font-weight: 600">Name der Gruppe</label>
+            <div style="display: flex; gap: 8px">
+              <input id="gn" value="{{draft}}" onChange="{{onDraft}}" style="flex: 1; min-width: 0; height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px">
+              <button type="button" onClick="{{rename}}" style="height: 44px; padding: 0 16px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">Speichern</button>
+            </div>
+            <span role="status" style="color: var(--color-success); font-size: 14px; font-weight: 700">{{renamed}}</span>
+          </div>
+          <hr style="width: 100%; height: 1px; margin: 0; border: none; background-color: var(--color-border)">
+          <h3 style="margin: 0; font-size: 17px; font-weight: 700">Bild</h3>
+          <div style="display: flex; align-items: center; gap: 14px">
+            <span style="display: grid; place-items: center; width: 56px; height: 56px; flex-shrink: 0; border-radius: 16px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 20px; font-weight: 800">MG</span>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <button type="button" style="align-self: flex-start; height: 40px; padding: 0 14px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 600">Bild hochladen</button>
+              <span style="color: var(--color-text-muted); font-size: 13px">PNG, JPEG oder GIF. Große Bilder werden vor dem Hochladen verkleinert.</span>
+            </div>
+          </div>
+        </section>
+
+        <div style="flex: 1 1 320px; display: flex; flex-direction: column; gap: 20px">
+          <section style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+            <h3 style="margin: 0; font-size: 17px; font-weight: 700">Daten exportieren</h3>
+            <p style="margin: 0; color: var(--color-text-muted); font-size: 14px; line-height: 1.5">Alle Daten der Gruppe als JSON-Datei: Mitglieder, Events, Katalog, Buchungen und Chats.</p>
+            <button type="button" onClick="{{exportData}}" style="align-self: flex-start; height: 40px; padding: 0 14px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 600">{{exportLabel}}</button>
+            <a href="Rollen.dc.html" style="font-size: 14px; font-weight: 700; text-decoration: none">Rollen &amp; Berechtigungen verwalten</a>
+          </section>
+
+          <section style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+            <h3 style="margin: 0; font-size: 17px; font-weight: 700">Gruppe verlassen</h3>
+            <p style="margin: 0; color: var(--color-text-muted); font-size: 14px; line-height: 1.5">Wenn du „{{groupName}}“ verlässt, verlierst du hier alle Rechte. Wieder dabei bist du nur mit einem neuen Einladungslink.</p>
+            <p style="margin: 0; padding: 10px 12px; border-radius: 8px; background-color: var(--color-warning-light); color: var(--color-text); font-size: 13px; line-height: 1.45">Du bist die letzte Person, die Mitglieder und Rollen verwalten kann. Gib diese Rolle zuerst jemand anderem.</p>
+            <button type="button" disabled style="align-self: flex-start; height: 40px; padding: 0 14px; border: 1px solid var(--color-border); border-radius: 8px; background: transparent; color: var(--color-text-muted); font: inherit; font-size: 14px; font-weight: 700">Gruppe verlassen</button>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { name: 'Meine Gruppe', draft: 'Meine Gruppe', renamed: '', exported: false };
+  }
+  renderVals() {
+    const s = this.state;
+    return {
+      theme: this.props.theme ?? 'light',
+      groupName: s.name,
+      draft: s.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value, renamed: '' }),
+      rename: () => { const n = s.draft.trim(); if (n) this.setState({ name: n, renamed: 'Der Name wurde gespeichert.' }); },
+      exportLabel: s.exported ? 'meine-gruppe-export.json heruntergeladen' : 'Als JSON herunterladen',
+      exportData: () => this.setState({ exported: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

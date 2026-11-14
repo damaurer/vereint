@@ -42,6 +42,10 @@ class StammtischEntity(
     @Column(name = "image_version", nullable = false)
     var imageVersion: Int = 0,
 
+    /** „Statistik in dieser Gruppe“: aus heißt, in der Gruppe und ihren Events wird nichts erfasst. */
+    @Column(name = "statistics_enabled", nullable = false)
+    var statisticsEnabled: Boolean = true,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),

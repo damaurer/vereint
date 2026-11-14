@@ -13,7 +13,7 @@ import { readStammtischCookie, STAMMTISCH_HEADER } from '../stammtisch/stammtisc
  * serverseitig verwahrte Keycloak-Access-Token der HttpOnly-Session als
  * `Authorization: Bearer` an und leitet die Anfrage an den Spring-Fachservice
  * weiter. Damit verlassen Tokens niemals den Server (siehe
- * `docs/authentifizierung.md`).
+ * `docs/backend-for-frontend/05-api-proxy-and-invites.md`).
  *
  * Dieser Proxy trifft keine fachlichen Entscheidungen: Er prüft ausschließlich,
  * dass eine gültige Session mit Access-Token besteht (`deny by default`) und

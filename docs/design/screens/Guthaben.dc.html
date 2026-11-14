@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Guthaben</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <header style="height: 56px; flex-shrink: 0; display: flex; align-items: center; gap: 10px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <img src="/_blob/658eacfb311db734fae6de78ff566261" alt="" style="width: 28px; height: 28px; border-radius: 8px">
+    <h1 style="margin: 0; flex: 1; font-size: 17px; font-weight: 800; letter-spacing: -0.01em">Guthaben</h1>
+    <button type="button" aria-label="Gruppe wechseln: Meine Gruppe" style="display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px 0 4px; border: 1px solid var(--color-border); border-radius: 999px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 13px; font-weight: 600">
+      <span style="display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 11px; font-weight: 800">MG</span>
+      Meine Gruppe
+    </button>
+    <button type="button" aria-label="Mitteilungen, 4 ungelesen" style="position: relative; display: grid; place-items: center; width: 44px; height: 44px; border: none; border-radius: 999px; background: transparent; color: var(--color-text-muted)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><circle cx="12" cy="21" r="1.6" fill="currentColor" stroke="none"/></svg>
+      <span style="position: absolute; top: 6px; right: 6px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--color-surface); border-radius: 999px; background-color: var(--color-danger); color: #ffffff; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center">4</span>
+    </button>
+  </header>
+
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; padding: 20px 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Guthaben &amp; Transaktionen</p>
+      <h2 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Bierkasse</h2>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <p style="margin: 0; color: var(--color-text-muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase">Aktueller Stand</p>
+          <p style="margin: 0; color: var(--color-brand); font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1">33,00 €</p>
+        </div>
+        <span style="color: var(--color-text-muted); font-size: 13px">Stand 17. Okt, 10:24</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <button type="button" style="height: 44px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">Aufladen</button>
+        <a href="Bezahlen.dc.html" style="display: grid; place-items: center; height: 44px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 15px; font-weight: 600; text-decoration: none">Bezahlen</a>
+      </div>
+    </section>
+
+    <aside class="ui-info-panel" role="note" style="display: flex; gap: 10px; align-items: flex-start">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--color-brand)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 1px"><circle cx="9.5" cy="9.5" r="5.5"/><path d="M15.3 9.2a5.5 5.5 0 1 1-6.1 6.1"/><circle cx="9.5" cy="9.5" r="1.6" fill="var(--color-brand)" stroke="none"/></svg>
+      <div>
+        <p class="ui-info-title">Verwaltet vom Kassenwart</p>
+        <div class="ui-info-body" style="font-size: 14px; line-height: 1.5">Aufladungen bucht Thomas Berger nach Barzahlung oder Überweisung.</div>
+      </div>
+    </aside>
+
+    <section style="display: flex; flex-direction: column; gap: 10px; min-height: 0">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <h3 style="margin: 0; font-size: 17px; font-weight: 700">Historie</h3>
+      </div>
+      <div role="group" aria-label="Filter" style="display: flex; gap: 8px">
+        <sc-for list="{{filters}}" as="f" hint-placeholder-count="3">
+          <button type="button" aria-pressed="{{f.pressed}}" onClick="{{f.pick}}" style="{{f.style}}">{{f.label}}</button>
+        </sc-for>
+      </div>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+          <li style="{{r.rowStyle}}">
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+              <span style="font-size: 15px; font-weight: 600">{{r.title}}</span>
+              <span style="color: var(--color-text-muted); font-size: 13px">{{r.meta}}</span>
+            </div>
+            <span style="{{r.amountStyle}}">{{r.amount}}</span>
+          </li>
+        </sc-for>
+      </ul>
+    </section>
+  </main>
+
+  <nav aria-label="Hauptnavigation" style="height: 64px; flex-shrink: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <a href="Main.dc.html" style="display: grid; place-content: center; justify-items: center; gap: 2px; color: var(--color-text-muted); font-size: 11px; font-weight: 600; text-decoration: none">
+      <span style="display: grid; place-items: center; width: 52px; height: 30px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.4 12 4l8 6.4V18a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18z"/><circle cx="12" cy="15.2" r="2" fill="currentColor" stroke="none"/></svg></span>
+      Start
+    </a>
+    <a href="Events.dc.html" style="display: grid; place-content: center; justify-items: center; gap: 2px; color: var(--color-text-muted); font-size: 11px; font-weight: 600; text-decoration: none">
+      <span style="display: grid; place-items: center; width: 52px; height: 30px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="15" rx="3.5"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="8.5" y1="3.5" x2="8.5" y2="7"/><line x1="15.5" y1="3.5" x2="15.5" y2="7"/><circle cx="15" cy="15" r="1.6" fill="currentColor" stroke="none"/></svg></span>
+      Events
+    </a>
+    <a href="Chat.dc.html" style="display: grid; place-content: center; justify-items: center; gap: 2px; color: var(--color-text-muted); font-size: 11px; font-weight: 600; text-decoration: none">
+      <span style="position: relative; display: grid; place-items: center; width: 52px; height: 30px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 4.5h11a3.5 3.5 0 0 1 3.5 3.5v6a3.5 3.5 0 0 1-3.5 3.5H12l-4.5 3.5v-3.5h-1A3.5 3.5 0 0 1 3 14V8a3.5 3.5 0 0 1 3.5-3.5z"/><circle cx="8" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="11" r="1.2" fill="currentColor" stroke="none"/></svg><span style="position: absolute; top: -2px; right: 6px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--color-surface); border-radius: 999px; background-color: var(--color-danger); color: #ffffff; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center">6</span></span>
+      Chat
+    </a>
+    <a href="Guthaben.dc.html" aria-current="page" style="display: grid; place-content: center; justify-items: center; gap: 2px; color: var(--color-brand); font-size: 11px; font-weight: 800; text-decoration: none">
+      <span style="display: grid; place-items: center; width: 52px; height: 30px; border-radius: 999px; background-color: var(--color-brand-soft)"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="7" width="17" height="13" rx="3"/><path d="M6 7 15.6 3.9a1.5 1.5 0 0 1 1.9 1.4V7"/><path d="M20.5 11h-3.5a2.5 2.5 0 0 0 0 5h3.5"/><circle cx="17" cy="13.5" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+      Guthaben
+    </a>
+    <a href="Mehr.dc.html" style="display: grid; place-content: center; justify-items: center; gap: 2px; color: var(--color-text-muted); font-size: 11px; font-weight: 600; text-decoration: none">
+      <span style="display: grid; place-items: center; width: 52px; height: 30px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="12" r="1.9" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.9" fill="currentColor" stroke="none"/></svg></span>
+      Mehr
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { filter: 'all' };
+  }
+  renderVals() {
+    const all = [
+      { kind: 'out', title: 'Käsespätzle', meta: 'Kauf · 17. Okt, 10:24', amount: '−7,50 €' },
+      { kind: 'out', title: 'Apfelschorle 0,5 l', meta: 'Kauf · 17. Okt, 10:24', amount: '−2,50 €' },
+      { kind: 'in', title: 'Aufladung bar', meta: 'Kassenwart · 15. Okt, 19:02', amount: '+20,00 €' },
+      { kind: 'out', title: 'Helles 0,5 l', meta: 'Strichliste · 3. Okt, 21:40', amount: '−3,50 €' },
+      { kind: 'out', title: 'Helles 0,5 l', meta: 'Strichliste · 3. Okt, 20:15', amount: '−3,50 €' }
+    ];
+    const f = this.state.filter;
+    const list = all.filter((r) => f === 'all' || r.kind === f);
+    const chip = 'height: 36px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 14px; ';
+    const on = chip + 'border: 1px solid transparent; background-color: var(--color-brand-soft); color: var(--color-brand); font-weight: 700';
+    const off = chip + 'border: 1px solid var(--color-border); background-color: var(--color-surface); color: var(--color-text-muted); font-weight: 600';
+    const filters = [
+      { id: 'all', label: 'Alle' },
+      { id: 'in', label: 'Aufladungen' },
+      { id: 'out', label: 'Ausgaben' }
+    ];
+    return {
+      theme: this.props.theme ?? 'light',
+      filters: filters.map((x) => ({
+        label: x.label,
+        pressed: f === x.id ? 'true' : 'false',
+        style: f === x.id ? on : off,
+        pick: () => this.setState({ filter: x.id })
+      })),
+      rows: list.map((r, i) => ({
+        title: r.title,
+        meta: r.meta,
+        amount: r.amount,
+        rowStyle: 'display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px;' + (i < list.length - 1 ? ' border-bottom: 1px solid var(--color-border);' : ''),
+        amountStyle: 'flex-shrink: 0; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; color: ' + (r.kind === 'in' ? 'var(--color-success)' : 'var(--color-text)')
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

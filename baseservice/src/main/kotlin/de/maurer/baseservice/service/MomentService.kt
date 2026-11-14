@@ -43,7 +43,8 @@ class MomentService(
     private val notificationService: NotificationService,
     private val auditService: AuditService,
     private val momentConfigService: MomentConfigService,
-    private val momentMediaRepository: MomentMediaRepository
+    private val momentMediaRepository: MomentMediaRepository,
+    private val statisticsRecorder: StatisticsRecorder
 ) {
 
     /**
@@ -94,6 +95,13 @@ class MomentService(
             expiresAt = expiresAt
         )
         val saved = momentSessionRepository.save(session)
+        statisticsRecorder.record(
+            StatisticFeature.MOMENT,
+            actor = caller,
+            event = event,
+            variant = topicType,
+            sourceId = saved.id
+        )
 
         // Benachrichtigung & Web-Push an alle, die den Moment sehen dürfen
         val recipients = audience(saved)
@@ -163,6 +171,25 @@ class MomentService(
         media.forEach {
             it.response = saved
             momentMediaRepository.save(it)
+        }
+        statisticsRecorder.record(
+            StatisticFeature.MOMENT_REACTION,
+            kind = StatisticKind.RESPONSE,
+            actor = caller,
+            event = session.event,
+            respondsTo = session.id,
+            sourceId = saved.id
+        )
+        if (media.isNotEmpty()) {
+            statisticsRecorder.record(
+                StatisticFeature.MOMENT_MEDIA,
+                kind = StatisticKind.RESPONSE,
+                actor = caller,
+                event = session.event,
+                respondsTo = session.id,
+                sourceId = saved.id,
+                quantity = media.size
+            )
         }
         return toResponseDto(saved, momentConfigService.labels(), media.map { toMediaDto(it, caller, access.canModerate) })
     }

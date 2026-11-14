@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Eventabrechnung</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Event verwalten" back-href="Vorstand.dc.html" bell="1" hint-size="100%,56px"></dc-import>
+  <nav aria-label="Bereiche" style="flex-shrink: 0; display: flex; gap: 4px; padding: 8px 16px 0; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <a href="EventVerwalten.dc.html" style="padding: 10px 10px 12px; border-bottom: 3px solid transparent; color: var(--color-text-muted); font-size: 14px; font-weight: 600; text-decoration: none">Stammdaten</a>
+    <a href="EventTeilnehmer.dc.html" style="padding: 10px 10px 12px; border-bottom: 3px solid transparent; color: var(--color-text-muted); font-size: 14px; font-weight: 600; text-decoration: none">Teilnehmer &amp; Getränke</a>
+    <a href="Eventabrechnung.dc.html" aria-current="page" style="padding: 10px 10px 12px; border-bottom: 3px solid var(--color-brand); color: var(--color-brand); font-size: 14px; font-weight: 700; text-decoration: none">Abrechnung</a>
+  </nav>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <h2 style="margin: 0; font-size: 22px; font-weight: 800">Stammtisch Oktober</h2>
+      <span style="color: var(--color-text-muted); font-size: 14px">13 Buchungen · Stand 17. Okt, 23:30</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div class="ui-stat-card"><p class="ui-stat-label">Umsatz</p><p class="ui-stat-value">44,00 €</p></div>
+      <div class="ui-stat-card"><p class="ui-stat-label">Reingewinn</p><p class="ui-stat-value" style="color: var(--color-success)">29,90 €</p></div>
+      <div class="ui-stat-card"><p class="ui-stat-label">Wareneinsatz</p><p class="ui-stat-value">14,10 €</p></div>
+      <div class="ui-stat-card"><p class="ui-stat-label">Über Guthaben</p><p class="ui-stat-value">44,00 €</p></div>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Nach Getränk</h3>
+      <table class="ui-table" style="border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface); font-size: 14px">
+        <thead><tr><th scope="col">Artikel</th><th scope="col" style="text-align: right">Menge</th><th scope="col" style="text-align: right">Umsatz</th></tr></thead>
+        <tbody>
+          <tr><td>Helles 0,5 l</td><td style="text-align: right">7</td><td style="text-align: right; font-variant-numeric: tabular-nums">24,50 €</td></tr>
+          <tr><td>Weißbier 0,5 l</td><td style="text-align: right">3</td><td style="text-align: right; font-variant-numeric: tabular-nums">11,40 €</td></tr>
+          <tr><td>Apfelschorle 0,5 l</td><td style="text-align: right">2</td><td style="text-align: right; font-variant-numeric: tabular-nums">5,00 €</td></tr>
+          <tr><td style="border-bottom: none">Wasser 0,5 l</td><td style="text-align: right; border-bottom: none">1</td><td style="text-align: right; border-bottom: none; font-variant-numeric: tabular-nums">3,10 €</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: auto">
+      <button type="button" style="height: 48px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 15px; font-weight: 600">Als CSV</button>
+      <button type="button" style="height: 48px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">Abschließen</button>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

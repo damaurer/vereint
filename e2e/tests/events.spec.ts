@@ -34,6 +34,7 @@ test.describe('Events', () => {
       await page.getByRole('button', { name: 'Veröffentlichen und einladen' }).click();
       await expect(page).toHaveURL(/\/events\/[0-9a-f-]+\/manage$/);
       eventId = page.url().split('/events/')[1].split('/')[0];
+      await page.getByRole('tab', { name: 'Teilnehmer' }).click();
       await expect(page.getByText('Mia Mitglied')).toBeVisible();
     });
 
@@ -118,10 +119,12 @@ test.describe('Events', () => {
 
     const { page } = board;
     await page.goto(`/events/${event.id}/manage`);
+    await page.getByRole('tab', { name: 'Chat' }).click();
     await page.getByLabel('Nachricht').fill(secret);
     await page.getByRole('button', { name: 'Senden' }).click();
     await expect(page.getByText(secret)).toBeVisible();
 
+    await page.getByRole('tab', { name: 'Gäste' }).click();
     await page.getByLabel('Max. Nutzungen').fill('1');
     await page.getByRole('button', { name: 'Gasteinladung erzeugen' }).click();
     const acceptPath = (await page.locator('code.manage-token').textContent())!.trim();
@@ -143,6 +146,7 @@ test.describe('Events', () => {
     });
 
     await page.reload();
+    await page.getByRole('tab', { name: 'Chat' }).click();
     await expect(page.getByText('Bin dabei!')).toBeVisible();
 
     // Verschluesselung auf Anwendungsebene: Klartext steht nicht in der Datenbank.

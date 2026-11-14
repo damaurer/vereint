@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Laufende Runden</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 1180px; height: 820px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 0 24px; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <a href="Theke.dc.html" aria-label="Zur Strichliste" style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; color: var(--color-text)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
+    </a>
+    <h1 style="margin: 0; flex: 1; font-size: 20px; font-weight: 800">Laufende Runden · Stammtisch Oktober</h1>
+    <span class="ui-chip" style="font-size: 13px; padding: 6px 12px">Nur Anzeige</span>
+  </header>
+
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; padding: 24px">
+    <p style="margin: 0; padding: 12px 16px; border-radius: 12px; background-color: var(--color-brand-soft); font-size: 16px; line-height: 1.5">Eine Runde gibt jede Person in der App am eigenen Handy aus und zahlt mit ihrem eigenen Guthaben. Am Terminal wird nichts ausgegeben. Wer eingeladen ist, bucht wie gewohnt einen Strich, er geht dann auf die Runde.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+      <sc-for list="{{rounds}}" as="r" hint-placeholder-count="2">
+        <article style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid var(--color-border); border-radius: 16px; background-color: var(--color-surface)">
+          <div style="display: flex; align-items: center; gap: 14px">
+            <span style="display: grid; place-items: center; width: 56px; height: 56px; flex-shrink: 0; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 18px; font-weight: 800">{{r.initials}}</span>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+              <span style="font-size: 20px; font-weight: 800">{{r.payer}}</span>
+              <span style="color: var(--color-text-muted); font-size: 15px">{{r.kind}}</span>
+            </div>
+            <span class="ui-badge ui-badge-success" style="font-size: 13px">Läuft</span>
+          </div>
+          <dl style="margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+            <div style="padding: 12px; border-radius: 10px; background-color: var(--color-bg)"><dt style="color: var(--color-text-muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase">Gibt aus</dt><dd style="margin: 4px 0 0; font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums">{{r.amount}}</dd></div>
+            <div style="padding: 12px; border-radius: 10px; background-color: var(--color-bg)"><dt style="color: var(--color-text-muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase">Verbraucht</dt><dd style="margin: 4px 0 0; font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums">{{r.used}}</dd></div>
+            <div style="padding: 12px; border-radius: 10px; background-color: var(--color-brand-soft)"><dt style="color: var(--color-text-muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase">Gültig</dt><dd style="margin: 4px 0 0; color: var(--color-brand); font-size: 20px; font-weight: 800">{{r.valid}}</dd></div>
+          </dl>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span style="font-size: 14px; font-weight: 700">{{r.forLabel}}</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <sc-for list="{{r.guests}}" as="g" hint-placeholder-count="4">
+                <span style="{{g.style}}">{{g.label}}</span>
+              </sc-for>
+            </div>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1180,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const chip = (label, done) => ({
+      label: (done ? '✓ ' : '') + label,
+      style: 'display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border-radius: 999px; font-size: 15px; font-weight: 600; ' + (done ? 'background-color: var(--color-success-light); color: var(--color-success)' : 'border: 1px solid var(--color-border); color: var(--color-text)')
+    });
+    return {
+      theme: this.props.theme ?? 'light',
+      rounds: [
+        {
+          initials: 'TB', payer: 'Thomas Berger', kind: 'Eine Runde Helles 0,5 l (3,50 €)',
+          amount: 'bis 21,00 €', used: '7,00 €', valid: 'noch 18 Min',
+          forLabel: '2 von 6 eingelöst',
+          guests: [chip('Felix Braun', true), chip('Sabine Wolf', true), chip('Jonas Keller', false), chip('Lena Hoffmann', false), chip('Mia Schulz', false), chip('Anna Neumann', false)]
+        },
+        {
+          initials: 'SW', payer: 'Sabine Wolf', kind: 'Ganzer Abend · alle Getränke',
+          amount: 'bis 30,00 €', used: '12,50 €', valid: 'bis 23:30',
+          forLabel: 'Eingeladen',
+          guests: [chip('Mia Schulz', false)]
+        }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

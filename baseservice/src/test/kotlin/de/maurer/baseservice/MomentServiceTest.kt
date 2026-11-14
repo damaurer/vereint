@@ -109,7 +109,8 @@ class MomentServiceTest {
             notificationService = notificationService,
             auditService = auditService,
             momentConfigService = momentConfigService,
-            momentMediaRepository = momentMediaRepository
+            momentMediaRepository = momentMediaRepository,
+            statisticsRecorder = org.mockito.Mockito.mock(de.maurer.baseservice.service.StatisticsRecorder::class.java)
         )
         `when`(momentConfigService.labels()).thenReturn(
             MomentLabels(

@@ -51,6 +51,14 @@ const PRIVATE_CLIENT_PATHS: readonly string[] = [
   'admin',
   'tablet',
   'statistik',
+  'statistik/getraenke',
+  'statistik/uebersicht',
+  'statistik/ich',
+  'statistik/events',
+  'statistik/gruppe/events',
+  'statistik/funktionen',
+  'events/:eventId/statistik',
+  'agb-zustimmen',
 ];
 
 function renderModeOf(path: string): RenderMode | undefined {

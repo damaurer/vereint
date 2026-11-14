@@ -1,6 +1,5 @@
 import { serverEnvironment } from './environment';
 
-export const sessionCookieName = serverEnvironment.sessionCookieName;
 export const sessionDurationMs = serverEnvironment.sessionDurationMs;
 export const publicPaths = new Set([
   '/auth/error',

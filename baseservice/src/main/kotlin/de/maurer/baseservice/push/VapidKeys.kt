@@ -14,8 +14,8 @@ import java.util.Base64
  * (65 Byte), privat als roher Skalar (32 Byte).
  *
  * Akzeptiert werden außerdem DER-kodierte Schlüssel (SubjectPublicKeyInfo bzw.
- * PKCS#8) in Base64 oder als PEM. So kann Terraform die Schlüssel mit
- * `tls_private_key` erzeugen, ohne dass jemand sie von Hand umwandeln muss.
+ * PKCS#8) in Base64 oder als PEM. So lassen sich die Schlüssel direkt mit
+ * openssl erzeugen, ohne dass jemand sie von Hand umwandeln muss.
  */
 object VapidKeys {
 

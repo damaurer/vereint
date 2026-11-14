@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Plattform: Gruppen verwalten</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 100%; min-height: 960px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans)">
+  <header style="height: 60px; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <img src="/_blob/658eacfb311db734fae6de78ff566261" alt="" style="width: 32px; height: 32px; border-radius: 9px">
+    <span style="font-size: 18px; font-weight: 800">Vereint</span>
+    <span class="ui-chip ui-chip-accent">Plattform</span>
+    <span style="flex: 1"></span>
+    <a href="GruppeWaehlen.dc.html" style="font-size: 14px; font-weight: 600; text-decoration: none">Zur Gruppenauswahl</a>
+  </header>
+  <main style="width: 100%; max-width: 1180px; box-sizing: border-box; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; padding: 28px 24px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Plattform</p>
+      <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Gruppen verwalten</h1>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 15px">Alle Gruppen dieser Installation. Archivierte Gruppen sind für ihre Mitglieder nicht mehr erreichbar.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px">
+      <div class="ui-stat-card"><p class="ui-stat-label">Gruppen</p><p class="ui-stat-value">{{active}}</p><p class="ui-stat-hint">{{archivedCount}} archiviert</p></div>
+      <div class="ui-stat-card"><p class="ui-stat-label">Mitglieder</p><p class="ui-stat-value">57</p><p class="ui-stat-hint">über alle Gruppen</p></div>
+      <div class="ui-stat-card"><p class="ui-stat-label">Speicher</p><p class="ui-stat-value">3,4 GB</p><p class="ui-stat-hint">belegt</p></div>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+      <form style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <h2 style="margin: 0; font-size: 17px; font-weight: 700">Neue Gruppe anlegen</h2>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="nn" style="font-size: 14px; font-weight: 600">Name</label>
+          <input id="nn" value="{{newName}}" onChange="{{onName}}" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="ae" style="font-size: 14px; font-weight: 600">E-Mail des Admins (optional)</label>
+          <input id="ae" type="email" placeholder="admin@example.de" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px">
+          <span style="color: var(--color-text-muted); font-size: 12px; line-height: 1.4">Ein bestehendes Konto mit dieser E-Mail wird Admin; ohne Angabe wirst du selbst Admin.</span>
+        </div>
+        <button type="button" onClick="{{create}}" style="height: 44px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">Anlegen</button>
+        <span role="status" style="color: var(--color-success); font-size: 14px; font-weight: 700">{{flash}}</span>
+      </form>
+
+      <section style="flex: 2 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 17px; font-weight: 700">Alle Gruppen</h2>
+        <div style="overflow-x: auto; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+          <table class="ui-table" style="min-width: 620px; font-size: 14px">
+            <thead><tr><th scope="col">Gruppe</th><th scope="col">Mitglieder</th><th scope="col">Speicher</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Aktionen</span></th></tr></thead>
+            <tbody>
+              <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+                <tr>
+                  <td><span style="display: flex; flex-direction: column; gap: 2px"><strong>{{g.label}}</strong><span style="color: var(--color-text-muted); font-size: 12px">{{g.meta}}</span></span></td>
+                  <td>{{g.members}}</td>
+                  <td style="font-variant-numeric: tabular-nums">{{g.storage}}</td>
+                  <td><span class="{{g.badge}}">{{g.status}}</span></td>
+                  <td style="text-align: right"><button type="button" onClick="{{g.toggle}}" style="height: 36px; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 600">{{g.action}}</button></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      newName: 'Kegelclub Alle Neune',
+      flash: '',
+      list: [
+        { id: 1, label: 'Meine Gruppe', meta: 'angelegt 17.10.2026', storage: '1,2 GB', members: 7, archived: false },
+        { id: 2, label: 'Schützenverein Aschau', meta: 'angelegt 02.03.2026', storage: '2,1 GB', members: 38, archived: false },
+        { id: 3, label: 'Lauftreff Dienstag', meta: 'angelegt 11.06.2026', storage: '0,1 GB', members: 6, archived: false },
+        { id: 4, label: 'Fußball-Stammtisch 2019', meta: 'angelegt 04.01.2019', storage: '0 B', members: 6, archived: true }
+      ]
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    const upd = (id, patch) => this.setState({ list: s.list.map((g) => (g.id === id ? { ...g, ...patch } : g)) });
+    return {
+      theme: this.props.theme ?? 'light',
+      active: String(s.list.filter((g) => !g.archived).length),
+      archivedCount: String(s.list.filter((g) => g.archived).length),
+      newName: s.newName,
+      onName: (e) => this.setState({ newName: e.target.value }),
+      flash: s.flash,
+      create: () => {
+        const n = s.newName.trim();
+        if (!n) return;
+        const id = s.list.reduce((m, g) => Math.max(m, g.id), 0) + 1;
+        this.setState({ newName: '', flash: '„' + n + '“ wurde angelegt.', list: [{ id, label: n, meta: 'angelegt gerade eben', storage: '0 B', members: 1, archived: false }].concat(s.list).slice(0, 5) });
+      },
+      groups: s.list.map((g) => ({
+        label: g.label, meta: g.meta, storage: g.storage, members: String(g.members),
+        status: g.archived ? 'Archiviert' : 'Aktiv',
+        badge: g.archived ? 'ui-badge ui-badge-neutral' : 'ui-badge ui-badge-success',
+        action: g.archived ? 'Wiederherstellen' : 'Archivieren',
+        toggle: () => upd(g.id, { archived: !g.archived })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Käufe</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Käufe" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 20px 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Belege</p>
+      <h2 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Käufe</h2>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 14px; line-height: 1.5">Jeder Kauf hat einen unveränderlichen Beleg mit dem Preis von damals.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div class="ui-stat-card"><p class="ui-stat-label">Oktober</p><p class="ui-stat-value">17,00 €</p><p class="ui-stat-hint">5 Käufe</p></div>
+      <div class="ui-stat-card"><p class="ui-stat-label">Am häufigsten</p><p class="ui-stat-value" style="font-size: 20px; margin-top: 8px">Helles 0,5 l</p><p class="ui-stat-hint">3 ×</p></div>
+    </div>
+
+    <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+        <li style="{{r.row}}">
+          <span style="display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 10px; background-color: var(--color-brand-soft); color: var(--color-brand)">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="11.5" x2="15" y2="11.5"/></svg>
+          </span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 15px; font-weight: 700">{{r.label}}</span>
+            <span style="color: var(--color-text-muted); font-size: 13px">{{r.meta}}</span>
+          </span>
+          <span style="font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums">{{r.price}}</span>
+        </li>
+      </sc-for>
+    </ul>
+  </main>
+  <dc-import name="TabBar" active="mehr" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const rows = [
+      ['Käsespätzle', '17. Okt, 10:24 · Speisen', '7,50 €'],
+      ['Apfelschorle 0,5 l', '17. Okt, 10:24 · Katalog v1', '2,50 €'],
+      ['Helles 0,5 l', '17. Okt, 10:20 · Bezahlt per Scan', '3,50 €'],
+      ['Helles 0,5 l', '3. Okt, 21:40 · Strichliste', '3,50 €'],
+      ['Helles 0,5 l', '3. Okt, 20:15 · Strichliste', '3,50 €']
+    ];
+    return {
+      theme: this.props.theme ?? 'light',
+      rows: rows.map(([label, meta, price], i) => ({ label, meta, price, row: 'display: flex; align-items: center; gap: 12px; padding: 12px 14px' + (i ? '; border-top: 1px solid var(--color-border)' : '') }))
+    };
+  }
+}
+</script>
+</body>
+</html>

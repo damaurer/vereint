@@ -38,7 +38,7 @@ import java.util.UUID
  * die eigenen Push-Abonnements. Das Versenden einer Benachrichtigung an ein
  * Mitglied ist Vorstand und Administration vorbehalten. Push-Subscriptions sind
  * geschützte Fachdaten; ihre geheimen Schlüssel verlassen den Spring-Service nicht
- * (siehe `docs/architektur.md`, Abschnitt „Bilder und Push"). Der eigentliche
+ * (siehe `docs/domains/chat-and-push-notifications.md`). Der eigentliche
  * Versand erfolgt über die gekapselte [PushSender]-Abstraktion mit VAPID.
  */
 @Service

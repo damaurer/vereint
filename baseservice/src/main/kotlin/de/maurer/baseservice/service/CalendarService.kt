@@ -1,20 +1,15 @@
 package de.maurer.baseservice.service
 
-import de.maurer.baseservice.domain.EventEntity
-import de.maurer.baseservice.domain.EventStatus
 import de.maurer.baseservice.dto.CalendarDto
 import de.maurer.baseservice.dto.CalendarEntryDto
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.repository.EventParticipantRepository
-import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.MomentSessionRepository
 import de.maurer.baseservice.repository.UserRepository
-import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.tenancy.MembershipView
-import de.maurer.baseservice.tenancy.StammtischAccess
 import de.maurer.baseservice.tenancy.StammtischMemberships
 import de.maurer.baseservice.tenancy.TenantTransactions
 import org.springframework.stereotype.Service
@@ -39,11 +34,10 @@ class CalendarService(
     private val userRepository: UserRepository,
     private val memberships: StammtischMemberships,
     private val tenantTransactions: TenantTransactions,
-    private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
     private val momentSessionRepository: MomentSessionRepository,
     private val momentConfigService: MomentConfigService,
-    private val access: StammtischAccess
+    private val eventVisibility: EventVisibility
 ) {
 
     fun calendar(from: Instant?, to: Instant?, principal: UserPrincipal): CalendarDto {
@@ -77,20 +71,10 @@ class CalendarService(
         end: Instant
     ): List<CalendarEntryDto> {
         val caller = userRepository.findById(callerId).orElseThrow()
-        // Rechte dieser Gruppe statt der gerade gewählten (wie nach dem StammtischContextFilter).
-        val groupPrincipal = principal.copy(
-            roles = membership.roles,
-            permissions = membership.permissions,
-            boardRole = membership.boardRole,
-            stammtischId = membership.stammtischId.toString()
-        )
+        val groupPrincipal = eventVisibility.groupPrincipal(principal, membership)
         val participations = eventParticipantRepository.findByUserId(caller.id)
         val myRsvp = participations.associate { it.event?.id to it.rsvp.name }
-        val visible: Collection<EventEntity> = if (access.has(groupPrincipal, caller, Permission.EVENT_MANAGE)) {
-            eventRepository.findAll()
-        } else {
-            (eventRepository.findByOwnerId(caller.id) + participations.mapNotNull { it.event }).associateBy { it.id }.values
-        }.filter { it.status != EventStatus.draft || it.owner?.id == caller.id }
+        val visible = eventVisibility.visibleEvents(groupPrincipal, caller)
 
         val groupId = membership.stammtischId.toString()
         val events = visible

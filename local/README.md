@@ -3,10 +3,22 @@
 Ein Befehl startet die komplette App auf dem eigenen Rechner, mit Demo-Daten.
 Ein zweiter Befehl führt alle Tests aus: Backend, Frontend und E2E.
 
-Es läuft derselbe Stack wie in Produktion (`deploy/compose.yaml`: Caddy,
-Keycloak mit dem Produktionsrealm, baseservice, webservice, PostgreSQL), nur
-unter `http://localhost:4200` statt HTTPS und mit einem S3-Ersatz statt AWS.
-Die Abweichungen stehen in [`compose.local.yaml`](compose.local.yaml).
+Es laufen dieselben Images wie in Produktion ([`compose.yaml`](compose.yaml):
+Caddy, Keycloak mit dem Produktionsrealm, baseservice, webservice, PostgreSQL,
+Bilder und Videos verschlüsselt im Dateispeicher), nur unter
+`http://localhost:4200` statt HTTPS. Die lokalen Abweichungen stehen in
+[`compose.local.yaml`](compose.local.yaml).
+
+Wer den Stack schon vor dem Umstieg auf den Dateispeicher genutzt hat
+(November 2026), startet einmal mit `node local/vereint.mjs down --clean` und
+`up` neu, sonst fehlen die Bilder der Demo-Daten.
+
+Dasselbe gilt nach dem Umstieg auf **PostgreSQL 18** (November 2026): Ein
+Daten-Volume von PostgreSQL 17 startet mit dem neuen Image nicht. Lokal
+einmal `node local/vereint.mjs down --clean` (beim Root-`docker-compose.yml`:
+`docker compose down -v`) und neu starten. Wer eine echte Datenbank betreibt,
+migriert sie vor dem Wechsel der Hauptversion (`pg_upgrade` oder Dump und
+Restore).
 
 ## Voraussetzungen
 
@@ -38,7 +50,7 @@ Guthaben, Striche, Chats, Moments, Rundbrief und Infotafel.
 | `admin` | `admin-demo-2026` | Administration, Vorstand, Mitglied |
 | `board` | `board-demo-2026` | Vorstand und Kasse |
 | `member` | `member-demo-2026` | Mitglied |
-| `jonas`, `mia`, `felix` | `<name>-demo-2026` | weitere Mitglieder |
+| `jonas`, `mia`, `felix` | `<name>-demo-2026` | weitere Mitglieder; `jonas` und `felix` sind zusätzlich im „Kegelclub Alle Neune“ und wählen nach der Anmeldung ihre Gruppe |
 | `theke` | `theke-demo-2026` | Thekentablet |
 
 Die Konten gibt es nur in diesem lokalen Stack. Chrome, Edge oder Firefox

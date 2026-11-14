@@ -6,7 +6,9 @@
     "cancel": "Abbrechen",
     "close": "Schließen",
     "retry": "Erneut versuchen",
-    "optional": "optional"
+    "optional": "optional",
+    "yesterday": "Gestern",
+    "today": "Heute"
   },
   "errors": {
     "api": {
@@ -19,7 +21,8 @@
       "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen.",
       "stammtischRequired": "Bitte zuerst eine Gruppe wählen.",
       "stammtischDenied": "Du gehörst dieser Gruppe nicht (mehr) an.",
-      "stammtischLimit": "Du hast bereits drei eigene Gruppen eröffnet. Mehr sind pro Person nicht möglich."
+      "stammtischLimit": "Du hast bereits drei eigene Gruppen eröffnet. Mehr sind pro Person nicht möglich.",
+      "termsRequired": "Bitte stimme zuerst den aktuellen AGB zu."
     }
   },
   "member": {
@@ -58,7 +61,7 @@
       "unavailable": "Übersicht nicht verfügbar",
       "eyebrow": "Servus",
       "greeting": {
-        "morning": "Guten Morgen, schön dass du da bist.",
+        "morning": "Guten Morgen, schön, dass du da bist.",
         "day": "Schön, dass du wieder da bist.",
         "evening": "Guten Abend. Wer ist heute dabei?"
       },
@@ -71,31 +74,11 @@
       "noEvents": "Aktuell keine Events.",
       "statEvents": "Deine Events",
       "statEntries": "Buchungen",
-      "shortcutsHeading": "Schnellzugriff",
-      "shortcuts": {
-        "scan": {
-          "title": "Getränk bezahlen",
-          "sub": "Strichcode scannen"
-        },
-        "moments": {
-          "title": "Moments",
-          "sub": "Anstoßen & Rituale"
-        },
-        "catalog": {
-          "title": "Getränkekatalog",
-          "sub": "Getränke & Speisen"
-        },
-        "purchases": {
-          "title": "Käufe",
-          "sub": "Was du getrunken hast"
-        },
-        "notifications": {
-          "title": "Mitteilungen",
-          "sub": "Neuigkeiten aus der Gruppe"
-        }
-      },
       "declined": "Du hast abgesagt",
-      "maybe": "Du hast mit Vielleicht geantwortet"
+      "maybe": "Du hast mit Vielleicht geantwortet",
+      "statementShort": "Kontoauszug",
+      "statEventsHint": "diesen Monat",
+      "statEntriesHint": "insgesamt"
     },
     "events": {
       "eyebrow": "Mitglied",
@@ -106,7 +89,14 @@
       "emptyTitle": "Keine Events",
       "emptyMessage": "Aktuell nimmst du an keinem Event teil.",
       "create": "Event anlegen",
-      "rsvpGroup": "Antwort für {title}"
+      "rsvpGroup": "Antwort für {title}",
+      "upcoming": "Kommend",
+      "past": "Vergangen",
+      "rangeGroup": "Zeitraum",
+      "emptyPast": "Noch keine vergangenen Events.",
+      "attending": "Du bist dabei",
+      "declined": "Du hast abgesagt",
+      "maybe": "Du hast mit Vielleicht geantwortet"
     },
     "eventDetail": {
       "eyebrow": "Event",
@@ -160,18 +150,35 @@
         "send": "Senden",
         "loading": "Der Chat wird geladen.",
         "unavailable": "Der Chat ist für dich nicht verfügbar."
-      }
+      },
+      "route": "Route",
+      "organizedBy": "Organisiert von {name}",
+      "chatChip": "Event-Chat",
+      "momentsChip": "Moments",
+      "momentsChipActive": "Moments ({count} aktiv)",
+      "attendanceHeading": "Anwesenheit",
+      "attendanceSummary": "{accepted} zugesagt · {invited} offen"
     },
     "purchases": {
       "eyebrow": "Belege",
       "title": "Käufe",
-      "intro": "Deine Käufe mit unveränderlichem Beleg.",
+      "intro": "Jeder Kauf hat einen unveränderlichen Beleg mit dem Preis von damals.",
       "loadingMessage": "Die Käufe werden abgerufen.",
       "unavailable": "Käufe nicht verfügbar",
       "emptyTitle": "Keine Käufe",
       "emptyMessage": "Du hast bisher keine Getränke gekauft.",
       "barcode": "Barcode {code}",
-      "catalogVersion": "Katalog v{version}"
+      "catalogVersion": "Katalog v{version}",
+      "count": "{count} Käufe",
+      "mostOften": "Am häufigsten",
+      "times": "{count} ×",
+      "source": {
+        "pwaBarcode": "Bezahlt per Scan",
+        "tabletManual": "Strichliste",
+        "round": "Runde",
+        "evening": "Ganzer Abend"
+      },
+      "food": "Speisen"
     },
     "wallet": {
       "eyebrow": "Guthaben & Transaktionen",
@@ -190,7 +197,9 @@
         "spend": "Ausgaben",
         "empty": "Keine Buchungen für diesen Filter."
       },
-      "reversal": "Storno: {name}"
+      "reversal": "Storno: {name}",
+      "asOf": "Stand {date}",
+      "roundTitle": "Runde: {name} · {item}"
     }
   },
   "profile": {
@@ -198,6 +207,12 @@
     "loadingMessage": "Das Profil wird abgerufen.",
     "unavailable": "Profil nicht verfügbar",
     "noRoles": "keine Rollen",
+    "beerWithMe": {
+      "title": "BeerWithMe Status",
+      "hint": "Verfügbar für ein spontanes Bier in der Nähe.",
+      "short": "Spontanes Bier",
+      "shortHint": "Freunde sehen, dass du Zeit hast"
+    },
     "theme": {
       "title": "Darstellung",
       "system": "System",
@@ -221,7 +236,8 @@
       "title": "Sicherheit",
       "hint": "Schütze dein Konto zusätzlich mit einer Authenticator-App (z. B. Google Authenticator). Danach fragt der Login nach Passwort und einem 6-stelligen Code. Freiwillig, aber empfohlen für Vorstand und Admin.",
       "setupTwoFactor": "Zwei-Faktor-Anmeldung einrichten"
-    }
+    },
+    "since": "seit {date}"
   },
   "notifications": {
     "eyebrow": "Mitteilungen",
@@ -244,14 +260,16 @@
       "moment": "Moment",
       "eventInvitation": "Einladung",
       "eventReminder": "Erinnerung",
-      "eventCancelled": "Abgesagt"
+      "eventCancelled": "Abgesagt",
+      "general": "Rundbrief"
     },
     "open": "Öffnen",
     "openEvent": "Zum Event",
     "answered": {
       "accepted": "Du hast zugesagt.",
       "declined": "Du hast abgesagt."
-    }
+    },
+    "markReadShort": "Gelesen"
   },
   "shell": {
     "brandHome": "Vereint – zur Startseite",
@@ -266,7 +284,8 @@
     "notifications": "Mitteilungen",
     "notificationsUnread": "Mitteilungen, {count} ungelesen",
     "chatUnread": "{label}, {count} ungelesen",
-    "switchStammtisch": "Gruppe wechseln (aktuell: {name})"
+    "switchStammtisch": "Gruppe wechseln (aktuell: {name})",
+    "back": "Zurück"
   },
   "nav": {
     "items": {
@@ -290,7 +309,8 @@
       "scan": "Bezahlen",
       "stammtisch": "Gruppeneinstellungen",
       "calendar": "Kalender",
-      "friends": "Freunde"
+      "friends": "Freunde",
+      "myStatistics": "Meine Statistik"
     },
     "sections": {
       "club": "Gruppe",
@@ -367,17 +387,17 @@
     }
   },
   "errorPages": {
-    "toDashboard": "Zum Dashboard",
-    "toHome": "Zur Startseite",
+    "toDashboard": "Zur Startseite",
     "forbidden": {
       "title": "Zugriff verweigert",
-      "description": "Für diese Seite fehlen Ihnen die erforderlichen Berechtigungen oder Ihre Sitzung ist nicht mehr gültig.",
+      "description": "Für diese Seite fehlen dir die Rechte oder deine Anmeldung ist abgelaufen.",
       "signInAgain": "Neu anmelden"
     },
     "notFound": {
-      "title": "Seite nicht gefunden",
-      "description": "Die von Ihnen aufgerufene Seite existiert nicht, wurde verschoben oder die Adresse ist fehlerhaft."
-    }
+      "title": "Diese Seite gibt es nicht",
+      "description": "Vielleicht wurde das Event gelöscht oder der Link ist veraltet."
+    },
+    "eyebrow": "Fehler {code}"
   },
   "routes": {
     "placeholder": {
@@ -499,7 +519,7 @@
     },
     "statistics": {
       "title": "Statistik",
-      "description": "Konsum, Anwesenheit, Ausgaben-Verlauf und Ranglisten deiner Gruppe."
+      "description": "Striche, Rangliste und Zusagequote deiner Gruppe."
     },
     "eventCreate": {
       "title": "Event anlegen",
@@ -507,7 +527,7 @@
     },
     "scan": {
       "title": "Getränk bezahlen",
-      "description": "Strichcode scannen und mit Guthaben bezahlen."
+      "description": "Strichcode scannen und mit Guthaben bezahlen oder für die Statistik erfassen."
     },
     "boardMoments": {
       "title": "Moment-Themen & Reaktionen",
@@ -548,6 +568,46 @@
     "friends": {
       "title": "Freunde",
       "description": "Deine Freundesliste über alle Gruppen."
+    },
+    "drinkStatistics": {
+      "title": "Getränkestatistik",
+      "description": "Wer hat wie viel von was getrunken, mit Litern und Kalorien."
+    },
+    "statisticsOverview": {
+      "title": "Statistik-Übersicht",
+      "description": "Alle Kennzahlen der Gruppe auf einer Seite."
+    },
+    "termsConsent": {
+      "title": "AGB zustimmen",
+      "description": "Der aktuellen Fassung der AGB zustimmen."
+    },
+    "myStatistics": {
+      "title": "Meine Statistik",
+      "description": "Alles, was du ausgelöst hast, über alle deine Gruppen."
+    },
+    "crossEventStatistics": {
+      "title": "Events übergreifend",
+      "description": "Alle sichtbaren Events aus deinen Gruppen im Vergleich."
+    },
+    "groupEventStatistics": {
+      "title": "Events der Gruppe",
+      "description": "Alle Events der Gruppe zusammengefasst und im Vergleich."
+    },
+    "featureStatistics": {
+      "title": "Funktionen",
+      "description": "Wie oft Funktionen ausgelöst und wie darauf geantwortet wurde."
+    },
+    "eventStatistics": {
+      "title": "Event-Statistik",
+      "description": "Antworten, Anwesende, Striche, Moments und Chat eines Events."
+    },
+    "tallyCategories": {
+      "title": "Strich-Kategorien",
+      "description": "Spalten der Strichliste mit Preis je Strich festlegen."
+    },
+    "roundGive": {
+      "title": "Runde ausgeben",
+      "description": "Eine Runde oder den ganzen Abend mit dem eigenen Guthaben ausgeben."
     }
   },
   "chat": {
@@ -595,14 +655,14 @@
       "readOnlyDirect": "Ihr seid weder befreundet noch in einer gemeinsamen Gruppe. Der Verlauf bleibt lesbar, neue Nachrichten gehen nicht."
     },
     "direct": {
-      "eyebrow": "Direktnachrichten",
+      "eyebrow": "Über alle Gruppen",
       "title": "Einzelgespräche",
       "badge": "DMs",
       "toGroupChat": "← Zum Gruppenchat",
       "unavailable": "Direktnachrichten nicht verfügbar",
       "searchLabel": "Gespräche durchsuchen",
       "searchPlaceholder": "Gespräche durchsuchen…",
-      "conversations": "Konversationen ({count})",
+      "conversations": "Gespräche ({count})",
       "emptyTitle": "Keine Konversationen",
       "emptyMessage": "Es gibt keine passenden Einzelgespräche.",
       "emptyStart": "Du hast noch keine Einzelgespräche. Starte eins mit „Neue Nachricht“.",
@@ -650,7 +710,7 @@
     "eyebrow": "Über alle Gruppen",
     "title": "Freunde",
     "toDirect": "Zu den Direktnachrichten",
-    "intro": "Füge Personen aus deinen Gruppen als Freunde hinzu. Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt, und ihr könnt euch weiter Direktnachrichten schreiben.",
+    "intro": "Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt.",
     "unavailable": "Freundesliste nicht verfügbar",
     "loadingMessage": "Deine Freunde werden abgerufen.",
     "incoming": "Anfragen an dich ({count})",
@@ -927,7 +987,12 @@
       "similarName": "Es gibt schon ein Getränk namens „{name}“. Bitte prüfe, ob es dasselbe ist.",
       "barcodeTaken": "Der Barcode {barcode} gehört schon zu „{name}“.",
       "barcodeNotAdded": "Der eingegebene Barcode ist noch nicht hinzugefügt. Bitte auf „+ Barcode hinzufügen“ tippen oder das Feld leeren.",
-      "activeLabel": "Im Sortiment (abwählen, um das Getränk aus dem Verkauf zu nehmen)"
+      "activeLabel": "Im Sortiment (abwählen, um das Getränk aus dem Verkauf zu nehmen)",
+      "volumeMl": "Füllmenge (ml)",
+      "volumePlaceholder": "z. B. 500",
+      "kcal": "Kalorien je Portion (kcal)",
+      "kcalPlaceholder": "z. B. 210",
+      "nutritionHint": "Für Liter und Kalorien in der Statistik. Leer lassen, wenn unbekannt."
     },
     "detail": {
       "fallbackTitle": "Getränkedetails",
@@ -1008,6 +1073,32 @@
       "share": "In die Getränkedatenbank teilen",
       "shared": "Dieses Getränk ist mit der Getränkedatenbank verknüpft.",
       "sharedInfo": "„{name}“ ist jetzt in der Getränkedatenbank (ohne Preis)."
+    },
+    "tally": {
+      "open": "Strich-Kategorien",
+      "field": "Strich-Kategorie",
+      "none": "Ohne",
+      "effectivePrice": "An der Theke: {price} (Kategorie {name}, überschreibt den Verkaufspreis)",
+      "eyebrow": "Strichliste",
+      "title": "Kategorien",
+      "create": "Neue Kategorie",
+      "intro": "Jede Kategorie ist eine Spalte der Strichliste. Ihr Preis gilt im Event für alle zugeordneten Getränke und überschreibt den Getränkepreis.",
+      "name": "Name",
+      "pricePerTally": "Preis je Strich",
+      "loadError": "Kategorien nicht verfügbar",
+      "emptyTitle": "Noch keine Kategorien",
+      "emptyMessage": "Lege mit „Neue Kategorie“ die erste Spalte an, zum Beispiel Bier.",
+      "unassign": "{name} aus der Kategorie nehmen",
+      "noDrinks": "Noch keine Getränke zugeordnet.",
+      "moveUp": "Nach links",
+      "moveDown": "Nach rechts",
+      "delete": "Löschen",
+      "confirmDelete": "Kategorie „{name}“ löschen? Ihre Getränke behalten dann ihren eigenen Preis.",
+      "withoutTitle": "Ohne Kategorie · eigener Preis",
+      "assign": "Zuordnen …",
+      "assignTo": "{name} einer Kategorie zuordnen",
+      "allAssigned": "Alle Getränke im Sortiment haben eine Kategorie.",
+      "required": "Bitte Name und einen Preis ab 0 angeben."
     }
   },
   "sublists": {
@@ -1069,31 +1160,6 @@
     }
   },
   "tablet": {
-    "row": {
-      "strokesFor": "Striche für {name}"
-    },
-    "revenue": {
-      "eveningTitle": "Ganzen Abend stiften",
-      "roundTitle": "Runde ausgeben",
-      "scope": "Umfang",
-      "oneRound": "Eine Runde",
-      "recipients": "Empfänger",
-      "hint": "Gültig, bis alle ein Getränk genommen haben. Tippt jemand versehentlich doppelt, wird trotzdem nur einmal gebucht.",
-      "confirmEvening": "Abend stiften",
-      "confirmRound": "Runde ausgeben"
-    },
-    "overlay": {
-      "title": "Getränkekarte & Speiseangebot",
-      "hint": "Wähle den Verkaufsartikel für die Strichliste.",
-      "categories": "Kategorien",
-      "drinksChip": "Getränke ({count})",
-      "foodChip": "Speisen ({count})",
-      "drinks": "Getränke",
-      "food": "Speisen",
-      "selected": "Aktuell ausgewählt: {name}",
-      "noneSelected": "Noch kein Artikel gewählt.",
-      "confirm": "Auswahl bestätigen"
-    },
     "terminal": {
       "kioskActive": "Kiosk-Modus aktiv",
       "startKiosk": "Kiosk-Modus starten",
@@ -1120,26 +1186,35 @@
       "select": "Auswählen"
     },
     "tally": {
-      "heading": "Strichliste",
-      "activeItem": "Artikel: {name} · {price}",
-      "activeDrink": "Getränk: {name} · {price}",
-      "chooseItem": "Artikel wählen",
-      "booked": "Strich erfasst: {label}",
-      "undo": "Rückgängig",
-      "quickbookLabel": "Aktiver Artikel für Schnellbuchung:",
-      "round": "Runde ausgeben",
-      "evening": "Ganzen Abend stiften"
+      "booked": "Strich: {label}",
+      "undo": "Rückgängig"
     },
     "messages": {
       "undoNotPossible": "Hier lassen sich nur Striche dieser Sitzung zurücknehmen. Ältere Buchungen korrigiert der Vorstand.",
       "undone": "Strich zurückgenommen.",
-      "purchaseRecorded": "Kauf erfasst.",
-      "eveningBooked": "Abendaktion gebucht.",
-      "roundBooked": "Runde gebucht."
+      "noDrinksInCategory": "Für {name} ist in diesem Event kein Getränk freigegeben."
     },
     "fallback": {
       "member": "Mitglied",
       "item": "Artikel"
+    },
+    "board": {
+      "hint": "Tippe auf das Feld unter der Kategorie, um einen Strich zu machen.",
+      "member": "Mitglied",
+      "perTally": "{price} je Strich",
+      "other": "Sonstiges",
+      "otherHint": "Weitere Getränke & Speisen",
+      "ownTab": "Eigene Rechnung",
+      "cellLabel": "{name}, {column}: {count} Striche. Tippen für einen Strich.",
+      "todayTitle": "Heute an der Theke",
+      "tallies": "Striche",
+      "revenue": "Umsatz"
+    },
+    "picker": {
+      "categoryTitle": "{name}: welches Getränk?",
+      "otherTitle": "Sonstiges: was wird gebucht?",
+      "forMember": "Strich für {name}",
+      "empty": "Für dieses Feld ist im Event nichts freigegeben."
     }
   },
   "admin": {
@@ -1321,9 +1396,9 @@
       "infoText": "Verwalte hier die Gruppenkasse, versende wichtige Ankündigungen oder plane die nächsten Treffen.",
       "panelsTitle": "Rollenspezifische Verwaltung",
       "panelsNav": "Vorstandsbereiche",
-      "treasuryTitle": "Kassenwart · Kasse & Finanzen",
-      "treasuryDesc": "Bierkasse, Guthaben und Buchungen",
-      "commsTitle": "Schriftwart · Kommunikation",
+      "treasuryTitle": "Kasse & Finanzen",
+      "treasuryDesc": "Bierkasse, Guthaben, Buchungen",
+      "commsTitle": "Kommunikation",
       "commsDesc": "Ankündigungen und Pinnwand",
       "loadingMessage": "Events und Protokoll werden abgerufen.",
       "unavailable": "Vorstandsbereich nicht verfügbar",
@@ -1332,14 +1407,14 @@
       "eventsHeading": "Gastgeber · Events ({count})",
       "eventsEmptyTitle": "Keine Events",
       "eventsEmptyMessage": "Aktuell sind keine Events zur Moderation sichtbar.",
-      "moderate": "Moderieren",
+      "moderate": "Verwalten",
       "auditHeading": "Letzte Aktionen ({count})",
       "inviteTitle": "Mitglied einladen",
-      "inviteDesc": "Einladungslink zur Registrierung erstellen",
+      "inviteDesc": "Einladungslink erstellen",
       "kioskDevicesTitle": "Kiosk-Geräte",
-      "kioskDevicesDesc": "Laufende Thekenterminals sehen und aus der Ferne entsperren",
-      "momentConfigTitle": "Moments · Themen & Reaktionen",
-      "momentConfigDesc": "Festlegen, welche Moments und Reaktionen es gibt"
+      "kioskDevicesDesc": "Thekenterminals sehen und entsperren",
+      "momentConfigTitle": "Moments",
+      "momentConfigDesc": "Typen und Reaktionen"
     },
     "comms": {
       "eyebrow": "Schriftwart",
@@ -1464,7 +1539,8 @@
         "empty": "Keine Mitglieder gefunden.",
         "lastEntry": "Letzte Buchung: {date}",
         "noEntry": "Noch keine Buchung",
-        "id": "ID {id}"
+        "id": "ID {id}",
+        "statTotal": "Guthaben gesamt"
       }
     },
     "kioskDevices": {
@@ -1592,7 +1668,15 @@
         "messageSent": "Nachricht gesendet.",
         "membersInvited": "Mitglieder eingeladen."
       },
-      "choose": "Bitte wählen"
+      "choose": "Bitte wählen",
+      "tabs": {
+        "label": "Bereiche",
+        "details": "Stammdaten",
+        "participants": "Teilnehmer",
+        "drinks": "Getränke & Speisen",
+        "guests": "Gäste",
+        "chat": "Chat"
+      }
     },
     "picker": {
       "allMembers": "Alle Mitglieder einladen",
@@ -1635,6 +1719,11 @@
         "end": "Das Ende muss nach dem Beginn liegen.",
         "notifyAt": "Bitte gib den Zeitpunkt der Benachrichtigung an."
       }
+    },
+    "statistics": {
+      "tab": "Statistik",
+      "switch": "Statistik für dieses Event",
+      "hint": "Aus heißt: In diesem Event wird nichts erfasst."
     }
   },
   "statistics": {
@@ -1654,32 +1743,25 @@
     "consumption": {
       "ariaLabel": "Rangliste nach Strichen",
       "title": "Rangliste",
-      "total": "Striche in der Gruppe",
-      "mine": "Deine Striche",
+      "total": "Gruppe",
+      "mine": "Du",
       "myRank": "Dein Platz",
-      "rankValue": "Platz {rank}",
-      "noRank": "Noch kein Platz",
+      "rankValue": "{rank}.",
+      "noRank": "noch kein Strich",
       "you": "Du",
       "count": {
         "one": "{count} Strich",
         "other": "{count} Striche"
       },
-      "empty": "In diesem Zeitraum gibt es noch keine Striche."
+      "empty": "In diesem Zeitraum gibt es noch keine Striche.",
+      "unit": "Striche",
+      "ofMembers": "von {count}"
     },
     "attendance": {
       "title": "Zusagequote",
       "ringLabel": "Zusagequote {percent} Prozent",
-      "hint": "Anteil der Zusagen an allen beantworteten Einladungen.",
+      "hint": "Anteil der Einladungen, auf die Mitglieder mit „Zusagen“ geantwortet haben.",
       "empty": "Noch keine Zusagen erfasst. Sobald Einladungen beantwortet sind, siehst du hier die Quote."
-    },
-    "spending": {
-      "title": "Umsatz 30 Tage",
-      "thisMonth": "Ausgaben diesen Monat",
-      "trendHint": "{change}% gegenüber den 30 Tagen davor",
-      "total": "Umsatz der letzten 30 Tage",
-      "weekly": "Verlauf der letzten 8 Wochen",
-      "weeklyLabel": "Umsatz je Woche, älteste zuerst: {values}",
-      "empty": "In den letzten 8 Wochen gab es keinen Umsatz."
     },
     "topRounds": {
       "title": "Top-Rundengeber",
@@ -1688,19 +1770,279 @@
         "other": "{count} Runden"
       }
     },
-    "drinkRanking": {
-      "title": "Getränke-Ranking",
-      "share": "{percent}% Beliebtheit"
-    },
     "intro": "Auswertungen der letzten {days} Tage.",
-    "items": {
-      "title": "Beliebteste Artikel",
-      "share": "{percent}% ({count} Stück)",
-      "empty": "Noch keine Artikel verkauft."
+    "links": {
+      "label": "Weitere Statistiken",
+      "drinks": "Getränkestatistik: wer, was, wie viel, kcal",
+      "overview": "Alle Statistiken im Überblick",
+      "groupEvents": "Events der Gruppe im Vergleich",
+      "features": "Funktionen: ausgelöst und Antworten",
+      "mine": "Meine Statistik",
+      "crossEvents": "Alle meine Events (gruppenübergreifend)"
     },
-    "topEvents": {
-      "title": "Events mit den meisten Strichen",
-      "empty": "Noch keine Striche bei Events."
+    "period": {
+      "label": "Zeitraum",
+      "days30": "30 Tage",
+      "days90": "90 Tage",
+      "year": "Dieses Jahr",
+      "lastDays": "Letzte {days} Tage",
+      "thisYear": "Dieses Jahr"
+    },
+    "categories": {
+      "legend": "Kategorien",
+      "beer": "Bier",
+      "nonAlcoholic": "Alkoholfrei",
+      "spirits": "Schnaps",
+      "wineSparkling": "Wein & Sekt",
+      "other": "Sonstiges"
+    },
+    "drinks": {
+      "eyebrow": "Ganze Gruppe · alle Mitglieder",
+      "title": "Getränkestatistik",
+      "total": "Getränke",
+      "liters": "Liter",
+      "kcal": "Kalorien",
+      "without": {
+        "one": "ohne Angabe bei {count} Getränk",
+        "other": "ohne Angabe bei {count} Getränken"
+      },
+      "averages": "Ø Getränke der Gruppe",
+      "perEvent": "je Event",
+      "perDay": "je Tag",
+      "perWeek": "je Woche",
+      "perMonth": "je Monat",
+      "viewLabel": "Ansicht",
+      "byMember": "Nach Mitglied",
+      "byDrink": "Nach Getränk",
+      "sortCount": "Nach Anzahl",
+      "sortKcal": "Nach Kalorien",
+      "perEventWeek": "Ø je Event · je Woche",
+      "noValue": "ohne Angabe",
+      "drinkDetails": "{members} Personen · {liters} l",
+      "empty": "In diesem Zeitraum wurden noch keine Getränke gebucht."
+    },
+    "overview": {
+      "eyebrow": "Meine Gruppe",
+      "title": "Statistik-Übersicht",
+      "intro": "Mitglieder, Events, Zusagen und Trinkverhalten auf einen Blick. Sichtbar für alle Mitglieder der Gruppe.",
+      "kpi": {
+        "members": "Mitglieder",
+        "membersHint": "{active} aktiv · {new} neu",
+        "events": "Events",
+        "eventsHint": "Ø {avg} Teilnehmende",
+        "attendanceHint": "aller Einladungen",
+        "perEvent": "Ø {value} je Event",
+        "perWeek": "Ø {value} je Woche",
+        "perMember": "Ø {value} je Mitglied",
+        "revenue": "Umsatz",
+        "perMonth": "Je Monat",
+        "perMonthHint": "Getränke im Schnitt"
+      },
+      "withoutValues": "Ohne Füllmenge: {volume} Getränke, ohne Kalorien: {kcal} Getränke. Sie zählen bei Litern bzw. Kalorien nicht mit.",
+      "sections": {
+        "events": "Events & Zusagen",
+        "drinking": "Trinkverhalten",
+        "drinks": "Getränke",
+        "community": "Gemeinschaft"
+      },
+      "rsvpByEvent": "Antworten je Event",
+      "rsvpByMember": "Zusagen je Mitglied",
+      "rsvp": {
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt",
+        "noAnswer": "Keine Antwort"
+      },
+      "acceptedOf": "{accepted} von {invited} zugesagt",
+      "noEvents": "In diesem Zeitraum gibt es keine Einladungen.",
+      "table": {
+        "member": "Mitglied",
+        "yes": "Zu",
+        "no": "Ab",
+        "attended": "Da gewesen",
+        "quote": "Quote",
+        "category": "Kategorie",
+        "share": "Anteil"
+      },
+      "attendedHint": "„Da gewesen“ zählt Events, bei denen das Mitglied mindestens einen Strich oder Kauf hatte.",
+      "weekly": "Getränke je Woche",
+      "weeklyAvg": "Ø {value} je Woche",
+      "weeklyValue": "{value} in dieser Woche",
+      "weeklyLabel": "Getränke je Woche, älteste zuerst: {values}",
+      "weeksAgo": {
+        "one": "vor {count} Woche",
+        "other": "vor {count} Wochen"
+      },
+      "thisWeek": "diese Woche",
+      "when": "Wann wird getrunken?",
+      "byWeekday": "Nach Wochentag",
+      "byHour": "Nach Uhrzeit",
+      "weekdays": {
+        "1": "Mo",
+        "2": "Di",
+        "3": "Mi",
+        "4": "Do",
+        "5": "Fr",
+        "6": "Sa",
+        "7": "So"
+      },
+      "hours": {
+        "lt18": "bis 18",
+        "18": "18–19",
+        "19": "19–20",
+        "20": "20–21",
+        "21": "21–22",
+        "22": "22–23",
+        "ge23": "ab 23"
+      },
+      "whoDrinksWhat": "Wer trinkt was? · Getränke je Mitglied nach Kategorie",
+      "drinksKcal": "{count} Getränke · {kcal} kcal",
+      "topDrinks": "Beliebteste Getränke",
+      "countPerEvent": "{count} · Ø {value}/Event",
+      "categoryShare": "Anteil nach Kategorie",
+      "noRounds": "Noch keine Runden ausgegeben.",
+      "moments": {
+        "title": "Moments",
+        "started": "Moments gestartet",
+        "reactions": "Reaktionen",
+        "media": "Fotos & Videos"
+      },
+      "chat": {
+        "title": "Chat",
+        "messages": "Nachrichten",
+        "mostActive": "Aktivste Person",
+        "eventChats": "Event-Chats"
+      },
+      "records": {
+        "title": "Rekorde",
+        "mostDrinks": "Meiste Getränke an einem Abend",
+        "mostDrinksValue": "{label} · {count} Getränke",
+        "streak": "Längste Serie dabei",
+        "streakValue": {
+          "one": "{label} · {count} Event",
+          "other": "{label} · {count} Events"
+        },
+        "fastest": "Schnellste Zusage",
+        "fastestValue": "{label} · nach {count} Min"
+      }
+    },
+    "recording": {
+      "groupOff": "Die Statistik ist in dieser Gruppe ausgeschaltet.",
+      "groupOffHint": "Neue Aktivitäten werden nicht erfasst. Bereits erfasste Zahlen bleiben, bis sie gelöscht werden.",
+      "eventOff": "Die Statistik ist für dieses Event ausgeschaltet.",
+      "eventOffHint": "Im Event wird nichts Neues erfasst.",
+      "userOff": "Du hast deine Statistik ausgeschaltet.",
+      "userOffHint": "Über dich wird in keiner Gruppe etwas Neues erfasst.",
+      "toAccount": "Zu Mein Konto"
+    },
+    "features": {
+      "purchase": "Striche und Käufe",
+      "foreign_drink": "Fremdgetränke",
+      "round": "Runden",
+      "top_up": "Aufladungen",
+      "event": "Events erstellt",
+      "rsvp": "Antworten auf Einladungen",
+      "moment": "Moments gestartet",
+      "moment_reaction": "Reaktionen auf Moments",
+      "moment_media": "Bilder und Videos in Moments",
+      "chat_message": "Chat-Nachrichten",
+      "chat_reaction": "Reaktionen im Chat",
+      "invite_link": "Einladungslinks",
+      "invite_join": "Beitritte über Einladungslink"
+    },
+    "mine": {
+      "eyebrow": "Mein Konto",
+      "title": "Meine Statistik",
+      "intro": "Alles, was du ausgelöst hast, über alle deine Gruppen und Events. Nur du siehst diese Seite.",
+      "empty": "Im Zeitraum ist noch nichts von dir erfasst.",
+      "accepted": "Zusagen",
+      "attended": "Teilnahmen",
+      "byFeature": "Nach Funktion",
+      "byGroup": "Nach Gruppe",
+      "groupOff": "Statistik aus"
+    },
+    "events": {
+      "empty": "Im Zeitraum gibt es keine Events.",
+      "off": "Statistik aus",
+      "purchases": "Striche",
+      "attendees": "Teilnehmende",
+      "moments": "Moments",
+      "chat": "Chat-Nachrichten",
+      "mine": "Meine Striche",
+      "myAnswer": "Meine Antwort",
+      "answer": {
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt"
+      },
+      "count": "Events",
+      "attendances": "Teilnahmen",
+      "perEvent": "{{value}} je Event",
+      "compare": "Events im Vergleich"
+    },
+    "crossEvents": {
+      "eyebrow": "Alle meine Gruppen",
+      "title": "Events übergreifend",
+      "intro": "Alle Events aus deinen Gruppen, die du sehen darfst. Gezeigt werden Summen, Durchschnitte und deine eigenen Werte, keine Namen anderer Personen.",
+      "mine": "Du warst bei {{attended}} Events dabei und hast {{purchases}} Striche gemacht."
+    },
+    "groupEvents": {
+      "title": "Events der Gruppe"
+    },
+    "featureStats": {
+      "title": "Funktionen",
+      "intro": "Wie oft jede Funktion der Gruppe ausgelöst wurde und wie darauf geantwortet wurde.",
+      "triggered": "ausgelöst",
+      "response": {
+        "rsvp": "Antworten",
+        "moment_reaction": "Reaktionen",
+        "chat_reaction": "Reaktionen",
+        "invite_join": "Beitritte",
+        "round_members": "bedachte Personen"
+      },
+      "variant": {
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt",
+        "moment_reaction": "Reaktionen",
+        "moment_media": "Bilder und Videos",
+        "club": "Gruppenchat",
+        "event": "Event-Chat",
+        "moment": "Moment-Chat",
+        "round": "Runde",
+        "evening": "Abendaktion",
+        "pwaBarcode": "Barcode-Kauf",
+        "tabletManual": "Strichliste",
+        "catalog": "Aus dem Katalog",
+        "library": "Nur Getränkedatenbank",
+        "other": "Sonstige"
+      }
+    },
+    "eventStats": {
+      "title": "Event-Statistik",
+      "back": "Zurück zum Event",
+      "answers": "Antworten auf die Einladung",
+      "reactions": "{{reactions}} Reaktionen, {{media}} Bilder/Videos",
+      "chatReactions": "{{count}} Reaktionen",
+      "consumers": "Striche je Person"
+    },
+    "settings": {
+      "mine": {
+        "title": "Statistik",
+        "switch": "Meine Statistik erfassen",
+        "hint": "Aus heißt: Über dich wird in keiner Gruppe und keinem Event etwas erfasst. Ausschalten löscht nichts.",
+        "delete": "Meine erfassten Statistikdaten löschen",
+        "confirm": "Wirklich alle über dich erfassten Statistikdaten in allen Gruppen löschen? Das lässt sich nicht rückgängig machen."
+      },
+      "group": {
+        "title": "Statistik",
+        "switch": "Statistik in dieser Gruppe",
+        "hint": "Aus heißt: In der Gruppe und ihren Events wird nichts erfasst. Ausschalten löscht nichts.",
+        "delete": "Statistikdaten der Gruppe löschen",
+        "confirm": "Wirklich alle Statistikdaten dieser Gruppe löschen? Das lässt sich nicht rückgängig machen."
+      },
+      "confirmDelete": "Ja, endgültig löschen",
+      "deleted": "{{count}} Einträge gelöscht."
     }
   },
   "guest": {
@@ -1764,9 +2106,9 @@
     }
   },
   "scan": {
-    "eyebrow": "Mit Guthaben bezahlen",
+    "eyebrow": "Bezahlen oder erfassen",
     "title": "Getränk scannen",
-    "intro": "Halte den Strichcode der Flasche in den Rahmen. Bevor etwas abgebucht wird, siehst du Getränk und Preis.",
+    "intro": "Halte den Strichcode der Flasche in den Rahmen. Bevor etwas abgebucht oder erfasst wird, siehst du das Getränk und wählst, was passieren soll.",
     "camera": {
       "label": "Kamerabild zum Scannen",
       "starting": "Kamera wird gestartet …",
@@ -1800,7 +2142,8 @@
       "undoHint": "Vertan? Du kannst den Kauf 10 Minuten lang zurücknehmen.",
       "undo": "Rückgängig",
       "next": "Nächstes Getränk scannen",
-      "toWallet": "Zum Guthaben"
+      "toWallet": "Zum Guthaben",
+      "noStatistics": "Der Kauf zählt in keiner Statistik."
     },
     "undone": {
       "title": "Kauf zurückgenommen",
@@ -1809,7 +2152,31 @@
     "errors": {
       "lookup": "Das Getränk konnte nicht gesucht werden.",
       "pay": "Bezahlen hat nicht geklappt.",
-      "undo": "Zurücknehmen hat nicht geklappt."
+      "undo": "Zurücknehmen hat nicht geklappt.",
+      "record": "Erfassen hat nicht geklappt.",
+      "remove": "Entfernen hat nicht geklappt."
+    },
+    "choice": {
+      "intro": "Gerade bist du bei keinem laufenden Event mit Selbstbedienung. Wähle, was mit dem Getränk passieren soll.",
+      "legend": "Was soll passieren?",
+      "credit": "Mit Guthaben bezahlen",
+      "creditHint": "Es gilt der Preis aus dem Getränkekatalog der Gruppe, ohne Event.",
+      "foreign": "Nur in die Statistik (Fremdgetränk)",
+      "foreignHint": "Es wird nichts abgebucht. Das Getränk zählt in deiner Statistik und in der Gruppenstatistik, aber bei keinem Event.",
+      "noPrice": "Bezahlen geht hier nicht: Das Getränk hat im Katalog der Gruppe keinen Preis.",
+      "recordStatistics": "In die Statistik aufnehmen",
+      "recordStatisticsHint": "Ohne Haken wird nur bezahlt. Der Kauf zählt dann in keiner Statistik.",
+      "statisticsOff": "Die Statistik ist ausgeschaltet. Bezahlen geht trotzdem; erfasst wird nichts.",
+      "submitForeign": "In die Statistik aufnehmen"
+    },
+    "recording": "Wird erfasst …",
+    "foreign": {
+      "title": "Erfasst",
+      "message": "{drink} zählt jetzt in deiner Statistik und in der Gruppenstatistik. Abgebucht wurde nichts.",
+      "removeHint": "Vertan? Du kannst das Getränk 10 Minuten lang wieder entfernen.",
+      "remove": "Entfernen",
+      "removedTitle": "Getränk entfernt",
+      "removedMessage": "{drink} zählt nicht mehr in der Statistik."
     }
   },
   "kiosk": {
@@ -1978,6 +2345,84 @@
     "acceptPrefix": "Ich habe die",
     "acceptLink": "AGB",
     "acceptSuffix": " gelesen und stimme ihnen zu.",
-    "acceptRequired": "Bitte stimme den AGB zu."
+    "acceptRequired": "Bitte stimme den AGB zu.",
+    "consent": {
+      "eyebrow": "Neue Fassung der AGB",
+      "title": "Bitte stimme den AGB zu",
+      "intro": "Bevor du Vereint weiter nutzt, brauchen wir deine Zustimmung zur aktuellen Fassung der AGB vom {date}.",
+      "statistics": "Neu ist der Abschnitt „Statistiken“: Striche, Käufe, Zusagen, Anwesenheit und Getränke mit Menge und Kalorien werden den Mitgliedern deiner Gruppe mit Namen angezeigt. Das ist nur zur Unterhaltung, keine Gesundheitsangabe, und bleibt innerhalb der Gruppe.",
+      "readTerms": "AGB lesen",
+      "accept": "Zustimmen",
+      "accepting": "Wird gespeichert …",
+      "decline": "Nicht zustimmen und abmelden",
+      "deleteHint": "Wenn du nicht zustimmen möchtest, melde dich ab. Dein Konto löschen wir auf Wunsch: Schreib dazu eine E-Mail an {email} (AGB § 10 Abs. 3).",
+      "failed": "Die Zustimmung konnte nicht gespeichert werden. Bitte versuche es noch einmal."
+    }
+  },
+  "rounds": {
+    "title": "Runde ausgeben",
+    "loading": "Event und Getränke werden abgerufen.",
+    "unavailable": "Runde ausgeben nicht möglich",
+    "eventChip": "Runde ausgeben",
+    "fromBalance": "Von deinem Guthaben:",
+    "kindLabel": "Art der Runde",
+    "kind": {
+      "round": "Eine Runde",
+      "evening": "Ganzen Abend"
+    },
+    "drink": "Getränk",
+    "allDrinks": "Alle Getränke",
+    "validity": "Gültig",
+    "validity30m": "30 Minuten",
+    "validity1h": "1 Stunde",
+    "validityEventEnd": "Bis Event-Ende",
+    "maxAmount": "Höchstsumme in Euro",
+    "forWhom": "Für wen? · {count} ausgewählt",
+    "accepted": "zugesagt",
+    "present": "vor Ort",
+    "noMembers": "Außer dir ist gerade niemand im Event.",
+    "maxHint": "Höchstens {amount} von deinem Guthaben",
+    "chargeHint": "Abgebucht wird nur, was die Eingeladenen an der Theke wirklich nehmen. Das Thekenterminal zeigt deine Runde an, bis sie abläuft.",
+    "submit": "Runde für {count} ausgeben",
+    "submitEvening": "Abend für {count} ausgeben",
+    "started": "Deine Runde läuft. Die Eingeladenen bekommen eine Mitteilung.",
+    "mine": "Deine Runden in diesem Event",
+    "end": "Beenden",
+    "endedInfo": "Runde beendet.",
+    "card": {
+      "gives": "Gibt aus",
+      "used": "Verbraucht",
+      "valid": "Gültig",
+      "upTo": "bis {amount}",
+      "remaining": "noch {minutes} Min",
+      "until": "bis {time}",
+      "untilEventEnd": "bis Event-Ende",
+      "redeemed": "{count} von {total} eingelöst",
+      "invited": "Eingeladen",
+      "roundOf": "Eine Runde {drink}",
+      "roundAll": "Eine Runde · alle Getränke",
+      "eveningOf": "Ganzer Abend · {drink}",
+      "eveningAll": "Ganzer Abend · alle Getränke"
+    },
+    "status": {
+      "running": "Läuft",
+      "usedUp": "Aufgebraucht",
+      "expired": "Abgelaufen",
+      "ended": "Beendet"
+    },
+    "payer": {
+      "round": "Runde von {name}",
+      "evening": "Abend von {name}"
+    },
+    "terminal": {
+      "title": "Laufende Runden",
+      "none": "Gerade läuft keine Runde.",
+      "showAll": "Alle ansehen",
+      "hint": "Runden gibt jede Person in der App am eigenen Handy aus. Am Terminal werden sie nur angezeigt.",
+      "summary": "{what} · {redeemed} von {total} · {validity}",
+      "overviewTitle": "Laufende Runden",
+      "displayOnly": "Nur Anzeige",
+      "overviewHint": "Eine Runde gibt jede Person in der App am eigenen Handy aus und zahlt mit ihrem eigenen Guthaben. Am Terminal wird nichts ausgegeben. Wer eingeladen ist, bekommt wie gewohnt einen Strich, er geht dann auf die Runde."
+    }
   }
 }

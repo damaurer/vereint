@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Getränkestatistik</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Getränkestatistik" back-href="Statistik.dc.html" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; overflow: hidden">
+    <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Ganze Gruppe · alle Mitglieder</p>
+
+    <div role="group" aria-label="Zeitraum" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 10px; background-color: var(--color-surface-muted)">
+      <sc-for list="{{periods}}" as="p" hint-placeholder-count="3">
+        <button type="button" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}" style="{{p.style}}">{{p.label}}</button>
+      </sc-for>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+      <div class="ui-stat-card" style="padding: 10px 12px"><p class="ui-stat-label" style="font-size: 11px">Getränke</p><p class="ui-stat-value" style="font-size: 22px">{{count}}</p></div>
+      <div class="ui-stat-card" style="padding: 10px 12px"><p class="ui-stat-label" style="font-size: 11px">Liter</p><p class="ui-stat-value" style="font-size: 22px">{{liters}}</p></div>
+      <div class="ui-stat-card" style="padding: 10px 12px"><p class="ui-stat-label" style="font-size: 11px">Kalorien</p><p class="ui-stat-value" style="font-size: 22px">{{kcal}}</p></div>
+    </div>
+
+    <section aria-label="Durchschnitt" style="display: flex; flex-direction: column; gap: 6px">
+      <h3 style="margin: 0; color: var(--color-text-muted); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Ø Getränke der Gruppe</h3>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+        <sc-for list="{{avgs}}" as="a" hint-placeholder-count="4">
+          <div style="display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; border-radius: 10px; background-color: var(--color-brand-soft)">
+            <span style="color: var(--color-brand); font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums">{{a.value}}</span>
+            <span style="font-size: 12px; font-weight: 600">{{a.label}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display: flex; align-items: center; gap: 8px">
+      <div role="tablist" aria-label="Ansicht" style="flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 10px; background-color: var(--color-surface-muted)">
+        <sc-for list="{{views}}" as="v" hint-placeholder-count="2">
+          <button type="button" role="tab" aria-selected="{{v.selected}}" onClick="{{v.pick}}" style="{{v.style}}">{{v.label}}</button>
+        </sc-for>
+      </div>
+      <button type="button" onClick="{{toggleSort}}" aria-label="Sortierung wechseln" style="height: 44px; padding: 0 10px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap">{{sortLabel}}</button>
+    </div>
+
+    <sc-if value="{{byMember}}" hint-placeholder-val="{{ true }}">
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <sc-for list="{{members}}" as="m" hint-placeholder-count="5">
+          <li style="{{m.li}}">
+            <button type="button" onClick="{{m.toggle}}" aria-expanded="{{m.expanded}}" style="width: 100%; display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border: none; background: transparent; color: var(--color-text); font: inherit; text-align: left">
+              <span style="display: flex; align-items: center; gap: 10px; width: 100%">
+                <span style="width: 18px; color: var(--color-text-muted); font-size: 13px; font-weight: 700">{{m.pos}}</span>
+                <span style="flex: 1; font-size: 15px; font-weight: 700">{{m.label}}</span>
+                <span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums">{{m.count}}</span>
+                <span style="width: 82px; text-align: right; color: var(--color-text-muted); font-size: 13px; font-variant-numeric: tabular-nums">{{m.kcal}}</span>
+              </span>
+              <span aria-hidden="true" style="display: flex; height: 8px; margin-left: 28px; border-radius: 999px; overflow: hidden; background-color: var(--color-surface-muted)">
+                <sc-for list="{{m.bar}}" as="b" hint-placeholder-count="3"><span style="{{b.style}}"></span></sc-for>
+              </span>
+            </button>
+            <sc-if value="{{m.open}}" hint-placeholder-val="{{ false }}">
+              <ul style="list-style: none; margin: 0 14px 10px 42px; padding: 0; display: flex; flex-direction: column; gap: 4px">
+                <sc-for list="{{m.detail}}" as="d" hint-placeholder-count="3">
+                  <li style="display: flex; justify-content: space-between; gap: 8px; font-size: 13px"><span>{{d.label}}</span><span style="color: var(--color-text-muted); font-variant-numeric: tabular-nums">{{d.value}}</span></li>
+                </sc-for>
+              </ul>
+            </sc-if>
+          </li>
+        </sc-for>
+      </ul>
+    </sc-if>
+
+    <sc-if value="{{byDrink}}" hint-placeholder-val="{{ false }}">
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <sc-for list="{{drinks}}" as="d" hint-placeholder-count="5">
+          <li style="{{d.li}}">
+            <span style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+              <span style="font-size: 15px; font-weight: 700">{{d.label}}</span>
+              <span style="color: var(--color-text-muted); font-size: 12px">{{d.meta}}</span>
+            </span>
+            <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+              <span style="font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums">{{d.count}}</span>
+              <span style="color: var(--color-text-muted); font-size: 12px; font-variant-numeric: tabular-nums">{{d.kcal}}</span>
+            </span>
+          </li>
+        </sc-for>
+      </ul>
+    </sc-if>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; color: var(--color-text-muted); font-size: 12px">
+      <span style="display: flex; align-items: center; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 3px; background-color: var(--color-brand)"></span>Bier</span>
+      <span style="display: flex; align-items: center; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 3px; background-color: var(--vereint-teal)"></span>Alkoholfrei</span>
+      <span style="display: flex; align-items: center; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 3px; background-color: var(--color-warning)"></span>Schnaps &amp; Wein</span>
+      <span>kcal je Portion laut Getränkedatenbank</span>
+    </div>
+  </main>
+  <dc-import name="TabBar" active="mehr" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { period: 90, view: 'member', sort: 'count', open: 'JK' };
+  }
+  renderVals() {
+    const D = [
+      { id: 'helles', label: 'Helles 0,5 l', cat: 'bier', l: 0.5, kcal: 215 },
+      { id: 'weiss', label: 'Weißbier 0,5 l', cat: 'bier', l: 0.5, kcal: 230 },
+      { id: 'schorle', label: 'Apfelschorle 0,5 l', cat: 'af', l: 0.5, kcal: 120 },
+      { id: 'wasser', label: 'Wasser 0,5 l', cat: 'af', l: 0.5, kcal: 0 },
+      { id: 'obstler', label: 'Obstler 2 cl', cat: 'hart', l: 0.02, kcal: 50 },
+      { id: 'sekt', label: 'Sekt 0,1 l', cat: 'hart', l: 0.1, kcal: 85 }
+    ];
+    const M = [
+      ['JK', 'Jonas Keller', { helles: 14, weiss: 6, schorle: 1, wasser: 2, obstler: 5, sekt: 0 }],
+      ['SW', 'Sabine Wolf', { helles: 9, weiss: 4, schorle: 3, wasser: 4, obstler: 2, sekt: 2 }],
+      ['TB', 'Thomas Berger', { helles: 11, weiss: 2, schorle: 2, wasser: 1, obstler: 3, sekt: 0 }],
+      ['FB', 'Felix Braun', { helles: 6, weiss: 3, schorle: 4, wasser: 3, obstler: 1, sekt: 0 }],
+      ['LH', 'Lena Hoffmann', { helles: 4, weiss: 0, schorle: 6, wasser: 5, obstler: 0, sekt: 3 }],
+      ['MS', 'Mia Schulz', { helles: 0, weiss: 1, schorle: 8, wasser: 6, obstler: 0, sekt: 4 }]
+    ];
+    const s = this.state;
+    const f = { 30: 0.35, 90: 1, 365: 3.8 }[s.period];
+    const cnt = (n) => Math.round(n * f);
+    const fmtK = (v) => v.toLocaleString('de-DE') + ' kcal';
+    const fmtL = (v) => v.toFixed(1).replace('.', ',');
+    const color = { bier: 'var(--color-brand)', af: 'var(--vereint-teal)', hart: 'var(--color-warning)' };
+    let tc = 0, tl = 0, tk = 0;
+    const members = M.map(([id, label, q]) => {
+      let c = 0, k = 0; const byCat = { bier: 0, af: 0, hart: 0 }; const detail = [];
+      D.forEach((d) => { const n = cnt(q[d.id]); if (!n) return; c += n; k += n * d.kcal; tl += n * d.l; byCat[d.cat] += n; detail.push({ label: n + ' × ' + d.label, value: fmtK(n * d.kcal) }); });
+      tc += c; tk += k;
+      return { id, label, c, k, byCat, detail };
+    });
+    members.sort((a, b) => (s.sort === 'kcal' ? b.k - a.k : b.c - a.c));
+    const drinks = D.map((d) => {
+      let n = 0, top = '', topN = 0;
+      M.forEach(([, label, q]) => { const x = cnt(q[d.id]); n += x; if (x > topN) { topN = x; top = label; } });
+      return { d, n, top, topN };
+    }).sort((a, b) => (s.sort === 'kcal' ? b.n * b.d.kcal - a.n * a.d.kcal : b.n - a.n));
+    const events = { 30: 2, 90: 6, 365: 24 }[s.period];
+    const avg = (v) => (Math.round(v * 10) / 10).toFixed(1).replace('.', ',');
+    const seg = (on) => 'height: 38px; border: none; border-radius: 8px; font: inherit; font-size: 14px; ' + (on ? 'background-color: var(--color-surface); color: var(--color-text); font-weight: 700' : 'background: transparent; color: var(--color-text-muted); font-weight: 600');
+    return {
+      theme: this.props.theme ?? 'light',
+      periods: [[30, '30 Tage'], [90, '90 Tage'], [365, 'Jahr']].map(([id, label]) => ({ label, pressed: s.period === id ? 'true' : 'false', style: seg(s.period === id), pick: () => this.setState({ period: id }) })),
+      count: String(tc),
+      liters: fmtL(tl),
+      kcal: tk.toLocaleString('de-DE'),
+      avgs: [
+        { label: 'je Event', value: avg(tc / events) },
+        { label: 'je Tag', value: avg(tc / s.period) },
+        { label: 'je Woche', value: avg(tc / (s.period / 7)) },
+        { label: 'je Monat', value: avg(tc / (s.period / 30.4)) }
+      ],
+      views: [['member', 'Nach Mitglied'], ['drink', 'Nach Getränk']].map(([id, label]) => ({ label, selected: s.view === id ? 'true' : 'false', style: seg(s.view === id), pick: () => this.setState({ view: id }) })),
+      byMember: s.view === 'member',
+      byDrink: s.view === 'drink',
+      sortLabel: s.sort === 'kcal' ? 'Nach kcal' : 'Nach Anzahl',
+      toggleSort: () => this.setState({ sort: s.sort === 'kcal' ? 'count' : 'kcal' }),
+      members: members.slice(0, 5).map((m, i) => {
+        const open = s.open === m.id;
+        return {
+          pos: (i + 1) + '.', label: m.label, count: m.c + ' ×', kcal: fmtK(m.k),
+          expanded: open ? 'true' : 'false', open,
+          toggle: () => this.setState({ open: open ? '' : m.id }),
+          li: i ? 'border-top: 1px solid var(--color-border)' : '',
+          bar: ['bier', 'af', 'hart'].map((c) => ({ style: 'height: 8px; width: ' + (m.c ? (m.byCat[c] / m.c * 100).toFixed(1) : 0) + '%; background-color: ' + color[c] })),
+          detail: [{ label: 'Ø je Event · je Woche', value: avg(m.c / events) + ' · ' + avg(m.c / (s.period / 7)) }].concat(m.detail.slice(0, 3))
+        };
+      }),
+      drinks: drinks.map((x, i) => ({
+        label: x.d.label,
+        meta: fmtL(x.n * x.d.l) + ' l · am meisten: ' + (x.top ? x.top + ' (' + x.topN + ')' : '–'),
+        count: x.n + ' ×',
+        kcal: fmtK(x.n * x.d.kcal),
+        li: 'display: flex; align-items: center; gap: 10px; padding: 10px 14px' + (i ? '; border-top: 1px solid var(--color-border)' : '')
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

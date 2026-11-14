@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Rollen und Berechtigungen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 100%; min-height: 960px; box-sizing: border-box; display: flex; flex-wrap: wrap; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans)">
+  <dc-import name="Sidebar" active="gruppe" hint-size="260px,960px"></dc-import>
+  <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="height: 60px; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+      <a href="Gruppeneinstellungen.dc.html" style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; text-decoration: none">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
+        Gruppe
+      </a>
+      <h1 style="margin: 0; flex: 1; font-size: 18px; font-weight: 800">Rollen &amp; Berechtigungen</h1>
+    </header>
+    <main style="width: 100%; max-width: 1120px; box-sizing: border-box; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 20px; padding: 28px 24px; align-items: flex-start">
+      <section style="flex: 1 1 280px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <h2 style="margin: 0; font-size: 17px; font-weight: 700">Rollen</h2>
+          <button type="button" onClick="{{addRole}}" style="height: 36px; padding: 0 12px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 14px; font-weight: 700">Neue Rolle</button>
+        </div>
+        <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+          <sc-for list="{{roles}}" as="r" hint-placeholder-count="4">
+            <li>
+              <button type="button" onClick="{{r.pick}}" aria-pressed="{{r.pressed}}" style="{{r.style}}">
+                <span style="display: flex; align-items: center; gap: 8px; width: 100%"><span style="flex: 1; text-align: left; font-size: 15px; font-weight: 700">{{r.label}}</span><span class="ui-chip">{{r.kind}}</span></span>
+                <span style="width: 100%; text-align: left; color: var(--color-text-muted); font-size: 13px">{{r.meta}}</span>
+              </button>
+            </li>
+          </sc-for>
+        </ul>
+      </section>
+
+      <section style="flex: 2 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 14px; padding: 20px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 800">{{selLabel}}</h2>
+          <p style="margin: 0; color: var(--color-text-muted); font-size: 14px">{{selHint}}</p>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+          <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+            <fieldset style="margin: 0; display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 10px">
+              <legend style="padding: 0 4px; font-size: 14px; font-weight: 700">{{g.label}}</legend>
+              <sc-for list="{{g.perms}}" as="p" hint-placeholder-count="3">
+                <label style="display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: 14px">
+                  <input type="checkbox" checked="{{p.checked}}" disabled="{{p.locked}}" onChange="{{p.flip}}" style="width: 18px; height: 18px; accent-color: var(--color-brand)">
+                  <span style="display: flex; flex-direction: column"><span>{{p.label}}</span><code style="color: var(--color-text-muted); font-size: 11px">{{p.code}}</code></span>
+                </label>
+              </sc-for>
+            </fieldset>
+          </sc-for>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      sel: 'board',
+      roles: [
+        { id: 'member', label: 'Mitglied', sys: true, people: 7, perms: ['balance.read.self', 'purchase.self', 'chat.member', 'chat.event', 'event.create', 'catalog.propose'] },
+        { id: 'board', label: 'Vorstand', sys: true, people: 2, perms: ['balance.read.self', 'purchase.self', 'chat.member', 'chat.event', 'chat.moderate', 'event.create', 'event.manage', 'catalog.propose', 'catalog.approve', 'ledger.read', 'ledger.correct', 'members.read', 'members.invite', 'notifications.broadcast', 'kiosk.manage', 'moments.manage'] },
+        { id: 'admin', label: 'Admin', sys: true, people: 1, perms: ['balance.read.self', 'purchase.self', 'chat.member', 'chat.event', 'chat.moderate', 'event.create', 'event.manage', 'catalog.propose', 'catalog.approve', 'ledger.read', 'ledger.correct', 'members.read', 'members.invite', 'members.manage', 'roles.manage', 'stammtisch.manage', 'notifications.broadcast', 'kiosk.manage', 'moments.manage'] },
+        { id: 'tablet', label: 'Theke', sys: true, people: 1, perms: ['purchase.tablet'] }
+      ]
+    };
+  }
+  renderVals() {
+    const G = [
+      ['Geld', [['balance.read.self', 'Eigenes Guthaben sehen'], ['purchase.self', 'Selbst kaufen'], ['purchase.tablet', 'Am Terminal für andere buchen'], ['ledger.read', 'Alle Konten sehen'], ['ledger.correct', 'Buchungen korrigieren']]],
+      ['Kommunikation', [['chat.member', 'Gruppenchat'], ['chat.event', 'Event-Chats'], ['chat.moderate', 'Chats moderieren'], ['notifications.broadcast', 'Rundbriefe senden']]],
+      ['Events & Katalog', [['event.create', 'Events anlegen'], ['event.manage', 'Alle Events verwalten'], ['catalog.propose', 'Getränke vorschlagen'], ['catalog.approve', 'Getränke freigeben'], ['moments.manage', 'Moments konfigurieren']]],
+      ['Verwaltung', [['members.read', 'Mitglieder sehen'], ['members.invite', 'Mitglieder einladen'], ['members.manage', 'Mitglieder verwalten'], ['roles.manage', 'Rollen verwalten'], ['stammtisch.manage', 'Gruppe verwalten und exportieren'], ['kiosk.manage', 'Kiosk-Geräte verwalten']]]
+    ];
+    const s = this.state;
+    const role = s.roles.find((r) => r.id === s.sel) || s.roles[0];
+    const has = {};
+    role.perms.forEach((p) => { has[p] = true; });
+    const flip = (code) => () => {
+      if (role.sys) return;
+      const perms = has[code] ? role.perms.filter((p) => p !== code) : role.perms.concat([code]);
+      this.setState({ roles: s.roles.map((r) => (r.id === role.id ? { ...r, perms } : r)) });
+    };
+    return {
+      theme: this.props.theme ?? 'light',
+      addRole: () => {
+        if (s.roles.some((r) => r.id === 'custom')) return this.setState({ sel: 'custom' });
+        this.setState({ sel: 'custom', roles: s.roles.concat([{ id: 'custom', label: 'Getränkewart', sys: false, people: 0, perms: ['catalog.propose', 'catalog.approve'] }]) });
+      },
+      roles: s.roles.map((r) => ({
+        label: r.label, kind: r.sys ? 'System' : 'Eigene',
+        meta: r.people + (r.people === 1 ? ' Person' : ' Personen') + ' · ' + r.perms.length + ' Berechtigungen',
+        pressed: r.id === s.sel ? 'true' : 'false',
+        pick: () => this.setState({ sel: r.id }),
+        style: 'width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 12px; font: inherit; color: var(--color-text); background-color: var(--color-surface); border: ' + (r.id === s.sel ? '2px solid var(--color-brand)' : '1px solid var(--color-border)')
+      })),
+      selLabel: role.label,
+      selHint: role.sys ? 'Systemrolle: Die Berechtigungen sind fest. Für Abweichungen lege eine eigene Rolle an.' : 'Eigene Rolle: Häkchen setzen oder entfernen, die Änderung gilt sofort.',
+      groups: G.map(([label, perms]) => ({ label, perms: perms.map(([code, l]) => ({ code, label: l, checked: !!has[code], locked: role.sys, flip: flip(code) })) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

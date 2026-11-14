@@ -8,7 +8,7 @@ Die **Vereint Backend API** (`baseservice`) folgt REST-Prinzipien, verwendet JSO
 
 - **Authorization**: `Bearer <Keycloak_OIDC_JWT>` (bei geschützten Endpunkten). Im Browser setzt der BFF den Header; das Token verlässt den Server nicht.
 - **X-Stammtisch-Id**: gewählte Gruppe. Der BFF setzt ihn aus dem HttpOnly-Cookie `vereint.stammtisch`; Rollen und Berechtigungen gelten immer für diese Gruppe.
-- **Idempotency-Key**: Pflicht bei allen Buchungen (Käufe, Rückgängig, Aufladungen, Auszahlungen, Korrekturen, Tablet-Buchungen), höchstens 128 Zeichen, bei Runde und Abend höchstens 80. Details: [Fehlerbehandlung & Idempotenz](error-handling-and-idempotency.md).
+- **Idempotency-Key**: Pflicht bei allen Buchungen (Käufe, Rückgängig, Aufladungen, Auszahlungen, Korrekturen, Tablet-Buchungen), höchstens 128 Zeichen. Details: [Fehlerbehandlung & Idempotenz](error-handling-and-idempotency.md).
 - **X-Guest-Token**: Gast-Token für die Gast-Endpunkte des Event-Chats (`/api/v1/events/{eventId}/chat/guest/**`).
 - **X-Request-Id**: Korrelations-ID (wird in Problem Details als `traceId` zurückgegeben).
 
@@ -51,8 +51,9 @@ Für die eigene Person lehnt der Fachservice Rollen-, Berechtigungs- und Status�
 | `GET` | `/api/v1/ledger/members/{memberId}/balance` | Guthaben und Kennzahlen eines Mitglieds (`MemberBalanceDto`) | eigenes Konto oder `ledger.read` |
 | `GET` | `/api/v1/ledger/members/{memberId}/entries` | Buchungen eines Mitglieds (`List<LedgerEntryDto>`) | eigenes Konto oder `ledger.read` |
 | `GET` | `/api/v1/ledger/events/{eventId}/summary` | Abrechnung eines Events (`EventLedgerSummaryDto`) | `ledger.read` oder `event.manage` |
-| `POST` | `/api/v1/ledger/purchases/preview` | Preis und Event zu einem Barcode vorab ermitteln | `purchase.self` |
+| `POST` | `/api/v1/ledger/purchases/preview` | Preis und Event zu einem Barcode vorab ermitteln; ohne laufendes Event mit Selbstbedienung stattdessen `creditPurchase` (Katalogpreis oder `null`) und `foreignDrink` (Fremdgetränk möglich), `drinkId` ist `null` bei Getränken nur aus der Getränkedatenbank | `purchase.self` |
 | `POST` | `/api/v1/ledger/purchases` | Barcode-Kauf ausführen (`PurchaseRequest` + `Idempotency-Key`) | `purchase.self` |
+| `POST` | `/api/v1/ledger/purchases/credit` | Guthabenkauf ohne Event zum Katalogpreis (`{ barcode, recordStatistics }` + `Idempotency-Key`); `409 credit_purchase_at_event` bei Teilnahme an einem laufenden Event mit Selbstbedienung, `404 no_catalog_price` ohne Preis | `purchase.self` |
 | `POST` | `/api/v1/ledger/purchases/{entryId}/undo` | Eigenen Barcode-Kauf innerhalb von 10 Minuten zurücknehmen (+ `Idempotency-Key`) | `purchase.self` |
 | `POST` | `/api/v1/ledger/topups` | Guthaben aufladen (`TopupRequest` + `Idempotency-Key`) | `ledger.correct` |
 | `POST` | `/api/v1/ledger/payouts` | Guthaben auszahlen (`PayoutRequest` + `Idempotency-Key`) | `ledger.correct` |
@@ -65,11 +66,21 @@ Für die eigene Person lehnt der Fachservice Rollen-, Berechtigungs- und Status�
 | `GET` | `/api/v1/tablet/events/{eventId}/members` | Teilnehmende für die Touch-Ansicht | `purchase.tablet` |
 | `GET` | `/api/v1/tablet/events/{eventId}/drinks` | Getränke des Events | `purchase.tablet` |
 | `GET` | `/api/v1/tablet/events/{eventId}/food` | Speisen des Events | `purchase.tablet` |
+| `GET` | `/api/v1/tablet/events/{eventId}/board` | Strichliste des Abends (`TabletBoardDto`): Spalten je Strich-Kategorie mit Preis und Getränken, je Mitglied die Striche pro Spalte und unter „Sonstiges“, dazu Zahl der Striche und Umsatz | `purchase.tablet` |
 | `GET` | `/api/v1/tablet/events/{eventId}/items` | Getränke und Speisen zusammen (`TabletItemsDto`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/purchases` | Buchung für Getränk oder Speise (`TabletPurchaseRequest` + `Idempotency-Key`) | `purchase.tablet` |
 | `POST` | `/api/v1/tablet/events/{eventId}/purchases/{entryId}/undo` | Tablet-Buchung innerhalb von 10 Minuten zurücknehmen (+ `Idempotency-Key`) | `purchase.tablet` |
-| `POST` | `/api/v1/tablet/events/{eventId}/rounds` | Runde (`TabletRevenuePurchaseRequest` + `Idempotency-Key`) | `purchase.tablet` |
-| `POST` | `/api/v1/tablet/events/{eventId}/evening` | Abendabrechnung (`TabletRevenuePurchaseRequest` + `Idempotency-Key`) | `purchase.tablet` |
+
+Ein Strich für eine Person, die in einer laufenden Runde eingeladen ist, geht automatisch auf den Geber der Runde (siehe [Thekenterminal](../domains/tablet-strichliste-recorder.md)). Die früheren Endpunkte `…/rounds` und `…/evening` am Terminal gibt es nicht mehr.
+
+**Runden am eigenen Handy (`RoundController`)**
+
+| Methode | Pfad | Beschreibung | Berechtigung |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/events/{eventId}/rounds` | Runden des Events mit Höchstsumme, Verbrauch, Stand und Eingeladenen (`RoundDto`) | Person des Events, Event-Verwaltung oder `purchase.tablet` |
+| `GET` | `/api/v1/events/{eventId}/rounds/options` | Eigenes Guthaben, Getränke mit Preis und Personen für das Formular (`RoundOptionsDto`) | Person des laufenden Events |
+| `POST` | `/api/v1/events/{eventId}/rounds` | Runde oder ganzen Abend ausgeben (`CreateRoundRequest`); abgebucht wird erst an der Theke | Person des laufenden Events |
+| `POST` | `/api/v1/events/{eventId}/rounds/{roundId}/end` | Eigene Runde vorzeitig beenden | Geber oder `event.manage` |
 
 **Kiosk-Modus (`KioskController`)**
 
@@ -88,11 +99,16 @@ Für die eigene Person lehnt der Fachservice Rollen-, Berechtigungs- und Status�
 | `GET` | `/api/v1/drinks/{id}` | Ein Getränk | Mitglied |
 | `GET` | `/api/v1/drinks/barcode/{barcode}` | Getränk zu einem Barcode | Mitglied |
 | `POST` | `/api/v1/drinks` | Getränk vorschlagen (`ProposeDrinkRequest`); mit `catalog.approve` sofort freigegeben | `catalog.propose` |
-| `PUT` | `/api/v1/drinks/{id}` | Getränk ändern (`UpdateDrinkRequest`) | `catalog.approve` oder eigener Vorschlag |
+| `PUT` | `/api/v1/drinks/{id}` | Getränk ändern (`UpdateDrinkRequest`); `tallyCategoryId` ordnet eine Strich-Kategorie zu (`""` = keine) und braucht `catalog.approve` | `catalog.approve` oder eigener Vorschlag |
 | `POST` | `/api/v1/drinks/{id}/approve` | Vorschlag freigeben | `catalog.approve` |
 | `POST` | `/api/v1/drinks/{id}/reject` | Vorschlag ablehnen | `catalog.approve` |
 | `POST` | `/api/v1/drinks/{id}/barcodes` | Barcode zuweisen (`AddBarcodeRequest`) | `catalog.approve` oder eigener Vorschlag |
 | `DELETE` | `/api/v1/drinks/{id}/barcodes/{barcodeId}` | Barcode entfernen | `catalog.approve` oder eigener Vorschlag |
+| `GET` | `/api/v1/tally-categories` | Strich-Kategorien der Gruppe in Spaltenreihenfolge, mit zugeordneten Getränken (`TallyCategoryDto`) | `catalog.propose`, `catalog.approve` oder `purchase.tablet` |
+| `POST` | `/api/v1/tally-categories` | Strich-Kategorie anlegen (`CreateTallyCategoryRequest`: `name`, `price`); `409`, wenn der Name vergeben ist | `catalog.approve` |
+| `PUT` | `/api/v1/tally-categories/order` | Reihenfolge festlegen (`{ "ids": [...] }`) | `catalog.approve` |
+| `PUT` | `/api/v1/tally-categories/{id}` | Name oder Preis ändern (`UpdateTallyCategoryRequest`) | `catalog.approve` |
+| `DELETE` | `/api/v1/tally-categories/{id}` | Kategorie archivieren; ihre Getränke stehen danach ohne Kategorie da | `catalog.approve` |
 | `GET` | `/api/v1/sublists` | Sublisten | Mitglied |
 | `GET` | `/api/v1/sublists/{id}` | Eine Subliste | Mitglied |
 | `POST` | `/api/v1/sublists` | Subliste anlegen (`CreateSublistRequest`) | Mitglied |
@@ -226,7 +242,19 @@ Gruppenübergreifend und ohne gewählte Gruppe, siehe [Kalender, Freunde und Dir
 | `GET` | `/api/v1/images/{id}` | Bildmetadaten; die URL zeigt auf `/content`, nicht direkt auf S3 | Mitglied |
 | `GET` | `/api/v1/images/{id}/content` | Entschlüsselte Bilddaten | Mitglied |
 | `DELETE` | `/api/v1/images/{id}` | Bild löschen | Eigentümer, `event.manage` oder `catalog.approve` |
-| `GET` | `/api/v1/statistics` | Kennzahlen der Gruppe für die letzten 90 Tage, eigene Platzierung | Mitglied |
+| `GET` | `/api/v1/statistics` | Kennzahlen der Gruppe im Zeitraum (`period=30\|90\|year` oder `zeitraum=30\|90\|jahr`, Standard 90), eigene Platzierung | Mitglied |
+| `GET` | `/api/v1/statistics/me` | Eigene Statistik über alle eigenen Gruppen (`zeitraum`); ohne gewählte Gruppe | angemeldet |
+| `GET` | `/api/v1/statistics/events` | Übergreifende Event-Statistik über alle sichtbaren Events der eigenen Gruppen, ohne fremde Namen (`zeitraum`); ohne gewählte Gruppe | angemeldet |
+| `GET` | `/api/v1/statistics/group-events` | Events der Gruppe zusammengefasst und im Vergleich (`zeitraum`) | Mitglied |
+| `GET` | `/api/v1/statistics/features` | Je Funktion ausgelöst und beantwortet (`zeitraum`) | Mitglied |
+| `POST` | `/api/v1/statistics/foreign-drinks` | Fremdgetränk nur für die Statistik erfassen, ohne Buchung und ohne Event (`{ barcode }` + `Idempotency-Key`); `409 statistics_disabled` bei ausgeschalteter Statistik, `409 credit_purchase_at_event` bei Teilnahme an einem laufenden Event mit Selbstbedienung | `purchase.self` |
+| `DELETE` | `/api/v1/statistics/foreign-drinks/{id}` | Eigenes Fremdgetränk innerhalb von 10 Minuten entfernen (`204`) | `purchase.self` |
+| `GET` | `/api/v1/events/{id}/statistics` | Statistik eines Events | wer das Event sehen darf |
+| `GET`, `PUT` | `/api/v1/me/statistics-settings` | Schalter „Meine Statistik erfassen“ (`{ "enabled": true }`) | angemeldet |
+| `DELETE` | `/api/v1/me/statistics` | Eigene Statistikdaten in allen Gruppen löschen; Audit-Eintrag | angemeldet |
+| `GET` | `/api/v1/stammtisch/statistics-settings` | Schalter „Statistik in dieser Gruppe“ lesen | Mitglied |
+| `PUT` | `/api/v1/stammtisch/statistics-settings` | Schalter der Gruppe setzen; Audit-Eintrag | `stammtisch.manage` |
+| `DELETE` | `/api/v1/stammtisch/statistics` | Statistikdaten der Gruppe löschen; Audit-Eintrag | `stammtisch.manage` |
 | `GET` | `/api/v1/audit-logs` | Revisionsprotokoll mit Filtern `targetEntity`, `action`, `actorId`, `targetId`; sichtbare Bereiche hängen von `audit.read`, `audit.read.all` und der Vorstandsrolle ab | `audit.read` |
 
 ### 9. Gruppen, Datenexport & Getränkedatenbank (`StammtischController`, `StammtischExportController`, `DrinkLibraryController`)

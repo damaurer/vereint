@@ -25,7 +25,7 @@ sequenceDiagram
     BFF->>KC: POST /protocol/openid-connect/token (Code + code_verifier)
     KC-->>BFF: 200 OK (Access Token JWT, Refresh Token, ID Token)
     Note over BFF: Verschlüsselt die Tokens (AES-256-GCM) & setzt HTTP-Only, SameSite Cookies
-    BFF-->>User: 302 Redirect to / (App Dashboard) + Set-Cookie: vereint_session
+    BFF-->>User: 302 Redirect to / (App Dashboard) + Set-Cookie: __Host-vereint_session
 
     Note over User, Spring: Nachfolgender API-Aufruf
     User->>BFF: GET /api/v1/users/me (Cookie)
@@ -136,7 +136,7 @@ In `baseservice` wird jede eingehende Anfrage durch `SecurityConfig` und `JwtAut
 | **Pfad-Prüfung**: Der API-Proxy reicht nur `/api/v1` weiter und verwirft Pfade mit `..` oder kodierten Schrägstrichen. | webservice |
 | **Keine API-Beschreibung in Produktion**: Swagger/OpenAPI nur mit `API_DOCS_ENABLED=true`. | baseservice |
 | **Metadaten entfernen**: EXIF/XMP (GPS, Gerät, Zeit) aus Bildern, Orts- und Geräteangaben aus Videos, bevor sie verschlüsselt gespeichert werden. | baseservice |
-| **Container**: ohne Root, ohne Linux-Capabilities, schreibgeschütztes Dateisystem für baseservice und webservice, Prozess- und Speicherlimits. | `deploy/compose.yaml` |
-| **Caddy**: HTTPS mit HSTS, Anfragen bis 8 MB (Moment-Medien bis 110 MB), `Permissions-Policy` erlaubt Kamera (Barcode-Scan, Fotos) und Standort (Moments) nur für die eigene Seite. | `deploy/Caddyfile` |
+| **Container**: ohne Root, ohne Linux-Capabilities, schreibgeschütztes Dateisystem für baseservice und webservice, Prozess- und Speicherlimits. | Images, Beispiel `local/compose.yaml` |
+| **Reverse Proxy**: HTTPS mit HSTS, Anfragen bis 8 MB (Moment-Medien bis 110 MB), `Permissions-Policy` erlaubt Kamera (Barcode-Scan, Fotos) und Standort (Moments) nur für die eigene Seite. | Betreiber, Beispiel `local/Caddyfile` |
 
-Details und die einmaligen Einstellungen in GitHub und Keycloak: [deploy/README.md](../../deploy/README.md#sicherheit).
+Details: [Vereint selbst betreiben](../betrieb/selbst-betreiben.md) und [Sicherheit und Schlüssel](../betrieb/sicherheit-und-schluessel.md).

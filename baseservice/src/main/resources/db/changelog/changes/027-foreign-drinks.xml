@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 310. Fremdgetränke (Issue #110): Ein Getränk, das jemand außerhalb eines
+         laufenden Events nur für die Statistik erfasst, steht ausschließlich in
+         `statistic_records` (feature `foreign_drink`, ohne event_id). Damit die
+         Getränkestatistik Name, Füllmenge und Kalorien kennt, merkt sich der
+         Eintrag das Getränk: aus dem Katalog der Gruppe (`drink_id`) oder nur aus
+         der gemeinsamen Getränkedatenbank (`library_drink_id`). Wie die übrigen
+         Spalten ohne Fremdschlüssel: Einträge bleiben, auch wenn das Getränk
+         wegfällt. Die Tabelle hat bereits stammtisch_id und Row-Level-Security
+         (303). -->
+    <changeSet id="310-statistic-records-drink" author="claude">
+        <addColumn tableName="statistic_records">
+            <column name="drink_id" type="${uuid.type}"/>
+            <column name="library_drink_id" type="${uuid.type}"/>
+        </addColumn>
+        <createIndex tableName="statistic_records" indexName="idx_statistic_records_feature_occurred">
+            <column name="feature"/>
+            <column name="occurred_at"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="statistic_records" indexName="idx_statistic_records_feature_occurred"/>
+            <dropColumn tableName="statistic_records" columnName="drink_id"/>
+            <dropColumn tableName="statistic_records" columnName="library_drink_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

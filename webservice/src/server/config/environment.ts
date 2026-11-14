@@ -15,6 +15,12 @@ export interface ServerEnvironment {
   readonly sessionCookieName: string;
   readonly sessionDurationMs: number;
   readonly sessionCookieSecure: boolean;
+  /**
+   * Cookies tragen das Präfix `__Host-` (nur mit `Secure`, `Path=/`, ohne
+   * `Domain`). Aktiv bei `SESSION_COOKIE_SECURE=true` und HTTPS-Adresse;
+   * lokal unter `http://localhost` bleiben die Namen ohne Präfix.
+   */
+  readonly hostPrefixedCookies: boolean;
   readonly sessionSecretCurrent: string;
   readonly sessionSecretPrevious: string | null;
   readonly publicBaseUrl: string;
@@ -34,7 +40,7 @@ interface NodeProcess {
 
 /**
  * Express-Session-TTL. Muss identisch zu `ssoSessionMaxLifespan` im
- * Keycloak-Realm (86400 s) bleiben, siehe `docs/authentifizierung.md`.
+ * Keycloak-Realm (86400 s) bleiben, siehe `docs/backend-for-frontend/01-overview-and-setup.md`.
  */
 const DEFAULT_SESSION_DURATION_MINUTES = 24 * 60;
 
@@ -83,6 +89,8 @@ export function resolveServerEnvironment(env: Record<string, string | undefined>
     sessionDurationMs = DEFAULT_SESSION_DURATION_MINUTES * 60 * 1000;
   }
 
+  const sessionCookieSecure = readBoolean(env['SESSION_COOKIE_SECURE'], production);
+  const publicBaseUrl = env['PUBLIC_BASE_URL'] || 'http://localhost:8080';
   const keycloakRealm = env['KEYCLOAK_REALM'] || 'vereint';
   const keycloakIssuerUri = env['KEYCLOAK_ISSUER_URI'] || `http://localhost:8082/realms/${keycloakRealm}`;
 
@@ -91,10 +99,11 @@ export function resolveServerEnvironment(env: Record<string, string | undefined>
     production,
     sessionCookieName: env['SESSION_COOKIE_NAME'] || 'vereint_session',
     sessionDurationMs,
-    sessionCookieSecure: readBoolean(env['SESSION_COOKIE_SECURE'], production),
+    sessionCookieSecure,
+    hostPrefixedCookies: sessionCookieSecure && publicBaseUrl.startsWith('https://'),
     sessionSecretCurrent: readSecret(env['SESSION_SECRET_CURRENT'] ?? env['SESSION_SECRET']),
     sessionSecretPrevious: readSecret(env['SESSION_SECRET_PREVIOUS']) || null,
-    publicBaseUrl: env['PUBLIC_BASE_URL'] || 'http://localhost:8080',
+    publicBaseUrl,
     springApiBaseUrl: env['SPRING_API_BASE_URL'] || 'http://localhost:8081',
     keycloakIssuerUri,
     keycloakRealm,

@@ -2,6 +2,8 @@
 
 Für Vorstandsmitglieder, zum Beispiel Kassenwart und Schriftwart. Als Vorstand bist du auch Mitglied; alles aus dem [Leitfaden Mitglied](02-mitglied.md) gilt für dich ebenso. Gastgeber eines Events finden hier außerdem den Abschnitt [Ein Event vorbereiten](#ein-event-vorbereiten).
 
+Jeden Vorstandsbildschirm einzeln erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#vorstand), dort auch die geplanten [Strich-Kategorien](07-alle-screens.md#strich-kategorien).
+
 Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltung**, am Rechner links unter **Verwaltung**: **Vorstand**, **Kasse & Finanzen** und **Kommunikation**. Welche davon du siehst, hängt von den Rechten deiner Rollen in der Gruppe ab. Eine eigene Rolle mit nur `ledger.read` sieht zum Beispiel nur **Vorstand** und **Kasse & Finanzen**.
 
 ## Auf einen Blick
@@ -12,17 +14,18 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltu
 | Guthaben auszahlen | **Kasse & Finanzen** → Mitglied antippen → **Auszahlen** |
 | ein neues Event planen | **Events** → **Event anlegen** |
 | sehen, was ein Abend eingebracht hat | **Kasse & Finanzen** → Event → **Abrechnung** |
-| Titel, Ort oder Status eines Events ändern | **Vorstand** → Event → **Moderieren** |
-| einen Gast einladen | Event moderieren → **Einladungen** → **Gasteinladung erzeugen** |
+| Titel, Ort oder Status eines Events ändern | **Vorstand** → Event → **Verwalten** |
+| einen Gast einladen | Event verwalten → Reiter **Gäste** → **Gasteinladung erzeugen** |
 | ein vorgeschlagenes Getränk freigeben | **Getränkekatalog** → Vorschlag → **Freigeben** |
 | ein Getränk anlegen oder den Preis ändern | **Getränkekatalog** → **Getränk anlegen** oder **Bearbeiten** |
+| die Spalten und Preise der Strichliste festlegen | **Getränkekatalog** → **Strich-Kategorien** |
 | ein Getränk aus der gemeinsamen Datenbank holen | **Getränkekatalog** → **Aus der Getränkedatenbank** → **Übernehmen** |
 | ein eigenes Getränk mit anderen Gruppen teilen | **Getränkekatalog** → Getränk → **Bearbeiten** → **In die Getränkedatenbank teilen** |
 | ein neues Mitglied einladen | **Vorstand** → **Mitglied einladen** (siehe [Leitfaden Administration](04-administration.md#neue-mitglieder-einladen)) |
 | allen eine Nachricht schicken | **Kommunikation** → Meldung verfassen → **Alle Mitglieder** |
 | einen Hinweis oben im Gruppenchat anheften | **Kommunikation** → Infotafel → **Anpinnen** |
 | ein Thekenterminal ohne PIN entsperren | **Vorstand** → **Kiosk-Geräte** → **Entsperren** |
-| festlegen, welche Moments und Reaktionen es gibt | **Vorstand** → **Moments · Typen & Reaktionen** |
+| festlegen, welche Moments und Reaktionen es gibt | **Vorstand** → **Moments** |
 
 ## Vorstandsübersicht
 
@@ -30,9 +33,9 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltu
 
 **Vorstand** ist dein Einstieg:
 
-- **Rollenspezifische Verwaltung** führt zu **Kassenwart · Kasse & Finanzen**, **Schriftwart · Kommunikation**, **Moments · Typen & Reaktionen**, **Mitglied einladen** und **Kiosk-Geräte**.
+- Die Kacheln oben führen zu **Kasse & Finanzen**, **Kommunikation**, **Moments** (Typen und Reaktionen), **Mitglied einladen** und **Kiosk-Geräte**.
 - Die Kennzahlen zeigen, wie viele Events du siehst und wie viele Aktionen zuletzt protokolliert wurden.
-- Unter **Gastgeber · Events** stehen alle Events mit **Moderieren**.
+- Unter **Gastgeber · Events** stehen alle Events mit Datum, Status und **Verwalten**.
 - **Letzte Aktionen** ist das Protokoll: wer wann was gebucht, geändert oder versendet hat, mit den Namen der beteiligten Mitglieder, Events und Artikel.
 
 <br clear="right">
@@ -43,7 +46,7 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltu
 
 Hier verwaltet der Kassenwart die Bierkasse.
 
-**Mitglieder und Guthaben**: Oben steht, wie viele Mitglieder es gibt und wie viele im Minus sind. Darunter die Liste aller Mitglieder mit Guthaben und letzter Buchung. Mit **Mitglied suchen** findest du jemanden schnell über den Namen.
+**Mitglieder und Guthaben**: Oben stehen das Guthaben aller Mitglieder zusammen, die Zahl der Mitglieder und wie viele im Minus sind (rot, wenn es welche gibt). Darunter die Liste aller Mitglieder mit Guthaben und Datum der letzten Buchung; ein Minus-Guthaben ist rot. Mit **Mitglied suchen** findest du jemanden schnell über den Namen.
 
 <br clear="right">
 
@@ -73,11 +76,13 @@ Tippe auf ein Mitglied. Es öffnen sich sein Guthaben, alle seine Buchungen und 
 
 ## Ein Event vorbereiten
 
-Ein neues Event legst du unter **Events** → **Event anlegen** an, wie im [Leitfaden Mitglied](02-mitglied.md#selbst-ein-event-anlegen) beschrieben. Bestehende Events moderierst du über **Vorstand** → **Moderieren**. Gastgeber eines Events kommen auch über die Eventseite dorthin.
+Ein neues Event legst du unter **Events** → **Event anlegen** an, wie im [Leitfaden Mitglied](02-mitglied.md#selbst-ein-event-anlegen) beschrieben. Bestehende Events bearbeitest du über **Vorstand** → **Verwalten**. Gastgeber eines Events kommen auch über die Eventseite dorthin.
+
+Oben stehen Status, Zeit und Ort. Darunter teilen Reiter die Seite in **Stammdaten**, **Teilnehmer**, **Getränke & Speisen**, **Gäste** und **Chat**.
 
 <img src="bilder/v-event-verwalten.png" alt="Event verwalten" width="300" align="right">
 
-**Stammdaten**: Titel, Ort, Beschreibung, Beginn und Ende ändern, dazu wann die Eingeladenen benachrichtigt werden und ob es eine Erinnerung gibt. Dann **Stammdaten speichern**.
+Reiter **Stammdaten**: Titel, Ort, Beschreibung, Beginn und Ende ändern, dazu wann die Eingeladenen benachrichtigt werden, ob es eine Erinnerung gibt und ob es eine **Statistik für dieses Event** gibt. Dann **Stammdaten speichern**.
 
 Über **Status** steuerst du den Ablauf:
 
@@ -93,7 +98,7 @@ Stelle ein Event am Abend selbst auf **Aktiv**, sonst erscheint es nicht am Thek
 
 <img src="bilder/v-event-teilnehmer.png" alt="Teilnehmer und Einladungen" width="300" align="right">
 
-**Teilnehmer & Anwesenheit**: alle Eingeladenen mit ihrer Antwort (Zugesagt, Vielleicht, Abgesagt, Offen). **Entfernen** nimmt jemanden heraus.
+Reiter **Teilnehmer**: alle Eingeladenen mit ihrer Antwort (Zugesagt, Vielleicht, Abgesagt, Offen). **Entfernen** nimmt jemanden heraus.
 
 **Mitglieder einladen**: Namen suchen und anhaken, oder **Alle Mitglieder einladen**, dann **Einladen**. Die neuen Eingeladenen bekommen eine Mitteilung.
 
@@ -101,7 +106,7 @@ Stelle ein Event am Abend selbst auf **Aktiv**, sonst erscheint es nicht am Thek
 
 <img src="bilder/v-event-getraenke.png" alt="Getränke eines Events" width="300" align="right">
 
-**Getränke** und **Speisen**: zeigen, was an diesem Abend an der Theke angeboten wird, mit Verkaufspreis und Einkaufspreis (EK). **Entfernen** nimmt einen Artikel aus dem Angebot.
+Reiter **Getränke & Speisen**: zeigt, was an diesem Abend an der Theke angeboten wird, mit Verkaufspreis und Einkaufspreis (EK). **Entfernen** nimmt einen Artikel aus dem Angebot.
 
 Zum Hinzufügen unter **Getränk aus dem Katalog** ein Getränk wählen, optional einen abweichenden Preis und EK eintragen und **Getränk hinzufügen** tippen. Schneller geht es mit **Sublist**: eine Getränkeliste wählen und **Sublist zuweisen**. Speisen fügst du genauso unter **Speise aus dem Katalog** hinzu.
 
@@ -109,7 +114,7 @@ Zum Hinzufügen unter **Getränk aus dem Katalog** ein Getränk wählen, optiona
 
 <img src="bilder/v-event-einladungen.png" alt="Gasteinladungen" width="300" align="right">
 
-**Einladungen**: So holst du Gäste ohne Konto dazu.
+Reiter **Gäste**: So holst du Gäste ohne Konto dazu.
 
 1. **Gültig (Minuten)** und **Max. Nutzungen** eintragen, z. B. 10080 Minuten (eine Woche) und 5 Nutzungen.
 2. **Gasteinladung erzeugen** tippen.
@@ -121,7 +126,7 @@ Die Liste zeigt jede Einladung mit Stand und Nutzungen, z. B. „aktiv · 0 / 5�
 
 <img src="bilder/v-event-chat.png" alt="Event-Chat" width="300" align="right">
 
-**Event-Chat**: Alle Nachrichten zu diesem Event, auch die der Gäste. Unten schreibst du unter **Nachricht** und tippst **Senden**.
+Reiter **Chat**: Alle Nachrichten zu diesem Event, auch die der Gäste. Unten schreibst du unter **Nachricht** und tippst **Senden**.
 
 <br clear="right">
 
@@ -152,10 +157,35 @@ Das klappt auch, wenn du schon in **Getränk anlegen** bist: Scannst du dort bei
 
 - **Name**, **Kategorie** und **Standardpreis** (Pflicht beim Preis),
 - **Einkaufspreis**: Darunter rechnet Vereint die Marge pro Verkauf aus.
+- **Füllmenge (ml)** und **Kalorien je Portion (kcal)**: freiwillig, für Liter und Kalorien in der Getränkestatistik. Aus der Getränkedatenbank übernommene Getränke bringen die Werte oft schon mit.
+- **Strich-Kategorie**: die Spalte, unter der das Getränk an der Theke gestrichen wird. Ist eine Kategorie gewählt, steht darunter „An der Theke: 3,00 € (Kategorie Bier, überschreibt den Verkaufspreis)“, und die Marge rechnet mit diesem Preis.
 - **Barcodes**: einen oder mehrere Strichcodes per Kamera oder Eingabe hinzufügen. Erst mit Strichcode können Mitglieder das Getränk selbst bezahlen.
 - **Im Sortiment**: Abwählen nimmt ein Getränk aus dem Verkauf, ohne es zu löschen. Alte Käufe behalten so ihren Namen und Preis.
 
 Vereint warnt, wenn ein Name oder Strichcode schon vergeben ist. **Speichern** übernimmt die Änderung.
+
+<br clear="right">
+
+### Strich-Kategorien
+
+<img src="screens/strich-kategorien.png" alt="Strich-Kategorien" width="300" align="right">
+
+Unter **Getränkekatalog → Strich-Kategorien** legst du fest, welche Spalten die Strichliste am Thekenterminal hat. Eine Strich-Kategorie fasst Getränke zusammen, die an der Theke gleich viel kosten, zum Beispiel „Bier“ für 3,00 € oder „Alkoholfrei“ für 2,00 €.
+
+- **Neue Kategorie**: **Name** und **Preis je Strich** eintragen und speichern.
+- Name und Preis änderst du direkt in der Karte der Kategorie. Der neue Preis gilt ab dem nächsten Strich; schon gebuchte Striche behalten ihren Preis.
+- **Nach links** und **Nach rechts** ändern die Reihenfolge. Sie ist die Reihenfolge der Spalten am Terminal.
+- **Getränke zuordnen**: Unter **Ohne Kategorie · eigener Preis** stehen alle Getränke ohne Spalte; über **Zuordnen …** kommen sie in eine Kategorie. Dasselbe geht im Getränk selbst über das Feld **Strich-Kategorie**. Ein Getränk gehört zu höchstens einer Kategorie. Das Kreuz neben einem Getränk nimmt es wieder heraus.
+- Weicht der eigene Preis eines Getränks vom Kategoriepreis ab, steht er durchgestrichen daneben.
+- **Löschen** entfernt die Kategorie; ihre Getränke stehen danach ohne Kategorie da und kosten wieder ihren eigenen Preis. Alte Buchungen behalten den Namen der Kategorie.
+
+**Welcher Preis gilt?** Die Kategorie zählt nur im Event:
+
+1. Hat das Getränk eine Strich-Kategorie, gilt im Event der **Kategoriepreis**, am Terminal ebenso wie beim Bezahlen per Strichcode am Handy.
+2. Sonst gilt der **Preis aus dem Event** (aus der Getränkeliste oder im Event eingetragen).
+3. Sonst der **Standardpreis** des Getränks.
+
+Getränke ohne Kategorie und Speisen stehen am Terminal in der Spalte **Sonstiges** mit ihrem eigenen Preis.
 
 <br clear="right">
 
@@ -219,11 +249,23 @@ Ein Thekenterminal im Kiosk-Modus lässt sich am Gerät nur mit seiner PIN verla
 
 Das Gerät verlässt den Kiosk-Modus innerhalb weniger Sekunden. Start, Fernentsperrung und PIN-Sperren stehen in **Letzte Aktionen**.
 
+## Statistik der Gruppe
+
+Unter **Mehr → Statistik** seht ihr die Gruppenstatistik, **Events der Gruppe** und **Funktionen**. Den **Umsatz** sehen nur Vorstand, Kasse und Admin; er kommt immer aus der Kasse, auch wenn die Statistik aus ist.
+
+Drei Schalter steuern, was erfasst wird. Alle sind zunächst an:
+
+- **Statistik für dieses Event** beim Anlegen oder unter **Verwalten → Stammdaten**: Aus heißt, im Event wird nichts Neues erfasst, weder Zusagen noch Striche, Moments oder Chat.
+- **Statistik in dieser Gruppe** unter **Mehr → Gruppeneinstellungen** (nur mit dem Recht, die Gruppe zu verwalten, meist Admin): Aus heißt, in der Gruppe und allen ihren Events wird nichts erfasst, auch wenn ein Event an ist.
+- **Meine Statistik erfassen** stellt jede Person selbst in **Mein Konto** ein. Er geht der Gruppe vor: Wer aus ist, wird nirgends erfasst.
+
+Ausschalten wirkt ab sofort und löscht nichts. **Statistikdaten der Gruppe löschen** in den Gruppeneinstellungen löscht nach einer Rückfrage alle erfassten Statistikdaten der Gruppe; Buchungen und Guthaben bleiben. Umschalten und Löschen stehen in **Letzte Aktionen**. Der Datenexport der Gruppe enthält die Statistikdaten.
+
 ## Moments: Typen & Reaktionen
 
 <img src="bilder/v-moments-verwalten.png" alt="Moments-Typen und Reaktionen verwalten" width="300" align="right">
 
-Unter **Vorstand** → **Moments · Typen & Reaktionen** legt ihr fest, welche Arten von Moments Mitglieder starten können (z. B. Anstoßen, Jubeln) und mit welchen Reaktionen sie antworten.
+Unter **Vorstand** → **Moments** legt ihr fest, welche Arten von Moments Mitglieder starten können (z. B. Anstoßen, Jubeln) und mit welchen Reaktionen sie antworten.
 
 - **Neuer Typ** bzw. **Neue Reaktion**: Emoji und Name eintragen, beim Typ optional eine Beschreibung. Beim Typ wählst du, ob **alle aktiven Reaktionen** erlaubt sind oder nur eine Auswahl.
 - **Bearbeiten** ändert einen Eintrag. Schaltest du **Mitglieder können diesen Typ starten** bzw. **… diese Reaktion verwenden** aus, ist der Eintrag ausgemustert: Für neue Moments ist er nicht mehr wählbar, bestehende Moments behalten ihn.

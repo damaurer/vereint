@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Mitgliedskonto buchen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Lena Hoffmann" back-href="Kasse.dc.html" bell="1" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 16px; overflow: hidden">
+    <section style="display: flex; flex-direction: column; gap: 4px; padding: 16px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase">Guthaben</p>
+      <p style="margin: 0; color: var(--color-brand); font-size: 34px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">{{balance}}</p>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 13px">Mitglied seit 17.10.2026 · Meine Gruppe</p>
+    </section>
+
+    <form style="display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <div role="group" aria-label="Buchungsart" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 10px; background-color: var(--color-surface-muted)">
+        <sc-for list="{{kinds}}" as="k" hint-placeholder-count="3">
+          <button type="button" aria-pressed="{{k.pressed}}" onClick="{{k.pick}}" style="{{k.style}}">{{k.label}}</button>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: 120px 1fr; gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <label for="amt" style="font-size: 13px; font-weight: 600">Betrag (€)</label>
+          <input id="amt" inputmode="decimal" value="{{amount}}" onChange="{{onAmount}}" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px; font-variant-numeric: tabular-nums">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <label for="note" style="font-size: 13px; font-weight: 600">Notiz</label>
+          <input id="note" value="Barzahlung am Stammtisch" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px">
+        </div>
+      </div>
+      <button type="button" onClick="{{book}}" style="height: 48px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">{{bookLabel}}</button>
+      <sc-if value="{{hasMsg}}" hint-placeholder-val="{{ false }}">
+        <p role="status" style="margin: 0; color: var(--color-success); font-size: 14px; font-weight: 700">{{msg}}</p>
+      </sc-if>
+    </form>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Letzte Buchungen</h3>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <sc-for list="{{log}}" as="l" hint-placeholder-count="3">
+          <li style="{{l.row}}">
+            <span style="flex: 1; display: flex; flex-direction: column; gap: 1px"><span style="font-size: 14px; font-weight: 600">{{l.label}}</span><span style="color: var(--color-text-muted); font-size: 12px">{{l.meta}}</span></span>
+            <span style="{{l.amountStyle}}">{{l.amount}}</span>
+          </li>
+        </sc-for>
+      </ul>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      kind: 'in', amount: '20,00', cents: 2950, msg: '',
+      log: [
+        { label: 'Käsespätzle', meta: 'Kauf · 17.10., 10:24', c: -750 },
+        { label: 'Aufladung bar', meta: 'Thomas Berger · 15.10., 19:02', c: 2000 }
+      ]
+    };
+  }
+  renderVals() {
+    const eur = (c) => (c < 0 ? '−' : '') + (Math.abs(c) / 100).toFixed(2).replace('.', ',') + ' €';
+    const s = this.state;
+    const seg = (on) => 'height: 38px; border: none; border-radius: 8px; font: inherit; font-size: 14px; ' + (on ? 'background-color: var(--color-surface); color: var(--color-text); font-weight: 700' : 'background: transparent; color: var(--color-text-muted); font-weight: 600');
+    const labels = { in: 'Aufladen', out: 'Auszahlen', fix: 'Korrektur' };
+    return {
+      theme: this.props.theme ?? 'light',
+      balance: eur(s.cents),
+      amount: s.amount,
+      onAmount: (e) => this.setState({ amount: e.target.value }),
+      kinds: Object.keys(labels).map((id) => ({ label: labels[id], pressed: s.kind === id ? 'true' : 'false', style: seg(s.kind === id), pick: () => this.setState({ kind: id }) })),
+      bookLabel: labels[s.kind] + ' buchen',
+      hasMsg: !!s.msg,
+      msg: s.msg,
+      book: () => {
+        const v = Math.round(parseFloat(String(s.amount).replace(',', '.')) * 100) || 0;
+        if (!v) return;
+        const signed = s.kind === 'out' ? -v : v;
+        this.setState({
+          cents: s.cents + signed,
+          msg: labels[s.kind] + ' über ' + eur(v) + ' gebucht.',
+          log: [{ label: labels[s.kind], meta: 'Du · gerade eben', c: signed }].concat(s.log).slice(0, 3)
+        });
+      },
+      log: s.log.map((l, i) => ({
+        label: l.label, meta: l.meta, amount: (l.c > 0 ? '+' : '') + eur(l.c),
+        row: 'display: flex; align-items: center; gap: 10px; padding: 10px 14px' + (i ? '; border-top: 1px solid var(--color-border)' : ''),
+        amountStyle: 'font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; color: ' + (l.c > 0 ? 'var(--color-success)' : 'var(--color-text)')
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

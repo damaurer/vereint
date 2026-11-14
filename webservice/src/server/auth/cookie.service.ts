@@ -1,9 +1,26 @@
 import type { Request, Response } from 'express';
 import { serverEnvironment } from '../config/environment';
-import { sessionCookieName, sessionDurationMs } from '../config/server-config';
+import { sessionDurationMs } from '../config/server-config';
 
-export const oidcStateCookieName = '__oidc_state';
 export const OIDC_STATE_DURATION_SECONDS = 600; // 10 Minuten
+
+/**
+ * Präfix für Cookies, die nur dieser Host setzen darf. Browser nehmen
+ * `__Host-`-Cookies nur mit `Secure`, `Path=/` und ohne `Domain` an; andere
+ * Anwendungen unter derselben Domain können sie daher weder setzen noch
+ * überschreiben.
+ */
+export const HOST_COOKIE_PREFIX = '__Host-';
+
+/** Cookie-Name im laufenden Betrieb: mit `__Host-`, sofern aktiv. */
+export function cookieName(baseName: string): string {
+  return serverEnvironment.hostPrefixedCookies ? `${HOST_COOKIE_PREFIX}${baseName}` : baseName;
+}
+
+/** Name des OIDC-Transaktions-Cookies (`__Host-oidc_state` bzw. lokal `__oidc_state`). */
+export function oidcStateCookieName(): string {
+  return serverEnvironment.hostPrefixedCookies ? `${HOST_COOKIE_PREFIX}oidc_state` : '__oidc_state';
+}
 
 /**
  * Nutzlast je Teil-Cookie. Browser verwerfen einzelne Cookies über 4 KB; der
@@ -19,15 +36,30 @@ export const SESSION_COOKIE_CHUNK_SIZE = 3072;
  */
 export const MAX_SESSION_COOKIE_CHUNKS = 6;
 
-/** Name des Teil-Cookies: der erste Teil trägt den Basisnamen, weitere `.1`, `.2` … */
-function sessionChunkName(index: number): string {
-  return index === 0 ? sessionCookieName : `${sessionCookieName}.${index}`;
+/** Basisname des Session-Cookies im laufenden Betrieb (Teil 0). */
+export function sessionCookieName(): string {
+  return cookieName(serverEnvironment.sessionCookieName);
 }
 
+/** Name des Teil-Cookies: der erste Teil trägt den Basisnamen, weitere `.1`, `.2` … */
+function sessionChunkName(index: number, baseName = sessionCookieName()): string {
+  return index === 0 ? baseName : `${baseName}.${index}`;
+}
+
+/**
+ * Liest ein Cookie. Ein Wert mit ungültiger Prozent-Kodierung (etwa `%E0`)
+ * zählt als nicht vorhanden: Er darf keine Anfrage mit 500 abbrechen, denn
+ * `attachIdentity` liest das Session-Cookie bei jeder Anfrage.
+ */
 export function readCookie(req: Request, name: string): string | undefined {
   const header = req.headers.cookie ?? '';
   const value = header.split(';').map((part) => part.trim()).find((part) => part.startsWith(`${name}=`));
-  return value ? decodeURIComponent(value.slice(name.length + 1)) : undefined;
+  if (!value) return undefined;
+  try {
+    return decodeURIComponent(value.slice(name.length + 1));
+  } catch {
+    return undefined;
+  }
 }
 
 export function appendCookie(res: Response, cookieString: string): void {
@@ -41,22 +73,37 @@ export function appendCookie(res: Response, cookieString: string): void {
   }
 }
 
+function readChunkedCookie(req: Request, baseName: string): string | undefined {
+  const first = readCookie(req, sessionChunkName(0, baseName));
+  if (first === undefined) return undefined;
+
+  let value = first;
+  for (let index = 1; index < MAX_SESSION_COOKIE_CHUNKS; index++) {
+    const next = readCookie(req, sessionChunkName(index, baseName));
+    if (next === undefined) break;
+    value += next;
+  }
+  return value;
+}
+
 /**
  * Setzt den (ggf. auf mehrere Teil-Cookies verteilten) Sessionwert wieder
  * zusammen. Fehlt der erste Teil, existiert keine Session; weitere Teile werden
  * lückenlos ab `.1` gelesen.
  */
 export function readSessionCookie(req: Request): string | undefined {
-  const first = readCookie(req, sessionChunkName(0));
-  if (first === undefined) return undefined;
+  return readChunkedCookie(req, sessionCookieName());
+}
 
-  let value = first;
-  for (let index = 1; index < MAX_SESSION_COOKIE_CHUNKS; index++) {
-    const next = readCookie(req, sessionChunkName(index));
-    if (next === undefined) break;
-    value += next;
-  }
-  return value;
+/**
+ * Session unter dem früheren Namen ohne `__Host-` (Umstellung, Issue #87).
+ * Nur relevant, solange `hostPrefixedCookies` aktiv ist und noch kein Cookie
+ * unter dem neuen Namen existiert; `verifyRequestSession` schreibt die Session
+ * dann unter den neuen Namen um und löscht die alten Cookies.
+ */
+export function readLegacySessionCookie(req: Request): string | undefined {
+  if (!serverEnvironment.hostPrefixedCookies) return undefined;
+  return readChunkedCookie(req, serverEnvironment.sessionCookieName);
 }
 
 function sessionChunkFlags(name: string, value: string, persistent: boolean): string {
@@ -113,13 +160,21 @@ export function clearSessionCookie(res: Response): void {
   }
 }
 
+/** Löscht die Session-Cookies unter dem früheren Namen ohne `__Host-`. */
+export function clearLegacySessionCookie(res: Response): void {
+  if (!serverEnvironment.hostPrefixedCookies) return;
+  for (let index = 0; index < MAX_SESSION_COOKIE_CHUNKS; index++) {
+    appendCookie(res, clearSessionChunkFlags(sessionChunkName(index, serverEnvironment.sessionCookieName)));
+  }
+}
+
 export function readOidcStateCookie(req: Request): string | undefined {
-  return readCookie(req, oidcStateCookieName);
+  return readCookie(req, oidcStateCookieName());
 }
 
 export function setOidcStateCookie(res: Response, value: string): void {
   const flags = [
-    `${oidcStateCookieName}=${encodeURIComponent(value)}`,
+    `${oidcStateCookieName()}=${encodeURIComponent(value)}`,
     'Path=/',
     'HttpOnly',
     'SameSite=Lax',
@@ -131,7 +186,7 @@ export function setOidcStateCookie(res: Response, value: string): void {
 
 export function clearOidcStateCookie(res: Response): void {
   const flags = [
-    `${oidcStateCookieName}=`,
+    `${oidcStateCookieName()}=`,
     'Path=/',
     'HttpOnly',
     'SameSite=Lax',

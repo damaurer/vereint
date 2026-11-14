@@ -92,16 +92,20 @@ describe('DashboardComponent', () => {
     expect(html(fixture)).toContain('Du bist dabei');
   });
 
-  it('lets an attending member decline and change their mind again', async () => {
+  it('shows attendance without buttons and lets a declined member accept again', async () => {
     api.listEvents.mockReturnValue(of([{ ...events[0], myRsvp: 'accepted' }]));
+    const attending = await create();
+    expect(html(attending)).toContain('Du bist dabei');
+    expect((attending.nativeElement as HTMLElement).querySelector('.dash-rsvp button')).toBeNull();
+    TestBed.resetTestingModule();
+
+    api.listEvents.mockReturnValue(of([{ ...events[0], myRsvp: 'declined' }]));
     const fixture = await create();
     const root = fixture.nativeElement as HTMLElement;
-    expect(html(fixture)).toContain('Du bist dabei');
-    (root.querySelector('.dash-rsvp-secondary') as HTMLButtonElement).click();
-    fixture.detectChanges();
-    expect(api.respondToEvent).toHaveBeenCalledWith('e-1', 'declined');
     expect(html(fixture)).toContain('Du hast abgesagt');
-    expect((root.querySelector('.dash-rsvp-primary') as HTMLButtonElement).textContent).toContain('Zusagen');
+    (root.querySelector('.dash-rsvp-primary') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(api.respondToEvent).toHaveBeenCalledWith('e-1', 'accepted');
   });
 
   it('offers no RSVP when the member is not invited', async () => {
@@ -123,18 +127,13 @@ describe('DashboardComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('vereint-event-card')).toBeNull();
   });
 
-  it('hides the top-up button for plain members', async () => {
-    const fixture = await create();
-    expect((fixture.nativeElement as HTMLElement).querySelector('vereint-balance-card button')).toBeNull();
-  });
-
-  it('sends board members to the treasury for top-ups', async () => {
+  it('links to paying and the statement instead of a top-up button', async () => {
     api.loadProfile.mockReturnValue(of({ ...profile, roles: ['member', 'board'] }));
     const fixture = await create();
-    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
-    const topup = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('vereint-balance-card button')!;
-    topup.click();
-    expect(navigate).toHaveBeenCalledWith(['/board/treasury']);
+    const card = (fixture.nativeElement as HTMLElement).querySelector('vereint-balance-card')!;
+    expect(card.querySelector('button')).toBeNull();
+    expect(card.querySelector('a[href="/scan"]')).toBeTruthy();
+    expect(card.querySelector('a[href="/wallet"]')).toBeTruthy();
   });
 
   it('shows a retry state on error', async () => {

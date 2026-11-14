@@ -29,12 +29,39 @@ updates:
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
 
+  # E2E-Tests (Playwright). Die Typen folgen der Node-Laufzeit im E2E-Workflow.
+  - package-ecosystem: npm
+    directory: /e2e
+    schedule:
+      interval: weekly
+    groups:
+      e2e:
+        patterns: ['*']
+    ignore:
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  # Keycloak-Updates gehen mit dem Abgleich des Login-Themes einher (#72).
   - package-ecosystem: docker
     directories:
       - /baseservice
       - /webservice
+      - /keycloak
     schedule:
       interval: weekly
+
+  # Compose-Dateien: docker-compose.yml (Entwicklung) sowie local/compose.yaml
+  # und local/compose.local.yaml (lokaler Stack und E2E).
+  - package-ecosystem: docker-compose
+    directories:
+      - /
+      - /local
+    schedule:
+      interval: weekly
+    ignore:
+      # Das Seed-Image muss zur Playwright-Version in local/seed.package.json
+      # passen (die Dependabot nicht erkennt); beides zusammen von Hand anheben.
+      - dependency-name: mcr.microsoft.com/playwright
 
   # Actions sind auf Commit-SHAs gepinnt (Kommentar = Tag); Dependabot
   # aktualisiert SHA und Kommentar gemeinsam.

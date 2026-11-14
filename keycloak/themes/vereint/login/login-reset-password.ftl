@@ -1,8 +1,9 @@
 <#--
   Vereint Login-Theme: Passwort zuruecksetzen.
-  Basis: keycloak.v2/login/login-reset-password.ftl aus Keycloak 26.1.4.
+  Basis: keycloak.v2/login/login-reset-password.ftl aus Keycloak 26.8.1.
   Aenderungen: Eyebrow/Untertitel statt Info-Block, eigener Button-Text
-  (vereintResetSubmit); Variablen und Aktionen unveraendert.
+  (vereintResetSubmit), autocomplete="username"; Variablen und Aktionen
+  unveraendert.
 -->
 <#import "template.ftl" as layout>
 <#import "field.ftl" as field>
@@ -28,8 +29,8 @@
                 <@field.input name="username" label=label value=auth.attemptedUsername!'' autofocus=true autocomplete="username" />
 
                 <@buttons.actionGroup>
-                  <@buttons.button id="kc-form-buttons" label="vereintResetSubmit" class=["kcButtonPrimaryClass", "kcButtonBlockClass"]/>
-                  <@buttons.buttonLink href=url.loginUrl label="backToLogin" class=["kcButtonSecondaryClass", "kcButtonBlockClass"]/>
+                  <@buttons.button id="kc-form-buttons" label="vereintResetSubmit"/>
+                  <@buttons.buttonLink href=url.loginUrl label="backToLogin"/>
                 </@buttons.actionGroup>
             </form>
         </div>

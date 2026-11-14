@@ -56,7 +56,7 @@ graph LR
   subgraph Infra["Infrastruktur & Drittsysteme"]
     Keycloak["Keycloak OIDC (Port 8082)"]
     Postgres[("PostgreSQL DB (Port 5432)")]
-    MinIO["S3 Storage (AWS S3, lokal S3Mock)"]
+    MinIO["Dateispeicher (Verzeichnis, optional S3)"]
     WebPush["Web Push Endpunkte (Browser)"]
   end
 

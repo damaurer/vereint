@@ -1,8 +1,9 @@
 # E2E-Tests
 
-Playwright-Tests gegen den echten Produktions-Stack: `deploy/compose.yaml`
-mit den Anpassungen aus `compose.e2e.yaml` (Keycloak, baseservice, webservice,
-Postgres, ein S3-Ersatz statt AWS und Caddy mit einer eigenen Test-CA). Die App
+Playwright-Tests gegen den kompletten Stack: `local/compose.yaml` mit den
+Anpassungen aus `compose.e2e.yaml` (Keycloak, baseservice, webservice,
+Postgres, Bilder und Videos im Dateispeicher wie in Produktion und
+Caddy mit einer eigenen Test-CA). Die App
 läuft dabei wie in Produktion unter HTTPS, hier unter `https://vereint.test:8443`.
 
 In GitHub Actions laufen die Tests bei jedem Pull Request und Push auf
@@ -32,6 +33,8 @@ Keycloak-Admin-API an, mit zufälligen Passwörtern in `.auth/users.json`.
   Events, Guthaben/Theke, Mitteilungen/Katalog, Bilder, Mobil).
 - `support/fixtures.ts` – `as('member' | 'board' | 'admin' | 'terminal' | 'member2')`
   meldet ein Konto über die echte Keycloak-Maske an und liefert Seite und API-Client.
+  Testkonten stimmen nach dem Login der gültigen AGB-Fassung zu
+  (`support/login.ts`); die AGB-Sperre selbst prüft `tests/auth.spec.ts`.
 - `support/api.ts` – legt Testdaten über die API an, wo es keine Oberfläche gibt
   (z. B. Events anlegen).
 - `support/stack.ts` – Blick in Datenbank und Objektspeicher, um die

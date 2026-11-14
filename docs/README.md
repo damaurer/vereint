@@ -8,7 +8,7 @@ Dieses Dokumentationszentrum bietet eine lückenlose, hochdetaillierte fachliche
 
 ## 📘 Benutzerhandbuch
 
-Das Handbuch für Mitglieder, Vorstand, Administration, Thekendienst und Gäste mit echten Screenshots liegt unter [`handbuch/`](handbuch/README.md).
+Das Handbuch für Mitglieder, Vorstand, Administration, Thekendienst und Gäste mit echten Screenshots liegt unter [`handbuch/`](handbuch/README.md). Jeden einzelnen Bildschirm erklärt [Die App Bildschirm für Bildschirm](handbuch/07-alle-screens.md), bebildert mit dem Design-Entwurf aus [`design/screens/`](design/screens/README.md).
 
 Kurzüberblick ohne Bildschirmfotos: [Funktionen](funktionen.md), [Rollen und Berechtigungen](rollen-und-berechtigungen.md) und [Offene Punkte](offene-punkte.md).
 
@@ -22,14 +22,11 @@ docs/
 ├── rollen-und-berechtigungen.md          # Rollen je Gruppe, eigene Rollen, Plattform-Admin
 ├── offene-punkte.md                      # Bekannte Lücken und nächste Schritte
 ├── handbuch/                             # Benutzerhandbuch je Rolle mit Bildschirmfotos
+├── design/screens/                       # Design-Entwurf: alle Bildschirme als Quelldateien
 │
-├── betrieb/                              # Produktion: Strato, CI, AWS-Variante, Deployment, Backups, Schlüssel
-│   ├── strato.md                         # Betrieb auf Strato (eigener VPS): Plan und Go-Live-Checkliste
-│   ├── go-live-checkliste.md             # Was vor dem ersten Produktivbetrieb auf AWS von Hand zu tun ist
+├── betrieb/                              # Images, Selbstbetrieb, CI, Schlüssel
+│   ├── selbst-betreiben.md               # Images, Konfiguration, erster Start, Updates
 │   ├── branches-und-ci.md                # develop, qs, main, Prüfungen vor jedem Merge, Images
-│   ├── aws-und-kosten.md                 # Terraform, Server, Budget, monatliche Kosten
-│   ├── deployment-und-rollback.md        # Automatisches Ausrollen, Health Check, Zurückrollen
-│   ├── backups-und-wiederherstellung.md  # Nächtliche Backups, Snapshots, Restore
 │   ├── sicherheit-und-schluessel.md      # Verschlüsselung, Secrets, Offline-Schlüssel, Härtung
 │   └── open-source.md                    # Lizenz (AGPL-3.0), Öffentlichschalten, Selbstbetrieb
 │
@@ -46,7 +43,7 @@ docs/
 │   ├── 04-persistence-and-migrations.md  # Entities, Repositories, Optimistic Locking & Liquibase
 │   ├── 05-error-handling-and-observability.md # ApiException, ErrorCode, RFC 7807, Actuator & OpenAPI
 │   ├── i18n.md                           # Mehrsprachige Fehler- und Validierungstexte
-│   ├── 06-integrations.md                # Objektspeicher (S3/In-Memory), Web-Push (VAPID) & Chat
+│   ├── 06-integrations.md                # Dateispeicher (Verzeichnis/S3/In-Memory), Web-Push (VAPID) & Chat
 │   └── 07-extending-the-service.md       # How-Tos, Testing (MockMvc/Testcontainers), Troubleshooting & PR-Checkliste
 │
 ├── backend-for-frontend/                 # Express 5 BFF Technische Dokumentation
@@ -83,7 +80,7 @@ docs/
 │
 └── operations/                           # Lokaler Betrieb, Keycloak, Speicher & Migrationen
     ├── local-setup-docker.md             # Lokale Entwicklung & Docker Compose Topology
-    ├── keycloak-and-storage.md           # Keycloak Realms & Objektspeicher (Verzeichnis, S3, lokal S3Mock)
+    ├── keycloak-and-storage.md           # Keycloak Realms & Dateispeicher (Verzeichnis, optional S3)
     └── database-migrations.md            # Liquibase Migrationen & Schema-Verwaltung
 ```
 
@@ -108,7 +105,7 @@ docs/
 | **Einkaufspreis & Deckungsbeitrag** | `costPrice`, `profit = unitPrice - costPrice` | Erfassung des Wareneinsatzes zur automatischen Ermittlung der Gewinnmarge im Beleg-Snapshot und Kassenbuch. |
 | **Moments & Rituale** | `MomentSessionEntity`, `MomentResponseEntity` | Ereignisgesteuerte Kollaborationsfunktion für spontane Momente gemeinsamer Aktivität (Toasts, Gebete, Jubelrufe, Check-ins) mit Multi-Status-Updates, Welt-Karten und 24h-Linked-Chats. |
 | **Gast-Einladungstoken** | `EventInviteEntity`, `token_hash` | Krypto-Token (SHA-256 gehasht) für passwortlose Registrierung externer Gäste zu Events. |
-| **Abendabrechnung** | `POST /api/v1/tablet/events/{eventId}/evening` | Abschlussbuchung von Bareinnahmen oder pauschalen Event-Umsätzen (`revenueOnly`). |
+| **Runde** | `RoundEntity`, `RoundService`, `/api/v1/events/{eventId}/rounds` | Eine Person gibt am eigenen Handy eine Runde oder den ganzen Abend aus; Striche der Eingeladenen gehen auf ihr Guthaben. |
 | **Optimus Design System** | `styles.css`, CSS Custom Properties | Zentrales Design-Token-System für konsistente Abstände, Farben, Elevation und Typografie. |
 | **BFF (Backend-for-Frontend)** | `webservice/src/server.ts` | Node.js / Express Server für SSR-Rendering, Cookie-Session-Verwaltung und API-Proxy. |
 
@@ -140,5 +137,5 @@ docs/
 - **Für Event-Betreiber & Thekenteams**:
   1. Siehe [Tablet Strichlisten-Recorder](domains/tablet-strichliste-recorder.md) für Kiosk-Abläufe, Speisen-/Getränkeauswahl und 1-Tap-Touch-Buchungen.
 - **Für den Betrieb (Produktion)**:
-  1. Vor dem ersten Ausrollen die [Go-Live-Checkliste](betrieb/go-live-checkliste.md) abarbeiten.
-  2. Siehe [Deployment & Rollback](betrieb/deployment-und-rollback.md), [Backups & Wiederherstellung](betrieb/backups-und-wiederherstellung.md) und [Sicherheit & Schlüssel](betrieb/sicherheit-und-schluessel.md).
+  1. Images, Konfiguration und erster Start: [Vereint selbst betreiben](betrieb/selbst-betreiben.md).
+  2. Verschlüsselung und Schlüssel: [Sicherheit & Schlüssel](betrieb/sicherheit-und-schluessel.md).

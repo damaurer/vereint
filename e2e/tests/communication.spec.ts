@@ -55,15 +55,15 @@ test.describe('Getraenkekatalog', () => {
     await member.page.getByRole('button', { name: 'Vorschlag einreichen' }).click();
     // Mitglieder sehen nur freigegebene Getraenke, bekommen aber eine Rueckmeldung.
     await expect(member.page.getByRole('status').filter({ hasText: name })).toBeVisible();
-    await expect(member.page.locator('article').filter({ hasText: name })).toHaveCount(0);
+    await expect(member.page.locator('li.catalog-item').filter({ hasText: name })).toHaveCount(0);
 
     await board.page.goto('/catalog');
-    const card = board.page.locator('article').filter({ hasText: name });
+    const card = board.page.locator('li.catalog-item').filter({ hasText: name });
     await card.getByRole('button', { name: 'Freigeben' }).click();
     await expect(card.getByText('Freigegeben')).toBeVisible();
 
     await member.page.reload();
-    const approved = member.page.locator('article').filter({ hasText: name });
+    const approved = member.page.locator('li.catalog-item').filter({ hasText: name });
     await expect(approved).toBeVisible();
     await expect(approved.getByRole('button', { name: 'Freigeben' })).toHaveCount(0);
   });
@@ -84,13 +84,13 @@ test.describe('Getraenkekatalog', () => {
     await board.page.getByRole('button', { name: 'Getränk anlegen', exact: true }).click();
 
     // Ohne zweiten Freigabeschritt sofort freigegeben.
-    const card = board.page.locator('article').filter({ hasText: name });
+    const card = board.page.locator('li.catalog-item').filter({ hasText: name });
     await expect(card.getByText('Freigegeben')).toBeVisible();
-    await expect(card.getByText('Marge 1.10 EUR')).toBeVisible();
+    await expect(card.getByText(/Marge 1,10\s€/)).toBeVisible();
 
     await card.getByRole('button', { name: 'Bearbeiten' }).click();
     await board.page.getByLabel('Standardpreis (€) *').fill('2.20');
     await board.page.getByRole('button', { name: 'Speichern' }).click();
-    await expect(card.getByText('2.20 EUR')).toBeVisible();
+    await expect(card.getByText(/2,20\s€/)).toBeVisible();
   });
 });

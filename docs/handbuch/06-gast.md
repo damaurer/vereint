@@ -2,6 +2,8 @@
 
 Für Gäste ohne Konto, zum Beispiel Freunde, Familie oder Mitglieder einer befreundeten Gruppe. Du brauchst nichts zu installieren und kein Konto anzulegen.
 
+Die Gast-Bildschirme im Detail: [Einladung annehmen](07-alle-screens.md#einladung-annehmen-gast) und [Gast-Ansicht](07-alle-screens.md#gast-ansicht-eines-events).
+
 ## So kommst du rein
 
 <img src="bilder/g-event.png" alt="Gastansicht eines Events" width="300" align="right">

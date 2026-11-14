@@ -6,7 +6,7 @@ import java.time.Duration
 /**
  * Konfiguration des S3-kompatiblen Objektspeichers (TICKET-014).
  *
- * Die Werte stammen aus den `S3_*`-Umgebungsvariablen (siehe `docs/deployment.md`).
+ * Die Werte stammen aus den `S3_*`-Umgebungsvariablen (siehe `docs/baseservice/06-integrations.md`).
  * Secrets (`accessKey`, `secretKey`) gelangen ausschließlich in den Spring-Service
  * und niemals in Browser-Bundles oder SSR-HTML.
  *

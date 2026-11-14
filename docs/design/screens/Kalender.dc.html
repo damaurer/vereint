@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kalender</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Kalender" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Über alle Gruppen</p>
+      <h2 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Mein Kalender</h2>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <button type="button" aria-label="Vorheriger Monat" style="display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--color-border); border-radius: 999px; background-color: var(--color-surface); color: var(--color-text)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
+        <span style="flex: 1; text-align: center; font-size: 17px; font-weight: 700">Oktober 2026</span>
+        <button type="button" aria-label="Nächster Monat" style="display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--color-border); border-radius: 999px; background-color: var(--color-surface); color: var(--color-text)"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; color: var(--color-text-muted); font-size: 12px; font-weight: 700; text-align: center">
+        <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+        <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+          <button type="button" onClick="{{c.pick}}" aria-label="{{c.aria}}" aria-pressed="{{c.pressed}}" style="{{c.style}}">
+            {{c.num}}
+            <span style="{{c.dot}}"></span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">{{dayTitle}}</h3>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+        <sc-for list="{{entries}}" as="e" hint-placeholder-count="2">
+          <li>
+            <a href="{{e.href}}" style="display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface); color: inherit; text-decoration: none">
+              <span style="display: flex; justify-content: space-between; gap: 8px"><span style="font-size: 15px; font-weight: 700">{{e.label}}</span><span class="ui-chip">{{e.kind}}</span></span>
+              <span style="color: var(--color-text-muted); font-size: 13px">{{e.meta}}</span>
+            </a>
+          </li>
+        </sc-for>
+      </ul>
+      <sc-if value="{{noEntries}}" hint-placeholder-val="{{ false }}">
+        <p style="margin: 0; color: var(--color-text-muted); font-size: 14px">Keine Termine an diesem Tag.</p>
+      </sc-if>
+    </section>
+  </main>
+  <dc-import name="TabBar" active="mehr" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { day: 17 };
+  }
+  renderVals() {
+    const E = {
+      3: [{ label: 'Pokalspiel schauen', kind: 'Event', meta: '20:00 · Schützenverein Aschau', href: 'Event.dc.html' }],
+      17: [
+        { label: 'Stammtisch Oktober', kind: 'Event', meta: '18:30 · Meine Gruppe · Vereinsheim', href: 'Event.dc.html' },
+        { label: 'Prost auf den Vereinsabend!', kind: 'Moment', meta: '10:24 · Meine Gruppe · läuft gerade', href: 'MomentDetail.dc.html' }
+      ],
+      21: [{ label: 'Herbstwanderung zur Kampenwand', kind: 'Event', meta: '09:00 · Meine Gruppe · Parkplatz Aschau', href: 'Event.dc.html' }],
+      28: [{ label: 'Lauftreff', kind: 'Event', meta: '18:00 · Lauftreff Dienstag', href: 'Event.dc.html' }]
+    };
+    const today = 17;
+    const sel = this.state.day;
+    const cells = [];
+    const lead = [28, 29, 30];
+    lead.forEach((d) => cells.push({ num: String(d), out: true }));
+    for (let d = 1; d <= 31; d++) cells.push({ num: String(d), d });
+    cells.push({ num: '1', out: true });
+    const wd = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+    const entries = E[sel] || [];
+    return {
+      theme: this.props.theme ?? 'light',
+      dayTitle: wd[(sel + 2) % 7] + ', ' + sel + '. Oktober',
+      entries,
+      noEntries: entries.length === 0,
+      cells: cells.map((c) => {
+        const isSel = c.d === sel;
+        const isToday = c.d === today;
+        const has = c.d && E[c.d];
+        let color = 'var(--color-text)';
+        let bg = 'transparent';
+        if (c.out) color = 'var(--color-text-muted)';
+        if (isToday && !isSel) bg = 'var(--color-brand-soft)';
+        if (isSel) { bg = 'var(--color-brand)'; color = 'var(--color-on-brand)'; }
+        return {
+          num: c.num,
+          aria: c.d ? c.d + '. Oktober' + (has ? ', mit Terminen' : '') : c.num,
+          pressed: isSel ? 'true' : 'false',
+          pick: () => { if (c.d) this.setState({ day: c.d }); },
+          style: 'position: relative; height: 42px; border: none; border-radius: 10px; font: inherit; font-size: 15px; font-weight: ' + (isToday || isSel ? '800' : '500') + '; background-color: ' + bg + '; color: ' + color,
+          dot: 'position: absolute; left: 50%; bottom: 5px; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 999px; background-color: ' + (has ? (isSel ? 'var(--color-on-brand)' : 'var(--color-brand)') : 'transparent')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

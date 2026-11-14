@@ -28,7 +28,7 @@ test('Bild-Upload ueber den BFF: verschluesselt im Speicher, lesbar nur mit Bere
   expect((await outsider.api.raw.get(image.url)).status()).toBeGreaterThanOrEqual(403);
   expect((await request.get(image.url)).status()).toBe(401);
 
-  // Im Objektspeicher liegt kein lesbares PNG.
+  // Im Dateispeicher liegt kein lesbares PNG.
   const [key] = await listObjects(`event/${event.id}/`);
   expect(key).toBeTruthy();
   const stored = await rawObject(key);

@@ -69,7 +69,8 @@ class StammtischService(
             myRoles = access.rolesOf(principal, caller),
             myPermissions = access.permissionsOf(principal, caller),
             createdAt = stammtisch.createdAt,
-            imageVersion = stammtisch.imageVersion.takeIf { stammtisch.imageKey != null }
+            imageVersion = stammtisch.imageVersion.takeIf { stammtisch.imageKey != null },
+            statisticsEnabled = stammtisch.statisticsEnabled
         )
     }
 

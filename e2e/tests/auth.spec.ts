@@ -1,5 +1,6 @@
 import { test, expect } from '../support/fixtures';
 import { loginViaKeycloak } from '../support/login';
+import { sql } from '../support/stack';
 
 test.describe('Anmeldung', () => {
   test('ohne Session fuehrt jede geschuetzte Seite zur Keycloak-Anmeldung', async ({ page }) => {
@@ -9,7 +10,7 @@ test.describe('Anmeldung', () => {
     await expect(page.locator('#kc-login')).toBeVisible();
     await expect(page.getByText('Benutzername oder E-Mail')).toBeVisible();
     // Wer noch keine Gruppe hat, kann direkt eine eigene eroeffnen.
-    await expect(page.getByRole('link', { name: 'Eigene Gruppe eröffnen' })).toHaveAttribute('href', '/gruppe-eroeffnen');
+    await expect(page.getByRole('link', { name: 'Eigene Gruppe eröffnen' })).toHaveAttribute('href', /\/gruppe-eroeffnen$/);
   });
 
   test('die fruehere Adresse /eroeffnen fuehrt zur Seite "Gruppe eröffnen"', async ({ page }) => {
@@ -38,6 +39,28 @@ test.describe('Anmeldung', () => {
     await page.goto('/');
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Mia Mitglied' })).toBeVisible();
+  });
+
+  test('ohne Zustimmung zur gueltigen AGB-Fassung ist die App gesperrt', async ({ page, credentials }) => {
+    // Zustimmung des Testkontos zuruecksetzen, damit die Sperre bei jedem Lauf greift.
+    sql(`update users set terms_version = null, terms_accepted_at = null where email = '${credentials.member2.username}@vereint.test'`);
+    await loginViaKeycloak(page, credentials.member2, '/wallet', { acceptTerms: false });
+    await expect(page).toHaveURL(/\/agb-zustimmen\?returnTo=%2Fwallet$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Bitte stimme den AGB zu' })).toBeVisible();
+
+    // Andere Seiten fuehren zurueck auf die Zustimmung, die Statistik antwortet nicht.
+    await page.goto('/statistik');
+    await expect(page).toHaveURL(/\/agb-zustimmen/);
+    expect((await page.request.get('/api/v1/statistics')).status()).toBe(403);
+    // AGB und Impressum bleiben lesbar.
+    await page.goto('/agb');
+    await expect(page.getByRole('heading', { level: 1, name: 'Allgemeine Geschäftsbedingungen' })).toBeVisible();
+
+    await page.goto('/wallet');
+    await expect(page).toHaveURL(/\/agb-zustimmen/);
+    await page.getByTestId('accept-terms').click();
+    await expect(page).toHaveURL(/\/wallet$/);
+    expect((await page.request.get('/api/v1/statistics')).status()).toBe(200);
   });
 
   test('Abmelden beendet die Session auch bei Keycloak', async ({ as }) => {

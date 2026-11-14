@@ -1,6 +1,6 @@
 <#--
   Vereint Login-Theme: Registrierung.
-  Basis: keycloak.v2/login/register.ftl aus Keycloak 26.1.4.
+  Basis: keycloak.v2/login/register.ftl aus Keycloak 26.8.1.
   Aenderungen: Eyebrow/Untertitel, Formular-Wrapper .vereint-form/.vereint-register,
   Fusszeile "Bereits Mitglied? Anmelden"; user-profile-commons, Passwort-Bestaetigung,
   Terms, reCAPTCHA und Passwort-Validierung unveraendert.
@@ -15,7 +15,7 @@
         ${msg("vereintEyebrow")}
     <#elseif section = "header">
         <#if messageHeader??>
-            ${kcSanitize(msg("${messageHeader}"))?no_esc}
+            ${msg(messageHeader)}
         <#else>
             ${msg("registerTitle")}
         </#if>
@@ -51,7 +51,7 @@
                 </script>
                 <div id="kc-form-buttons" class="${properties.kcFormButtonsClass!} vereint-register-actions">
                     <button class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonBlockClass!} ${properties.kcButtonLargeClass!} g-recaptcha"
-                            data-sitekey="${recaptchaSiteKey}" data-callback="onSubmitRecaptcha" data-action="${recaptchaAction}" type="submit">
+                            data-sitekey="${recaptchaSiteKey}" data-callback="onSubmitRecaptcha" data-action="${recaptchaAction}" type="submit" id="kc-submit">
                         ${msg("doRegister")}
                     </button>
                 </div>
@@ -64,7 +64,7 @@
             <div class="${properties.kcFormGroupClass!} pf-v5-c-login__main-footer-band vereint-register-footer">
                 <div id="kc-form-options" class="${properties.kcFormOptionsClass!} pf-v5-c-login__main-footer-band-item">
                     <div class="${properties.kcFormOptionsWrapperClass!}">
-                        <span>${msg("vereintAlreadyMember")} <a href="${url.loginUrl}">${kcSanitize(msg("doLogIn"))?no_esc}</a></span>
+                        <span>${msg("vereintAlreadyMember")} <a href="${url.loginUrl}">${msg("doLogIn")}</a></span>
                     </div>
                 </div>
             </div>

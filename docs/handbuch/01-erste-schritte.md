@@ -2,6 +2,8 @@
 
 Dieser Teil gilt für alle, die ein Konto bei Vereint haben. Gäste ohne Konto lesen den [Leitfaden Gast](06-gast.md).
 
+Jeden Bildschirm rund um Anmeldung, Registrierung und Gruppenwahl erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#einstieg-und-konto) im Detail.
+
 ## Mit einem Einladungslink registrieren
 
 <img src="bilder/g-registrieren.png" alt="Registrierung über den Einladungslink" width="300" align="right">
@@ -20,6 +22,8 @@ Funktioniert der Link nicht, ist er abgelaufen, schon verwendet oder zurückgezo
 
 ## Mit einem bestehenden Konto beitreten
 
+<img src="bilder/g-beitreten-konto.png" alt="Gruppe beitreten mit bestehendem Konto" width="300" align="right">
+
 Du hast schon ein Konto, etwa weil du in einer anderen Gruppe bist? Dann brauchst du kein neues.
 
 1. Melde dich in diesem Browser an.
@@ -27,6 +31,8 @@ Du hast schon ein Konto, etwa weil du in einer anderen Gruppe bist? Dann brauchs
 3. Tippe auf **Dieser Gruppe beitreten**.
 
 Du bist sofort Mitglied und landest auf der Startseite der neuen Gruppe. Dein Konto, dein Name und deine Einstellungen bleiben gleich.
+
+<br clear="right">
 
 ## Anmelden
 
@@ -44,6 +50,8 @@ Weitere Möglichkeiten auf dieser Seite:
 
 Nach der Anmeldung landest du auf der Startseite. Bist du in mehreren Gruppen, wählst du vorher eine aus (siehe [Gruppe wählen und wechseln](#gruppe-wählen-und-wechseln)).
 
+**Neue Fassung der AGB**: Hast du der aktuellen Fassung der AGB noch nicht zugestimmt (etwa weil dein Konto vom Admin angelegt wurde oder die AGB geändert wurden), zeigt Vereint nach der Anmeldung zuerst die Seite **Bitte stimme den AGB zu**. Dort liest du mit **AGB lesen** den vollen Text und tippst **Zustimmen**; danach geht es weiter wie gewohnt. Bis dahin sind nur Abmelden, Impressum und AGB erreichbar. Mit **Nicht zustimmen und abmelden** meldest du dich ab; dein Konto löscht der Betreiber auf Wunsch, die Adresse steht auf der Seite.
+
 Unter der Anmeldung steht außerdem „Noch keine Gruppe? **Eigene Gruppe eröffnen**“ (siehe [Eine eigene Gruppe eröffnen](#eine-eigene-gruppe-eröffnen)). Ganz unten führen **Impressum** und **AGB** zu den Rechtstexten.
 
 <br clear="right">
@@ -54,10 +62,9 @@ Unter der Anmeldung steht außerdem „Noch keine Gruppe? **Eigene Gruppe eröff
 
 Die Startseite zeigt auf einen Blick:
 
-- dein **Guthaben** mit dem Link zum Kontoauszug,
-- deinen **nächsten Termin** mit Zu- oder Absage,
-- wie viele **Events** und **Buchungen** du hast,
-- einen **Schnellzugriff** auf Getränk bezahlen, Moments, Getränkekatalog, Käufe und Mitteilungen.
+- dein **Guthaben** mit **Bezahlen** (Getränk scannen) und dem Link zum **Kontoauszug**,
+- deinen **nächsten Termin** mit Zu- oder Absage; ein Tipp auf die Karte öffnet das Event,
+- wie viele **Events** und **Buchungen** du hast.
 
 Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, wie viele davon noch ungelesen sind. Auch am Reiter **Chat** zeigt eine rote Zahl ungelesene Nachrichten.
 
@@ -69,10 +76,12 @@ Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, w
 
 **Am Handy** steht unten eine Leiste mit den vier wichtigsten Bereichen: **Start**, **Events**, **Chat** und **Guthaben**. Alles andere findest du unter **Mehr**, sortiert nach:
 
-- **Gruppe**: Moments, Direktnachrichten
+- **Gruppe**: Moments, Direktnachrichten, Statistik
 - **Mein Konto**: Kalender, Freunde, Bezahlen, Käufe, Mitteilungen, Profil, Gruppeneinstellungen
-- **Theke**: Getränkekatalog, Getränkelisten, Statistik
-- **Verwaltung**: nur für Vorstand, Administration und Theke
+- **Theke**: Getränkekatalog, Getränkelisten, Thekenterminal
+- **Verwaltung**: nur für Vorstand und Administration (dort stehen dann auch die Gruppeneinstellungen)
+
+Auf Unterseiten wie „Event verwalten“ oder „Kasse & Finanzen“ führt der **Pfeil** oben links zurück.
 
 Ganz unten im Mehr-Menü meldest du dich mit **Abmelden** ab. Darunter stehen **Impressum** und **AGB**.
 
@@ -84,15 +93,19 @@ Das Mehr-Menü schließt du, indem du es mit dem Finger nach unten wischst, dane
 
 ## Gruppe wählen und wechseln
 
+<img src="bilder/gruppe-waehlen.png" alt="Gruppe wählen" width="300" align="right">
+
 Vereint kann mehrere Gruppen tragen, zum Beispiel einen Stammtisch, einen Verein oder ein Team. Mit einem Konto kannst du Mitglied in mehreren Gruppen sein. Events, Chat, Guthaben, Katalog und Mitteilungen gehören immer zu genau einer Gruppe. Du siehst immer nur die Daten der Gruppe, die gerade offen ist.
 
 - Bist du nur in einer Gruppe, öffnet Vereint sie von selbst.
-- Bist du in mehreren, zeigt Vereint nach der Anmeldung die Seite **Gruppe wählen**. Dort stehen alle deine Gruppen mit deinen Rollen. Tippe bei der gewünschten Gruppe auf **Öffnen**. Die offene Gruppe trägt das Kennzeichen **Aktuell**.
+- Bist du in mehreren, zeigt Vereint nach der Anmeldung die Seite **Gruppe wählen**. Dort stehen alle deine Gruppen mit deinen Rollen. Tippe auf die gewünschte Gruppe. Die offene Gruppe ist blau umrandet und trägt das Kennzeichen **Aktuell**.
 - Oben rechts stehen Bild und Name der offenen Gruppe. Bist du in mehreren Gruppen, führt ein Tipp darauf zurück zur Auswahl. Dasselbe geht unter **Gruppeneinstellungen** mit **Gruppe wechseln**.
 
 Die Auswahl erreichst du auch direkt unter der Adresse `/gruppen`. Bist du noch in keiner Gruppe, steht dort „Noch keine Gruppe“. Bitte dann den Vorstand um einen Einladungslink oder eröffne eine eigene Gruppe.
 
 Wie du eine Gruppe verlässt, steht im [Leitfaden Mitglied](02-mitglied.md#eine-gruppe-verlassen).
+
+<br clear="right">
 
 ## Eine eigene Gruppe eröffnen
 

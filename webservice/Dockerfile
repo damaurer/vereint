@@ -35,7 +35,7 @@ RUN npm ci --omit=dev --ignore-scripts
 FROM ${NODE_IMAGE} AS runtime
 
 # Nicht vertrauliche Vorgaben. Reale Werte kommen aus Compose bzw. der
-# Secret-Verwaltung der Zielplattform (siehe docs/deployment.md).
+# Secret-Verwaltung der Zielplattform (siehe docs/betrieb/selbst-betreiben.md).
 ENV NODE_ENV=production \
     PORT=8080 \
     HOST=0.0.0.0 \
@@ -53,7 +53,10 @@ WORKDIR /app
 # Kein Root im Container: eigener, unprivilegierter Benutzer.
 # Paketmanager (npm, npx, corepack, yarn) werden zur Laufzeit nicht gebraucht
 # und bringen eigene, verwundbare Abhaengigkeiten mit; sie werden entfernt.
-RUN addgroup -g 10001 -S vereint \
+# Sicherheitsupdates der Alpine-Pakete (z. B. musl, zlib) kommen oft vor dem
+# naechsten Node-Image; `apk upgrade` holt sie bei jedem Build.
+RUN apk upgrade --no-cache \
+ && addgroup -g 10001 -S vereint \
  && adduser -u 10001 -S -G vereint -h /app vereint \
  && rm -rf /usr/local/lib/node_modules /opt/yarn-* \
       /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \

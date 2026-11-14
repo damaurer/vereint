@@ -6,7 +6,9 @@
     "cancel": "Cancel",
     "close": "Close",
     "retry": "Try again",
-    "optional": "optional"
+    "optional": "optional",
+    "yesterday": "Yesterday",
+    "today": "Today"
   },
   "errors": {
     "api": {
@@ -19,7 +21,8 @@
       "generic": "The action could not be completed. Please try again later.",
       "stammtischRequired": "Please choose a group first.",
       "stammtischDenied": "You are not (or no longer) a member of this group.",
-      "stammtischLimit": "You have already opened three groups of your own. That is the maximum per person."
+      "stammtischLimit": "You have already opened three groups of your own. That is the maximum per person.",
+      "termsRequired": "Please accept the current terms first."
     }
   },
   "member": {
@@ -71,31 +74,11 @@
       "noEvents": "No events at the moment.",
       "statEvents": "Your events",
       "statEntries": "Transactions",
-      "shortcutsHeading": "Quick access",
-      "shortcuts": {
-        "scan": {
-          "title": "Pay for a drink",
-          "sub": "Scan the barcode"
-        },
-        "moments": {
-          "title": "Moments",
-          "sub": "Toasts & rituals"
-        },
-        "catalog": {
-          "title": "Drinks menu",
-          "sub": "Drinks & food"
-        },
-        "purchases": {
-          "title": "Purchases",
-          "sub": "What you've had"
-        },
-        "notifications": {
-          "title": "Notifications",
-          "sub": "News from the group"
-        }
-      },
       "declined": "You declined",
-      "maybe": "You answered maybe"
+      "maybe": "You answered maybe",
+      "statementShort": "Statement",
+      "statEventsHint": "this month",
+      "statEntriesHint": "in total"
     },
     "events": {
       "eyebrow": "Member",
@@ -106,7 +89,14 @@
       "emptyTitle": "No events",
       "emptyMessage": "You are not attending any events at the moment.",
       "create": "Create event",
-      "rsvpGroup": "Response for {title}"
+      "rsvpGroup": "Response for {title}",
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "rangeGroup": "Period",
+      "emptyPast": "No past events yet.",
+      "attending": "You're going",
+      "declined": "You declined",
+      "maybe": "You answered maybe"
     },
     "eventDetail": {
       "eyebrow": "Event",
@@ -166,18 +156,35 @@
         "send": "Send",
         "loading": "Loading the chat.",
         "unavailable": "The chat is not available to you."
-      }
+      },
+      "route": "Route",
+      "organizedBy": "Organised by {name}",
+      "chatChip": "Event chat",
+      "momentsChip": "Moments",
+      "momentsChipActive": "Moments ({count} active)",
+      "attendanceHeading": "Attendance",
+      "attendanceSummary": "{accepted} going · {invited} open"
     },
     "purchases": {
       "eyebrow": "Receipts",
       "title": "Purchases",
-      "intro": "Your purchases with permanent receipts.",
+      "intro": "Every purchase has a fixed receipt with the price at the time.",
       "loadingMessage": "Loading purchases.",
       "unavailable": "Purchases unavailable",
       "emptyTitle": "No purchases",
       "emptyMessage": "You haven't bought any drinks yet.",
       "barcode": "Barcode {code}",
-      "catalogVersion": "Catalogue v{version}"
+      "catalogVersion": "Catalogue v{version}",
+      "count": "{count} purchases",
+      "mostOften": "Most often",
+      "times": "{count} ×",
+      "source": {
+        "pwaBarcode": "Paid by scan",
+        "tabletManual": "Tally sheet",
+        "round": "Round",
+        "evening": "Whole evening"
+      },
+      "food": "Food"
     },
     "wallet": {
       "eyebrow": "Balance & transactions",
@@ -196,7 +203,9 @@
         "spend": "Spending",
         "empty": "No transactions for this filter."
       },
-      "reversal": "Reversal: {name}"
+      "reversal": "Reversal: {name}",
+      "asOf": "As of {date}",
+      "roundTitle": "Round: {name} · {item}"
     }
   },
   "profile": {
@@ -204,6 +213,12 @@
     "loadingMessage": "Loading your profile.",
     "unavailable": "Profile not available",
     "noRoles": "no roles",
+    "beerWithMe": {
+      "title": "BeerWithMe status",
+      "hint": "Up for a spontaneous beer nearby.",
+      "short": "Spontaneous beer",
+      "shortHint": "Friends see that you have time"
+    },
     "theme": {
       "title": "Appearance",
       "system": "System",
@@ -227,7 +242,8 @@
       "title": "Security",
       "hint": "Protect your account with an authenticator app (e.g. Google Authenticator). Login then asks for your password and a 6-digit code. Optional, but recommended for board members and admins.",
       "setupTwoFactor": "Set up two-factor sign-in"
-    }
+    },
+    "since": "since {date}"
   },
   "notifications": {
     "eyebrow": "Messages",
@@ -250,14 +266,16 @@
       "moment": "Moment",
       "eventInvitation": "Invitation",
       "eventReminder": "Reminder",
-      "eventCancelled": "Cancelled"
+      "eventCancelled": "Cancelled",
+      "general": "Newsletter"
     },
     "open": "Open",
     "openEvent": "Go to event",
     "answered": {
       "accepted": "You accepted.",
       "declined": "You declined."
-    }
+    },
+    "markReadShort": "Read"
   },
   "shell": {
     "brandHome": "Vereint – go to home page",
@@ -272,7 +290,8 @@
     "notifications": "Notifications",
     "notificationsUnread": "Notifications, {count} unread",
     "chatUnread": "{label}, {count} unread",
-    "switchStammtisch": "Switch group (current: {name})"
+    "switchStammtisch": "Switch group (current: {name})",
+    "back": "Back"
   },
   "nav": {
     "items": {
@@ -296,7 +315,8 @@
       "scan": "Pay",
       "stammtisch": "Group settings",
       "calendar": "Calendar",
-      "friends": "Friends"
+      "friends": "Friends",
+      "myStatistics": "My statistics"
     },
     "sections": {
       "club": "Group",
@@ -373,17 +393,17 @@
     }
   },
   "errorPages": {
-    "toDashboard": "Go to dashboard",
-    "toHome": "Go to home page",
+    "toDashboard": "Go to start",
     "forbidden": {
       "title": "Access denied",
-      "description": "You do not have the required permissions for this page, or your session is no longer valid.",
+      "description": "You lack the rights for this page or your sign-in has expired.",
       "signInAgain": "Sign in again"
     },
     "notFound": {
-      "title": "Page not found",
-      "description": "The page you requested does not exist, has been moved, or the address is incorrect."
-    }
+      "title": "This page does not exist",
+      "description": "Maybe the event was deleted or the link is outdated."
+    },
+    "eyebrow": "Error {code}"
   },
   "routes": {
     "placeholder": {
@@ -505,7 +525,7 @@
     },
     "statistics": {
       "title": "Statistics",
-      "description": "Consumption, attendance, spending history and rankings for your group."
+      "description": "Tallies, leaderboard and RSVP rate of your group."
     },
     "eventCreate": {
       "title": "Create event",
@@ -513,7 +533,7 @@
     },
     "scan": {
       "title": "Pay for a drink",
-      "description": "Scan a barcode and pay with your credit."
+      "description": "Scan a barcode and pay with your credit or add it to statistics."
     },
     "boardMoments": {
       "title": "Moment topics & reactions",
@@ -554,6 +574,46 @@
     "friends": {
       "title": "Friends",
       "description": "Your friends list across all groups."
+    },
+    "drinkStatistics": {
+      "title": "Drink statistics",
+      "description": "Who drank how much of what, with litres and calories."
+    },
+    "statisticsOverview": {
+      "title": "Statistics overview",
+      "description": "All figures of the group on one page."
+    },
+    "termsConsent": {
+      "title": "Accept the terms",
+      "description": "Accept the current version of the terms."
+    },
+    "myStatistics": {
+      "title": "My statistics",
+      "description": "Everything you triggered, across all your groups."
+    },
+    "crossEventStatistics": {
+      "title": "Events across groups",
+      "description": "All visible events from your groups compared."
+    },
+    "groupEventStatistics": {
+      "title": "Group events",
+      "description": "All events of the group summarised and compared."
+    },
+    "featureStatistics": {
+      "title": "Features",
+      "description": "How often features were triggered and how people replied."
+    },
+    "eventStatistics": {
+      "title": "Event statistics",
+      "description": "Replies, attendees, tallies, moments and chat of an event."
+    },
+    "tallyCategories": {
+      "title": "Tally categories",
+      "description": "Set the columns of the tally sheet and their price per mark."
+    },
+    "roundGive": {
+      "title": "Buy a round",
+      "description": "Buy a round or the whole evening from your own balance."
     }
   },
   "chat": {
@@ -607,7 +667,7 @@
       "readOnlyDirect": "You are neither friends nor share a group. The history stays readable, but you cannot send new messages."
     },
     "direct": {
-      "eyebrow": "Direct messages",
+      "eyebrow": "Across all groups",
       "title": "One-to-one chats",
       "badge": "DMs",
       "toGroupChat": "← To the group chat",
@@ -662,7 +722,7 @@
     "eyebrow": "Across all groups",
     "title": "Friends",
     "toDirect": "To direct messages",
-    "intro": "Add people from your groups as friends. Friends stay even if you no longer share a group, and you can keep sending each other direct messages.",
+    "intro": "Friends stay, even when you no longer share a group.",
     "unavailable": "Friends list unavailable",
     "loadingMessage": "Loading your friends.",
     "incoming": "Requests to you ({count})",
@@ -960,7 +1020,12 @@
       "similarName": "A drink called “{name}” already exists. Please check whether it is the same one.",
       "barcodeTaken": "Barcode {barcode} already belongs to “{name}”.",
       "barcodeNotAdded": "The barcode you entered has not been added yet. Tap “+ Add barcode” or clear the field.",
-      "activeLabel": "In stock (untick to take the drink off sale)"
+      "activeLabel": "In stock (untick to take the drink off sale)",
+      "volumeMl": "Volume (ml)",
+      "volumePlaceholder": "e.g. 500",
+      "kcal": "Calories per serving (kcal)",
+      "kcalPlaceholder": "e.g. 210",
+      "nutritionHint": "For litres and calories in the statistics. Leave empty if unknown."
     },
     "detail": {
       "fallbackTitle": "Drink details",
@@ -1041,6 +1106,32 @@
       "share": "Share to drinks database",
       "shared": "This drink is linked to the drinks database.",
       "sharedInfo": "“{name}” is now in the drinks database (without price)."
+    },
+    "tally": {
+      "open": "Tally categories",
+      "field": "Tally category",
+      "none": "None",
+      "effectivePrice": "At the bar: {price} (category {name}, overrides the sales price)",
+      "eyebrow": "Tally sheet",
+      "title": "Categories",
+      "create": "New category",
+      "intro": "Each category is a column of the tally sheet. At events its price applies to all assigned drinks and overrides the drink price.",
+      "name": "Name",
+      "pricePerTally": "Price per mark",
+      "loadError": "Categories unavailable",
+      "emptyTitle": "No categories yet",
+      "emptyMessage": "Use “New category” to add the first column, for example Beer.",
+      "unassign": "Remove {name} from the category",
+      "noDrinks": "No drinks assigned yet.",
+      "moveUp": "Move left",
+      "moveDown": "Move right",
+      "delete": "Delete",
+      "confirmDelete": "Delete category “{name}”? Its drinks then keep their own price.",
+      "withoutTitle": "Without category · own price",
+      "assign": "Assign …",
+      "assignTo": "Assign {name} to a category",
+      "allAssigned": "Every drink in the range has a category.",
+      "required": "Please enter a name and a price of 0 or more."
     }
   },
   "sublists": {
@@ -1102,31 +1193,6 @@
     }
   },
   "tablet": {
-    "row": {
-      "strokesFor": "Tally marks for {name}"
-    },
-    "revenue": {
-      "eveningTitle": "Sponsor the whole evening",
-      "roundTitle": "Buy a round",
-      "scope": "Scope",
-      "oneRound": "One round",
-      "recipients": "Recipients",
-      "hint": "Valid until everyone has taken a drink. If someone accidentally taps twice, it is still only booked once.",
-      "confirmEvening": "Sponsor evening",
-      "confirmRound": "Buy round"
-    },
-    "overlay": {
-      "title": "Drinks menu & food",
-      "hint": "Choose the item for the tally sheet.",
-      "categories": "Categories",
-      "drinksChip": "Drinks ({count})",
-      "foodChip": "Food ({count})",
-      "drinks": "Drinks",
-      "food": "Food",
-      "selected": "Currently selected: {name}",
-      "noneSelected": "No item selected yet.",
-      "confirm": "Confirm selection"
-    },
     "terminal": {
       "kioskActive": "Kiosk mode active",
       "startKiosk": "Start kiosk mode",
@@ -1153,26 +1219,35 @@
       "select": "Select"
     },
     "tally": {
-      "heading": "Tally sheet",
-      "activeItem": "Item: {name} · {price}",
-      "activeDrink": "Drink: {name} · {price}",
-      "chooseItem": "Choose item",
-      "booked": "Mark recorded: {label}",
-      "undo": "Undo",
-      "quickbookLabel": "Active item for quick booking:",
-      "round": "Buy a round",
-      "evening": "Sponsor the whole evening"
+      "booked": "Mark: {label}",
+      "undo": "Undo"
     },
     "messages": {
       "undoNotPossible": "Only marks from this session can be undone here. The board corrects older bookings.",
       "undone": "Mark undone.",
-      "purchaseRecorded": "Purchase recorded.",
-      "eveningBooked": "Evening sponsorship booked.",
-      "roundBooked": "Round booked."
+      "noDrinksInCategory": "No drink of {name} is available at this event."
     },
     "fallback": {
       "member": "Member",
       "item": "Item"
+    },
+    "board": {
+      "hint": "Tap the cell under a category to add a tally mark.",
+      "member": "Member",
+      "perTally": "{price} per mark",
+      "other": "Other",
+      "otherHint": "More drinks & food",
+      "ownTab": "Own tab",
+      "cellLabel": "{name}, {column}: {count} marks. Tap to add one.",
+      "todayTitle": "Today at the bar",
+      "tallies": "Marks",
+      "revenue": "Revenue"
+    },
+    "picker": {
+      "categoryTitle": "{name}: which drink?",
+      "otherTitle": "Other: what is being booked?",
+      "forMember": "Mark for {name}",
+      "empty": "Nothing is available for this cell at the event."
     }
   },
   "admin": {
@@ -1354,10 +1429,10 @@
       "infoText": "Manage the group kitty, send important announcements or plan the next get-togethers here.",
       "panelsTitle": "Role-specific management",
       "panelsNav": "Board areas",
-      "treasuryTitle": "Treasurer · Kitty & finances",
-      "treasuryDesc": "Beer kitty, balances and bookings",
-      "commsTitle": "Secretary · Communication",
-      "commsDesc": "Announcements and notice board",
+      "treasuryTitle": "Treasury",
+      "treasuryDesc": "Bar fund, balances, bookings",
+      "commsTitle": "Communication",
+      "commsDesc": "Announcements and pinboard",
       "loadingMessage": "Loading events and audit log.",
       "unavailable": "Board area unavailable",
       "statEvents": "Visible events",
@@ -1365,14 +1440,14 @@
       "eventsHeading": "Host · Events ({count})",
       "eventsEmptyTitle": "No events",
       "eventsEmptyMessage": "There are currently no events to moderate.",
-      "moderate": "Moderate",
+      "moderate": "Manage",
       "auditHeading": "Recent actions ({count})",
       "inviteTitle": "Invite member",
-      "inviteDesc": "Create an invite link for registration",
+      "inviteDesc": "Create an invite link",
       "kioskDevicesTitle": "Kiosk devices",
-      "kioskDevicesDesc": "See running bar terminals and unlock them remotely",
-      "momentConfigTitle": "Moments · topics & reactions",
-      "momentConfigDesc": "Decide which moments and reactions exist"
+      "kioskDevicesDesc": "See and unlock bar terminals",
+      "momentConfigTitle": "Moments",
+      "momentConfigDesc": "Types and reactions"
     },
     "comms": {
       "eyebrow": "Secretary",
@@ -1497,7 +1572,8 @@
         "empty": "No members found.",
         "lastEntry": "Last booking: {date}",
         "noEntry": "No bookings yet",
-        "id": "ID {id}"
+        "id": "ID {id}",
+        "statTotal": "Total balance"
       }
     },
     "kioskDevices": {
@@ -1625,7 +1701,15 @@
         "messageSent": "Message sent.",
         "membersInvited": "Members invited."
       },
-      "choose": "Please choose"
+      "choose": "Please choose",
+      "tabs": {
+        "label": "Sections",
+        "details": "Details",
+        "participants": "Participants",
+        "drinks": "Drinks & food",
+        "guests": "Guests",
+        "chat": "Chat"
+      }
     },
     "picker": {
       "allMembers": "Invite all members",
@@ -1668,6 +1752,11 @@
         "end": "The end must be after the start.",
         "notifyAt": "Please enter the notification time."
       }
+    },
+    "statistics": {
+      "tab": "Statistics",
+      "switch": "Statistics for this event",
+      "hint": "Off means nothing is recorded in this event."
     }
   },
   "statistics": {
@@ -1687,32 +1776,25 @@
     "consumption": {
       "ariaLabel": "Leaderboard by tallies",
       "title": "Leaderboard",
-      "total": "Group tallies",
-      "mine": "Your tallies",
+      "total": "Group",
+      "mine": "You",
       "myRank": "Your rank",
-      "rankValue": "Rank {rank}",
-      "noRank": "No rank yet",
+      "rankValue": "#{rank}",
+      "noRank": "no tally yet",
       "you": "You",
       "count": {
         "one": "{count} tally",
         "other": "{count} tallies"
       },
-      "empty": "No tallies in this period yet."
+      "empty": "No tallies in this period yet.",
+      "unit": "tallies",
+      "ofMembers": "of {count}"
     },
     "attendance": {
       "title": "Acceptance rate",
       "ringLabel": "Acceptance rate {percent} percent",
-      "hint": "Share of acceptances among answered invitations.",
+      "hint": "Share of invitations that members answered with “Attend”.",
       "empty": "No RSVPs yet. Once invitations are answered, the rate shows up here."
-    },
-    "spending": {
-      "title": "Sales 30 days",
-      "thisMonth": "Spending this month",
-      "trendHint": "{change}% vs. the previous 30 days",
-      "total": "Sales in the last 30 days",
-      "weekly": "Last 8 weeks",
-      "weeklyLabel": "Sales per week, oldest first: {values}",
-      "empty": "No sales in the last 8 weeks."
     },
     "topRounds": {
       "title": "Top round buyers",
@@ -1721,19 +1803,279 @@
         "other": "{count} rounds"
       }
     },
-    "drinkRanking": {
-      "title": "Drinks ranking",
-      "share": "{percent}% popularity"
+    "intro": "Figures of the last {days} days.",
+    "links": {
+      "label": "More statistics",
+      "drinks": "Drink statistics: who, what, how much, kcal",
+      "overview": "All statistics at a glance",
+      "groupEvents": "Group events compared",
+      "features": "Features: triggered and replies",
+      "mine": "My statistics",
+      "crossEvents": "All my events (across groups)"
     },
-    "intro": "Figures for the last {days} days.",
-    "items": {
-      "title": "Most popular items",
-      "share": "{percent}% ({count} sold)",
-      "empty": "No items sold yet."
+    "period": {
+      "label": "Period",
+      "days30": "30 days",
+      "days90": "90 days",
+      "year": "This year",
+      "lastDays": "Last {days} days",
+      "thisYear": "This year"
     },
-    "topEvents": {
-      "title": "Events with the most tallies",
-      "empty": "No tallies at events yet."
+    "categories": {
+      "legend": "Categories",
+      "beer": "Beer",
+      "nonAlcoholic": "Non-alcoholic",
+      "spirits": "Spirits",
+      "wineSparkling": "Wine & sparkling",
+      "other": "Other"
+    },
+    "drinks": {
+      "eyebrow": "Whole group · all members",
+      "title": "Drink statistics",
+      "total": "Drinks",
+      "liters": "Litres",
+      "kcal": "Calories",
+      "without": {
+        "one": "no value for {count} drink",
+        "other": "no value for {count} drinks"
+      },
+      "averages": "Ø drinks of the group",
+      "perEvent": "per event",
+      "perDay": "per day",
+      "perWeek": "per week",
+      "perMonth": "per month",
+      "viewLabel": "View",
+      "byMember": "By member",
+      "byDrink": "By drink",
+      "sortCount": "By count",
+      "sortKcal": "By calories",
+      "perEventWeek": "Ø per event · per week",
+      "noValue": "no value",
+      "drinkDetails": "{members} people · {liters} l",
+      "empty": "No drinks were booked in this period yet."
+    },
+    "overview": {
+      "eyebrow": "My group",
+      "title": "Statistics overview",
+      "intro": "Members, events, RSVPs and drinking habits at a glance. Visible to all members of the group.",
+      "kpi": {
+        "members": "Members",
+        "membersHint": "{active} active · {new} new",
+        "events": "Events",
+        "eventsHint": "Ø {avg} attendees",
+        "attendanceHint": "of all invitations",
+        "perEvent": "Ø {value} per event",
+        "perWeek": "Ø {value} per week",
+        "perMember": "Ø {value} per member",
+        "revenue": "Revenue",
+        "perMonth": "Per month",
+        "perMonthHint": "drinks on average"
+      },
+      "withoutValues": "Without volume: {volume} drinks, without calories: {kcal} drinks. They do not count towards litres or calories.",
+      "sections": {
+        "events": "Events & RSVPs",
+        "drinking": "Drinking habits",
+        "drinks": "Drinks",
+        "community": "Community"
+      },
+      "rsvpByEvent": "Answers per event",
+      "rsvpByMember": "RSVPs per member",
+      "rsvp": {
+        "accepted": "Attending",
+        "maybe": "Maybe",
+        "declined": "Declined",
+        "noAnswer": "No answer"
+      },
+      "acceptedOf": "{accepted} of {invited} attending",
+      "noEvents": "There are no invitations in this period.",
+      "table": {
+        "member": "Member",
+        "yes": "Yes",
+        "no": "No",
+        "attended": "Attended",
+        "quote": "Rate",
+        "category": "Category",
+        "share": "Share"
+      },
+      "attendedHint": "“Attended” counts events where the member had at least one tally or purchase.",
+      "weekly": "Drinks per week",
+      "weeklyAvg": "Ø {value} per week",
+      "weeklyValue": "{value} in this week",
+      "weeklyLabel": "Drinks per week, oldest first: {values}",
+      "weeksAgo": {
+        "one": "{count} week ago",
+        "other": "{count} weeks ago"
+      },
+      "thisWeek": "this week",
+      "when": "When do people drink?",
+      "byWeekday": "By weekday",
+      "byHour": "By time",
+      "weekdays": {
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat",
+        "7": "Sun"
+      },
+      "hours": {
+        "lt18": "until 6 pm",
+        "18": "6–7 pm",
+        "19": "7–8 pm",
+        "20": "8–9 pm",
+        "21": "9–10 pm",
+        "22": "10–11 pm",
+        "ge23": "from 11 pm"
+      },
+      "whoDrinksWhat": "Who drinks what? · Drinks per member by category",
+      "drinksKcal": "{count} drinks · {kcal} kcal",
+      "topDrinks": "Most popular drinks",
+      "countPerEvent": "{count} · Ø {value}/event",
+      "categoryShare": "Share by category",
+      "noRounds": "No rounds given yet.",
+      "moments": {
+        "title": "Moments",
+        "started": "Moments started",
+        "reactions": "Reactions",
+        "media": "Photos & videos"
+      },
+      "chat": {
+        "title": "Chat",
+        "messages": "Messages",
+        "mostActive": "Most active",
+        "eventChats": "Event chats"
+      },
+      "records": {
+        "title": "Records",
+        "mostDrinks": "Most drinks in one evening",
+        "mostDrinksValue": "{label} · {count} drinks",
+        "streak": "Longest attendance streak",
+        "streakValue": {
+          "one": "{label} · {count} event",
+          "other": "{label} · {count} events"
+        },
+        "fastest": "Fastest RSVP",
+        "fastestValue": "{label} · after {count} min"
+      }
+    },
+    "recording": {
+      "groupOff": "Statistics are switched off in this group.",
+      "groupOffHint": "New activity is not recorded. Numbers already recorded stay until they are deleted.",
+      "eventOff": "Statistics are switched off for this event.",
+      "eventOffHint": "Nothing new is recorded in this event.",
+      "userOff": "You switched off your statistics.",
+      "userOffHint": "Nothing new about you is recorded in any group.",
+      "toAccount": "Go to My account"
+    },
+    "features": {
+      "purchase": "Tallies and purchases",
+      "foreign_drink": "Drinks from elsewhere",
+      "round": "Rounds",
+      "top_up": "Top-ups",
+      "event": "Events created",
+      "rsvp": "Replies to invitations",
+      "moment": "Moments started",
+      "moment_reaction": "Reactions to moments",
+      "moment_media": "Photos and videos in moments",
+      "chat_message": "Chat messages",
+      "chat_reaction": "Chat reactions",
+      "invite_link": "Invite links",
+      "invite_join": "Joins via invite link"
+    },
+    "mine": {
+      "eyebrow": "My account",
+      "title": "My statistics",
+      "intro": "Everything you triggered, across all your groups and events. Only you can see this page.",
+      "empty": "Nothing of yours has been recorded in this period yet.",
+      "accepted": "Acceptances",
+      "attended": "Attendances",
+      "byFeature": "By feature",
+      "byGroup": "By group",
+      "groupOff": "statistics off"
+    },
+    "events": {
+      "empty": "There are no events in this period.",
+      "off": "statistics off",
+      "purchases": "Tallies",
+      "attendees": "Attendees",
+      "moments": "Moments",
+      "chat": "Chat messages",
+      "mine": "My tallies",
+      "myAnswer": "My reply",
+      "answer": {
+        "accepted": "Accepted",
+        "maybe": "Maybe",
+        "declined": "Declined"
+      },
+      "count": "Events",
+      "attendances": "Attendances",
+      "perEvent": "{{value}} per event",
+      "compare": "Events compared"
+    },
+    "crossEvents": {
+      "eyebrow": "All my groups",
+      "title": "Events across groups",
+      "intro": "All events from your groups that you may see. Shows totals, averages and your own values, no names of other people.",
+      "mine": "You attended {{attended}} events and made {{purchases}} tallies."
+    },
+    "groupEvents": {
+      "title": "Group events"
+    },
+    "featureStats": {
+      "title": "Features",
+      "intro": "How often each feature of the group was triggered and how people replied.",
+      "triggered": "triggered",
+      "response": {
+        "rsvp": "replies",
+        "moment_reaction": "reactions",
+        "chat_reaction": "reactions",
+        "invite_join": "joins",
+        "round_members": "people treated"
+      },
+      "variant": {
+        "accepted": "Accepted",
+        "maybe": "Maybe",
+        "declined": "Declined",
+        "moment_reaction": "Reactions",
+        "moment_media": "Photos and videos",
+        "club": "Group chat",
+        "event": "Event chat",
+        "moment": "Moment chat",
+        "round": "Round",
+        "evening": "Evening special",
+        "pwaBarcode": "Barcode purchase",
+        "tabletManual": "Tally sheet",
+        "catalog": "From the catalogue",
+        "library": "Drink database only",
+        "other": "Other"
+      }
+    },
+    "eventStats": {
+      "title": "Event statistics",
+      "back": "Back to the event",
+      "answers": "Replies to the invitation",
+      "reactions": "{{reactions}} reactions, {{media}} photos/videos",
+      "chatReactions": "{{count}} reactions",
+      "consumers": "Tallies per person"
+    },
+    "settings": {
+      "mine": {
+        "title": "Statistics",
+        "switch": "Record my statistics",
+        "hint": "Off means nothing about you is recorded in any group or event. Switching off deletes nothing.",
+        "delete": "Delete my recorded statistics",
+        "confirm": "Really delete all statistics recorded about you in all groups? This cannot be undone."
+      },
+      "group": {
+        "title": "Statistics",
+        "switch": "Statistics in this group",
+        "hint": "Off means nothing is recorded in the group and its events. Switching off deletes nothing.",
+        "delete": "Delete the group statistics",
+        "confirm": "Really delete all statistics of this group? This cannot be undone."
+      },
+      "confirmDelete": "Yes, delete permanently",
+      "deleted": "{{count}} entries deleted."
     }
   },
   "guest": {
@@ -1797,9 +2139,9 @@
     }
   },
   "scan": {
-    "eyebrow": "Pay with credit",
+    "eyebrow": "Pay or record",
     "title": "Scan a drink",
-    "intro": "Hold the bottle's barcode inside the frame. You will see the drink and price before anything is charged.",
+    "intro": "Hold the bottle's barcode inside the frame. Before anything is charged or recorded, you see the drink and choose what should happen.",
     "camera": {
       "label": "Camera view for scanning",
       "starting": "Starting camera …",
@@ -1833,7 +2175,8 @@
       "undoHint": "Made a mistake? You can undo the purchase for 10 minutes.",
       "undo": "Undo",
       "next": "Scan next drink",
-      "toWallet": "Go to credit"
+      "toWallet": "Go to credit",
+      "noStatistics": "The purchase counts in no statistics."
     },
     "undone": {
       "title": "Purchase undone",
@@ -1842,7 +2185,31 @@
     "errors": {
       "lookup": "The drink could not be looked up.",
       "pay": "Payment failed.",
-      "undo": "Undo failed."
+      "undo": "Undo failed.",
+      "record": "Recording failed.",
+      "remove": "Removing failed."
+    },
+    "choice": {
+      "intro": "You are not at a running event with self-service right now. Choose what should happen with the drink.",
+      "legend": "What should happen?",
+      "credit": "Pay with credit",
+      "creditHint": "The price from the group's drink catalogue applies, without an event.",
+      "foreign": "Statistics only (drink from elsewhere)",
+      "foreignHint": "Nothing is charged. The drink counts in your statistics and in the group statistics, but not at any event.",
+      "noPrice": "Paying is not possible here: the drink has no price in the group's catalogue.",
+      "recordStatistics": "Include in statistics",
+      "recordStatisticsHint": "Without the tick, you only pay. The purchase then counts in no statistics.",
+      "statisticsOff": "Statistics are switched off. You can still pay; nothing is recorded.",
+      "submitForeign": "Add to statistics"
+    },
+    "recording": "Recording …",
+    "foreign": {
+      "title": "Recorded",
+      "message": "{drink} now counts in your statistics and in the group statistics. Nothing was charged.",
+      "removeHint": "Made a mistake? You can remove the drink for 10 minutes.",
+      "remove": "Remove",
+      "removedTitle": "Drink removed",
+      "removedMessage": "{drink} no longer counts in the statistics."
     }
   },
   "kiosk": {
@@ -2011,6 +2378,84 @@
     "acceptPrefix": "I have read and accept the",
     "acceptLink": "terms and conditions",
     "acceptSuffix": ".",
-    "acceptRequired": "Please accept the terms and conditions."
+    "acceptRequired": "Please accept the terms and conditions.",
+    "consent": {
+      "eyebrow": "New version of the terms",
+      "title": "Please accept the terms",
+      "intro": "Before you continue using Vereint, we need your consent to the current version of the terms dated {date}.",
+      "statistics": "New is the section “Statistics”: tallies, purchases, RSVPs, attendance and drinks with amount and calories are shown by name to the members of your group. This is just for fun, not a health statement, and stays within the group.",
+      "readTerms": "Read the terms",
+      "accept": "Accept",
+      "accepting": "Saving …",
+      "decline": "Do not accept and sign out",
+      "deleteHint": "If you do not want to accept, sign out. We delete your account on request: just send an email to {email} (terms § 10 (3)).",
+      "failed": "Your consent could not be saved. Please try again."
+    }
+  },
+  "rounds": {
+    "title": "Buy a round",
+    "loading": "Loading event and drinks.",
+    "unavailable": "Buying a round is not possible",
+    "eventChip": "Buy a round",
+    "fromBalance": "From your balance:",
+    "kindLabel": "Kind of round",
+    "kind": {
+      "round": "One round",
+      "evening": "Whole evening"
+    },
+    "drink": "Drink",
+    "allDrinks": "All drinks",
+    "validity": "Valid",
+    "validity30m": "30 minutes",
+    "validity1h": "1 hour",
+    "validityEventEnd": "Until the event ends",
+    "maxAmount": "Maximum in euros",
+    "forWhom": "For whom? · {count} selected",
+    "accepted": "accepted",
+    "present": "here",
+    "noMembers": "Nobody else is at the event right now.",
+    "maxHint": "At most {amount} from your balance",
+    "chargeHint": "Only what the invited people actually take at the bar is charged. The bar terminal shows your round until it expires.",
+    "submit": "Buy a round for {count}",
+    "submitEvening": "Buy the evening for {count}",
+    "started": "Your round is running. The invited people get a notification.",
+    "mine": "Your rounds at this event",
+    "end": "End",
+    "endedInfo": "Round ended.",
+    "card": {
+      "gives": "Buys",
+      "used": "Used",
+      "valid": "Valid",
+      "upTo": "up to {amount}",
+      "remaining": "{minutes} min left",
+      "until": "until {time}",
+      "untilEventEnd": "until the event ends",
+      "redeemed": "{count} of {total} redeemed",
+      "invited": "Invited",
+      "roundOf": "One round of {drink}",
+      "roundAll": "One round · all drinks",
+      "eveningOf": "Whole evening · {drink}",
+      "eveningAll": "Whole evening · all drinks"
+    },
+    "status": {
+      "running": "Running",
+      "usedUp": "Used up",
+      "expired": "Expired",
+      "ended": "Ended"
+    },
+    "payer": {
+      "round": "Round from {name}",
+      "evening": "Evening from {name}"
+    },
+    "terminal": {
+      "title": "Running rounds",
+      "none": "No round is running right now.",
+      "showAll": "Show all",
+      "hint": "Everyone buys rounds in the app on their own phone. The terminal only shows them.",
+      "summary": "{what} · {redeemed} of {total} · {validity}",
+      "overviewTitle": "Running rounds",
+      "displayOnly": "Display only",
+      "overviewHint": "Everyone buys a round in the app on their own phone and pays from their own balance. Nothing is bought at the terminal. Invited people get their mark as usual, and it goes on the round."
+    }
   }
 }

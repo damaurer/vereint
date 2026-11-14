@@ -2,21 +2,6 @@
 # Nur eintragen, wenn der Fund nachweislich nicht ausnutzbar ist oder noch
 # kein Fix existiert; Eintraege regelmaessig ueberpruefen.
 
-# infra/aws: S3 nutzt SSE-S3 (AES-256) statt eines eigenen KMS-Schluessels.
-# Ein Customer Managed Key kostet 1 USD/Monat je Schluessel und bringt fuer
-# dieses Projekt nur zusaetzliches Audit-Logging; Verschluesselung besteht so oder so.
-AVD-AWS-0132
-
-# infra/aws: Ausgehender Verkehr ist auf die Ports 80/443/465/587 beschraenkt,
-# Ziel muss aber das Internet sein (Updates, Images, Let's Encrypt, E-Mail).
-# VPC-Endpunkte bzw. ein Egress-Proxy kosten ein Vielfaches des Servers.
-AVD-AWS-0104
-
-# infra/aws: Das Alarm-Topic enthaelt nur Alarmnamen und Schwellwerte, keine
-# Nutzerdaten. CloudWatch kann nicht an Topics mit dem AWS-verwalteten
-# SNS-Schluessel senden; ein eigener KMS-Schluessel kostet 1 USD/Monat.
-AVD-AWS-0095
-
 # keycloak: Guava 33.6.0 im offiziellen Keycloak-Image 26.8.1 (DoS beim
 # Deserialisieren). Keycloak deserialisiert keine Guava-Objekte aus Anfragen,
 # und es gibt noch kein Keycloak-Release mit Guava >= 33.7.2. Läuft Ende 2026

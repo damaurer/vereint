@@ -3,11 +3,11 @@ package de.maurer.baseservice.controller
 import de.maurer.baseservice.dto.EventDrinkDto
 import de.maurer.baseservice.dto.EventFoodDto
 import de.maurer.baseservice.dto.LedgerEntryDto
+import de.maurer.baseservice.dto.TabletBoardDto
 import de.maurer.baseservice.dto.TabletEventDto
 import de.maurer.baseservice.dto.TabletItemsDto
 import de.maurer.baseservice.dto.TabletMemberDto
 import de.maurer.baseservice.dto.TabletPurchaseRequest
-import de.maurer.baseservice.dto.TabletRevenuePurchaseRequest
 import de.maurer.baseservice.security.AuthContext
 import de.maurer.baseservice.service.TabletRecorderService
 import de.maurer.baseservice.support.Identifiers
@@ -50,6 +50,16 @@ class TabletRecorderController(
     fun listMembers(@PathVariable("eventId") id: String): ResponseEntity<List<TabletMemberDto>> {
         val principal = authContext.getRequiredPrincipal()
         return ResponseEntity.ok(tabletRecorderService.listEventMembers(eventId(id), principal))
+    }
+
+    @GetMapping("/events/{eventId}/board")
+    @Operation(
+        summary = "Strichliste nach Kategorien",
+        description = "Spalten je Strich-Kategorie, Zeilen je Eventmitglied mit den Strichen des Abends, Striche und Umsatz"
+    )
+    fun board(@PathVariable("eventId") id: String): ResponseEntity<TabletBoardDto> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(tabletRecorderService.board(eventId(id), principal))
     }
 
     @GetMapping("/events/{eventId}/drinks")
@@ -103,36 +113,6 @@ class TabletRecorderController(
             principal
         )
         return ResponseEntity.status(HttpStatus.CREATED).body(entry)
-    }
-
-    @PostMapping("/events/{eventId}/rounds")
-    @Operation(
-        summary = "Runde erfassen",
-        description = "Bucht eine idempotente Runde als Revenue-Only für die angegebenen Eventmitglieder (nur Tablet-Recorder)"
-    )
-    fun recordRound(
-        @PathVariable("eventId") id: String,
-        @RequestHeader(value = IDEMPOTENCY_HEADER, required = false) idempotencyKey: String?,
-        @Valid @RequestBody request: TabletRevenuePurchaseRequest
-    ): ResponseEntity<List<LedgerEntryDto>> {
-        val principal = authContext.getRequiredPrincipal()
-        val entries = tabletRecorderService.recordRound(eventId(id), request, idempotencyKey, principal)
-        return ResponseEntity.status(HttpStatus.CREATED).body(entries)
-    }
-
-    @PostMapping("/events/{eventId}/evening")
-    @Operation(
-        summary = "Abendaktion erfassen",
-        description = "Bucht eine idempotente Abendaktion als Revenue-Only für die angegebenen Eventmitglieder (nur Tablet-Recorder)"
-    )
-    fun recordEvening(
-        @PathVariable("eventId") id: String,
-        @RequestHeader(value = IDEMPOTENCY_HEADER, required = false) idempotencyKey: String?,
-        @Valid @RequestBody request: TabletRevenuePurchaseRequest
-    ): ResponseEntity<List<LedgerEntryDto>> {
-        val principal = authContext.getRequiredPrincipal()
-        val entries = tabletRecorderService.recordEvening(eventId(id), request, idempotencyKey, principal)
-        return ResponseEntity.status(HttpStatus.CREATED).body(entries)
     }
 
     companion object {

@@ -9,7 +9,9 @@ import {
   permissionGuard,
   platformGuard,
   signedInGuard,
+  termsConsentGuard,
 } from './auth/auth.guards';
+import { TERMS_CONSENT_PATH } from './legal/terms-status.service';
 import { kioskGuard } from './kiosk/kiosk.guard';
 
 /** Sichtbare Adressen der Gruppen-Seiten (im Code weiterhin „Stammtisch“). */
@@ -89,6 +91,13 @@ export const routes: Routes = [
     loadComponent: () => import('./legal/agb.component').then((m) => m.AgbComponent),
   },
   {
+    // AGB-Sperre nach dem Login: der aktuellen Fassung zustimmen oder abmelden.
+    path: TERMS_CONSENT_PATH,
+    canActivate: [kioskGuard, termsConsentGuard],
+    data: { title: 'routes.termsConsent.title', description: 'routes.termsConsent.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./legal/terms-gate.component').then((m) => m.TermsGateComponent),
+  },
+  {
     path: '403',
     data: { title: 'routes.forbidden.title', description: 'routes.forbidden.description', access: 'routes.access.denied' },
     loadComponent: () => import('./errors/forbidden.component').then((m) => m.ForbiddenComponent),
@@ -134,7 +143,7 @@ export const routes: Routes = [
   {
     path: 'scan',
     canActivate: [authGuard],
-    data: { title: 'routes.scan.title', description: 'routes.scan.description', access: 'routes.access.protected' },
+    data: { back: '/wallet', title: 'routes.scan.title', description: 'routes.scan.description', access: 'routes.access.protected' },
     loadComponent: () => import('./scan/scan.component').then((m) => m.ScanComponent),
   },
   {
@@ -147,20 +156,27 @@ export const routes: Routes = [
     // Muss vor `events/:eventId` stehen, sonst gilt `new` als Event-ID.
     path: 'events/new',
     canActivate: [authGuard],
-    data: { title: 'routes.eventCreate.title', description: 'routes.eventCreate.description', access: 'routes.access.protected' },
+    data: { back: '/events', title: 'routes.eventCreate.title', description: 'routes.eventCreate.description', access: 'routes.access.protected' },
     loadComponent: () => import('./events/event-create.component').then((m) => m.EventCreateComponent),
   },
   {
     path: 'events/:eventId',
     canActivate: [authGuard],
-    data: { title: 'routes.eventDetail.title', description: 'routes.eventDetail.description', access: 'routes.access.protected' },
+    data: { back: '/events', title: 'routes.eventDetail.title', description: 'routes.eventDetail.description', access: 'routes.access.protected' },
     loadComponent: () => import('./member/event-detail.component').then((m) => m.EventDetailComponent),
   },
   {
     path: 'events/:eventId/manage',
     canActivate: [authGuard],
-    data: { title: 'routes.eventManage.title', description: 'routes.eventManage.description', access: 'routes.access.protected' },
+    data: { back: '/events/:eventId', title: 'routes.eventManage.title', description: 'routes.eventManage.description', access: 'routes.access.protected' },
     loadComponent: () => import('./events/event-manage.component').then((m) => m.EventManageComponent),
+  },
+  {
+    // Runde am eigenen Handy ausgeben (Issue #81).
+    path: 'events/:eventId/runde',
+    canActivate: [authGuard],
+    data: { back: '/events/:eventId', title: 'routes.roundGive.title', description: 'routes.roundGive.description', access: 'routes.access.protected' },
+    loadComponent: () => import('./rounds/round-give.component').then((m) => m.RoundGiveComponent),
   },
   {
     path: 'guest/:eventId',
@@ -227,6 +243,7 @@ export const routes: Routes = [
     path: 'events/:eventId/moments',
     canActivate: [authGuard],
     data: {
+      back: '/events/:eventId',
       title: 'routes.eventMoments.title',
       description: 'routes.eventMoments.description',
       access: 'routes.access.protected',
@@ -249,6 +266,7 @@ export const routes: Routes = [
     path: 'board/treasury',
     canActivate: [authGuard, contextGuard],
     data: {
+      back: '/board',
       appContext: 'boardTreasury',
       title: 'routes.treasury.title',
       description: 'routes.treasury.description',
@@ -261,6 +279,7 @@ export const routes: Routes = [
     path: 'board/communications',
     canActivate: [authGuard, contextGuard],
     data: {
+      back: '/board',
       appContext: 'boardCommunications',
       title: 'routes.communications.title',
       description: 'routes.communications.description',
@@ -274,6 +293,7 @@ export const routes: Routes = [
     path: 'board/moments',
     canActivate: [authGuard, contextGuard],
     data: {
+      back: '/board',
       appContext: 'boardGeneral',
       title: 'routes.boardMoments.title',
       description: 'routes.boardMoments.description',
@@ -314,10 +334,23 @@ export const routes: Routes = [
     loadComponent: () => import('./stammtisch/stammtisch-settings.component').then((m) => m.StammtischSettingsComponent),
   },
   {
+    // Strich-Kategorien: Spalten der Strichliste mit Preis je Strich (Katalogpflege).
+    path: 'catalog/categories',
+    canActivate: [authGuard, permissionGuard],
+    data: {
+      back: '/catalog',
+      title: 'routes.tallyCategories.title',
+      description: 'routes.tallyCategories.description',
+      access: 'routes.access.protected',
+      permissions: ['catalog.approve'],
+    },
+    loadComponent: () => import('./catalog/tally-categories.component').then((m) => m.TallyCategoriesComponent),
+  },
+  {
     // Übergreifende Getränkedatenbank: Getränke in den eigenen Katalog übernehmen.
     path: 'catalog/library',
     canActivate: [authGuard],
-    data: { title: 'routes.drinkLibrary.title', description: 'routes.drinkLibrary.description', access: 'routes.access.protected' },
+    data: { back: '/catalog', title: 'routes.drinkLibrary.title', description: 'routes.drinkLibrary.description', access: 'routes.access.protected' },
     loadComponent: () => import('./catalog/drink-library.component').then((m) => m.DrinkLibraryComponent),
   },
   {
@@ -331,6 +364,90 @@ export const routes: Routes = [
     },
     loadComponent: () =>
       import('./statistics/statistics.component').then((m) => m.StatisticsComponent),
+  },
+  {
+    path: 'statistik/getraenke',
+    canActivate: [authGuard],
+    data: {
+      back: '/statistik',
+      title: 'routes.drinkStatistics.title',
+      description: 'routes.drinkStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/drink-statistics.component').then((m) => m.DrinkStatisticsComponent),
+  },
+  {
+    path: 'statistik/uebersicht',
+    canActivate: [authGuard],
+    data: {
+      back: '/statistik',
+      title: 'routes.statisticsOverview.title',
+      description: 'routes.statisticsOverview.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/statistics-overview.component').then((m) => m.StatisticsOverviewComponent),
+  },
+  {
+    path: 'statistik/ich',
+    canActivate: [authGuard],
+    data: {
+      back: '/profile',
+      title: 'routes.myStatistics.title',
+      description: 'routes.myStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/my-statistics.component').then((m) => m.MyStatisticsComponent),
+  },
+  {
+    path: 'statistik/events',
+    canActivate: [authGuard],
+    data: {
+      back: '/statistik',
+      title: 'routes.crossEventStatistics.title',
+      description: 'routes.crossEventStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/event-level-statistics.component').then((m) => m.CrossEventStatisticsComponent),
+  },
+  {
+    path: 'statistik/gruppe/events',
+    canActivate: [authGuard],
+    data: {
+      back: '/statistik',
+      title: 'routes.groupEventStatistics.title',
+      description: 'routes.groupEventStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/event-level-statistics.component').then((m) => m.GroupEventStatisticsComponent),
+  },
+  {
+    path: 'statistik/funktionen',
+    canActivate: [authGuard],
+    data: {
+      back: '/statistik',
+      title: 'routes.featureStatistics.title',
+      description: 'routes.featureStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/feature-statistics.component').then((m) => m.FeatureStatisticsComponent),
+  },
+  {
+    path: 'events/:eventId/statistik',
+    canActivate: [authGuard],
+    data: {
+      back: '/events/:eventId',
+      title: 'routes.eventStatistics.title',
+      description: 'routes.eventStatistics.description',
+      access: 'routes.access.statistics',
+    },
+    loadComponent: () =>
+      import('./statistics/feature-statistics.component').then((m) => m.EventStatisticsComponent),
   },
     ],
   },

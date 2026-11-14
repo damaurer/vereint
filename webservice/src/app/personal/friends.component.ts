@@ -62,7 +62,7 @@ interface FriendsPage {
             </h2>
             <ul class="fr-list">
               @for (person of page.overview.incoming; track person.userId) {
-                <li class="fr-row">
+                <li class="fr-row fr-row-incoming">
                   <vereint-avatar-badge [name]="person.displayName" />
                   <span class="fr-text">
                     <span class="fr-name">{{ person.displayName }}</span>
@@ -114,7 +114,7 @@ interface FriendsPage {
                   <span class="fr-actions">
                     <button
                       type="button"
-                      class="member-button"
+                      class="fr-soft"
                       [disabled]="busy() !== null"
                       (click)="message(person)"
                     >
@@ -249,15 +249,24 @@ interface FriendsPage {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: var(--space-2);
-        padding: var(--space-2);
+        gap: var(--space-2) var(--space-3);
+        padding: var(--space-3);
         border: 1px solid var(--color-border);
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-lg);
         background-color: var(--color-surface-raised);
+      }
+      .fr-row-incoming {
+        border: 2px solid var(--color-brand);
+      }
+      .fr-row-incoming .fr-actions {
+        flex-basis: 100%;
+      }
+      .fr-row-incoming .fr-actions > * {
+        flex: 1;
       }
       .fr-text {
         flex: 1;
-        min-width: 10rem;
+        min-width: 8rem;
         display: flex;
         flex-direction: column;
       }
@@ -275,9 +284,20 @@ interface FriendsPage {
         flex-wrap: wrap;
         gap: var(--space-2);
       }
+      .fr-soft {
+        min-height: 2.5rem;
+        padding: 0 1rem;
+        border-radius: var(--radius-md);
+        border: 0;
+        background-color: var(--color-brand-soft);
+        color: var(--color-brand);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
       .fr-secondary,
       .fr-danger {
-        min-height: 2.75rem;
+        min-height: 2.5rem;
         padding: 0 1rem;
         border-radius: 999px;
         border: 1px solid var(--color-border);

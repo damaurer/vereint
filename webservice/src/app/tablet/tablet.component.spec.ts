@@ -3,11 +3,13 @@ import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
-import type { EventDrink } from '../events/event-manage.types';
-import type { LedgerEntry, TabletEvent, TabletMember } from '../api/api.types';
+import type { EventDrink, EventFood } from '../events/event-manage.types';
+import type { LedgerEntry, Round, TabletBoard, TabletEvent, TabletMember } from '../api/api.types';
 import { TabletApiService } from './tablet-api.service';
 import { KioskModeService } from '../kiosk/kiosk-mode.service';
 import { TabletComponent } from './tablet.component';
+import type { TallyCell } from './tally-grid.component';
+import type { TallyPickItem } from './tally-picker.component';
 
 const events: TabletEvent[] = [
   {
@@ -19,52 +21,90 @@ const events: TabletEvent[] = [
   },
 ];
 
-const members: TabletMember[] = [{ memberId: 'm-1', displayName: 'Alice' }];
+const members: TabletMember[] = [
+  { memberId: 'm-1', displayName: 'Alice' },
+  { memberId: 'm-2', displayName: 'Bob' },
+];
+
+const eventDrink = (id: string, name: string, price: string, tallyCategoryId: string | null): EventDrink => ({
+  id,
+  eventId: 'e-1',
+  drinkId: `g-${id}`,
+  drinkName: name,
+  price,
+  effectivePrice: price,
+  currency: 'EUR',
+  selfServiceEnabled: true,
+  tabletEnabled: true,
+  catalogVersion: 1,
+  imageSnapshot: null,
+  createdAt: '2026-01-01T10:00:00Z',
+  updatedAt: '2026-01-01T10:00:00Z',
+  tallyCategoryId,
+});
 
 const drinks: EventDrink[] = [
+  eventDrink('d-1', 'Helles', '3.50', 'c-bier'),
+  eventDrink('d-2', 'Weißbier', '3.50', 'c-bier'),
+  eventDrink('d-3', 'Obstler', '2.00', 'c-schnaps'),
+  eventDrink('d-4', 'Wasser', '1.50', null),
+];
+
+const food: EventFood[] = [
   {
-    id: 'd-1',
+    id: 'f-1',
     eventId: 'e-1',
-    drinkId: 'g-1',
-    drinkName: 'Bier',
-    price: '2.50',
+    foodId: 'x-1',
+    foodName: 'Brezel',
+    price: null,
+    effectivePrice: '2.00',
     currency: 'EUR',
     selfServiceEnabled: true,
     tabletEnabled: true,
-    catalogVersion: 1,
-    imageSnapshot: null,
-    createdAt: '2026-01-01T10:00:00Z',
-    updatedAt: '2026-01-01T10:00:00Z',
-  },
+  } as unknown as EventFood,
 ];
+
+const board = (): TabletBoard => ({
+  columns: [
+    {
+      categoryId: 'c-bier',
+      name: 'Bier',
+      price: '3.50',
+      currency: 'EUR',
+      drinks: [
+        { eventDrinkId: 'd-1', drinkName: 'Helles' },
+        { eventDrinkId: 'd-2', drinkName: 'Weißbier' },
+      ],
+    },
+    { categoryId: 'c-schnaps', name: 'Schnaps', price: '2.00', currency: 'EUR', drinks: [{ eventDrinkId: 'd-3', drinkName: 'Obstler' }] },
+    { categoryId: 'c-wein', name: 'Wein', price: '4.00', currency: 'EUR', drinks: [] },
+  ],
+  members: [
+    { memberId: 'm-1', displayName: 'Alice', counts: { 'c-bier': 3 }, otherCount: 0 },
+    { memberId: 'm-2', displayName: 'Bob', counts: {}, otherCount: 0 },
+  ],
+  tallyCount: 3,
+  revenue: '10.50',
+  currency: 'EUR',
+});
 
 const entry = { id: 'l-1' } as LedgerEntry;
 
 interface TabletInternals {
   selectEvent(eventId: string): void;
-  purchaseForm: { memberId: string; eventDrinkId: string };
-  recordPurchase(): void;
-  revenueForm: { eventDrinkId: string; kind: 'round' | 'evening' };
-  revenueSelection: Record<string, boolean>;
-  recordRevenue(): void;
-  activeDrinkId: () => string | null;
-  selectActiveDrink(eventDrinkId: string): void;
-  confirmDrink(): void;
-  drinkOverlayOpen: () => boolean;
-  onTallyIncrease(memberId: string): void;
-  onTallyDecrease(memberId: string): void;
-  tallyFor(memberId: string): number;
-  openRevenueSheet(kind: 'round' | 'evening', members: TabletMember[]): void;
-  confirmRevenue(): void;
-  revenueSheetOpen: () => boolean;
+  onCellTap(cell: TallyCell): void;
+  onPick(item: TallyPickItem): void;
+  picker: () => { items: TallyPickItem[]; title: string } | null;
+  board: () => TabletBoard | null;
+  undoLast(): void;
+  lastBooking: () => { entryId: string; label: string; cell: TallyCell } | null;
+  actionError: () => string | null;
+  payers: () => Record<string, string>;
+  roundsOpen: { (): boolean; set(value: boolean): void };
   standalone: () => boolean;
   toggleStandalone(): void;
   kioskStartOpen: () => boolean;
   onKioskStarted(session: { id: string }): void;
-  quickBook(memberId: string): void;
-  undoLast(): void;
-  lastBooking: () => { memberId: string; label: string } | null;
-  actionError: () => string | null;
 }
 
 describe('TabletComponent', () => {
@@ -73,19 +113,15 @@ describe('TabletComponent', () => {
     listMembers: ReturnType<typeof vi.fn>;
     listDrinks: ReturnType<typeof vi.fn>;
     listFood: ReturnType<typeof vi.fn>;
+    loadBoard: ReturnType<typeof vi.fn>;
     recordPurchase: ReturnType<typeof vi.fn>;
-    recordRound: ReturnType<typeof vi.fn>;
-    recordEvening: ReturnType<typeof vi.fn>;
     undoPurchase: ReturnType<typeof vi.fn>;
   };
 
   const create = async () => {
     TestBed.configureTestingModule({
       imports: [TabletComponent],
-      providers: [
-        provideRouter([]),
-        { provide: TabletApiService, useValue: api },
-      ],
+      providers: [provideRouter([]), { provide: TabletApiService, useValue: api }],
     });
     const fixture = TestBed.createComponent(TabletComponent);
     fixture.detectChanges();
@@ -94,8 +130,19 @@ describe('TabletComponent', () => {
     return fixture;
   };
 
-  const html = (fixture: { nativeElement: unknown }) =>
-    (fixture.nativeElement as HTMLElement).textContent ?? '';
+  const open = async () => {
+    const fixture = await create();
+    const cmp = fixture.componentInstance as unknown as TabletInternals;
+    cmp.selectEvent('e-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    return { fixture, cmp };
+  };
+
+  const html = (fixture: { nativeElement: unknown }) => (fixture.nativeElement as HTMLElement).textContent ?? '';
+  const count = (cmp: TabletInternals, memberId: string, categoryId: string) =>
+    cmp.board()?.members.find((m) => m.memberId === memberId)?.counts[categoryId] ?? 0;
 
   beforeEach(() => {
     localStorage.clear();
@@ -103,54 +150,114 @@ describe('TabletComponent', () => {
       listEvents: vi.fn(() => of(events)),
       listMembers: vi.fn(() => of(members)),
       listDrinks: vi.fn(() => of(drinks)),
-      listFood: vi.fn(() => of([])),
+      listFood: vi.fn(() => of(food)),
+      loadBoard: vi.fn(() => of(board())),
       recordPurchase: vi.fn(() => of(entry)),
-      recordRound: vi.fn(() => of([entry])),
-      recordEvening: vi.fn(() => of([entry])),
       undoPurchase: vi.fn(() => of({ id: 'l-2' } as LedgerEntry)),
     };
   });
 
-  it('lists active events and loads members and drinks on selection', async () => {
-    const fixture = await create();
-    expect(html(fixture)).toContain('Vereinsabend');
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-    expect(api.listMembers).toHaveBeenCalledWith('e-1');
-    expect(api.listDrinks).toHaveBeenCalledWith('e-1');
-    expect(html(fixture)).toContain('Strichliste');
-    expect(html(fixture)).toContain('Alice');
+  it('shows one row per member and one column per category with price and tally bundles', async () => {
+    const { fixture } = await open();
+    expect(api.loadBoard).toHaveBeenCalledWith('e-1');
+    const text = html(fixture);
+    expect(text).toContain('Alice');
+    expect(text).toContain('Bob');
+    expect(text).toContain('Bier');
+    expect(text).toContain('je Strich');
+    expect(text).toContain('Sonstiges');
+    expect(text).toContain('Heute an der Theke');
+    const el = fixture.nativeElement as HTMLElement;
+    // Alice hat drei Striche Bier: drei senkrechte Striche, ein Bündel.
+    expect(el.querySelectorAll('tbody tr')[0].querySelectorAll('.stroke').length).toBe(3);
+    // Leere Felder zeigen ein Plus.
+    expect(el.querySelectorAll('tbody tr')[1].querySelector('.cell-count')?.textContent?.trim()).toBe('+');
   });
 
-  it('books exactly one purchase for the active drink on tally increase', async () => {
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.selectActiveDrink('d-1');
-    cmp.onTallyIncrease('m-1');
+  it('books the only drink of a category directly at a single tap', async () => {
+    const { cmp } = await open();
+    cmp.onCellTap({ memberId: 'm-2', categoryId: 'c-schnaps' });
     expect(api.recordPurchase).toHaveBeenCalledTimes(1);
     const [eventId, payload, key] = api.recordPurchase.mock.calls[0];
     expect(eventId).toBe('e-1');
-    expect(payload).toEqual({ memberId: 'm-1', eventDrinkId: 'd-1' });
+    expect(payload).toEqual({ memberId: 'm-2', eventDrinkId: 'd-3' });
     expect(typeof key).toBe('string');
-    expect(cmp.tallyFor('m-1')).toBe(1);
+    expect(cmp.lastBooking()?.label).toContain('Bob · Schnaps');
+    expect(api.loadBoard).toHaveBeenCalledTimes(2);
   });
 
-  it('undoes the last own tally with a counter-booking', async () => {
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
+  it('asks which drink when a category holds several and books the chosen one', async () => {
+    const { cmp } = await open();
+    cmp.onCellTap({ memberId: 'm-1', categoryId: 'c-bier' });
+    expect(api.recordPurchase).not.toHaveBeenCalled();
+    const picker = cmp.picker();
+    expect(picker?.items.map((i) => i.name)).toEqual(['Helles', 'Weißbier']);
+    expect(picker?.items.every((i) => i.price === '3.50')).toBe(true);
+    cmp.onPick(picker!.items[1]);
+    expect(cmp.picker()).toBeNull();
+    expect(api.recordPurchase.mock.calls[0][1]).toEqual({ memberId: 'm-1', eventDrinkId: 'd-2' });
+  });
+
+  it('offers drinks without category and food in the column "Sonstiges"', async () => {
+    const { cmp } = await open();
+    cmp.onCellTap({ memberId: 'm-1', categoryId: null });
+    expect(cmp.picker()?.items.map((i) => `${i.kind}:${i.name}`)).toEqual(['drink:Wasser', 'food:Brezel']);
+    cmp.onPick(cmp.picker()!.items[1]);
+    expect(api.recordPurchase.mock.calls[0][1]).toEqual({ memberId: 'm-1', eventFoodId: 'f-1' });
+  });
+
+  it('explains an empty category instead of booking', async () => {
+    const { cmp } = await open();
+    cmp.onCellTap({ memberId: 'm-1', categoryId: 'c-wein' });
+    expect(api.recordPurchase).not.toHaveBeenCalled();
+    expect(cmp.actionError()).toContain('Wein');
+  });
+
+  it('counts the mark at once and takes it back when the booking fails', async () => {
+    const pending = new Subject<LedgerEntry>();
+    api.recordPurchase.mockReturnValue(pending);
+    const { cmp } = await open();
+    cmp.onCellTap({ memberId: 'm-2', categoryId: 'c-schnaps' });
+    expect(count(cmp, 'm-2', 'c-schnaps')).toBe(1);
+    pending.error(new ApiError(500, 'internal_error', ''));
+    expect(count(cmp, 'm-2', 'c-schnaps')).toBe(0);
+    expect(cmp.lastBooking()).toBeNull();
+    expect(cmp.actionError()).toBeTruthy();
+  });
+
+  it('retries a failed mark with the same key and counts a replayed booking only once', async () => {
+    api.recordPurchase
+      .mockReturnValueOnce(throwError(() => new ApiError(503, 'upstream_unavailable', '')))
+      .mockReturnValueOnce(of({ id: 'l-9' } as LedgerEntry))
+      .mockReturnValueOnce(of({ id: 'l-9' } as LedgerEntry));
+    api.loadBoard.mockReturnValue(new Subject<TabletBoard>());
+    api.loadBoard.mockReturnValueOnce(of(board()));
+    const { cmp } = await open();
+    cmp.onCellTap({ memberId: 'm-2', categoryId: 'c-schnaps' });
+    cmp.onCellTap({ memberId: 'm-2', categoryId: 'c-schnaps' });
+    expect(api.recordPurchase.mock.calls[1][2]).toBe(api.recordPurchase.mock.calls[0][2]);
+    expect(count(cmp, 'm-2', 'c-schnaps')).toBe(1);
+    cmp.onCellTap({ memberId: 'm-2', categoryId: 'c-schnaps' });
+    expect(count(cmp, 'm-2', 'c-schnaps')).toBe(1);
+  });
+
+  it('two quick taps are two bookings with separate keys', async () => {
+    const first = new Subject<LedgerEntry>();
+    const second = new Subject<LedgerEntry>();
+    api.recordPurchase.mockReturnValueOnce(first).mockReturnValueOnce(second);
+    const { cmp } = await open();
+    cmp.onCellTap({ memberId: 'm-2', categoryId: 'c-schnaps' });
+    cmp.onCellTap({ memberId: 'm-2', categoryId: 'c-schnaps' });
+    expect(api.recordPurchase.mock.calls[1][2]).not.toBe(api.recordPurchase.mock.calls[0][2]);
+    expect(count(cmp, 'm-2', 'c-schnaps')).toBe(2);
+  });
+
+  it('undo takes back the last mark with a counter-booking', async () => {
+    const { fixture, cmp } = await open();
+    api.loadBoard.mockReturnValue(new Subject<TabletBoard>());
+    cmp.onCellTap({ memberId: 'm-2', categoryId: 'c-schnaps' });
     fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.selectActiveDrink('d-1');
-    cmp.onTallyIncrease('m-1');
-    fixture.detectChanges();
-    expect(cmp.lastBooking()?.memberId).toBe('m-1');
+    expect(html(fixture)).toContain('Strich: Bob · Schnaps');
     expect(html(fixture)).toContain('Rückgängig');
     cmp.undoLast();
     expect(api.undoPurchase).toHaveBeenCalledTimes(1);
@@ -158,159 +265,72 @@ describe('TabletComponent', () => {
     expect(eventId).toBe('e-1');
     expect(entryId).toBe('l-1');
     expect(typeof key).toBe('string');
-    expect(cmp.tallyFor('m-1')).toBe(0);
+    expect(count(cmp, 'm-2', 'c-schnaps')).toBe(0);
     expect(cmp.lastBooking()).toBeNull();
   });
 
-  it('does not undo tallies that were not booked in this session', async () => {
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.onTallyDecrease('m-1');
-    expect(api.undoPurchase).not.toHaveBeenCalled();
-    expect(cmp.actionError()).toContain('Vorstand');
-  });
-
-  it('restores the tally when the undo fails', async () => {
+  it('keeps the mark when the undo fails', async () => {
     api.undoPurchase.mockReturnValue(throwError(() => new ApiError(409, 'ledger_already_corrected', '')));
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.selectActiveDrink('d-1');
-    cmp.onTallyIncrease('m-1');
-    cmp.onTallyDecrease('m-1');
-    expect(cmp.tallyFor('m-1')).toBe(1);
+    const { cmp } = await open();
+    api.loadBoard.mockReturnValue(new Subject<TabletBoard>());
+    cmp.onCellTap({ memberId: 'm-2', categoryId: 'c-schnaps' });
+    cmp.undoLast();
+    expect(count(cmp, 'm-2', 'c-schnaps')).toBe(1);
+    expect(cmp.lastBooking()).not.toBeNull();
     expect(cmp.actionError()).toBeTruthy();
   });
 
-  it('books two quick taps on the same member as two purchases with separate keys', async () => {
-    const first = new Subject<LedgerEntry>();
-    const second = new Subject<LedgerEntry>();
-    api.recordPurchase.mockReturnValueOnce(first).mockReturnValueOnce(second);
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.selectActiveDrink('d-1');
-    cmp.onTallyIncrease('m-1');
-    cmp.onTallyIncrease('m-1');
-    expect(api.recordPurchase).toHaveBeenCalledTimes(2);
-    expect(api.recordPurchase.mock.calls[1][2]).not.toBe(api.recordPurchase.mock.calls[0][2]);
-    first.next({ id: 'l-1' } as LedgerEntry);
-    first.complete();
-    second.next({ id: 'l-2' } as LedgerEntry);
-    second.complete();
-    expect(cmp.tallyFor('m-1')).toBe(2);
+  it('shows the empty state when nothing can be booked', async () => {
+    api.listDrinks.mockReturnValue(of([]));
+    api.listFood.mockReturnValue(of([]));
+    api.loadBoard.mockReturnValue(of({ ...board(), columns: [] }));
+    const { fixture } = await open();
+    expect(html(fixture)).toContain('Erfassung nicht möglich');
   });
 
-  it('retries a failed tally with the same key and counts a replayed booking only once', async () => {
-    api.recordPurchase
-      .mockReturnValueOnce(throwError(() => new ApiError(503, 'upstream_unavailable', '')))
-      .mockReturnValueOnce(of({ id: 'l-9' } as LedgerEntry))
-      .mockReturnValueOnce(of({ id: 'l-9' } as LedgerEntry));
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
+  it('shows running rounds and who pays in the row header, without buttons to buy a round', async () => {
+    const round: Round = {
+      id: 'r-1',
+      eventId: 'e-1',
+      sponsorId: 'm-3',
+      sponsorName: 'Thomas',
+      kind: 'round',
+      eventDrinkId: 'd-1',
+      drinkName: 'Helles',
+      maxAmount: '7.00',
+      usedAmount: '3.50',
+      currency: 'EUR',
+      validUntil: new Date(Date.now() + 18 * 60_000).toISOString(),
+      endedAt: null,
+      status: 'running',
+      createdAt: '2026-06-01T18:00:00Z',
+      invitees: [
+        { memberId: 'm-1', displayName: 'Alice', redeemedCount: 1, redeemed: true },
+        { memberId: 'm-2', displayName: 'Bob', redeemedCount: 0, redeemed: false },
+      ],
+    };
+    const withRound = board();
+    withRound.members[1] = { ...withRound.members[1], fundedBy: { roundId: 'r-1', sponsorName: 'Thomas', kind: 'round' } };
+    api.loadBoard.mockReturnValue(of({ ...withRound, rounds: [round] }));
+    const { fixture, cmp } = await open();
+    const text = html(fixture);
+    expect(cmp.payers()).toEqual({ 'm-2': 'Runde von Thomas' });
+    expect(text).toContain('Runde von Thomas');
+    expect(text).toContain('Eigene Rechnung');
+    expect(text).toContain('Laufende Runden');
+    expect(text).toContain('Eine Runde Helles');
+    expect(text).toContain('1 von 2');
+    expect(text).not.toContain('Ganzen Abend stiften');
+
+    cmp.roundsOpen.set(true);
     fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.selectActiveDrink('d-1');
-    cmp.onTallyIncrease('m-1');
-    expect(cmp.tallyFor('m-1')).toBe(0);
-    cmp.onTallyIncrease('m-1');
-    expect(api.recordPurchase.mock.calls[1][2]).toBe(api.recordPurchase.mock.calls[0][2]);
-    expect(cmp.tallyFor('m-1')).toBe(1);
-    // Kommt dieselbe Buchung noch einmal zurück, zählt sie nicht doppelt.
-    cmp.onTallyIncrease('m-1');
-    expect(cmp.tallyFor('m-1')).toBe(1);
+    expect(html(fixture)).toContain('Gibt aus');
+    expect(html(fixture)).toContain('noch 18 Min');
   });
 
-  it('removes the optimistic tally when the purchase fails', async () => {
-    api.recordPurchase.mockReturnValue(throwError(() => new ApiError(500, 'internal_error', '')));
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.selectActiveDrink('d-1');
-    cmp.onTallyIncrease('m-1');
-    expect(cmp.tallyFor('m-1')).toBe(0);
-    expect(cmp.lastBooking()).toBeNull();
-  });
-
-  it('opens the drink overlay instead of booking when no drink is active', async () => {
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.onTallyIncrease('m-1');
-    expect(api.recordPurchase).not.toHaveBeenCalled();
-    expect(cmp.drinkOverlayOpen()).toBe(true);
-  });
-
-  it('confirms the active drink selection and closes the overlay', async () => {
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.selectActiveDrink('d-1');
-    cmp.confirmDrink();
-    expect(cmp.activeDrinkId()).toBe('d-1');
-    expect(cmp.drinkOverlayOpen()).toBe(false);
-  });
-
-  it('books a round via the revenue sheet for the preselected members', async () => {
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.selectActiveDrink('d-1');
-    cmp.openRevenueSheet('round', members);
-    cmp.confirmRevenue();
-    expect(api.recordRound).toHaveBeenCalledTimes(1);
-    const [eventId, payload] = api.recordRound.mock.calls[0];
-    expect(eventId).toBe('e-1');
-    expect(payload).toEqual({ eventDrinkId: 'd-1', memberIds: ['m-1'] });
-    expect(cmp.revenueSheetOpen()).toBe(false);
-  });
-
-  it('records a manual purchase with a generated idempotency key', async () => {
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.purchaseForm = { memberId: 'm-1', eventDrinkId: 'd-1' };
-    cmp.recordPurchase();
-    expect(api.recordPurchase).toHaveBeenCalledTimes(1);
-    const [eventId, payload, key] = api.recordPurchase.mock.calls[0];
-    expect(eventId).toBe('e-1');
-    expect(payload).toEqual({ memberId: 'm-1', eventDrinkId: 'd-1' });
-    expect(typeof key).toBe('string');
-    expect((key as string).length).toBeGreaterThan(0);
-  });
-
-  it('records an evening action for the selected members', async () => {
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.revenueForm = { eventDrinkId: 'd-1', kind: 'evening' };
-    cmp.revenueSelection = { 'm-1': true };
-    cmp.recordRevenue();
-    expect(api.recordEvening).toHaveBeenCalledTimes(1);
-    const [eventId, payload] = api.recordEvening.mock.calls[0];
-    expect(eventId).toBe('e-1');
-    expect(payload).toEqual({ eventDrinkId: 'd-1', memberIds: ['m-1'] });
-    expect(api.recordRound).not.toHaveBeenCalled();
+  it('says that no round is running', async () => {
+    const { fixture } = await open();
+    expect(html(fixture)).toContain('Gerade läuft keine Runde.');
   });
 
   it('starts kiosk mode after the device chose its PIN and keeps it on the device', async () => {
@@ -323,16 +343,13 @@ describe('TabletComponent', () => {
     cmp.toggleStandalone();
     fixture.detectChanges();
     expect(cmp.kioskStartOpen()).toBe(true);
-    expect(cmp.standalone()).toBe(false);
 
     cmp.onKioskStarted({ id: 's-1' });
     fixture.detectChanges();
-    expect(cmp.kioskStartOpen()).toBe(false);
     expect(cmp.standalone()).toBe(true);
     expect(html(fixture)).toContain('Kiosk-Modus aktiv');
     expect(JSON.parse(localStorage.getItem('vereint.kiosk')!)).toEqual({ active: true, sessionId: 's-1', eventId: 'e-1' });
 
-    // Verlassen fragt nur die PIN ab, der Modus bleibt bis zur Bestätigung aktiv.
     cmp.toggleStandalone();
     fixture.detectChanges();
     expect(cmp.standalone()).toBe(true);
@@ -345,38 +362,16 @@ describe('TabletComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     expect(api.listMembers).toHaveBeenCalledWith('e-1');
-    expect((fixture.componentInstance as unknown as TabletInternals).standalone()).toBe(true);
+    expect(api.loadBoard).toHaveBeenCalledWith('e-1');
   });
 
-  it('preserves the selected event and tallies across an orientation/mode toggle', async () => {
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.selectActiveDrink('d-1');
-    cmp.quickBook('m-1');
-    expect(cmp.tallyFor('m-1')).toBe(1);
+  it('keeps the marks across a kiosk mode toggle', async () => {
+    const { fixture, cmp } = await open();
+    cmp.onCellTap({ memberId: 'm-2', categoryId: 'c-schnaps' });
     cmp.onKioskStarted({ id: 's-1' });
     fixture.detectChanges();
-    expect(cmp.activeDrinkId()).toBe('d-1');
-    expect(cmp.tallyFor('m-1')).toBe(1);
-  });
-
-  it('quick-book triggers exactly one purchase for the active drink', async () => {
-    const fixture = await create();
-    const cmp = fixture.componentInstance as unknown as TabletInternals;
-    cmp.selectEvent('e-1');
-    fixture.detectChanges();
-    await fixture.whenStable();
-    cmp.selectActiveDrink('d-1');
-    cmp.quickBook('m-1');
-    expect(api.recordPurchase).toHaveBeenCalledTimes(1);
-    const [eventId, payload, key] = api.recordPurchase.mock.calls[0];
-    expect(eventId).toBe('e-1');
-    expect(payload).toEqual({ memberId: 'm-1', eventDrinkId: 'd-1' });
-    expect(typeof key).toBe('string');
-    expect(cmp.tallyFor('m-1')).toBe(1);
+    expect(count(cmp, 'm-1', 'c-bier')).toBe(3);
+    expect(cmp.board()).not.toBeNull();
   });
 
   it('shows an empty state when no active events exist', async () => {

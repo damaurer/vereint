@@ -1,0 +1,818 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-06T09:00:00Z"
+ },
+ "title": "Vereint Screens",
+ "launch": {
+  "view": "canvas",
+  "page": "mitglied"
+ },
+ "pages": [
+  {
+   "id": "einstieg",
+   "name": "Einstieg & Konto"
+  },
+  {
+   "id": "mitglied",
+   "name": "Mitglied"
+  },
+  {
+   "id": "vorstand",
+   "name": "Vorstand"
+  },
+  {
+   "id": "theke",
+   "name": "Theke"
+  },
+  {
+   "id": "admin",
+   "name": "Administration"
+  },
+  {
+   "id": "bausteine",
+   "name": "Bausteine"
+  }
+ ],
+ "boards": {
+  "Login.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Login",
+   "page": "einstieg",
+   "is_interactive": true
+  },
+  "Registrieren.dc.html": {
+   "x": 470,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Registrieren",
+   "page": "einstieg",
+   "is_interactive": true
+  },
+  "GruppeEroeffnen.dc.html": {
+   "x": 940,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Gruppe eröffnen",
+   "page": "einstieg",
+   "is_interactive": true
+  },
+  "EinladungAnnehmen.dc.html": {
+   "x": 1410,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Einladung annehmen",
+   "page": "einstieg",
+   "is_interactive": true
+  },
+  "GruppeWaehlen.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Gruppe wählen",
+   "page": "einstieg",
+   "is_interactive": true
+  },
+  "GastEvent.dc.html": {
+   "x": 0,
+   "y": 1224,
+   "w": 390,
+   "h": 844,
+   "title": "Gast-Event",
+   "page": "einstieg",
+   "is_interactive": true
+  },
+  "Abgemeldet.dc.html": {
+   "x": 0,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Abgemeldet",
+   "page": "einstieg"
+  },
+  "Fehler403.dc.html": {
+   "x": 470,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Kein Zugriff (403)",
+   "page": "einstieg"
+  },
+  "Fehler404.dc.html": {
+   "x": 940,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Nicht gefunden (404)",
+   "page": "einstieg"
+  },
+  "Impressum.dc.html": {
+   "x": 1410,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Impressum",
+   "page": "einstieg"
+  },
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Start",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Mehr.dc.html": {
+   "x": 470,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Mehr",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Mitteilungen.dc.html": {
+   "x": 940,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Mitteilungen",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Profil.dc.html": {
+   "x": 1410,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Profil",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Events.dc.html": {
+   "x": 0,
+   "y": 1224,
+   "w": 390,
+   "h": 844,
+   "title": "Events",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Event.dc.html": {
+   "x": 470,
+   "y": 1224,
+   "w": 390,
+   "h": 844,
+   "title": "Event",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "EventAnlegen.dc.html": {
+   "x": 940,
+   "y": 1224,
+   "w": 390,
+   "h": 844,
+   "title": "Event anlegen",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "EventChat.dc.html": {
+   "x": 1410,
+   "y": 1224,
+   "w": 390,
+   "h": 844,
+   "title": "Event-Chat",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Moments.dc.html": {
+   "x": 1880,
+   "y": 1224,
+   "w": 390,
+   "h": 844,
+   "title": "Moments",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "MomentDetail.dc.html": {
+   "x": 2350,
+   "y": 1224,
+   "w": 390,
+   "h": 844,
+   "title": "Moment",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Chat.dc.html": {
+   "x": 0,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Chat",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Gruppenchat.dc.html": {
+   "x": 470,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Gruppenchat",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Direktnachrichten.dc.html": {
+   "x": 940,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Direktnachrichten",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Freunde.dc.html": {
+   "x": 1410,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Freunde",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Kalender.dc.html": {
+   "x": 1880,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Kalender",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Guthaben.dc.html": {
+   "x": 0,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Guthaben",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Kaeufe.dc.html": {
+   "x": 470,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Käufe",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Bezahlen.dc.html": {
+   "x": 940,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Bezahlen",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "BezahlenBestaetigen.dc.html": {
+   "x": 1410,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Bezahlen bestätigen",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Bezahlt.dc.html": {
+   "x": 1880,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Bezahlt",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Katalog.dc.html": {
+   "x": 2350,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Getränkekatalog",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Statistik.dc.html": {
+   "x": 2820,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Statistik",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "Vorstand.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Vorstandsübersicht",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "EventVerwalten.dc.html": {
+   "x": 470,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Event verwalten",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "EventTeilnehmer.dc.html": {
+   "x": 940,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Event: Teilnehmer & Getränke",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "Eventabrechnung.dc.html": {
+   "x": 1410,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Eventabrechnung",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "Kasse.dc.html": {
+   "x": 0,
+   "y": 1224,
+   "w": 390,
+   "h": 844,
+   "title": "Bierkasse verwalten",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "KontoBuchen.dc.html": {
+   "x": 470,
+   "y": 1224,
+   "w": 390,
+   "h": 844,
+   "title": "Mitgliedskonto buchen",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "Kommunikation.dc.html": {
+   "x": 0,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Kommunikation",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "MomentKonfig.dc.html": {
+   "x": 470,
+   "y": 2448,
+   "w": 390,
+   "h": 844,
+   "title": "Moments: Typen & Reaktionen",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "KatalogFreigabe.dc.html": {
+   "x": 0,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Katalog-Freigabe",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "GetraenkBearbeiten.dc.html": {
+   "x": 470,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Getränk bearbeiten",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "Getraenkedatenbank.dc.html": {
+   "x": 940,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Getränkedatenbank",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "Getraenkelisten.dc.html": {
+   "x": 1410,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Getränkelisten",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "KioskGeraete.dc.html": {
+   "x": 1880,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Kiosk-Geräte",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "Theke.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1180,
+   "h": 820,
+   "title": "Thekenterminal",
+   "page": "theke",
+   "is_interactive": true
+  },
+  "StrichRueckgaengig.dc.html": {
+   "x": 1260,
+   "y": 0,
+   "w": 1180,
+   "h": 820,
+   "title": "Strich rückgängig",
+   "page": "theke",
+   "is_interactive": true
+  },
+  "RundeAusgeben.dc.html": {
+   "x": 2520,
+   "y": 0,
+   "w": 1180,
+   "h": 820,
+   "title": "Laufende Runden (nur Anzeige)",
+   "page": "theke",
+   "is_interactive": true
+  },
+  "KioskStarten.dc.html": {
+   "x": 0,
+   "y": 1200,
+   "w": 1180,
+   "h": 820,
+   "title": "Kiosk-Modus starten",
+   "page": "theke",
+   "is_interactive": true
+  },
+  "KioskEntsperren.dc.html": {
+   "x": 1260,
+   "y": 1200,
+   "w": 1180,
+   "h": 820,
+   "title": "Kiosk-Modus verlassen",
+   "page": "theke",
+   "is_interactive": true
+  },
+  "AdminMitglieder.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "title": "Mitglieder & Rollen",
+   "page": "admin",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AdminMitgliedBearbeiten.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "title": "Mitglied bearbeiten",
+   "page": "admin",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AdminEinladen.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "title": "Mitglied einladen",
+   "page": "admin",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Gruppeneinstellungen.dc.html": {
+   "x": 0,
+   "y": 1340,
+   "w": 1440,
+   "h": 960,
+   "title": "Gruppeneinstellungen",
+   "page": "admin",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Rollen.dc.html": {
+   "x": 1520,
+   "y": 1340,
+   "w": 1440,
+   "h": 960,
+   "title": "Rollen & Berechtigungen",
+   "page": "admin",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "Plattform.dc.html": {
+   "x": 3040,
+   "y": 1340,
+   "w": 1440,
+   "h": 960,
+   "title": "Plattform",
+   "page": "admin",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "TopBar.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 56,
+   "title": "Baustein: Kopfzeile",
+   "page": "bausteine"
+  },
+  "TabBar.dc.html": {
+   "x": 470,
+   "y": 0,
+   "w": 390,
+   "h": 64,
+   "title": "Baustein: Untere Leiste",
+   "page": "bausteine"
+  },
+  "Sidebar.dc.html": {
+   "x": 940,
+   "y": 0,
+   "w": 260,
+   "h": 900,
+   "title": "Baustein: Seitenleiste",
+   "page": "bausteine"
+  },
+  "RundeHandy.dc.html": {
+   "x": 3290,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Runde ausgeben (eigenes Handy)",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "StrichKategorien.dc.html": {
+   "x": 2350,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Strich-Kategorien",
+   "page": "vorstand",
+   "is_interactive": true
+  },
+  "Getraenkestatistik.dc.html": {
+   "x": 3760,
+   "y": 3672,
+   "w": 390,
+   "h": 844,
+   "title": "Getränkestatistik",
+   "page": "mitglied",
+   "is_interactive": true
+  },
+  "StatistikUebersicht.dc.html": {
+   "x": 0,
+   "y": 4896,
+   "w": 1440,
+   "h": 2200,
+   "title": "Statistik-Übersicht (für alle Mitglieder)",
+   "page": "mitglied",
+   "is_interactive": true
+  }
+ },
+ "order": [
+  "Login.dc.html",
+  "Registrieren.dc.html",
+  "GruppeEroeffnen.dc.html",
+  "EinladungAnnehmen.dc.html",
+  "GruppeWaehlen.dc.html",
+  "GastEvent.dc.html",
+  "Abgemeldet.dc.html",
+  "Fehler403.dc.html",
+  "Fehler404.dc.html",
+  "Impressum.dc.html",
+  "Main.dc.html",
+  "Mehr.dc.html",
+  "Mitteilungen.dc.html",
+  "Profil.dc.html",
+  "Events.dc.html",
+  "Event.dc.html",
+  "EventAnlegen.dc.html",
+  "EventChat.dc.html",
+  "Moments.dc.html",
+  "MomentDetail.dc.html",
+  "Chat.dc.html",
+  "Gruppenchat.dc.html",
+  "Direktnachrichten.dc.html",
+  "Freunde.dc.html",
+  "Kalender.dc.html",
+  "Guthaben.dc.html",
+  "Kaeufe.dc.html",
+  "Bezahlen.dc.html",
+  "BezahlenBestaetigen.dc.html",
+  "Bezahlt.dc.html",
+  "Katalog.dc.html",
+  "Statistik.dc.html",
+  "RundeHandy.dc.html",
+  "Getraenkestatistik.dc.html",
+  "Vorstand.dc.html",
+  "EventVerwalten.dc.html",
+  "EventTeilnehmer.dc.html",
+  "Eventabrechnung.dc.html",
+  "Kasse.dc.html",
+  "KontoBuchen.dc.html",
+  "Kommunikation.dc.html",
+  "MomentKonfig.dc.html",
+  "KatalogFreigabe.dc.html",
+  "GetraenkBearbeiten.dc.html",
+  "Getraenkedatenbank.dc.html",
+  "Getraenkelisten.dc.html",
+  "KioskGeraete.dc.html",
+  "StrichKategorien.dc.html",
+  "Theke.dc.html",
+  "StrichRueckgaengig.dc.html",
+  "RundeAusgeben.dc.html",
+  "KioskStarten.dc.html",
+  "KioskEntsperren.dc.html",
+  "AdminMitglieder.dc.html",
+  "AdminMitgliedBearbeiten.dc.html",
+  "AdminEinladen.dc.html",
+  "Gruppeneinstellungen.dc.html",
+  "Rollen.dc.html",
+  "Plattform.dc.html",
+  "TopBar.dc.html",
+  "TabBar.dc.html",
+  "Sidebar.dc.html",
+  "StatistikUebersicht.dc.html"
+ ],
+ "notes": {
+  "einstieg0": {
+   "x": 0,
+   "y": -260,
+   "text": "Anmelden & Registrieren",
+   "kind": "title1",
+   "page": "einstieg",
+   "maxW": 2270
+  },
+  "einstieg1": {
+   "x": 0,
+   "y": 964,
+   "text": "Gastzugang",
+   "kind": "title1",
+   "page": "einstieg",
+   "maxW": 1200
+  },
+  "einstieg2": {
+   "x": 0,
+   "y": 2188,
+   "text": "Status & Rechtliches",
+   "kind": "title1",
+   "page": "einstieg",
+   "maxW": 1800
+  },
+  "mitglied0": {
+   "x": 0,
+   "y": -260,
+   "text": "Start & Navigation",
+   "kind": "title1",
+   "page": "mitglied",
+   "maxW": 1800
+  },
+  "mitglied1": {
+   "x": 0,
+   "y": 964,
+   "text": "Events & Moments",
+   "kind": "title1",
+   "page": "mitglied",
+   "maxW": 2740
+  },
+  "mitglied2": {
+   "x": 0,
+   "y": 2188,
+   "text": "Kommunikation & Persönliches",
+   "kind": "title1",
+   "page": "mitglied",
+   "maxW": 2270
+  },
+  "mitglied3": {
+   "x": 0,
+   "y": 3412,
+   "text": "Guthaben, Bezahlen & Getränke",
+   "kind": "title1",
+   "page": "mitglied",
+   "maxW": 4150
+  },
+  "vorstand0": {
+   "x": 0,
+   "y": -260,
+   "text": "Vorstandsbereich & Events",
+   "kind": "title1",
+   "page": "vorstand",
+   "maxW": 1800
+  },
+  "vorstand1": {
+   "x": 0,
+   "y": 964,
+   "text": "Kasse",
+   "kind": "title1",
+   "page": "vorstand",
+   "maxW": 860
+  },
+  "vorstand2": {
+   "x": 0,
+   "y": 2188,
+   "text": "Kommunikation & Moments",
+   "kind": "title1",
+   "page": "vorstand",
+   "maxW": 1200
+  },
+  "vorstand3": {
+   "x": 0,
+   "y": 3412,
+   "text": "Getränke, Strich-Kategorien & Geräte",
+   "kind": "title1",
+   "page": "vorstand",
+   "maxW": 2740
+  },
+  "theke0": {
+   "x": 0,
+   "y": -260,
+   "text": "Strichliste nach Kategorien",
+   "kind": "title1",
+   "page": "theke",
+   "maxW": 3700
+  },
+  "theke1": {
+   "x": 0,
+   "y": 940,
+   "text": "Kiosk-Modus",
+   "kind": "title1",
+   "page": "theke",
+   "maxW": 2440
+  },
+  "admin0": {
+   "x": 0,
+   "y": -260,
+   "text": "Mitglieder",
+   "kind": "title1",
+   "page": "admin",
+   "maxW": 4480
+  },
+  "admin1": {
+   "x": 0,
+   "y": 1080,
+   "text": "Gruppe & Plattform",
+   "kind": "title1",
+   "page": "admin",
+   "maxW": 4480
+  },
+  "bausteine0": {
+   "x": 0,
+   "y": -260,
+   "text": "Bausteine",
+   "kind": "title1",
+   "page": "bausteine",
+   "maxW": 1200
+  },
+  "mitglied4": {
+   "x": 0,
+   "y": 4636,
+   "text": "Statistiken · für alle Mitglieder sichtbar",
+   "kind": "title1",
+   "page": "mitglied",
+   "maxW": 1440
+  }
+ },
+ "designSystems": [
+  {
+   "title": "Vereint",
+   "namespace": "vereint",
+   "artifact": "https://claude.ai/artifact/M4Neod4bn1KBp4vTx8EcVw",
+   "version": null,
+   "copiedAt": "2026-11-06T09:00:00Z"
+  }
+ ]
+}

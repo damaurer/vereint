@@ -5,16 +5,19 @@ import de.maurer.baseservice.domain.EventEntity
 import de.maurer.baseservice.domain.EventFoodEntity
 import de.maurer.baseservice.domain.EventStatus
 import de.maurer.baseservice.domain.FoodCatalogEntity
-import de.maurer.baseservice.domain.PurchaseSource
+import de.maurer.baseservice.domain.LedgerEntryType
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.EventDrinkDto
 import de.maurer.baseservice.dto.EventFoodDto
 import de.maurer.baseservice.dto.LedgerEntryDto
+import de.maurer.baseservice.dto.TabletBoardColumnDto
+import de.maurer.baseservice.dto.TabletBoardDrinkDto
+import de.maurer.baseservice.dto.TabletBoardDto
+import de.maurer.baseservice.dto.TabletBoardMemberDto
 import de.maurer.baseservice.dto.TabletEventDto
 import de.maurer.baseservice.dto.TabletItemsDto
 import de.maurer.baseservice.dto.TabletMemberDto
 import de.maurer.baseservice.dto.TabletPurchaseRequest
-import de.maurer.baseservice.dto.TabletRevenuePurchaseRequest
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.EventNotActiveException
@@ -25,6 +28,8 @@ import de.maurer.baseservice.repository.EventDrinkRepository
 import de.maurer.baseservice.repository.EventFoodRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
+import de.maurer.baseservice.repository.LedgerEntryRepository
+import de.maurer.baseservice.repository.TallyCategoryRepository
 import de.maurer.baseservice.repository.UserRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
@@ -54,7 +59,10 @@ class TabletRecorderService(
     private val access: StammtischAccess,
     private val members: StammtischMembers,
     private val userService: UserService,
-    private val ledgerService: LedgerService
+    private val ledgerService: LedgerService,
+    private val ledgerEntryRepository: LedgerEntryRepository,
+    private val tallyCategoryRepository: TallyCategoryRepository,
+    private val roundService: RoundService
 ) {
 
     @Transactional(readOnly = true)
@@ -80,6 +88,61 @@ class TabletRecorderService(
         return members.values
             .sortedBy { it.displayName.lowercase() }
             .map { TabletMemberDto(memberId = it.id.toString(), displayName = it.displayName) }
+    }
+
+    /**
+     * Strichliste nach Kategorien (Issue #80): eine Spalte je Strich-Kategorie
+     * der Gruppe mit den dazu buchbaren Eventgetränken, eine Zeile je
+     * Eventmitglied mit den Strichen des Abends, dazu Striche und Umsatz des
+     * Events. Zurückgenommene Käufe zählen nicht.
+     */
+    @Transactional(readOnly = true)
+    fun board(eventId: UUID, principal: UserPrincipal): TabletBoardDto {
+        requireTabletRecorder(principal)
+        requireActiveEvent(eventId)
+        val tabletDrinks = eventDrinkRepository.findByEventId(eventId)
+            .filter { it.tabletEnabled }
+            .sortedBy { it.drink?.name?.lowercase().orEmpty() }
+        val columns = tallyCategoryRepository.findByArchivedFalseOrderBySortOrderAscNameAsc().map { category ->
+            TabletBoardColumnDto(
+                categoryId = category.id.toString(),
+                name = category.name,
+                price = category.price.setScale(2),
+                currency = category.currency,
+                drinks = tabletDrinks
+                    .filter { EventDrinkPricing.activeCategory(it)?.id == category.id }
+                    .map { TabletBoardDrinkDto(eventDrinkId = it.id.toString(), drinkName = it.drink?.name.orEmpty()) }
+            )
+        }
+
+        val entries = ledgerEntryRepository.findByEventId(eventId)
+        val reversed = entries.mapNotNull { it.reversesEntry?.id }.toSet()
+        val purchases = entries.filter { it.entryType == LedgerEntryType.purchase && it.id !in reversed }
+        // Bei Runden zählt der Strich bei der Person, die getrunken hat.
+        val byMember = purchases.groupBy { (it.beneficiary ?: it.member)?.id }
+        val (rounds, funding) = roundService.boardView(eventId)
+
+        val members = listEventMembers(eventId, principal).map { member ->
+            val own = byMember[UUID.fromString(member.memberId)].orEmpty()
+            val counts = own.mapNotNull { it.tallyCategory?.id?.toString() }
+                .groupingBy { it }
+                .eachCount()
+            TabletBoardMemberDto(
+                memberId = member.memberId,
+                displayName = member.displayName,
+                counts = counts,
+                otherCount = own.count { it.tallyCategory == null },
+                fundedBy = funding[member.memberId]
+            )
+        }
+        return TabletBoardDto(
+            columns = columns,
+            members = members,
+            tallyCount = purchases.size,
+            revenue = purchases.fold(BigDecimal.ZERO) { acc, entry -> acc + entry.amount }.setScale(2),
+            currency = purchases.firstOrNull()?.currency ?: columns.firstOrNull()?.currency ?: DEFAULT_CURRENCY,
+            rounds = rounds
+        )
     }
 
     @Transactional(readOnly = true)
@@ -157,13 +220,21 @@ class TabletRecorderService(
                     ErrorCode.NOT_FOUND
                 )
 
+            // Wiederholter Strich (Offline-Warteschlange): nicht erneut auf eine Runde prüfen.
+            val replay = ledgerService.findByIdempotencyKey(idempotencyKey)
+            if (replay != null && replay.entryType == LedgerEntryType.purchase &&
+                replay.event?.id == event.id && (replay.beneficiary ?: replay.member)?.id == buyer.id
+            ) {
+                return ledgerService.describe(replay)
+            }
             ledgerService.recordTabletPurchase(
                 event = event,
                 member = buyer,
                 drink = drink,
                 eventDrink = eventDrink,
                 actor = actor,
-                idempotencyKey = idempotencyKey
+                idempotencyKey = idempotencyKey,
+                round = if (replay == null) roundService.claimFor(event, buyer, eventDrink) else null
             )
         } else {
             val eventFoodId = Identifiers.parseUuid(request.eventFoodId, "eventFoodId")
@@ -201,108 +272,6 @@ class TabletRecorderService(
         return ledgerService.undoTabletPurchase(eventId, entryId, actor, idempotencyKey)
     }
 
-    /**
-     * Erfasst eine Runde (`source = round`) als Revenue-Only-Buchung für alle
-     * angegebenen Eventmitglieder.
-     */
-    fun recordRound(
-        eventId: UUID,
-        request: TabletRevenuePurchaseRequest,
-        idempotencyKey: String?,
-        principal: UserPrincipal
-    ): List<LedgerEntryDto> = recordRevenuePurchase(eventId, request, idempotencyKey, principal, PurchaseSource.round)
-
-    /**
-     * Erfasst eine Abendaktion (`source = evening`) als Revenue-Only-Buchung für alle
-     * angegebenen Eventmitglieder.
-     */
-    fun recordEvening(
-        eventId: UUID,
-        request: TabletRevenuePurchaseRequest,
-        idempotencyKey: String?,
-        principal: UserPrincipal
-    ): List<LedgerEntryDto> = recordRevenuePurchase(eventId, request, idempotencyKey, principal, PurchaseSource.evening)
-
-    private fun recordRevenuePurchase(
-        eventId: UUID,
-        request: TabletRevenuePurchaseRequest,
-        idempotencyKey: String?,
-        principal: UserPrincipal,
-        source: PurchaseSource
-    ): List<LedgerEntryDto> {
-        val actor = requireTabletRecorder(principal)
-        val event = requireActiveEvent(eventId)
-        val baseKey = requireBatchIdempotencyKey(idempotencyKey)
-
-        val hasDrink = !request.eventDrinkId.isNullOrBlank()
-        val hasFood = !request.eventFoodId.isNullOrBlank()
-
-        if (hasDrink && hasFood) {
-            throw InvalidRequestException(
-                Msg("error.tablet.drinkOrFoodExclusive"),
-                ErrorCode.INVALID_REQUEST
-            )
-        }
-        if (!hasDrink && !hasFood) {
-            throw InvalidRequestException(
-                Msg("error.tablet.drinkOrFoodRequired"),
-                ErrorCode.INVALID_REQUEST
-            )
-        }
-
-        val rawIds = request.memberIds.orEmpty()
-        if (rawIds.isEmpty()) {
-            throw InvalidRequestException(Msg("error.field.blank", "memberIds"), ErrorCode.INVALID_REQUEST)
-        }
-        val memberIds = rawIds.map { Identifiers.parseUuid(it, "memberIds") }.distinct()
-
-        return if (hasDrink) {
-            val eventDrinkId = Identifiers.parseUuid(request.eventDrinkId, "eventDrinkId")
-            val eventDrink = requireEventDrink(eventId, eventDrinkId)
-            val drink = eventDrink.drink
-                ?: throw ResourceNotFoundException(
-                    Msg("error.eventDrink.noDrink", eventDrinkId),
-                    ErrorCode.NOT_FOUND
-                )
-
-            memberIds.map { memberId ->
-                val buyer = requireEventMember(event, memberId)
-                val derivedKey = "$baseKey#${source.name}#$memberId"
-                ledgerService.recordEventRevenuePurchase(
-                    event = event,
-                    member = buyer,
-                    drink = drink,
-                    eventDrink = eventDrink,
-                    actor = actor,
-                    source = source,
-                    idempotencyKey = derivedKey
-                )
-            }
-        } else {
-            val eventFoodId = Identifiers.parseUuid(request.eventFoodId, "eventFoodId")
-            val eventFood = requireEventFood(eventId, eventFoodId)
-            val food = eventFood.food
-                ?: throw ResourceNotFoundException(
-                    Msg("error.eventFood.noFood", eventFoodId),
-                    ErrorCode.NOT_FOUND
-                )
-
-            memberIds.map { memberId ->
-                val buyer = requireEventMember(event, memberId)
-                val derivedKey = "$baseKey#${source.name}#$memberId"
-                ledgerService.recordEventRevenueFoodPurchase(
-                    event = event,
-                    member = buyer,
-                    food = food,
-                    eventFood = eventFood,
-                    actor = actor,
-                    source = source,
-                    idempotencyKey = derivedKey
-                )
-            }
-        }
-    }
-
     private fun requireTabletRecorder(principal: UserPrincipal): UserEntity {
         val actor = userService.getOrCreateUser(principal)
         if (!access.has(principal, actor, Permission.PURCHASE_TABLET)) {
@@ -312,23 +281,6 @@ class TabletRecorderService(
             )
         }
         return actor
-    }
-
-    private fun requireBatchIdempotencyKey(value: String?): String {
-        val key = value?.trim()
-        if (key.isNullOrBlank()) {
-            throw InvalidRequestException(
-                Msg("error.idempotency.keyRequired"),
-                ErrorCode.IDEMPOTENCY_KEY_REQUIRED
-            )
-        }
-        if (key.length > MAX_BATCH_IDEMPOTENCY_KEY_LENGTH) {
-            throw InvalidRequestException(
-                Msg("error.idempotency.batchKeyTooLong", MAX_BATCH_IDEMPOTENCY_KEY_LENGTH),
-                ErrorCode.INVALID_REQUEST
-            )
-        }
-        return key
     }
 
     private fun requireActiveEvent(eventId: UUID): EventEntity {
@@ -425,7 +377,10 @@ class TabletRecorderService(
             catalogVersion = eventDrink.catalogVersion,
             imageSnapshot = eventDrink.imageSnapshot,
             createdAt = eventDrink.createdAt,
-            updatedAt = eventDrink.updatedAt
+            updatedAt = eventDrink.updatedAt,
+            effectivePrice = EventDrinkPricing.resolve(eventDrink).unitPrice,
+            tallyCategoryId = EventDrinkPricing.activeCategory(eventDrink)?.id?.toString(),
+            tallyCategoryName = EventDrinkPricing.activeCategory(eventDrink)?.name
         )
     }
 
@@ -454,6 +409,6 @@ class TabletRecorderService(
     }
 
     companion object {
-        const val MAX_BATCH_IDEMPOTENCY_KEY_LENGTH = 80
+        const val DEFAULT_CURRENCY = "EUR"
     }
 }

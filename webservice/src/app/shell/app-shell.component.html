@@ -93,7 +93,11 @@
 
     <div class="shell-main">
       <header class="shell-topbar">
-        @if (viewport() === 'mobile' && !kiosk()) {
+        @if (viewport() === 'mobile' && !kiosk() && backLink(); as back) {
+          <a class="shell-topbar-back" [routerLink]="back" [attr.aria-label]="'shell.back' | t">
+            <vereint-icon name="arrow-left" />
+          </a>
+        } @else if (viewport() === 'mobile' && !kiosk()) {
           <a
             class="shell-topbar-brand"
             routerLink="/dashboard"
@@ -112,6 +116,7 @@
         @if (!kiosk()) {
           <div class="shell-topbar-actions">
             @if (stammtischName(); as name) {
+              @if (!(viewport() === 'mobile' && backLink())) {
               @if (canSwitchStammtisch()) {
                 <a
                   class="shell-stammtisch"
@@ -131,6 +136,7 @@
                   }
                   <span class="shell-stammtisch-name">{{ name }}</span>
                 </span>
+              }
               }
             }
             <a

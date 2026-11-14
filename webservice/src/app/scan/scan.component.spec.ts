@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
-import type { LedgerEntry, PurchasePreview } from '../api/api.types';
+import type { ForeignDrink, LedgerEntry, PurchasePreview } from '../api/api.types';
 import { MemberApiService } from '../member/member-api.service';
 import { BARCODE_SCANNER, BarcodeScanner } from './barcode-scanner';
 import { ScanComponent } from './scan.component';
@@ -18,6 +18,24 @@ const preview: PurchasePreview = {
   balanceCurrency: 'EUR',
 };
 
+/** Ohne laufendes Event: Wahl zwischen Guthabenkauf und Fremdgetränk. */
+const choicePreview: PurchasePreview = {
+  ...preview,
+  options: [],
+  creditBalance: '10.00',
+  creditPurchase: { unitPrice: '2.20', currency: 'EUR' },
+  foreignDrink: true,
+};
+
+const foreignDrink: ForeignDrink = {
+  id: 'r-1',
+  drinkName: 'Helles',
+  drinkId: 'g-1',
+  libraryDrinkId: null,
+  occurredAt: '2026-10-14T18:00:00Z',
+  removableUntil: '2026-10-14T18:10:00Z',
+};
+
 const entry = {
   id: 'l-1',
   amount: '2.50',
@@ -30,6 +48,9 @@ describe('ScanComponent', () => {
     previewPurchase: ReturnType<typeof vi.fn>;
     purchaseByBarcode: ReturnType<typeof vi.fn>;
     undoPurchase: ReturnType<typeof vi.fn>;
+    purchaseWithCredit: ReturnType<typeof vi.fn>;
+    recordForeignDrink: ReturnType<typeof vi.fn>;
+    removeForeignDrink: ReturnType<typeof vi.fn>;
   };
   let scanner: BarcodeScanner & { emit: (code: string) => void; stop: ReturnType<typeof vi.fn> };
 
@@ -71,6 +92,9 @@ describe('ScanComponent', () => {
       previewPurchase: vi.fn(() => of(preview)),
       purchaseByBarcode: vi.fn(() => of(entry)),
       undoPurchase: vi.fn(() => of({ id: 'l-2' } as LedgerEntry)),
+      purchaseWithCredit: vi.fn(() => of({ ...entry, amount: '2.20' })),
+      recordForeignDrink: vi.fn(() => of(foreignDrink)),
+      removeForeignDrink: vi.fn(() => of(undefined)),
     };
     let onCode: (code: string) => void = () => undefined;
     const stop = vi.fn();
@@ -192,5 +216,140 @@ describe('ScanComponent', () => {
     await settle(fixture);
 
     expect(api.previewPurchase).toHaveBeenCalledWith('4006381333931');
+  });
+
+  describe('without a running event', () => {
+    const radios = (fixture: { nativeElement: unknown }) =>
+      Array.from(
+        (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>(
+          'input[name=choice]',
+        ),
+      );
+
+    it('offers paying with credit and recording only for statistics', async () => {
+      api.previewPurchase.mockReturnValue(of(choicePreview));
+      const fixture = await create();
+      scanner.emit('4006381333931');
+      await settle(fixture);
+
+      expect(radios(fixture).map((r) => r.value)).toEqual(['credit', 'foreign']);
+      expect(radios(fixture)[0].checked).toBe(true);
+      expect(text(fixture)).toContain('Mit Guthaben bezahlen');
+      expect(text(fixture)).toContain('Nur in die Statistik');
+      expect(text(fixture)).toContain('In die Statistik aufnehmen');
+      expect(api.purchaseWithCredit).not.toHaveBeenCalled();
+      expect(api.recordForeignDrink).not.toHaveBeenCalled();
+    });
+
+    it('pays with credit at the catalogue price and can undo it', async () => {
+      api.previewPurchase.mockReturnValue(of(choicePreview));
+      const fixture = await create();
+      scanner.emit('4006381333931');
+      await settle(fixture);
+
+      click(fixture, '2,20');
+      await settle(fixture);
+
+      expect(api.purchaseWithCredit).toHaveBeenCalledWith('4006381333931', true, expect.any(String));
+      expect(api.purchaseByBarcode).not.toHaveBeenCalled();
+      expect(text(fixture)).toContain('Bezahlt');
+      expect(text(fixture)).not.toContain('in keiner Statistik');
+
+      click(fixture, 'Rückgängig');
+      await settle(fixture);
+      expect(api.undoPurchase).toHaveBeenCalledWith('l-1', expect.any(String));
+      expect(text(fixture)).toContain('Kauf zurückgenommen');
+    });
+
+    it('pays with credit without a statistics entry when unticked', async () => {
+      api.previewPurchase.mockReturnValue(of(choicePreview));
+      const fixture = await create();
+      scanner.emit('4006381333931');
+      await settle(fixture);
+
+      const box = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+        'input[name=recordStatistics]',
+      )!;
+      expect(box.checked).toBe(true);
+      box.click();
+      await settle(fixture);
+      click(fixture, '2,20');
+      await settle(fixture);
+
+      expect(api.purchaseWithCredit).toHaveBeenCalledWith('4006381333931', false, expect.any(String));
+      expect(text(fixture)).toContain('in keiner Statistik');
+    });
+
+    it('records a foreign drink without charging and can remove it', async () => {
+      api.previewPurchase.mockReturnValue(of(choicePreview));
+      const fixture = await create();
+      scanner.emit('4006381333931');
+      await settle(fixture);
+
+      radios(fixture)[1].click();
+      await settle(fixture);
+      expect(text(fixture)).not.toContain('Guthaben danach');
+      click(fixture, 'In die Statistik aufnehmen');
+      await settle(fixture);
+
+      expect(api.recordForeignDrink).toHaveBeenCalledWith('4006381333931', expect.any(String));
+      expect(api.purchaseWithCredit).not.toHaveBeenCalled();
+      expect(text(fixture)).toContain('Erfasst');
+      expect(text(fixture)).toContain('Abgebucht wurde nichts');
+
+      click(fixture, 'Entfernen');
+      await settle(fixture);
+      expect(api.removeForeignDrink).toHaveBeenCalledWith('r-1');
+      expect(text(fixture)).toContain('Getränk entfernt');
+    });
+
+    it('does not offer the foreign drink when statistics are switched off', async () => {
+      api.previewPurchase.mockReturnValue(of({ ...choicePreview, foreignDrink: false }));
+      const fixture = await create();
+      scanner.emit('4006381333931');
+      await settle(fixture);
+
+      expect(radios(fixture).map((r) => r.value)).toEqual(['credit']);
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelector('input[name=recordStatistics]'),
+      ).toBeNull();
+      expect(text(fixture)).toContain('Statistik ist ausgeschaltet');
+      click(fixture, '2,20');
+      await settle(fixture);
+      expect(api.purchaseWithCredit).toHaveBeenCalledWith('4006381333931', true, expect.any(String));
+    });
+
+    it('offers only the foreign drink for a drink without a catalogue price', async () => {
+      api.previewPurchase.mockReturnValue(
+        of({ ...choicePreview, drinkId: null, creditPurchase: null, libraryDrinkId: 'lib-1' }),
+      );
+      const fixture = await create();
+      scanner.emit('4006381333931');
+      await settle(fixture);
+
+      expect(radios(fixture).map((r) => r.value)).toEqual(['foreign']);
+      expect(text(fixture)).toContain('keinen Preis');
+      click(fixture, 'In die Statistik aufnehmen');
+      await settle(fixture);
+      expect(api.recordForeignDrink).toHaveBeenCalled();
+    });
+
+    it('shows the server message when recording fails and keeps the key for a retry', async () => {
+      api.previewPurchase.mockReturnValue(of({ ...choicePreview, creditPurchase: null }));
+      api.recordForeignDrink.mockReturnValueOnce(
+        throwError(() => new ApiError(409, 'statistics_disabled', 'Die Statistik ist ausgeschaltet')),
+      );
+      const fixture = await create();
+      scanner.emit('4006381333931');
+      await settle(fixture);
+
+      click(fixture, 'In die Statistik aufnehmen');
+      await settle(fixture);
+      expect(text(fixture)).toContain('Die Statistik ist ausgeschaltet');
+      click(fixture, 'In die Statistik aufnehmen');
+      await settle(fixture);
+      expect(api.recordForeignDrink.mock.calls[0][1]).toBe(api.recordForeignDrink.mock.calls[1][1]);
+      expect(text(fixture)).toContain('Erfasst');
+    });
   });
 });

@@ -28,7 +28,7 @@ import java.util.UUID
  * mit optionalem Vorschlagspreis bündeln. Sie können mehrfach auf eigene Events
  * angewendet werden ([EventDrinkService.assignSublist]); dabei werden die
  * Einträge in die Eventauswahl kopiert, spätere Vorlagenänderungen wirken nicht
- * rückwirkend (siehe `docs/fachkonzept.md`).
+ * rückwirkend (siehe `docs/domains/drink-catalog-and-sublists.md`).
  *
  * Alle Berechtigungen werden serverseitig geprüft; jeder Aufruf folgt dem
  * Prinzip `deny by default`. Eine Sublist verwaltet ausschließlich ihr Ersteller

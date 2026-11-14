@@ -291,6 +291,14 @@ describe('auth.routes', () => {
       expect(data.code).toBe('oidc_session_expired');
     });
 
+    it('answers 401, not 500, for cookies with invalid percent-encoding', async () => {
+      const response = await originalFetch(`${baseUrl}/api/auth/me`, {
+        headers: { Cookie: 'vereint_session=%E0; vereint.stammtisch=%E0' },
+      });
+      expect(response.status).toBe(401);
+      expect(((await response.json()) as { code: string }).code).toBe('oidc_session_expired');
+    });
+
     it('returns only subject, displayName, roles, boardRole, permissions and the Stammtisch fields', async () => {
       const tokens = await signTokenPair({
         subject: 'u-auth-test',

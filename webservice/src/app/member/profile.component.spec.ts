@@ -56,10 +56,7 @@ describe('ProfileComponent', () => {
 
     const displayName = root.querySelector<HTMLInputElement>('#displayName');
     expect(displayName?.value).toBe('Alice');
-    expect(html(fixture)).toContain('member');
-    // Roles are rendered through the shared ui/ role-chip primitive.
-    expect(root.querySelector('vereint-role-chip')).toBeTruthy();
-    expect(root.querySelector('vereint-hero-greeting')).toBeTruthy();
+    expect(html(fixture)).toContain('Mitglied');
   });
 
   it('switches the theme from the profile', async () => {

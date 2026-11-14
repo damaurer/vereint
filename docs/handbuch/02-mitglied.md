@@ -2,6 +2,8 @@
 
 Für alle Mitglieder einer Gruppe. Anmeldung, Navigation und Profil stehen in den [Ersten Schritten](01-erste-schritte.md).
 
+Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#mitglied).
+
 ## Auf einen Blick
 
 | Ich möchte … | So geht's |
@@ -9,15 +11,17 @@ Für alle Mitglieder einer Gruppe. Anmeldung, Navigation und Profil stehen in de
 | zu einem Termin zusagen | **Events** → **Zusagen** bei der Einladung, oder direkt in der Push-Nachricht |
 | selbst ein Event planen | **Events** → **Event anlegen** |
 | mit allen in der Gruppe schreiben | **Chat** → **Gruppenchat** |
-| jemandem persönlich schreiben | **Mehr → Direktnachrichten** → **Neue Nachricht** |
+| jemandem persönlich schreiben | **Mehr → Direktnachrichten** → **+** |
 | alle Termine aus allen meinen Gruppen sehen | **Mehr → Kalender** |
 | jemanden als Freund hinzufügen | **Mehr → Freunde** → **Anfragen** |
 | sehen, wer am meisten Striche hat | **Mehr → Statistik** |
+| sehen, wer was getrunken hat, mit Litern und Kalorien | **Mehr → Statistik** → **Getränkestatistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
-| ein Getränk selbst bezahlen | **Mehr → Bezahlen** (oder **Getränk bezahlen** auf der Startseite) → Strichcode scannen |
+| eine Runde ausgeben | Im laufenden Event **Runde ausgeben** → Personen anhaken → **Runde für … ausgeben** |
+| ein Getränk selbst bezahlen oder nur für die Statistik erfassen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
-| beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments ansehen** |
+| beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments** |
 | ein neues Getränk vorschlagen | **Mehr → Getränkekatalog** → **Getränk vorschlagen** oder **Barcode scannen** |
 | die Gruppe wechseln | Gruppenname oben rechts antippen, oder **Mehr → Gruppeneinstellungen** → **Gruppe wechseln** |
 | eine Gruppe verlassen | **Mehr → Gruppeneinstellungen** → **Gruppe verlassen** |
@@ -31,7 +35,7 @@ Wirst du zu einem Event eingeladen, bekommst du eine Mitteilung, mit eingeschalt
 Antworten kannst du an drei Stellen:
 
 - direkt in der **Push-Nachricht** mit **Zusagen** oder **Absagen**,
-- unter **Events**: Bei offenen Einladungen steht „Offen“ mit **Zusagen** und **Absagen**,
+- unter **Events**: Bei offenen Einladungen steht „Offen“ mit **Zusagen** und **Absagen**. Oben wechselst du zwischen **Kommend** und **Vergangen**,
 - auf der Eventseite mit **Zusagen**, **Vielleicht** oder **Absagen**.
 
 Deine Antwort kannst du bis zum Event jederzeit ändern. Die Karten zeigen außerdem den Stand des Events:
@@ -46,10 +50,10 @@ Deine Antwort kannst du bis zum Event jederzeit ändern. Die Karten zeigen auße
 
 Tippe auf ein Event, um die Details zu sehen:
 
-- Datum, Ende, Ort und Gastgeber. **Route öffnen** startet die Navigation zum Treffpunkt.
-- **Deine Antwort**: Deine aktuelle Wahl ist grün hinterlegt.
-- **Anwesenheit**: wer eingeladen ist und wie viele zugesagt, vielleicht gesagt, abgesagt oder noch nicht geantwortet haben.
-- **Event-Chat** und **Moments & Rituale** weiter unten.
+- Datum, Uhrzeit, Ort und wer das Event organisiert. **Route** startet die Navigation zum Treffpunkt.
+- Darunter führen **Event-Chat** und **Moments** (mit der Zahl laufender Moments) weiter. Läuft das Event, steht dort auch **Runde ausgeben** (siehe [Eine Runde ausgeben](#eine-runde-ausgeben)); Gastgeber und Vorstand sehen zusätzlich **Verwalten**.
+- **Deine Antwort**: Deine aktuelle Wahl ist hervorgehoben.
+- **Anwesenheit**: wie viele zugesagt, vielleicht gesagt, abgesagt oder noch nicht geantwortet haben, darunter die Eingeladenen nach ihrer Antwort gruppiert.
 
 Auf der **Startseite** steht außerdem immer dein nächster Termin.
 
@@ -105,8 +109,8 @@ Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vor
 
 **Direktnachrichten** (über **Mehr** oder oben im Chat) sind Gespräche zu zweit, die nur ihr beide seht. Sie gelten über alle Gruppen: Mit jeder Person gibt es genau ein Gespräch, egal in welcher Gruppe du gerade bist.
 
-- **Neue Nachricht**: Person wählen und losschreiben. Zur Auswahl stehen alle aus deinen Gruppen und deine Freunde. Unter dem Namen siehst du eure gemeinsamen Gruppen.
-- Bestehende Gespräche stehen unter **Konversationen**; mit dem Suchfeld findest du sie schnell.
+- **+** (neben dem Suchfeld): Person wählen und losschreiben. Zur Auswahl stehen alle aus deinen Gruppen und deine Freunde. Unter dem Namen siehst du eure gemeinsamen Gruppen.
+- Bestehende Gespräche stehen unter **Gespräche**; mit dem Suchfeld findest du sie schnell. **Freunde** oben rechts führt zur Freundesliste.
 - Seid ihr weder befreundet noch in einer gemeinsamen Gruppe, bleibt das Gespräch lesbar, neue Nachrichten gehen aber nicht mehr.
 - Mit eingeschaltetem Push bekommst du neue Direktnachrichten aufs Handy, egal welche Gruppe gerade gewählt ist. Ein Tipp darauf öffnet das Gespräch.
 
@@ -148,7 +152,7 @@ Unter **Mehr → Freunde** führst du deine Freundesliste. Sie gilt über alle G
 
 Vereint führt für dich ein Guthabenkonto, die „Bierkasse“. Alles, was an der Theke auf deinen Namen angeschrieben wird, wird davon abgezogen.
 
-- Oben steht der **aktuelle Stand**.
+- Oben steht der **aktuelle Stand**. **Bezahlen** öffnet direkt den Strichcode-Scanner.
 - In der **Historie** siehst du jede Buchung. Mit **Alle**, **Aufladungen** und **Ausgaben** filterst du die Liste.
 
 **Aufladen**: Gib das Geld beim Kassenwart ab. Er bucht den Betrag ein, danach erscheint er hier als „Aufladung“. Selbst aufladen kannst du nicht.
@@ -159,7 +163,10 @@ Ein Guthaben kann auch ins Minus gehen. Dann bitte zeitnah beim Kassenwart ausgl
 
 ## Getränk selbst bezahlen
 
-Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst mit deinem Guthaben. Das geht während eines laufenden Events, zu dem du gehörst.
+Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst mit deinem Guthaben. Was nach dem Scannen passiert, hängt davon ab, ob du gerade bei einem Event bist:
+
+- **Du nimmst an einem laufenden Event mit Selbstbedienung teil**: Das Getränk wird über das Event gebucht, zum Preis des Events. Eine andere Wahl gibt es dann nicht.
+- **Sonst** entscheidest du selbst (siehe [Ohne laufendes Event](#ohne-laufendes-event-bezahlen-oder-nur-erfassen)): mit Guthaben bezahlen oder das Getränk nur in die Statistik aufnehmen.
 
 <img src="bilder/m-bezahlen.png" alt="Getränk scannen" width="300" align="right">
 
@@ -184,7 +191,37 @@ Reicht dein Guthaben nicht, warnt Vereint dich vorher. Du kannst trotzdem bezahl
 
 Vertippt oder das falsche Getränk erwischt? Mit **Rückgängig** nimmst du den Kauf innerhalb von **10 Minuten** selbst zurück. Danach hilft der Kassenwart. **Nächstes Getränk scannen** startet gleich den nächsten Kauf.
 
-Wird ein Strichcode nicht erkannt, ist das Getränk noch nicht im Katalog oder hat noch keinen Strichcode. Sag dem Vorstand Bescheid.
+Wird ein Strichcode nicht erkannt, ist das Getränk weder im Katalog noch in der Getränkedatenbank oder hat noch keinen Strichcode. Sag dem Vorstand Bescheid.
+
+### Ohne laufendes Event: bezahlen oder nur erfassen
+
+Bist du gerade bei keinem laufenden Event mit Selbstbedienung, fragt Vereint nach dem Scannen, was mit dem Getränk passieren soll:
+
+- **Mit Guthaben bezahlen**: Es gilt der Preis aus dem Getränkekatalog der Gruppe. Vereint zeigt Preis und dein Guthaben vorher und nachher; erst **… bezahlen** bucht ab. Der Haken **In die Statistik aufnehmen** ist gesetzt. Nimmst du ihn weg, wird nur bezahlt und der Kauf zählt in keiner Statistik. Hat das Getränk im Katalog keinen Preis, kannst du es nicht bezahlen.
+- **Nur in die Statistik (Fremdgetränk)**: Für ein Getränk, das du woanders gekauft hast. Es wird nichts abgebucht. Mit **In die Statistik aufnehmen** zählt es in deiner Statistik und in der Statistik der Gruppe, die du gerade gewählt hast, aber bei keinem Event. Das geht auch mit Getränken, die nur in der gemeinsamen Getränkedatenbank stehen.
+
+Wie bei einem Kauf kannst du dich 10 Minuten lang korrigieren: **Rückgängig** nimmt einen Kauf zurück, **Entfernen** nimmt ein Fremdgetränk wieder aus der Statistik.
+
+Hast du **Meine Statistik erfassen** ausgeschaltet oder hat die Gruppe ihre Statistik aus, gibt es **Nur in die Statistik** nicht. Bezahlen geht trotzdem; erfasst wird dann nichts.
+
+<br clear="right">
+
+## Eine Runde ausgeben
+
+<img src="screens/runde-handy.png" alt="Runde am eigenen Handy ausgeben" width="300" align="right">
+
+Eine Runde gibst du **an deinem eigenen Handy** aus, bezahlt wird **von deinem Guthaben**. Das geht, solange ein Event läuft, zu dem du gehörst. Öffne das Event und tippe auf **Runde ausgeben**.
+
+1. Oben steht das Event und **Von deinem Guthaben** mit deinem aktuellen Stand.
+2. Wähle **Eine Runde** (jede eingeladene Person bekommt ein Getränk) oder **Ganzen Abend** (alles, bis die Höchstsumme erreicht ist; die Höchstsumme trägst du selbst ein).
+3. **Getränk**: ein bestimmtes Getränk oder **Alle Getränke**. Eine Runde auf ein Getränk gilt auch für die anderen Getränke derselben Spalte der Strichliste, etwa alle Biere.
+4. **Gültig**: **30 Minuten**, **1 Stunde** oder **Bis Event-Ende**.
+5. **Für wen?**: Personen anhaken. Neben dem Namen steht „zugesagt“ oder „vor Ort“ (hatte heute schon einen Strich).
+6. Unten steht, wie viel **höchstens** von deinem Guthaben abgehen kann. **Runde für … ausgeben** startet die Runde.
+
+Abgebucht wird nur, was die Eingeladenen an der Theke wirklich nehmen: Bekommt eine eingeladene Person einen Strich, geht der Betrag von deinem Guthaben ab statt von ihrem. Dein Guthaben darf dabei ins Minus gehen. Die Eingeladenen bekommen eine Mitteilung, und das Thekenterminal zeigt deine Runde an, bis sie aufgebraucht oder abgelaufen ist. Ist jemand in mehreren Runden eingeladen, gilt die zuerst gestartete.
+
+Unter **Deine Runden in diesem Event** siehst du, wie viel schon verbraucht ist und wer eingelöst hat. **Beenden** stoppt eine Runde vorzeitig. In deinem **Guthaben** steht jeder eingelöste Strich als „Runde: Name · Getränk“.
 
 <br clear="right">
 
@@ -219,7 +256,7 @@ Die **Glocke** oben rechts (oder **Mehr → Mitteilungen**) sammelt alles, was d
 
 Ein **Moment** ist eine kurze gemeinsame Aktion während eines Events, zum Beispiel alle stoßen gleichzeitig an. Jemand startet ihn, alle anderen reagieren darauf.
 
-- **Mehr → Moments** zeigt die Moments deiner aktiven Events. Aus einem Event kommst du über **Moments ansehen** direkt hierher.
+- **Mehr → Moments** zeigt die Moments deiner aktiven Events. Aus einem Event kommst du über **Moments** direkt hierher.
 - Eine Karte zeigt Art, Titel, wer ihn gestartet hat, wie lange er noch läuft und wie viele schon reagiert haben.
 - **Neuen Moment starten** beginnt selbst einen Moment: Art wählen (z. B. Anstoßen), Titel und Nachricht eingeben, Dauer festlegen. Welche Arten es gibt, legt der Vorstand fest.
 
@@ -228,6 +265,10 @@ Ein **Moment** ist eine kurze gemeinsame Aktion während eines Events, zum Beisp
 <img src="bilder/m-moment-reagieren.png" alt="Auf einen Moment reagieren" width="300" align="right">
 
 **Reagieren**: Tippe auf **Reagieren** oder unter **Schnell reagieren** direkt auf eine Reaktion wie **Anstoßen**, **Jubel** oder **Daumen hoch**. Mit **+ Status & Text** schreibst du einen eigenen Satz dazu.
+
+<br clear="right">
+
+<img src="bilder/m-moment-medien.png" alt="Timeline eines Moments mit Fotos" width="300" align="right">
 
 **Fotos und Videos teilen**: Beim Starten unter **Fotos & Videos (optional)** oder später im Moment mit **Foto/Video teilen** hängst du bis zu vier Bilder oder Videos an. Videos dürfen höchstens 60 Sekunden lang und 100 MB groß sein (MP4 oder MOV); zu große Videos am besten in 720p aufnehmen. Standort und Gerätedaten werden vor dem Speichern aus den Dateien entfernt. Eigene Bilder und Videos kannst du mit **Entfernen** wieder löschen.
 
@@ -241,9 +282,9 @@ Ist ein Moment vorbei, landet er unter **Archivierte Moments & Rituale**.
 
 <img src="bilder/m-katalog.png" alt="Getränkekatalog" width="300" align="right">
 
-Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen der Gruppe mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, das Suchfeld findet Getränke nach Name oder Kategorie. **Details & Barcodes** zeigt Preis, Beschreibung und die hinterlegten Strichcodes.
+Unter **Mehr → Getränkekatalog** stehen alle Getränke und Speisen der Gruppe mit ihrem Standardpreis. Über die Reiter wechselst du zwischen **Getränkekatalog** und **Speisenkatalog**, das Suchfeld findet Getränke nach Name oder Kategorie. Jede Zeile zeigt Preis und Stand; ein Tipp darauf zeigt Preis, Beschreibung und die hinterlegten Strichcodes.
 
-**Barcode scannen**: Scanne eine Flasche, um zu sehen, ob sie schon im Katalog ist. Kennt Vereint den Strichcode, öffnet sich das Getränk. Steht es in der gemeinsamen Getränkedatenbank, öffnet sich der Vorschlag mit Name, Sorte und Strichcodes schon ausgefüllt, du trägst nur noch den Preis ein. Sonst öffnet sich der leere Vorschlag mit dem Strichcode.
+**Kamera-Knopf** (Barcode scannen): Scanne eine Flasche, um zu sehen, ob sie schon im Katalog ist. Kennt Vereint den Strichcode, öffnet sich das Getränk. Steht es in der gemeinsamen Getränkedatenbank, öffnet sich der Vorschlag mit Name, Sorte und Strichcodes schon ausgefüllt, du trägst nur noch den Preis ein. Sonst öffnet sich der leere Vorschlag mit dem Strichcode.
 
 Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, Kategorie, Preis und Strichcode vor. Vereint warnt dich, wenn es schon ein Getränk mit diesem Namen oder Strichcode gibt. Der Vorstand prüft den Vorschlag und gibt ihn frei; bis dahin steht er als „Vorgeschlagen“ in der Liste.
 
@@ -255,14 +296,34 @@ Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, K
 
 <img src="bilder/m-statistik.png" alt="Statistik" width="300" align="right">
 
-Unter **Mehr → Statistik** siehst du Auswertungen der letzten 90 Tage:
+Unter **Mehr → Statistik** siehst du Auswertungen deiner Gruppe. Alle Mitglieder sehen dieselben Zahlen, mit Namen. Die Statistiken sind Spaß-Fakten, keine Gesundheitsangabe, und bleiben in der Gruppe (siehe AGB, Abschnitt „Statistiken“).
 
-- **Rangliste**: Striche in der ganzen Gruppe, deine eigenen Striche und dein Platz.
-- **Zusagequote**: wie viele Einladungen mit Zusage beantwortet wurden.
-- **Umsatz 30 Tage** mit dem Verlauf der letzten acht Wochen.
-- **Beliebteste Artikel** und **Events mit den meisten Strichen**.
+Oben wählst du den **Zeitraum**: **30 Tage**, **90 Tage** oder **Jahr** (das laufende Kalenderjahr ab 1. Januar). Er bleibt erhalten, wenn du zwischen den Statistikseiten wechselst.
+
+- **Gruppe**, **Du** und **Dein Platz**: Striche der ganzen Gruppe, deine eigenen und dein Platz in der Rangliste.
+- **Rangliste** mit Balken; dein Eintrag ist hervorgehoben.
+- **Zusagequote**: wie viele Einladungen mit „Zusagen“ beantwortet wurden.
+
+**Getränkestatistik: wer, was, wie viel, kcal** zeigt Getränke, Liter und Kalorien der Gruppe und den Durchschnitt je Event, Tag, Woche und Monat. Darunter wechselst du zwischen **Nach Mitglied** und **Nach Getränk** und sortierst **Nach Anzahl** oder **Nach Kalorien**. Ein Tipp auf ein Mitglied klappt seine Getränke mit Menge und Kalorien auf. Liter und Kalorien kommen aus den Angaben am Getränk im Katalog; Getränke ohne Angabe zählen dort nicht mit, die Seite nennt ihre Zahl.
+
+**Alle Statistiken im Überblick** fasst alles auf einer Seite zusammen, am besten am Rechner: Mitglieder, Events, Zusagen je Event und je Mitglied (mit **Da gewesen**: Events mit mindestens einem Strich oder Kauf), Getränke je Woche, nach Wochentag und Uhrzeit, **Wer trinkt was?** nach Bier, Alkoholfrei, Schnaps, Wein & Sekt, die beliebtesten Getränke, Rundengeber, Moments, Chat und Rekorde. Den **Umsatz** sehen dort nur Vorstand und Kasse.
+
+**Events der Gruppe** vergleicht alle Events der Gruppe im Zeitraum: Antworten als Balken (Zugesagt, Vielleicht, Abgesagt, Keine Antwort), Teilnehmende, Striche, Moments und Chat. Ein Tipp auf ein Event öffnet seine **Event-Statistik**; die erreichst du auch auf der Eventseite über **Statistik**. **Funktionen** zeigt je Funktion, wie oft sie benutzt und wie darauf geantwortet wurde, zum Beispiel Events und Zusagen, Moments und Reaktionen, Einladungslinks und Beitritte.
 
 <br clear="right">
+
+### Meine Statistik
+
+Unter **Mehr → Meine Statistik** siehst du nur für dich, was du ausgelöst hast, über alle deine Gruppen: Striche, Zusagen, Teilnahmen, Moments, Chatnachrichten und mehr, aufgeschlüsselt nach Funktion und nach Gruppe. **Events übergreifend** vergleicht alle Events deiner Gruppen, die du sehen darfst, mit Summen, Durchschnitten und deinen eigenen Werten. Namen anderer Personen stehen dort nicht.
+
+### Statistik ausschalten oder löschen
+
+In **Mein Konto** steht der Abschnitt **Statistik**:
+
+- **Meine Statistik erfassen**: Schaltest du ihn aus, wird über dich in keiner Gruppe und keinem Event mehr etwas erfasst. Das gilt auch, wenn die Gruppe ihre Statistik an hat. Ausschalten löscht nichts.
+- **Meine erfassten Statistikdaten löschen**: löscht nach einer Rückfrage alles, was über dich erfasst wurde, in allen Gruppen. Deine Buchungen und dein Guthaben bleiben. Das Löschen steht im Protokoll der Gruppe.
+
+Direktnachrichten werden nie erfasst. Ein storniertes Getränk verschwindet wieder aus der Statistik. Fremdgetränke (siehe [Ohne laufendes Event](#ohne-laufendes-event-bezahlen-oder-nur-erfassen)) zählen in deiner Statistik und in der Gruppenstatistik, aber in keiner Event-Statistik.
 
 ## Eine Gruppe verlassen
 

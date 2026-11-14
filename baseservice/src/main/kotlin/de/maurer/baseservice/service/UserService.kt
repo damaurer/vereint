@@ -529,7 +529,9 @@ class UserService(
             roles = roles,
             permissions = access.permissionsForRoles(roles) + custom,
             createdAt = user.createdAt,
-            updatedAt = user.updatedAt
+            updatedAt = user.updatedAt,
+            termsVersion = user.termsVersion,
+            statisticsEnabled = user.statisticsEnabled
         )
     }
 

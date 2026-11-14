@@ -67,6 +67,9 @@ Die Klasse `ErrorCode.kt` definiert alle stabilen Fehlerkonstanten im System:
 | `ledger_already_corrected` | `409 Conflict` | Buchungseintrag wurde bereits storniert/korrigiert. |
 | `self_service_disabled` | `403 Forbidden` | Self-Service für diesen Artikel oder diese Veranstaltung deaktiviert. |
 | `drink_not_in_event`| `400 Bad Request` | Getränk ist nicht im Sortiment der angegebenen Veranstaltung. |
+| `credit_purchase_at_event` | `409 Conflict` | Guthabenkauf ohne Event oder Fremdgetränk während der Teilnahme an einem laufenden Event mit Selbstbedienung. |
+| `no_catalog_price` | `404 Not Found` | Getränk hat im Katalog der Gruppe keinen Preis (Guthabenkauf ohne Event). |
+| `statistics_disabled` | `409 Conflict` | Statistik für Person oder Gruppe ausgeschaltet; kein Fremdgetränk. |
 | `invitation_used_up` | `410 Gone` | Einladungslink ist ausgeschöpft. |
 | `email_already_registered` | `409 Conflict` | Für die E-Mail-Adresse gibt es schon ein Konto (Registrierung). |
 | `password_rejected` | `400 Bad Request` | Keycloak lehnt das Passwort ab (Passwortregeln). |

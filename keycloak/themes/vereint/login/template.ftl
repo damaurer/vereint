@@ -1,12 +1,22 @@
 <#--
   Vereint Login-Theme: Split-Screen-Rahmen fuer alle Login-Seiten.
-  Basis: keycloak.v2/login/template.ftl aus Keycloak 26.1.4.
+  Basis: keycloak.v2/login/template.ftl aus Keycloak 26.8.1
+  (abgeglichen mit org.keycloak:keycloak-themes:26.8.1).
   Head, Macro-Parameter, Alerts, Locale-Dropdown, Scripts und alle
-  <#nested>-Slots sind unveraendert; nur die Body-Struktur wurde durch
-  .vereint-shell (Branding-Panel + Formular-Karte) ersetzt.
+  <#nested>-Slots entsprechen dem Original. Vereint-Aenderungen:
+  - Viewport mit viewport-fit=cover, theme-color, SVG-Favicon als Fallback
+    (wenn das Theme keine favicons-Resourcen deklariert).
+  - Body-Struktur: .vereint-shell (Branding-Panel + Formular-Karte) statt
+    pf-v5-c-login; bodyClass der Seite wird an <body> angehaengt.
+  - Optionaler Slot "eyebrow" ueber der Ueberschrift.
+  - "info" bleibt im Karten-Body (.vereint-info, ohne die Footer-Band-
+    Klassen des Originals), "socialProviders" in der Kartenfusszeile
+    (.vereint-card-footer).
+  - Fusszeile mit Links zu Impressum, Datenschutz und AGB der App.
 -->
 <#import "field.ftl" as field>
 <#import "footer.ftl" as loginFooter>
+<#import "theme-resources.ftl" as themeResourceTags>
 <#macro username>
   <#assign label>
     <#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if>
@@ -25,7 +35,8 @@
             <span class="kc-tooltip-text">${msg("restartLoginTooltip")}</span>
         </button>
       </div>
-    </@field.group>
+    </div>
+  </@field.group>
 </#macro>
 
 <#macro registrationLayout bodyClass="" displayInfo=false displayMessage=true displayRequiredFields=false>
@@ -35,7 +46,6 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <meta name="robots" content="noindex, nofollow">
     <meta name="color-scheme" content="light${darkMode?then(' dark', '')}">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1e3a8a">
@@ -45,14 +55,22 @@
             <meta name="${meta?split('==')[0]}" content="${meta?split('==')[1]}"/>
         </#list>
     </#if>
-    <title>${msg("loginTitle",(realm.displayName!''))}</title>
-    <link rel="icon" type="image/svg+xml" href="${url.resourcesPath}/img/favicon.svg" />
-    <#if properties.stylesCommon?has_content>
+    <title>${title!}</title>
+    <#if themeResources?? && themeResources.favicons?has_content>
+        <@themeResourceTags.renderFavicons themeResources.favicons url.resourcesPath />
+    <#else>
+        <link rel="icon" type="image/svg+xml" href="${url.resourcesPath}/img/favicon.svg" />
+    </#if>
+    <#if themeResources?? && themeResources.stylesCommon?has_content>
+        <@themeResourceTags.renderStyles themeResources.stylesCommon url.resourcesCommonPath />
+    <#elseif properties.stylesCommon?has_content>
         <#list properties.stylesCommon?split(' ') as style>
             <link href="${url.resourcesCommonPath}/${style}" rel="stylesheet" />
         </#list>
     </#if>
-    <#if properties.styles?has_content>
+    <#if themeResources?? && themeResources.styles?has_content>
+        <@themeResourceTags.renderStyles themeResources.styles url.resourcesPath />
+    <#elseif properties.styles?has_content>
         <#list properties.styles?split(' ') as style>
             <link href="${url.resourcesPath}/${style}" rel="stylesheet" />
         </#list>
@@ -66,7 +84,8 @@
     </script>
     <#if darkMode>
       <script type="module" async blocking="render">
-          const DARK_MODE_CLASS = "${properties.kcDarkModeClass}";
+          <#outputformat "JavaScript">
+          const DARK_MODE_CLASS = ${properties.kcDarkModeClass?c};
           const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
           updateDarkMode(mediaQuery.matches);
@@ -81,9 +100,12 @@
               classList.remove(DARK_MODE_CLASS);
             }
           }
+          </#outputformat>
       </script>
     </#if>
-    <#if properties.scripts?has_content>
+    <#if themeResources?? && themeResources.scripts?has_content>
+        <@themeResourceTags.renderScripts themeResources.scripts url.resourcesPath "text/javascript" />
+    <#elseif properties.scripts?has_content>
         <#list properties.scripts?split(' ') as script>
             <script src="${url.resourcesPath}/${script}" type="text/javascript"></script>
         </#list>
@@ -95,19 +117,46 @@
     </#if>
     <script type="module" src="${url.resourcesPath}/js/passwordVisibility.js"></script>
     <script type="module">
-        import { startSessionPolling } from "${url.resourcesPath}/js/authChecker.js";
+        <#outputformat "JavaScript">
+        import { startSessionPolling } from ${(url.resourcesPath + "/js/authChecker.js")?c};
 
         startSessionPolling(
-            "${url.ssoLoginInOtherTabsUrl?no_esc}"
+            ${url.ssoLoginInOtherTabsUrl?c}
         );
+        </#outputformat>
+    </script>
+    <script type="module">
+        document.addEventListener("click", (event) => {
+            const link = event.target.closest("a[data-once-link]");
+
+            if (!link) {
+                return;
+            }
+
+            if (link.getAttribute("aria-disabled") === "true") {
+                event.preventDefault();
+                return;
+            }
+
+            const { disabledClass } = link.dataset;
+
+            if (disabledClass) {
+                link.classList.add(...disabledClass.trim().split(/\s+/));
+            }
+
+            link.setAttribute("role", "link");
+            link.setAttribute("aria-disabled", "true");
+        });
     </script>
     <#if authenticationSession??>
         <script type="module">
-            import { checkAuthSession } from "${url.resourcesPath}/js/authChecker.js";
+             <#outputformat "JavaScript">
+            import { checkAuthSession } from ${(url.resourcesPath + "/js/authChecker.js")?c};
 
             checkAuthSession(
-                "${authenticationSession.authSessionIdHash}"
+                ${authenticationSession.authSessionIdHash?c}
             );
+            </#outputformat>
         </script>
     </#if>
     <script>
@@ -116,7 +165,7 @@
     </script>
 </head>
 
-<body id="keycloak-bg" class="${properties.kcBodyClass!} ${bodyClass}">
+<body id="keycloak-bg" class="${properties.kcBodyClass!} ${bodyClass}" data-page-id="login-${pageId}">
 <div class="vereint-shell">
   <aside class="vereint-brand" aria-hidden="true">
     <div class="vereint-brand-inner">
@@ -226,7 +275,7 @@
                     <#if message.type = 'error'><span class="${properties.kcFeedbackErrorIcon!}"></span></#if>
                     <#if message.type = 'info'><span class="${properties.kcFeedbackInfoIcon!}"></span></#if>
                 </div>
-                <span class="${properties.kcAlertTitleClass!} kc-feedback-text">${kcSanitize(message.summary)?no_esc}</span>
+                <span class="${properties.kcAlertTitleClass!} kc-feedback-text">${message.summary}</span>
             </div>
         </#if>
 
@@ -237,32 +286,54 @@
               <input type="hidden" name="tryAnotherWay" value="on"/>
               <a id="try-another-way" href="javascript:document.forms['kc-select-try-another-way-form'].requestSubmit()"
                   class="${properties.kcButtonSecondaryClass} ${properties.kcButtonBlockClass} ${properties.kcMarginTopClass}">
-                    ${kcSanitize(msg("doTryAnotherWay"))?no_esc}
+                    ${msg("doTryAnotherWay")}
+              </a>
+          </form>
+        </#if>
+
+        <#if switchOrganizationEnabled?? && switchOrganizationEnabled>
+          <form id="kc-switch-organization-form" action="${url.loginAction}" method="post" novalidate="novalidate">
+              <input type="hidden" name="switchOrganization" value="true"/>
+              <a id="switch-organization" href="javascript:document.forms['kc-switch-organization-form'].requestSubmit()"
+                  class="${properties.kcButtonSecondaryClass} ${properties.kcButtonBlockClass} ${properties.kcMarginTopClass}">
+                    ${msg("doSwitchOrganization")}
               </a>
           </form>
         </#if>
 
         <#if displayInfo>
-          <div id="kc-info" class="${properties.kcSignUpClass!} vereint-info">
-              <div id="kc-info-wrapper" class="${properties.kcInfoAreaWrapperClass!}">
+          <div id="kc-info" class="vereint-info">
+              <div id="kc-info-wrapper">
                   <#nested "info">
               </div>
           </div>
         </#if>
       </div>
 
-      <div class="pf-v5-c-login__main-footer vereint-card-footer">
+      <div class="${properties.kcLoginMainFooter!} vereint-card-footer">
         <#nested "socialProviders">
       </div>
     </div>
 
     <footer class="vereint-footer">
       <@loginFooter.content/>
-      <#-- Keycloak liegt unter /kc auf derselben Domain wie die App. -->
+      <#-- Auf dem Server liegt Keycloak unter einer eigenen Domain (auth.DOMAIN).
+           Die Links zeigen deshalb auf die App des Clients (Root-URL, z. B.
+           https://vereint.DOMAIN). Ohne Client bleiben sie relativ; auf
+           auth.DOMAIN liefert der Server dann Impressum und Datenschutz der
+           Plattform aus (Rolle legal). -->
+      <#assign legalBase = "">
+      <#if client?? && client.baseUrl?has_content>
+        <#assign legalBase = client.baseUrl?remove_ending("/")>
+      </#if>
       <nav class="vereint-legal-links" aria-label="${msg("vereintLegalNav")}">
-        <a href="/impressum">${msg("vereintImprint")}</a>
+        <a href="${legalBase}/impressum">${msg("vereintImprint")}</a>
         <span aria-hidden="true">·</span>
-        <a href="/agb">${msg("vereintTerms")}</a>
+        <a href="${legalBase}/datenschutz">${msg("vereintPrivacy")}</a>
+        <#if legalBase?has_content>
+        <span aria-hidden="true">·</span>
+        <a href="${legalBase}/agb">${msg("vereintTerms")}</a>
+        </#if>
       </nav>
     </footer>
   </main>

@@ -31,9 +31,9 @@ graph TD
     end
 
     subgraph InfraLayer ["4. Infrastructure & Persistence"]
-        PG["PostgreSQL 17 (vereint-db:5432)"]
+        PG["PostgreSQL 18 (vereint-db:5432)"]
         KC["Keycloak 26 (keycloak:8082)"]
-        S3["Objektspeicher (Produktion Verzeichnis, lokal S3Mock)"]
+        S3["Dateispeicher (Verzeichnis)"]
     end
 
     Browser -->|HTTP / Hydration / Static Assets| SSR
@@ -80,18 +80,18 @@ graph TD
   - **Getränke- & Speisenkatalog**: Stammdatenverwaltung (`DrinkCatalogService`, `FoodCatalogService`) mit Standardpreisen und Einkaufspreisen (`costPrice`).
   - **Event-Angebote**: Granulare Zuordnung von Getränken (`EventDrinkService`) und Speisen (`EventFoodService`) zu Events mit individueller Preisgestaltung und Tablet-/Kiosk-Freigabe.
   - **Revisionssicheres Kassenbuch & Gewinnermittlung**: Transaktionsjournal (`LedgerService`) mit Beleg-Snapshots (`PurchaseSnapshot`), Einkaufspreiserfassung und Deckungsbeitragsberechnung (`profit = unit_price - cost_price`).
-  - **Tablet Strichlisten-Recorder**: Thekenterminal-API (`TabletRecorderService`) für Getränke und Speisen mit kombinierten Katalogen (`/items`), Runden- und Abendbuchungen; Kiosk-Modus mit PIN (`KioskService`).
+  - **Tablet Strichlisten-Recorder**: Thekenterminal-API (`TabletRecorderService`) für Getränke und Speisen mit kombinierten Katalogen (`/items`), Anzeige laufender Runden (ausgegeben am eigenen Handy, `RoundService`); Kiosk-Modus mit PIN (`KioskService`).
   - **Gemeinsame Getränkedatenbank**: gruppenübergreifende Stammdaten ohne Preise (`DrinkLibraryService`).
 - **Storage & Push**:
   - Integrierter S3-Client (`S3ObjectStorage`) für Bilder sowie Fotos und Videos aus Moments. Alle Dateien werden vor dem Speichern mit `DATA_ENCRYPTION_KEY` verschlüsselt und nur über berechtigungsgeprüfte Endpunkte des baseservice ausgeliefert, nie über direkte S3-Links.
   - VAPID Web Push Sender (`VapidPushSender`, RFC 8292) ohne Nutzlast: Der Push weckt nur den Service Worker, die Inhalte lädt der Client berechtigt aus `notifications` nach.
 
 ### 4. Daten- & Infrastrukturschicht
-- **PostgreSQL 17**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.
+- **PostgreSQL 18**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.
 - **Liquibase**: Versionskontrollierte Datenbankmigrationen (`db.changelog-master.xml`).
 - **Keycloak 26.8.1**: Identity & Access Management (OIDC Provider). Lokal mit Testbenutzern (`keycloak/dev/realm-export-dev.json`), in Produktion ohne Seed-Benutzer (`keycloak/realm-export.json`).
-- **Objektspeicher**: In Produktion auf Strato ein Verzeichnis im Docker-Volume `vereint_files` (`STORAGE_BACKEND=filesystem`), in der AWS-Variante ein privater S3-Bucket, lokal S3Mock (`docker-compose.yml`), in den E2E-Tests ein S3-Ersatz.
-- **Produktion**: Vereint läuft unter `https://vereint.maurercloud.de` auf einem Strato VPS, den [LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) einrichtet (Traefik, Keycloak der Plattform mit Realm `vereint`, PostgreSQL mit pgvector), siehe [Betrieb auf einem Strato VPS](../betrieb/strato.md). Die AWS-Variante (Docker Compose hinter Caddy) beschreiben [deploy/README.md](../../deploy/README.md) und [infra/aws/README.md](../../infra/aws/README.md).
+- **Dateispeicher**: Überall ein Verzeichnis (`STORAGE_BACKEND=filesystem`): in Produktion ein dauerhaftes Volume, im lokalen Stack und in den E2E-Tests das Volume `files`, bei `./gradlew bootRun` `<Repo>/.data/files`. Ein S3-kompatibler Speicher ist optional möglich (`STORAGE_BACKEND=s3`).
+- **Produktion**: Das Repository liefert die Images `ghcr.io/damaurer/baseservice` und `ghcr.io/damaurer/webservice`; Betrieb siehe [Vereint selbst betreiben](../betrieb/selbst-betreiben.md).
 
 ---
 
@@ -103,7 +103,7 @@ sequenceDiagram
     actor User as Benutzer / Tablet-Kiosk
     participant BFF as Express BFF
     participant Spring as Spring Boot
-    participant DB as PostgreSQL 17
+    participant DB as PostgreSQL 18
 
     User->>BFF: POST /api/v1/tablet/events/{id}/purchases (Cookie-Session)
     Note over BFF: attachIdentity entschlüsselt die Session & erneuert bei Bedarf das Keycloak-JWT
@@ -126,8 +126,7 @@ sequenceDiagram
 | **Frontend / BFF** | Node.js Express (`npm start`) | `4200` | `4200` | HTTP / SSR & BFF API Proxy |
 | **Backend Core** | Spring Boot Kotlin | `8081` | `8081` | HTTP / REST API & Actuator |
 | **Keycloak IAM** | Keycloak 26 Dev | `8082` | `8080` | HTTP / OIDC Provider & Admin-Console |
-| **Keycloak DB** | PostgreSQL 17 | `5433` | `5432` | PostgreSQL JDBC (Keycloak Realm DB) |
-| **Vereint DB** | PostgreSQL 17 | `5432` | `5432` | PostgreSQL JDBC (Hauptanwendung) |
-| **S3-Ersatz** | S3Mock (nur lokal) | `9090` | `9090` | S3 REST API (Asset Storage) |
+| **Keycloak DB** | PostgreSQL 18 | `5433` | `5432` | PostgreSQL JDBC (Keycloak Realm DB) |
+| **Vereint DB** | PostgreSQL 18 | `5432` | `5432` | PostgreSQL JDBC (Hauptanwendung) |
 
-In Produktion ist von außen nur Caddy auf Port 80/443 erreichbar; alle anderen Dienste sprechen nur im internen Container-Netz miteinander ([deploy/README.md](../../deploy/README.md)).
+In Produktion sollte von außen nur der Reverse Proxy auf Port 80/443 erreichbar sein; alle anderen Dienste sprechen nur im internen Container-Netz miteinander ([Vereint selbst betreiben](../betrieb/selbst-betreiben.md)).

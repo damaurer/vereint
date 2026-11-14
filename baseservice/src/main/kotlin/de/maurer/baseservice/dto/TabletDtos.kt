@@ -1,7 +1,7 @@
 package de.maurer.baseservice.dto
 
 import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.NotEmpty
+import java.math.BigDecimal
 import java.time.Instant
 
 /**
@@ -13,17 +13,6 @@ data class TabletPurchaseRequest(
 
     val eventDrinkId: String? = null,
     val eventFoodId: String? = null
-)
-
-/**
- * Erfassung einer Runde oder Abendaktion (Getränk oder Speise).
- */
-data class TabletRevenuePurchaseRequest(
-    val eventDrinkId: String? = null,
-    val eventFoodId: String? = null,
-
-    @field:NotEmpty(message = "memberIds {validation.notBlank}")
-    val memberIds: List<String>? = null
 )
 
 /** Kompaktes aktives Event für die Tablet-Auswahl. */
@@ -45,4 +34,43 @@ data class TabletMemberDto(
 data class TabletItemsDto(
     val drinks: List<EventDrinkDto>,
     val food: List<EventFoodDto>
+)
+
+/** Getränk einer Spalte, das im Event am Terminal buchbar ist. */
+data class TabletBoardDrinkDto(
+    val eventDrinkId: String,
+    val drinkName: String
+)
+
+/** Spalte der Strichliste: Strich-Kategorie mit Preis je Strich (Issue #80). */
+data class TabletBoardColumnDto(
+    val categoryId: String,
+    val name: String,
+    val price: BigDecimal,
+    val currency: String,
+    /** Buchbare Eventgetränke der Kategorie; ein Tipp wählt eines davon. */
+    val drinks: List<TabletBoardDrinkDto>
+)
+
+/** Zeile der Strichliste: Mitglied mit seinen Strichen des Abends je Spalte. */
+data class TabletBoardMemberDto(
+    val memberId: String,
+    val displayName: String,
+    /** Striche je Kategorie-ID. */
+    val counts: Map<String, Int>,
+    /** Käufe ohne Kategorie (Sonstiges, Speisen). */
+    val otherCount: Int,
+    /** Laufende Runde, auf die der nächste Strich geht; `null` = eigene Rechnung (Issue #81). */
+    val fundedBy: RoundFundingDto? = null
+)
+
+/** Strichliste eines Events: Spalten, Zeilen und „Heute an der Theke“. */
+data class TabletBoardDto(
+    val columns: List<TabletBoardColumnDto>,
+    val members: List<TabletBoardMemberDto>,
+    val tallyCount: Int,
+    val revenue: BigDecimal,
+    val currency: String,
+    /** Laufende Runden des Events, nur zur Anzeige (Issue #81). */
+    val rounds: List<RoundDto> = emptyList()
 )

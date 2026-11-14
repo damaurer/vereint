@@ -67,7 +67,7 @@ Die Nummer `006` ist nicht vergeben.
 
 1. **Neue Datei**: nächste freie Nummer ist `022-…xml`, eingetragen in `db.changelog-master.xml`. Changeset-IDs fortlaufend und noch nicht vergeben wählen (belegt sind u. a. `201-202`, `210-211`, `220-222`, `230`, `240` und `301-302`).
 2. **DBMS-Kompatibilität**:
-   - Die Zieldatenbank ist **PostgreSQL 17**.
+   - Die Zieldatenbank ist **PostgreSQL 18**.
    - H2 ist ausschließlich für die schnellen Spring-Context-Tests zugelassen.
    - Für Typen die Properties `${uuid.type}` und `${text.type}` nutzen; jede Datei, die sie nutzt, definiert sie selbst für `postgresql` und `h2`.
 3. **Rollback**:

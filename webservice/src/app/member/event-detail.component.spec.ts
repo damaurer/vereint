@@ -164,15 +164,14 @@ describe('EventDetailComponent', () => {
     const fixture = await create();
     expect(api.listMoments).toHaveBeenCalledWith('e-1');
     expect(api.listMomentHistory).toHaveBeenCalledWith('e-1');
-    expect(html(fixture)).toContain('Moments & Rituale');
-    expect(html(fixture)).toContain('1 aktiver Moment läuft gerade!');
+    expect(html(fixture)).toContain('Moments (1 aktiv)');
     expect(html(fixture)).toContain('Früheres Gebet');
     expect(html(fixture)).toContain('4 Teilnehmer haben 5 Statusbeiträge geteilt.');
   });
 
   it('offers a route button and RSVP answer options', async () => {
     const fixture = await create();
-    expect(html(fixture)).toContain('Route öffnen');
+    expect((fixture.nativeElement as HTMLElement).querySelector('.detail-route')?.textContent).toContain('Route');
     expect(html(fixture)).toContain('Zusagen');
     expect(html(fixture)).toContain('Vielleicht');
     expect(html(fixture)).toContain('Absagen');
@@ -185,7 +184,7 @@ describe('EventDetailComponent', () => {
     expect(active.textContent).toContain('Zusagen');
     expect(active.getAttribute('aria-pressed')).toBe('true');
     expect(html(fixture)).toContain('Du hast zugesagt');
-    expect(root.querySelector('.count-declined')?.textContent).toContain('2');
+    expect(root.querySelector('.detail-section-meta')?.textContent).toMatch(/\d+ zugesagt · \d+ offen/);
     expect(html(fixture)).toContain('Carla');
     expect(html(fixture)).toContain('Abgesagt');
   });
@@ -211,13 +210,30 @@ describe('EventDetailComponent', () => {
 
   it('links to the manage page only when the member may manage', async () => {
     let fixture = await create();
-    expect((fixture.nativeElement as HTMLElement).querySelector('.manage-link')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.detail-chip-strong')).toBeNull();
     TestBed.resetTestingModule();
     api.getEvent.mockReturnValue(of({ ...event, canManage: true }));
     fixture = await create();
-    const link = (fixture.nativeElement as HTMLElement).querySelector('.manage-link') as HTMLAnchorElement;
+    const link = (fixture.nativeElement as HTMLElement).querySelector('.detail-chip-strong') as HTMLAnchorElement;
     expect(link.textContent).toContain('Verwalten');
     expect(link.getAttribute('href')).toBe('/events/e-1/manage');
+  });
+
+  it('links to the event statistics', async () => {
+    const fixture = await create();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="event-statistics-link"]') as HTMLAnchorElement;
+    expect(link.getAttribute('href')).toBe('/events/e-1/statistik');
+  });
+
+  it('offers to buy a round only while the event is running', async () => {
+    let fixture = await create();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('.detail-chip-round') as HTMLAnchorElement;
+    expect(link.textContent).toContain('Runde ausgeben');
+    expect(link.getAttribute('href')).toBe('/events/e-1/runde');
+    TestBed.resetTestingModule();
+    api.getEvent.mockReturnValue(of({ ...event, status: 'published' }));
+    fixture = await create();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.detail-chip-round')).toBeNull();
   });
 
   it('shows the event chat, marks it read and sends messages', async () => {

@@ -84,16 +84,16 @@ baseservice/
 ## ⚡ Lokales Starten & Entwicklung
 
 ### 1. Infrastruktur mit Docker Compose starten
-Bevor der `baseservice` gestartet werden kann, müssen PostgreSQL und Keycloak (sowie S3Mock als lokaler S3-Ersatz) laufen:
+Bevor der `baseservice` gestartet werden kann, müssen PostgreSQL und Keycloak laufen:
 
 ```bash
 # Im Projekt-Hauptverzeichnis:
-docker compose up -d vereint-db keycloak-db keycloak object-storage
+docker compose up -d vereint-db keycloak-db keycloak
 ```
 
 - **PostgreSQL**: `localhost:5432` (User: `vereint`, DB: `vereint`)
 - **Keycloak**: `http://localhost:8082` (Realm: `vereint`)
-- **S3Mock**: `http://localhost:9090` (Bucket `vereint`, wird beim Start angelegt)
+- **Dateien**: `<Repo>/.data/files` (`STORAGE_BACKEND=filesystem` aus `.env.example`)
 
 ### 2. Service über Gradle starten
 Der Service kann direkt über den Gradle-Wrapper gestartet werden:
@@ -138,28 +138,29 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `VEREINT_DB_USERNAME` | `spring.datasource.username` | String | `vereint` | Datenbankbenutzer. |
 | `VEREINT_DB_PASSWORD` | `spring.datasource.password` | String | `change-me-vereint-db-password` | Datenbankpasswort. |
 | `EV_LIQUIBASE_ENABLED` | `spring.liquibase.enabled` | Boolean | `true` | Aktiviert die automatische Ausführung von Liquibase-Migrationen beim Start. |
-| `EV_LIQUIBASE_CONTEXTS` | `spring.liquibase.contexts` | String | `prod` | Aktiver Liquibase-Kontext (`prod`, lokal `dev`, in Tests `test`). |
+| `EV_LIQUIBASE_CONTEXTS` | `spring.liquibase.contexts` | String | `prod` | Aktiver Liquibase-Kontext (`prod`, lokal `dev`, in Tests `test`). `prod` (oder das Spring-Profil `prod`) schaltet die Startprüfungen scharf: ohne Verschlüsselung oder mit einem Datenbankbenutzer mit Superuser/`BYPASSRLS` startet der Service nicht. |
 | `KEYCLOAK_ISSUER_URI` | `spring.security.oauth2.resourceserver.jwt.issuer-uri` | URL | `http://localhost:8082/realms/vereint` | OIDC-Issuer-URI von Keycloak zur JWT-Validierung. |
 | `KEYCLOAK_JWK_SET_URI` | `spring.security.oauth2.resourceserver.jwt.jwk-set-uri` | URL | `http://localhost:8082/realms/vereint/protocol/openid-connect/certs` | JWK-Set-Endpunkt zum Abrufen öffentlicher Signierschlüssel. |
 | `VEREINT_I18N_SUPPORTED_LOCALES` | `vereint.i18n.supported-locales` | String (CSV) | `de,en` | Sprachen der Fehlertexte, siehe [i18n](i18n.md). |
 | `TENANCY_BOOTSTRAP_REALM_ROLES` | `vereint.tenancy.bootstrap-realm-roles` | Boolean | `false` | Nur Entwicklung/E2E: Konten ohne Mitgliedschaft treten „Meine Gruppe“ mit ihren Keycloak-Realmrollen bei. In Produktion aus. |
 | `VEREIN_CORS_ALLOWED_ORIGINS` | `vereint.cors.allowed-origins` | String (CSV) | `http://localhost:4200` | Erlaubte CORS-Ursprünge (z. B. `http://localhost:4200,http://localhost:4300`). Wildcards (`*`) sind verboten. |
-| `STORAGE_BACKEND` | `vereint.storage.backend` | String | *leer* | `filesystem` (Verzeichnis, so in Produktion auf Strato), `s3` oder `memory`. Leer: `S3_ENABLED` entscheidet. |
+| `STORAGE_BACKEND` | `vereint.storage.backend` | String | *leer* | `filesystem` (Verzeichnis, empfohlen), `s3` oder `memory`. Leer: `S3_ENABLED` entscheidet. |
 | `STORAGE_DIRECTORY` | `vereint.storage.directory` | Pfad | *leer* | Verzeichnis für `STORAGE_BACKEND=filesystem`. |
 | `S3_ENABLED` | `vereint.storage.enabled` | Boolean | `false` | Nur bei leerem `STORAGE_BACKEND`: schaltet echten S3-Speicher frei. Bei `false` greift der `InMemoryObjectStorage`. |
-| `S3_ENDPOINT` | `vereint.storage.endpoint` | URL | `http://localhost:9000` | S3-kompatibler Endpunkt (lokal S3Mock, in der AWS-Variante AWS S3). |
+| `S3_ENDPOINT` | `vereint.storage.endpoint` | URL | `http://localhost:9000` | S3-kompatibler Endpunkt, nur mit `STORAGE_BACKEND=s3`. |
 | `S3_BUCKET` | `vereint.storage.bucket` | String | `vereint` | Name des S3-Buckets für Bild-Uploads. |
 | `S3_REGION` | `vereint.storage.region` | String | `us-east-1` | S3-Region. |
 | `S3_ACCESS_KEY` | `vereint.storage.access-key` | String | *leer* | S3 Access Key ID (Geheimnis). |
 | `S3_SECRET_KEY` | `vereint.storage.secret-key` | String | *leer* | S3 Secret Access Key (Geheimnis). |
-| `S3_PATH_STYLE_ACCESS` | `vereint.storage.path-style-access` | Boolean | `true` | Verwendet Path-Style-URLs (`/bucket/key`), erforderlich für S3Mock. |
+| `S3_PATH_STYLE_ACCESS` | `vereint.storage.path-style-access` | Boolean | `true` | Verwendet Path-Style-URLs (`/bucket/key`), nötig für viele S3-kompatible Dienste. |
 | `S3_URL_TTL_SECONDS` | `vereint.storage.url-ttl-seconds` | Long | `900` | Gültigkeitsdauer für signierte Download-URLs (15 Minuten). |
 | `VAPID_ENABLED` | `vereint.push.enabled` | Boolean | `false` | Schaltet Web-Push-Versand frei. Bei `false` greift der `NoOpPushSender`. |
 | `VAPID_SUBJECT` | `vereint.push.subject` | String | *leer* | VAPID-Subject (`mailto:admin@vereint.de`). |
 | `VAPID_PUBLIC_KEY` | `vereint.push.public-key` | String | *leer* | Öffentlicher Base64-VAPID-Schlüssel für den Client. |
 | `VAPID_PRIVATE_KEY` | `vereint.push.private-key` | String | *leer* | Privater Base64-VAPID-Schlüssel (Geheimnis). |
 | `VAPID_TTL_SECONDS` | `vereint.push.ttl-seconds` | Long | `2419200` | Time-to-Live für Push-Nachrichten (Standard: 28 Tage). |
-| `DATA_ENCRYPTION_ENABLED` | `vereint.encryption.enabled` | Boolean | `false` | Anwendungsverschlüsselung für Chat, Benachrichtigungen und Dateien (AES-256-GCM). In Produktion `true`; ohne Schlüssel startet der Service dann nicht. |
+| `DATA_ENCRYPTION_ENABLED` | `vereint.encryption.enabled` | Boolean | `false` | Anwendungsverschlüsselung für Chat, Benachrichtigungen und Dateien (AES-256-GCM). In Produktion Pflicht: mit Kontext `prod` startet der Service ohne `true` nicht; mit `true` und ohne Schlüssel ebenfalls nicht. |
+| `DATA_ENCRYPTION_ALLOW_PLAINTEXT` | `vereint.encryption.allow-plaintext` | Boolean | `false` | Erlaubt bewusst einen Produktionsstart ohne Verschlüsselung (Klartext in DB und Dateien). |
 | `DATA_ENCRYPTION_KEY` | `vereint.encryption.key` | String | *leer* | 32 Byte, Base64 (Geheimnis). |
 | `DATA_ENCRYPTION_KEY_PREVIOUS` | `vereint.encryption.previous-key` | String | *leer* | Vorgängerschlüssel, nur zum Entschlüsseln während einer Rotation. |
 | `REGISTRATION_ENABLED` | `vereint.registration.enabled` | Boolean | `false` | Kontoanlage über die Keycloak-Admin-API (Einladungslinks, Gruppe eröffnen). Ohne Secret antwortet die Registrierung mit `503`. |
@@ -167,9 +168,9 @@ Alle Konfigurationswerte in `application.yaml` können über Umgebungsvariablen 
 | `KEYCLOAK_REALM` | `vereint.registration.realm` | String | `vereint` | Realm, in dem Konten angelegt werden. |
 | `KEYCLOAK_REGISTRATION_CLIENT_ID` | `vereint.registration.client-id` | String | `vereint-registration` | Vertraulicher Client mit `manage-users`. |
 | `KEYCLOAK_REGISTRATION_CLIENT_SECRET` | `vereint.registration.client-secret` | String | *leer* | Secret dieses Clients (Geheimnis). |
-| `SIGNUP_ENABLED` | `vereint.signup.enabled` | Boolean | `true` | Öffentliches Eröffnen neuer Gruppen (`/api/v1/signup`). |
+| `SIGNUP_ENABLED` | `vereint.signup.enabled` | Boolean | `false` | Öffentliches Eröffnen neuer Gruppen (`/api/v1/signup`, `/gruppe-eroeffnen`). Ohne `true` antworten Eröffnen und Registrieren mit `503`; Einladungslinks funktionieren weiter. Lokal (`.env.example`, `local/`) und in E2E an. |
 | `SIGNUP_MAX_OWNED` | `vereint.signup.max-owned` | Integer | `3` | Höchstzahl aktiver Gruppen, die eine Person selbst eröffnet. |
-| `TERMS_VERSION` | `vereint.legal.terms-version` | String | `2026-10-28` | Gültige Fassung der AGB, der bei Registrierung und Eröffnung zugestimmt wird. |
+| `TERMS_VERSION` | `vereint.legal.terms-version` | String | `2026-11-11` | Gültige Fassung der AGB, der bei Registrierung und Eröffnung zugestimmt wird; alle übrigen Konten stimmen nach dem Login zu. |
 | `API_DOCS_ENABLED` | `springdoc.api-docs.enabled`, `springdoc.swagger-ui.enabled` | Boolean | `false` | OpenAPI und Swagger UI; in Produktion aus. |
 
 ---

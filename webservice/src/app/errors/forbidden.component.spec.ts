@@ -15,6 +15,6 @@ describe('ForbiddenComponent', () => {
     const text = fixture.nativeElement.textContent ?? '';
     expect(text).toContain('403');
     expect(text).toContain('Zugriff verweigert');
-    expect(text).toContain('Zum Dashboard');
+    expect(text).toContain('Zur Startseite');
   });
 });

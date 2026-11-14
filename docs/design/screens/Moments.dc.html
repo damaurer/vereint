@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Moments</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Moments" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 20px 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Gemeinschaftsmomente &amp; Rituale</p>
+      <h2 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Moments</h2>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+      <span style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600"><span style="width: 10px; height: 10px; border-radius: 999px; background-color: var(--color-success)"></span>1 aktiver Moment</span>
+      <button type="button" style="display: inline-flex; align-items: center; gap: 6px; height: 44px; padding: 0 14px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Moment starten
+      </button>
+    </div>
+
+    <article style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 2px solid var(--color-brand); border-radius: 12px; background-color: var(--color-surface)">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+        <span class="ui-chip ui-chip-accent">Gemeinsames Anstoßen</span>
+        <span style="color: var(--color-text-muted); font-size: 13px">noch 59 Min</span>
+      </div>
+      <h3 style="margin: 0; font-size: 19px; font-weight: 800">Prost auf den Vereinsabend!</h3>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 15px">„Alle Gläser hoch“ · von Thomas Berger</p>
+      <div style="display: flex; align-items: center; gap: 6px">
+        <span style="display: grid; place-items: center; width: 28px; height: 28px; border: 2px solid var(--color-surface); border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 10px; font-weight: 800">MS</span>
+        <span style="display: grid; place-items: center; width: 28px; height: 28px; margin-left: -12px; border: 2px solid var(--color-surface); border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 10px; font-weight: 800">JK</span>
+        <span style="display: grid; place-items: center; width: 28px; height: 28px; margin-left: -12px; border: 2px solid var(--color-surface); border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 10px; font-weight: 800">LH</span>
+        <span style="color: var(--color-text-muted); font-size: 13px">3 Antworten</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 8px">
+        <a href="MomentDetail.dc.html" style="display: grid; place-items: center; height: 44px; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 15px; font-weight: 700; text-decoration: none">Reagieren</a>
+        <a href="EventChat.dc.html" style="display: grid; place-items: center; height: 44px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 14px; font-weight: 600; text-decoration: none">24h-Chat</a>
+        <button type="button" style="height: 44px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 600">Beenden</button>
+      </div>
+    </article>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; color: var(--color-text-muted); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Vergangene Moments</h3>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <li style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--color-border)">
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Spontaner Check-in</span><span style="color: var(--color-text-muted); font-size: 13px">Sommerfest · 19. Jul · 12 Antworten</span></div>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--color-text-muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg>
+        </li>
+        <li style="display: flex; align-items: center; gap: 12px; padding: 12px 14px">
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Jubeln &amp; Anfeuern</span><span style="color: var(--color-text-muted); font-size: 13px">Pokalspiel · 4. Jul · 8 Antworten</span></div>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--color-text-muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg>
+        </li>
+      </ul>
+    </section>
+  </main>
+  <dc-import name="TabBar" active="mehr" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

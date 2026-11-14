@@ -1,4 +1,0 @@
-# Kopieren nach `backend.hcl` und den Bucket-Namen aus der Ausgabe von
-# `bootstrap/` eintragen.
-bucket = "vereint-tfstate-123456789012"
-region = "eu-central-1"

@@ -3,11 +3,12 @@ import { RouterLink } from '@angular/router';
 import { describeApiError } from '../api/api-client.service';
 import { AsyncState } from './async-state';
 import { MemberApiService, rsvpLabelKey, rsvpTone, type RsvpAnswer } from './member-api.service';
-import { eventStatusLabel, formatDateTime } from './member-format';
+import { eventStatusLabel, formatDateTime, formatEventWhen } from './member-format';
 import type { EventStatus, EventSummary } from '../api/api.types';
-import { EventCardComponent, IconComponent, StatusBadgeComponent, type StatusTone } from '../ui';
+import { EventCardComponent, IconComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
+import { translate } from '../i18n/i18n.service';
 
 /**
  * Eventübersicht eines Mitglieds (TICKET-024, Redesign TICKET-034).
@@ -20,7 +21,7 @@ import { TranslatePipe } from '../i18n';
  */
 @Component({
   selector: 'app-member-events',
-  imports: [StateComponent, RouterLink, EventCardComponent, IconComponent, StatusBadgeComponent, TranslatePipe],
+  imports: [StateComponent, RouterLink, EventCardComponent, IconComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="events-title">
@@ -31,7 +32,6 @@ import { TranslatePipe } from '../i18n';
             <vereint-icon name="plus" /> {{ 'member.events.create' | t }}
           </a>
         </div>
-        <p>{{ 'member.events.intro' | t }}</p>
         @if (rsvpError(); as error) {
           <p class="member-hint events-error" role="alert">{{ error }}</p>
         }
@@ -57,46 +57,71 @@ import { TranslatePipe } from '../i18n';
               [message]="'member.events.emptyMessage' | t"
             />
           } @else {
-            <ul class="events-list">
-              @for (event of events; track event.id) {
-                <li>
-                  <a class="events-link" [routerLink]="['/events', event.id]">
+            <div class="events-tabs" role="group" [attr.aria-label]="'member.events.rangeGroup' | t">
+              <button type="button" class="events-tab" [attr.aria-pressed]="range() === 'upcoming'" (click)="range.set('upcoming')">
+                {{ 'member.events.upcoming' | t }} · {{ upcoming(events).length }}
+              </button>
+              <button type="button" class="events-tab" [attr.aria-pressed]="range() === 'past'" (click)="range.set('past')">
+                {{ 'member.events.past' | t }}
+              </button>
+            </div>
+            @if (visible(events); as list) {
+              @if (list.length === 0) {
+                <vereint-state
+                  kind="empty"
+                  [title]="'member.events.emptyTitle' | t"
+                  [message]="(range() === 'past' ? 'member.events.emptyPast' : 'member.events.emptyMessage') | t"
+                />
+              }
+              <ul class="events-list">
+                @for (event of list; track event.id) {
+                  <li>
                     <vereint-event-card
                       [title]="event.title"
-                      [when]="formatDateTime(event.startsAt)"
-                      [location]="event.location || event.ownerDisplayName"
-                      [statusLabel]="eventStatusLabel(event.status)"
-                      [statusTone]="eventTone(event.status)"
-                    />
-                  </a>
-                  @if (event.myRsvp && canAnswer(event)) {
-                    <div class="events-rsvp" role="group" [attr.aria-label]="'member.events.rsvpGroup' | t: { title: event.title }">
-                      <vereint-status-badge [label]="rsvpLabelKey(event.myRsvp) | t" [tone]="rsvpTone(event.myRsvp)" />
-                      @if (event.myRsvp !== 'accepted') {
-                        <button
-                          type="button"
-                          class="events-rsvp-button events-accept"
-                          [disabled]="busyId() === event.id"
-                          (click)="respond(event.id, 'accepted')"
-                        >
-                          {{ 'member.rsvp.accept' | t }}
-                        </button>
+                      [when]="whenLine(event)"
+                      [statusLabel]="badgeLabel(event)"
+                      [statusTone]="badgeTone(event)"
+                      [icons]="false"
+                    >
+                      <a class="events-cover" [routerLink]="['/events', event.id]" [attr.aria-label]="event.title"></a>
+                      @if (event.myRsvp && canAnswer(event)) {
+                        <div class="events-rsvp" role="group" [attr.aria-label]="'member.events.rsvpGroup' | t: { title: event.title }">
+                          @if (event.myRsvp === 'accepted') {
+                            <span class="events-state events-state-yes"><vereint-icon name="check" /> {{ 'member.events.attending' | t }}</span>
+                          } @else {
+                            @if (event.myRsvp === 'declined') {
+                              <span class="events-state events-state-no">{{ 'member.events.declined' | t }}</span>
+                            } @else if (event.myRsvp === 'maybe') {
+                              <span class="events-state">{{ 'member.events.maybe' | t }}</span>
+                            }
+                            <div class="events-actions">
+                              <button
+                                type="button"
+                                class="member-button events-accept"
+                                [disabled]="busyId() === event.id"
+                                (click)="respond(event.id, 'accepted')"
+                              >
+                                {{ 'member.rsvp.accept' | t }}
+                              </button>
+                              @if (event.myRsvp !== 'declined') {
+                                <button
+                                  type="button"
+                                  class="events-decline"
+                                  [disabled]="busyId() === event.id"
+                                  (click)="respond(event.id, 'declined')"
+                                >
+                                  {{ 'member.rsvp.decline' | t }}
+                                </button>
+                              }
+                            </div>
+                          }
+                        </div>
                       }
-                      @if (event.myRsvp !== 'declined') {
-                        <button
-                          type="button"
-                          class="events-rsvp-button events-decline"
-                          [disabled]="busyId() === event.id"
-                          (click)="respond(event.id, 'declined')"
-                        >
-                          {{ 'member.rsvp.decline' | t }}
-                        </button>
-                      }
-                    </div>
-                  }
-                </li>
-              }
-            </ul>
+                    </vereint-event-card>
+                  </li>
+                }
+              </ul>
+            }
           }
         }
       </section>
@@ -104,22 +129,53 @@ import { TranslatePipe } from '../i18n';
   `,
   styles: [
     `
+      .events-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.25rem;
+        margin: var(--space-3) 0;
+        padding: 0.25rem;
+        border-radius: 0.65rem;
+        background-color: var(--color-surface-muted);
+      }
+      .events-tab {
+        height: 2.25rem;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--color-text-muted);
+        font: inherit;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .events-tab[aria-pressed='true'] {
+        background-color: var(--color-surface);
+        color: var(--color-text);
+        font-weight: 700;
+        box-shadow: var(--vereint-shadow);
+      }
       .events-list {
         list-style: none;
-        margin: 0.5rem 0 0;
+        margin: 0;
         padding: 0;
         display: flex;
         flex-direction: column;
         gap: var(--space-2, 0.75rem);
       }
-      .events-link {
+      vereint-event-card {
         display: block;
-        text-decoration: none;
+      }
+      /* Die ganze Karte öffnet das Event; die Antwort-Knöpfe liegen darüber. */
+      .events-cover {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
       }
       .events-head {
         display: flex;
         flex-wrap: wrap;
-        align-items: center;
+        align-items: flex-end;
         justify-content: space-between;
         gap: 0.5rem 1rem;
       }
@@ -137,27 +193,47 @@ import { TranslatePipe } from '../i18n';
         color: var(--color-danger);
       }
       .events-rsvp {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
+        position: relative;
+        display: grid;
         gap: 0.5rem;
-        margin-top: 0.4rem;
+        margin-top: 0.5rem;
       }
-      .events-rsvp-button {
+      .events-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+      .events-state-yes {
+        color: var(--color-success);
+      }
+      .events-state-no {
+        color: var(--color-danger);
+      }
+      .events-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+        gap: 0.5rem;
+      }
+      .events-accept,
+      .events-decline {
         min-height: 2.75rem;
+        justify-content: center;
+      }
+      .events-decline {
         padding: 0 1rem;
         border: 1px solid var(--color-border-dark);
-        border-radius: 0.5rem;
-        background: transparent;
+        border-radius: var(--radius-sm);
+        background-color: var(--color-surface);
         color: var(--color-text);
         font: inherit;
         font-weight: 600;
         cursor: pointer;
       }
-      .events-accept {
-        border-color: var(--color-success);
-      }
-      .events-rsvp-button:disabled {
+      .events-accept:disabled,
+      .events-decline:disabled {
         opacity: 0.6;
         cursor: progress;
       }
@@ -175,6 +251,52 @@ export class EventsComponent implements OnInit, OnDestroy {
   /** Event, dessen Antwort gerade gespeichert wird. */
   protected readonly busyId = signal<string | null>(null);
   protected readonly rsvpError = signal<string | null>(null);
+
+  /** Reiter „Kommend“ bzw. „Vergangen“. */
+  protected readonly range = signal<'upcoming' | 'past'>('upcoming');
+
+  /** Laufende und noch nicht beendete Events, das nächste zuerst. */
+  protected upcoming(events: EventSummary[], now: Date = new Date()): EventSummary[] {
+    return events
+      .filter((event) => !this.isPast(event, now))
+      .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
+  }
+
+  /** Events des gewählten Reiters; vergangene mit dem jüngsten zuerst. */
+  protected visible(events: EventSummary[], now: Date = new Date()): EventSummary[] {
+    if (this.range() === 'upcoming') return this.upcoming(events, now);
+    return events
+      .filter((event) => this.isPast(event, now))
+      .sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt));
+  }
+
+  /** Vorbei ist ein Event, das abgeschlossen ist oder dessen Ende bzw. Beginn zurückliegt. */
+  private isPast(event: EventSummary, now: Date): boolean {
+    if (event.status === 'active') return false;
+    if (event.status === 'completed' || event.status === 'archived') return true;
+    // Ohne Ende gilt ein Event bis sechs Stunden nach Beginn als kommend.
+    const end = event.endsAt ? Date.parse(event.endsAt) : Date.parse(event.startsAt) + 6 * 3600_000;
+    return Number.isFinite(end) && end < now.getTime();
+  }
+
+  /** Zeile unter dem Titel: „Fr, 17. Okt · 18:30 · Vereinsheim“. */
+  protected whenLine(event: EventSummary): string {
+    const when = formatEventWhen(event.startsAt);
+    return event.location ? `${when} · ${event.location}` : when;
+  }
+
+  /** Laufende Events sind „Aktiv“, offene Einladungen „Offen“, sonst der Eventstatus. */
+  protected badgeLabel(event: EventSummary): string {
+    if (event.status !== 'active' && event.myRsvp === 'invited' && this.canAnswer(event)) {
+      return translate(rsvpLabelKey('invited'));
+    }
+    return eventStatusLabel(event.status);
+  }
+
+  protected badgeTone(event: EventSummary): StatusTone {
+    if (event.status !== 'active' && event.myRsvp === 'invited' && this.canAnswer(event)) return 'neutral';
+    return this.eventTone(event.status);
+  }
 
   /** Antworten sind für veröffentlichte und laufende Events möglich. */
   protected canAnswer(event: EventSummary): boolean {

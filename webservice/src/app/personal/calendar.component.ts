@@ -39,43 +39,17 @@ import { PersonalApiService } from './personal-api.service';
       <section class="page-card member-card" aria-labelledby="calendar-title">
         <span class="eyebrow">{{ 'calendar.eyebrow' | t }}</span>
         <h1 id="calendar-title">{{ 'calendar.title' | t }}</h1>
-        <p>{{ 'calendar.intro' | t }}</p>
-
-        <div class="cal-toolbar">
-          <div class="cal-nav" role="group" [attr.aria-label]="'calendar.navLabel' | t">
-            <button
-              type="button"
-              class="cal-icon"
-              [attr.aria-label]="'calendar.previous' | t"
-              (click)="shift(-1)"
-            >
-              <vereint-icon name="chevron-left" />
-            </button>
-            <h2 class="cal-month" aria-live="polite">{{ monthLabel() }}</h2>
-            <button
-              type="button"
-              class="cal-icon"
-              [attr.aria-label]="'calendar.next' | t"
-              (click)="shift(1)"
-            >
-              <vereint-icon name="chevron-right" />
-            </button>
-            <button type="button" class="member-button cal-today" (click)="goToday()">
-              {{ 'calendar.today' | t }}
-            </button>
-          </div>
-          @if (groups().length > 1) {
-            <label class="cal-filter">
-              <span>{{ 'calendar.groupFilter' | t }}</span>
-              <select [value]="groupFilter()" (change)="groupFilter.set($any($event.target).value)">
-                <option value="">{{ 'calendar.allGroups' | t }}</option>
-                @for (group of groups(); track group.id) {
-                  <option [value]="group.id">{{ group.name }}</option>
-                }
-              </select>
-            </label>
-          }
-        </div>
+        @if (groups().length > 1) {
+          <label class="cal-filter">
+            <span>{{ 'calendar.groupFilter' | t }}</span>
+            <select [value]="groupFilter()" (change)="groupFilter.set($any($event.target).value)">
+              <option value="">{{ 'calendar.allGroups' | t }}</option>
+              @for (group of groups(); track group.id) {
+                <option [value]="group.id">{{ group.name }}</option>
+              }
+            </select>
+          </label>
+        }
 
         @if (openError()) {
           <p class="manage-action-error" role="alert">{{ openError() }}</p>
@@ -89,6 +63,28 @@ import { PersonalApiService } from './personal-api.service';
             (retry)="reload()"
           />
         } @else {
+          <div class="cal-panel">
+          <div class="cal-toolbar">
+            <div class="cal-nav" role="group" [attr.aria-label]="'calendar.navLabel' | t">
+              <button
+                type="button"
+                class="cal-icon"
+                [attr.aria-label]="'calendar.previous' | t"
+                (click)="shift(-1)"
+              >
+                <vereint-icon name="chevron-left" />
+              </button>
+              <h2 class="cal-month" aria-live="polite">{{ monthLabel() }}</h2>
+              <button
+                type="button"
+                class="cal-icon"
+                [attr.aria-label]="'calendar.next' | t"
+                (click)="shift(1)"
+              >
+                <vereint-icon name="chevron-right" />
+              </button>
+            </div>
+          </div>
           <div
             class="cal-grid"
             role="grid"
@@ -138,8 +134,12 @@ import { PersonalApiService } from './personal-api.service';
             }
           </div>
 
+          </div>
           <div class="cal-agenda-head">
             <h2>{{ agendaTitle() }}</h2>
+            <button type="button" class="cal-today" (click)="goToday()">
+              {{ 'calendar.today' | t }}
+            </button>
             @if (selectedDay()) {
               <button
                 type="button"
@@ -233,33 +233,40 @@ import { PersonalApiService } from './personal-api.service';
   `,
   styles: [
     `
+      .cal-panel {
+        margin-top: var(--space-3);
+        padding: var(--space-3);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-surface-raised);
+      }
       .cal-toolbar {
         display: flex;
-        flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
         gap: var(--space-2);
-        margin: var(--space-3) 0;
+        margin-bottom: var(--space-2);
       }
       .cal-nav {
+        flex: 1;
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: var(--space-2);
-        flex-wrap: wrap;
       }
       .cal-month {
         margin: 0;
-        min-width: 9.5rem;
+        flex: 1;
         text-align: center;
-        font-size: 1.15rem;
+        font-size: 1.1rem;
         text-transform: capitalize;
       }
       .cal-icon {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 2.75rem;
-        height: 2.75rem;
+        width: 2.5rem;
+        height: 2.5rem;
         border-radius: 999px;
         border: 1px solid var(--color-border);
         background-color: var(--color-surface-raised);
@@ -267,7 +274,16 @@ import { PersonalApiService } from './personal-api.service';
         cursor: pointer;
       }
       .cal-today {
-        min-height: 2.75rem;
+        min-height: 2.25rem;
+        padding: 0 0.85rem;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        background-color: transparent;
+        color: inherit;
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
       }
       .cal-filter {
         display: flex;
@@ -305,15 +321,16 @@ import { PersonalApiService } from './personal-api.service';
         padding: 0.25rem 0;
       }
       .cal-day {
-        min-height: 3.25rem;
+        min-height: 2.75rem;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.2rem;
-        padding: 0.35rem 0.1rem;
-        border: 1px solid var(--color-border);
+        justify-content: center;
+        gap: 0.15rem;
+        padding: 0.25rem 0.1rem;
+        border: 0;
         border-radius: var(--radius-md);
-        background-color: var(--color-surface-raised);
+        background-color: transparent;
         color: inherit;
         font: inherit;
         cursor: pointer;
@@ -321,19 +338,27 @@ import { PersonalApiService } from './personal-api.service';
       .cal-day.is-outside {
         opacity: 0.45;
       }
+      .cal-day:hover {
+        background-color: var(--color-surface-subtle);
+      }
       .cal-day.is-today .cal-day-number {
+        color: var(--color-brand);
+        font-weight: 800;
+      }
+      .cal-day.is-selected,
+      .cal-day.is-selected:hover {
         background-color: var(--color-brand);
         color: var(--color-on-brand);
-        border-radius: 999px;
-        padding: 0 0.4rem;
       }
-      .cal-day.is-selected {
-        border-color: var(--color-brand);
-        box-shadow: inset 0 0 0 1px var(--color-brand);
+      .cal-day.is-selected .cal-day-number {
+        color: var(--color-on-brand);
+      }
+      .cal-day.is-selected .cal-mark {
+        background-color: var(--color-on-brand);
       }
       .cal-day-number {
-        font-weight: 700;
-        font-size: 0.9rem;
+        font-weight: 500;
+        font-size: 0.95rem;
       }
       .cal-marks {
         display: flex;
@@ -341,8 +366,8 @@ import { PersonalApiService } from './personal-api.service';
         gap: 2px;
       }
       .cal-mark {
-        width: 0.45rem;
-        height: 0.45rem;
+        width: 0.3rem;
+        height: 0.3rem;
         border-radius: 999px;
         background-color: var(--color-brand);
       }
@@ -364,6 +389,7 @@ import { PersonalApiService } from './personal-api.service';
         margin-top: var(--space-4);
       }
       .cal-agenda-head h2 {
+        flex: 1;
         margin: 0;
         font-size: 1.05rem;
       }
@@ -387,7 +413,7 @@ import { PersonalApiService } from './personal-api.service';
         gap: var(--space-2);
         padding: var(--space-2) var(--space-3);
         border: 1px solid var(--color-border);
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-lg);
         background-color: var(--color-surface-raised);
         color: inherit;
         font: inherit;

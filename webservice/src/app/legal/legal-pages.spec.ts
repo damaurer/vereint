@@ -60,4 +60,16 @@ describe('legal pages', () => {
     expect(page.querySelector('#widerruf')).toBeNull();
     expect(page.querySelector('#inhalte')).not.toBeNull();
   });
+
+  it('explains the statistics shown by name within the group', () => {
+    const page = render(AgbComponent);
+    const section = page.querySelector('#statistiken');
+    expect(section?.textContent).toContain('Statistiken');
+    const text = page.textContent ?? '';
+    expect(text).toContain('mit Namen');
+    expect(text).toContain('keine Gesundheitsangabe');
+    expect(text).toContain('Gruppenübergreifend sieht jeder Nutzer nur seine eigenen Werte');
+    expect(text).toContain('Die Erfassung lässt sich abschalten');
+    expect(text).toContain('Direktnachrichten werden nicht erfasst');
+  });
 });

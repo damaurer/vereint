@@ -1,10 +1,10 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { forkJoin, map, switchMap } from 'rxjs';
 import { describeApiError } from '../api/api-client.service';
 import { AsyncState } from './async-state';
 import { MemberApiService, type RsvpAnswer } from './member-api.service';
-import { eventStatusLabel, formatDateTime, formatMoney } from './member-format';
+import { eventStatusLabel, formatDateTime, formatEventWhen, formatMoney } from './member-format';
 import type { EventStatus, EventSummary, MemberBalance, MemberProfile, RsvpStatus } from '../api/api.types';
 import {
   BalanceCardComponent,
@@ -12,19 +12,11 @@ import {
   HeroGreetingComponent,
   IconComponent,
   StatCardComponent,
-  type IconName,
   type StatusTone,
 } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
-
-interface DashboardShortcut {
-  route: string;
-  icon: IconName;
-  titleKey: string;
-  subKey: string;
-}
 
 interface DashboardView {
   profile: MemberProfile;
@@ -77,70 +69,72 @@ interface DashboardView {
           />
 
           <div class="dash-top">
-            <section class="dash-block" aria-labelledby="dash-balance">
-              <h2 id="dash-balance" class="dash-heading">{{ 'member.dashboard.balanceHeading' | t }}</h2>
+            <section class="dash-block" [attr.aria-label]="'member.dashboard.balanceHeading' | t">
               <vereint-balance-card
-                [label]="'member.balance.current' | t"
+                [label]="'member.dashboard.balanceHeading' | t"
                 [amount]="formatMoney(view.balance.creditBalance, view.balance.currency)"
                 [negative]="isNegative(view.balance.creditBalance)"
-                [showTopup]="canTopup(view.profile)"
-                (topup)="onTopup()"
-              />
-              <a class="dash-more" routerLink="/wallet">
-                {{ 'member.dashboard.statementLink' | t }} <vereint-icon name="chevron-right" />
-              </a>
+              >
+                <a class="member-button dash-pay" routerLink="/scan">
+                  <vereint-icon name="camera" /> {{ 'nav.items.scan' | t }}
+                </a>
+                <a class="dash-more" routerLink="/wallet">
+                  {{ 'member.dashboard.statementShort' | t }} <vereint-icon name="chevron-right" />
+                </a>
+              </vereint-balance-card>
             </section>
 
             <section class="dash-block" aria-labelledby="dash-next">
-              <h2 id="dash-next" class="dash-heading">{{ 'member.dashboard.nextEventHeading' | t }}</h2>
+              <div class="dash-head-row">
+                <h2 id="dash-next" class="dash-heading">{{ 'member.dashboard.nextEventHeading' | t }}</h2>
+                <a class="dash-head-link" routerLink="/events">{{ 'member.dashboard.allEvents' | t }}</a>
+              </div>
               @if (nextEvent(view.events); as event) {
-                <a class="dash-event-link" [routerLink]="['/events', event.id]">
-                  <vereint-event-card
-                    [title]="event.title"
-                    [when]="formatDateTime(event.startsAt)"
-                    [statusLabel]="eventStatusLabel(event.status)"
-                    [statusTone]="eventTone(event.status)"
-                  />
-                </a>
-                @if (rsvp(); as myAnswer) {
-                  <div class="dash-rsvp" role="group" [attr.aria-label]="'member.dashboard.rsvpGroup' | t">
-                    @if (myAnswer === 'accepted') {
-                      <span class="dash-rsvp-state">
-                        <vereint-icon name="check" /> {{ 'member.dashboard.attending' | t }}
-                      </span>
-                    } @else if (myAnswer === 'declined') {
-                      <span class="dash-rsvp-state dash-rsvp-declined">{{ 'member.dashboard.declined' | t }}</span>
-                    } @else if (myAnswer === 'maybe') {
-                      <span class="dash-rsvp-state dash-rsvp-maybe">{{ 'member.dashboard.maybe' | t }}</span>
-                    }
-                    @if (myAnswer !== 'accepted') {
-                      <button
-                        type="button"
-                        class="member-button dash-rsvp-primary"
-                        [disabled]="rsvpBusy()"
-                        (click)="answer(event.id, 'accepted')"
-                      >
-                        <vereint-icon name="check" /> {{ 'member.rsvp.accept' | t }}
-                      </button>
-                    }
-                    @if (myAnswer !== 'declined') {
-                      <button
-                        type="button"
-                        class="dash-rsvp-secondary"
-                        [disabled]="rsvpBusy()"
-                        (click)="answer(event.id, 'declined')"
-                      >
-                        {{ 'member.rsvp.decline' | t }}
-                      </button>
-                    }
-                  </div>
-                  @if (rsvpError(); as error) {
-                    <p class="member-hint dash-rsvp-error" role="alert">{{ error }}</p>
+                <vereint-event-card
+                  [title]="event.title"
+                  [when]="formatEventWhen(event.startsAt)"
+                  [location]="event.location ?? null"
+                  [statusLabel]="eventStatusLabel(event.status)"
+                  [statusTone]="eventTone(event.status)"
+                >
+                  <a class="dash-event-cover" [routerLink]="['/events', event.id]" [attr.aria-label]="event.title"></a>
+                  @if (rsvp(); as myAnswer) {
+                    <div class="ui-event-foot dash-rsvp" role="group" [attr.aria-label]="'member.dashboard.rsvpGroup' | t">
+                      @if (myAnswer === 'accepted') {
+                        <span class="dash-rsvp-state">
+                          <vereint-icon name="check" /> {{ 'member.dashboard.attending' | t }}
+                        </span>
+                      } @else {
+                        @if (myAnswer === 'declined') {
+                          <span class="dash-rsvp-state dash-rsvp-declined">{{ 'member.dashboard.declined' | t }}</span>
+                        } @else if (myAnswer === 'maybe') {
+                          <span class="dash-rsvp-state dash-rsvp-maybe">{{ 'member.dashboard.maybe' | t }}</span>
+                        }
+                        <button
+                          type="button"
+                          class="member-button dash-rsvp-primary"
+                          [disabled]="rsvpBusy()"
+                          (click)="answer(event.id, 'accepted')"
+                        >
+                          <vereint-icon name="check" /> {{ 'member.rsvp.accept' | t }}
+                        </button>
+                        @if (myAnswer !== 'declined') {
+                          <button
+                            type="button"
+                            class="dash-rsvp-secondary"
+                            [disabled]="rsvpBusy()"
+                            (click)="answer(event.id, 'declined')"
+                          >
+                            {{ 'member.rsvp.decline' | t }}
+                          </button>
+                        }
+                      }
+                    </div>
                   }
+                </vereint-event-card>
+                @if (rsvpError(); as error) {
+                  <p class="member-hint dash-rsvp-error" role="alert">{{ error }}</p>
                 }
-                <a class="dash-more" routerLink="/events">
-                  {{ 'member.dashboard.allEvents' | t }} <vereint-icon name="chevron-right" />
-                </a>
               } @else {
                 <div class="dash-empty">
                   <vereint-icon name="events" [size]="28" />
@@ -151,20 +145,18 @@ interface DashboardView {
           </div>
 
           <div class="dash-grid">
-            <vereint-stat-card icon="events" [label]="'member.dashboard.statEvents' | t" [value]="view.events.length" />
-            <vereint-stat-card icon="receipt" [label]="'member.dashboard.statEntries' | t" [value]="view.balance.entryCount" />
+            <vereint-stat-card
+              [label]="'member.dashboard.statEvents' | t"
+              [value]="eventsThisMonth(view.events)"
+              [hint]="'member.dashboard.statEventsHint' | t"
+            />
+            <vereint-stat-card
+              [label]="'member.dashboard.statEntries' | t"
+              [value]="view.balance.entryCount"
+              [hint]="'member.dashboard.statEntriesHint' | t"
+            />
           </div>
 
-          <h2 class="dash-heading">{{ 'member.dashboard.shortcutsHeading' | t }}</h2>
-          <nav class="dash-shortcuts" [attr.aria-label]="'member.dashboard.shortcutsHeading' | t">
-            @for (shortcut of shortcuts; track shortcut.route) {
-              <a class="dash-shortcut-card" [routerLink]="shortcut.route">
-                <span class="dash-shortcut-icon"><vereint-icon [name]="shortcut.icon" /></span>
-                <span class="dash-shortcut-title">{{ shortcut.titleKey | t }}</span>
-                <span class="dash-shortcut-sub">{{ shortcut.subKey | t }}</span>
-              </a>
-            }
-          </nav>
         }
       </section>
     </main>
@@ -175,46 +167,71 @@ interface DashboardView {
         display: grid;
         gap: var(--space-4);
         grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-        margin-bottom: var(--space-3);
+        margin-bottom: var(--space-4);
       }
 
       .dash-block {
         display: grid;
         align-content: start;
-        gap: var(--space-1);
+        gap: 0.6rem;
+      }
+
+      .dash-head-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--space-2);
       }
 
       .dash-heading {
-        margin: 0 0 0.25rem;
+        margin: 0;
         color: var(--color-text);
-        font-size: 1rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+      }
+
+      .dash-head-link {
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .dash-pay {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 2.75rem;
+        text-decoration: none;
+      }
+
+      .dash-pay:hover,
+      .dash-pay:focus-visible {
+        text-decoration: none;
       }
 
       .dash-more {
         display: inline-flex;
         align-items: center;
         gap: 0.2rem;
-        justify-self: start;
         min-height: 2.75rem;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
       }
 
-      .dash-event-link {
+      vereint-event-card {
         display: block;
-        color: inherit;
-        font-weight: inherit;
-        text-decoration: none;
-        border-radius: var(--radius-md);
-        transition:
-          transform 0.15s ease,
-          box-shadow 0.15s ease;
       }
 
-      .dash-event-link:hover,
-      .dash-event-link:focus-visible {
-        text-decoration: none;
-        transform: translateY(-1px);
-        box-shadow: var(--vereint-shadow);
+      /* Die ganze Karte öffnet das Event; die Antwort-Knöpfe liegen darüber. */
+      .dash-event-cover {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+      }
+
+      .dash-rsvp {
+        position: relative;
       }
 
       .dash-empty {
@@ -232,13 +249,6 @@ interface DashboardView {
         margin: 0;
       }
 
-      .dash-rsvp {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.5rem 0.75rem;
-        margin-top: 0.35rem;
-      }
       .dash-rsvp-primary {
         display: inline-flex;
         align-items: center;
@@ -283,66 +293,11 @@ interface DashboardView {
         margin: 0 0 var(--space-4);
       }
 
-      .dash-shortcuts {
-        display: grid;
-        gap: var(--space-2);
-        grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-        margin: 0.5rem 0 1rem 0;
-      }
-
-      .dash-shortcut-card {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.2rem;
-        padding: 0.9rem;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-md);
-        background: var(--color-surface);
-        text-decoration: none;
-        transition:
-          transform 0.15s ease,
-          border-color 0.15s ease;
-      }
-
-      .dash-shortcut-card:hover,
-      .dash-shortcut-card:focus-visible {
-        border-color: var(--color-brand);
-        text-decoration: none;
-        transform: translateY(-2px);
-      }
-
-      .dash-shortcut-icon {
-        display: grid;
-        place-items: center;
-        width: 2.5rem;
-        height: 2.5rem;
-        margin-bottom: 0.35rem;
-        border-radius: var(--radius-sm);
-        background-color: var(--color-brand-soft);
-        color: var(--color-brand);
-        font-size: 1.35rem;
-      }
-
-      .dash-shortcut-title {
-        overflow-wrap: anywhere;
-        hyphens: auto;
-        font-weight: 700;
-        font-size: 0.95rem;
-        color: var(--color-text);
-      }
-
-      .dash-shortcut-sub {
-        font-size: 0.78rem;
-        font-weight: 500;
-        color: var(--color-text-muted);
-      }
     `,
   ],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly api = inject(MemberApiService);
-  private readonly router = inject(Router);
 
   protected readonly load = new AsyncState<DashboardView>();
   /** Eigene Antwort zum nächsten Termin: `null` = nicht eingeladen oder keine Antwort möglich. */
@@ -351,41 +306,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   protected readonly rsvpError = signal<string | null>(null);
   protected readonly formatMoney = formatMoney;
   protected readonly formatDateTime = formatDateTime;
+  protected readonly formatEventWhen = formatEventWhen;
   protected readonly eventStatusLabel = eventStatusLabel;
 
-  /** Kacheln „Schnellzugriff“: die Ziele hinter „Mehr“, die man oft braucht. */
-  protected readonly shortcuts: readonly DashboardShortcut[] = [
-    {
-      route: '/scan',
-      icon: 'camera',
-      titleKey: 'member.dashboard.shortcuts.scan.title',
-      subKey: 'member.dashboard.shortcuts.scan.sub',
-    },
-    {
-      route: '/moments',
-      icon: 'moments',
-      titleKey: 'member.dashboard.shortcuts.moments.title',
-      subKey: 'member.dashboard.shortcuts.moments.sub',
-    },
-    {
-      route: '/catalog',
-      icon: 'catalog',
-      titleKey: 'member.dashboard.shortcuts.catalog.title',
-      subKey: 'member.dashboard.shortcuts.catalog.sub',
-    },
-    {
-      route: '/purchases',
-      icon: 'receipt',
-      titleKey: 'member.dashboard.shortcuts.purchases.title',
-      subKey: 'member.dashboard.shortcuts.purchases.sub',
-    },
-    {
-      route: '/notifications',
-      icon: 'bell',
-      titleKey: 'member.dashboard.shortcuts.notifications.title',
-      subKey: 'member.dashboard.shortcuts.notifications.sub',
-    },
-  ];
+  /** Events der Liste, die im laufenden Kalendermonat beginnen. */
+  protected eventsThisMonth(events: EventSummary[], now: Date = new Date()): number {
+    return events.filter((event) => {
+      const start = new Date(event.startsAt);
+      return start.getFullYear() === now.getFullYear() && start.getMonth() === now.getMonth();
+    }).length;
+  }
 
   /** Tageszeitabhängiger Untertitel der Begrüßung. */
   protected greeting(now: Date = new Date()): string {
@@ -428,20 +358,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /** Negatives Guthaben (dezimale Zeichenkette) für rote Darstellung. */
   protected isNegative(amount: string): boolean {
     return Number(amount) < 0;
-  }
-
-  /**
-   * Aufladen bucht nur der Vorstand bzw. Admin über die Kasse; Mitglieder
-   * sehen den Button deshalb nicht (sie können ihr Guthaben nicht selbst aufladen).
-   */
-  protected canTopup(profile: MemberProfile): boolean {
-    const roles = profile.roles ?? [];
-    return roles.includes('board') || roles.includes('admin');
-  }
-
-  /** Führt Vorstand/Admin zur Kasse, wo Aufladungen gebucht werden. */
-  protected onTopup(): void {
-    void this.router.navigate(['/board/treasury']);
   }
 
   ngOnDestroy(): void {

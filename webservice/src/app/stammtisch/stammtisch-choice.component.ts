@@ -49,28 +49,31 @@ function safeReturnTo(value: string | null): string {
             [message]="'stammtisch.choice.emptyMessage' | t"
           />
         } @else {
-          <ul class="member-list">
+          <ul class="st-choices">
             @for (item of memberships(); track item.id) {
-              <li class="member-list-item st-row" [class.st-current]="item.id === currentId()">
-                <vereint-group-avatar [groupId]="item.id" [name]="item.name" [imageVersion]="item.imageVersion" size="3rem" />
-                <span class="st-row-main">
-                  <span class="member-list-title">
-                    {{ item.name }}
-                    @if (item.id === currentId()) {
-                      <span class="st-badge st-badge-brand">{{ 'stammtisch.choice.current' | t }}</span>
-                    }
-                  </span>
-                  @if (item.roles.length > 0) {
-                    <span class="member-list-meta">{{ item.roles.join(', ') }}</span>
-                  }
-                </span>
+              <li>
                 <button
                   type="button"
-                  class="member-button"
+                  class="st-choice"
+                  [class.st-current]="item.id === currentId()"
                   [disabled]="busyId() !== null"
                   (click)="open(item.id)"
                 >
-                  {{ (busyId() === item.id ? 'stammtisch.choice.opening' : 'stammtisch.choice.open') | t }}
+                  <vereint-group-avatar [groupId]="item.id" [name]="item.name" [imageVersion]="item.imageVersion" size="2.75rem" />
+                  <span class="st-row-main">
+                    <span class="st-choice-name">{{ item.name }}</span>
+                    @if (item.roles.length > 0) {
+                      <span class="member-list-meta">{{ rolesText(item.roles) }}</span>
+                    }
+                  </span>
+                  <span class="visually-hidden">
+                    {{ (busyId() === item.id ? 'stammtisch.choice.opening' : 'stammtisch.choice.open') | t }}
+                  </span>
+                  @if (item.id === currentId()) {
+                    <span class="st-badge st-badge-brand">{{ 'stammtisch.choice.current' | t }}</span>
+                  } @else {
+                    <vereint-icon class="st-choice-chevron" name="chevron-right" />
+                  }
                 </button>
               </li>
             }
@@ -79,7 +82,11 @@ function safeReturnTo(value: string | null): string {
 
         @if (!loading()) {
           <p class="st-open-own">
-            <a class="member-button member-button-ghost" routerLink="/gruppe-eroeffnen">{{ 'stammtisch.choice.openOwn' | t }}</a>
+            <a routerLink="/gruppe-eroeffnen">
+              <span class="st-open-own-title">
+                <vereint-icon name="plus" /> {{ 'stammtisch.choice.openOwn' | t }}
+              </span>
+            </a>
           </p>
         }
 
@@ -132,6 +139,17 @@ export class StammtischChoiceComponent implements OnInit {
       await this.open(only[0].id);
     }
     this.loading.set(false);
+  }
+
+  /** Rollen lesbar, die höchste zuerst (z. B. „Admin, Vorstand, Mitglied“). */
+  protected rolesText(roles: string[]): string {
+    return roles
+      .map((role) => {
+        const key = `admin.roles.${role}`;
+        const label = translate(key);
+        return label === key ? role : label;
+      })
+      .join(' · ');
   }
 
   protected async open(id: string): Promise<void> {

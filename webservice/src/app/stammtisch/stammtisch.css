@@ -162,13 +162,69 @@ code {
   filter: brightness(0.92);
 }
 
-.st-open-own {
+.st-choices {
+  list-style: none;
   margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
 }
 
-.st-open-own .member-button {
-  display: inline-block;
+.st-choice {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-raised);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.st-choice:hover:not(:disabled) {
+  border-color: var(--color-brand);
+}
+
+.st-choice:disabled {
+  cursor: progress;
+}
+
+.st-choice.st-current {
+  border: 2px solid var(--color-brand);
+}
+
+.st-choice-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.st-choice-chevron {
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+.st-open-own {
+  margin: 0.75rem 0 0;
+}
+
+.st-open-own a {
+  display: block;
+  padding: 1rem;
+  border: 1px dashed var(--color-text-muted);
+  border-radius: var(--radius-lg);
+  color: var(--color-brand);
+  font-weight: 700;
   text-decoration: none;
+}
+
+.st-open-own-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .st-footer-links {

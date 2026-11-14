@@ -175,7 +175,7 @@ authRoutes.get('/keycloak', (req, res, next) => {
  *
  * Rohe Token-Claims verlassen den Server nicht: geliefert werden ausschließlich
  * `subject`, `displayName`, `roles`, `boardRole`, `permissions` sowie der
- * gewählte Stammtisch und die Mitgliedschaften (`docs/authentifizierung.md`).
+ * gewählte Stammtisch und die Mitgliedschaften (`docs/backend-for-frontend/03-authentication-and-session.md`).
  *
  * Die Permissions stammen aus der Rollen-Matrix des Fachservices
  * (`/api/v1/auth/access`, kurz gecacht). Keycloak stellt keinen

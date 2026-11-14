@@ -2,6 +2,7 @@ package de.maurer.baseservice.controller
 
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.security.AuthContext
+import de.maurer.baseservice.service.TermsService
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.Identifiers
 import io.swagger.v3.oas.annotations.Operation
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*
 @Tag(name = "Users", description = "Benutzerprofile, Rollen- und Berechtigungsverwaltung")
 class UserController(
     private val userService: UserService,
+    private val termsService: TermsService,
     private val authContext: AuthContext
 ) {
 
@@ -42,6 +44,16 @@ class UserController(
         val profile = userService.updateProfile(principal, request)
         return ResponseEntity.ok(profile)
     }
+
+    @GetMapping("/me/terms")
+    @Operation(summary = "Stand der AGB-Zustimmung", description = "Gültige Fassung, zugestimmte Fassung und Zeitpunkt des eigenen Kontos")
+    fun getMyTerms(): ResponseEntity<TermsStatusDto> =
+        ResponseEntity.ok(termsService.status(authContext.getRequiredPrincipal()))
+
+    @PostMapping("/me/terms")
+    @Operation(summary = "Der gültigen AGB-Fassung zustimmen", description = "Speichert Fassung und Zeitpunkt der Zustimmung am eigenen Konto")
+    fun acceptMyTerms(@RequestBody request: AcceptTermsRequest): ResponseEntity<TermsStatusDto> =
+        ResponseEntity.ok(termsService.accept(authContext.getRequiredPrincipal(), request))
 
     @GetMapping
     @Operation(

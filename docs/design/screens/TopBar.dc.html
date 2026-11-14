@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kopfzeile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<header style="height: 56px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface); color: var(--color-text); font-family: var(--font-sans)">
+  <sc-if value="{{hasBack}}" hint-placeholder-val="{{ false }}">
+    <a href="{{backHref}}" aria-label="Zurück" style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; color: var(--color-text)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
+    </a>
+  </sc-if>
+  <sc-if value="{{noBack}}" hint-placeholder-val="{{ true }}">
+    <img src="/_blob/658eacfb311db734fae6de78ff566261" alt="Vereint" style="width: 28px; height: 28px; margin-left: 8px; border-radius: 8px">
+  </sc-if>
+  <h1 style="margin: 0 0 0 4px; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 17px; font-weight: 800; letter-spacing: -0.01em">{{heading}}</h1>
+  <sc-if value="{{showGroup}}" hint-placeholder-val="{{ true }}">
+    <a href="GruppeWaehlen.dc.html" aria-label="Gruppe wechseln: Meine Gruppe" style="display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px 0 4px; box-sizing: border-box; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-text); font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap">
+      <span style="display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 11px; font-weight: 800">MG</span>
+      Meine Gruppe
+    </a>
+  </sc-if>
+  <sc-if value="{{showBell}}" hint-placeholder-val="{{ true }}">
+    <a href="Mitteilungen.dc.html" aria-label="Mitteilungen, {{bell}} ungelesen" style="position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; color: var(--color-text-muted)">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><circle cx="12" cy="21" r="1.6" fill="currentColor" stroke="none"/></svg>
+      <sc-if value="{{hasBell}}" hint-placeholder-val="{{ true }}">
+        <span style="position: absolute; top: 6px; right: 6px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--color-surface); border-radius: 999px; background-color: var(--color-danger); color: #ffffff; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center">{{bell}}</span>
+      </sc-if>
+    </a>
+  </sc-if>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"heading":{"editor":null,"default":"Start"},"backHref":{"editor":null,"default":""},"group":{"editor":null,"default":"yes"},"bell":{"editor":null,"default":"4"},"$preview":{"width":390,"height":56}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const back = this.props.backHref ?? '';
+    const bell = this.props.bell ?? '4';
+    return {
+      heading: this.props.heading ?? 'Start',
+      backHref: back,
+      hasBack: back !== '',
+      noBack: back === '',
+      showGroup: (this.props.group ?? 'yes') === 'yes' && back === '',
+      showBell: bell !== 'none',
+      hasBell: bell !== 'none' && bell !== '0',
+      bell: bell
+    };
+  }
+}
+</script>
+</body>
+</html>

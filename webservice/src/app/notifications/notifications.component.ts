@@ -8,7 +8,7 @@ import {
 } from './notifications-api.service';
 import { UnreadBadgeStore } from './unread-badge.store';
 import { AsyncState } from '../member/async-state';
-import { formatDateTime } from '../member/member-format';
+import { formatDateTime, formatDayTime } from '../member/member-format';
 import { StatusBadgeComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
@@ -29,7 +29,6 @@ import { translate } from '../i18n/i18n.service';
                 <vereint-status-badge [label]="'notifications.unread' | t: { count: unreadCount() }" tone="warning" />
               }
             </div>
-            <p>{{ 'notifications.intro' | t }}</p>
           </div>
 
           <div class="header-actions">
@@ -73,15 +72,12 @@ import { translate } from '../i18n/i18n.service';
               @for (item of notifications; track item.id) {
                 <li class="notification-item" [class.unread]="!item.read">
                   <div class="notification-head">
-                    <div class="head-left">
-                      <span class="unread-dot" [class.visible]="!item.read" aria-hidden="true"></span>
-                      <h3 class="item-title">{{ item.title }}</h3>
-                      <vereint-status-badge
-                        [label]="typeLabel(item.type)"
-                        [tone]="typeTone(item.type)"
-                      />
-                    </div>
-                    <time class="item-time">{{ formatDateTime(item.createdAt) }}</time>
+                    <span class="unread-dot" [class.visible]="!item.read" aria-hidden="true"></span>
+                    <h3 class="item-title">{{ item.title }}</h3>
+                    <vereint-status-badge
+                      [label]="typeLabel(item.type)"
+                      [tone]="typeTone(item.type)"
+                    />
                   </div>
 
                   <p class="item-body">{{ item.body }}</p>
@@ -93,7 +89,8 @@ import { translate } from '../i18n/i18n.service';
                     <p class="item-error" role="alert">{{ error }}</p>
                   }
 
-                  @if (item.link || !item.read) {
+                  <div class="item-foot">
+                    <time class="item-time" [attr.datetime]="item.createdAt">{{ formatDayTime(item.createdAt) }}</time>
                     <div class="item-actions">
                       @if (item.type === 'event_invitation' && eventIdOf(item.link); as eventId) {
                         @if (answered()[item.id] !== 'accepted') {
@@ -125,15 +122,16 @@ import { translate } from '../i18n/i18n.service';
                       @if (!item.read) {
                         <button
                           type="button"
-                          class="btn-secondary-sm"
+                          class="item-read"
+                          [attr.aria-label]="'notifications.markRead' | t"
                           [disabled]="busy()"
                           (click)="markAsRead(item.id)"
                         >
-                          {{ 'notifications.markRead' | t }}
+                          {{ 'notifications.markReadShort' | t }}
                         </button>
                       }
                     </div>
-                  }
+                  </div>
                 </li>
               }
             </ul>
@@ -145,17 +143,15 @@ import { translate } from '../i18n/i18n.service';
   styles: [
     `
       .notifications-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-bottom: 1.5rem;
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: var(--space-3);
       }
       .title-with-badge {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
+        justify-content: space-between;
         gap: 0.25rem 0.75rem;
         min-width: 0;
       }
@@ -168,46 +164,38 @@ import { translate } from '../i18n/i18n.service';
         display: flex;
         gap: 0.5rem;
       }
+      .header-actions:empty {
+        display: none;
+      }
       .notifications-list {
         list-style: none;
         padding: 0;
-        margin: 0;
+        margin: var(--space-3) 0 0;
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
       }
       .notification-item {
-        background: var(--color-surface, #ffffff);
-        border: 1px solid var(--color-border, #e2e8f0);
-        border-radius: var(--radius-md, 0.75rem);
-        padding: 1.25rem;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-3);
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        transition: border-color 0.2s;
-      }
-      .notification-item.unread {
-        border-left: 4px solid var(--color-brand, #3b82f6);
-        background: rgba(59, 130, 246, 0.02);
+        gap: 0.4rem;
       }
       .notification-head {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-      }
-      .head-left {
-        display: flex;
-        align-items: center;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: start;
         gap: 0.5rem;
       }
       .unread-dot {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
+        width: 0.5rem;
+        height: 0.5rem;
+        margin-top: 0.45rem;
         border-radius: 50%;
-        background-color: var(--color-brand, #3b82f6);
+        background-color: var(--color-brand);
         visibility: hidden;
       }
       .unread-dot.visible {
@@ -215,26 +203,35 @@ import { translate } from '../i18n/i18n.service';
       }
       .item-title {
         margin: 0;
-        font-size: 1.05rem;
+        font-size: 1rem;
         font-weight: 700;
-        color: var(--color-text, #0f172a);
+        line-height: 1.35;
+        color: var(--color-text);
+      }
+      .item-body {
+        margin: 0 0 0 1rem;
+        font-size: 0.875rem;
+        color: var(--color-text-muted);
+        line-height: 1.5;
+      }
+      .item-foot {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin: 0.25rem 0 0 1rem;
       }
       .item-time {
         font-size: 0.8rem;
-        color: var(--color-text-muted, #64748b);
-      }
-      .item-body {
-        margin: 0;
-        font-size: 0.95rem;
-        color: var(--color-text, #334155);
-        line-height: 1.5;
+        color: var(--color-text-muted);
       }
       .item-actions {
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         justify-content: flex-end;
         gap: 0.5rem;
-        margin-top: 0.25rem;
       }
       .item-actions a,
       .item-actions button {
@@ -242,6 +239,16 @@ import { translate } from '../i18n/i18n.service';
         align-items: center;
         min-height: 2.25rem;
         text-decoration: none;
+      }
+      .item-read {
+        padding: 0 0.25rem;
+        border: none;
+        background: none;
+        color: var(--color-brand);
+        font: inherit;
+        font-size: 0.875rem;
+        font-weight: 700;
+        cursor: pointer;
       }
       .btn-primary-sm {
         padding: 0.35rem 0.75rem;
@@ -265,13 +272,14 @@ import { translate } from '../i18n/i18n.service';
         color: var(--color-danger, #b91c1c);
       }
       .member-button-outline {
-        padding: 0.5rem 1rem;
+        min-height: 2.25rem;
+        padding: 0 1rem;
         font-size: 0.85rem;
-        font-weight: 600;
-        background: transparent;
-        color: var(--color-brand, #3b82f6);
-        border: 1px solid var(--color-brand, #3b82f6);
-        border-radius: var(--radius-md, 0.5rem);
+        font-weight: 700;
+        background: var(--color-surface);
+        color: var(--color-brand);
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
         cursor: pointer;
         transition: all 0.2s;
       }
@@ -304,6 +312,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   protected readonly rsvpErrors = signal<Record<string, string>>({});
 
   protected readonly formatDateTime = formatDateTime;
+  protected readonly formatDayTime = formatDayTime;
 
   ngOnInit(): void {
     this.reload();
@@ -400,6 +409,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         return translate('notifications.type.system');
       case 'moment':
         return translate('notifications.type.moment');
+      case 'general':
+        return translate('notifications.type.general');
       default:
         return type || translate('notifications.type.info');
     }

@@ -15,7 +15,6 @@ import {
   AvatarBadgeComponent,
   DataTableComponent,
   type DataTableColumn,
-  InfoPanelComponent,
   RoleChipComponent,
   StatusBadgeComponent,
   type StatusTone,
@@ -113,7 +112,6 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
     FormsModule,
     AvatarBadgeComponent,
     DataTableComponent,
-    InfoPanelComponent,
     RoleChipComponent,
     StatusBadgeComponent,
     InviteModalComponent,
@@ -126,14 +124,10 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
         <span class="eyebrow">{{ 'admin.eyebrow' | t }}</span>
         <h1 id="admin-title">{{ 'admin.title' | t }}</h1>
         @if (groupName(); as name) {
-          <p>{{ 'admin.intro' | t: { name } }}</p>
+          <p>{{ 'admin.intro' | t: { name } }} {{ 'admin.infoPanel' | t }}</p>
         } @else {
-          <p>{{ 'admin.introNoName' | t }}</p>
+          <p>{{ 'admin.introNoName' | t }} {{ 'admin.infoPanel' | t }}</p>
         }
-
-        <vereint-info-panel icon="admin" [title]="'admin.eyebrow' | t">
-          {{ 'admin.infoPanel' | t }}
-        </vereint-info-panel>
 
         @if (actionError(); as err) {
           <p class="manage-action-error" role="alert">{{ err }}</p>
@@ -201,11 +195,9 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
 
           <ng-template #cell let-user let-column="column">
             @switch (column.key) {
-              @case ('avatar') {
-                <vereint-avatar-badge [name]="user.displayName" />
-              }
               @case ('name') {
                 <span class="admin-name">
+                  <vereint-avatar-badge [name]="user.displayName" />
                   {{ user.displayName }}
                   @if (user.disabled) { <em class="admin-disabled">{{ 'admin.members.disabledMark' | t }}</em> }
                 </span>
@@ -232,7 +224,7 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
                 <span class="member-list-meta">{{ formatDate(user.createdAt) }}</span>
               }
               @case ('actions') {
-                <button type="button" class="member-button" (click)="selectUser(user.id)">
+                <button type="button" class="member-button member-button-ghost" (click)="selectUser(user.id)">
                   {{ 'admin.members.edit' | t }}
                 </button>
               }
@@ -406,7 +398,11 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
         color: #b91c1c;
       }
       .admin-name {
-        font-weight: 600;
+        --avatar-size: 2.25rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-weight: 700;
       }
       .admin-balance {
         font-weight: 600;
@@ -527,7 +523,6 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   /** Spalten der Mitgliedertabelle (geteilte `DataTable`, Zellen via Vorlage). */
   protected readonly columns = computed<DataTableColumn<UserSummary>[]>(() => [
-    { key: 'avatar', header: translate('admin.columns.avatar') },
     { key: 'name', header: translate('admin.columns.name') },
     { key: 'email', header: translate('admin.columns.email') },
     { key: 'role', header: translate('admin.columns.role') },

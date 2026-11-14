@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kommunikation</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Kommunikation" back-href="Vorstand.dc.html" bell="1" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Schriftwart</p>
+      <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">Infotafel &amp; Rundbriefe</h2>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Infotafel im Gruppenchat</h3>
+      <label for="pin" class="visually-hidden">Text der Infotafel</label>
+      <textarea id="pin" rows="2" style="box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px; line-height: 1.4; resize: none">Mitgliederversammlung am 15. November um 19 Uhr im Vereinsheim.</textarea>
+      <div style="display: flex; gap: 8px">
+        <button type="button" style="height: 40px; padding: 0 14px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 14px; font-weight: 700">Anpinnen</button>
+        <button type="button" style="height: 40px; padding: 0 14px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 600">Entfernen</button>
+      </div>
+    </section>
+
+    <form style="display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Rundbrief verfassen</h3>
+      <div role="radiogroup" aria-label="Empfänger" style="display: flex; gap: 16px; font-size: 14px">
+        <label style="display: flex; align-items: center; gap: 6px; min-height: 36px"><input type="radio" name="to" checked style="width: 18px; height: 18px; accent-color: var(--color-brand)">Alle Mitglieder</label>
+        <label style="display: flex; align-items: center; gap: 6px; min-height: 36px"><input type="radio" name="to" style="width: 18px; height: 18px; accent-color: var(--color-brand)">Ausgewählte</label>
+      </div>
+      <label for="tt" class="visually-hidden">Titel</label>
+      <input id="tt" value="{{title}}" onChange="{{onTitle}}" placeholder="Titel" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+      <button type="button" onClick="{{send}}" style="height: 44px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">An alle senden</button>
+    </form>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Gesendet ({{count}})</h3>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <sc-for list="{{sent}}" as="s" hint-placeholder-count="2">
+          <li style="{{s.row}}">
+            <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14px; font-weight: 700">{{s.label}}</span><span style="color: var(--color-text-muted); font-size: 12px">{{s.meta}}</span></span>
+            <span class="ui-badge ui-badge-success">Gesendet</span>
+          </li>
+        </sc-for>
+      </ul>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      title: 'Helfer für die Weihnachtsfeier gesucht',
+      list: [
+        { label: 'Mitgliederversammlung am 15. November', meta: 'an 7 Mitglieder · 17.10., 10:24' },
+        { label: 'Neue Getränkepreise ab Oktober', meta: 'an 7 Mitglieder · 01.10., 18:00' }
+      ]
+    };
+  }
+  renderVals() {
+    const s = this.state;
+    return {
+      theme: this.props.theme ?? 'light',
+      title: s.title,
+      onTitle: (e) => this.setState({ title: e.target.value }),
+      send: () => {
+        const t = s.title.trim();
+        if (!t) return;
+        this.setState({ title: '', list: [{ label: t, meta: 'an 7 Mitglieder · gerade eben' }].concat(s.list) });
+      },
+      count: String(s.list.length),
+      sent: s.list.slice(0, 2).map((x, i) => ({ ...x, row: 'display: flex; align-items: center; gap: 10px; padding: 10px 14px' + (i ? '; border-top: 1px solid var(--color-border)' : '') }))
+    };
+  }
+}
+</script>
+</body>
+</html>

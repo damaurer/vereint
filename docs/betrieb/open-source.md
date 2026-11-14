@@ -16,13 +16,13 @@ Getränkedatenbank stammt aus Open Food Facts und steht unter der ODbL 1.0
   (28.10.2026). Gefunden wurden nur zwei Testwerte (ein fester Einladungs-Token
   und der PEM-Rahmen um einen im Test erzeugten Schlüssel); beide stehen jetzt
   in `.gitleaksignore`. Keine Terraform-States, `.env`-Dateien, Schlüsseldateien
-  oder AWS-Konto-IDs im Verlauf. Alle echten Schlüssel liegen nur im Vault von
-  LinuxServerSetup und in den GitHub-Secrets.
+  oder AWS-Konto-IDs im Verlauf. Echte Schlüssel liegen nur beim Betreiber, nie
+  im Repository.
 - **Demo-Zugänge:** Die Passwörter in `.env.example` und im Entwicklungs-Realm
   (`admin-demo-2026` usw.) gelten nur lokal; Produktion erzeugt eigene Werte.
 - **Workflows:** Kein Workflow nutzt `pull_request_target` oder selbst gehostete
-  Runner. Pull Requests aus Forks laufen ohne Secrets; ausgerollt wird nur von
-  `main` über die Umgebung `production`.
+  Runner. Pull Requests aus Forks laufen ohne Secrets; Images werden nur nach
+  einem Merge auf `qs` oder `main` veröffentlicht.
 
 ## Was öffentlich sichtbar wird
 
@@ -46,24 +46,19 @@ Getränkedatenbank stammt aus Open Food Facts und steht unter der ODbL 1.0
 4. **Settings → Code security:** *Private vulnerability reporting*, *Secret
    scanning* und *Push protection* einschalten (für öffentliche Repos
    kostenlos).
-5. **Settings → Environments → production:** Deployments nur von `main`
-   zulassen (falls noch nicht geschehen, siehe
-   [Go-Live-Checkliste](go-live-checkliste.md)).
-6. **Settings → Branches:** Schutzregeln für `develop`, `qs` und `main`
+5. **Settings → Branches:** Schutzregeln für `develop`, `qs` und `main`
    (Pull Request nötig, Prüfungen müssen grün sein).
 
 Danach sind GitHub Actions für das Repository kostenlos; das monatliche Limit
 privater Repositories gilt nicht mehr. Die Container-Images unter
 `ghcr.io/damaurer/*` bleiben privat, bis du sie unter *Packages* einzeln
-öffentlich schaltest. Das Ausrollen funktioniert in beiden Fällen.
+öffentlich schaltest.
 
 ## Selbst betreiben
 
 Für Ausprobieren und Entwickeln reicht `node local/vereint.mjs up`
 ([local/README.md](../../local/README.md)). Für den
-Produktionsbetrieb auf einem eigenen Server richtet
-[LinuxServerSetup](https://github.com/damaurer/LinuxServerSetup) per Ansible
-einen gehärteten Server mit Traefik, Backups und Monitoring ein; Vereint ist
-dort eine eigene Rolle, Dateien liegen in einem Docker-Volume, ausgerollt wird
-per SSH. Schritt für Schritt: [Betrieb auf einem Strato VPS](strato.md). Die
-AWS-Variante (Terraform, SSM, S3) beschreibt [AWS und Kosten](aws-und-kosten.md).
+Produktionsbetrieb beschreibt [Vereint selbst betreiben](selbst-betreiben.md)
+die Images, die Konfiguration und den ersten Start. Wer
+lieber S3 statt eines Verzeichnisses nutzt, stellt `STORAGE_BACKEND=s3` und
+die `S3_*`-Werte ein ([Integrationen](../baseservice/06-integrations.md)).

@@ -14,7 +14,7 @@ import java.util.UUID
  * Eigentümer, Zweck, referenziertes Objekt, validierten Bildtyp, Größe,
  * Dimensionen, Version und Status. Die Binärdaten liegen im Objektspeicher; der
  * Zugriff erfolgt ausschließlich über zeitlich begrenzte, private URLs
- * (siehe `docs/architektur.md` und `docs/fachkonzept.md`).
+ * (siehe `docs/baseservice/06-integrations.md`).
  */
 @Entity
 @Table(

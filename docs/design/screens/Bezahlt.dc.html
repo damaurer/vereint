@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Bezahlt</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Bezahlen" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 24px 20px">
+    <span style="display: grid; place-items: center; width: 80px; height: 80px; align-self: center; border-radius: 999px; background-color: var(--color-success-light); color: var(--color-success)">
+      <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 9.5 17 19 7.5"/></svg>
+    </span>
+    <div role="status" style="display: flex; flex-direction: column; gap: 6px; text-align: center">
+      <h2 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Bezahlt</h2>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 16px; line-height: 1.5">Helles 0,5 l für 3,50 € wurde von deinem Guthaben abgebucht.</p>
+      <p style="margin: 0; font-size: 16px; font-weight: 700">Neues Guthaben: 29,50 €</p>
+    </div>
+
+    <sc-if value="{{canUndo}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--color-text-muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+        <span style="flex: 1; font-size: 14px; line-height: 1.4">Vertan? Noch 9 Minuten zurücknehmbar.</span>
+        <button type="button" onClick="{{undo}}" style="height: 40px; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 700">Rückgängig</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{undone}}" hint-placeholder-val="{{ false }}">
+      <p role="status" style="margin: 0; padding: 12px 14px; border-radius: 12px; background-color: var(--color-brand-soft); font-size: 14px; text-align: center">Kauf zurückgenommen. Dein Guthaben ist wieder 33,00 €.</p>
+    </sc-if>
+
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <a href="Bezahlen.dc.html" style="display: grid; place-items: center; height: 52px; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 16px; font-weight: 700; text-decoration: none">Nächstes Getränk scannen</a>
+      <a href="Guthaben.dc.html" style="display: grid; place-items: center; height: 48px; font-size: 15px; font-weight: 600; text-decoration: none">Zum Guthaben</a>
+    </div>
+  </main>
+  <dc-import name="TabBar" active="mehr" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { undone: false };
+  }
+  renderVals() {
+    return {
+      theme: this.props.theme ?? 'light',
+      canUndo: !this.state.undone,
+      undone: this.state.undone,
+      undo: () => this.setState({ undone: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

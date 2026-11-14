@@ -78,6 +78,19 @@ describe('resolveServerEnvironment', () => {
     });
   });
 
+  it('prefixes cookies with __Host- only for secure cookies behind HTTPS', () => {
+    const https = { ...completeEnv, PUBLIC_BASE_URL: 'https://vereint.example.org' };
+    expect(resolveServerEnvironment({ ...https, SESSION_COOKIE_SECURE: 'true' }).hostPrefixedCookies).toBe(true);
+    expect(resolveServerEnvironment({ ...https, SESSION_COOKIE_SECURE: 'false' }).hostPrefixedCookies).toBe(false);
+    expect(
+      resolveServerEnvironment({
+        ...completeEnv,
+        PUBLIC_BASE_URL: 'http://localhost:4200',
+        SESSION_COOKIE_SECURE: 'true',
+      }).hostPrefixedCookies,
+    ).toBe(false);
+  });
+
   it('defaults the session TTL to 24 hours, matching the Keycloak SSO lifespan', () => {
     const env = resolveServerEnvironment({ ...completeEnv, PORT: 'not-a-port' });
 

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kein Zugriff</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Kein Zugriff" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 20px; padding: 24px">
+    <span style="display: grid; place-items: center; width: 72px; height: 72px; border-radius: 999px; background-color: var(--color-warning-light); color: var(--color-warning)">
+      <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><circle cx="12" cy="15.5" r="1.6" fill="currentColor" stroke="none"/></svg>
+    </span>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 13px; font-weight: 700; letter-spacing: 0.08em">FEHLER 403</p>
+      <h2 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Dafür fehlt dir die Berechtigung</h2>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 16px; line-height: 1.5">Diese Seite ist nur für den Vorstand von Meine Gruppe freigegeben. Wenn du sie brauchst, frag eine Person aus dem Vorstand.</p>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      <a href="Main.dc.html" style="display: grid; place-items: center; height: 52px; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 16px; font-weight: 700; text-decoration: none">Zur Startseite</a>
+      <a href="GruppeWaehlen.dc.html" style="display: grid; place-items: center; height: 48px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 15px; font-weight: 600; text-decoration: none">Andere Gruppe wählen</a>
+    </div>
+  </main>
+  <dc-import name="TabBar" active="start" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

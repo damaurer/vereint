@@ -29,7 +29,7 @@ function normalizeBarcode(value: string): string {
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="library-title">
-        <a class="member-back" routerLink="/catalog">{{ 'catalog.library.back' | t }}</a>
+        <a class="member-back" data-topbar-back routerLink="/catalog">{{ 'catalog.library.back' | t }}</a>
         <span class="eyebrow">{{ 'catalog.header.eyebrow' | t }}</span>
         <h1 id="library-title">{{ 'catalog.library.title' | t }}</h1>
         <p>{{ 'catalog.library.intro' | t }}</p>

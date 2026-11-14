@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  *
  * [key] und [previousKey] sind Base64-kodierte 256-Bit-Schlüssel aus
  * `DATA_ENCRYPTION_KEY` bzw. `DATA_ENCRYPTION_KEY_PREVIOUS`. In Produktion
- * stammen sie aus dem AWS SSM Parameter Store und gelangen nie in Browser,
+ * setzt sie der Betreiber als Secret; sie gelangen nie in Browser,
  * SSR-HTML oder Logs. Ist [enabled] gesetzt, startet der Service ohne gültigen
  * Schlüssel nicht (`deny by default`).
  */

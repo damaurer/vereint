@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { IconComponent } from './icon.component';
 import { StatusBadgeComponent, StatusTone } from './status-badge.component';
 
 /**
@@ -8,7 +9,7 @@ import { StatusBadgeComponent, StatusTone } from './status-badge.component';
 @Component({
   selector: 'vereint-event-card',
   standalone: true,
-  imports: [StatusBadgeComponent],
+  imports: [StatusBadgeComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <article class="ui-event-card">
@@ -19,11 +20,12 @@ import { StatusBadgeComponent, StatusTone } from './status-badge.component';
         }
       </div>
       @if (when) {
-        <p class="ui-event-meta">{{ when }}</p>
+        <p class="ui-event-meta">@if (icons) {<vereint-icon name="clock" />} {{ when }}</p>
       }
       @if (location) {
-        <p class="ui-event-meta">{{ location }}</p>
+        <p class="ui-event-meta">@if (icons) {<vereint-icon name="location" />} {{ location }}</p>
       }
+      <ng-content />
     </article>
   `,
 })
@@ -33,4 +35,6 @@ export class EventCardComponent {
   @Input() location: string | null = null;
   @Input() statusLabel: string | null = null;
   @Input() statusTone: StatusTone = 'neutral';
+  /** Uhr- und Ortssymbol vor den Zeilen (Startseite); die Eventliste zeigt nur Text. */
+  @Input() icons = true;
 }

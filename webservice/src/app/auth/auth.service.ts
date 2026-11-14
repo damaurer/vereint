@@ -10,7 +10,7 @@ import { AuthMeResponse, AuthSessionUser } from './auth.types';
  * OIDC-Authorization-Code-Flow mit PKCE in Express (`GET /api/auth/login`),
  * Keycloak authentifiziert, und Express legt die HttpOnly-Session an. Der
  * frühere Firebase-Pfad mit `POST /api/auth/session` ist entfallen; der
- * Endpunkt antwortet mit `410` (siehe `docs/authentifizierung.md`).
+ * Endpunkt antwortet mit `410` (siehe `docs/backend-for-frontend/03-authentication-and-session.md`).
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -113,7 +113,7 @@ export class AuthService {
    * Verwirft zwischengespeicherte Sessioninformationen im Client. Tokens werden
    * ohnehin nur serverseitig gehalten; hier wird lediglich der kurzlebige
    * Identitäts-Cache invalidiert, damit nach Logout keine veraltete Navigation
-   * erfolgt (siehe `docs/authentifizierung.md`, „Logout").
+   * erfolgt (siehe `docs/backend-for-frontend/03-authentication-and-session.md`, „Session-Zerstörung & Logout").
    */
   clearClientState(): void {
     this.sessionRequest = null;

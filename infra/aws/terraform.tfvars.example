@@ -1,8 +1,0 @@
-# Kopieren nach `terraform.tfvars` und anpassen. `terraform.tfvars` wird nicht
-# eingecheckt.
-domain      = "vereint.example.de"
-alert_email = "admin@example.de"
-
-# Optional:
-# monthly_budget_usd = 30
-# instance_type      = "t4g.small"

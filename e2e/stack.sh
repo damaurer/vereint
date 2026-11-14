@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Startet bzw. stoppt den Produktions-Stack (deploy/compose.yaml) fuer die
+# Startet bzw. stoppt den Stack (local/compose.yaml) fuer die
 # E2E-Tests unter https://vereint.test:8443.
 #
 #   e2e/stack.sh up      Images aus den Dockerfiles bauen und Stack starten
@@ -14,9 +14,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ENV_FILE="$ROOT/e2e/.env.e2e"
 compose() {
-  docker compose --project-name vereint-e2e --project-directory "$ROOT/deploy" \
+  docker compose --project-name vereint-e2e --project-directory "$ROOT/local" \
     --env-file "$ENV_FILE" \
-    -f "$ROOT/deploy/compose.yaml" -f "$ROOT/e2e/compose.e2e.yaml" "$@"
+    -f "$ROOT/local/compose.yaml" -f "$ROOT/e2e/compose.e2e.yaml" "$@"
 }
 rand() { openssl rand -hex 24; }
 
@@ -36,10 +36,6 @@ KEYCLOAK_TABLET_CLIENT_SECRET=$(rand)
 KEYCLOAK_REGISTRATION_CLIENT_SECRET=$(rand)
 SESSION_SECRET=$(rand)
 DATA_ENCRYPTION_KEY=$(openssl rand -base64 32)
-S3_BUCKET=vereint-e2e
-S3_REGION=us-east-1
-S3_ACCESS_KEY=e2e$(openssl rand -hex 8)
-S3_SECRET_KEY=$(rand)
 ENV
 }
 

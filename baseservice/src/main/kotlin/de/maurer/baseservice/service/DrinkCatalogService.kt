@@ -3,6 +3,7 @@ package de.maurer.baseservice.service
 import de.maurer.baseservice.domain.DrinkBarcodeEntity
 import de.maurer.baseservice.domain.DrinkCatalogEntity
 import de.maurer.baseservice.domain.DrinkStatus
+import de.maurer.baseservice.domain.TallyCategoryEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.error.AccessDeniedException
@@ -13,6 +14,7 @@ import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.DrinkCatalogRepository
 import de.maurer.baseservice.repository.DrinkLibraryRepository
+import de.maurer.baseservice.repository.TallyCategoryRepository
 import de.maurer.baseservice.security.Permission
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.Identifiers
@@ -29,7 +31,7 @@ import java.util.UUID
  * (TICKET-013). Neue Getränke werden vorgeschlagen (`proposed`) und ausschließlich
  * durch Vorstand und Administration freigegeben (`approved`) oder abgelehnt
  * (`rejected`). Alle Berechtigungen werden serverseitig geprüft; jeder Aufruf
- * folgt dem Prinzip `deny by default` (siehe `docs/fachkonzept.md`).
+ * folgt dem Prinzip `deny by default` (siehe `docs/domains/drink-catalog-and-sublists.md`).
  */
 @Service
 @Transactional
@@ -37,6 +39,7 @@ class DrinkCatalogService(
     private val drinkCatalogRepository: DrinkCatalogRepository,
     private val drinkBarcodeRepository: DrinkBarcodeRepository,
     private val drinkLibraryRepository: DrinkLibraryRepository,
+    private val tallyCategoryRepository: TallyCategoryRepository,
     private val access: StammtischAccess,
     private val userService: UserService
 ) {
@@ -112,13 +115,13 @@ class DrinkCatalogService(
         }
 
         // Übernahme aus der gemeinsamen Getränkedatenbank: nur die Herkunft merken.
-        val libraryDrinkId = request.libraryDrinkId?.trim()?.takeIf { it.isNotEmpty() }?.let { value ->
+        val libraryDrink = request.libraryDrinkId?.trim()?.takeIf { it.isNotEmpty() }?.let { value ->
             val id = Identifiers.parseUuid(value, "libraryDrinkId")
-            if (!drinkLibraryRepository.existsById(id)) {
-                throw ResourceNotFoundException(Msg("error.drinkLibrary.notFound", id), ErrorCode.NOT_FOUND)
+            drinkLibraryRepository.findById(id).orElseThrow {
+                ResourceNotFoundException(Msg("error.drinkLibrary.notFound", id), ErrorCode.NOT_FOUND)
             }
-            id
         }
+        val libraryDrinkId = libraryDrink?.id
 
         // Barcodes vor dem Speichern prüfen, damit ein belegter Code kein halb angelegtes Getränk hinterlässt.
         val barcodes = request.barcodes.orEmpty().map { normalizeBarcode(it) }.distinct()
@@ -130,6 +133,9 @@ class DrinkCatalogService(
             name = name,
             description = request.description?.trim()?.ifBlank { null },
             category = request.category?.trim()?.ifBlank { null },
+            // Füllmenge und Kalorien: eigene Angabe, sonst die der Getränkedatenbank.
+            volumeMl = request.nutrition?.volumeMl ?: libraryDrink?.volumeMl,
+            kcalPerServing = request.nutrition?.kcalPerServing ?: libraryDrink?.kcalPerServing,
             defaultPrice = price,
             costPrice = request.costPrice ?: BigDecimal.ZERO,
             currency = normalizeCurrency(request.currency),
@@ -139,7 +145,9 @@ class DrinkCatalogService(
             active = privileged,
             status = if (privileged) DrinkStatus.approved else DrinkStatus.proposed,
             proposedBy = caller,
-            approvedBy = if (privileged) caller else null
+            approvedBy = if (privileged) caller else null,
+            // Nur wer den Katalog pflegt, ordnet eine Strich-Kategorie zu (Issue #80).
+            tallyCategory = if (privileged) request.tallyCategoryId?.let { resolveTallyCategory(it) } else null
         )
         val saved = drinkCatalogRepository.save(drink)
 
@@ -176,6 +184,15 @@ class DrinkCatalogService(
             }
             drink.active = request.active
         }
+        if (request.tallyCategoryId != null) {
+            if (!privileged) {
+                throw AccessDeniedException(
+                    Msg("error.tallyCategory.assignDenied"),
+                    ErrorCode.ACCESS_DENIED
+                )
+            }
+            drink.tallyCategory = resolveTallyCategory(request.tallyCategoryId)
+        }
 
         // Katalogversion nur für bereits freigegebene Stammdaten fortschreiben, damit
         // historische Event-Snapshots (TICKET-013/016) die Änderung erkennen können.
@@ -202,6 +219,10 @@ class DrinkCatalogService(
         }
         if (request.category != null) {
             drink.category = request.category.trim().ifBlank { null }
+        }
+        request.nutrition?.let {
+            drink.volumeMl = it.volumeMl
+            drink.kcalPerServing = it.kcalPerServing
         }
         if (request.imageReference != null) {
             val image = request.imageReference.trim().ifBlank { null }
@@ -284,6 +305,19 @@ class DrinkCatalogService(
         }
         drinkBarcodeRepository.delete(barcode)
     }
+
+    /** Leer = ohne Kategorie; sonst eine nicht gelöschte Kategorie der Gruppe. */
+    private fun resolveTallyCategory(value: String): TallyCategoryEntity? {
+        val trimmed = value.trim()
+        if (trimmed.isEmpty()) return null
+        val id = Identifiers.parseUuid(trimmed, "tallyCategoryId")
+        return tallyCategoryRepository.findById(id).filter { !it.archived }.orElseThrow {
+            ResourceNotFoundException(Msg("error.tallyCategory.notFound", id), ErrorCode.NOT_FOUND)
+        }
+    }
+
+    private fun activeTallyCategory(drink: DrinkCatalogEntity): TallyCategoryEntity? =
+        drink.tallyCategory?.takeUnless { it.archived }
 
     private fun requireDrink(id: UUID): DrinkCatalogEntity =
         drinkCatalogRepository.findById(id).orElseThrow {
@@ -383,7 +417,12 @@ class DrinkCatalogService(
             barcodes = barcodes,
             createdAt = drink.createdAt,
             updatedAt = drink.updatedAt,
-            libraryDrinkId = drink.libraryDrinkId?.toString()
+            libraryDrinkId = drink.libraryDrinkId?.toString(),
+            volumeMl = drink.volumeMl,
+            kcalPerServing = drink.kcalPerServing,
+            tallyCategoryId = activeTallyCategory(drink)?.id?.toString(),
+            tallyCategoryName = activeTallyCategory(drink)?.name,
+            tallyCategoryPrice = activeTallyCategory(drink)?.price
         )
     }
 
@@ -397,7 +436,10 @@ class DrinkCatalogService(
             currency = drink.currency,
             status = drink.status.name,
             active = drink.active,
-            catalogVersion = drink.catalogVersion
+            catalogVersion = drink.catalogVersion,
+            tallyCategoryId = activeTallyCategory(drink)?.id?.toString(),
+            tallyCategoryName = activeTallyCategory(drink)?.name,
+            tallyCategoryPrice = activeTallyCategory(drink)?.price
         )
 
     private fun toBarcodeDto(barcode: DrinkBarcodeEntity): DrinkBarcodeDto =

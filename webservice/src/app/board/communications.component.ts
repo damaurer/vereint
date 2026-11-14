@@ -1,6 +1,5 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { describeApiError } from '../api/api-client.service';
@@ -13,7 +12,8 @@ import type {
   ConversationSummary,
   DirectoryMember,
 } from '../api/api.types';
-import { InfoPanelComponent, StatusBadgeComponent } from '../ui';
+import { RouterLink } from '@angular/router';
+import { StatusBadgeComponent } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
@@ -34,20 +34,18 @@ type RecipientMode = 'all' | 'selected';
  */
 @Component({
   selector: 'app-board-communications',
-  imports: [StateComponent, FormsModule, RouterLink, InfoPanelComponent, StatusBadgeComponent, TranslatePipe],
+  imports: [StateComponent, FormsModule, RouterLink, StatusBadgeComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="comm-title">
         <span class="eyebrow">{{ 'board.comms.eyebrow' | t }}</span>
         <h1 id="comm-title">{{ 'board.comms.title' | t }}</h1>
-        <p>{{ 'board.comms.intro' | t }}</p>
-        <a class="member-back" routerLink="/board">{{ 'board.backToBoard' | t }}</a>
+        <a class="member-back" data-topbar-back routerLink="/board">{{ 'board.backToBoard' | t }}</a>
 
         <!-- Infotafel des Gruppenchats -->
-        <h2 class="member-subtitle">{{ 'board.comms.pinboardTitle' | t }}</h2>
-        <vereint-info-panel icon="pin" [title]="'board.comms.infoTitle' | t">
-          {{ 'board.comms.infoText' | t }}
-        </vereint-info-panel>
+        <section class="comm-card">
+        <h2 class="comm-card-title">{{ 'board.comms.pinboardTitle' | t }}</h2>
+        <p class="comm-card-hint">{{ 'board.comms.infoText' | t }}</p>
 
         @if (club.isLoading()) {
           <vereint-state kind="loading" [title]="'common.loading' | t" [message]="'board.comms.pin.loading' | t" />
@@ -97,8 +95,11 @@ type RecipientMode = 'all' | 'selected';
           }
         }
 
+        </section>
+
         <!-- Rundbrief -->
-        <h2 class="member-subtitle">{{ 'board.comms.composeTitle' | t }}</h2>
+        <section class="comm-card">
+        <h2 class="comm-card-title">{{ 'board.comms.composeTitle' | t }}</h2>
         <form class="manage-form" (ngSubmit)="send()">
           <fieldset class="comm-recipients">
             <legend>{{ 'board.comms.recipients.legend' | t }}</legend>
@@ -197,6 +198,8 @@ type RecipientMode = 'all' | 'selected';
           </div>
         }
 
+        </section>
+
         <!-- Protokoll -->
         @if (audit.isLoading()) {
           <vereint-state
@@ -263,13 +266,28 @@ type RecipientMode = 'all' | 'selected';
         font: inherit;
         min-width: 0;
       }
+      .comm-card {
+        margin: var(--space-3) 0;
+        padding: var(--space-3);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-surface-raised);
+      }
+      .comm-card-title {
+        margin: 0 0 0.25rem;
+        font-size: 1.05rem;
+      }
+      .comm-card-hint {
+        margin: 0 0 var(--space-2);
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+      }
       .comm-pinned {
         display: grid;
         gap: 0.25rem;
         margin: 0.75rem 0 0;
         padding: 0.75rem;
-        border-left: 4px solid var(--color-brand);
-        border-radius: 0.5rem;
+        border-radius: var(--radius-md);
         background: var(--color-brand-soft, transparent);
       }
       .comm-pinned-text {

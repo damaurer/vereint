@@ -2,6 +2,8 @@
 
 Für Administratorinnen und Administratoren einer Gruppe. Du hast alle Rechte des Vorstands (siehe [Leitfaden Vorstand](03-vorstand.md)) und zusätzlich die **Administration** und die **Gruppeneinstellungen**. Alles hier gilt nur für die Gruppe, die gerade offen ist. Diese Arbeit erledigst du am besten am Rechner; die Bilder zeigen deshalb die Rechneransicht.
 
+Jeden Bildschirm der Administration einzeln erklärt [Die App Bildschirm für Bildschirm](07-alle-screens.md#administration).
+
 ## Mitgliederliste
 
 <img src="bilder/a-mitglieder.png" alt="Mitgliederliste" width="720">
@@ -105,7 +107,7 @@ Ein eigenes Thekenkonto ist besser als ein persönliches: So erscheint auf dem T
 
 ## Passwort vergessen
 
-Vereint verschickt keine E-Mails, deshalb gibt es keinen Link zum Zurücksetzen. Hat jemand sein Passwort vergessen, hilft, wer Zugang zur Keycloak-Verwaltung hat, meist der Betreiber der Installation. Dort unter Realm `vereint` → *Users* → Person → *Credentials* → *Reset password* ein neues Passwort mit **Temporary** setzen. Die Person muss es beim nächsten Anmelden ändern. Wie man die Keycloak-Verwaltung erreicht, steht in [`deploy/README.md`](../../deploy/README.md#keycloak-verwaltung).
+Vereint verschickt keine E-Mails, deshalb gibt es keinen Link zum Zurücksetzen. Hat jemand sein Passwort vergessen, hilft, wer Zugang zur Keycloak-Verwaltung hat, meist der Betreiber der Installation. Dort unter Realm `vereint` → *Users* → Person → *Credentials* → *Reset password* ein neues Passwort mit **Temporary** setzen. Die Person muss es beim nächsten Anmelden ändern.
 
 ## Plattform-Administration
 

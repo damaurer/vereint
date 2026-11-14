@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Einladung annehmen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <header style="height: 64px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px">
+    <img src="/_blob/658eacfb311db734fae6de78ff566261" alt="Vereint" style="width: 32px; height: 32px; border-radius: 9px">
+    <span class="ui-chip ui-chip-accent">Einladung</span>
+  </header>
+
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 18px; padding: 8px 20px 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Du bist eingeladen</p>
+      <h1 style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em">Weihnachtsfeier</h1>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 15px; line-height: 1.5">Thomas Berger lädt dich zur Weihnachtsfeier von Meine Gruppe ein.</p>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface); font-size: 15px">
+      <span style="display: flex; align-items: center; gap: 10px">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--color-text-muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+        Mi, 16. Dez · 19:00
+      </span>
+      <span style="display: flex; align-items: center; gap: 10px">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--color-text-muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.2" fill="var(--color-text-muted)" stroke="none"/></svg>
+        Gasthaus Post, Saal
+      </span>
+      <span style="display: flex; align-items: center; gap: 10px">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--color-text-muted)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>
+        Gültig bis 24.10.2026 · noch 4 von 5 Plätzen frei
+      </span>
+    </section>
+
+    <form style="display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 700">Als Gast teilnehmen</h2>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <label for="gname" style="font-size: 13px; font-weight: 600">Dein Name</label>
+        <input id="gname" value="Karin Maier" style="height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+        <span style="color: var(--color-text-muted); font-size: 12px">So sehen dich die anderen im Event-Chat.</span>
+      </div>
+      <a href="GastEvent.dc.html" style="display: grid; place-items: center; height: 52px; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 16px; font-weight: 700; text-decoration: none">Event beitreten</a>
+    </form>
+
+    <div style="display: flex; align-items: center; gap: 12px; color: var(--color-text-muted); font-size: 13px">
+      <span style="flex: 1; height: 1px; background-color: var(--color-border)"></span>
+      oder
+      <span style="flex: 1; height: 1px; background-color: var(--color-border)"></span>
+    </div>
+    <a href="Login.dc.html" style="display: grid; place-items: center; height: 48px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 15px; font-weight: 600; text-decoration: none">Mit Mitgliedskonto anmelden</a>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? 'light' };
+  }
+}
+</script>
+</body>
+</html>

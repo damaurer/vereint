@@ -12,7 +12,7 @@ const events: EventSummary[] = [
     id: 'e-1',
     title: 'Sommerfest',
     status: 'active',
-    startsAt: '2026-07-01T18:00:00Z',
+    startsAt: '2099-07-01T18:00:00Z',
     endsAt: null,
     ownerId: 'o-1',
     ownerDisplayName: 'Bob',
@@ -62,13 +62,33 @@ describe('EventsComponent', () => {
   it('lets invited members answer via the rsvp endpoint', async () => {
     const fixture = await create();
     const root = fixture.nativeElement as HTMLElement;
-    expect(html(fixture)).toContain('Offen');
+    expect(html(fixture)).toContain('Aktiv');
     (root.querySelector('.events-accept') as HTMLButtonElement).click();
     fixture.detectChanges();
     expect(api.respondToEvent).toHaveBeenCalledWith('e-1', 'accepted');
-    expect(html(fixture)).toContain('Zugesagt');
+    expect(html(fixture)).toContain('Du bist dabei');
     expect(root.querySelector('.events-accept')).toBeNull();
-    expect(root.querySelector('.events-decline')).toBeTruthy();
+  });
+
+  it('shows an open invitation as "Offen" and splits upcoming from past events', async () => {
+    api.listEvents.mockReturnValue(
+      of([
+        { ...events[0], id: 'e-2', title: 'Wanderung', status: 'published' },
+        { ...events[0], id: 'e-3', title: 'Altes Fest', status: 'completed', startsAt: '2020-01-01T18:00:00Z' },
+      ]),
+    );
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(html(fixture)).toContain('Offen');
+    expect(html(fixture)).toContain('Wanderung');
+    expect(html(fixture)).not.toContain('Altes Fest');
+    const past = Array.from(root.querySelectorAll<HTMLButtonElement>('.events-tab')).find((tab) =>
+      tab.textContent?.includes('Vergangen'),
+    )!;
+    past.click();
+    fixture.detectChanges();
+    expect(html(fixture)).toContain('Altes Fest');
+    expect(html(fixture)).not.toContain('Wanderung');
   });
 
   it('shows no answer buttons for events without invitation', async () => {

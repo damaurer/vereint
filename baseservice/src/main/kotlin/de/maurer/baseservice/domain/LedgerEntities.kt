@@ -77,6 +77,28 @@ class LedgerEntryEntity(
     var createdAt: Instant = Instant.now(),
 
     /**
+     * Strich-Kategorie, zu deren Preis das Getränk gebucht wurde (Strich am
+     * Terminal oder Kauf per Scan im Event). Gegenbuchungen übernehmen sie von
+     * der Ursprungsbuchung.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tally_category_id")
+    var tallyCategory: TallyCategoryEntity? = null,
+
+    /**
+     * Runde, auf die der Strich ging (Issue #81). Dann ist [member] der Geber,
+     * dessen Guthaben belastet wird, und [beneficiary] die Person, die getrunken
+     * hat. Gegenbuchungen übernehmen beide Verweise.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "round_id")
+    var round: RoundEntity? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "beneficiary_id")
+    var beneficiary: UserEntity? = null,
+
+    /**
      * Der Beleg-Snapshot ist eigenständig und wird nicht mit der Buchung
      * gelöscht (Fremdschlüssel auf `RESTRICT`).
      *

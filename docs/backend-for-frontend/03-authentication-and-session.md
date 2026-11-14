@@ -100,7 +100,29 @@ Browser begrenzen einzelne Cookies auf maximal 4 KB. Da Access-, Refresh- und ID
 - **Max. Chunks (`MAX_SESSION_COOKIE_CHUNKS`)**: `6`.
 - **Max. Gesamtkapazität (`MAX_SESSION_COOKIE_BYTES`)**: `18.432` Bytes (18 KB).
 - **Namensschema**: `vereint_session` (Teil 0), `vereint_session.1`, `vereint_session.2` bis `vereint_session.5`.
-- **Cookie-Attribute**: `Path=/; HttpOnly; SameSite=Lax; Secure (in Prod); Max-Age=...`
+- **Cookie-Attribute**: `Path=/; HttpOnly; SameSite=Lax; Secure (in Prod); Max-Age=...`, nie `Domain`.
+
+### Cookie-Namen mit `__Host-`
+
+Mit `SESSION_COOKIE_SECURE=true` und einer `PUBLIC_BASE_URL` mit `https://`
+(Produktion, E2E) tragen alle Cookies des BFF das Präfix `__Host-`:
+`__Host-vereint_session` (und `.1` bis `.5`), `__Host-oidc_state` und
+`__Host-vereint.stammtisch`. Browser nehmen solche Cookies nur mit `Secure`,
+`Path=/` und ohne `Domain` an. Andere Anwendungen unter derselben Domain können
+sie daher weder setzen noch überschreiben. Lokal unter `http://localhost`
+bleiben die Namen ohne Präfix (`vereint_session`, `__oidc_state`,
+`vereint.stammtisch`).
+
+- **Ungültige Kodierung**: Ein Cookie mit kaputter Prozent-Kodierung (etwa
+  `vereint_session=%E0`) zählt als nicht vorhanden. Die Anfrage läuft ohne
+  Session weiter (Login-Seite bzw. `401`), nicht in einen `500`.
+- **Umstellung bestehender Sitzungen**: Fehlt `__Host-vereint_session`, liest
+  `verifyRequestSession` einmalig die Session unter dem alten Namen, schreibt sie
+  unter dem neuen Namen und löscht die alten Teil-Cookies. Ebenso übernimmt
+  `attachIdentity` ein altes `vereint.stammtisch` nach `__Host-vereint.stammtisch`.
+  Ein Cookie unter dem alten Namen zählt nur, solange kein neues existiert.
+  Ein laufender Login (`__oidc_state`) wird nicht übernommen: Wer genau während
+  der Umstellung auf der Keycloak-Seite stand, meldet sich erneut an.
 
 ---
 
@@ -133,7 +155,7 @@ graph TD
 Beim Aufruf von `/api/auth/logout`:
 1. **Cache-Invalidierung**: `invalidateAccessDecision(sessionId)` verwirft sofort gecachte Rollenberechtigungen.
 2. **Backchannel-Logout**: Der BFF sendet einen `POST`-Request an Keycloaks `/protocol/openid-connect/logout` mit `client_id`, `client_secret` und dem `refresh_token`.
-3. **Cookie-Löschung**: Alle Session-Chunks (`vereint_session.*`) und State-Cookies werden mit `Max-Age=0` gelöscht. Das Gruppen-Cookie `vereint.stammtisch` bleibt bestehen; es gewährt ohne Session nichts.
+3. **Cookie-Löschung**: Alle Session-Chunks (`vereint_session.*`, in Produktion `__Host-vereint_session.*` und die alten Namen) und State-Cookies werden mit `Max-Age=0` gelöscht. Das Gruppen-Cookie `vereint.stammtisch` bleibt bestehen; es gewährt ohne Session nichts.
 4. **End-Session-Redirect**: Bei Browseraufrufen leitet der Server mit `id_token_hint` und `post_logout_redirect_uri` (`/auth/logged-out`) zu Keycloak weiter, um auch die Keycloak-SSO-Sitzung im Browser zu beenden. *Hinweis*: Bestehende Keycloak-Realms müssen die Redirect-URI `/auth/logged-out` erlauben (`post.logout.redirect.uris`), andernfalls lehnt Keycloak den End-Session-Redirect ab.
 
 ---

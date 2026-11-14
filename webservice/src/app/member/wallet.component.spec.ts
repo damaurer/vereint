@@ -45,7 +45,8 @@ const entries: LedgerEntry[] = [
     memberId: 'm-1',
     memberDisplayName: 'Alice',
     drinkId: 'd-1',
-    amount: '-7.50',
+    // Wie vom Fachservice: Kaufbeträge sind positiv, die Buchungsart bestimmt das Vorzeichen.
+    amount: '7.50',
     currency: 'EUR',
     accountingMode: 'credit',
     source: 'pwaBarcode',
@@ -97,13 +98,15 @@ describe('WalletComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('vereint-balance-card')).toBeTruthy();
   });
 
-  it('renders negative amounts in the danger colour', async () => {
+  it('signs amounts by their effect on the balance', async () => {
     const fixture = await create();
-    const root = fixture.nativeElement as HTMLElement;
-
-    const negative = root.querySelector('.member-amount-negative');
-    expect(negative).toBeTruthy();
-    expect(negative?.textContent).toContain('7,50');
+    const amounts = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('.member-amount'));
+    const purchase = amounts.find((node) => node.textContent?.includes('7,50'));
+    const topup = amounts.find((node) => node.textContent?.includes('20,00'));
+    expect(purchase?.textContent).toContain('−7,50');
+    expect(purchase?.classList.contains('member-amount-positive')).toBe(false);
+    expect(topup?.textContent).toContain('+20,00');
+    expect(topup?.classList.contains('member-amount-positive')).toBe(true);
   });
 
   it('lists the newest booking first', async () => {
@@ -178,6 +181,28 @@ describe('WalletComponent', () => {
       (fixture.nativeElement as HTMLElement).querySelectorAll('.member-list-title'),
     ).map((el) => el.textContent?.trim());
     expect(titles).toEqual(['Storno: Helles', 'Helles', 'Aufladung']);
+  });
+
+  it('names who drank on my round', async () => {
+    const roundEntry: LedgerEntry = {
+      ...entries[1],
+      source: 'round',
+      roundId: 'r-1',
+      beneficiaryId: 'm-2',
+      beneficiaryDisplayName: 'Felix Braun',
+      snapshot: {
+        itemType: 'DRINK',
+        drinkName: 'Helles',
+        imageReference: null,
+        barcode: null,
+        unitPrice: '3.50',
+        currency: 'EUR',
+        catalogVersion: 1,
+      },
+    };
+    api.listEntries.mockReturnValue(of([roundEntry]));
+    const fixture = await create();
+    expect(html(fixture)).toContain('Runde: Felix Braun · Helles');
   });
 
   it('shows an empty state when there are no entries', async () => {

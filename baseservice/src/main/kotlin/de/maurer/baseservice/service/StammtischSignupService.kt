@@ -43,7 +43,7 @@ class StammtischSignupService(
     private val identityProvisioner: IdentityProvisioner,
     private val tenantTransactions: TenantTransactions,
     private val termsConsent: TermsConsent,
-    @Value("\${vereint.signup.enabled:true}") private val enabled: Boolean,
+    @Value("\${vereint.signup.enabled:false}") private val enabled: Boolean,
     @Value("\${vereint.signup.max-owned:3}") private val maxOwned: Long
 ) {
 

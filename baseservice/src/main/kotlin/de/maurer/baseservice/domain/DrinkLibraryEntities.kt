@@ -29,6 +29,14 @@ class DrinkLibraryEntity(
     @Column(name = "category", length = 64)
     var category: String? = null,
 
+    /** Füllmenge einer Portion in Millilitern (aus Open Food Facts oder gepflegt). */
+    @Column(name = "volume_ml")
+    var volumeMl: Int? = null,
+
+    /** Kalorien je Portion. */
+    @Column(name = "kcal_per_serving")
+    var kcalPerServing: Int? = null,
+
     @OneToMany(mappedBy = "drink", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
     var barcodes: MutableList<DrinkLibraryBarcodeEntity> = mutableListOf(),
 

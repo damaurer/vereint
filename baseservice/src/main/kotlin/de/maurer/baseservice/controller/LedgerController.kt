@@ -70,10 +70,24 @@ class LedgerController(
         return ResponseEntity.status(HttpStatus.CREATED).body(entry)
     }
 
+    @PostMapping("/purchases/credit")
+    @Operation(
+        summary = "Mit Guthaben ohne Event bezahlen",
+        description = "Bucht einen idempotenten Guthabenkauf zum Katalogpreis der Gruppe, nur außerhalb eines laufenden Events mit Selbstbedienung; optional ohne Statistikeintrag"
+    )
+    fun purchaseWithCredit(
+        @RequestHeader(value = IDEMPOTENCY_HEADER, required = false) idempotencyKey: String?,
+        @Valid @RequestBody request: CreditPurchaseRequest
+    ): ResponseEntity<LedgerEntryDto> {
+        val principal = authContext.getRequiredPrincipal()
+        val entry = ledgerService.purchaseWithCredit(request, idempotencyKey, principal)
+        return ResponseEntity.status(HttpStatus.CREATED).body(entry)
+    }
+
     @PostMapping("/purchases/preview")
     @Operation(
         summary = "Barcodekauf vorab prüfen",
-        description = "Liefert Getränk, Preis je laufendem Event und eigenes Guthaben zu einem gescannten Barcode, ohne zu buchen"
+        description = "Liefert Getränk, Preis je laufendem Event, eigenes Guthaben und außerhalb eines Events die Wahl zwischen Guthabenkauf und Fremdgetränk zu einem gescannten Barcode, ohne zu buchen"
     )
     fun previewPurchase(@Valid @RequestBody request: PurchasePreviewRequest): ResponseEntity<PurchasePreviewDto> {
         val principal = authContext.getRequiredPrincipal()

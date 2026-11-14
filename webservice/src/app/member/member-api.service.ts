@@ -21,6 +21,7 @@ import type {
   MomentSummaryDto,
   MomentTypeDto,
   PurchasePreview,
+  ForeignDrink,
   RsvpStatus,
   SaveMomentReactionRequest,
   SaveMomentTypeRequest,
@@ -139,6 +140,36 @@ export class MemberApiService {
       { eventId, barcode },
       { 'Idempotency-Key': idempotencyKey },
     );
+  }
+
+  /**
+   * Bezahlt ein gescanntes Getränk ohne Event mit Guthaben zum Katalogpreis
+   * (`POST /api/v1/ledger/purchases/credit`); mit `recordStatistics = false` ohne Statistikeintrag.
+   */
+  purchaseWithCredit(
+    barcode: string,
+    recordStatistics: boolean,
+    idempotencyKey: string,
+  ): Observable<LedgerEntry> {
+    return this.api.post<LedgerEntry>(
+      '/ledger/purchases/credit',
+      { barcode, recordStatistics },
+      { 'Idempotency-Key': idempotencyKey },
+    );
+  }
+
+  /** Erfasst ein gescanntes Getränk nur für die Statistik (`POST /api/v1/statistics/foreign-drinks`). */
+  recordForeignDrink(barcode: string, idempotencyKey: string): Observable<ForeignDrink> {
+    return this.api.post<ForeignDrink>(
+      '/statistics/foreign-drinks',
+      { barcode },
+      { 'Idempotency-Key': idempotencyKey },
+    );
+  }
+
+  /** Entfernt ein eben erfasstes eigenes Fremdgetränk (`DELETE /api/v1/statistics/foreign-drinks/{id}`). */
+  removeForeignDrink(id: string): Observable<void> {
+    return this.api.delete<void>(`/statistics/foreign-drinks/${encodeURIComponent(id)}`);
   }
 
   /** Nimmt einen eben bezahlten eigenen Kauf zurück (`POST /api/v1/ledger/purchases/{id}/undo`). */
