@@ -68,8 +68,8 @@ graph LR
     Base -->|"verschlüsselte Dateien"| Files[("Datei-Volume")]
 ```
 
-Das Repository baut zwei Images, `ghcr.io/damaurer/baseservice` und
-`ghcr.io/damaurer/webservice`, und legt sie nach einem Merge auf `qs` oder
+Das Repository baut zwei Images, `ghcr.io/damaurer/vereint-baseservice` und
+`ghcr.io/damaurer/vereint-webservice`, und legt sie nach einem Merge auf `qs` oder
 `main` in GitHub Packages ab. Wie sie betrieben werden, beschreibt
 [Vereint selbst betreiben](docs/betrieb/selbst-betreiben.md).
 Chat-Nachrichten, Mitteilungen, Bilder und Videos verschlüsselt der

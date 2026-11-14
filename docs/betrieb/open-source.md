@@ -51,7 +51,7 @@ Getränkedatenbank stammt aus Open Food Facts und steht unter der ODbL 1.0
 
 Danach sind GitHub Actions für das Repository kostenlos; das monatliche Limit
 privater Repositories gilt nicht mehr. Die Container-Images unter
-`ghcr.io/damaurer/*` bleiben privat, bis du sie unter *Packages* einzeln
+`ghcr.io/damaurer/vereint-*` bleiben privat, bis du sie unter *Packages* einzeln
 öffentlich schaltest.
 
 ## Selbst betreiben

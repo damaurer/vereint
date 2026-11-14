@@ -91,7 +91,7 @@ graph TD
 - **Liquibase**: Versionskontrollierte Datenbankmigrationen (`db.changelog-master.xml`).
 - **Keycloak 26.8.1**: Identity & Access Management (OIDC Provider). Lokal mit Testbenutzern (`keycloak/dev/realm-export-dev.json`), in Produktion ohne Seed-Benutzer (`keycloak/realm-export.json`).
 - **Dateispeicher**: Überall ein Verzeichnis (`STORAGE_BACKEND=filesystem`): in Produktion ein dauerhaftes Volume, im lokalen Stack und in den E2E-Tests das Volume `files`, bei `./gradlew bootRun` `<Repo>/.data/files`. Ein S3-kompatibler Speicher ist optional möglich (`STORAGE_BACKEND=s3`).
-- **Produktion**: Das Repository liefert die Images `ghcr.io/damaurer/baseservice` und `ghcr.io/damaurer/webservice`; Betrieb siehe [Vereint selbst betreiben](../betrieb/selbst-betreiben.md).
+- **Produktion**: Das Repository liefert die Images `ghcr.io/damaurer/vereint-baseservice` und `ghcr.io/damaurer/vereint-webservice`; Betrieb siehe [Vereint selbst betreiben](../betrieb/selbst-betreiben.md).
 
 ---
 

@@ -26,16 +26,16 @@ export interface LegalOperator {
 }
 
 export const LEGAL_OPERATOR: LegalOperator = {
-  name: '[Vorname Nachname]',
+  name: 'Michael Maurer',
   tradingName: 'Vereint',
-  street: '[Straße Hausnummer]',
-  postalCodeAndCity: '[PLZ Ort]',
+  street: 'Ahornweg',
+  postalCodeAndCity: '84424',
   country: 'Deutschland',
-  email: '[kontakt@deine-domain.de]',
-  phone: '[Telefonnummer]',
+  email: 'info@vereint.maurercloud.de',
+  phone: '',
   vatId: '',
   economicId: '',
-  appUrl: '[https://deine-domain.de]',
+  appUrl: 'https://vereint.maurercloud.de',
 };
 
 /**
@@ -43,10 +43,10 @@ export const LEGAL_OPERATOR: LegalOperator = {
  * `vereint.legal.terms-version` im Fachservice gleichziehen; der Fachservice
  * speichert diese Fassung zur Zustimmung jedes Kontos.
  */
-export const TERMS_VERSION = '2026-11-11';
+export const TERMS_VERSION = '2026-11-14';
 
 /** Datum der AGB-Fassung für die Anzeige („28. Oktober 2026“). */
-export const TERMS_DATE_LABEL = '11. November 2026';
+export const TERMS_DATE_LABEL = '14. November 2026';
 
 /** Aufbewahrung der Datenbanksicherungen (`backup_retention_days`). */
 export const LEGAL_BACKUP_RETENTION_DAYS = 30;
