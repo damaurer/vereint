@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 270. Füllmenge (ml) und Kalorien je Portion für Katalog und Getränkedatenbank.
+         Beide Werte sind optional; ohne Angabe zählt ein Getränk in der Statistik
+         nicht bei Litern und Kalorien mit. -->
+    <changeSet id="270-drink-volume-and-kcal" author="claude">
+        <addColumn tableName="drink_catalog">
+            <column name="volume_ml" type="INTEGER"/>
+            <column name="kcal_per_serving" type="INTEGER"/>
+        </addColumn>
+        <addColumn tableName="drink_library">
+            <column name="volume_ml" type="INTEGER"/>
+            <column name="kcal_per_serving" type="INTEGER"/>
+        </addColumn>
+        <sql>
+            ALTER TABLE drink_catalog ADD CONSTRAINT ck_drink_catalog_volume CHECK (volume_ml IS NULL OR volume_ml BETWEEN 1 AND 10000);
+            ALTER TABLE drink_catalog ADD CONSTRAINT ck_drink_catalog_kcal CHECK (kcal_per_serving IS NULL OR kcal_per_serving BETWEEN 0 AND 10000);
+            ALTER TABLE drink_library ADD CONSTRAINT ck_drink_library_volume CHECK (volume_ml IS NULL OR volume_ml BETWEEN 1 AND 10000);
+            ALTER TABLE drink_library ADD CONSTRAINT ck_drink_library_kcal CHECK (kcal_per_serving IS NULL OR kcal_per_serving BETWEEN 0 AND 10000);
+        </sql>
+        <rollback>
+            <dropColumn tableName="drink_catalog" columnName="volume_ml"/>
+            <dropColumn tableName="drink_catalog" columnName="kcal_per_serving"/>
+            <dropColumn tableName="drink_library" columnName="volume_ml"/>
+            <dropColumn tableName="drink_library" columnName="kcal_per_serving"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 271. Füllmenge und Kalorien der Startdaten aus Open Food Facts (ODbL 1.0),
+         erzeugt mit scripts/drink-library/build_nutrition.py. Gesetzt wird nur, wo
+         noch nichts eingetragen ist. -->
+    <changeSet id="271-seed-drink-nutrition" author="claude">
+        <createTable tableName="drink_library_nutrition_seed">
+            <column name="drink_id" type="VARCHAR(36)"/>
+            <column name="volume_ml" type="VARCHAR(16)"/>
+            <column name="kcal_per_serving" type="VARCHAR(16)"/>
+        </createTable>
+        <loadData tableName="drink_library_nutrition_seed" file="../data/drink-library-nutrition.csv"
+                  relativeToChangelogFile="true" encoding="UTF-8" separator="," quotchar="&quot;"
+                  usePreparedStatements="true">
+            <column name="drink_id" type="STRING"/>
+            <column name="volume_ml" type="STRING"/>
+            <column name="kcal_per_serving" type="STRING"/>
+        </loadData>
+        <sql>
+            UPDATE drink_library SET
+                volume_ml = COALESCE(volume_ml, (
+                    SELECT CAST(NULLIF(s.volume_ml, '') AS INTEGER) FROM drink_library_nutrition_seed s
+                    WHERE CAST(s.drink_id AS UUID) = drink_library.id)),
+                kcal_per_serving = COALESCE(kcal_per_serving, (
+                    SELECT CAST(NULLIF(s.kcal_per_serving, '') AS INTEGER) FROM drink_library_nutrition_seed s
+                    WHERE CAST(s.drink_id AS UUID) = drink_library.id))
+            WHERE id IN (SELECT CAST(drink_id AS UUID) FROM drink_library_nutrition_seed);
+        </sql>
+        <dropTable tableName="drink_library_nutrition_seed"/>
+        <rollback>
+            <sql>UPDATE drink_library SET volume_ml = NULL, kcal_per_serving = NULL</sql>
+        </rollback>
+    </changeSet>
+
+    <!-- 272. Gruppen-Kataloge: aus der Getränkedatenbank übernommene Getränke erhalten
+         deren Werte, solange sie selbst keine haben. Unter PostgreSQL gilt
+         Row-Level-Security auch für die Migration, daher vorher die Umgehung
+         nur für diese Transaktion (siehe 165-row-level-security). -->
+    <changeSet id="272-copy-nutrition-to-catalog" author="claude" dbms="postgresql">
+        <sql splitStatements="false">
+            SELECT set_config('vereint.rls_bypass', 'on', true);
+            UPDATE drink_catalog SET
+                volume_ml = COALESCE(volume_ml, (SELECT l.volume_ml FROM drink_library l WHERE l.id = drink_catalog.library_drink_id)),
+                kcal_per_serving = COALESCE(kcal_per_serving, (SELECT l.kcal_per_serving FROM drink_library l WHERE l.id = drink_catalog.library_drink_id))
+            WHERE library_drink_id IS NOT NULL;
+        </sql>
+        <rollback/>
+    </changeSet>
+    <changeSet id="272-copy-nutrition-to-catalog-h2" author="claude" dbms="h2">
+        <sql>
+            UPDATE drink_catalog SET
+                volume_ml = COALESCE(volume_ml, (SELECT l.volume_ml FROM drink_library l WHERE l.id = drink_catalog.library_drink_id)),
+                kcal_per_serving = COALESCE(kcal_per_serving, (SELECT l.kcal_per_serving FROM drink_library l WHERE l.id = drink_catalog.library_drink_id))
+            WHERE library_drink_id IS NOT NULL;
+        </sql>
+        <rollback/>
+    </changeSet>
+</databaseChangeLog>

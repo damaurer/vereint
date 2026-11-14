@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Datenintegrität, Idempotenz und Nebenläufigkeit (Review-Nacharbeiten TICKET-008).
+        Zieldatenbank ist PostgreSQL; H2 bleibt für die schnellen Spring-Context-Tests
+        zugelassen. Rein PostgreSQL-spezifische Changesets tragen eine eigene
+        `preConditions`-Prüfung.
+    -->
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 101. CHECK-Constraints für die Aufzählungstypen aus AGENTS.md -->
+    <changeSet id="101-add-enum-check-constraints" author="junie">
+        <sql>
+            ALTER TABLE users
+            ADD CONSTRAINT ck_users_board_role
+            CHECK (board_role IS NULL OR board_role IN ('chair', 'treasurer', 'secretary', 'assessor'))
+        </sql>
+        <sql>
+            ALTER TABLE user_roles
+            ADD CONSTRAINT ck_user_roles_role
+            CHECK (role IN ('member', 'board', 'admin', 'tabletRecorder'))
+        </sql>
+        <sql>
+            ALTER TABLE events
+            ADD CONSTRAINT ck_events_status
+            CHECK (status IN ('draft', 'published', 'active', 'cancelled', 'completed', 'archived'))
+        </sql>
+        <sql>
+            ALTER TABLE event_guests
+            ADD CONSTRAINT ck_event_guests_status
+            CHECK (status IN ('pending', 'active', 'revoked', 'expired'))
+        </sql>
+        <sql>
+            ALTER TABLE ledger_entries
+            ADD CONSTRAINT ck_ledger_entries_accounting_mode
+            CHECK (accounting_mode IN ('credit', 'revenueOnly'))
+        </sql>
+        <sql>
+            ALTER TABLE ledger_entries
+            ADD CONSTRAINT ck_ledger_entries_source
+            CHECK (source IN ('pwaBarcode', 'tabletManual', 'round', 'evening'))
+        </sql>
+        <sql>
+            <![CDATA[
+            ALTER TABLE moment_sessions
+            ADD CONSTRAINT ck_moment_sessions_latitude
+            CHECK (latitude IS NULL OR (latitude >= -90.0 AND latitude <= 90.0))
+            ]]>
+        </sql>
+        <sql>
+            <![CDATA[
+            ALTER TABLE moment_sessions
+            ADD CONSTRAINT ck_moment_sessions_longitude
+            CHECK (longitude IS NULL OR (longitude >= -180.0 AND longitude <= 180.0))
+            ]]>
+        </sql>
+        <sql>
+            <![CDATA[
+            ALTER TABLE moment_responses
+            ADD CONSTRAINT ck_moment_responses_latitude
+            CHECK (latitude IS NULL OR (latitude >= -90.0 AND latitude <= 90.0))
+            ]]>
+        </sql>
+        <sql>
+            <![CDATA[
+            ALTER TABLE moment_responses
+            ADD CONSTRAINT ck_moment_responses_longitude
+            CHECK (longitude IS NULL OR (longitude >= -180.0 AND longitude <= 180.0))
+            ]]>
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE moment_responses DROP CONSTRAINT ck_moment_responses_longitude</sql>
+            <sql>ALTER TABLE moment_responses DROP CONSTRAINT ck_moment_responses_latitude</sql>
+            <sql>ALTER TABLE moment_sessions DROP CONSTRAINT ck_moment_sessions_longitude</sql>
+            <sql>ALTER TABLE moment_sessions DROP CONSTRAINT ck_moment_sessions_latitude</sql>
+            <sql>ALTER TABLE users DROP CONSTRAINT ck_users_board_role</sql>
+            <sql>ALTER TABLE user_roles DROP CONSTRAINT ck_user_roles_role</sql>
+            <sql>ALTER TABLE events DROP CONSTRAINT ck_events_status</sql>
+            <sql>ALTER TABLE event_guests DROP CONSTRAINT ck_event_guests_status</sql>
+            <sql>ALTER TABLE ledger_entries DROP CONSTRAINT ck_ledger_entries_accounting_mode</sql>
+            <sql>ALTER TABLE ledger_entries DROP CONSTRAINT ck_ledger_entries_source</sql>
+        </rollback>
+    </changeSet>
+
+    <!-- 102. Idempotenzschlüssel je Kontext eindeutig -->
+    <changeSet id="102-idempotency-scope-unique" author="junie">
+        <dropUniqueConstraint tableName="idempotency_records" constraintName="uk_idempotency_records_key"/>
+        <addUniqueConstraint tableName="idempotency_records" columnNames="scope, idempotency_key"
+                             constraintName="uk_idempotency_records_scope_key"/>
+        <rollback>
+            <dropUniqueConstraint tableName="idempotency_records" constraintName="uk_idempotency_records_scope_key"/>
+            <addUniqueConstraint tableName="idempotency_records" columnNames="idempotency_key"
+                                 constraintName="uk_idempotency_records_key"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 103. Optimistic Locking für alle änderbaren Entitäten -->
+    <changeSet id="103-add-version-columns" author="junie">
+        <addColumn tableName="users">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="events">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="event_invites">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="event_guests">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="drink_catalog">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="drink_barcodes">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="drink_sublists">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="drink_sublist_items">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="event_drinks">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="conversations">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="notifications">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="push_subscriptions">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="moment_sessions">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="moment_responses">
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="users" columnName="version"/>
+            <dropColumn tableName="events" columnName="version"/>
+            <dropColumn tableName="event_invites" columnName="version"/>
+            <dropColumn tableName="event_guests" columnName="version"/>
+            <dropColumn tableName="drink_catalog" columnName="version"/>
+            <dropColumn tableName="drink_barcodes" columnName="version"/>
+            <dropColumn tableName="drink_sublists" columnName="version"/>
+            <dropColumn tableName="drink_sublist_items" columnName="version"/>
+            <dropColumn tableName="event_drinks" columnName="version"/>
+            <dropColumn tableName="conversations" columnName="version"/>
+            <dropColumn tableName="notifications" columnName="version"/>
+            <dropColumn tableName="push_subscriptions" columnName="version"/>
+            <dropColumn tableName="moment_sessions" columnName="version"/>
+            <dropColumn tableName="moment_responses" columnName="version"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 104. Beleg-Snapshot darf nicht mit der Buchung gelöscht werden -->
+    <changeSet id="104-purchase-snapshot-restrict" author="junie">
+        <dropForeignKeyConstraint baseTableName="purchase_snapshots"
+                                  constraintName="fk_purchase_snapshots_ledger_entry"/>
+        <addForeignKeyConstraint baseTableName="purchase_snapshots" baseColumnNames="ledger_entry_id"
+                                 constraintName="fk_purchase_snapshots_ledger_entry"
+                                 referencedTableName="ledger_entries" referencedColumnNames="id"
+                                 onDelete="RESTRICT"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="purchase_snapshots"
+                                      constraintName="fk_purchase_snapshots_ledger_entry"/>
+            <addForeignKeyConstraint baseTableName="purchase_snapshots" baseColumnNames="ledger_entry_id"
+                                     constraintName="fk_purchase_snapshots_ledger_entry"
+                                     referencedTableName="ledger_entries" referencedColumnNames="id"
+                                     onDelete="CASCADE"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 105. Indizes für die häufigsten Ledger-Auswertungen -->
+    <changeSet id="105-ledger-query-indexes" author="junie">
+        <createIndex tableName="ledger_entries" indexName="idx_ledger_entries_event_member_created">
+            <column name="event_id"/>
+            <column name="member_id"/>
+            <column name="created_at"/>
+        </createIndex>
+        <createIndex tableName="ledger_entries" indexName="idx_ledger_entries_created_at">
+            <column name="created_at"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="ledger_entries" indexName="idx_ledger_entries_event_member_created"/>
+            <dropIndex tableName="ledger_entries" indexName="idx_ledger_entries_created_at"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 106. Ledger append-only: UPDATE und DELETE werden datenbankseitig verweigert -->
+    <changeSet id="106-ledger-append-only-trigger" author="junie">
+        <preConditions onFail="MARK_RAN">
+            <dbms type="postgresql"/>
+        </preConditions>
+        <sql splitStatements="false">
+            CREATE OR REPLACE FUNCTION vereint_reject_ledger_mutation() RETURNS trigger AS $$
+            BEGIN
+                RAISE EXCEPTION 'ledger is append-only: % on % is not allowed, use a compensating entry',
+                    TG_OP, TG_TABLE_NAME;
+            END;
+            $$ LANGUAGE plpgsql;
+        </sql>
+        <sql splitStatements="false">
+            CREATE TRIGGER trg_ledger_entries_append_only
+            BEFORE UPDATE OR DELETE ON ledger_entries
+            FOR EACH ROW EXECUTE FUNCTION vereint_reject_ledger_mutation();
+        </sql>
+        <sql splitStatements="false">
+            CREATE TRIGGER trg_purchase_snapshots_append_only
+            BEFORE UPDATE OR DELETE ON purchase_snapshots
+            FOR EACH ROW EXECUTE FUNCTION vereint_reject_ledger_mutation();
+        </sql>
+        <rollback>
+            <sql>DROP TRIGGER IF EXISTS trg_ledger_entries_append_only ON ledger_entries</sql>
+            <sql>DROP TRIGGER IF EXISTS trg_purchase_snapshots_append_only ON purchase_snapshots</sql>
+            <sql>DROP FUNCTION IF EXISTS vereint_reject_ledger_mutation()</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,83 @@
+name: E2E-Tests
+
+# Startet den kompletten Stack (local/compose.yaml mit den Anpassungen aus
+# e2e/compose.e2e.yaml: Keycloak, baseservice, webservice, Postgres,
+# Dateispeicher, Caddy mit Test-CA) und testet die App mit Playwright
+# im Browser unter https://vereint.test:8443.
+#
+# Laeuft bei jedem Pull Request und Push auf develop, qs und main. Bei
+# Fehlern liegen Playwright-Report (mit Trace und Video) und die Logs aller
+# Dienste als Artefakt am Lauf. Lokal: siehe e2e/README.md.
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - qs
+  pull_request:
+    branches:
+      - develop
+      - main
+      - qs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  e2e:
+    name: Playwright gegen den echten Stack
+    # Fest auf 24.04: ubuntu-latest ist seit November 2026 Ubuntu 26.04, dort installiert Playwright 1.56 keinen Chromium.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: e2e
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Testdomain auf den Runner zeigen lassen
+        run: echo "127.0.0.1 vereint.test" | sudo tee -a /etc/hosts
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Abhaengigkeiten installieren
+        run: npm ci
+
+      - name: Chromium fuer Playwright installieren
+        run: npx playwright install --with-deps chromium
+
+      - name: Stack bauen und starten
+        run: ./stack.sh up
+
+      - name: E2E-Tests ausfuehren
+        run: npx playwright test
+
+      - name: Logs der Dienste sichern
+        if: failure()
+        run: ./stack.sh logs > stack-logs.txt 2>&1 || true
+
+      - name: Report hochladen
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-report
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+            e2e/stack-logs.txt
+          retention-days: 7
+
+      - name: Stack entfernen
+        if: always()
+        run: ./stack.sh down || true

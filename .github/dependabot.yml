@@ -1,0 +1,74 @@
+# Dependabot oeffnet woechentlich Pull Requests fuer veraltete bzw. unsichere
+# Abhaengigkeiten. Sicherheitsupdates kommen zusaetzlich sofort.
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: /baseservice
+    schedule:
+      interval: weekly
+    groups:
+      gradle:
+        patterns: ['*']
+
+  - package-ecosystem: npm
+    directory: /webservice
+    schedule:
+      interval: weekly
+    groups:
+      angular:
+        patterns: ['@angular/*', '@angular-devkit/*']
+      npm:
+        patterns: ['*']
+        exclude-patterns: ['@angular/*', '@angular-devkit/*']
+    ignore:
+      # Angular gibt die TypeScript-Version vor (Angular 22: >=6.0 <6.1).
+      # Erst mit dem Angular-Update anheben, das den neuen Major unterstuetzt.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major', 'version-update:semver-minor']
+      # Die Typen folgen der Node-Laufzeit im Dockerfile (node:22).
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  # E2E-Tests (Playwright). Die Typen folgen der Node-Laufzeit im E2E-Workflow.
+  - package-ecosystem: npm
+    directory: /e2e
+    schedule:
+      interval: weekly
+    groups:
+      e2e:
+        patterns: ['*']
+    ignore:
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  # Keycloak-Updates gehen mit dem Abgleich des Login-Themes einher (#72).
+  - package-ecosystem: docker
+    directories:
+      - /baseservice
+      - /webservice
+      - /keycloak
+    schedule:
+      interval: weekly
+
+  # Compose-Dateien: docker-compose.yml (Entwicklung) sowie local/compose.yaml
+  # und local/compose.local.yaml (lokaler Stack und E2E).
+  - package-ecosystem: docker-compose
+    directories:
+      - /
+      - /local
+    schedule:
+      interval: weekly
+    ignore:
+      # Das Seed-Image muss zur Playwright-Version in local/seed.package.json
+      # passen (die Dependabot nicht erkennt); beides zusammen von Hand anheben.
+      - dependency-name: mcr.microsoft.com/playwright
+
+  # Actions sind auf Commit-SHAs gepinnt (Kommentar = Tag); Dependabot
+  # aktualisiert SHA und Kommentar gemeinsam.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']

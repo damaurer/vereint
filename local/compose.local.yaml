@@ -1,0 +1,87 @@
+# Lokale Anpassungen des Stacks (local/compose.yaml).
+#
+# Wird ausschliesslich zusammen mit local/compose.yaml genutzt, siehe
+# local/vereint.mjs. Es laeuft dieselbe Konfiguration wie in Produktion
+# (Keycloak mit Produktions-Realm, eigene Images, Verschluesselung an,
+# Dateien im Dateisystem), nur mit diesen Abweichungen:
+#   - Die App laeuft unter http://localhost:4200 ohne TLS. Caddy teilt sich
+#     den Netzwerk-Namensraum mit dem webservice; dadurch erreicht das BFF
+#     Keycloak unter derselben Adresse localhost:4200/kc wie der Browser.
+#   - Images werden lokal aus den Dockerfiles gebaut (vereint-local/*, Namen in local/.env.local).
+#   - Testkonten ohne Mitgliedschaft treten automatisch „Meine Gruppe" bei.
+#   - „Gruppe eröffnen“ ist eingeschaltet (SIGNUP_ENABLED).
+#   - Der Dienst `seed` (Profil seed) legt einmalig Demo-Daten an.
+# Alle Ports lauschen nur auf 127.0.0.1.
+
+services:
+  caddy:
+    environment:
+      PUBLIC_DOMAIN: http://localhost:4200
+    # Die Ports veroeffentlicht der webservice, dessen Netz Caddy mitnutzt.
+    network_mode: service:webservice
+    ports: !reset []
+    networks: !reset {}
+
+  postgres:
+    ports:
+      # Nur fuer den Blick in die Datenbank (Benutzer postgres, Passwort in local/.env.local).
+      - "127.0.0.1:5434:5432"
+
+  keycloak:
+    build: ../keycloak
+    environment:
+      KC_HOSTNAME: http://localhost:4200/kc
+      # Admin-Konsole direkt unter http://localhost:8090/kc/admin.
+      KC_HOSTNAME_ADMIN: http://localhost:8090/kc
+      PUBLIC_BASE_URL: http://localhost:4200
+    ports: !override
+      - "127.0.0.1:8090:8080"
+
+  baseservice:
+    build: ../baseservice
+    environment:
+      KEYCLOAK_ISSUER_URI: http://localhost:4200/kc/realms/vereint
+      VEREIN_CORS_ALLOWED_ORIGINS: http://localhost:4200
+      PUBLIC_BASE_URL: http://localhost:4200
+      TENANCY_BOOTSTRAP_REALM_ROLES: "true"
+      # „Gruppe eröffnen“ lokal an (Standard ist aus).
+      SIGNUP_ENABLED: "true"
+
+  webservice:
+    build: ../webservice
+    environment:
+      PUBLIC_BASE_URL: http://localhost:4200
+      KEYCLOAK_ISSUER_URI: http://localhost:4200/kc/realms/vereint
+      # Browser behandeln http://localhost als sicheren Kontext und nehmen
+      # Secure-Cookies an (Chrome, Edge, Firefox; Safari nicht).
+      SESSION_COOKIE_SECURE: "true"
+    ports:
+      - "127.0.0.1:4200:4200"
+
+  # Einmalige Demo-Daten (local/seed.mjs). Laeuft im Netz des webservice, damit
+  # der Browser die App wie ein Mensch unter http://localhost:4200 aufruft.
+  seed:
+    profiles: ["seed"]
+    image: mcr.microsoft.com/playwright:v1.56.1-noble
+    network_mode: service:webservice
+    working_dir: /work/local
+    command: ["sh", "-c", "npm install --no-audit --no-fund --no-update-notifier --loglevel=error && node seed.mjs"]
+    environment:
+      HANDBOOK_APP_URL: http://localhost:4200
+      HANDBOOK_KEYCLOAK_URL: http://keycloak:8080/kc
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+      KEYCLOAK_SEED_BOARD_PASSWORD: ${SEED_BOARD_PASSWORD}
+      KEYCLOAK_SEED_MEMBER_PASSWORD: ${SEED_MEMBER_PASSWORD}
+      # Optional: Datei im Container fuer die IDs der Demo-Daten (scripts/handbook/README.md).
+      HANDBOOK_SEED_FILE: ${HANDBOOK_SEED_FILE:-}
+    volumes:
+      - ../local/seed.mjs:/work/local/seed.mjs:ro
+      - ../local/seed.package.json:/work/local/package.json:ro
+      # Beschreibbar, damit HANDBOOK_SEED_FILE die IDs fuer die Handbuch-Bilder ablegen kann.
+      - ../scripts/handbook:/work/scripts/handbook
+      - seed-node-modules:/work/local/node_modules
+
+volumes:
+  seed-node-modules:

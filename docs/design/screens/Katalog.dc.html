@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Getränkekatalog</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Katalog" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 18px 16px; overflow: hidden">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Gruppenkatalog</p>
+        <h2 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em">Getränke &amp; Speisen</h2>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px">
+      <button type="button" style="flex: 1; height: 44px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 14px; font-weight: 700">Vorschlagen</button>
+      <a href="Getraenkedatenbank.dc.html" style="flex: 1; display: grid; place-items: center; height: 44px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 14px; font-weight: 600; text-decoration: none">Aus Datenbank</a>
+      <a href="Bezahlen.dc.html" aria-label="Barcode scannen" style="display: grid; place-items: center; width: 44px; height: 44px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.8L10 3.5h4L15.7 6h1.8A2.5 2.5 0 0 1 20 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      </a>
+    </div>
+
+    <div role="tablist" aria-label="Katalog" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 10px; background-color: var(--color-surface-muted)">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+        <button type="button" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+    <label for="q" class="visually-hidden">Suchen</label>
+    <input id="q" value="{{q}}" onChange="{{onQ}}" placeholder="Suchen nach Name oder Kategorie …" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+
+    <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+        <li style="{{r.row}}">
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 15px; font-weight: 700">{{r.label}}</span>
+            <span style="color: var(--color-text-muted); font-size: 13px">{{r.cat}}</span>
+          </span>
+          <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
+            <span style="font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums">{{r.price}}</span>
+            <span class="{{r.badge}}">{{r.status}}</span>
+          </span>
+        </li>
+      </sc-for>
+    </ul>
+  </main>
+  <dc-import name="TabBar" active="mehr" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'drinks', q: '' };
+  }
+  renderVals() {
+    const D = {
+      drinks: [
+        ['Helles 0,5 l', 'Bier', '3,50 €', 'ok'], ['Weißbier 0,5 l', 'Bier', '3,80 €', 'ok'], ['Apfelschorle 0,5 l', 'Alkoholfrei', '2,50 €', 'ok'],
+        ['Cola Zero 0,33 l', 'Alkoholfrei', '2,00 €', 'new'], ['Obstler 2 cl', 'Schnaps', '2,00 €', 'ok'], ['Wasser 0,5 l', 'Alkoholfrei', '1,50 €', 'ok']
+      ],
+      food: [['Käsespätzle', 'Hauptgericht', '7,50 €', 'ok'], ['Brezn mit Obazda', 'Brotzeit', '4,50 €', 'ok'], ['Wiener Würstl', 'Brotzeit', '3,80 €', 'new']]
+    };
+    const q = this.state.q.trim().toLowerCase();
+    const rows = D[this.state.tab].filter(([l, c]) => !q || l.toLowerCase().includes(q) || c.toLowerCase().includes(q)).slice(0, 6);
+    const seg = (on) => 'height: 40px; border: none; border-radius: 8px; font: inherit; font-size: 14px; ' + (on ? 'background-color: var(--color-surface); color: var(--color-text); font-weight: 700' : 'background: transparent; color: var(--color-text-muted); font-weight: 600');
+    return {
+      theme: this.props.theme ?? 'light',
+      q: this.state.q,
+      onQ: (e) => this.setState({ q: e.target.value }),
+      tabs: [['drinks', 'Getränke'], ['food', 'Speisen']].map(([id, label]) => ({ label, selected: this.state.tab === id ? 'true' : 'false', style: seg(this.state.tab === id), pick: () => this.setState({ tab: id }) })),
+      rows: rows.map(([label, cat, price, st], i) => ({
+        label, cat, price,
+        status: st === 'ok' ? 'Freigegeben' : 'Vorgeschlagen',
+        badge: st === 'ok' ? 'ui-badge ui-badge-success' : 'ui-badge ui-badge-warning',
+        row: 'display: flex; align-items: center; gap: 12px; padding: 11px 14px' + (i ? '; border-top: 1px solid var(--color-border)' : '')
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

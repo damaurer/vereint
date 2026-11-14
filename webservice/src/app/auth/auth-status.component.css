@@ -1,0 +1,56 @@
+.login-form {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.login-form button {
+  width: 100%;
+  min-height: var(--vereint-control-height, 2.75rem);
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  border-radius: var(--vereint-control-radius, 0.5rem);
+  background-color: var(--color-brand, #1e3a8a);
+  color: var(--color-on-brand);
+  font-family: var(--opt-font-sans, inherit);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.login-form button:hover:not(:disabled) {
+  background-color: var(--color-brand-strong, #172554);
+}
+
+.login-form button:focus-visible {
+  outline: 2px solid var(--color-brand, #1e3a8a);
+  outline-offset: 2px;
+}
+
+.login-form button[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.login-error {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.login-error strong {
+  color: var(--color-danger, #dc2626);
+}
+
+/* Einstieg für Neue ohne Einladung: eigenen Stammtisch eröffnen. */
+.open-own {
+  margin: 0;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.open-own a {
+  color: var(--color-brand, #1e3a8a);
+  font-weight: 600;
+}

@@ -1,0 +1,9 @@
+# Bewusst akzeptierte Trivy-Funde, eine CVE-ID pro Zeile mit Begruendung.
+# Nur eintragen, wenn der Fund nachweislich nicht ausnutzbar ist oder noch
+# kein Fix existiert; Eintraege regelmaessig ueberpruefen.
+
+# keycloak: Guava 33.6.0 im offiziellen Keycloak-Image 26.8.1 (DoS beim
+# Deserialisieren). Keycloak deserialisiert keine Guava-Objekte aus Anfragen,
+# und es gibt noch kein Keycloak-Release mit Guava >= 33.7.2. Läuft Ende 2026
+# ab, damit der Fund nach dem nächsten Keycloak-Update wieder geprüft wird.
+CVE-2026-102554 exp:2026-12-31

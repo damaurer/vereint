@@ -1,0 +1,261 @@
+@if (isGuest()) {
+  <div class="shell shell-guest">
+    <header class="shell-guest-bar">
+      <span class="shell-brand">
+        <img class="shell-brand-mark" src="vereint-app-icon.svg" alt="" width="28" height="28" />
+        <span class="shell-brand-name">Vereint</span>
+      </span>
+      <span class="shell-guest-tag">{{ 'shell.guestTag' | t }}</span>
+    </header>
+    <div class="shell-content">
+      <router-outlet />
+    </div>
+  </div>
+} @else {
+  <div class="shell" [attr.data-viewport]="viewport()" [attr.data-kiosk]="kiosk() ? '' : null">
+    <a class="shell-skip-link" href="#shell-main-content">{{ 'shell.skipLink' | t }}</a>
+
+    @if (kiosk()) {
+      <!-- Kiosk-Modus: keine Navigation, nur das Thekenterminal. -->
+    } @else if (viewport() === 'web') {
+      <aside class="shell-sidebar">
+        <a
+          class="shell-brand shell-brand-row"
+          routerLink="/dashboard"
+          [attr.aria-label]="'shell.brandHome' | t"
+        >
+          <img class="shell-brand-mark" src="vereint-app-icon.svg" alt="" width="32" height="32" />
+          <span class="shell-brand-name">Vereint</span>
+        </a>
+        @for (section of sections(); track section.id) {
+          <nav
+            class="shell-nav"
+            [class.shell-nav-panel]="section.id === 'admin'"
+            [attr.aria-label]="section.labelKey | t"
+          >
+            <p class="shell-nav-heading">{{ section.labelKey | t }}</p>
+            @for (item of section.items; track trackNav($index, item)) {
+              <a
+                class="shell-nav-link"
+                [routerLink]="item.route"
+                [attr.aria-label]="navAriaLabel(item)"
+                routerLinkActive="is-active"
+                [routerLinkActiveOptions]="activeOptions(item)"
+                ariaCurrentWhenActive="page"
+              >
+                <vereint-icon class="shell-nav-icon" [name]="item.icon" />
+                <span class="shell-nav-label">{{ item.labelKey | t }}</span>
+                @if (item.id === 'chat' && chatBadge(); as badge) {
+                  <span class="shell-nav-count" aria-hidden="true">{{ badge }}</span>
+                }
+              </a>
+            }
+          </nav>
+        }
+        <app-legal-links class="shell-legal" />
+      </aside>
+    } @else if (viewport() === 'tablet') {
+      <aside class="shell-rail">
+        <a class="shell-rail-brand" routerLink="/dashboard" [attr.aria-label]="'shell.brandHome' | t">
+          <img class="shell-brand-mark" src="vereint-app-icon.svg" alt="" width="36" height="36" />
+        </a>
+        <nav class="shell-rail-nav" [attr.aria-label]="'shell.mainNav' | t">
+          @for (item of primaryNav(); track trackNav($index, item)) {
+            <a
+              class="shell-rail-link"
+              [routerLink]="item.route"
+              [attr.aria-label]="navAriaLabel(item)"
+              routerLinkActive="is-active"
+              [routerLinkActiveOptions]="activeOptions(item)"
+              ariaCurrentWhenActive="page"
+            >
+              <vereint-icon class="shell-rail-icon" [name]="item.icon" />
+              <span class="shell-rail-label">{{ item.labelKey | t }}</span>
+              @if (item.id === 'chat' && chatBadge(); as badge) {
+                <span class="shell-nav-count" aria-hidden="true">{{ badge }}</span>
+              }
+            </a>
+          }
+          <button
+            type="button"
+            class="shell-rail-link"
+            [class.is-active]="moreOpen() || moreActive()"
+            aria-haspopup="dialog"
+            [attr.aria-expanded]="moreOpen()"
+            (click)="openMore()"
+          >
+            <vereint-icon class="shell-rail-icon" name="more" />
+            <span class="shell-rail-label">{{ 'shell.more' | t }}</span>
+          </button>
+        </nav>
+      </aside>
+    }
+
+    <div class="shell-main">
+      <header class="shell-topbar">
+        @if (viewport() === 'mobile' && !kiosk() && backLink(); as back) {
+          <a class="shell-topbar-back" [routerLink]="back" [attr.aria-label]="'shell.back' | t">
+            <vereint-icon name="arrow-left" />
+          </a>
+        } @else if (viewport() === 'mobile' && !kiosk()) {
+          <a
+            class="shell-topbar-brand"
+            routerLink="/dashboard"
+            [attr.aria-label]="'shell.brandHome' | t"
+          >
+            <img
+              class="shell-brand-mark"
+              src="vereint-app-icon.svg"
+              alt=""
+              width="28"
+              height="28"
+            />
+          </a>
+        }
+        <p class="shell-page-title">{{ pageTitle() }}</p>
+        @if (!kiosk()) {
+          <div class="shell-topbar-actions">
+            @if (stammtischName(); as name) {
+              @if (!(viewport() === 'mobile' && backLink())) {
+              @if (canSwitchStammtisch()) {
+                <a
+                  class="shell-stammtisch"
+                  routerLink="/gruppen"
+                  [attr.aria-label]="'shell.switchStammtisch' | t: { name }"
+                  [attr.title]="'shell.switchStammtisch' | t: { name }"
+                >
+                  @if (stammtischId(); as id) {
+                    <vereint-group-avatar [groupId]="id" [name]="name" [imageVersion]="stammtischImageVersion()" size="1.75rem" />
+                  }
+                  <span class="shell-stammtisch-name">{{ name }}</span>
+                </a>
+              } @else {
+                <span class="shell-stammtisch" [attr.title]="name">
+                  @if (stammtischId(); as id) {
+                    <vereint-group-avatar [groupId]="id" [name]="name" [imageVersion]="stammtischImageVersion()" size="1.75rem" />
+                  }
+                  <span class="shell-stammtisch-name">{{ name }}</span>
+                </span>
+              }
+              }
+            }
+            <a
+              class="shell-icon-button"
+              routerLink="/notifications"
+              routerLinkActive="is-active"
+              [attr.aria-label]="bellLabel()"
+              [attr.title]="bellLabel()"
+            >
+              <vereint-icon name="bell" />
+              @if (unreadBadge(); as badge) {
+                <span class="shell-badge" aria-hidden="true">{{ badge }}</span>
+              }
+            </a>
+            @if (viewport() !== 'mobile') {
+              <div class="shell-profile-menu">
+                <button
+                  type="button"
+                  class="shell-profile"
+                  aria-haspopup="menu"
+                  [attr.aria-expanded]="profileOpen()"
+                  (click)="toggleProfile($event)"
+                >
+                  <span class="shell-profile-avatar" aria-hidden="true">{{ initials() }}</span>
+                  <span class="shell-profile-name">{{ displayName() ?? ('shell.account' | t) }}</span>
+                  <vereint-icon name="chevron-down" />
+                </button>
+                @if (profileOpen()) {
+                  <div class="shell-menu" role="menu" (click)="$event.stopPropagation()">
+                    <a
+                      class="shell-menu-item"
+                      role="menuitem"
+                      routerLink="/profile"
+                      (click)="closeMenus()"
+                    >
+                      <vereint-icon name="user" /> {{ 'shell.profile' | t }}
+                    </a>
+                    <a
+                      class="shell-menu-item"
+                      role="menuitem"
+                      routerLink="/wallet"
+                      (click)="closeMenus()"
+                    >
+                      <vereint-icon name="wallet" /> {{ 'shell.wallet' | t }}
+                    </a>
+                    <button type="button" class="shell-menu-item" role="menuitem" (click)="logout()">
+                      <vereint-icon name="logout" /> {{ 'shell.logout' | t }}
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </header>
+
+      <div class="shell-content" id="shell-main-content" tabindex="-1">
+        <router-outlet />
+      </div>
+
+      @if (viewport() === 'mobile' && !kiosk()) {
+        <nav class="shell-bottom-bar" [attr.aria-label]="'shell.mainNav' | t">
+          @for (item of primaryNav(); track trackNav($index, item)) {
+            <a
+              class="shell-bottom-link"
+              [routerLink]="item.route"
+              [attr.aria-label]="navAriaLabel(item)"
+              routerLinkActive="is-active"
+              [routerLinkActiveOptions]="activeOptions(item)"
+              ariaCurrentWhenActive="page"
+            >
+              <vereint-icon class="shell-bottom-icon" [name]="item.icon" />
+              <span class="shell-bottom-label">{{ item.labelKey | t }}</span>
+              @if (item.id === 'chat' && chatBadge(); as badge) {
+                <span class="shell-nav-count" aria-hidden="true">{{ badge }}</span>
+              }
+            </a>
+          }
+          <button
+            type="button"
+            class="shell-bottom-link"
+            [class.is-active]="moreOpen() || moreActive()"
+            aria-haspopup="dialog"
+            [attr.aria-expanded]="moreOpen()"
+            (click)="openMore()"
+          >
+            <vereint-icon class="shell-bottom-icon" name="more" />
+            <span class="shell-bottom-label">{{ 'shell.more' | t }}</span>
+          </button>
+        </nav>
+      }
+    </div>
+
+    <vereint-bottom-sheet [open]="moreOpen() && !kiosk()" [title]="'shell.more' | t" (closed)="closeMenus()">
+      <div class="shell-more">
+        @for (section of moreSections(); track section.id) {
+          <nav class="shell-more-section" [attr.aria-label]="section.labelKey | t">
+            <p class="shell-nav-heading">{{ section.labelKey | t }}</p>
+            <div class="shell-more-grid">
+              @for (item of section.items; track trackNav($index, item)) {
+                <a
+                  class="shell-more-link"
+                  [routerLink]="item.route"
+                  routerLinkActive="is-active"
+                  [routerLinkActiveOptions]="activeOptions(item)"
+                  (click)="closeMenus()"
+                >
+                  <vereint-icon class="shell-more-icon" [name]="item.icon" />
+                  <span>{{ item.labelKey | t }}</span>
+                </a>
+              }
+            </div>
+          </nav>
+        }
+        <button type="button" class="shell-more-logout" (click)="logout()">
+          <vereint-icon name="logout" /> {{ 'shell.logout' | t }}
+        </button>
+        <app-legal-links class="shell-legal" />
+      </div>
+    </vereint-bottom-sheet>
+  </div>
+}

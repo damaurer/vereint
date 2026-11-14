@@ -1,0 +1,9 @@
+{
+  "name": "vereint-local-seed",
+  "private": true,
+  "type": "module",
+  "description": "Legt im lokalen Stack (local/vereint.mjs) einmalig Demo-Daten an.",
+  "dependencies": {
+    "playwright": "1.56.1"
+  }
+}

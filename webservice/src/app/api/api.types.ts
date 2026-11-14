@@ -1,0 +1,1138 @@
+/**
+ * Datenverträge der fachlichen API (`/api/v1`), soweit die Mitglieder-PWA sie
+ * konsumiert (TICKET-024). Die Formen entsprechen den Kotlin-DTOs des
+ * Spring-Fachservice; Kennungen sind Zeichenketten (UUID), Zeitstempel
+ * ISO-8601, Geldbeträge dezimale Zeichenketten.
+ */
+
+import type { BoardRole, UserRole } from '../auth/auth.types';
+
+export type { BoardRole, UserRole } from '../auth/auth.types';
+
+/** Zulässige Eventstatuswerte gemäß Datenvertrag (`EventStatus`). */
+export type EventStatus =
+  | 'draft'
+  | 'published'
+  | 'active'
+  | 'cancelled'
+  | 'completed'
+  | 'archived';
+
+/** Eigenes Benutzerprofil (`GET /api/v1/users/me`). */
+export interface MemberProfile {
+  id: string;
+  keycloakSubject: string;
+  displayName: string;
+  email: string | null;
+  disabled: boolean;
+  drinkRecorder: boolean;
+  boardRole: BoardRole | null;
+  roles: UserRole[];
+  permissions: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Aktualisierung des eigenen Profils (`PUT /api/v1/users/me`). */
+export interface UpdateProfilePayload {
+  displayName?: string;
+  email?: string;
+}
+
+/** Kompakte Eventzeile (`GET /api/v1/events`). */
+export interface EventSummary {
+  id: string;
+  title: string;
+  status: EventStatus;
+  startsAt: string;
+  endsAt: string | null;
+  ownerId: string;
+  ownerDisplayName: string;
+  location?: string | null;
+  /** Eigene Antwort, falls man eingeladen ist. */
+  myRsvp?: RsvpStatus | null;
+}
+
+/** Antwort eines Eingeladenen; `invited` heißt: noch keine Antwort. */
+export type RsvpStatus = 'invited' | 'accepted' | 'maybe' | 'declined';
+
+export interface RsvpCounts {
+  invited: number;
+  accepted: number;
+  maybe: number;
+  declined: number;
+}
+
+/** Eventdetails (`GET /api/v1/events/{id}`). */
+export interface EventDetail {
+  id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: string;
+  endsAt: string | null;
+  status: EventStatus;
+  ownerId: string;
+  ownerDisplayName: string;
+  participantCount: number;
+  createdAt: string;
+  updatedAt: string;
+  /** Ab wann Eingeladene benachrichtigt werden; `null` = bei Veröffentlichung. */
+  invitationNotifyAt?: string | null;
+  /** Erinnerung so viele Stunden vor Beginn; `null` = keine. */
+  reminderHoursBefore?: number | null;
+  myRsvp?: RsvpStatus | null;
+  rsvpCounts?: RsvpCounts;
+  canManage?: boolean;
+  /** „Statistik für dieses Event“; fehlt bei älteren Antworten (dann an). */
+  statisticsEnabled?: boolean;
+}
+
+/** Neues Event (`POST /api/v1/events`). */
+export interface CreateEventPayload {
+  title: string;
+  description?: string | null;
+  location?: string | null;
+  startsAt: string;
+  endsAt?: string | null;
+  status?: 'draft' | 'published';
+  invitationNotifyAt?: string | null;
+  reminderHoursBefore?: number | null;
+  inviteUserIds?: string[];
+  inviteAllMembers?: boolean;
+  /** „Statistik für dieses Event“; Standard an. */
+  statisticsEnabled?: boolean;
+}
+
+/** Mitglieder einladen (`POST /api/v1/events/{id}/invitations`). */
+export interface InviteMembersPayload {
+  userIds?: string[];
+  allMembers?: boolean;
+}
+
+/** Eintrag des Mitgliederverzeichnisses (`GET /api/v1/users/directory`, alle Angemeldeten). */
+export interface DirectoryMember {
+  id: string;
+  displayName: string;
+  boardRole: string | null;
+  roles: string[];
+}
+
+/** Zeile der Guthabenübersicht (`GET /api/v1/ledger/balances`, Vorstand/Admin). */
+export interface MemberBalanceOverview {
+  memberId: string;
+  displayName: string;
+  currency: string;
+  creditBalance: string;
+  lastEntryAt: string | null;
+}
+
+/** Rundbrief (`POST /api/v1/notifications/broadcast`, Vorstand/Admin). */
+export interface BroadcastPayload {
+  userIds?: string[];
+  allMembers?: boolean;
+  title: string;
+  body: string;
+}
+
+export interface BroadcastResult {
+  sent: number;
+}
+
+/** Teilnehmer eines Events (`GET /api/v1/events/{id}/participants`). */
+export interface EventParticipant {
+  userId: string;
+  displayName: string;
+  role: string;
+  joinedAt: string;
+  rsvp?: RsvpStatus;
+  rsvpAt?: string | null;
+}
+
+/**
+ * Guthaben und Umsatzkennzahlen einer Person
+ * (`GET /api/v1/ledger/members/{memberId}/balance`).
+ */
+export interface MemberBalance {
+  memberId: string;
+  currency: string;
+  creditBalance: string;
+  topupTotal: string;
+  payoutTotal: string;
+  purchaseTotal: string;
+  correctionTotal: string;
+  entryCount: number;
+}
+
+/** Zulässige Belegpositionstypen. */
+export type PurchaseItemType = 'DRINK' | 'FOOD';
+
+/** Unveränderlicher Beleg-Snapshot eines Kaufs. */
+export interface PurchaseSnapshot {
+  itemType?: PurchaseItemType;
+  drinkName: string | null;
+  foodName?: string | null;
+  imageReference: string | null;
+  barcode: string | null;
+  unitPrice: string;
+  costPrice?: string;
+  profit?: string;
+  currency: string;
+  catalogVersion: number | null;
+}
+
+/**
+ * Einzelne Ledger-Buchung
+ * (`GET /api/v1/ledger/members/{memberId}/entries`).
+ */
+export interface LedgerEntry {
+  id: string;
+  entryType: string;
+  eventId: string | null;
+  memberId: string;
+  memberDisplayName: string;
+  drinkId: string | null;
+  foodId?: string | null;
+  amount: string;
+  currency: string;
+  accountingMode: string;
+  source: string | null;
+  actorId: string;
+  reversesEntryId: string | null;
+  idempotencyKey: string;
+  createdAt: string;
+  snapshot: PurchaseSnapshot | null;
+  /** Strich-Kategorie, zu deren Preis das Getränk gebucht wurde. */
+  tallyCategoryId?: string | null;
+  tallyCategoryName?: string | null;
+  /** Runde, auf die der Strich ging; `memberId` ist dann der Geber. */
+  roundId?: string | null;
+  /** Wer getrunken hat, wenn die Buchung auf eine Runde ging. */
+  beneficiaryId?: string | null;
+  beneficiaryDisplayName?: string | null;
+}
+
+/** Ein laufendes Event, an dem das gescannte Getränk gekauft werden kann. */
+export interface PurchaseOption {
+  eventId: string;
+  eventTitle: string;
+  unitPrice: string;
+  currency: string;
+}
+
+/** Guthabenkauf ohne Event zum Katalogpreis der Gruppe. */
+export interface CreditPurchaseOption {
+  unitPrice: string;
+  currency: string;
+}
+
+/**
+ * Vorschau nach einem Scan (`POST /api/v1/ledger/purchases/preview`); bucht nichts.
+ * Mit `options` gilt nur der Kauf über das laufende Event. Ohne `options` darf
+ * die Person wählen: `creditPurchase` (Guthaben zum Katalogpreis) und, wenn die
+ * Statistik an ist, `foreignDrink` (nur Statistik).
+ */
+export interface PurchasePreview {
+  barcode: string;
+  /** `null`, wenn das Getränk nur in der Getränkedatenbank steht. */
+  drinkId: string | null;
+  drinkName: string;
+  imageReference: string | null;
+  options: PurchaseOption[];
+  creditBalance: string;
+  balanceCurrency: string;
+  creditPurchase?: CreditPurchaseOption | null;
+  /** Fremdgetränk möglich; zugleich: ein Guthabenkauf ginge in die Statistik ein. */
+  foreignDrink?: boolean;
+  libraryDrinkId?: string | null;
+}
+
+/** Erfasstes Fremdgetränk (`POST /api/v1/statistics/foreign-drinks`): nur Statistik, ohne Buchung. */
+export interface ForeignDrink {
+  id: string;
+  drinkName: string;
+  drinkId: string | null;
+  libraryDrinkId: string | null;
+  occurredAt: string;
+  removableUntil: string;
+}
+
+/**
+ * Verträge der Verwaltungs- und Tablet-Kontexte (TICKET-026): Vorstand/Kasse,
+ * Kommunikation, Administration/Audit sowie der Drink-Recorder. Sämtliche
+ * Autorisierung verbleibt serverseitig im Fachservice (`deny by default`); die
+ * Oberflächen formulieren ausschließlich die Aufrufe.
+ */
+
+/** Aggregierte Kassen-/Umsatzsicht eines Events (`GET /api/v1/ledger/events/{id}/summary`). */
+export interface EventLedgerSummary {
+  eventId: string;
+  currency: string;
+  revenueTotal: string;
+  costTotal?: string;
+  profitTotal?: string;
+  creditConsumptionTotal: string;
+  entryCount: number;
+}
+
+/** Guthaben-Aufladung (`POST /api/v1/ledger/topups`, nur Vorstand/Admin). */
+export interface TopupPayload {
+  memberId: string;
+  amount: string;
+  currency?: string;
+  note?: string;
+}
+
+/** Guthaben-Auszahlung (`POST /api/v1/ledger/payouts`, nur Vorstand/Admin). */
+export interface PayoutPayload {
+  memberId: string;
+  amount: string;
+  currency?: string;
+  note?: string;
+}
+
+/** Korrektur als Gegenbuchung (`POST /api/v1/ledger/corrections`, nur Vorstand/Admin). */
+export interface CorrectionPayload {
+  originalEntryId: string;
+  reason?: string;
+}
+
+/** Gespeicherte Benachrichtigung (`GET`/`POST /api/v1/notifications`). */
+export interface NotificationMessage {
+  id: string;
+  title: string;
+  body: string;
+  type: string;
+  read: boolean;
+  createdAt: string;
+  /** Ziel in der App, z. B. `/events/{id}`. */
+  link?: string | null;
+}
+
+/** Versenden einer Benachrichtigung (`POST /api/v1/notifications`, nur Vorstand/Admin). */
+export interface SendNotificationPayload {
+  userId: string;
+  title: string;
+  body: string;
+  type?: string;
+}
+
+/** Ein Eintrag des Audit-Protokolls (`GET /api/v1/audit-logs`, nur Vorstand/Admin). */
+export interface AuditLogEntry {
+  id: string;
+  action: string;
+  targetEntity: string;
+  targetId: string | null;
+  actorId: string | null;
+  actorDisplayName: string | null;
+  details: string | null;
+  createdAt: string;
+  /** Betroffene Person (Mitglied, Empfänger), vom Server aufgelöst. */
+  targetName?: string | null;
+  /** Betreff, z. B. Titel einer Mitteilung. */
+  targetTitle?: string | null;
+}
+
+/** Kompaktes aktives Event für die Tablet-Auswahl (`GET /api/v1/tablet/events`). */
+export interface TabletEvent {
+  id: string;
+  title: string;
+  location: string | null;
+  startsAt: string;
+  status: EventStatus;
+}
+
+/** Für den Tablet-Kontext freigegebenes Eventmitglied. */
+export interface TabletMember {
+  memberId: string;
+  displayName: string;
+}
+
+/** Manueller Strichlisten-Kauf (`POST /api/v1/tablet/events/{id}/purchases`). */
+export interface TabletPurchasePayload {
+  memberId: string;
+  eventDrinkId?: string | null;
+  eventFoodId?: string | null;
+}
+
+/** Buchbares Eventgetränk einer Spalte der Strichliste. */
+export interface TabletBoardDrink {
+  eventDrinkId: string;
+  drinkName: string;
+}
+
+/** Spalte der Strichliste: Strich-Kategorie mit Preis je Strich. */
+export interface TabletBoardColumn {
+  categoryId: string;
+  name: string;
+  price: string;
+  currency: string;
+  drinks: TabletBoardDrink[];
+}
+
+/** Zeile der Strichliste: Striche des Abends je Kategorie-ID. */
+export interface TabletBoardMember {
+  memberId: string;
+  displayName: string;
+  counts: Record<string, number>;
+  otherCount: number;
+  /** Laufende Runde, auf die der nächste Strich geht; fehlt = eigene Rechnung. */
+  fundedBy?: RoundFunding | null;
+}
+
+/** Strichliste eines Events (`GET /api/v1/tablet/events/{id}/board`). */
+export interface TabletBoard {
+  columns: TabletBoardColumn[];
+  members: TabletBoardMember[];
+  tallyCount: number;
+  revenue: string;
+  currency: string;
+  /** Laufende Runden, nur zur Anzeige. */
+  rounds?: Round[];
+}
+
+/** Art einer Runde: ein Getränk je Person oder alles bis zur Höchstsumme. */
+export type RoundKind = 'round' | 'evening';
+
+/** Stand einer Runde. */
+export type RoundStatus = 'running' | 'usedUp' | 'expired' | 'ended';
+
+/** Wer gerade für eine Person an der Theke zahlt. */
+export interface RoundFunding {
+  roundId: string;
+  sponsorName: string;
+  kind: RoundKind;
+}
+
+export interface RoundInvitee {
+  memberId: string;
+  displayName: string;
+  redeemedCount: number;
+  redeemed: boolean;
+}
+
+/** Runde im Event (`GET /api/v1/events/{id}/rounds`). */
+export interface Round {
+  id: string;
+  eventId: string;
+  sponsorId: string;
+  sponsorName: string;
+  kind: RoundKind;
+  /** fehlt = alle Getränke */
+  eventDrinkId: string | null;
+  drinkName: string | null;
+  maxAmount: string;
+  usedAmount: string;
+  currency: string;
+  /** fehlt = bis Event-Ende */
+  validUntil: string | null;
+  endedAt: string | null;
+  status: RoundStatus;
+  createdAt: string;
+  invitees: RoundInvitee[];
+}
+
+/** Gültigkeit beim Ausgeben. */
+export type RoundValidity = '30m' | '1h' | 'eventEnd';
+
+/** Runde ausgeben (`POST /api/v1/events/{id}/rounds`). */
+export interface CreateRoundPayload {
+  kind: RoundKind;
+  eventDrinkId?: string | null;
+  validity: RoundValidity;
+  memberIds: string[];
+  /** nur bei `evening` */
+  maxAmount?: number | null;
+}
+
+/** Formular „Runde ausgeben“ (`GET /api/v1/events/{id}/rounds/options`). */
+export interface RoundOptions {
+  eventId: string;
+  eventTitle: string;
+  creditBalance: string;
+  currency: string;
+  drinks: { eventDrinkId: string; drinkName: string; price: string; currency: string }[];
+  members: { memberId: string; displayName: string; accepted: boolean; present: boolean }[];
+}
+
+/** Globaler Speisenkatalog (`GET /api/v1/food`). */
+export interface FoodSummary {
+  id: string;
+  name: string;
+  category: string | null;
+  defaultPrice: string;
+  costPrice: string;
+  currency: string;
+  active: boolean;
+}
+
+/** Speisedetails (`GET /api/v1/food/{id}`). */
+export interface FoodDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  defaultPrice: string;
+  costPrice: string;
+  currency: string;
+  active: boolean;
+  createdById: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateFoodPayload {
+  name: string;
+  description?: string;
+  category?: string;
+  defaultPrice: string | number;
+  costPrice?: string | number;
+  currency?: string;
+}
+
+export interface UpdateFoodPayload {
+  name?: string;
+  description?: string;
+  category?: string;
+  defaultPrice?: string | number;
+  costPrice?: string | number;
+  currency?: string;
+  active?: boolean;
+}
+
+/** Eventspeise (`GET /api/v1/events/{id}/food`). */
+export interface EventFood {
+  id: string;
+  eventId: string;
+  foodId: string;
+  foodName: string;
+  price: string | null;
+  effectivePrice: string;
+  costPrice: string | null;
+  effectiveCostPrice: string;
+  currency: string;
+  selfServiceEnabled: boolean;
+  tabletEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AddEventFoodPayload {
+  foodId: string;
+  price?: string | number | null;
+  costPrice?: string | number | null;
+  currency?: string;
+  selfServiceEnabled?: boolean;
+  tabletEnabled?: boolean;
+}
+
+export interface UpdateEventFoodPayload {
+  price?: string | number | null;
+  costPrice?: string | number | null;
+  currency?: string;
+  selfServiceEnabled?: boolean;
+  tabletEnabled?: boolean;
+}
+
+/** Kombiniertes Angebot an Getränken und Speisen für das Tablet. */
+export interface TabletItems {
+  drinks: any[];
+  food: EventFood[];
+}
+
+/** Administrative Benutzeraktualisierung (`PUT /api/v1/users/{id}`). */
+export interface AdminUpdateUserPayload {
+  displayName?: string;
+  email?: string;
+  disabled?: boolean;
+  drinkRecorder?: boolean;
+  boardRole?: BoardRole | '' | null;
+  roles?: string[];
+  permissions?: string[];
+}
+
+/** Setzt die Rollen eines Benutzers (`PUT /api/v1/users/{id}/roles`). */
+export interface AssignRolesPayload {
+  roles: string[];
+}
+
+/** Setzt die Permissions eines Benutzers (`PUT /api/v1/users/{id}/permissions`). */
+export interface AssignPermissionsPayload {
+  permissions: string[];
+}
+
+/** Aktiviert/deaktiviert einen Benutzer (`PUT /api/v1/users/{id}/status`). */
+export interface UpdateUserStatusPayload {
+  disabled: boolean;
+}
+
+/** Query-Parameter der administrativen Benutzerliste (`GET /api/v1/users`). */
+export interface UserListQuery {
+  search?: string;
+  role?: string;
+  disabled?: boolean;
+  page?: number;
+  size?: number;
+}
+
+/** Wer einen Moment sieht: die ganze Gruppe oder nur die Teilnehmer des verknüpften Events. */
+export type MomentVisibility = 'group' | 'event';
+
+/** Gemeinschaftsmomente & Rituale DTOs (`/api/v1/moments`). */
+export interface StartMomentRequest {
+  /** Optional; leer übernimmt der Moment den Namen des Themas. */
+  title?: string;
+  topicType: string;
+  message?: string;
+  consent: boolean;
+  latitude?: number;
+  longitude?: number;
+  durationMinutes?: number;
+  /** Optionales Event, an das der Moment geknüpft wird. */
+  eventId?: string;
+  visibility?: MomentVisibility;
+}
+
+export interface SubmitMomentResponseRequest {
+  /** Code einer Reaktion; optional, wenn Text oder Bilder/Videos mitkommen. */
+  reaction?: string;
+  statusText?: string;
+  consent: boolean;
+  latitude?: number;
+  longitude?: number;
+  /** Zuvor hochgeladene Bilder/Videos (`uploadMomentMedia`). */
+  mediaIds?: string[];
+}
+
+export interface MomentSessionDto {
+  id: string;
+  eventId: string | null;
+  eventTitle: string | null;
+  visibility: MomentVisibility;
+  creatorId: string;
+  creatorName: string;
+  conversationId: string | null;
+  title: string;
+  topicType: string;
+  message: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  active: boolean;
+  topicName: string;
+  topicEmoji: string | null;
+  responsesCount: number;
+  expiresAt: string;
+  createdAt: string;
+  summary: string | null;
+}
+
+export interface MomentResponseDto {
+  id: string;
+  momentId: string;
+  userId: string;
+  userName: string;
+  reaction: string | null;
+  reactionName: string | null;
+  reactionEmoji: string | null;
+  statusText: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  createdAt: string;
+  media: MomentMediaDto[];
+}
+
+export interface MomentMediaDto {
+  id: string;
+  kind: 'image' | 'video';
+  contentType: string;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+  durationSeconds: number | null;
+  /** Berechtigungsgeprüfter Content-Endpunkt (Videos mit HTTP-Range). */
+  url: string;
+  canDelete: boolean;
+}
+
+/** Vom Vorstand gepflegter Moment-Typ (`/api/v1/moment-config`). */
+export interface MomentTypeDto {
+  id: string;
+  code: string;
+  name: string;
+  emoji: string;
+  description: string | null;
+  active: boolean;
+  allReactions: boolean;
+  reactionIds: string[];
+  /** Codes der Reaktionen, die in Moments dieses Typs gerade wählbar sind. */
+  allowedReactionCodes: string[];
+}
+
+export interface MomentReactionDto {
+  id: string;
+  code: string;
+  name: string;
+  emoji: string;
+  active: boolean;
+}
+
+export interface MomentMediaLimitsDto {
+  maxImageBytes: number;
+  maxVideoBytes: number;
+  maxVideoSeconds: number;
+  maxMediaPerResponse: number;
+  imageTypes: string[];
+  videoTypes: string[];
+}
+
+export interface MomentConfigDto {
+  types: MomentTypeDto[];
+  reactions: MomentReactionDto[];
+  mediaLimits: MomentMediaLimitsDto;
+}
+
+export interface SaveMomentTypeRequest {
+  name: string;
+  emoji: string;
+  description?: string;
+  active: boolean;
+  allReactions: boolean;
+  reactionIds: string[];
+}
+
+export interface SaveMomentReactionRequest {
+  name: string;
+  emoji: string;
+  active: boolean;
+}
+
+export interface GeoJsonGeometryDto {
+  type: string;
+  coordinates: [number, number];
+}
+
+export interface GeoJsonFeatureDto {
+  type: string;
+  geometry: GeoJsonGeometryDto;
+  properties: Record<string, unknown>;
+}
+
+export interface MomentMapGeoJsonDto {
+  type: string;
+  features: GeoJsonFeatureDto[];
+}
+
+export interface MomentDetailDto {
+  session: MomentSessionDto;
+  responses: MomentResponseDto[];
+  mapGeoJson: MomentMapGeoJsonDto;
+}
+
+export interface MomentSummaryDto {
+  momentId: string;
+  eventId: string | null;
+  eventTitle: string | null;
+  title: string;
+  topicType: string;
+  topicName: string;
+  topicEmoji: string | null;
+  totalResponses: number;
+  uniqueParticipants: number;
+  summary: string;
+  completedAt: string;
+}
+
+// --- Chat (`/api/v1/conversations`) ---
+
+export type ConversationType = 'club' | 'direct' | 'event' | 'moment';
+
+export interface ChatReaction {
+  emoji: string;
+  count: number;
+  reactedByMe: boolean;
+}
+
+/** Nachricht einer Konversation. `senderType` ist `member` oder `guest`. */
+export interface ChatMessageDto {
+  id: string;
+  conversationId: string;
+  senderType: 'member' | 'guest';
+  senderId: string | null;
+  senderName: string;
+  message: string;
+  imageUrl: string | null;
+  createdAt: string;
+  reactions?: ChatReaction[];
+}
+
+export interface PinnedNote {
+  text: string;
+  authorName: string;
+  pinnedAt: string;
+}
+
+/** Eintrag der Chat-Übersicht (`GET /api/v1/conversations`). */
+export interface ConversationSummary {
+  id: string;
+  type: ConversationType;
+  title: string;
+  eventId: string | null;
+  partnerId: string | null;
+  partnerName: string | null;
+  lastMessage: { senderName: string; message: string; createdAt: string } | null;
+  unreadCount: number;
+  pinned: PinnedNote | null;
+  canWrite: boolean;
+}
+
+// --- Freunde (`/api/v1/friends`, gruppenübergreifend) ---
+
+export type FriendStatus = 'friend' | 'incoming' | 'outgoing' | 'none';
+
+/** Gemeinsame Gruppe; nur Gruppen, in denen man selbst Mitglied ist. */
+export interface SharedGroup {
+  id: string;
+  name: string;
+}
+
+/** Person in Freundesliste oder Kontakten. */
+export interface FriendContact {
+  userId: string;
+  displayName: string;
+  friendStatus: FriendStatus;
+  since: string | null;
+  sharedGroups: SharedGroup[];
+  /** Darf man der Person schreiben (Freunde oder gemeinsame Gruppe)? */
+  canMessage: boolean;
+}
+
+export interface FriendsOverview {
+  friends: FriendContact[];
+  incoming: FriendContact[];
+  outgoing: FriendContact[];
+}
+
+// --- Persönlicher Kalender (`GET /api/v1/calendar`, alle eigenen Gruppen) ---
+
+export interface CalendarEntry {
+  kind: 'event' | 'moment';
+  id: string;
+  eventId: string;
+  title: string;
+  startsAt: string;
+  endsAt: string | null;
+  /** Ort des Events; bei Moments der Titel des Events. */
+  location: string | null;
+  status: string;
+  myRsvp: string | null;
+  emoji: string | null;
+  topicName: string | null;
+  active: boolean;
+  stammtischId: string;
+  stammtischName: string;
+}
+
+export interface CalendarResponse {
+  from: string;
+  to: string;
+  entries: CalendarEntry[];
+}
+
+// --- Statistik (`GET /api/v1/statistics…`, alle Mitglieder nach Zustimmung zu den AGB) ---
+
+/** Zeitraum der Statistik: letzte 30 bzw. 90 Tage oder laufendes Kalenderjahr. */
+export type StatisticsPeriodCode = '30' | '90' | 'year';
+
+/** Feste Kategoriegruppen für „Wer trinkt was?“. */
+export type DrinkCategoryGroup = 'beer' | 'nonAlcoholic' | 'spirits' | 'wineSparkling' | 'other';
+
+export interface MemberCount {
+  memberId: string;
+  displayName: string;
+  count: number;
+}
+
+/** Einstieg (`GET /api/v1/statistics?period=`). */
+export interface ClubStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  totalItems: number;
+  myItems: number;
+  myRank: number | null;
+  rankedMembers: number;
+  topConsumers: MemberCount[];
+  attendancePercent: number | null;
+  recording?: StatisticsRecording;
+}
+
+export interface MemberDrinkStats {
+  rank: number;
+  memberId: string;
+  displayName: string;
+  count: number;
+  kcal: number;
+  liters: number;
+  perEvent: number | null;
+  perWeek: number;
+  categories: { category: DrinkCategoryGroup; count: number }[];
+  drinks: { name: string; volumeMl: number | null; count: number; kcal: number | null }[];
+}
+
+export interface DrinkTotals {
+  rank: number;
+  name: string;
+  category: DrinkCategoryGroup;
+  volumeMl: number | null;
+  count: number;
+  liters: number | null;
+  kcal: number | null;
+  members: number;
+  perEvent: number | null;
+}
+
+/** Getränkestatistik (`GET /api/v1/statistics/drinks?period=&by=`). */
+export interface DrinkStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  totalDrinks: number;
+  liters: number;
+  kcal: number;
+  withoutVolume: number;
+  withoutKcal: number;
+  averages: { perEvent: number | null; perDay: number; perWeek: number; perMonth: number };
+  by: 'member' | 'drink';
+  members: MemberDrinkStats[];
+  drinks: DrinkTotals[];
+}
+
+export interface StatisticsRecord {
+  label: string;
+  value: number;
+}
+
+/** Statistik-Übersicht (`GET /api/v1/statistics/overview?period=`). */
+export interface StatisticsOverview {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  kpis: {
+    members: number;
+    activeMembers: number;
+    newMembers: number;
+    events: number;
+    avgParticipants: number | null;
+    attendancePercent: number | null;
+    drinks: number;
+    drinksPerEvent: number | null;
+    liters: number;
+    litersPerWeek: number;
+    kcal: number;
+    kcalPerMember: number | null;
+    /** Nur für Vorstand/Kasse, sonst `null`. */
+    revenue: number | null;
+    revenuePerEvent: number | null;
+    currency: string;
+    drinksPerMonth: number;
+    withoutVolume: number;
+    withoutKcal: number;
+  };
+  rsvpByEvent: {
+    eventId: string;
+    title: string;
+    startsAt: string;
+    accepted: number;
+    maybe: number;
+    declined: number;
+    noAnswer: number;
+    invited: number;
+  }[];
+  rsvpByMember: {
+    memberId: string;
+    displayName: string;
+    accepted: number;
+    maybe: number;
+    declined: number;
+    attended: number;
+    invited: number;
+    quotePercent: number | null;
+  }[];
+  weekly: number[];
+  weekdays: { key: string; count: number }[];
+  hours: { key: string; count: number }[];
+  whoDrinksWhat: MemberDrinkStats[];
+  topDrinks: { name: string; count: number; perEvent: number | null }[];
+  categories: { category: DrinkCategoryGroup; count: number; sharePercent: number; liters: number; kcal: number }[];
+  roundGivers: MemberCount[];
+  moments: { started: number; reactions: number; media: number };
+  chat: { messages: number; mostActive: string | null; eventChats: number };
+  records: {
+    mostDrinksEvening: StatisticsRecord | null;
+    longestStreak: StatisticsRecord | null;
+    fastestRsvp: StatisticsRecord | null;
+  };
+}
+
+/** Stand der AGB-Zustimmung (`GET/POST /api/v1/users/me/terms`). */
+export interface TermsStatus {
+  currentVersion: string;
+  acceptedVersion: string | null;
+  acceptedAt: string | null;
+  accepted: boolean;
+}
+
+// --- Statistik-Ebenen und Schalter (Issue #104) ---
+
+/** Stand der Schalter Nutzer > Gruppe > Event. */
+export interface StatisticsRecording {
+  userEnabled: boolean;
+  /** `null` auf gruppenübergreifenden Seiten. */
+  groupEnabled?: boolean | null;
+  /** Nur auf der Event-Statistik. */
+  eventEnabled?: boolean | null;
+}
+
+/** Funktionen, die die Statistik zählt. */
+export type StatisticFeature =
+  | 'purchase'
+  | 'foreign_drink'
+  | 'round'
+  | 'top_up'
+  | 'event'
+  | 'rsvp'
+  | 'moment'
+  | 'moment_reaction'
+  | 'moment_media'
+  | 'chat_message'
+  | 'chat_reaction'
+  | 'invite_link'
+  | 'invite_join';
+
+export interface FeatureCount {
+  feature: StatisticFeature;
+  count: number;
+}
+
+/** Eigene Statistik (`GET /api/v1/statistics/me?zeitraum=`). */
+export interface MyStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  recording: StatisticsRecording;
+  total: number;
+  counts: FeatureCount[];
+  accepted: number;
+  attended: number;
+  groups: {
+    stammtischId: string;
+    stammtischName: string;
+    groupEnabled: boolean;
+    total: number;
+    counts: FeatureCount[];
+  }[];
+}
+
+/** Ein Event im Vergleich; gruppenübergreifend ohne Namen anderer Personen. */
+export interface EventComparison {
+  eventId: string;
+  title: string;
+  startsAt: string;
+  status: string;
+  statisticsEnabled: boolean;
+  stammtischId?: string | null;
+  stammtischName?: string | null;
+  accepted: number;
+  maybe: number;
+  declined: number;
+  noAnswer: number;
+  invited: number;
+  attendees: number;
+  purchases: number;
+  rounds: number;
+  moments: number;
+  reactions: number;
+  chatMessages: number;
+  myPurchases?: number | null;
+  myRsvp?: string | null;
+}
+
+export interface EventTotals {
+  events: number;
+  attendances: number;
+  avgAttendees: number | null;
+  attendancePercent: number | null;
+  purchases: number;
+  purchasesPerEvent: number | null;
+  moments: number;
+}
+
+/** Übergreifende Event-Statistik (`GET /api/v1/statistics/events?zeitraum=`). */
+export interface CrossEventStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  recording: StatisticsRecording;
+  totals: EventTotals;
+  myAttended: number;
+  myPurchases: number;
+  events: EventComparison[];
+}
+
+/** Gruppen-Event-Statistik (`GET /api/v1/statistics/group-events?zeitraum=`). */
+export interface GroupEventStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  recording: StatisticsRecording;
+  totals: EventTotals;
+  events: EventComparison[];
+}
+
+/** Event-Statistik (`GET /api/v1/events/{id}/statistics`). */
+export interface EventStatistics {
+  eventId: string;
+  title: string;
+  startsAt: string;
+  recording: StatisticsRecording;
+  accepted: number;
+  maybe: number;
+  declined: number;
+  noAnswer: number;
+  invited: number;
+  attendees: number;
+  purchases: number;
+  rounds: number;
+  moments: number;
+  reactions: number;
+  media: number;
+  chatMessages: number;
+  chatReactions: number;
+  topConsumers: MemberCount[];
+}
+
+export interface FeatureStat {
+  feature: StatisticFeature;
+  triggered: number;
+  responseFeature: string | null;
+  responses: number;
+  breakdown: { key: string; count: number }[];
+}
+
+/** Funktions-Statistik (`GET /api/v1/statistics/features?zeitraum=`). */
+export interface FeatureStatistics {
+  period: StatisticsPeriodCode;
+  from: string;
+  days: number;
+  recording: StatisticsRecording;
+  features: FeatureStat[];
+}
+
+/** Schalter (`/api/v1/me/statistics-settings`, `/api/v1/stammtisch/statistics-settings`). */
+export interface StatisticsSettings {
+  enabled: boolean;
+}
+
+export interface StatisticsDeleted {
+  deleted: number;
+}

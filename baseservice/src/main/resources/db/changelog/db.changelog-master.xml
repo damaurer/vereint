@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Zieldatenbank ist PostgreSQL; H2 ist ausschließlich für die schnellen
+        Spring-Context-Tests zugelassen. Seed- oder Testdaten gehören ausschließlich in
+        Changesets mit `context="dev"`; Produktivmigrationen laufen ohne Context bzw.
+        mit `context="prod"`.
+    -->
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <include file="db/changelog/changes/001-initial-schema.xml"/>
+    <include file="db/changelog/changes/002-integrity-constraints.xml"/>
+    <include file="db/changelog/changes/003-drink-catalog-approval.xml"/>
+    <include file="db/changelog/changes/004-image-assets.xml"/>
+    <include file="db/changelog/changes/005-ledger-transactions.xml"/>
+    <include file="db/changelog/changes/007-food-and-cost-prices.xml"/>
+    <include file="db/changelog/changes/008-encrypted-content.xml"/>
+    <include file="db/changelog/changes/009-chat-and-rsvp.xml"/>
+    <include file="db/changelog/changes/010-member-invites.xml"/>
+    <include file="db/changelog/changes/011-kiosk-sessions.xml"/>
+    <include file="db/changelog/changes/012-moment-types-and-media.xml"/>
+    <include file="db/changelog/changes/013-stammtische.xml"/>
+    <include file="db/changelog/changes/014-drink-library.xml"/>
+    <include file="db/changelog/changes/015-billing.xml"/>
+    <include file="db/changelog/changes/016-terms-acceptance.xml"/>
+    <include file="db/changelog/changes/017-drink-library-seed.xml"/>
+    <include file="db/changelog/changes/018-drink-library-seed-breweries.xml"/>
+    <include file="db/changelog/changes/019-friends-and-direct-messages.xml"/>
+    <include file="db/changelog/changes/020-moments-without-events.xml"/>
+    <include file="db/changelog/changes/021-remove-plans-and-billing.xml"/>
+    <include file="db/changelog/changes/022-unique-ledger-correction.xml"/>
+    <include file="db/changelog/changes/023-tally-categories.xml"/>
+    <include file="db/changelog/changes/024-drink-nutrition.xml"/>
+    <include file="db/changelog/changes/025-rounds.xml"/>
+    <include file="db/changelog/changes/026-statistic-records.xml"/>
+    <include file="db/changelog/changes/027-foreign-drinks.xml"/>
+
+</databaseChangeLog>

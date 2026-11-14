@@ -1,0 +1,2428 @@
+{
+  "common": {
+    "loading": "Wird geladen …",
+    "save": "Speichern",
+    "saving": "Wird gespeichert …",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "retry": "Erneut versuchen",
+    "optional": "optional",
+    "yesterday": "Gestern",
+    "today": "Heute"
+  },
+  "errors": {
+    "api": {
+      "network": "Vereint ist gerade nicht erreichbar. Bitte versuche es gleich noch einmal.",
+      "unavailable": "Der Dienst ist gerade nicht erreichbar. Bitte später erneut versuchen.",
+      "sessionExpired": "Die Sitzung ist abgelaufen. Bitte erneut anmelden.",
+      "permissionDenied": "Für diese Aktion fehlen die erforderlichen Rechte.",
+      "notFound": "Der angeforderte Eintrag wurde nicht gefunden.",
+      "invalid": "Die Eingabe ist ungültig. Bitte prüfen und erneut versuchen.",
+      "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte später erneut versuchen.",
+      "stammtischRequired": "Bitte zuerst eine Gruppe wählen.",
+      "stammtischDenied": "Du gehörst dieser Gruppe nicht (mehr) an.",
+      "stammtischLimit": "Du hast bereits drei eigene Gruppen eröffnet. Mehr sind pro Person nicht möglich.",
+      "termsRequired": "Bitte stimme zuerst den aktuellen AGB zu."
+    }
+  },
+  "member": {
+    "entryType": {
+      "purchase": "Kauf",
+      "topup": "Aufladung",
+      "payout": "Auszahlung",
+      "correction": "Korrektur"
+    },
+    "eventStatus": {
+      "draft": "Entwurf",
+      "published": "Veröffentlicht",
+      "active": "Aktiv",
+      "cancelled": "Abgesagt",
+      "completed": "Abgeschlossen",
+      "archived": "Archiviert"
+    },
+    "rsvp": {
+      "accept": "Zusagen",
+      "maybe": "Vielleicht",
+      "decline": "Absagen",
+      "status": {
+        "invited": "Offen",
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt"
+      }
+    },
+    "balance": {
+      "current": "Aktueller Stand",
+      "topupHint": "Aufladungen erfolgen über den Kassenwart. Bitte sprich ihn direkt an."
+    },
+    "dashboard": {
+      "ariaLabel": "Persönliche Übersicht",
+      "loadingMessage": "Deine Übersicht wird abgerufen.",
+      "unavailable": "Übersicht nicht verfügbar",
+      "eyebrow": "Servus",
+      "greeting": {
+        "morning": "Guten Morgen, schön, dass du da bist.",
+        "day": "Schön, dass du wieder da bist.",
+        "evening": "Guten Abend. Wer ist heute dabei?"
+      },
+      "balanceHeading": "Dein Guthaben",
+      "statementLink": "Kontoauszug ansehen",
+      "nextEventHeading": "Nächster Termin",
+      "rsvpGroup": "Teilnahme am nächsten Termin",
+      "attending": "Du bist dabei",
+      "allEvents": "Alle Events",
+      "noEvents": "Aktuell keine Events.",
+      "statEvents": "Deine Events",
+      "statEntries": "Buchungen",
+      "declined": "Du hast abgesagt",
+      "maybe": "Du hast mit Vielleicht geantwortet",
+      "statementShort": "Kontoauszug",
+      "statEventsHint": "diesen Monat",
+      "statEntriesHint": "insgesamt"
+    },
+    "events": {
+      "eyebrow": "Mitglied",
+      "title": "Events",
+      "intro": "Deine Events und Teilnahmen.",
+      "loadingMessage": "Die Events werden abgerufen.",
+      "unavailable": "Events nicht verfügbar",
+      "emptyTitle": "Keine Events",
+      "emptyMessage": "Aktuell nimmst du an keinem Event teil.",
+      "create": "Event anlegen",
+      "rsvpGroup": "Antwort für {title}",
+      "upcoming": "Kommend",
+      "past": "Vergangen",
+      "rangeGroup": "Zeitraum",
+      "emptyPast": "Noch keine vergangenen Events.",
+      "attending": "Du bist dabei",
+      "declined": "Du hast abgesagt",
+      "maybe": "Du hast mit Vielleicht geantwortet"
+    },
+    "eventDetail": {
+      "eyebrow": "Event",
+      "back": "← Zu den Events",
+      "loadingMessage": "Die Eventdetails werden abgerufen.",
+      "unavailable": "Event nicht verfügbar",
+      "until": "bis {date}",
+      "openRoute": "Route öffnen",
+      "rsvpHeading": "Deine Antwort",
+      "attendance": {
+        "one": "Anwesenheit ({count} Personen)",
+        "other": "Anwesenheit ({count} Personen)"
+      },
+      "noParticipants": "Noch keine Teilnehmer.",
+      "momentsHeading": "Moments & Rituale",
+      "momentsTitle": "Gemeinschaftsmomente",
+      "momentsActive": {
+        "one": "{count} aktiver Moment läuft gerade!",
+        "other": "{count} aktiver Moment läuft gerade!"
+      },
+      "momentsInvite": "Starte ein gemeinsames Anstoßen, Gebet oder Anfeuern für alle Teilnehmer.",
+      "momentsView": "Moments ansehen ({count} aktiv) →",
+      "momentsStart": "Moment starten / Übersicht →",
+      "historyHeading": "Vergangene Moments & Rituale",
+      "historyParticipants": "{count} Teilnehmer",
+      "historyResponses": "{count} Beiträge",
+      "role": {
+        "coHost": "Co-Gastgeber",
+        "participant": "Teilnehmer"
+      },
+      "manage": "Verwalten",
+      "countsLabel": "Antworten der Eingeladenen",
+      "counts": {
+        "accepted": "Zugesagt: {count}",
+        "maybe": "Vielleicht: {count}",
+        "declined": "Abgesagt: {count}",
+        "invited": "Offen: {count}"
+      },
+      "myRsvp": {
+        "invited": "Du bist eingeladen. Bist du dabei?",
+        "accepted": "Du hast zugesagt.",
+        "maybe": "Du hast mit Vielleicht geantwortet.",
+        "declined": "Du hast abgesagt. Du kannst deine Antwort jederzeit ändern."
+      },
+      "chat": {
+        "heading": "Event-Chat",
+        "empty": "Noch keine Nachrichten. Schreib die erste!",
+        "closed": "Das Event ist abgesagt oder archiviert. Der Chat ist nur noch lesbar.",
+        "message": "Nachricht",
+        "placeholder": "Nachricht schreiben",
+        "send": "Senden",
+        "loading": "Der Chat wird geladen.",
+        "unavailable": "Der Chat ist für dich nicht verfügbar."
+      },
+      "route": "Route",
+      "organizedBy": "Organisiert von {name}",
+      "chatChip": "Event-Chat",
+      "momentsChip": "Moments",
+      "momentsChipActive": "Moments ({count} aktiv)",
+      "attendanceHeading": "Anwesenheit",
+      "attendanceSummary": "{accepted} zugesagt · {invited} offen"
+    },
+    "purchases": {
+      "eyebrow": "Belege",
+      "title": "Käufe",
+      "intro": "Jeder Kauf hat einen unveränderlichen Beleg mit dem Preis von damals.",
+      "loadingMessage": "Die Käufe werden abgerufen.",
+      "unavailable": "Käufe nicht verfügbar",
+      "emptyTitle": "Keine Käufe",
+      "emptyMessage": "Du hast bisher keine Getränke gekauft.",
+      "barcode": "Barcode {code}",
+      "catalogVersion": "Katalog v{version}",
+      "count": "{count} Käufe",
+      "mostOften": "Am häufigsten",
+      "times": "{count} ×",
+      "source": {
+        "pwaBarcode": "Bezahlt per Scan",
+        "tabletManual": "Strichliste",
+        "round": "Runde",
+        "evening": "Ganzer Abend"
+      },
+      "food": "Speisen"
+    },
+    "wallet": {
+      "eyebrow": "Guthaben & Transaktionen",
+      "title": "Bierkasse",
+      "loadingMessage": "Guthaben und Buchungen werden abgerufen.",
+      "unavailable": "Guthaben nicht verfügbar",
+      "treasurerTitle": "Kassenwart",
+      "treasurerHint": "Guthaben wird vom Kassenwart verwaltet. Änderungen bedürfen einer Freigabe.",
+      "historyHeading": "Historie",
+      "emptyTitle": "Keine Buchungen",
+      "emptyMessage": "Für dein Konto liegen noch keine Buchungen vor.",
+      "filter": {
+        "label": "Historie filtern",
+        "all": "Alle",
+        "topup": "Aufladungen",
+        "spend": "Ausgaben",
+        "empty": "Keine Buchungen für diesen Filter."
+      },
+      "reversal": "Storno: {name}",
+      "asOf": "Stand {date}",
+      "roundTitle": "Runde: {name} · {item}"
+    }
+  },
+  "profile": {
+    "title": "Mein Profil",
+    "loadingMessage": "Das Profil wird abgerufen.",
+    "unavailable": "Profil nicht verfügbar",
+    "noRoles": "keine Rollen",
+    "beerWithMe": {
+      "title": "BeerWithMe Status",
+      "hint": "Verfügbar für ein spontanes Bier in der Nähe.",
+      "short": "Spontanes Bier",
+      "shortHint": "Freunde sehen, dass du Zeit hast"
+    },
+    "theme": {
+      "title": "Darstellung",
+      "system": "System",
+      "light": "Hell",
+      "dark": "Dunkel"
+    },
+    "language": {
+      "title": "Sprache"
+    },
+    "displayName": "Anzeigename",
+    "email": "E-Mail",
+    "saved": "Profil aktualisiert.",
+    "personalDetails": "Persönliche Angaben",
+    "status": "Status",
+    "statusActive": "Aktiv",
+    "statusDisabled": "Deaktiviert",
+    "memberSince": "Mitglied seit",
+    "recording": "Erfassung",
+    "recordingActive": "Strichlisten-Erfassung aktiv",
+    "security": {
+      "title": "Sicherheit",
+      "hint": "Schütze dein Konto zusätzlich mit einer Authenticator-App (z. B. Google Authenticator). Danach fragt der Login nach Passwort und einem 6-stelligen Code. Freiwillig, aber empfohlen für Vorstand und Admin.",
+      "setupTwoFactor": "Zwei-Faktor-Anmeldung einrichten"
+    },
+    "since": "seit {date}"
+  },
+  "notifications": {
+    "eyebrow": "Mitteilungen",
+    "title": "Benachrichtigungen",
+    "unread": "{count} ungelesen",
+    "intro": "Bleibe über Events, Ankündigungen der Gruppe und Neuigkeiten auf dem Laufenden.",
+    "markAllRead": "Alle als gelesen markieren",
+    "markRead": "Als gelesen markieren",
+    "loadingMessage": "Benachrichtigungen werden abgerufen.",
+    "unavailable": "Benachrichtigungen nicht verfügbar",
+    "emptyTitle": "Keine Benachrichtigungen",
+    "emptyMessage": "Du hast aktuell keine Benachrichtigungen.",
+    "listLabel": "Benachrichtigungsliste",
+    "type": {
+      "event": "Event",
+      "ledger": "Kasse",
+      "announcement": "Ankündigung",
+      "system": "System",
+      "info": "Info",
+      "moment": "Moment",
+      "eventInvitation": "Einladung",
+      "eventReminder": "Erinnerung",
+      "eventCancelled": "Abgesagt",
+      "general": "Rundbrief"
+    },
+    "open": "Öffnen",
+    "openEvent": "Zum Event",
+    "answered": {
+      "accepted": "Du hast zugesagt.",
+      "declined": "Du hast abgesagt."
+    },
+    "markReadShort": "Gelesen"
+  },
+  "shell": {
+    "brandHome": "Vereint – zur Startseite",
+    "guestTag": "Gast",
+    "skipLink": "Zum Inhalt springen",
+    "mainNav": "Hauptnavigation",
+    "more": "Mehr",
+    "account": "Konto",
+    "profile": "Profil",
+    "wallet": "Guthaben",
+    "logout": "Abmelden",
+    "notifications": "Mitteilungen",
+    "notificationsUnread": "Mitteilungen, {count} ungelesen",
+    "chatUnread": "{label}, {count} ungelesen",
+    "switchStammtisch": "Gruppe wechseln (aktuell: {name})",
+    "back": "Zurück"
+  },
+  "nav": {
+    "items": {
+      "home": "Start",
+      "events": "Events",
+      "chat": "Chat",
+      "wallet": "Guthaben",
+      "moments": "Moments",
+      "direct": "Direktnachrichten",
+      "purchases": "Käufe",
+      "notifications": "Mitteilungen",
+      "catalog": "Getränkekatalog",
+      "sublists": "Getränkelisten",
+      "statistik": "Statistik",
+      "profil": "Profil",
+      "board": "Vorstand",
+      "treasury": "Kasse & Finanzen",
+      "communications": "Kommunikation",
+      "admin": "Administration",
+      "tablet": "Thekenterminal",
+      "scan": "Bezahlen",
+      "stammtisch": "Gruppeneinstellungen",
+      "calendar": "Kalender",
+      "friends": "Freunde",
+      "myStatistics": "Meine Statistik"
+    },
+    "sections": {
+      "club": "Gruppe",
+      "account": "Mein Konto",
+      "bar": "Theke",
+      "admin": "Verwaltung"
+    }
+  },
+  "ui": {
+    "balanceCard": {
+      "label": "Guthaben",
+      "topup": "Aufladen"
+    },
+    "dataTable": {
+      "empty": "Keine Einträge vorhanden."
+    },
+    "heroGreeting": {
+      "eyebrow": "Hallo"
+    },
+    "stepper": {
+      "decrease": "Verringern",
+      "increase": "Erhöhen",
+      "quantity": "Menge"
+    }
+  },
+  "auth": {
+    "status": {
+      "eyebrow": "Öffentlich",
+      "brandClaim": "Deine Gruppe. Vereint.",
+      "brandSub": "Mitglieder, Events, Kasse und Theke an einem Ort – sicher und auf jedem Gerät.",
+      "loginFailed": "Anmeldung fehlgeschlagen",
+      "loggedOutTitle": "Abgemeldet",
+      "loggedOutMessage": "Sie wurden erfolgreich abgemeldet.",
+      "retryLogin": "Erneut anmelden",
+      "openOwn": "Eigene Gruppe eröffnen"
+    },
+    "errors": {
+      "invalidState": "Die Anmeldung ist abgelaufen. Bitte erneut starten.",
+      "accountDisabled": "Dieses Konto ist deaktiviert.",
+      "oidcLoginFailed": "Die Anmeldung über Keycloak ist fehlgeschlagen.",
+      "browserOnly": "Der Anmeldedienst ist auf diesem Gerät nicht verfügbar.",
+      "generic": "Die Anmeldung ist fehlgeschlagen."
+    },
+    "register": {
+      "eyebrow": "Einladung",
+      "title": "Mitglied werden",
+      "doneTitle": "Willkommen in der Gruppe!",
+      "checking": "Einladungslink wird geprüft …",
+      "invalidTitle": "Registrierung nicht möglich",
+      "toLogin": "Zur Anmeldung",
+      "intro": "Du wurdest eingeladen. Lege dein Konto an, danach kannst du dich sofort anmelden.",
+      "validUntil": "Der Link gilt bis {date}.",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail-Adresse",
+      "password": "Passwort (mindestens {min} Zeichen)",
+      "passwordRepeat": "Passwort wiederholen",
+      "submit": "Konto anlegen",
+      "submitting": "Konto wird angelegt …",
+      "done": "Dein Konto für {email} ist angelegt. Melde dich jetzt mit deiner E-Mail-Adresse und deinem Passwort an.",
+      "loginNow": "Jetzt anmelden",
+      "errors": {
+        "noToken": "Dieser Link enthält keinen gültigen Einladungscode. Bitte öffne den vollständigen Link aus deiner Einladung.",
+        "nameRequired": "Bitte Vor- und Nachnamen angeben.",
+        "emailInvalid": "Bitte eine gültige E-Mail-Adresse eingeben.",
+        "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
+        "passwordMismatch": "Die beiden Passwörter stimmen nicht überein.",
+        "checkInput": "Bitte prüfe deine Eingaben. Das Passwort muss mindestens {min} Zeichen lang sein."
+      },
+      "joinTitle": "Gruppe beitreten",
+      "joinIntro": "Du bist bereits angemeldet. Mit diesem Einladungslink trittst du der Gruppe mit deinem bestehenden Konto bei.",
+      "join": "Dieser Gruppe beitreten",
+      "joining": "Wird beigetreten …"
+    }
+  },
+  "errorPages": {
+    "toDashboard": "Zur Startseite",
+    "forbidden": {
+      "title": "Zugriff verweigert",
+      "description": "Für diese Seite fehlen dir die Rechte oder deine Anmeldung ist abgelaufen.",
+      "signInAgain": "Neu anmelden"
+    },
+    "notFound": {
+      "title": "Diese Seite gibt es nicht",
+      "description": "Vielleicht wurde das Event gelöscht oder der Link ist veraltet."
+    },
+    "eyebrow": "Fehler {code}"
+  },
+  "routes": {
+    "placeholder": {
+      "title": "Feature-Platzhalter",
+      "message": "Diese Seite ist für die SSR- und Rechteprüfung vorbereitet.",
+      "toHome": "Zur Startseite"
+    },
+    "access": {
+      "public": "Öffentlich",
+      "invite": "Gültiger Einladungscode erforderlich",
+      "denied": "Zugriff verweigert",
+      "protected": "Geschützter Bereich",
+      "guestToken": "Gültiges Gast-Token erforderlich",
+      "boardOrAdmin": "Vorstand oder Admin",
+      "admin": "Admin",
+      "drinkRecorder": "drinkRecorder",
+      "statistics": "Statistiken einsehen",
+      "platform": "Plattform-Admin"
+    },
+    "authError": {
+      "title": "Anmeldefehler",
+      "description": "Fehler während der Anmeldung über Keycloak."
+    },
+    "loggedOut": {
+      "title": "Abgemeldet",
+      "description": "Erfolgreich abgemeldet."
+    },
+    "inviteAccept": {
+      "title": "Einladung annehmen",
+      "description": "Einladung annehmen oder Gastaktivierung."
+    },
+    "forbidden": {
+      "title": "Kein Zugriff",
+      "description": "Für diese Seite fehlen die erforderlichen Rechte."
+    },
+    "notFound": {
+      "title": "Nicht gefunden",
+      "description": "Die angeforderte Seite existiert nicht."
+    },
+    "dashboard": {
+      "title": "Start",
+      "description": "Persönliche Übersicht und teilnehmende Events."
+    },
+    "profile": {
+      "title": "Profil",
+      "description": "Persönliche Kontodaten und Provider."
+    },
+    "wallet": {
+      "title": "Guthaben",
+      "description": "Persönliches Guthaben und Ledger."
+    },
+    "purchases": {
+      "title": "Käufe",
+      "description": "Historische Käufe mit unveränderlichen Snapshots."
+    },
+    "events": {
+      "title": "Events",
+      "description": "Eventübersicht und Eventdetails."
+    },
+    "eventDetail": {
+      "title": "Event",
+      "description": "Eventdetails, Getränkeliste und Chat."
+    },
+    "eventManage": {
+      "title": "Event verwalten",
+      "description": "Stammdaten, Einladungen, Getränke und Chat des eigenen Events."
+    },
+    "guestEvent": {
+      "title": "Gast-Event",
+      "description": "Freigegebene Eventdetails und Event-Chat."
+    },
+    "catalog": {
+      "title": "Getränkekatalog",
+      "description": "Globaler Katalog und Vorschläge."
+    },
+    "sublists": {
+      "title": "Getränkelisten",
+      "description": "Wiederverwendbare Getränkelisten."
+    },
+    "chat": {
+      "title": "Chat",
+      "description": "Mitglieds- und Event-Chats."
+    },
+    "directMessages": {
+      "title": "Direktnachrichten",
+      "description": "Persönliche Einzelgespräche."
+    },
+    "notifications": {
+      "title": "Mitteilungen",
+      "description": "In-App- und Push-Benachrichtigungen."
+    },
+    "moments": {
+      "title": "Moments",
+      "description": "Gemeinschaftsmomente & Rituale für aktive Events."
+    },
+    "eventMoments": {
+      "title": "Event Moments",
+      "description": "Gemeinschaftsmomente & Rituale für dieses Event."
+    },
+    "board": {
+      "title": "Vorstand",
+      "description": "Moderation, Finanzübersichten und vorbereitete Notifications."
+    },
+    "treasury": {
+      "title": "Kasse & Finanzen",
+      "description": "Finanzübersichten und Buchungen."
+    },
+    "communications": {
+      "title": "Kommunikation",
+      "description": "Mitteilungen und Ankündigungen."
+    },
+    "admin": {
+      "title": "Administration",
+      "description": "Mitglieder, Rollen und Audit-Ansichten."
+    },
+    "tablet": {
+      "title": "Thekenterminal",
+      "description": "Manuelle Getränkeerfassung für den Drink Recorder."
+    },
+    "statistics": {
+      "title": "Statistik",
+      "description": "Striche, Rangliste und Zusagequote deiner Gruppe."
+    },
+    "eventCreate": {
+      "title": "Event anlegen",
+      "description": "Neues Event planen und Mitglieder einladen."
+    },
+    "scan": {
+      "title": "Getränk bezahlen",
+      "description": "Strichcode scannen und mit Guthaben bezahlen oder für die Statistik erfassen."
+    },
+    "boardMoments": {
+      "title": "Moment-Themen & Reaktionen",
+      "description": "Themen und Reaktionen für Moments festlegen."
+    },
+    "stammtische": {
+      "title": "Gruppe wählen",
+      "description": "Eine deiner Gruppen öffnen."
+    },
+    "platform": {
+      "title": "Plattform",
+      "description": "Gruppen dieser Installation verwalten."
+    },
+    "stammtisch": {
+      "title": "Gruppe",
+      "description": "Name, Bild, Rollen und Mitgliedschaft der Gruppe."
+    },
+    "drinkLibrary": {
+      "title": "Getränkedatenbank",
+      "description": "Getränke aus der gemeinsamen Datenbank übernehmen."
+    },
+    "stammtischOpen": {
+      "title": "Gruppe eröffnen",
+      "description": "Eine eigene Gruppe anlegen und verwalten."
+    },
+    "imprint": {
+      "title": "Impressum",
+      "description": "Angaben zum Betreiber von Vereint."
+    },
+    "terms": {
+      "title": "AGB",
+      "description": "Allgemeine Geschäftsbedingungen von Vereint."
+    },
+    "calendar": {
+      "title": "Kalender",
+      "description": "Events und Moments aus allen deinen Gruppen."
+    },
+    "friends": {
+      "title": "Freunde",
+      "description": "Deine Freundesliste über alle Gruppen."
+    },
+    "drinkStatistics": {
+      "title": "Getränkestatistik",
+      "description": "Wer hat wie viel von was getrunken, mit Litern und Kalorien."
+    },
+    "statisticsOverview": {
+      "title": "Statistik-Übersicht",
+      "description": "Alle Kennzahlen der Gruppe auf einer Seite."
+    },
+    "termsConsent": {
+      "title": "AGB zustimmen",
+      "description": "Der aktuellen Fassung der AGB zustimmen."
+    },
+    "myStatistics": {
+      "title": "Meine Statistik",
+      "description": "Alles, was du ausgelöst hast, über alle deine Gruppen."
+    },
+    "crossEventStatistics": {
+      "title": "Events übergreifend",
+      "description": "Alle sichtbaren Events aus deinen Gruppen im Vergleich."
+    },
+    "groupEventStatistics": {
+      "title": "Events der Gruppe",
+      "description": "Alle Events der Gruppe zusammengefasst und im Vergleich."
+    },
+    "featureStatistics": {
+      "title": "Funktionen",
+      "description": "Wie oft Funktionen ausgelöst und wie darauf geantwortet wurde."
+    },
+    "eventStatistics": {
+      "title": "Event-Statistik",
+      "description": "Antworten, Anwesende, Striche, Moments und Chat eines Events."
+    },
+    "tallyCategories": {
+      "title": "Strich-Kategorien",
+      "description": "Spalten der Strichliste mit Preis je Strich festlegen."
+    },
+    "roundGive": {
+      "title": "Runde ausgeben",
+      "description": "Eine Runde oder den ganzen Abend mit dem eigenen Guthaben ausgeben."
+    }
+  },
+  "chat": {
+    "eyebrow": "Gruppenchat",
+    "title": "Chat",
+    "toDirectMessages": "Direktnachrichten →",
+    "loadingMessage": "Die Konversationen werden abgerufen.",
+    "unavailable": "Chat nicht verfügbar",
+    "online": "online",
+    "unread": "{count} ungelesen",
+    "you": "Du",
+    "list": {
+      "ariaLabel": "Konversationen",
+      "newMessage": "+ Neue Nachricht",
+      "groupOnline": "{count} online",
+      "clubChat": "Gruppenchat",
+      "eventChats": "Event-Chats",
+      "noEventChats": "Du hast gerade keine Event-Chats. Sie erscheinen, sobald du zu einem Event eingeladen bist.",
+      "noMessages": "Noch keine Nachrichten"
+    },
+    "thread": {
+      "back": "← Zurück",
+      "membersOnline": "{count} Mitglieder online",
+      "pinnedTitle": "Infotafel von {name}",
+      "emptyTitle": "Noch keine Nachrichten",
+      "emptyMessage": "Schreibe die erste Nachricht in diese Konversation.",
+      "addReaction": "Reaktion hinzufügen",
+      "toEvent": "Zum Event",
+      "loadingMessage": "Die Nachrichten werden abgerufen.",
+      "loadFailed": "Nachrichten nicht verfügbar",
+      "guest": "Gast",
+      "image": "Bild zur Nachricht",
+      "reactionLabel": "Reaktion {emoji}, {count}",
+      "reactWith": "Mit {emoji} reagieren",
+      "reactionFailed": "Die Reaktion konnte nicht gespeichert werden. Bitte erneut versuchen."
+    },
+    "composer": {
+      "attach": "Anhang hinzufügen",
+      "placeholder": "Schreibe eine Nachricht…",
+      "addDrink": "Getränk einfügen",
+      "send": "Senden",
+      "sendFailed": "Nachricht konnte nicht gesendet werden. Bitte erneut versuchen.",
+      "attachUnavailable": "Anhänge sind derzeit nicht verfügbar.",
+      "readOnly": "In diesem Chat kannst du nicht mehr schreiben.",
+      "readOnlyDirect": "Ihr seid weder befreundet noch in einer gemeinsamen Gruppe. Der Verlauf bleibt lesbar, neue Nachrichten gehen nicht."
+    },
+    "direct": {
+      "eyebrow": "Über alle Gruppen",
+      "title": "Einzelgespräche",
+      "badge": "DMs",
+      "toGroupChat": "← Zum Gruppenchat",
+      "unavailable": "Direktnachrichten nicht verfügbar",
+      "searchLabel": "Gespräche durchsuchen",
+      "searchPlaceholder": "Gespräche durchsuchen…",
+      "conversations": "Gespräche ({count})",
+      "emptyTitle": "Keine Konversationen",
+      "emptyMessage": "Es gibt keine passenden Einzelgespräche.",
+      "emptyStart": "Du hast noch keine Einzelgespräche. Starte eins mit „Neue Nachricht“.",
+      "noneSelectedTitle": "Kein Gespräch ausgewählt",
+      "noneSelectedMessage": "Wähle links ein Gespräch oder starte ein neues.",
+      "pickerTitle": "Neue Nachricht",
+      "pickerSearchLabel": "Person suchen",
+      "pickerSearchPlaceholder": "Name eingeben…",
+      "pickerLoading": "Deine Kontakte werden abgerufen.",
+      "pickerUnavailable": "Kontakte nicht verfügbar",
+      "pickerEmptyTitle": "Niemand gefunden",
+      "pickerEmptyMessage": "Schreiben kannst du Freunden und Personen aus deinen Gruppen.",
+      "pickerStarting": "Wird geöffnet…",
+      "toFriends": "Freunde",
+      "friend": "Freund"
+    }
+  },
+  "calendar": {
+    "eyebrow": "Über alle Gruppen",
+    "title": "Mein Kalender",
+    "intro": "Hier siehst du vergangene und kommende Events sowie Moments aus allen deinen Gruppen. Jeder Eintrag zeigt, zu welcher Gruppe er gehört.",
+    "navLabel": "Monat wählen",
+    "previous": "Voriger Monat",
+    "next": "Nächster Monat",
+    "today": "Heute",
+    "groupFilter": "Gruppe",
+    "allGroups": "Alle Gruppen",
+    "unavailable": "Kalender nicht verfügbar",
+    "loadingMessage": "Die Termine werden abgerufen.",
+    "emptyTitle": "Keine Einträge",
+    "emptyMonth": "In diesem Monat gibt es keine Events oder Moments.",
+    "emptyDay": "An diesem Tag gibt es keine Events oder Moments.",
+    "showMonth": "Ganzen Monat zeigen",
+    "monthAgenda": "Alles im {month}",
+    "kindEvent": "Event",
+    "kindMoment": "Moment",
+    "location": "Ort: {name}",
+    "atEvent": "Beim Event „{name}“",
+    "momentActive": "Läuft gerade",
+    "opening": "Wird geöffnet…",
+    "entries": "{count} Einträge",
+    "switchFailed": "Wechsel in die Gruppe „{name}“ hat nicht geklappt."
+  },
+  "friends": {
+    "eyebrow": "Über alle Gruppen",
+    "title": "Freunde",
+    "toDirect": "Zu den Direktnachrichten",
+    "intro": "Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt.",
+    "unavailable": "Freundesliste nicht verfügbar",
+    "loadingMessage": "Deine Freunde werden abgerufen.",
+    "incoming": "Anfragen an dich ({count})",
+    "friends": "Deine Freunde ({count})",
+    "outgoing": "Deine Anfragen ({count})",
+    "accept": "Annehmen",
+    "decline": "Ablehnen",
+    "withdraw": "Zurückziehen",
+    "message": "Nachricht",
+    "remove": "Entfernen",
+    "confirmRemove": "Wirklich entfernen",
+    "waiting": "Wartet auf Antwort",
+    "noSharedGroup": "Keine gemeinsame Gruppe mehr",
+    "emptyTitle": "Noch keine Freunde",
+    "emptyMessage": "Füge unten Personen aus deinen Gruppen hinzu.",
+    "addTitle": "Freunde hinzufügen",
+    "addHint": "Du kannst nur Personen anfragen, mit denen du eine Gruppe teilst.",
+    "searchLabel": "Person suchen",
+    "searchPlaceholder": "Name eingeben…",
+    "add": "Anfragen",
+    "noCandidatesTitle": "Niemand zum Hinzufügen",
+    "noCandidatesMessage": "Alle aus deinen Gruppen sind schon Freunde oder angefragt, oder niemand passt zur Suche."
+  },
+  "moments": {
+    "eyebrow": "Gemeinschaftsmomente & Rituale",
+    "backToEvent": "← Zum Event",
+    "loadingMessage": "Moments und Ritual-Feeds werden abgerufen.",
+    "unavailable": "Nicht verfügbar",
+    "push": {
+      "title": "Neuer Moment gestartet: „{title}“",
+      "message": "Möchtest du beitreten und eine Reaktion oder einen Status teilen?",
+      "join": "Jetzt Beitreten",
+      "dismiss": "Ausblenden"
+    },
+    "actions": {
+      "start": "Neuen Moment starten",
+      "activeCount": "{count} aktiver Moment"
+    },
+    "empty": {
+      "title": "Kein aktiver Moment",
+      "message": "Gerade läuft kein Moment. Starte ein gemeinsames Anstoßen, ein Gebet oder einen Jubel – mit oder ohne Event.",
+      "initiate": "Moment initiieren"
+    },
+    "session": {
+      "by": "Von {name}",
+      "responses": "{count} Antworten",
+      "react": "+ Reagieren",
+      "chat": "24h-Chat",
+      "complete": "Abschließen",
+      "completeTitle": "Moment abschließen und in den Verlauf verschieben",
+      "eventOnly": "Nur Event-Teilnehmer"
+    },
+    "detail": {
+      "eyebrow": "Ausgewählter Moment",
+      "timelineTab": "Timeline ({count})",
+      "mapTab": "Weltkarte ({count})",
+      "quickLabel": "Schnell reagieren:",
+      "custom": "+ Status & Text",
+      "shareMedia": "Foto/Video teilen",
+      "ended": "Dieser Moment ist beendet."
+    },
+    "history": {
+      "title": "Archivierte Moments & Rituale",
+      "participants": "{count} Teilnehmer",
+      "contributions": "{count} Beiträge",
+      "view": "Ansehen"
+    },
+    "start": {
+      "title": "Neuer Moment",
+      "titleLabel": "Eigener Titel",
+      "titlePlaceholder": "Sonst gilt der Name des Themas",
+      "topicLabel": "Thema",
+      "messageLabel": "Nachricht",
+      "messagePlaceholder": "z. B. Ein Hoch auf unsere Gruppe! Wer stößt aus der Ferne mit an?",
+      "durationLabel": "Dauer des Moments",
+      "duration": {
+        "m15": "15 Min.",
+        "m30": "30 Min.",
+        "h1": "1 Std.",
+        "h2": "2 Std.",
+        "h24": "24 Std."
+      },
+      "consent": "Erscheint auf der Karte des Moments (freiwillig).",
+      "submit": "Moment starten",
+      "submitting": "Wird gestartet …",
+      "error": "Fehler beim Starten des Moments.",
+      "failed": "Moment konnte nicht gestartet werden.",
+      "noTypes": "Der Vorstand hat noch kein Thema freigegeben.",
+      "intro": "Wähle ein Thema und leg los. Alles andere ist optional.",
+      "eventLabel": "Mit Event verknüpfen",
+      "noEvent": "Kein Event – für die ganze Gruppe",
+      "visibilityLabel": "Wer sieht den Moment?",
+      "visibility": {
+        "group": "Ganze Gruppe",
+        "event": "Nur Teilnehmer",
+        "groupHint": "Alle Mitglieder der Gruppe sehen den Moment und können mitmachen.",
+        "eventHint": "Nur Teilnehmer des Events sehen den Moment und seinen Chat.",
+        "noEventHint": "Ohne Event sehen alle Mitglieder der Gruppe den Moment."
+      },
+      "consentTitle": "Standort teilen",
+      "manageTypes": "Themen anlegen"
+    },
+    "respond": {
+      "title": "Beitrag teilen",
+      "reactionLabel": "Reaktion",
+      "statusLabel": "Status",
+      "statusPlaceholder": "z. B. Schöne Grüße aus Hamburg! 🍺",
+      "consent": "Erscheint mit diesem Beitrag auf der Karte (freiwillig).",
+      "submit": "Beitrag absenden",
+      "submitting": "Wird gesendet …",
+      "error": "Fehler beim Absenden.",
+      "failed": "Status konnte nicht gesendet werden."
+    },
+    "topics": {
+      "toast": {
+        "label": "Gemeinsames Anstoßen",
+        "description": "Für Treffen & Feste"
+      },
+      "prayer": {
+        "label": "Gebet & Fürbitte",
+        "description": "Für Kirchen- & Glaubensgemeinschaften"
+      },
+      "cheer": {
+        "label": "Jubeln & Anfeuern",
+        "description": "Für Sport- & Fan-Clubs"
+      },
+      "checkin": {
+        "label": "Spontaner Check-in",
+        "description": "Präsenz & Standort teilen"
+      },
+      "other": {
+        "label": "Sonstiger Impuls",
+        "description": "Freie Gemeinschaftsaktion"
+      }
+    },
+    "reactions": {
+      "toast": "Anstoßen",
+      "prayer": "Gebet",
+      "cheer": "Jubel",
+      "cheering": "Jubeln",
+      "thumbsUp": "Daumen hoch",
+      "celebrate": "Feiern",
+      "heart": "Herz",
+      "checkin": "Check-in"
+    },
+    "geo": {
+      "locating": "Ermittle GPS-Standort …",
+      "captured": "Standort erfasst: {lat}°, {lng}°",
+      "failedOrDenied": "Standortermittlung fehlgeschlagen oder im Browser verweigert.",
+      "failed": "Standortermittlung fehlgeschlagen."
+    },
+    "remaining": {
+      "expired": "Abgelaufen",
+      "minutes": "noch {count} Min aktiv",
+      "hours": "noch {count} Std aktiv"
+    },
+    "map": {
+      "ariaLabel": "Karte der geteilten Standorte",
+      "title": "Teilnehmerkarte",
+      "subtitle": "Standorte von Teilnehmern mit aktiver Standortfreigabe (Opt-in).",
+      "count": "{count} Standorte",
+      "emptyTitle": "Keine Standorte geteilt",
+      "emptyMessage": "Für diesen Moment liegen keine Standortdaten vor. Standorte werden DSGVO-konform ausschließlich mit freiwilliger Freigabe (Opt-in) erfasst.",
+      "svgLabel": "Weltkarte mit Teilnehmer-Pins",
+      "pinDetails": "Pin Details",
+      "listTitle": "Geteilte Standorte",
+      "fallbackName": "Teilnehmer {number}",
+      "attribution": "Kartendaten © OpenStreetMap-Mitwirkende",
+      "initiator": "Gestartet",
+      "north": "N",
+      "south": "S",
+      "east": "O",
+      "west": "W"
+    },
+    "timeline": {
+      "title": "Status-Timeline",
+      "count": "{count} Beiträge",
+      "empty": "Noch keine Statusbeiträge geteilt. Sei der Erste und teile deine Reaktion!",
+      "locationShared": "Standort geteilt ({lat}, {lng})"
+    },
+    "quote": "„{text}“",
+    "manageLink": "Typen & Reaktionen verwalten",
+    "media": {
+      "label": "Fotos & Videos",
+      "add": "Foto oder Video hinzufügen",
+      "hint": "Bis zu {count} Dateien. Videos höchstens {seconds} Sekunden und {mb} MB.",
+      "remove": "Entfernen",
+      "removeConfirm": "Dieses Bild bzw. Video wirklich entfernen?",
+      "photoBy": "Foto von {name}",
+      "videoBy": "Video von {name}",
+      "errors": {
+        "videoType": "Dieses Videoformat wird nicht unterstützt. Bitte MP4 oder MOV verwenden.",
+        "videoTooLarge": "Das Video ist größer als {max} MB. Bitte kürzer aufnehmen oder in geringerer Auflösung (z. B. 720p).",
+        "videoTooLong": "Das Video ist länger als {max} Sekunden. Bitte vorher kürzen.",
+        "imageType": "Dieses Bild kann nicht gelesen werden. Bitte JPEG, PNG oder GIF verwenden.",
+        "imageTooLarge": "Das Bild ist größer als {max} MB.",
+        "unsupported": "Nur Fotos und Videos können geteilt werden.",
+        "tooMany": "Höchstens {count} Dateien pro Beitrag.",
+        "tooLargeServer": "Die Datei ist zu groß.",
+        "uploadFailed": "Hochladen fehlgeschlagen. Bitte erneut versuchen.",
+        "aborted": "Hochladen abgebrochen."
+      },
+      "takePhoto": "Foto aufnehmen",
+      "takeVideo": "Video aufnehmen",
+      "fromGallery": "Aus Galerie"
+    },
+    "allMoments": "Alle Moments",
+    "eventFilter": "Moments zum Event „{title}“"
+  },
+  "catalog": {
+    "header": {
+      "eyebrow": "Gruppenkatalog",
+      "title": "Getränke- & Speisenkatalog",
+      "intro": "Übersicht aller Getränke der Gruppe, Barcodes und Verpflegungsangebote."
+    },
+    "actions": {
+      "proposeDrink": "+ Getränk vorschlagen",
+      "createFood": "+ Neue Speise anlegen",
+      "createDrink": "+ Getränk anlegen"
+    },
+    "tabs": {
+      "label": "Katalogbereiche",
+      "drinks": "Getränkekatalog",
+      "food": "Speisenkatalog"
+    },
+    "filter": {
+      "searchPlaceholder": "Suchen nach Name oder Kategorie …",
+      "allStatuses": "Alle Status",
+      "approvedOnly": "Nur Freigegebene",
+      "proposedOnly": "Nur Vorgeschlagene",
+      "rejectedOnly": "Nur Abgelehnte"
+    },
+    "state": {
+      "loadingMessage": "Katalogdaten werden abgerufen.",
+      "unavailable": "Katalog nicht verfügbar",
+      "noDrinksTitle": "Keine Getränke gefunden",
+      "noDrinksMessage": "Es wurden keine passenden Getränke gefunden.",
+      "noFoodTitle": "Keine Speisen gefunden",
+      "noFoodMessage": "Es wurden keine passenden Speisen gefunden."
+    },
+    "card": {
+      "generalCategory": "Allgemein",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "detailsAndBarcodes": "Details & Barcodes",
+      "approve": "Freigeben",
+      "reject": "Ablehnen",
+      "edit": "Bearbeiten",
+      "margin": "Marge {amount}"
+    },
+    "drinkStatus": {
+      "approved": "Freigegeben",
+      "proposed": "Vorgeschlagen",
+      "rejected": "Abgelehnt"
+    },
+    "propose": {
+      "title": "Getränk vorschlagen",
+      "name": "Name des Getränks *",
+      "namePlaceholder": "z. B. Kellerbier 0,5 l",
+      "categoryPlaceholder": "z. B. Helles, Weizen, Alkoholfrei",
+      "pricePlaceholder": "z. B. 2.50",
+      "descriptionPlaceholder": "Besonderheiten, Brauerei, etc.",
+      "submit": "Vorschlag einreichen"
+    },
+    "form": {
+      "category": "Kategorie",
+      "defaultPrice": "Standardpreis (€) *",
+      "description": "Beschreibung",
+      "requiredFields": "Bitte füllen Sie alle Pflichtfelder aus.",
+      "costPrice": "Einkaufspreis (€)",
+      "costPricePlaceholder": "z. B. 1.10",
+      "marginHint": "Marge pro Verkauf: {amount}",
+      "barcodes": "Barcodes",
+      "similarName": "Es gibt schon ein Getränk namens „{name}“. Bitte prüfe, ob es dasselbe ist.",
+      "barcodeTaken": "Der Barcode {barcode} gehört schon zu „{name}“.",
+      "barcodeNotAdded": "Der eingegebene Barcode ist noch nicht hinzugefügt. Bitte auf „+ Barcode hinzufügen“ tippen oder das Feld leeren.",
+      "activeLabel": "Im Sortiment (abwählen, um das Getränk aus dem Verkauf zu nehmen)",
+      "volumeMl": "Füllmenge (ml)",
+      "volumePlaceholder": "z. B. 500",
+      "kcal": "Kalorien je Portion (kcal)",
+      "kcalPlaceholder": "z. B. 210",
+      "nutritionHint": "Für Liter und Kalorien in der Statistik. Leer lassen, wenn unbekannt."
+    },
+    "detail": {
+      "fallbackTitle": "Getränkedetails",
+      "category": "Kategorie:",
+      "status": "Status:",
+      "defaultPrice": "Standardpreis:",
+      "barcodesHeading": "Zugeordnete Barcodes",
+      "noBarcodes": "Keine Barcodes hinterlegt.",
+      "removeBarcode": "Barcode entfernen",
+      "newBarcodePlaceholder": "Neuen Barcode erfassen …",
+      "addBarcode": "+ Barcode hinzufügen",
+      "scanBarcode": "Mit Kamera scannen",
+      "scanCancel": "Scannen beenden"
+    },
+    "food": {
+      "editTitle": "Speise bearbeiten",
+      "createTitle": "Neue Speise anlegen",
+      "name": "Name der Speise *",
+      "namePlaceholder": "z. B. Bratwurstsemmel",
+      "categoryPlaceholder": "z. B. Grill, Snack, Vegetarisch",
+      "pricePlaceholder": "z. B. 3.50",
+      "costPrice": "Selbstkostenpreis (€)",
+      "costPricePlaceholder": "z. B. 1.80",
+      "descriptionPlaceholder": "Zutaten, Allergene, Hinweise",
+      "activeLabel": "Speise aktiv und bestellbar"
+    },
+    "errors": {
+      "propose": "Fehler beim Einreichen des Vorschlags.",
+      "addBarcode": "Fehler beim Hinzufügen des Barcodes.",
+      "saveFood": "Fehler beim Speichern der Speise.",
+      "createFood": "Fehler beim Anlegen der Speise.",
+      "saveDrink": "Fehler beim Speichern des Getränks."
+    },
+    "proposeInfo": "„{name}“ wurde vorgeschlagen. Nach der Freigabe durch den Vorstand erscheint es im Katalog.",
+    "create": {
+      "title": "Getränk anlegen",
+      "submit": "Getränk anlegen"
+    },
+    "edit": {
+      "title": "Getränk bearbeiten"
+    },
+    "lookup": {
+      "open": "Barcode scannen",
+      "title": "Getränk per Barcode finden",
+      "intro": "Halte den Barcode der Flasche vor die Kamera. Ist das Getränk schon im Katalog, öffnet es sich. Kennt es die Getränkedatenbank, wird es vorausgefüllt übernommen; sonst legst du es neu an.",
+      "manual": "Barcode eingeben …",
+      "search": "Suchen",
+      "newBarcode": "Der Barcode {barcode} ist noch keinem Getränk zugeordnet. Er wird mit dem neuen Getränk gespeichert.",
+      "fromLibrary": "„{name}“ ist aus der Getränkedatenbank übernommen. Prüf die Angaben und leg den Preis für eure Gruppe fest.",
+      "inCatalog": "Der Barcode {barcode} gehört zu „{name}“, ist hier aber noch nicht zugeordnet. Mit „+ Barcode hinzufügen“ ist er gespeichert."
+    },
+    "createInfo": "„{name}“ wurde angelegt und ist sofort im Katalog.",
+    "library": {
+      "open": "Aus der Getränkedatenbank",
+      "back": "Zurück zum Katalog",
+      "title": "Getränkedatenbank",
+      "intro": "Die Getränkedatenbank teilen sich alle Gruppen; sie enthält keine Preise – den Preis legt jede Gruppe beim Übernehmen selbst fest.",
+      "searchLabel": "Name oder Sorte",
+      "searchPlaceholder": "z. B. Helles",
+      "barcodeLabel": "Strichcode (EAN)",
+      "search": "Suchen",
+      "unavailable": "Die Getränkedatenbank ist gerade nicht erreichbar.",
+      "empty": "Keine Treffer",
+      "emptyHint": "Probier einen anderen Namen oder Strichcode.",
+      "inCatalog": "Schon im Katalog",
+      "adopt": "Übernehmen",
+      "adoptSubmit": "In den Katalog übernehmen",
+      "name": "Name",
+      "category": "Sorte",
+      "description": "Beschreibung",
+      "price": "Verkaufspreis (€)",
+      "costPrice": "Einkaufspreis (€, optional)",
+      "priceHint": "Der Preis gilt nur für deine Gruppe.",
+      "priceRequired": "Bitte einen Namen und einen Preis ab 0 € angeben.",
+      "adopted": "„{name}“ ist jetzt in eurem Katalog.",
+      "proposed": "„{name}“ wurde für euren Katalog vorgeschlagen.",
+      "toCatalog": "Zum Katalog",
+      "share": "In die Getränkedatenbank teilen",
+      "shared": "Dieses Getränk ist mit der Getränkedatenbank verknüpft.",
+      "sharedInfo": "„{name}“ ist jetzt in der Getränkedatenbank (ohne Preis)."
+    },
+    "tally": {
+      "open": "Strich-Kategorien",
+      "field": "Strich-Kategorie",
+      "none": "Ohne",
+      "effectivePrice": "An der Theke: {price} (Kategorie {name}, überschreibt den Verkaufspreis)",
+      "eyebrow": "Strichliste",
+      "title": "Kategorien",
+      "create": "Neue Kategorie",
+      "intro": "Jede Kategorie ist eine Spalte der Strichliste. Ihr Preis gilt im Event für alle zugeordneten Getränke und überschreibt den Getränkepreis.",
+      "name": "Name",
+      "pricePerTally": "Preis je Strich",
+      "loadError": "Kategorien nicht verfügbar",
+      "emptyTitle": "Noch keine Kategorien",
+      "emptyMessage": "Lege mit „Neue Kategorie“ die erste Spalte an, zum Beispiel Bier.",
+      "unassign": "{name} aus der Kategorie nehmen",
+      "noDrinks": "Noch keine Getränke zugeordnet.",
+      "moveUp": "Nach links",
+      "moveDown": "Nach rechts",
+      "delete": "Löschen",
+      "confirmDelete": "Kategorie „{name}“ löschen? Ihre Getränke behalten dann ihren eigenen Preis.",
+      "withoutTitle": "Ohne Kategorie · eigener Preis",
+      "assign": "Zuordnen …",
+      "assignTo": "{name} einer Kategorie zuordnen",
+      "allAssigned": "Alle Getränke im Sortiment haben eine Kategorie.",
+      "required": "Bitte Name und einen Preis ab 0 angeben."
+    }
+  },
+  "sublists": {
+    "header": {
+      "eyebrow": "Event-Vorbereitung",
+      "title": "Getränkelisten",
+      "intro": "Erstelle und verwalte wiederverwendbare Getränkekonfigurationen für Events."
+    },
+    "actions": {
+      "create": "+ Neue Sublist erstellen"
+    },
+    "info": {
+      "title": "Wiederverwendbare Getränkelisten",
+      "body": "Sublists ermöglichen es dir, eine Vorauswahl an Getränken mit spezifischen Event-Preisen zusammenzustellen und mit einem Klick jedem Event zuzuweisen."
+    },
+    "state": {
+      "loadingMessage": "Sublists werden abgerufen.",
+      "unavailable": "Sublists nicht verfügbar",
+      "emptyTitle": "Keine Sublists vorhanden",
+      "emptyMessage": "Erstelle deine erste Sublist, um Getränke für Events vorzukonfigurieren."
+    },
+    "card": {
+      "drinkCount": {
+        "one": "{count} Getränk",
+        "other": "{count} Getränke"
+      },
+      "manageItems": "Einträge verwalten ({count})",
+      "edit": "Bearbeiten",
+      "delete": "Löschen"
+    },
+    "form": {
+      "editTitle": "Sublist bearbeiten",
+      "createTitle": "Neue Sublist erstellen",
+      "name": "Name der Sublist *",
+      "namePlaceholder": "z. B. Standardauswahl",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "z. B. Standardauswahl an Bieren und Softdrinks für reguläre Treffen",
+      "nameRequired": "Bitte geben Sie einen Namen ein."
+    },
+    "detail": {
+      "fallbackTitle": "Sublist-Details",
+      "itemsTitle": "Enthaltene Getränke ({count})",
+      "noItems": "Noch keine Getränke in dieser Sublist enthalten.",
+      "price": "Preis: {price}",
+      "catalogPrice": "Standardkatalogpreis",
+      "removeItem": "Aus Sublist entfernen"
+    },
+    "addItem": {
+      "title": "+ Getränk hinzufügen",
+      "selectPlaceholder": "Getränk aus Katalog wählen …",
+      "option": "{name} (Standard: {price})",
+      "customPricePlaceholder": "Abweichender Preis (€)",
+      "submit": "Hinzufügen"
+    },
+    "errors": {
+      "update": "Fehler beim Aktualisieren der Sublist.",
+      "create": "Fehler beim Anlegen der Sublist.",
+      "addItem": "Fehler beim Hinzufügen des Getränks."
+    }
+  },
+  "tablet": {
+    "terminal": {
+      "kioskActive": "Kiosk-Modus aktiv",
+      "startKiosk": "Kiosk-Modus starten",
+      "leaveKiosk": "Kiosk-Modus verlassen",
+      "startHint": "Im Kiosk-Modus bleibt dieses Gerät auf dem Thekenterminal, auch nach Schließen und Neuöffnen. Beim Start vergibst du eine PIN; nur mit ihr lässt sich der Modus hier wieder verlassen. Vorstand und Administration können das Gerät jederzeit aus der Ferne entsperren."
+    },
+    "header": {
+      "eyebrow": "Drink Recorder",
+      "terminalTitle": "Strichliste Terminal",
+      "title": "Thekenterminal",
+      "intro": "Strichliste für aktive Events."
+    },
+    "state": {
+      "eventsLoading": "Aktive Events werden abgerufen.",
+      "unavailable": "Erfassung nicht verfügbar",
+      "contextLoading": "Mitglieder und Getränke werden abgerufen.",
+      "notPossibleTitle": "Erfassung nicht möglich",
+      "notPossibleMessage": "Für dieses Event fehlen freigegebene Mitglieder oder Getränke."
+    },
+    "events": {
+      "heading": "Aktive Events ({count})",
+      "emptyTitle": "Keine aktiven Events",
+      "emptyMessage": "Derzeit ist kein Event für die Erfassung freigegeben.",
+      "select": "Auswählen"
+    },
+    "tally": {
+      "booked": "Strich: {label}",
+      "undo": "Rückgängig"
+    },
+    "messages": {
+      "undoNotPossible": "Hier lassen sich nur Striche dieser Sitzung zurücknehmen. Ältere Buchungen korrigiert der Vorstand.",
+      "undone": "Strich zurückgenommen.",
+      "noDrinksInCategory": "Für {name} ist in diesem Event kein Getränk freigegeben."
+    },
+    "fallback": {
+      "member": "Mitglied",
+      "item": "Artikel"
+    },
+    "board": {
+      "hint": "Tippe auf das Feld unter der Kategorie, um einen Strich zu machen.",
+      "member": "Mitglied",
+      "perTally": "{price} je Strich",
+      "other": "Sonstiges",
+      "otherHint": "Weitere Getränke & Speisen",
+      "ownTab": "Eigene Rechnung",
+      "cellLabel": "{name}, {column}: {count} Striche. Tippen für einen Strich.",
+      "todayTitle": "Heute an der Theke",
+      "tallies": "Striche",
+      "revenue": "Umsatz"
+    },
+    "picker": {
+      "categoryTitle": "{name}: welches Getränk?",
+      "otherTitle": "Sonstiges: was wird gebucht?",
+      "forMember": "Strich für {name}",
+      "empty": "Für dieses Feld ist im Event nichts freigegeben."
+    }
+  },
+  "admin": {
+    "eyebrow": "Administration",
+    "title": "Mitglieder & Gruppen",
+    "intro": "Mitglieder, Rollen und Einladungen der Gruppe „{name}“.",
+    "introNoName": "Mitglieder, Rollen und Einladungen deiner Gruppe.",
+    "infoPanel": "Änderungen gelten sofort für die gewählte Gruppe; der Server prüft jede Berechtigung.",
+    "loadingMessage": "Benutzer und Protokoll werden abgerufen.",
+    "unavailable": "Administration nicht verfügbar",
+    "roles": {
+      "admin": "Admin",
+      "board": "Vorstand",
+      "member": "Mitglied",
+      "chair": "Vorsitz",
+      "treasurer": "Kassenwart",
+      "secretary": "Schriftwart",
+      "assessor": "Beisitzer",
+      "tabletRecorder": "Thekenterminal"
+    },
+    "members": {
+      "search": "Mitglieder suchen",
+      "searchPlaceholder": "Mitglieder suchen …",
+      "roleFilter": "Nach Rolle filtern",
+      "roleFilterAll": "Rolle: Alle",
+      "invite": "+ Mitglied einladen",
+      "heading": "Mitglieder ({count})",
+      "empty": "Für die aktuelle Suche wurden keine Mitglieder gefunden.",
+      "disabledMark": "(deaktiviert)",
+      "statusActive": "Aktiv",
+      "statusInactive": "Inaktiv",
+      "edit": "Bearbeiten",
+      "range": "Zeige {start}–{end} von {total} Mitgliedern",
+      "prev": "Zurück",
+      "next": "Weiter"
+    },
+    "columns": {
+      "avatar": "Avatar",
+      "name": "Name",
+      "email": "E-Mail",
+      "role": "Rolle",
+      "balance": "Guthaben",
+      "status": "Status",
+      "joined": "Beitrittsdatum",
+      "actions": "Aktionen"
+    },
+    "user": {
+      "editTitle": "{name} bearbeiten",
+      "id": "ID: {id}",
+      "roles": "Rollen",
+      "saveRoles": "Rollen speichern",
+      "boardRole": "Vorstands-Unterrolle",
+      "noBoardRole": "keine",
+      "drinkRecorder": "Drink Recorder",
+      "saveProfile": "Profil speichern",
+      "disabled": "Deaktiviert",
+      "saveStatus": "Status speichern",
+      "rolesSaved": "Rollen gespeichert.",
+      "profileSaved": "Profil gespeichert.",
+      "statusSaved": "Status gespeichert.",
+      "customRolesHint": "Eigene Rollen und ihre Berechtigungen legst du in den Gruppeneinstellungen an.",
+      "customRolesLink": "Rollen verwalten"
+    },
+    "audit": {
+      "heading": "Audit-Protokoll ({count})",
+      "emptyTitle": "Keine Einträge",
+      "emptyMessage": "Es liegen keine Protokolleinträge vor.",
+      "system": "System"
+    },
+    "invite": {
+      "title": "Mitglied einladen",
+      "intro": "Die eingeladene Person registriert sich über den Link selbst und ist danach normales Mitglied.",
+      "labelField": "Für wen? (optional, nur zum Wiedererkennen)",
+      "labelPlaceholder": "z. B. Anna Neumann",
+      "validity": "Gültig für",
+      "validityDays": {
+        "one": "{count} Tag",
+        "other": "{count} Tage"
+      },
+      "maxUses": "Anzahl Personen",
+      "create": "Link erstellen",
+      "createdTitle": "Einladungslink erstellt",
+      "createdHint": "Schick diesen Link an die Person, zum Beispiel per Messenger oder E-Mail. Er wird nur jetzt angezeigt und gilt bis {date}.",
+      "linkLabel": "Einladungslink",
+      "share": "Teilen",
+      "copy": "Link kopieren",
+      "copied": "Kopiert",
+      "another": "Weiteren Link erstellen",
+      "listTitle": "Einladungslinks",
+      "loading": "Einladungen werden geladen",
+      "loadFailed": "Einladungen nicht geladen",
+      "emptyTitle": "Noch keine Einladungen",
+      "emptyMessage": "Erstelle oben einen Link für die erste Person.",
+      "noLabel": "Ohne Bezeichnung",
+      "usage": "{used} von {max} verwendet · gültig bis {date}",
+      "registered": "Registriert: {names}",
+      "revoke": "Zurückziehen",
+      "status": {
+        "active": "Offen",
+        "used": "Verwendet",
+        "expired": "Abgelaufen",
+        "revoked": "Zurückgezogen"
+      },
+      "maxUsesInvalid": "Die Anzahl Personen muss zwischen 1 und 50 liegen.",
+      "copyFailed": "Kopieren nicht möglich. Bitte den Link markieren und manuell kopieren.",
+      "shareTitle": "Einladung zu Vereint",
+      "shareText": "Hier kannst du dich als Mitglied registrieren:",
+      "errors": {
+        "notFound": "Dieser Einladungslink ist ungültig. Bitte prüfe, ob du den ganzen Link geöffnet hast.",
+        "expired": "Dieser Einladungslink ist abgelaufen. Bitte den Vorstand um einen neuen Link.",
+        "revoked": "Dieser Einladungslink wurde zurückgezogen. Bitte den Vorstand um einen neuen Link.",
+        "usedUp": "Dieser Einladungslink wurde schon verwendet. Bitte den Vorstand um einen neuen Link.",
+        "emailTaken": "Für diese E-Mail-Adresse gibt es schon ein Konto. Melde dich damit an oder setze dein Passwort zurück.",
+        "passwordRejected": "Das Passwort erfüllt die Vorgaben nicht. Bitte wähle ein längeres Passwort.",
+        "unavailable": "Die Registrierung ist gerade nicht möglich. Bitte versuche es später noch einmal."
+      }
+    }
+  },
+  "board": {
+    "backToBoard": "← Zum Vorstand",
+    "auditTarget": {
+      "ledger": "Finanzen",
+      "notification": "Kommunikation",
+      "user": "Benutzer",
+      "kiosk": "Thekenterminal"
+    },
+    "auditAction": {
+      "NOTIFICATION_SENT": "Mitteilung gesendet",
+      "USER_ROLES_CHANGED": "Rollen geändert",
+      "USER_PERMISSIONS_CHANGED": "Berechtigungen geändert",
+      "USER_STATUS_CHANGED": "Status geändert",
+      "USER_PROFILE_ADMIN_UPDATED": "Profil bearbeitet",
+      "USER_REGISTERED_BY_INVITE": "Per Einladung registriert",
+      "LEDGER_TOPUP": "Aufladung",
+      "LEDGER_PAYOUT": "Auszahlung",
+      "LEDGER_CORRECTION": "Korrektur",
+      "LEDGER_PURCHASE": "Kauf",
+      "MOMENT_STARTED": "Moment gestartet",
+      "MOMENT_COMPLETED": "Moment beendet",
+      "KIOSK_PIN_LOCKED": "Kiosk-PIN nach Fehlversuchen gesperrt",
+      "KIOSK_STARTED": "Kiosk-Modus gestartet",
+      "KIOSK_ENDED_REMOTELY": "Kiosk-Gerät aus der Ferne entsperrt",
+      "MOMENT_TYPE_SAVED": "Moment-Typ gespeichert",
+      "MOMENT_REACTION_SAVED": "Moment-Reaktion gespeichert",
+      "MOMENT_MEDIA_REMOVED": "Moment-Bild/Video entfernt"
+    },
+    "auditDetail": {
+      "amount": "Betrag",
+      "note": "Notiz",
+      "old": "Vorher",
+      "new": "Nachher",
+      "roles": "Rollen",
+      "displayName": "Name",
+      "disabled": "Gesperrt",
+      "boardRole": "Vorstandsrolle",
+      "title": "Titel",
+      "topic": "Thema",
+      "durationMinutes": "Dauer (Min.)"
+    },
+    "auditRecipient": "an {name}",
+    "auditMember": "Betrifft {name}",
+    "boardRole": {
+      "chair": "Vorsitz",
+      "treasurer": "Kassenwart",
+      "secretary": "Schriftführer",
+      "assessor": "Beisitzer",
+      "board": "Vorstand"
+    },
+    "audit": {
+      "emptyTitle": "Keine Einträge",
+      "emptyMessage": "Für die erlaubten Bereiche liegen keine Protokolleinträge vor.",
+      "system": "System"
+    },
+    "overview": {
+      "eyebrow": "Vorstand",
+      "title": "Vorstandsübersicht",
+      "intro": "Moderation, Finanzübersichten und vorbereitete Mitteilungen.",
+      "infoTitle": "Vorstandsbereich",
+      "infoText": "Verwalte hier die Gruppenkasse, versende wichtige Ankündigungen oder plane die nächsten Treffen.",
+      "panelsTitle": "Rollenspezifische Verwaltung",
+      "panelsNav": "Vorstandsbereiche",
+      "treasuryTitle": "Kasse & Finanzen",
+      "treasuryDesc": "Bierkasse, Guthaben, Buchungen",
+      "commsTitle": "Kommunikation",
+      "commsDesc": "Ankündigungen und Pinnwand",
+      "loadingMessage": "Events und Protokoll werden abgerufen.",
+      "unavailable": "Vorstandsbereich nicht verfügbar",
+      "statEvents": "Sichtbare Events",
+      "statActions": "Letzte Aktionen",
+      "eventsHeading": "Gastgeber · Events ({count})",
+      "eventsEmptyTitle": "Keine Events",
+      "eventsEmptyMessage": "Aktuell sind keine Events zur Moderation sichtbar.",
+      "moderate": "Verwalten",
+      "auditHeading": "Letzte Aktionen ({count})",
+      "inviteTitle": "Mitglied einladen",
+      "inviteDesc": "Einladungslink erstellen",
+      "kioskDevicesTitle": "Kiosk-Geräte",
+      "kioskDevicesDesc": "Thekenterminals sehen und entsperren",
+      "momentConfigTitle": "Moments",
+      "momentConfigDesc": "Typen und Reaktionen"
+    },
+    "comms": {
+      "eyebrow": "Schriftwart",
+      "title": "Infotafeln & Rundbriefe",
+      "intro": "Infotafel im Gruppenchat, Rundbriefe an Mitglieder und versendete Benachrichtigungen.",
+      "pinboardTitle": "Infotafel im Gruppenchat",
+      "infoTitle": "Info vom Schriftwart",
+      "infoText": "Die Infotafel steht oben im Gruppenchat und ist für alle Mitglieder sichtbar.",
+      "composeTitle": "Meldung verfassen",
+      "recipientId": "Empfänger (Mitglieds-ID)",
+      "messageTitle": "Titel",
+      "messageBody": "Text",
+      "send": "Senden",
+      "loadingMessage": "Versendete Mitteilungen werden abgerufen.",
+      "unavailable": "Kommunikation nicht verfügbar",
+      "recipientsHeading": "Empfänger ({count})",
+      "noRecipients": "Keine Mitglieder sichtbar.",
+      "pickRecipient": "Als Empfänger",
+      "sentHeading": "Rundbriefe / Meldungen ({count})",
+      "sentEmpty": "Es wurden noch keine Mitteilungen protokolliert.",
+      "sent": "Gesendet",
+      "sentInfo": "Mitteilung gesendet.",
+      "pin": {
+        "loading": "Infotafel wird abgerufen.",
+        "unavailable": "Infotafel nicht verfügbar",
+        "current": "Aktuell angepinnt",
+        "meta": "Von {name}, {date}",
+        "none": "Aktuell ist keine Infotafel angepinnt.",
+        "label": "Infotafel",
+        "save": "Anpinnen",
+        "remove": "Entfernen",
+        "saved": "Infotafel angepinnt.",
+        "removed": "Infotafel entfernt."
+      },
+      "recipients": {
+        "legend": "Empfänger",
+        "all": "Alle Mitglieder",
+        "selected": "Ausgewählte Mitglieder",
+        "loading": "Mitglieder werden abgerufen.",
+        "search": "Empfänger suchen",
+        "searchPlaceholder": "Name eingeben",
+        "chosen": {
+          "one": "{count} Empfänger ausgewählt",
+          "other": "{count} Empfänger ausgewählt"
+        },
+        "remove": "{name} entfernen",
+        "none": "Keine Mitglieder gefunden.",
+        "missing": "Wähle mindestens ein Mitglied aus."
+      },
+      "sentCount": {
+        "zero": "Niemand hat die Mitteilung erhalten.",
+        "one": "{count} Mitglied hat die Mitteilung erhalten.",
+        "other": "{count} Mitglieder haben die Mitteilung erhalten."
+      }
+    },
+    "treasury": {
+      "eyebrow": "Kassenwart",
+      "title": "Bierkasse verwalten",
+      "intro": "Guthaben aller Mitglieder, Kassenbuchungen und Eventabrechnungen.",
+      "infoTitle": "Bierkasse",
+      "infoText": "Jede Buchung zählt nur einmal, auch wenn sie versehentlich doppelt abgeschickt wird.",
+      "eventsLoading": "Events werden abgerufen.",
+      "unavailable": "Kasse nicht verfügbar",
+      "statEvents": "Events mit Abrechnung",
+      "eventsHeading": "Events ({count})",
+      "eventsEmpty": "Es sind keine Events mit Abrechnung sichtbar.",
+      "summaryButton": "Abrechnung",
+      "summary": {
+        "title": "Eventabrechnung",
+        "revenue": "Umsatz: {amount}",
+        "cost": "Wareneinsatz: {amount}",
+        "profit": "Reingewinn: {amount}",
+        "credit": "Kreditverzehr: {amount}",
+        "entries": "Buchungen: {count}"
+      },
+      "lookup": {
+        "title": "Guthaben nachschlagen",
+        "memberId": "Mitglieds-ID",
+        "show": "Anzeigen",
+        "loading": "Guthaben und Buchungen werden abgerufen.",
+        "balance": "Guthaben",
+        "entriesHeading": "Buchungen ({count})",
+        "noEntries": "Keine Buchungen."
+      },
+      "columns": {
+        "type": "Art",
+        "date": "Datum",
+        "amount": "Betrag"
+      },
+      "booking": {
+        "title": "Buchen",
+        "topupMemberId": "Aufladen · Mitglieds-ID",
+        "payoutMemberId": "Auszahlen · Mitglieds-ID",
+        "correctionEntryId": "Korrektur · Ursprungsbuchung",
+        "amount": "Betrag",
+        "note": "Notiz",
+        "reason": "Grund",
+        "topup": "Aufladen",
+        "payout": "Auszahlen",
+        "correct": "Korrigieren",
+        "topupDone": "Aufladung gebucht.",
+        "payoutDone": "Auszahlung gebucht.",
+        "correctionDone": "Korrektur gebucht.",
+        "topupTitle": "Guthaben aufladen",
+        "payoutTitle": "Guthaben auszahlen",
+        "correctionTitle": "Buchung korrigieren",
+        "correctionEntry": "Buchung",
+        "correctionPlaceholder": "Buchung wählen",
+        "correctionOption": "{date} · {type} · {amount}",
+        "noCorrectable": "Es gibt keine Buchung, die du korrigieren kannst.",
+        "reversed": "Korrigiert",
+        "pick": "Zur Korrektur wählen",
+        "pickAria": "{entry} zur Korrektur wählen"
+      },
+      "members": {
+        "title": "Mitglieder und Guthaben",
+        "loading": "Guthaben werden abgerufen.",
+        "statMembers": "Mitglieder",
+        "statNegative": "Im Minus",
+        "search": "Mitglied suchen",
+        "searchPlaceholder": "Name eingeben",
+        "empty": "Keine Mitglieder gefunden.",
+        "lastEntry": "Letzte Buchung: {date}",
+        "noEntry": "Noch keine Buchung",
+        "id": "ID {id}",
+        "statTotal": "Guthaben gesamt"
+      }
+    },
+    "kioskDevices": {
+      "title": "Kiosk-Geräte",
+      "intro": "Auf diesen Geräten läuft gerade der Kiosk-Modus. „Entsperren“ beendet ihn ohne PIN; das Gerät verlässt den Modus innerhalb weniger Sekunden.",
+      "emptyTitle": "Kein Gerät im Kiosk-Modus",
+      "emptyMessage": "Sobald ein Thekenterminal den Kiosk-Modus startet, erscheint es hier.",
+      "since": "Gestartet von {name} am {date}",
+      "lockedUntil": "PIN-Eingabe gesperrt bis {date}",
+      "unlock": "Entsperren",
+      "unlocked": "{label} ist entsperrt."
+    },
+    "momentConfig": {
+      "back": "← Zum Vorstandsbereich",
+      "title": "Moments: Themen & Reaktionen",
+      "intro": "Hier legt ihr die Themen fest, aus denen Mitglieder beim Starten eines Moments wählen, und mit welchen Reaktionen sie antworten. Ausgemusterte Einträge verschwinden für neue Moments, alte Moments behalten sie.",
+      "unavailable": "Moment-Einstellungen nicht verfügbar",
+      "typesTitle": "Themen",
+      "reactionsTitle": "Reaktionen",
+      "newType": "Neues Thema",
+      "editType": "Thema bearbeiten",
+      "newReaction": "Neue Reaktion",
+      "editReaction": "Reaktion bearbeiten",
+      "edit": "Bearbeiten",
+      "retired": "ausgemustert",
+      "emoji": "Emoji",
+      "name": "Name",
+      "description": "Beschreibung (optional)",
+      "allowedReactions": "Erlaubte Reaktionen",
+      "allReactions": "Alle aktiven Reaktionen erlauben",
+      "allReactionsShort": "Alle Reaktionen",
+      "someReactions": "Reaktionen: {list}",
+      "activeType": "Mitglieder können dieses Thema wählen",
+      "activeReaction": "Mitglieder können diese Reaktion verwenden",
+      "retireTypeHint": "Ausgemustert: Neue Moments mit diesem Thema sind nicht mehr möglich, bestehende bleiben erhalten.",
+      "retireReactionHint": "Ausgemustert: Die Reaktion ist nicht mehr wählbar, bisherige Beiträge behalten sie.",
+      "saveFailed": "Speichern fehlgeschlagen."
+    }
+  },
+  "events": {
+    "manage": {
+      "eyebrow": "Gastgeber",
+      "back": "← Zum Event",
+      "loadingMessage": "Die Eventverwaltung wird vorbereitet.",
+      "unavailable": "Verwaltung nicht verfügbar",
+      "title": "{title} verwalten",
+      "nextDate": "Nächster Termin",
+      "noRights": "Keine Verwaltungsrechte",
+      "noRightsHint": "Nur der Gastgeber dieses Events (oder der Vorstand) kann es verwalten.",
+      "remove": "Entfernen",
+      "costPrice": "EK: {amount}",
+      "priceOptional": "Preis (optional)",
+      "costPriceOptional": "EK (optional)",
+      "fallback": "Fallback",
+      "currency": "Währung",
+      "details": {
+        "title": "Stammdaten",
+        "name": "Titel",
+        "location": "Ort",
+        "description": "Beschreibung",
+        "status": "Status",
+        "save": "Stammdaten speichern",
+        "start": "Beginn",
+        "end": "Ende"
+      },
+      "participants": {
+        "heading": "Teilnehmer & Anwesenheit ({count})",
+        "empty": "Noch keine Teilnehmer.",
+        "id": "Teilnehmer-ID",
+        "role": "Rolle",
+        "roleParticipant": "Teilnehmer",
+        "roleCoHost": "Co-Gastgeber",
+        "add": "Hinzufügen",
+        "inviteLegend": "Mitglieder einladen",
+        "invite": "Einladen",
+        "removeNamed": "{name} entfernen"
+      },
+      "drinks": {
+        "heading": "Getränke ({count})",
+        "empty": "Noch keine Getränke zugewiesen.",
+        "id": "Getränke-ID",
+        "add": "Getränk hinzufügen",
+        "sublistId": "Sublist-ID",
+        "assignSublist": "Sublist zuweisen",
+        "pick": "Getränk aus dem Katalog",
+        "sublistPick": "Sublist"
+      },
+      "food": {
+        "heading": "Speisen ({count})",
+        "empty": "Noch keine Speisen zugewiesen.",
+        "default": "(Standard)",
+        "id": "Speisen-ID",
+        "add": "Speise hinzufügen",
+        "pick": "Speise aus dem Katalog"
+      },
+      "invites": {
+        "heading": "Einladungen ({count})",
+        "createdTitle": "Einladung erstellt",
+        "createdHint": "Dieser Link wird nur einmal angezeigt:",
+        "empty": "Keine aktiven Einladungen.",
+        "active": "aktiv",
+        "inactive": "inaktiv",
+        "revoke": "Widerrufen",
+        "validMinutes": "Gültig (Minuten)",
+        "maxUses": "Max. Nutzungen",
+        "create": "Gasteinladung erzeugen"
+      },
+      "chat": {
+        "heading": "Event-Chat ({count})",
+        "empty": "Noch keine Nachrichten.",
+        "message": "Nachricht",
+        "send": "Senden"
+      },
+      "info": {
+        "detailsSaved": "Stammdaten gespeichert.",
+        "participantAdded": "Teilnehmer hinzugefügt.",
+        "participantRemoved": "Teilnehmer entfernt.",
+        "drinkAdded": "Getränk hinzugefügt.",
+        "drinkRemoved": "Getränk entfernt.",
+        "foodAdded": "Speise hinzugefügt.",
+        "foodRemoved": "Speise entfernt.",
+        "sublistAssigned": "Sublist zugewiesen.",
+        "inviteCreated": "Einladung erstellt.",
+        "inviteRevoked": "Einladung widerrufen.",
+        "messageSent": "Nachricht gesendet.",
+        "membersInvited": "Mitglieder eingeladen."
+      },
+      "choose": "Bitte wählen",
+      "tabs": {
+        "label": "Bereiche",
+        "details": "Stammdaten",
+        "participants": "Teilnehmer",
+        "drinks": "Getränke & Speisen",
+        "guests": "Gäste",
+        "chat": "Chat"
+      }
+    },
+    "picker": {
+      "allMembers": "Alle Mitglieder einladen",
+      "search": "Mitglied suchen",
+      "searchPlaceholder": "Name eingeben",
+      "empty": "Keine weiteren Mitglieder verfügbar.",
+      "noMatch": "Kein Mitglied passt zur Suche.",
+      "selected": "{count} ausgewählt"
+    },
+    "reminder": {
+      "none": "Keine Erinnerung",
+      "hours": "{count} Stunden vorher",
+      "days": {
+        "one": "1 Tag vorher",
+        "other": "{count} Tage vorher"
+      },
+      "week": "1 Woche vorher"
+    },
+    "create": {
+      "eyebrow": "Neues Event",
+      "back": "← Zu den Events",
+      "title": "Event anlegen",
+      "intro": "Plane ein Event und lade Mitglieder ein. Pflichtfelder sind mit * markiert.",
+      "name": "Titel",
+      "description": "Beschreibung",
+      "location": "Ort",
+      "start": "Beginn",
+      "end": "Ende",
+      "invitees": "Eingeladene",
+      "notifyHeading": "Benachrichtigung der Eingeladenen",
+      "notifyOnPublish": "Sofort bei Veröffentlichung",
+      "notifyAt": "Zu einem Zeitpunkt",
+      "notifyAtTime": "Zeitpunkt der Benachrichtigung",
+      "reminder": "Erinnerung",
+      "saveDraft": "Als Entwurf speichern",
+      "publish": "Veröffentlichen und einladen",
+      "errors": {
+        "title": "Bitte gib einen Titel ein.",
+        "start": "Bitte gib den Beginn an.",
+        "end": "Das Ende muss nach dem Beginn liegen.",
+        "notifyAt": "Bitte gib den Zeitpunkt der Benachrichtigung an."
+      }
+    },
+    "statistics": {
+      "tab": "Statistik",
+      "switch": "Statistik für dieses Event",
+      "hint": "Aus heißt: In diesem Event wird nichts erfasst."
+    }
+  },
+  "statistics": {
+    "ariaLabel": "Statistiken der Gruppe",
+    "eyebrow": "Statistiken",
+    "title": "Gruppenstatistik",
+    "ssr": {
+      "title": "Diagramme werden im Browser geladen",
+      "message": "Aggregierte Auswertungen erscheinen erst nach dem Laden im Browser."
+    },
+    "loadingMessage": "Die Auswertungen werden abgerufen.",
+    "unavailable": "Statistiken nicht verfügbar",
+    "empty": {
+      "title": "Noch keine Auswertungen",
+      "message": "Sobald Striche, Umsätze oder Zusagen erfasst sind, erscheinen hier Kennzahlen."
+    },
+    "consumption": {
+      "ariaLabel": "Rangliste nach Strichen",
+      "title": "Rangliste",
+      "total": "Gruppe",
+      "mine": "Du",
+      "myRank": "Dein Platz",
+      "rankValue": "{rank}.",
+      "noRank": "noch kein Strich",
+      "you": "Du",
+      "count": {
+        "one": "{count} Strich",
+        "other": "{count} Striche"
+      },
+      "empty": "In diesem Zeitraum gibt es noch keine Striche.",
+      "unit": "Striche",
+      "ofMembers": "von {count}"
+    },
+    "attendance": {
+      "title": "Zusagequote",
+      "ringLabel": "Zusagequote {percent} Prozent",
+      "hint": "Anteil der Einladungen, auf die Mitglieder mit „Zusagen“ geantwortet haben.",
+      "empty": "Noch keine Zusagen erfasst. Sobald Einladungen beantwortet sind, siehst du hier die Quote."
+    },
+    "topRounds": {
+      "title": "Top-Rundengeber",
+      "rounds": {
+        "one": "{count} Runde",
+        "other": "{count} Runden"
+      }
+    },
+    "intro": "Auswertungen der letzten {days} Tage.",
+    "links": {
+      "label": "Weitere Statistiken",
+      "drinks": "Getränkestatistik: wer, was, wie viel, kcal",
+      "overview": "Alle Statistiken im Überblick",
+      "groupEvents": "Events der Gruppe im Vergleich",
+      "features": "Funktionen: ausgelöst und Antworten",
+      "mine": "Meine Statistik",
+      "crossEvents": "Alle meine Events (gruppenübergreifend)"
+    },
+    "period": {
+      "label": "Zeitraum",
+      "days30": "30 Tage",
+      "days90": "90 Tage",
+      "year": "Dieses Jahr",
+      "lastDays": "Letzte {days} Tage",
+      "thisYear": "Dieses Jahr"
+    },
+    "categories": {
+      "legend": "Kategorien",
+      "beer": "Bier",
+      "nonAlcoholic": "Alkoholfrei",
+      "spirits": "Schnaps",
+      "wineSparkling": "Wein & Sekt",
+      "other": "Sonstiges"
+    },
+    "drinks": {
+      "eyebrow": "Ganze Gruppe · alle Mitglieder",
+      "title": "Getränkestatistik",
+      "total": "Getränke",
+      "liters": "Liter",
+      "kcal": "Kalorien",
+      "without": {
+        "one": "ohne Angabe bei {count} Getränk",
+        "other": "ohne Angabe bei {count} Getränken"
+      },
+      "averages": "Ø Getränke der Gruppe",
+      "perEvent": "je Event",
+      "perDay": "je Tag",
+      "perWeek": "je Woche",
+      "perMonth": "je Monat",
+      "viewLabel": "Ansicht",
+      "byMember": "Nach Mitglied",
+      "byDrink": "Nach Getränk",
+      "sortCount": "Nach Anzahl",
+      "sortKcal": "Nach Kalorien",
+      "perEventWeek": "Ø je Event · je Woche",
+      "noValue": "ohne Angabe",
+      "drinkDetails": "{members} Personen · {liters} l",
+      "empty": "In diesem Zeitraum wurden noch keine Getränke gebucht."
+    },
+    "overview": {
+      "eyebrow": "Meine Gruppe",
+      "title": "Statistik-Übersicht",
+      "intro": "Mitglieder, Events, Zusagen und Trinkverhalten auf einen Blick. Sichtbar für alle Mitglieder der Gruppe.",
+      "kpi": {
+        "members": "Mitglieder",
+        "membersHint": "{active} aktiv · {new} neu",
+        "events": "Events",
+        "eventsHint": "Ø {avg} Teilnehmende",
+        "attendanceHint": "aller Einladungen",
+        "perEvent": "Ø {value} je Event",
+        "perWeek": "Ø {value} je Woche",
+        "perMember": "Ø {value} je Mitglied",
+        "revenue": "Umsatz",
+        "perMonth": "Je Monat",
+        "perMonthHint": "Getränke im Schnitt"
+      },
+      "withoutValues": "Ohne Füllmenge: {volume} Getränke, ohne Kalorien: {kcal} Getränke. Sie zählen bei Litern bzw. Kalorien nicht mit.",
+      "sections": {
+        "events": "Events & Zusagen",
+        "drinking": "Trinkverhalten",
+        "drinks": "Getränke",
+        "community": "Gemeinschaft"
+      },
+      "rsvpByEvent": "Antworten je Event",
+      "rsvpByMember": "Zusagen je Mitglied",
+      "rsvp": {
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt",
+        "noAnswer": "Keine Antwort"
+      },
+      "acceptedOf": "{accepted} von {invited} zugesagt",
+      "noEvents": "In diesem Zeitraum gibt es keine Einladungen.",
+      "table": {
+        "member": "Mitglied",
+        "yes": "Zu",
+        "no": "Ab",
+        "attended": "Da gewesen",
+        "quote": "Quote",
+        "category": "Kategorie",
+        "share": "Anteil"
+      },
+      "attendedHint": "„Da gewesen“ zählt Events, bei denen das Mitglied mindestens einen Strich oder Kauf hatte.",
+      "weekly": "Getränke je Woche",
+      "weeklyAvg": "Ø {value} je Woche",
+      "weeklyValue": "{value} in dieser Woche",
+      "weeklyLabel": "Getränke je Woche, älteste zuerst: {values}",
+      "weeksAgo": {
+        "one": "vor {count} Woche",
+        "other": "vor {count} Wochen"
+      },
+      "thisWeek": "diese Woche",
+      "when": "Wann wird getrunken?",
+      "byWeekday": "Nach Wochentag",
+      "byHour": "Nach Uhrzeit",
+      "weekdays": {
+        "1": "Mo",
+        "2": "Di",
+        "3": "Mi",
+        "4": "Do",
+        "5": "Fr",
+        "6": "Sa",
+        "7": "So"
+      },
+      "hours": {
+        "lt18": "bis 18",
+        "18": "18–19",
+        "19": "19–20",
+        "20": "20–21",
+        "21": "21–22",
+        "22": "22–23",
+        "ge23": "ab 23"
+      },
+      "whoDrinksWhat": "Wer trinkt was? · Getränke je Mitglied nach Kategorie",
+      "drinksKcal": "{count} Getränke · {kcal} kcal",
+      "topDrinks": "Beliebteste Getränke",
+      "countPerEvent": "{count} · Ø {value}/Event",
+      "categoryShare": "Anteil nach Kategorie",
+      "noRounds": "Noch keine Runden ausgegeben.",
+      "moments": {
+        "title": "Moments",
+        "started": "Moments gestartet",
+        "reactions": "Reaktionen",
+        "media": "Fotos & Videos"
+      },
+      "chat": {
+        "title": "Chat",
+        "messages": "Nachrichten",
+        "mostActive": "Aktivste Person",
+        "eventChats": "Event-Chats"
+      },
+      "records": {
+        "title": "Rekorde",
+        "mostDrinks": "Meiste Getränke an einem Abend",
+        "mostDrinksValue": "{label} · {count} Getränke",
+        "streak": "Längste Serie dabei",
+        "streakValue": {
+          "one": "{label} · {count} Event",
+          "other": "{label} · {count} Events"
+        },
+        "fastest": "Schnellste Zusage",
+        "fastestValue": "{label} · nach {count} Min"
+      }
+    },
+    "recording": {
+      "groupOff": "Die Statistik ist in dieser Gruppe ausgeschaltet.",
+      "groupOffHint": "Neue Aktivitäten werden nicht erfasst. Bereits erfasste Zahlen bleiben, bis sie gelöscht werden.",
+      "eventOff": "Die Statistik ist für dieses Event ausgeschaltet.",
+      "eventOffHint": "Im Event wird nichts Neues erfasst.",
+      "userOff": "Du hast deine Statistik ausgeschaltet.",
+      "userOffHint": "Über dich wird in keiner Gruppe etwas Neues erfasst.",
+      "toAccount": "Zu Mein Konto"
+    },
+    "features": {
+      "purchase": "Striche und Käufe",
+      "foreign_drink": "Fremdgetränke",
+      "round": "Runden",
+      "top_up": "Aufladungen",
+      "event": "Events erstellt",
+      "rsvp": "Antworten auf Einladungen",
+      "moment": "Moments gestartet",
+      "moment_reaction": "Reaktionen auf Moments",
+      "moment_media": "Bilder und Videos in Moments",
+      "chat_message": "Chat-Nachrichten",
+      "chat_reaction": "Reaktionen im Chat",
+      "invite_link": "Einladungslinks",
+      "invite_join": "Beitritte über Einladungslink"
+    },
+    "mine": {
+      "eyebrow": "Mein Konto",
+      "title": "Meine Statistik",
+      "intro": "Alles, was du ausgelöst hast, über alle deine Gruppen und Events. Nur du siehst diese Seite.",
+      "empty": "Im Zeitraum ist noch nichts von dir erfasst.",
+      "accepted": "Zusagen",
+      "attended": "Teilnahmen",
+      "byFeature": "Nach Funktion",
+      "byGroup": "Nach Gruppe",
+      "groupOff": "Statistik aus"
+    },
+    "events": {
+      "empty": "Im Zeitraum gibt es keine Events.",
+      "off": "Statistik aus",
+      "purchases": "Striche",
+      "attendees": "Teilnehmende",
+      "moments": "Moments",
+      "chat": "Chat-Nachrichten",
+      "mine": "Meine Striche",
+      "myAnswer": "Meine Antwort",
+      "answer": {
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt"
+      },
+      "count": "Events",
+      "attendances": "Teilnahmen",
+      "perEvent": "{{value}} je Event",
+      "compare": "Events im Vergleich"
+    },
+    "crossEvents": {
+      "eyebrow": "Alle meine Gruppen",
+      "title": "Events übergreifend",
+      "intro": "Alle Events aus deinen Gruppen, die du sehen darfst. Gezeigt werden Summen, Durchschnitte und deine eigenen Werte, keine Namen anderer Personen.",
+      "mine": "Du warst bei {{attended}} Events dabei und hast {{purchases}} Striche gemacht."
+    },
+    "groupEvents": {
+      "title": "Events der Gruppe"
+    },
+    "featureStats": {
+      "title": "Funktionen",
+      "intro": "Wie oft jede Funktion der Gruppe ausgelöst wurde und wie darauf geantwortet wurde.",
+      "triggered": "ausgelöst",
+      "response": {
+        "rsvp": "Antworten",
+        "moment_reaction": "Reaktionen",
+        "chat_reaction": "Reaktionen",
+        "invite_join": "Beitritte",
+        "round_members": "bedachte Personen"
+      },
+      "variant": {
+        "accepted": "Zugesagt",
+        "maybe": "Vielleicht",
+        "declined": "Abgesagt",
+        "moment_reaction": "Reaktionen",
+        "moment_media": "Bilder und Videos",
+        "club": "Gruppenchat",
+        "event": "Event-Chat",
+        "moment": "Moment-Chat",
+        "round": "Runde",
+        "evening": "Abendaktion",
+        "pwaBarcode": "Barcode-Kauf",
+        "tabletManual": "Strichliste",
+        "catalog": "Aus dem Katalog",
+        "library": "Nur Getränkedatenbank",
+        "other": "Sonstige"
+      }
+    },
+    "eventStats": {
+      "title": "Event-Statistik",
+      "back": "Zurück zum Event",
+      "answers": "Antworten auf die Einladung",
+      "reactions": "{{reactions}} Reaktionen, {{media}} Bilder/Videos",
+      "chatReactions": "{{count}} Reaktionen",
+      "consumers": "Striche je Person"
+    },
+    "settings": {
+      "mine": {
+        "title": "Statistik",
+        "switch": "Meine Statistik erfassen",
+        "hint": "Aus heißt: Über dich wird in keiner Gruppe und keinem Event etwas erfasst. Ausschalten löscht nichts.",
+        "delete": "Meine erfassten Statistikdaten löschen",
+        "confirm": "Wirklich alle über dich erfassten Statistikdaten in allen Gruppen löschen? Das lässt sich nicht rückgängig machen."
+      },
+      "group": {
+        "title": "Statistik",
+        "switch": "Statistik in dieser Gruppe",
+        "hint": "Aus heißt: In der Gruppe und ihren Events wird nichts erfasst. Ausschalten löscht nichts.",
+        "delete": "Statistikdaten der Gruppe löschen",
+        "confirm": "Wirklich alle Statistikdaten dieser Gruppe löschen? Das lässt sich nicht rückgängig machen."
+      },
+      "confirmDelete": "Ja, endgültig löschen",
+      "deleted": "{{count}} Einträge gelöscht."
+    }
+  },
+  "guest": {
+    "event": {
+      "eyebrow": "Gastzugang",
+      "defaultTitle": "Event-Chat",
+      "intro": "Als Gast hast du Zugriff auf den Event-Chat.",
+      "noAccess": "Kein Gastzugang",
+      "noAccessHint": "Dieser Link enthält kein gültiges Gast-Token. Bitte den Einladungslink erneut öffnen.",
+      "loadingMessage": "Der Event-Chat wird abgerufen.",
+      "unavailable": "Chat nicht verfügbar",
+      "empty": "Noch keine Nachrichten.",
+      "message": "Nachricht",
+      "placeholder": "Nachricht schreiben …",
+      "send": "Senden"
+    },
+    "invite": {
+      "badge": "Einladung",
+      "title": "Event-Einladung annehmen",
+      "invalidTitle": "Ungültiger Einladungslink",
+      "invalidHint": "Dieser Link enthält kein Einladungs-Token. Bitte nutzen Sie den vollständigen Link aus Ihrer Einladung.",
+      "backHome": "Zurück zur Startseite",
+      "checking": "Einladung wird geprüft und aktiviert …",
+      "failed": "Einladung konnte nicht eingelöst werden",
+      "home": "Zur Startseite",
+      "description": "Geben Sie optional Ihren Namen ein, um dem Event als Gast beizutreten.",
+      "nameLabel": "Ihr Name / Spitzname (optional)",
+      "namePlaceholder": "z. B. Max Mustermann",
+      "joining": "Beitreten …",
+      "join": "Event beitreten"
+    }
+  },
+  "pwa": {
+    "install": {
+      "title": "App auf diesem Gerät",
+      "installed": "Vereint ist installiert.",
+      "prompt": "Startet wie eine App vom Home-Bildschirm, ohne Browserleiste.",
+      "ios": "In Safari unten auf „Teilen“ tippen, dann „Zum Home-Bildschirm“.",
+      "manual": "Im Browsermenü „App installieren“ oder „Zum Startbildschirm“ wählen.",
+      "button": "Installieren"
+    },
+    "push": {
+      "title": "Mitteilungen auf diesem Gerät",
+      "hint": {
+        "on": "Du bekommst neue Mitteilungen auch bei geschlossener App.",
+        "off": "Neue Mitteilungen auch bei geschlossener App erhalten.",
+        "blocked": "Im Browser blockiert. Erlaube Mitteilungen in den Website-Einstellungen.",
+        "needsInstall": "Auf iPhone und iPad erst nach der Installation auf dem Home-Bildschirm möglich.",
+        "unsupported": "Dieser Browser unterstützt keine Mitteilungen.",
+        "checking": "Wird geprüft …"
+      },
+      "message": {
+        "permissionDenied": "Ohne deine Erlaubnis kann Vereint keine Mitteilungen schicken.",
+        "serverDisabled": "Mitteilungen sind auf dem Server noch nicht eingerichtet.",
+        "notReady": "Die App ist noch nicht vollständig geladen. Bitte gleich noch einmal versuchen.",
+        "enabled": "Mitteilungen sind auf diesem Gerät aktiv.",
+        "enableFailed": "Mitteilungen konnten nicht aktiviert werden. Bitte später erneut versuchen.",
+        "disabled": "Mitteilungen sind auf diesem Gerät aus.",
+        "disableFailed": "Mitteilungen konnten nicht deaktiviert werden. Bitte später erneut versuchen."
+      }
+    }
+  },
+  "scan": {
+    "eyebrow": "Bezahlen oder erfassen",
+    "title": "Getränk scannen",
+    "intro": "Halte den Strichcode der Flasche in den Rahmen. Bevor etwas abgebucht oder erfasst wird, siehst du das Getränk und wählst, was passieren soll.",
+    "camera": {
+      "label": "Kamerabild zum Scannen",
+      "starting": "Kamera wird gestartet …",
+      "denied": "Die App darf die Kamera nicht benutzen. Erlaube den Kamerazugriff in den Browser-Einstellungen oder tippe die Nummer unten ein.",
+      "unavailable": "Hier ist keine Kamera verfügbar. Tippe die Nummer unter dem Strichcode unten ein."
+    },
+    "manual": {
+      "label": "Oder Nummer unter dem Strichcode eintippen",
+      "placeholder": "z. B. 4006381333931",
+      "submit": "Suchen"
+    },
+    "loading": "Getränk wird gesucht …",
+    "notFound": {
+      "title": "Das hat nicht geklappt"
+    },
+    "retry": "Nochmal scannen",
+    "confirm": {
+      "chooseEvent": "Bei welchem Event?",
+      "event": "Event",
+      "price": "Preis",
+      "balanceNow": "Guthaben jetzt",
+      "balanceAfter": "Guthaben danach",
+      "negative": "Dein Guthaben geht damit ins Minus. Bitte lade es beim Vorstand wieder auf.",
+      "pay": "{price} bezahlen",
+      "cancel": "Abbrechen"
+    },
+    "paying": "Wird bezahlt …",
+    "done": {
+      "title": "Bezahlt",
+      "message": "{drink} für {price} wurde von deinem Guthaben abgebucht.",
+      "undoHint": "Vertan? Du kannst den Kauf 10 Minuten lang zurücknehmen.",
+      "undo": "Rückgängig",
+      "next": "Nächstes Getränk scannen",
+      "toWallet": "Zum Guthaben",
+      "noStatistics": "Der Kauf zählt in keiner Statistik."
+    },
+    "undone": {
+      "title": "Kauf zurückgenommen",
+      "message": "{price} sind wieder auf deinem Guthaben."
+    },
+    "errors": {
+      "lookup": "Das Getränk konnte nicht gesucht werden.",
+      "pay": "Bezahlen hat nicht geklappt.",
+      "undo": "Zurücknehmen hat nicht geklappt.",
+      "record": "Erfassen hat nicht geklappt.",
+      "remove": "Entfernen hat nicht geklappt."
+    },
+    "choice": {
+      "intro": "Gerade bist du bei keinem laufenden Event mit Selbstbedienung. Wähle, was mit dem Getränk passieren soll.",
+      "legend": "Was soll passieren?",
+      "credit": "Mit Guthaben bezahlen",
+      "creditHint": "Es gilt der Preis aus dem Getränkekatalog der Gruppe, ohne Event.",
+      "foreign": "Nur in die Statistik (Fremdgetränk)",
+      "foreignHint": "Es wird nichts abgebucht. Das Getränk zählt in deiner Statistik und in der Gruppenstatistik, aber bei keinem Event.",
+      "noPrice": "Bezahlen geht hier nicht: Das Getränk hat im Katalog der Gruppe keinen Preis.",
+      "recordStatistics": "In die Statistik aufnehmen",
+      "recordStatisticsHint": "Ohne Haken wird nur bezahlt. Der Kauf zählt dann in keiner Statistik.",
+      "statisticsOff": "Die Statistik ist ausgeschaltet. Bezahlen geht trotzdem; erfasst wird nichts.",
+      "submitForeign": "In die Statistik aufnehmen"
+    },
+    "recording": "Wird erfasst …",
+    "foreign": {
+      "title": "Erfasst",
+      "message": "{drink} zählt jetzt in deiner Statistik und in der Gruppenstatistik. Abgebucht wurde nichts.",
+      "removeHint": "Vertan? Du kannst das Getränk 10 Minuten lang wieder entfernen.",
+      "remove": "Entfernen",
+      "removedTitle": "Getränk entfernt",
+      "removedMessage": "{drink} zählt nicht mehr in der Statistik."
+    }
+  },
+  "kiosk": {
+    "lock": {
+      "badge": "Kiosk",
+      "open": "Kiosk entsperren",
+      "title": "Kiosk-Modus verlassen",
+      "intro": "Gib die Kiosk-PIN ein, um das Thekenterminal zu verlassen.",
+      "pinLabel": "PIN",
+      "submit": "Entsperren",
+      "wrong": "Die PIN ist falsch. Noch {count} Versuche bis zur Sperre.",
+      "locked": "Zu viele falsche Eingaben. Die nächste Eingabe ist ab {time} möglich."
+    },
+    "start": {
+      "title": "Kiosk-Modus starten",
+      "intro": "Vergib eine PIN für dieses Gerät. Nur mit ihr lässt sich der Kiosk-Modus hier wieder verlassen.",
+      "label": "Gerätename (optional)",
+      "labelPlaceholder": "z. B. Theke links",
+      "pin": "PIN ({min} bis {max} Ziffern)",
+      "repeat": "PIN wiederholen",
+      "remoteHint": "PIN vergessen? Vorstand oder Administration entsperren das Gerät unter Vorstand → Kiosk-Geräte.",
+      "submit": "Starten",
+      "format": "Die PIN muss aus {min} bis {max} Ziffern bestehen.",
+      "mismatch": "Die beiden Eingaben stimmen nicht überein."
+    }
+  },
+  "stammtisch": {
+    "choice": {
+      "eyebrow": "Gruppen",
+      "title": "Gruppe wählen",
+      "intro": "Wähle, welche Gruppe du öffnen möchtest. Du kannst jederzeit wechseln.",
+      "current": "Aktuell",
+      "open": "Öffnen",
+      "opening": "Wird geöffnet …",
+      "emptyTitle": "Noch keine Gruppe",
+      "emptyMessage": "Du bist noch in keiner Gruppe. Bitte den Vorstand um einen Einladungslink.",
+      "platform": "Plattform verwalten",
+      "selectFailed": "Die Gruppe konnte nicht geöffnet werden. Bitte erneut versuchen.",
+      "openOwn": "Eigene Gruppe eröffnen"
+    },
+    "platform": {
+      "back": "Zur Gruppenauswahl",
+      "eyebrow": "Plattform",
+      "title": "Gruppen verwalten",
+      "intro": "Alle Gruppen dieser Installation. Archivierte Gruppen sind für ihre Mitglieder nicht mehr erreichbar.",
+      "createTitle": "Neue Gruppe anlegen",
+      "name": "Name",
+      "adminEmail": "E-Mail des Admins (optional)",
+      "adminEmailHint": "Ein bestehendes Konto mit dieser E-Mail wird Admin der Gruppe; ohne Angabe wirst du selbst Admin.",
+      "create": "Anlegen",
+      "created": "„{name}“ wurde angelegt.",
+      "listTitle": "Alle Gruppen",
+      "unavailable": "Die Gruppen konnten nicht geladen werden.",
+      "empty": "Noch keine Gruppen",
+      "archived": "Archiviert",
+      "members": {
+        "one": "{count} Mitglied",
+        "other": "{count} Mitglieder"
+      },
+      "createdAt": "angelegt {date}",
+      "rename": "Umbenennen",
+      "archive": "Archivieren",
+      "unarchive": "Wiederherstellen",
+      "archiveConfirm": "„{name}“ archivieren? Mitglieder können ihn danach nicht mehr öffnen.",
+      "storage": "{size} belegt"
+    },
+    "settings": {
+      "eyebrow": "Gruppe",
+      "title": "Gruppe",
+      "memberCount": {
+        "one": "{count} Mitglied",
+        "other": "{count} Mitglieder"
+      },
+      "switch": "Gruppe wechseln",
+      "unavailable": "Die Gruppe konnte nicht geladen werden.",
+      "nameTitle": "Name",
+      "name": "Name der Gruppe",
+      "renamed": "Der Name wurde gespeichert.",
+      "leaveTitle": "Gruppe verlassen",
+      "leaveHint": "Wenn du „{name}“ verlässt, verlierst du hier alle Rechte. Wieder dabei bist du nur mit einem neuen Einladungslink.",
+      "leave": "Gruppe verlassen",
+      "leaveConfirm": "„{name}“ wirklich verlassen?",
+      "lastManager": "Du bist die letzte Person, die Mitglieder und Rollen verwalten kann. Gib diese Rolle zuerst jemand anderem.",
+      "imageTitle": "Bild",
+      "imageAlt": "Bild der Gruppe {name}",
+      "imageHint": "PNG, JPEG oder GIF. Große Bilder werden vor dem Hochladen verkleinert.",
+      "imageUpload": "Bild hochladen",
+      "imageChange": "Bild ändern",
+      "imageRemove": "Bild entfernen",
+      "imageRemoveConfirm": "Das Bild der Gruppe wirklich entfernen?",
+      "imageUploading": "Bild wird hochgeladen …",
+      "imageSaved": "Das Bild wurde gespeichert.",
+      "imageRemoved": "Das Bild wurde entfernt.",
+      "imageType": "Bitte wähle ein Bild im Format PNG, JPEG oder GIF.",
+      "imageTooLarge": "Das Bild ist zu groß (höchstens {max} MB)."
+    },
+    "roles": {
+      "title": "Rollen & Berechtigungen",
+      "readOnly": "Nur Ansicht – Rollen ändern kann, wer Rollen verwalten darf.",
+      "new": "Neue Rolle",
+      "editTitle": "Rolle bearbeiten",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "deleteConfirm": "Rolle „{name}“ löschen? Personen mit dieser Rolle verlieren ihre Berechtigungen.",
+      "system": "System",
+      "memberCount": {
+        "zero": "niemand",
+        "one": "{count} Person",
+        "other": "{count} Personen"
+      },
+      "permissions": "Berechtigungen",
+      "noPermissions": "Keine Berechtigungen",
+      "name": "Name",
+      "description": "Beschreibung (optional)"
+    },
+    "permissionGroups": {
+      "audit": "Protokoll",
+      "balance": "Guthaben",
+      "catalog": "Katalog",
+      "chat": "Chat",
+      "event": "Veranstaltungen",
+      "kiosk": "Kiosk",
+      "ledger": "Buchungen",
+      "members": "Mitglieder",
+      "moments": "Moments",
+      "notifications": "Benachrichtigungen",
+      "profile": "Profil",
+      "purchase": "Einkäufe",
+      "roles": "Rollen",
+      "stammtisch": "Gruppe"
+    },
+    "open": {
+      "eyebrow": "Neue Gruppe",
+      "title": "Gruppe eröffnen",
+      "doneTitle": "Deine Gruppe ist eröffnet!",
+      "checking": "Wird vorbereitet …",
+      "intro": "Lege deine Gruppe und dein Konto in einem Schritt an. Du wirst Admin der Gruppe.",
+      "createIntro": "Du bist angemeldet. Gib deiner neuen Gruppe einen Namen – du wirst ihr Admin.",
+      "planInfo": "Mitglieder kommen per Einladungslink dazu.",
+      "name": "Name der Gruppe",
+      "submit": "Gruppe eröffnen",
+      "submitting": "Gruppe wird eröffnet …",
+      "done": "„{name}“ ist eröffnet und dein Konto für {email} angelegt. Melde dich jetzt an, um Mitglieder einzuladen.",
+      "haveAccount": "Du hast schon ein Konto?",
+      "loginFirst": "Erst anmelden, dann eröffnen",
+      "back": "Zurück zur Gruppenauswahl",
+      "errors": {
+        "nameRequired": "Bitte gib deiner Gruppe einen Namen.",
+        "checkInput": "Bitte prüfe deine Eingaben. Der Gruppenname darf höchstens {max} Zeichen lang sein, das Passwort braucht mindestens {min} Zeichen.",
+        "selectFailed": "Die Gruppe ist eröffnet, konnte aber nicht geöffnet werden. Du findest sie in der Gruppenauswahl."
+      }
+    },
+    "export": {
+      "title": "Datenexport",
+      "hint": "Alle Daten dieser Gruppe als JSON-Datei.",
+      "button": "Daten exportieren"
+    }
+  },
+  "legal": {
+    "nav": "Rechtliches",
+    "imprint": "Impressum",
+    "terms": "AGB",
+    "home": "Zur Startseite",
+    "placeholders": "Entwurf: Die Angaben zum Betreiber sind noch Platzhalter. Diese Seite ist erst gültig, wenn sie ausgefüllt sind.",
+    "germanOnly": "This text is available in German only. The German version is binding.",
+    "acceptPrefix": "Ich habe die",
+    "acceptLink": "AGB",
+    "acceptSuffix": " gelesen und stimme ihnen zu.",
+    "acceptRequired": "Bitte stimme den AGB zu.",
+    "consent": {
+      "eyebrow": "Neue Fassung der AGB",
+      "title": "Bitte stimme den AGB zu",
+      "intro": "Bevor du Vereint weiter nutzt, brauchen wir deine Zustimmung zur aktuellen Fassung der AGB vom {date}.",
+      "statistics": "Neu ist der Abschnitt „Statistiken“: Striche, Käufe, Zusagen, Anwesenheit und Getränke mit Menge und Kalorien werden den Mitgliedern deiner Gruppe mit Namen angezeigt. Das ist nur zur Unterhaltung, keine Gesundheitsangabe, und bleibt innerhalb der Gruppe.",
+      "readTerms": "AGB lesen",
+      "accept": "Zustimmen",
+      "accepting": "Wird gespeichert …",
+      "decline": "Nicht zustimmen und abmelden",
+      "deleteHint": "Wenn du nicht zustimmen möchtest, melde dich ab. Dein Konto löschen wir auf Wunsch: Schreib dazu eine E-Mail an {email} (AGB § 10 Abs. 3).",
+      "failed": "Die Zustimmung konnte nicht gespeichert werden. Bitte versuche es noch einmal."
+    }
+  },
+  "rounds": {
+    "title": "Runde ausgeben",
+    "loading": "Event und Getränke werden abgerufen.",
+    "unavailable": "Runde ausgeben nicht möglich",
+    "eventChip": "Runde ausgeben",
+    "fromBalance": "Von deinem Guthaben:",
+    "kindLabel": "Art der Runde",
+    "kind": {
+      "round": "Eine Runde",
+      "evening": "Ganzen Abend"
+    },
+    "drink": "Getränk",
+    "allDrinks": "Alle Getränke",
+    "validity": "Gültig",
+    "validity30m": "30 Minuten",
+    "validity1h": "1 Stunde",
+    "validityEventEnd": "Bis Event-Ende",
+    "maxAmount": "Höchstsumme in Euro",
+    "forWhom": "Für wen? · {count} ausgewählt",
+    "accepted": "zugesagt",
+    "present": "vor Ort",
+    "noMembers": "Außer dir ist gerade niemand im Event.",
+    "maxHint": "Höchstens {amount} von deinem Guthaben",
+    "chargeHint": "Abgebucht wird nur, was die Eingeladenen an der Theke wirklich nehmen. Das Thekenterminal zeigt deine Runde an, bis sie abläuft.",
+    "submit": "Runde für {count} ausgeben",
+    "submitEvening": "Abend für {count} ausgeben",
+    "started": "Deine Runde läuft. Die Eingeladenen bekommen eine Mitteilung.",
+    "mine": "Deine Runden in diesem Event",
+    "end": "Beenden",
+    "endedInfo": "Runde beendet.",
+    "card": {
+      "gives": "Gibt aus",
+      "used": "Verbraucht",
+      "valid": "Gültig",
+      "upTo": "bis {amount}",
+      "remaining": "noch {minutes} Min",
+      "until": "bis {time}",
+      "untilEventEnd": "bis Event-Ende",
+      "redeemed": "{count} von {total} eingelöst",
+      "invited": "Eingeladen",
+      "roundOf": "Eine Runde {drink}",
+      "roundAll": "Eine Runde · alle Getränke",
+      "eveningOf": "Ganzer Abend · {drink}",
+      "eveningAll": "Ganzer Abend · alle Getränke"
+    },
+    "status": {
+      "running": "Läuft",
+      "usedUp": "Aufgebraucht",
+      "expired": "Abgelaufen",
+      "ended": "Beendet"
+    },
+    "payer": {
+      "round": "Runde von {name}",
+      "evening": "Abend von {name}"
+    },
+    "terminal": {
+      "title": "Laufende Runden",
+      "none": "Gerade läuft keine Runde.",
+      "showAll": "Alle ansehen",
+      "hint": "Runden gibt jede Person in der App am eigenen Handy aus. Am Terminal werden sie nur angezeigt.",
+      "summary": "{what} · {redeemed} von {total} · {validity}",
+      "overviewTitle": "Laufende Runden",
+      "displayOnly": "Nur Anzeige",
+      "overviewHint": "Eine Runde gibt jede Person in der App am eigenen Handy aus und zahlt mit ihrem eigenen Guthaben. Am Terminal wird nichts ausgegeben. Wer eingeladen ist, bekommt wie gewohnt einen Strich, er geht dann auf die Runde."
+    }
+  }
+}

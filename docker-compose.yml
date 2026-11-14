@@ -1,0 +1,112 @@
+# Reine Entwicklungsumgebung.
+#
+# Diese Datei ist ausschliesslich fuer die lokale Entwicklung bestimmt:
+# Keycloak laeuft im Entwicklungsmodus (`start-dev`), TLS ist deaktiviert und
+# alle Ports sind auf localhost veroeffentlicht. Den Betrieb mit TLS und
+# Keycloak im Produktionsmodus beschreibt `docs/betrieb/selbst-betreiben.md`;
+# ein vollstaendiges Beispiel ist `local/compose.yaml`.
+#
+# Alle Zugangsdaten sind Pflichtvariablen und stehen ausschliesslich in `.env`
+# (Vorlage: `.env.example`). Ohne gesetzte Werte bricht Compose bewusst ab.
+
+services:
+  keycloak-db:
+    image: postgres:18.6-alpine
+    container_name: keycloak-db
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME:?KEYCLOAK_DB_NAME fehlt in .env}
+      POSTGRES_USER: ${KEYCLOAK_DB_USERNAME:?KEYCLOAK_DB_USERNAME fehlt in .env}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?KEYCLOAK_DB_PASSWORD fehlt in .env}
+    ports:
+      - "${KEYCLOAK_DB_PORT:-5433}:5432"
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  vereint-db:
+    image: postgres:18.6-alpine
+    container_name: vereint-db
+    environment:
+      POSTGRES_DB: ${VEREINT_DB_NAME:?VEREINT_DB_NAME fehlt in .env}
+      POSTGRES_USER: ${VEREINT_DB_USERNAME:?VEREINT_DB_USERNAME fehlt in .env}
+      POSTGRES_PASSWORD: ${VEREINT_DB_PASSWORD:?VEREINT_DB_PASSWORD fehlt in .env}
+    ports:
+      - "${VEREINT_DB_PORT:-5432}:5432"
+    volumes:
+      - vereint-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    container_name: keycloak
+    # `start-dev` ist ausschliesslich lokal zulaessig. Produktion siehe
+    # keycloak/Dockerfile (`start --optimized`) und docs/betrieb/selbst-betreiben.md.
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/${KEYCLOAK_DB_NAME:?KEYCLOAK_DB_NAME fehlt in .env}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USERNAME:?KEYCLOAK_DB_USERNAME fehlt in .env}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?KEYCLOAK_DB_PASSWORD fehlt in .env}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:?KEYCLOAK_ADMIN fehlt in .env}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD fehlt in .env}
+      KC_HTTP_PORT: 8080
+      # Im Container auf allen Schnittstellen lauschen, sonst ist der
+      # veroeffentlichte Port 8082 vom Rechner aus nicht erreichbar.
+      KC_HTTP_HOST: 0.0.0.0
+      KC_HEALTH_ENABLED: "true"
+      # Nur Dev: Theme-Cache aus, damit Aenderungen am Login-Theme `vereint`
+      # (./keycloak/themes) ohne Neustart sichtbar sind. In Produktion bleiben
+      # die Keycloak-Standardwerte (Cache aktiv), siehe keycloak/README.md.
+      KC_SPI_THEME_CACHE_THEMES: "false"
+      KC_SPI_THEME_CACHE_TEMPLATES: "false"
+      KC_SPI_THEME_STATIC_MAX_AGE: "-1"
+      # Platzhalter des Realm-Imports (`${VARIABLE}`), siehe keycloak/README.md.
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+      SPRING_API_BASE_URL: http://vereint-service:8081
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:?KEYCLOAK_CLIENT_SECRET fehlt in .env}
+      KEYCLOAK_TABLET_CLIENT_SECRET: ${KEYCLOAK_TABLET_CLIENT_SECRET:?KEYCLOAK_TABLET_CLIENT_SECRET fehlt in .env}
+      KEYCLOAK_REGISTRATION_CLIENT_SECRET: ${KEYCLOAK_REGISTRATION_CLIENT_SECRET:?KEYCLOAK_REGISTRATION_CLIENT_SECRET fehlt in .env}
+      KEYCLOAK_SEED_ADMIN_PASSWORD: ${KEYCLOAK_SEED_ADMIN_PASSWORD:?KEYCLOAK_SEED_ADMIN_PASSWORD fehlt in .env}
+      KEYCLOAK_SEED_BOARD_PASSWORD: ${KEYCLOAK_SEED_BOARD_PASSWORD:?KEYCLOAK_SEED_BOARD_PASSWORD fehlt in .env}
+      KEYCLOAK_SEED_MEMBER_PASSWORD: ${KEYCLOAK_SEED_MEMBER_PASSWORD:?KEYCLOAK_SEED_MEMBER_PASSWORD fehlt in .env}
+    ports:
+      - "8082:8080"
+    volumes:
+      # Ausschliesslich der Entwicklungs-Realm inklusive Seed-Benutzer.
+      - ./keycloak/dev:/opt/keycloak/data/import:ro
+      # Login-Theme `vereint` (keycloak/themes/vereint), siehe keycloak/README.md.
+      - ./keycloak/themes:/opt/keycloak/themes:ro
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      # Das Keycloak-Image enthaelt kein curl; die Bereitschaft wird ueber den
+      # Management-Port 9000 (`KC_HEALTH_ENABLED`) mit Bash-Bordmitteln geprueft.
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000 &&
+          printf "GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 &&
+          grep -q '"status": "UP"' <&3 &&
+          exec 3>&-
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  keycloak-db-data:
+  vereint-db-data:

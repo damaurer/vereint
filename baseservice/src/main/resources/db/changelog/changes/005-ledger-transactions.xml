@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Ledger-Buchungsarten (TICKET-015): Neben dem Getränkekauf (`purchase`) bilden
+        `topup`, `payout` und `correction` Guthaben-Aufladung, Auszahlung und
+        Gegenbuchung ab. Diese Buchungen kennen weder Event noch Getränk, deshalb
+        werden `event_id`, `drink_id` und `source` nullbar. Das Ledger bleibt
+        append-only (Trigger aus `002-integrity-constraints.xml`).
+        Zieldatenbank ist PostgreSQL; H2 bleibt für die Spring-Context-Tests zugelassen.
+    -->
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 107. Buchungsart und Gegenbuchungsverweis für das Ledger -->
+    <changeSet id="107-ledger-entry-type" author="junie">
+        <addColumn tableName="ledger_entries">
+            <column name="entry_type" type="VARCHAR(32)" defaultValue="purchase">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reverses_entry_id" type="${uuid.type}"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="ledger_entries" baseColumnNames="reverses_entry_id"
+                                 constraintName="fk_ledger_entries_reverses_entry"
+                                 referencedTableName="ledger_entries" referencedColumnNames="id"
+                                 onDelete="RESTRICT"/>
+        <createIndex tableName="ledger_entries" indexName="idx_ledger_entries_reverses_entry">
+            <column name="reverses_entry_id"/>
+        </createIndex>
+        <sql>
+            ALTER TABLE ledger_entries
+            ADD CONSTRAINT ck_ledger_entries_entry_type
+            CHECK (entry_type IN ('purchase', 'topup', 'payout', 'correction'))
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE ledger_entries DROP CONSTRAINT ck_ledger_entries_entry_type</sql>
+            <dropIndex tableName="ledger_entries" indexName="idx_ledger_entries_reverses_entry"/>
+            <dropForeignKeyConstraint baseTableName="ledger_entries"
+                                      constraintName="fk_ledger_entries_reverses_entry"/>
+            <dropColumn tableName="ledger_entries" columnName="reverses_entry_id"/>
+            <dropColumn tableName="ledger_entries" columnName="entry_type"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 108. Event, Getränk und Quelle sind nur für Käufe verpflichtend -->
+    <changeSet id="108-ledger-nullable-purchase-columns" author="junie">
+        <dropNotNullConstraint tableName="ledger_entries" columnName="event_id" columnDataType="${uuid.type}"/>
+        <dropNotNullConstraint tableName="ledger_entries" columnName="drink_id" columnDataType="${uuid.type}"/>
+        <dropNotNullConstraint tableName="ledger_entries" columnName="source" columnDataType="VARCHAR(32)"/>
+        <rollback>
+            <addNotNullConstraint tableName="ledger_entries" columnName="event_id" columnDataType="${uuid.type}"/>
+            <addNotNullConstraint tableName="ledger_entries" columnName="drink_id" columnDataType="${uuid.type}"/>
+            <addNotNullConstraint tableName="ledger_entries" columnName="source" columnDataType="VARCHAR(32)"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Moment: Prost auf den Vereinsabend</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Moment" back-href="Moments.dc.html" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span class="ui-chip ui-chip-accent" style="align-self: flex-start">Gemeinsames Anstoßen · noch 59 Min</span>
+      <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.02em">Prost auf den Vereinsabend!</h2>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Schnell reagieren</h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <sc-for list="{{reactions}}" as="r" hint-placeholder-count="6">
+          <button type="button" onClick="{{r.pick}}" aria-pressed="{{r.pressed}}" style="{{r.style}}">{{r.label}}</button>
+        </sc-for>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <button type="button" style="height: 40px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 600">Status &amp; Text</button>
+        <button type="button" style="display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 600">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.8L10 3.5h4L15.7 6h1.8A2.5 2.5 0 0 1 20 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          Foto/Video
+        </button>
+      </div>
+    </section>
+
+    <div role="tablist" aria-label="Ansicht" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 10px; background-color: var(--color-surface-muted)">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="2">
+        <button type="button" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{showTimeline}}" hint-placeholder-val="{{ true }}">
+      <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+        <sc-for list="{{entries}}" as="e" hint-placeholder-count="3">
+          <li style="display: flex; gap: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+            <span style="display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 13px; font-weight: 800">{{e.initials}}</span>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+                <span style="font-size: 15px; font-weight: 700">{{e.author}}</span>
+                <span class="ui-chip ui-chip-accent">{{e.reaction}}</span>
+              </div>
+              <span style="color: var(--color-text-muted); font-size: 12px">{{e.time}}</span>
+            </div>
+          </li>
+        </sc-for>
+      </ol>
+    </sc-if>
+    <sc-if value="{{showMap}}" hint-placeholder-val="{{ false }}">
+      <div style="flex: 1; min-height: 160px; display: grid; place-items: center; gap: 8px; border: 1px dashed var(--color-border-dark); border-radius: 12px; background-color: var(--color-surface); color: var(--color-text-muted); font-size: 14px; text-align: center; padding: 16px">
+        <span>Weltkarte: Noch niemand hat einen Standort geteilt.<br>Teile deinen über „Status &amp; Text“.</span>
+      </div>
+    </sc-if>
+  </main>
+  <dc-import name="TabBar" active="events" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mine: null, tab: 'timeline' };
+  }
+  renderVals() {
+    const R = ['Anstoßen', 'Gebet', 'Jubel', 'Daumen hoch', 'Feiern', 'Herz'];
+    const base = [
+      { initials: 'MS', author: 'Mia Schulz', reaction: 'Anstoßen', time: '17.10., 10:24' },
+      { initials: 'JK', author: 'Jonas Keller', reaction: 'Anstoßen', time: '17.10., 10:22' }
+    ];
+    const mine = this.state.mine;
+    const entries = mine ? [{ initials: 'LH', author: 'Lena Hoffmann (du)', reaction: mine, time: 'gerade eben' }].concat(base) : base;
+    const seg = (on) => 'height: 40px; border: none; border-radius: 8px; font: inherit; font-size: 14px; ' + (on ? 'background-color: var(--color-surface); color: var(--color-text); font-weight: 700' : 'background: transparent; color: var(--color-text-muted); font-weight: 600');
+    return {
+      theme: this.props.theme ?? 'light',
+      showTimeline: this.state.tab === 'timeline',
+      showMap: this.state.tab === 'map',
+      tabs: [['timeline', 'Timeline (' + entries.length + ')'], ['map', 'Weltkarte (0)']].map(([id, label]) => ({ label, selected: this.state.tab === id ? 'true' : 'false', style: seg(this.state.tab === id), pick: () => this.setState({ tab: id }) })),
+      reactions: R.map((label) => ({
+        label,
+        pressed: mine === label ? 'true' : 'false',
+        pick: () => this.setState({ mine: label, tab: 'timeline' }),
+        style: 'height: 36px; padding: 0 12px; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 600; ' + (mine === label ? 'border: 2px solid var(--color-brand); background-color: var(--color-brand-soft); color: var(--color-brand)' : 'border: 1px solid var(--color-border); background-color: var(--color-bg); color: var(--color-text)')
+      })),
+      entries: entries.slice(0, 3)
+    };
+  }
+}
+</script>
+</body>
+</html>

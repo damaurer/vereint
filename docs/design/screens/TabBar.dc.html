@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Untere Leiste</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+</style>
+</helmet>
+<nav aria-label="Hauptnavigation" style="height: 64px; box-sizing: border-box; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--color-border); background-color: var(--color-surface); font-family: var(--font-sans)">
+  <a href="Main.dc.html" aria-current="{{start.current}}" style="{{start.link}}">
+    <span style="{{start.pill}}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.4 12 4l8 6.4V18a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18z"/><circle cx="12" cy="15.2" r="2" fill="currentColor" stroke="none"/></svg></span>
+    Start
+  </a>
+  <a href="Events.dc.html" aria-current="{{events.current}}" style="{{events.link}}">
+    <span style="{{events.pill}}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5.5" width="16" height="15" rx="3.5"/><line x1="4" y1="10" x2="20" y2="10"/><line x1="8.5" y1="3.5" x2="8.5" y2="7"/><line x1="15.5" y1="3.5" x2="15.5" y2="7"/><circle cx="15" cy="15" r="1.6" fill="currentColor" stroke="none"/></svg></span>
+    Events
+  </a>
+  <a href="Chat.dc.html" aria-current="{{chat.current}}" style="{{chat.link}}">
+    <span style="{{chat.pill}}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 4.5h11a3.5 3.5 0 0 1 3.5 3.5v6a3.5 3.5 0 0 1-3.5 3.5H12l-4.5 3.5v-3.5h-1A3.5 3.5 0 0 1 3 14V8a3.5 3.5 0 0 1 3.5-3.5z"/><circle cx="8" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="11" r="1.2" fill="currentColor" stroke="none"/></svg><span style="position: absolute; top: -2px; right: 6px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border: 2px solid var(--color-surface); border-radius: 999px; background-color: var(--color-danger); color: #ffffff; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center">6</span></span>
+    Chat
+  </a>
+  <a href="Guthaben.dc.html" aria-current="{{guthaben.current}}" style="{{guthaben.link}}">
+    <span style="{{guthaben.pill}}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="7" width="17" height="13" rx="3"/><path d="M6 7 15.6 3.9a1.5 1.5 0 0 1 1.9 1.4V7"/><path d="M20.5 11h-3.5a2.5 2.5 0 0 0 0 5h3.5"/><circle cx="17" cy="13.5" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+    Guthaben
+  </a>
+  <a href="Mehr.dc.html" aria-current="{{mehr.current}}" style="{{mehr.link}}">
+    <span style="{{mehr.pill}}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="12" r="1.9" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.9" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.9" fill="currentColor" stroke="none"/></svg></span>
+    Mehr
+  </a>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"enum","options":["start","events","chat","guthaben","mehr"],"default":"start"},"$preview":{"width":390,"height":64}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const active = this.props.active ?? 'start';
+    const tab = (id) => {
+      const on = id === active;
+      return {
+        current: on ? 'page' : 'false',
+        link: 'display: grid; place-content: center; justify-items: center; gap: 2px; font-size: 11px; text-decoration: none; color: ' + (on ? 'var(--color-brand); font-weight: 800' : 'var(--color-text-muted); font-weight: 600'),
+        pill: 'position: relative; display: grid; place-items: center; width: 52px; height: 30px; border-radius: 999px' + (on ? '; background-color: var(--color-brand-soft)' : '')
+      };
+    };
+    return { start: tab('start'), events: tab('events'), chat: tab('chat'), guthaben: tab('guthaben'), mehr: tab('mehr') };
+  }
+}
+</script>
+</body>
+</html>

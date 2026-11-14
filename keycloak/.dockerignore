@@ -1,0 +1,5 @@
+# Der Entwicklungs-Realm mit Seed-Benutzern gehoert nicht ins Produktions-Image.
+dev
+README.md
+Dockerfile
+.dockerignore

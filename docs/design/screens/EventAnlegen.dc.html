@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Event anlegen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Event anlegen" back-href="Events.dc.html" hint-size="100%,56px"></dc-import>
+  <form style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <label for="t" style="font-size: 13px; font-weight: 600">Titel *</label>
+      <input id="t" value="Grillabend am Vereinsheim" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <label for="d" style="font-size: 13px; font-weight: 600">Beschreibung</label>
+      <textarea id="d" rows="2" style="box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px; line-height: 1.4; resize: none">Jeder bringt etwas fürs Buffet mit, Getränke gibt es an der Theke.</textarea>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <label for="o" style="font-size: 13px; font-weight: 600">Ort</label>
+      <input id="o" value="Vereinsheim, Terrasse" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <label for="b" style="font-size: 13px; font-weight: 600">Beginn *</label>
+        <input id="b" type="datetime-local" value="2026-10-24T18:00" style="height: 44px; box-sizing: border-box; padding: 0 8px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 14px">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <label for="e" style="font-size: 13px; font-weight: 600">Ende</label>
+        <input id="e" type="datetime-local" value="2026-10-24T23:00" style="height: 44px; box-sizing: border-box; padding: 0 8px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 14px">
+      </div>
+    </div>
+
+    <fieldset style="margin: 0; display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <legend style="padding: 0 4px; font-size: 14px; font-weight: 700">Eingeladene · {{count}} ausgewählt</legend>
+      <label style="display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: 15px; font-weight: 600">
+        <input type="checkbox" checked="{{allChecked}}" onChange="{{toggleAll}}" style="width: 20px; height: 20px; accent-color: var(--color-brand)">
+        Alle Mitglieder einladen
+      </label>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 10px">
+        <sc-for list="{{members}}" as="m" hint-placeholder-count="6">
+          <label style="display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: 14px">
+            <input type="checkbox" checked="{{m.checked}}" onChange="{{m.flip}}" style="width: 20px; height: 20px; accent-color: var(--color-brand)">
+            {{m.label}}
+          </label>
+        </sc-for>
+      </div>
+    </fieldset>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <label for="n" style="font-size: 13px; font-weight: 600">Benachrichtigen</label>
+        <select id="n" style="height: 44px; padding: 0 8px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 14px">
+          <option>Sofort</option>
+          <option>Zu einem Zeitpunkt</option>
+        </select>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <label for="r" style="font-size: 13px; font-weight: 600">Erinnerung</label>
+        <select id="r" style="height: 44px; padding: 0 8px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 14px">
+          <option>1 Tag vorher</option>
+          <option>Keine</option>
+          <option>1 Woche vorher</option>
+        </select>
+      </div>
+    </div>
+  </form>
+  <div style="flex-shrink: 0; display: grid; grid-template-columns: 1fr 2fr; gap: 10px; padding: 12px 16px 20px; border-top: 1px solid var(--color-border); background-color: var(--color-surface)">
+    <a href="Events.dc.html" style="display: grid; place-items: center; height: 48px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 15px; font-weight: 600; text-decoration: none">Abbrechen</a>
+    <a href="Event.dc.html" style="display: grid; place-items: center; height: 48px; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 15px; font-weight: 700; text-decoration: none">Event veröffentlichen</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { picked: { JK: true, MS: true } };
+  }
+  renderVals() {
+    const people = [['FB', 'Felix Braun'], ['JK', 'Jonas Keller'], ['LH', 'Lena Hoffmann'], ['MS', 'Mia Schulz'], ['SW', 'Sabine Wolf'], ['TB', 'Thomas Berger']];
+    const picked = this.state.picked;
+    const count = people.filter(([id]) => picked[id]).length;
+    const all = count === people.length;
+    return {
+      theme: this.props.theme ?? 'light',
+      count: String(count),
+      allChecked: all,
+      toggleAll: () => {
+        const next = {};
+        if (!all) people.forEach(([id]) => { next[id] = true; });
+        this.setState({ picked: next });
+      },
+      members: people.map(([id, label]) => ({
+        label,
+        checked: !!picked[id],
+        flip: () => this.setState({ picked: { ...picked, [id]: !picked[id] } })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

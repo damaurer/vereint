@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Vorstandsübersicht</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <dc-import name="TopBar" heading="Vorstand" bell="1" hint-size="100%,56px"></dc-import>
+  <main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 16px; overflow: hidden">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Vorstand</p>
+      <h2 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.02em">Vorstandsübersicht</h2>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 14px">Moderation, Finanzen und Mitteilungen.</p>
+    </div>
+
+    <ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <sc-for list="{{tiles}}" as="t" hint-placeholder-count="6">
+        <li>
+          <a href="{{t.href}}" style="position: relative; display: flex; flex-direction: column; gap: 6px; min-height: 96px; box-sizing: border-box; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface); color: inherit; text-decoration: none">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="var(--color-brand)" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.strokeD}}"/><path d="{{t.fillD}}" fill="var(--color-brand)" stroke="none"/></svg>
+            <span style="font-size: 15px; font-weight: 700; line-height: 1.25">{{t.label}}</span>
+            <span style="color: var(--color-text-muted); font-size: 12px; line-height: 1.35">{{t.hint}}</span>
+            <sc-if value="{{t.hasBadge}}" hint-placeholder-val="{{ false }}">
+              <span style="position: absolute; top: 10px; right: 10px; min-width: 22px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background-color: var(--color-danger); color: #ffffff; font-size: 12px; font-weight: 700; line-height: 22px; text-align: center">{{t.badge}}</span>
+            </sc-if>
+          </a>
+        </li>
+      </sc-for>
+    </ul>
+
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h3 style="margin: 0; font-size: 15px; font-weight: 700">Gastgeber · Events</h3>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <li style="display: flex; align-items: center; gap: 10px; padding: 10px 14px">
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Stammtisch Oktober</span><span style="color: var(--color-text-muted); font-size: 13px">17. Okt · Aktiv</span></span>
+          <a href="EventVerwalten.dc.html" style="display: grid; place-items: center; height: 36px; padding: 0 12px; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 14px; font-weight: 700; text-decoration: none">Verwalten</a>
+        </li>
+        <li style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--color-border)">
+          <span style="flex: 1; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 700">Weihnachtsfeier</span><span style="color: var(--color-text-muted); font-size: 13px">16. Dez · Veröffentlicht</span></span>
+          <a href="EventVerwalten.dc.html" style="display: grid; place-items: center; height: 36px; padding: 0 12px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 14px; font-weight: 600; text-decoration: none">Verwalten</a>
+        </li>
+      </ul>
+    </section>
+  </main>
+  <dc-import name="TabBar" active="mehr" hint-size="100%,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = (d) => ({ s: d });
+    const l = (a, b, c, d) => ({ s: 'M' + a + ' ' + b + 'L' + c + ' ' + d });
+    const circ = (cx, cy, r) => 'M' + (cx - r) + ' ' + cy + 'a' + r + ' ' + r + ' 0 1 0 ' + (2 * r) + ' 0a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0';
+    const c = (cx, cy, r) => ({ s: circ(cx, cy, r) });
+    const n = (cx, cy, r) => ({ f: circ(cx, cy, r || 1.6) });
+    const I = {
+      kasse: [c(9.5, 9.5, 5.5), p('M15.3 9.2a5.5 5.5 0 1 1-6.1 6.1'), n(9.5, 9.5, 1.6)],
+      komm: [p('M4 10v4h3l6 4V6l-6 4z'), p('M16.5 9a4 4 0 0 1 0 6'), n(19.5, 12, 1.4)],
+      moments: [p('M11 3.5c.6 4 2.6 6 6.5 6.5-3.9.6-5.9 2.6-6.5 6.5-.6-3.9-2.6-5.9-6.5-6.5 3.9-.5 5.9-2.5 6.5-6.5z'), n(18.5, 18.5, 1.8)],
+      freigabe: [p('M9 3.5h6v3l1.5 2.5V19a1.5 1.5 0 0 1-1.5 1.5H9A1.5 1.5 0 0 1 7.5 19V9L9 6.5z'), p('M9.5 14.5l1.8 1.8 3.4-3.6')],
+      listen: [l(9, 7, 20, 7), l(9, 12, 20, 12), l(9, 17, 20, 17), n(5, 7, 1.4), n(5, 12, 1.4), n(5, 17, 1.4)],
+      kiosk: [p('M5 5h14a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 19 17H5a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 5 5z'), l(9, 20.5, 15, 20.5), l(12, 17, 12, 20.5), n(12, 11, 1.8)]
+    };
+    const T = [
+      ['kasse', 'Kasse & Finanzen', 'Bierkasse, Guthaben, Buchungen', 'Kasse.dc.html', ''],
+      ['komm', 'Kommunikation', 'Infotafel und Rundbriefe', 'Kommunikation.dc.html', ''],
+      ['moments', 'Moments', 'Typen und Reaktionen', 'MomentKonfig.dc.html', ''],
+      ['freigabe', 'Katalog-Freigabe', 'Vorschläge prüfen', 'KatalogFreigabe.dc.html', '1'],
+      ['listen', 'Strich-Kategorien', 'Spalten und Preise der Strichliste', 'StrichKategorien.dc.html', ''],
+      ['kiosk', 'Kiosk-Geräte', 'Thekenterminals entsperren', 'KioskGeraete.dc.html', '']
+    ];
+    return {
+      theme: this.props.theme ?? 'light',
+      tiles: T.map(([id, label, hint, href, badge]) => {
+        const s = I[id];
+        return {
+          label, hint, href, badge, hasBadge: !!badge,
+          strokeD: s.filter((x) => x.s).map((x) => x.s).join(' ') || 'M0 0',
+          fillD: s.filter((x) => x.f).map((x) => x.f).join(' ') || 'M0 0'
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

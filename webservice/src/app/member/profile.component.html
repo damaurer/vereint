@@ -1,0 +1,157 @@
+<main class="page-shell">
+  <section class="page-card member-card" [attr.aria-label]="'profile.title' | t">
+
+    @if (load.isLoading()) {
+      <vereint-state kind="loading" [title]="'common.loading' | t" [message]="'profile.loadingMessage' | t" />
+    } @else if (load.isError()) {
+      <vereint-state
+        kind="error"
+        [title]="'profile.unavailable' | t"
+        [message]="load.errorMessage()"
+        (retry)="reload()"
+      />
+    } @else if (load.data(); as profile) {
+      <header class="profile-head">
+        <vereint-avatar-badge class="profile-avatar" [name]="profile.displayName" />
+        <div class="profile-head-text">
+          <h1 class="profile-name">{{ profile.displayName }}</h1>
+          @if (profile.email) {
+            <p class="profile-email">{{ profile.email }}</p>
+          }
+          <div class="profile-roles">
+            @for (role of profile.roles; track role) {
+              <vereint-role-chip [label]="roleLabel(role)" />
+            } @empty {
+              <span class="member-muted">{{ 'profile.noRoles' | t }}</span>
+            }
+            @if (profile.boardRole) {
+              <vereint-role-chip [label]="profile.boardRole" tone="accent" />
+            }
+            <vereint-role-chip [label]="'profile.since' | t: { date: formatDate(profile.createdAt) }" />
+          </div>
+        </div>
+      </header>
+
+      <form class="profile-card member-form" (submit)="submit($event)">
+        <label class="member-field">
+          <span>{{ 'profile.displayName' | t }}</span>
+          <span class="profile-inline">
+            <input
+              id="displayName"
+              name="displayName"
+              type="text"
+              autocomplete="name"
+              required
+              maxlength="255"
+              [value]="displayName()"
+              (input)="onDisplayName($any($event.target).value)"
+            />
+            <button type="submit" class="member-button" [disabled]="saving()">
+              {{ (saving() ? 'common.saving' : 'common.save') | t }}
+            </button>
+          </span>
+        </label>
+
+        <label class="member-field">
+          <span>{{ 'profile.email' | t }}</span>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            maxlength="255"
+            [value]="email()"
+            (input)="onEmail($any($event.target).value)"
+          />
+        </label>
+
+        @if (saved()) {
+          <p class="member-hint member-hint-success" role="status">{{ 'profile.saved' | t }}</p>
+        }
+        @if (saveError()) {
+          <p class="member-hint member-hint-error" role="alert">{{ saveError() }}</p>
+        }
+      </form>
+
+      <div class="profile-theme">
+        <span class="profile-section-title" id="theme-label">{{ 'profile.theme.title' | t }}</span>
+        <div class="profile-theme-options" role="radiogroup" aria-labelledby="theme-label">
+          @for (option of themeOptions; track option.value) {
+            <button
+              type="button"
+              class="profile-theme-option"
+              role="radio"
+              [attr.aria-checked]="themePreference() === option.value"
+              (click)="setTheme(option.value)"
+            >
+              {{ option.labelKey | t }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="profile-theme">
+        <span class="profile-section-title" id="language-label">{{ 'profile.language.title' | t }}</span>
+        <div
+          class="profile-theme-options"
+          role="radiogroup"
+          aria-labelledby="language-label"
+          [style.grid-template-columns]="'repeat(' + languages.length + ', 1fr)'"
+        >
+          @for (option of languages; track option.code) {
+            <button
+              type="button"
+              class="profile-language-option"
+              role="radio"
+              [attr.lang]="option.code"
+              [attr.aria-checked]="language() === option.code"
+              (click)="setLanguage(option.code)"
+            >
+              {{ option.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <vereint-pwa-settings>
+        <div class="profile-toggle">
+          <div class="profile-toggle-text">
+            <span class="profile-toggle-title" id="beer-label">{{ 'profile.beerWithMe.short' | t }}</span>
+            <span class="member-muted">{{ 'profile.beerWithMe.shortHint' | t }}</span>
+          </div>
+          <input
+            id="beerWithMe"
+            type="checkbox"
+            role="switch"
+            aria-labelledby="beer-label"
+            [checked]="beerWithMe()"
+            [attr.aria-checked]="beerWithMe()"
+            (change)="toggleBeerWithMe()"
+          />
+        </div>
+      </vereint-pwa-settings>
+
+      <h2 class="member-subtitle">{{ 'profile.personalDetails' | t }}</h2>
+      <dl class="member-detail-list">
+        <div>
+          <dt>{{ 'profile.status' | t }}</dt>
+          <dd>{{ (profile.disabled ? 'profile.statusDisabled' : 'profile.statusActive') | t }}</dd>
+        </div>
+        @if (profile.drinkRecorder) {
+          <div>
+            <dt>{{ 'profile.recording' | t }}</dt>
+            <dd>{{ 'profile.recordingActive' | t }}</dd>
+          </div>
+        }
+      </dl>
+
+      <app-statistics-settings scope="mine" />
+
+      <h2 class="member-subtitle">{{ 'profile.security.title' | t }}</h2>
+      <p class="member-hint">{{ 'profile.security.hint' | t }}</p>
+      <a class="member-button" [href]="twoFactorUrl" rel="noopener">
+        {{ 'profile.security.setupTwoFactor' | t }}
+      </a>
+    }
+  </section>
+</main>

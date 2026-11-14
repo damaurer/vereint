@@ -1,0 +1,134 @@
+name: webservice CI/CD
+
+# Diese Action ist ausschliesslich fuer den `webservice` zustaendig und
+# wird nur ausgefuehrt, wenn sich etwas im Ordner `webservice/` oder an
+# diesem Workflow selbst geaendert hat (siehe `paths`-Filter).
+#
+# Bei jedem Pull Request und Push:
+#   1. Tests ausfuehren
+#   2. Docker-Image bauen und mit Trivy auf bekannte Schwachstellen pruefen
+#      (behebbare HIGH/CRITICAL-Funde lassen den Lauf fehlschlagen)
+# Nur nach einem Merge auf `qs` oder `main` (push-Event):
+#   3. Multi-Arch-Image (amd64 + arm64) nach GitHub Packages (ghcr.io) pushen,
+#      getaggt mit Commit-SHA und Branch-Namen. Der SHA-Tag erlaubt es, jede
+#      Version gezielt erneut auszurollen bzw. zurueckzurollen.
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - qs
+    paths:
+      - 'webservice/**'
+      - '.github/workflows/webservice-docker.yml'
+  # Von Hand, z. B. um vor dem ersten Deployment alle Images auf main zu bauen.
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - develop
+      - main
+      - qs
+    paths:
+      - 'webservice/**'
+      - '.github/workflows/webservice-docker.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: webservice-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/vereint-webservice
+  TRIVY_IMAGE: aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+
+jobs:
+  test:
+    name: Tests ausfuehren
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Node.js 22 einrichten
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: webservice/package-lock.json
+
+      - name: Abhaengigkeiten installieren
+        run: npm ci
+        working-directory: webservice
+
+      - name: Tests ausfuehren
+        run: npm test -- --watch=false
+        working-directory: webservice
+
+  docker:
+    name: Docker Image bauen, pruefen und deployen
+    needs: test
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: QEMU fuer arm64 einrichten
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+
+      - name: Docker Buildx einrichten
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Image fuer den Scan bauen
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: webservice
+          file: webservice/Dockerfile
+          load: true
+          tags: webservice:scan
+          cache-from: type=gha,scope=webservice
+          cache-to: type=gha,scope=webservice,mode=max
+
+      - name: Image mit Trivy auf Schwachstellen pruefen
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$PWD/.trivyignore:/.trivyignore:ro" \
+            "$TRIVY_IMAGE" image \
+            --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \
+            --ignorefile /.trivyignore \
+            webservice:scan
+
+      - name: An GitHub Container Registry anmelden
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/qs' || github.ref == 'refs/heads/main')
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Multi-Arch-Image nach GitHub Packages pushen
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/qs' || github.ref == 'refs/heads/main')
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: webservice
+          file: webservice/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: true
+          sbom: true
+          cache-from: type=gha,scope=webservice
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.title=vereint-webservice
+            org.opencontainers.image.licenses=AGPL-3.0-only
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:${{ github.ref_name }}
