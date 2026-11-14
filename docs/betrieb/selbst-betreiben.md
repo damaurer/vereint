@@ -5,8 +5,8 @@ entscheidet der Betreiber; das Repository rollt nichts aus.
 
 | Image | Inhalt | Port |
 | :--- | :--- | :--- |
-| `ghcr.io/damaurer/baseservice` | Fachservice (Spring Boot), REST-API, Liquibase-Migrationen | 8081 |
-| `ghcr.io/damaurer/webservice` | Oberfläche (Angular SSR) und BFF mit Session-Cookie | 8080 |
+| `ghcr.io/damaurer/vereint-baseservice` | Fachservice (Spring Boot), REST-API, Liquibase-Migrationen | 8081 |
+| `ghcr.io/damaurer/vereint-webservice` | Oberfläche (Angular SSR) und BFF mit Session-Cookie | 8080 |
 
 Gebaut und mit Trivy geprüft werden beide bei jedem Pull Request. Nach einem
 Merge auf `qs` oder `main` landen sie für `linux/amd64` und `linux/arm64` in
@@ -14,6 +14,10 @@ GitHub Packages, getaggt mit dem Commit (`<sha>`) und dem Branch-Namen
 (`:main`, `:qs`). Ein Image wird nur neu gebaut, wenn sich sein Ordner
 geändert hat; `:main` zeigt also immer auf den neuesten Stand beider Dienste,
 der `<sha>`-Tag nur auf den Commit, der das Image gebaut hat.
+
+Bis November 2026 hießen die Images `ghcr.io/damaurer/baseservice` und
+`ghcr.io/damaurer/webservice`. Unter den alten Namen kommen keine neuen
+Versionen mehr; wer sie noch zieht, stellt auf die neuen Namen um.
 
 Ein komplettes, lauffähiges Beispiel aller Dienste ist
 [`local/compose.yaml`](../../local/compose.yaml) (lokaler Stack und E2E-Tests).

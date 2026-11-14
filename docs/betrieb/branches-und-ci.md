@@ -41,6 +41,6 @@ Die drei Image-Workflows laufen nur, wenn sich ihr Ordner (`baseservice/`,
 und `E2E-Tests` laufen immer. Gebaut und gescannt wird bei jedem Pull Request
 und Push. Nur nach einem Merge auf `qs` oder `main` werden baseservice und
 webservice für `linux/amd64` und `linux/arm64` nach
-`ghcr.io/damaurer/<dienst>` gepusht, getaggt mit Commit-SHA und Branch-Namen.
+`ghcr.io/damaurer/vereint-<dienst>` gepusht, getaggt mit Commit-SHA und Branch-Namen.
 Mit *Run workflow* lassen sich die Image-Workflows auch von Hand starten.
 Ausgerollt wird außerhalb dieses Repositorys.
