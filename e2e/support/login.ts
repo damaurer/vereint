@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import type { TestUser } from './keycloak-admin';
+import { trackRequests, waitForSettled } from './settle';
 
 /** Seite, auf der die App nach dem Login die Zustimmung zur gültigen AGB-Fassung verlangt. */
 export const TERMS_CONSENT_PATH = '/agb-zustimmen';
@@ -17,6 +18,7 @@ export async function loginViaKeycloak(
   path = '/',
   { acceptTerms = true }: { acceptTerms?: boolean } = {},
 ): Promise<void> {
+  trackRequests(page);
   await page.goto(path);
   await expect(page).toHaveURL(/\/kc\/realms\/vereint\/protocol\/openid-connect\/auth/);
   await page.locator('#username').fill(user.username);
@@ -30,6 +32,6 @@ export async function loginViaKeycloak(
     headers: { Accept: 'application/json' },
   });
   expect(response.ok(), `AGB-Zustimmung fuer ${user.username}: HTTP ${response.status()}`).toBe(true);
-  await page.waitForLoadState('networkidle');
+  await waitForSettled(page);
   if (new URL(page.url()).pathname === TERMS_CONSENT_PATH) await page.goto(path);
 }

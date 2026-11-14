@@ -51,6 +51,15 @@ test.describe('Gruppenchat und Direktnachrichten', () => {
         .toBe(0);
     });
 
+    await test.step('Antwort erscheint beim offenen Chat sofort, ohne Neuladen', async () => {
+      const reply = unique('Super, bis Samstag');
+      // Das erste Mitglied hat den Gruppenchat noch offen. Die Abfrage laeuft
+      // nur alle 10 Sekunden; die Antwort muss ueber die Live-Verbindung kommen.
+      await member2.page.getByPlaceholder('Schreibe eine Nachricht…').fill(reply);
+      await member2.page.getByRole('button', { name: 'Senden' }).click();
+      await expect(thread(member.page).getByText(reply)).toBeVisible({ timeout: 5_000 });
+    });
+
     // Nachrichten und Infotafel liegen verschluesselt in der Datenbank.
     const stored = sql(
       `select coalesce(m.message, '') || ' ' || coalesce(c.pinned_text, '') from chat_messages m join conversations c on c.id = m.conversation_id where c.type = 'club'`,
