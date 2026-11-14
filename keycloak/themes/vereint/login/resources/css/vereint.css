@@ -1,0 +1,958 @@
+/* =============================================================
+   Vereint Login-Theme (Keycloak 26.8.1, Basis keycloak.v2 / PF5)
+   Optimus Design-Tokens aus webservice/src/styles.css, Markenverlauf
+   Teal -> Blau -> Violett aus webservice/public/vereint-*.svg.
+   ============================================================= */
+
+/* --- 1. Design-Tokens ------------------------------------------ */
+:root {
+  /* Optimus Original Aliases */
+  --opt-color-primary: #1e3a8a;
+  --opt-color-primary-light: #e1e9f7;
+  --opt-color-primary-dark: #172554;
+  --opt-color-accent: #d97706;
+  --opt-color-accent-light: #fef3c7;
+  --opt-color-success: #137638;
+  --opt-color-success-light: #dcfce7;
+  --opt-color-danger: #b91c1c;
+  --opt-color-danger-light: #fee2e2;
+  --opt-bg-canvas: #e8ecf1;
+  --opt-bg-surface: #f4f6f9;
+  --opt-bg-surface-raised: #f9fafb;
+  --opt-border-color: #d3d9e2;
+  --opt-border-dark: #b8c2cf;
+  --opt-text-main: #1e293b;
+  --opt-text-muted: #526075;
+  --opt-radius-sm: 4px;
+  --opt-radius-md: 8px;
+  --opt-radius-lg: 12px;
+  --opt-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
+  /* Markenverlauf (vereint-logo.svg) */
+  --vereint-teal: #2ec4b6;
+  --vereint-blue: #3a86ff;
+  --vereint-violet: #8338ec;
+  --vereint-ink: #1b1f3b;
+  --vereint-gradient: linear-gradient(135deg, var(--vereint-teal) 0%, var(--vereint-blue) 55%, var(--vereint-violet) 100%);
+
+  /* Layout */
+  --vereint-card-width: 28rem;
+  --vereint-card-padding: clamp(1.25rem, 4vw, 2.5rem);
+  --vereint-control-height: 2.75rem; /* >= 44px Touch-Ziel */
+  --vereint-control-radius: 0.5rem;
+  --vereint-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  --vereint-focus-ring: 0 0 0 2px var(--opt-bg-surface), 0 0 0 4px var(--opt-color-primary);
+
+  /* --- Mapping auf PatternFly-5-Globals ------------------------ */
+  --pf-v5-global--FontFamily--sans-serif: var(--opt-font-sans);
+  --pf-v5-global--FontFamily--text: var(--opt-font-sans);
+  --pf-v5-global--FontFamily--heading: var(--opt-font-sans);
+  --pf-v5-global--FontFamily--monospace: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pf-v5-global--primary-color--100: var(--opt-color-primary);
+  --pf-v5-global--primary-color--200: var(--opt-color-primary-dark);
+  --pf-v5-global--primary-color--light-100: var(--opt-color-primary-light);
+  --pf-v5-global--active-color--100: var(--opt-color-primary);
+  --pf-v5-global--active-color--400: var(--opt-color-primary-light);
+  --pf-v5-global--link--Color: var(--opt-color-primary);
+  --pf-v5-global--link--Color--hover: var(--opt-color-primary-dark);
+  --pf-v5-global--success-color--100: var(--opt-color-success);
+  --pf-v5-global--danger-color--100: var(--opt-color-danger);
+  --pf-v5-global--danger-color--200: #991b1b;
+  --pf-v5-global--warning-color--100: var(--opt-color-accent);
+  --pf-v5-global--warning-color--200: #92400e;
+  --pf-v5-global--info-color--100: var(--opt-color-primary);
+  --pf-v5-global--Color--100: var(--opt-text-main);
+  --pf-v5-global--Color--200: var(--opt-text-muted);
+  --pf-v5-global--Color--dark-100: var(--opt-text-main);
+  --pf-v5-global--Color--dark-200: var(--opt-text-muted);
+  --pf-v5-global--BackgroundColor--100: var(--opt-bg-surface);
+  --pf-v5-global--BackgroundColor--200: var(--opt-bg-canvas);
+  --pf-v5-global--BorderColor--100: var(--opt-border-color);
+  --pf-v5-global--BorderColor--200: var(--opt-border-dark);
+  --pf-v5-global--BorderColor--300: var(--opt-border-color);
+  --pf-v5-global--BorderRadius--sm: var(--vereint-control-radius);
+  --pf-v5-global--BorderRadius--lg: 1rem;
+}
+
+/* --- 2. Grundgeruest ------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html.vereint-html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* keycloak.v2 setzt auf `.login-pf body` ein Hintergrundbild -> ueberschreiben. */
+.login-pf body.vereint-body,
+body.vereint-body {
+  margin: 0;
+  min-height: 100%;
+  height: auto;
+  background: var(--opt-bg-canvas);
+  color: var(--opt-text-main);
+  font-family: var(--opt-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+.vereint-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* --- 3. Branding-Panel (Split-Screen, ab 768 px) ---------------- */
+.vereint-brand {
+  display: none;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--vereint-ink);
+  background-image: var(--vereint-gradient);
+  color: #ffffff;
+}
+
+.vereint-brand-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  height: 100%;
+  padding: clamp(2rem, 6vw, 5rem);
+  max-width: 34rem;
+}
+
+.vereint-brand-logo {
+  display: block;
+  width: min(100%, 16rem);
+  height: auto;
+  /* Mono-Logo (dunkel) fuer den Verlauf weiss einfaerben. */
+  filter: brightness(0) invert(1);
+}
+
+.vereint-brand-claim {
+  margin: 1.5rem 0 0;
+  font-size: clamp(1.75rem, 2.6vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.vereint-brand-sub {
+  margin: 0;
+  max-width: 28rem;
+  font-size: clamp(1rem, 1.2vw, 1.125rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* Dezente Knoten-Grafik: Kreise/Linien wie in vereint-icon.svg. */
+.vereint-brand-nodes {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  /* Weisse Variante der Bildmarke aus vereint-icon.svg */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='2' y='2' width='96' height='96' rx='26' fill='none' stroke='%23fff' stroke-width='4'/%3E%3Cg stroke='%23fff' stroke-width='3.5' stroke-linecap='round'%3E%3Cline x1='50' y1='50' x2='28' y2='30'/%3E%3Cline x1='50' y1='50' x2='72' y2='30'/%3E%3Cline x1='50' y1='50' x2='28' y2='72'/%3E%3Cline x1='50' y1='50' x2='72' y2='72'/%3E%3C/g%3E%3Cg fill='%23fff'%3E%3Ccircle cx='28' cy='30' r='8'/%3E%3Ccircle cx='72' cy='30' r='8'/%3E%3Ccircle cx='28' cy='72' r='8'/%3E%3Ccircle cx='72' cy='72' r='8'/%3E%3Ccircle cx='50' cy='50' r='11'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: min(70%, 34rem) auto;
+  background-position: right -12% bottom -14%;
+  background-repeat: no-repeat;
+}
+
+/* --- 4. Formularspalte ------------------------------------------ */
+.vereint-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  min-width: 0;
+  padding: clamp(1rem, 4vw, 3rem) 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.vereint-mobile-header {
+  display: flex;
+  justify-content: center;
+  width: min(100%, var(--vereint-card-width));
+}
+
+.vereint-mobile-brand {
+  display: inline-flex;
+  border-radius: var(--opt-radius-md);
+}
+
+.vereint-mobile-header .vereint-logo {
+  display: block;
+  width: min(60vw, 11rem);
+  height: auto;
+}
+
+.vereint-mobile-header .vereint-logo-dark {
+  display: none;
+  filter: brightness(0) invert(1);
+}
+
+/* Karte analog `.page-card` in styles.css */
+.vereint-card {
+  width: min(100%, var(--vereint-card-width));
+  padding: var(--vereint-card-padding);
+  border-radius: 1rem;
+  background-color: var(--opt-bg-surface);
+  border: 1px solid var(--opt-border-color);
+  box-shadow: var(--vereint-shadow);
+  color: var(--opt-text-main);
+  overflow-wrap: break-word;
+}
+
+/* PF5-Login-Header/-Body ohne `.pf-v5-c-login__main`-Ahnen: Abstaende selbst setzen. */
+.vereint-card .vereint-card-header {
+  display: flex;
+  flex-direction: column-reverse; /* Locale-Umschalter oberhalb der Ueberschrift */
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0;
+  margin-bottom: 1.25rem;
+  /* keycloak.v2 (ab 26.x) setzt hier einen blauen Kartenrand oben. */
+  border-top: 0;
+}
+
+.vereint-card .vereint-title {
+  margin: 0;
+  font-family: var(--opt-font-sans);
+  font-size: clamp(1.375rem, 5vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.2;
+  text-wrap: balance;
+  letter-spacing: -0.02em;
+  color: var(--opt-text-main);
+}
+
+.vereint-card .vereint-card-body,
+.vereint-card .vereint-card-footer {
+  padding: 0;
+}
+
+.vereint-card .vereint-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.vereint-card .vereint-card-footer:empty {
+  display: none;
+}
+
+.vereint-card .vereint-card-heading {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+/* Eyebrow + Untertitel (Muster `.eyebrow` aus styles.css) */
+.vereint-eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--opt-color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vereint-subtitle {
+  margin: 0 0 1.25rem;
+  color: var(--opt-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Locale-Umschalter */
+.vereint-card .vereint-locale {
+  align-self: flex-end;
+  min-width: 0;
+  margin-top: -0.5rem;
+}
+
+.vereint-card .vereint-locale .pf-v5-c-form-control {
+  --pf-v5-c-form-control--before--BorderTopColor: transparent;
+  --pf-v5-c-form-control--before--BorderRightColor: transparent;
+  --pf-v5-c-form-control--before--BorderLeftColor: transparent;
+  --pf-v5-c-form-control--after--BorderBottomColor: var(--opt-border-color);
+  --pf-v5-c-form-control--BackgroundColor: transparent;
+  --pf-v5-c-form-control--inset--base: 0.5rem;
+  width: auto;
+  min-width: 0;
+}
+
+.vereint-card .vereint-locale select {
+  min-height: 2.5rem;
+  padding-block: 0.4rem;
+  padding-inline-end: 1.75rem;
+  font-size: 0.9rem;
+  color: var(--opt-text-muted);
+}
+
+.vereint-card .vereint-locale select option {
+  color: var(--opt-color-primary);
+}
+
+/* --- 5. Formularelemente ---------------------------------------- */
+.vereint-card .pf-v5-c-form {
+  gap: 1rem;
+}
+
+.vereint-card .pf-v5-c-form__group {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.vereint-card .pf-v5-c-form__label,
+.vereint-card .pf-v5-c-form__label-text {
+  color: var(--opt-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.vereint-card .pf-v5-c-form__label-required {
+  color: var(--opt-color-danger);
+}
+
+.vereint-card .pf-v5-c-form-control {
+  --pf-v5-c-form-control--BorderRadius: var(--vereint-control-radius);
+  --pf-v5-c-form-control--BackgroundColor: var(--opt-bg-surface-raised);
+  --pf-v5-c-form-control--before--BorderTopColor: var(--opt-border-dark);
+  --pf-v5-c-form-control--before--BorderRightColor: var(--opt-border-dark);
+  --pf-v5-c-form-control--before--BorderLeftColor: var(--opt-border-dark);
+  --pf-v5-c-form-control--after--BorderBottomColor: var(--opt-border-dark);
+  --pf-v5-c-form-control--hover--after--BorderBottomColor: var(--opt-text-muted);
+  --pf-v5-c-form-control--focus--after--BorderBottomColor: var(--opt-color-primary);
+  --pf-v5-c-form-control--focus--after--BorderBottomWidth: 1px;
+  --pf-v5-c-form-control--m-error--after--BorderBottomColor: var(--opt-color-danger);
+  --pf-v5-c-form-control--m-readonly--BackgroundColor: var(--opt-bg-canvas);
+  --pf-v5-c-form-control--Color: var(--opt-text-main);
+  --pf-v5-c-form-control--FontSize: 1rem;
+  --pf-v5-c-form-control--inset--base: 0.875rem;
+  width: 100%;
+  border-radius: var(--vereint-control-radius);
+}
+
+.vereint-card .pf-v5-c-form-control > input,
+.vereint-card .pf-v5-c-form-control > select,
+.vereint-card .pf-v5-c-form-control > textarea {
+  min-height: var(--vereint-control-height);
+  font-size: 1rem; /* kein iOS-Zoom */
+  font-family: var(--opt-font-sans);
+  color: var(--opt-text-main);
+}
+
+.vereint-card .pf-v5-c-form-control:focus-within {
+  outline: 2px solid var(--opt-color-primary);
+  outline-offset: 1px;
+}
+
+/* Fehlerzustand auch fuer Felder aus user-profile-commons (nur aria-invalid gesetzt) */
+.vereint-card .pf-v5-c-form-control:has([aria-invalid="true"]) {
+  --pf-v5-c-form-control--after--BorderBottomColor: var(--opt-color-danger);
+  --pf-v5-c-form-control--after--BorderBottomWidth: 2px;
+}
+
+.vereint-card .pf-v5-c-form-control > input:focus,
+.vereint-card .pf-v5-c-form-control > select:focus {
+  outline: none;
+}
+
+/* Passwort-Eingabegruppe: Toggle-Button buendig zum Feld */
+.vereint-card .pf-v5-c-input-group {
+  --pf-v5-c-input-group--BackgroundColor: transparent;
+  border-radius: var(--vereint-control-radius);
+}
+
+.vereint-card .pf-v5-c-input-group__item.pf-m-fill .pf-v5-c-form-control {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.vereint-card .pf-v5-c-input-group .pf-v5-c-button.pf-m-control {
+  --pf-v5-c-button--m-control--BackgroundColor: var(--opt-bg-surface-raised);
+  --pf-v5-c-button--m-control--Color: var(--opt-text-muted);
+  --pf-v5-c-button--m-control--after--BorderTopColor: var(--opt-border-dark);
+  --pf-v5-c-button--m-control--after--BorderRightColor: var(--opt-border-dark);
+  --pf-v5-c-button--m-control--after--BorderBottomColor: var(--opt-border-dark);
+  --pf-v5-c-button--m-control--after--BorderLeftColor: var(--opt-border-dark);
+  --pf-v5-c-button--m-control--hover--after--BorderBottomColor: var(--opt-color-primary);
+  --pf-v5-c-button--m-control--hover--after--BorderBottomWidth: 1px;
+  --pf-v5-c-button--m-control--focus--after--BorderBottomWidth: 1px;
+  --pf-v5-c-button--m-control--active--after--BorderBottomWidth: 1px;
+  --pf-v5-c-button--m-control--BorderRadius: 0;
+  min-width: var(--vereint-control-height);
+  min-height: var(--vereint-control-height);
+  border-start-end-radius: var(--vereint-control-radius);
+  border-end-end-radius: var(--vereint-control-radius);
+}
+
+.vereint-card .pf-v5-c-input-group .pf-v5-c-button.pf-m-control:focus-visible {
+  outline: 2px solid var(--opt-color-primary);
+  outline-offset: 1px;
+}
+
+/* Hilfetexte / Fehler unter Feldern */
+.vereint-card .pf-v5-c-helper-text__item-text {
+  font-size: 0.85rem;
+  color: var(--opt-text-muted);
+}
+
+.vereint-card .pf-v5-c-helper-text__item.pf-m-error .pf-v5-c-helper-text__item-text,
+.vereint-card .pf-v5-c-helper-text__item-text.pf-m-error {
+  color: var(--opt-color-danger);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Checkbox */
+.vereint-card .pf-v5-c-check {
+  --pf-v5-c-check__label--Color: var(--opt-text-main);
+  --pf-v5-c-check__label--FontSize: 0.95rem;
+  align-items: center;
+  column-gap: 0.6rem;
+  min-height: 2.75rem;
+}
+
+.vereint-card .pf-v5-c-check__input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  accent-color: var(--opt-color-primary);
+}
+
+.vereint-card .pf-v5-c-check__label {
+  cursor: pointer;
+}
+
+/* "Angemeldet bleiben" + "Passwort vergessen?" in einer Zeile, Umbruch < 400 px */
+.vereint-card .vereint-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+}
+
+.vereint-card .vereint-form-row .pf-v5-c-check {
+  min-height: 2.75rem;
+}
+
+.vereint-card .vereint-forgot {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 25em) {
+  .vereint-card .vereint-form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .vereint-card .vereint-forgot {
+    justify-content: flex-start;
+  }
+}
+
+/* Hinweis "* Pflichtfelder" (displayRequiredFields) */
+.vereint-card .subtitle {
+  margin: 0 0 0.75rem;
+  color: var(--opt-text-muted);
+  font-size: 0.8rem;
+}
+
+/* Registrierung: Vorname/Nachname nebeneinander ab 640 px */
+.vereint-register .pf-v5-c-form {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 40em) {
+  .vereint-register .pf-v5-c-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 0.75rem;
+  }
+
+  .vereint-register .pf-v5-c-form > * {
+    grid-column: 1 / -1;
+  }
+
+  .vereint-register .pf-v5-c-form > .pf-v5-c-form__group:has(#firstName),
+  .vereint-register .pf-v5-c-form > .pf-v5-c-form__group:has(#lastName) {
+    grid-column: auto;
+  }
+}
+
+.vereint-register .form-group {
+  display: grid;
+  gap: 0.35rem;
+}
+
+#kc-registration-terms-text {
+  margin-top: 0.35rem;
+  color: var(--opt-text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.vereint-register .form-group #termsAccepted {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0 0.6rem 0 0;
+  vertical-align: middle;
+  accent-color: var(--opt-color-primary);
+}
+
+.vereint-register .form-group label[for="termsAccepted"] {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--opt-text-main);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.vereint-register .vereint-register-actions {
+  margin-top: 0.25rem;
+}
+
+.vereint-register .vereint-register-footer {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--opt-border-color);
+}
+
+/* --- 6. Buttons (Muster `.member-button` / `.ui-button`) --------- */
+.vereint-card .pf-v5-c-form__actions {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.vereint-card .pf-v5-c-form__actions > * {
+  margin: 0;
+}
+
+.vereint-card .pf-v5-c-button {
+  --pf-v5-c-button--BorderRadius: var(--vereint-control-radius);
+  --pf-v5-c-button--FontSize: 1rem;
+  --pf-v5-c-button--FontWeight: 700;
+  --pf-v5-c-button--PaddingTop: 0.75rem;
+  --pf-v5-c-button--PaddingBottom: 0.75rem;
+  --pf-v5-c-button--PaddingLeft: 1.25rem;
+  --pf-v5-c-button--PaddingRight: 1.25rem;
+  min-height: var(--vereint-control-height);
+  font-family: var(--opt-font-sans);
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.vereint-card .pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--opt-color-primary);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--opt-color-primary-dark);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--opt-color-primary-dark);
+  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--opt-color-primary-dark);
+  --pf-v5-c-button--m-primary--Color: #ffffff;
+}
+
+.vereint-card .pf-v5-c-button.pf-m-secondary {
+  --pf-v5-c-button--m-secondary--Color: var(--opt-color-primary);
+  --pf-v5-c-button--m-secondary--BackgroundColor: transparent;
+  --pf-v5-c-button--m-secondary--after--BorderColor: var(--opt-border-dark);
+  --pf-v5-c-button--m-secondary--hover--Color: var(--opt-color-primary-dark);
+  --pf-v5-c-button--m-secondary--hover--after--BorderColor: var(--opt-color-primary);
+  --pf-v5-c-button--m-secondary--focus--after--BorderColor: var(--opt-color-primary);
+}
+
+.vereint-card .pf-v5-c-button.pf-m-block {
+  width: 100%;
+}
+
+.vereint-card .pf-v5-c-button:focus-visible {
+  outline: 2px solid var(--opt-color-primary);
+  outline-offset: 2px;
+}
+
+.vereint-card .pf-v5-c-button:disabled,
+.vereint-card .pf-v5-c-button.pf-m-disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* --- 7. Links ---------------------------------------------------- */
+.vereint-card a:not(.pf-v5-c-button) {
+  color: var(--opt-color-primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.vereint-card a:not(.pf-v5-c-button):hover,
+.vereint-card a:not(.pf-v5-c-button):focus-visible {
+  color: var(--opt-color-primary-dark);
+  text-decoration: underline;
+}
+
+.vereint-card a:not(.pf-v5-c-button):focus-visible {
+  outline: 2px solid var(--opt-color-primary);
+  outline-offset: 2px;
+  border-radius: var(--opt-radius-sm);
+}
+
+/* --- 8. Alerts (Muster `.state-card` mit Farbbalken links) ------- */
+.vereint-card .pf-v5-c-alert {
+  --vereint-alert-color: var(--opt-color-primary);
+  --vereint-alert-bg: var(--opt-color-primary-light);
+  --pf-v5-c-alert--BorderTopWidth: 0;
+  --pf-v5-c-alert--BackgroundColor: var(--vereint-alert-bg);
+  --pf-v5-c-alert__icon--Color: var(--vereint-alert-color);
+  --pf-v5-c-alert__title--Color: var(--opt-text-main);
+  --pf-v5-c-alert--GridTemplateColumns: max-content 1fr;
+  --pf-v5-c-alert--PaddingTop: 0.85rem;
+  --pf-v5-c-alert--PaddingBottom: 0.85rem;
+  --pf-v5-c-alert--PaddingLeft: 1rem;
+  --pf-v5-c-alert--PaddingRight: 1rem;
+  --pf-v5-c-alert--BoxShadow: none;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--opt-border-color);
+  border-left: 0.25rem solid var(--vereint-alert-color);
+  border-radius: var(--vereint-control-radius);
+  background-color: var(--vereint-alert-bg);
+  box-shadow: none;
+}
+
+.vereint-card .pf-v5-c-alert::before {
+  display: none;
+}
+
+.vereint-card .pf-v5-c-alert.pf-m-danger {
+  --vereint-alert-color: var(--opt-color-danger);
+  --vereint-alert-bg: var(--opt-color-danger-light);
+}
+
+.vereint-card .pf-v5-c-alert.pf-m-success {
+  --vereint-alert-color: var(--opt-color-success);
+  --vereint-alert-bg: var(--opt-color-success-light);
+}
+
+.vereint-card .pf-v5-c-alert.pf-m-warning {
+  --vereint-alert-color: var(--opt-color-accent);
+  --vereint-alert-bg: var(--opt-color-accent-light);
+}
+
+.vereint-card .pf-v5-c-alert.pf-m-info {
+  --vereint-alert-color: var(--opt-color-primary);
+  --vereint-alert-bg: var(--opt-color-primary-light);
+}
+
+.vereint-card .pf-v5-c-alert__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--opt-text-main);
+  overflow-wrap: anywhere;
+}
+
+/* --- 9. Info-Bereich / Fussbereiche ----------------------------- */
+.vereint-card .vereint-info {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--opt-border-color);
+  color: var(--opt-text-muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.vereint-card .pf-v5-c-login__main-footer-band {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  color: var(--opt-text-muted);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.vereint-card .pf-v5-c-login__main-footer-band-item {
+  margin: 0;
+}
+
+.vereint-card .pf-v5-c-login__main-footer-links {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.vereint-card .pf-v5-c-login__main-footer-links-item {
+  margin: 0;
+}
+
+.vereint-card .pf-v5-c-login__main-footer-links-item-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: var(--vereint-control-height);
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--opt-border-color);
+  border-radius: var(--vereint-control-radius);
+  background: var(--opt-bg-surface-raised);
+  color: var(--opt-text-main);
+  font-weight: 600;
+}
+
+.vereint-card .pf-v5-c-login__main-footer-links-item-link:hover,
+.vereint-card .pf-v5-c-login__main-footer-links-item-link:focus-visible {
+  border-color: var(--opt-color-primary);
+  color: var(--opt-color-primary);
+  text-decoration: none;
+}
+
+.vereint-card hr {
+  margin: 1.25rem 0;
+  border: 0;
+  border-top: 1px solid var(--opt-border-color);
+}
+
+.vereint-footer {
+  width: min(100%, var(--vereint-card-width));
+  color: var(--opt-text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.vereint-footer:empty {
+  display: none;
+}
+
+.vereint-legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.vereint-legal-links a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* Tooltip aus keycloak.v2 innerhalb der Karte halten */
+.vereint-card .kc-login-tooltip .kc-tooltip-text {
+  left: auto;
+  right: 0;
+  top: calc(100% + 0.25rem);
+  border-radius: var(--opt-radius-sm);
+}
+
+/* --- 10. Breakpoints -------------------------------------------- */
+/* Tablet: Split-Screen mit schmalem Branding-Panel */
+@media (min-width: 48em) {
+  .vereint-shell {
+    grid-template-columns: minmax(16rem, 38%) minmax(0, 1fr);
+  }
+
+  .vereint-brand {
+    display: block;
+  }
+
+  .vereint-mobile-header {
+    display: none;
+  }
+
+  .vereint-main {
+    padding: clamp(1.5rem, 4vw, 4rem);
+  }
+}
+
+/* Desktop: breiteres Branding-Panel */
+@media (min-width: 80em) {
+  .vereint-shell {
+    grid-template-columns: minmax(20rem, 45%) minmax(0, 1fr);
+  }
+}
+
+/* Kleine Smartphones: Full-Bleed-Karte fuer maximale Flaeche */
+@media (max-width: 30em) {
+  .vereint-main {
+    padding: 1rem 0 max(1rem, env(safe-area-inset-bottom));
+    gap: 0.75rem;
+  }
+
+  .vereint-mobile-header {
+    padding: 0.5rem 1rem 0;
+  }
+
+  .vereint-card {
+    padding: 1.25rem 1rem 1.5rem;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    box-shadow: none;
+  }
+
+  .vereint-card .pf-v5-c-alert {
+    --pf-v5-c-alert--PaddingLeft: 0.75rem;
+    --pf-v5-c-alert--PaddingRight: 0.75rem;
+  }
+}
+
+/* --- 11. Dark-Mode ---------------------------------------------- */
+/* keycloak.v2 setzt bei prefers-color-scheme: dark die Klasse
+   `pf-v5-theme-dark` auf <html>; die Media-Query dient als Fallback ohne JS. */
+html.pf-v5-theme-dark {
+  color-scheme: dark;
+  --opt-color-primary: #3b82f6;
+  --opt-color-primary-light: rgba(59, 130, 246, 0.16);
+  --opt-color-primary-dark: #2563eb;
+  --opt-color-accent: #fbbf24;
+  --opt-color-accent-light: rgba(217, 119, 6, 0.18);
+  --opt-color-success: #4ade80;
+  --opt-color-success-light: rgba(22, 163, 74, 0.18);
+  --opt-color-danger: #f87171;
+  --opt-color-danger-light: rgba(220, 38, 38, 0.18);
+  --opt-bg-canvas: #0f172a;
+  --opt-bg-surface: #1e293b;
+  --opt-bg-surface-raised: #0f172a;
+  --opt-border-color: #334155;
+  --opt-border-dark: #475569;
+  --opt-text-main: #f8fafc;
+  --opt-text-muted: #94a3b8;
+  --vereint-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+
+  --pf-v5-global--Color--100: var(--opt-text-main);
+  --pf-v5-global--Color--200: var(--opt-text-muted);
+  --pf-v5-global--Color--dark-100: var(--opt-text-main);
+  --pf-v5-global--Color--dark-200: var(--opt-text-muted);
+  --pf-v5-global--Color--light-100: var(--opt-text-main);
+  --pf-v5-global--BackgroundColor--100: var(--opt-bg-surface);
+  --pf-v5-global--BackgroundColor--200: var(--opt-bg-canvas);
+  --pf-v5-global--BackgroundColor--light-100: var(--opt-bg-surface);
+  --pf-v5-global--BackgroundColor--dark-100: var(--opt-bg-canvas);
+  --pf-v5-global--BorderColor--100: var(--opt-border-color);
+  --pf-v5-global--BorderColor--200: var(--opt-border-dark);
+  --pf-v5-global--BorderColor--300: var(--opt-border-color);
+  --pf-v5-global--primary-color--100: var(--opt-color-primary);
+  --pf-v5-global--primary-color--200: var(--opt-color-primary-dark);
+  --pf-v5-global--primary-color--dark-100: var(--opt-color-primary);
+  --pf-v5-global--primary-color--light-100: var(--opt-color-primary);
+  --pf-v5-global--active-color--100: var(--opt-color-primary);
+  --pf-v5-global--link--Color: var(--opt-color-primary);
+  --pf-v5-global--link--Color--hover: #60a5fa;
+  --pf-v5-global--link--Color--dark: var(--opt-color-primary);
+  --pf-v5-global--link--Color--dark--hover: #60a5fa;
+  --pf-v5-global--link--Color--light: var(--opt-color-primary);
+  --pf-v5-global--success-color--100: var(--opt-color-success);
+  --pf-v5-global--danger-color--100: var(--opt-color-danger);
+  --pf-v5-global--warning-color--100: var(--opt-color-accent);
+  --pf-v5-global--info-color--100: var(--opt-color-primary);
+  --pf-v5-global--disabled-color--100: #64748b;
+  --pf-v5-global--disabled-color--200: #334155;
+  --pf-v5-global--disabled-color--300: #1e293b;
+}
+
+html.pf-v5-theme-dark .vereint-card .pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--BackgroundColor: #2563eb;
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: #1d4ed8;
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: #1d4ed8;
+  --pf-v5-c-button--m-primary--active--BackgroundColor: #1d4ed8;
+}
+
+html.pf-v5-theme-dark .vereint-card .pf-v5-c-button.pf-m-secondary {
+  --pf-v5-c-button--m-secondary--Color: #93c5fd;
+  --pf-v5-c-button--m-secondary--hover--Color: #bfdbfe;
+}
+
+html.pf-v5-theme-dark .vereint-card a:not(.pf-v5-c-button):hover,
+html.pf-v5-theme-dark .vereint-card a:not(.pf-v5-c-button):focus-visible {
+  color: #60a5fa;
+}
+
+html.pf-v5-theme-dark .vereint-eyebrow {
+  color: #93c5fd;
+}
+
+html.pf-v5-theme-dark .vereint-card .pf-v5-c-alert {
+  border-color: var(--opt-border-color);
+}
+
+html.pf-v5-theme-dark .vereint-card .pf-v5-c-alert.pf-m-warning {
+  --vereint-alert-color: var(--opt-color-accent);
+}
+
+html.pf-v5-theme-dark .vereint-brand {
+  background: #0b1120;
+  background-image: linear-gradient(135deg, #1f8f86 0%, #2563eb 55%, #6d28d9 100%);
+}
+
+html.pf-v5-theme-dark .vereint-mobile-header .vereint-logo-light {
+  display: none;
+}
+
+html.pf-v5-theme-dark .vereint-mobile-header .vereint-logo-dark {
+  display: block;
+}
+
+html.pf-v5-theme-dark .vereint-card .pf-v5-c-check__input,
+html.pf-v5-theme-dark .vereint-register .form-group #termsAccepted {
+  accent-color: #3b82f6;
+}
+
+/* Fallback ohne JavaScript: dieselben Tokens per Media-Query */
+@media (prefers-color-scheme: dark) {
+  html.vereint-html:not(.pf-v5-theme-dark) {
+    color-scheme: dark;
+    --opt-color-primary: #3b82f6;
+    --opt-color-primary-light: rgba(59, 130, 246, 0.16);
+    --opt-color-primary-dark: #2563eb;
+    --opt-color-accent: #fbbf24;
+    --opt-color-accent-light: rgba(217, 119, 6, 0.18);
+    --opt-color-success: #4ade80;
+    --opt-color-success-light: rgba(22, 163, 74, 0.18);
+    --opt-color-danger: #f87171;
+    --opt-color-danger-light: rgba(220, 38, 38, 0.18);
+    --opt-bg-canvas: #0f172a;
+    --opt-bg-surface: #1e293b;
+    --opt-bg-surface-raised: #0f172a;
+    --opt-border-color: #334155;
+    --opt-border-dark: #475569;
+    --opt-text-main: #f8fafc;
+    --opt-text-muted: #94a3b8;
+  }
+
+  html.vereint-html:not(.pf-v5-theme-dark) .vereint-mobile-header .vereint-logo-light {
+    display: none;
+  }
+
+  html.vereint-html:not(.pf-v5-theme-dark) .vereint-mobile-header .vereint-logo-dark {
+    display: block;
+  }
+}
+
+/* --- 12. Bewegung ----------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .vereint-body *,
+  .vereint-body *::before,
+  .vereint-body *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "vereint-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "stack:up": "./stack.sh up",
+    "stack:down": "./stack.sh down",
+    "test": "playwright test",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "^20.17.19",
+    "typescript": "~5.9.3"
+  }
+}

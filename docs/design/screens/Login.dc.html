@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Anmelden</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); overflow: hidden">
+  <header style="height: 72px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 20px">
+    <img src="/_blob/658eacfb311db734fae6de78ff566261" alt="Vereint" style="width: 36px; height: 36px; border-radius: 10px">
+    <label style="display: flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: 14px; font-weight: 600">
+      Sprache
+      <select style="height: 36px; padding: 0 8px; border: 1px solid var(--color-border); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px">
+        <option>Deutsch</option>
+        <option>English</option>
+      </select>
+    </label>
+  </header>
+
+  <main style="flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 12px 20px 20px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <p style="margin: 0; color: var(--color-brand); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase">Vereint</p>
+      <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.02em">Willkommen zurück</h1>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 15px">Melde dich mit deinem Mitgliedskonto an.</p>
+    </div>
+
+    <form style="display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="user" style="font-size: 14px; font-weight: 600">Benutzername oder E-Mail</label>
+        <input id="user" autocomplete="username" value="lena.hoffmann@example.de" style="height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="pw" style="font-size: 14px; font-weight: 600">Passwort</label>
+        <div style="display: flex; gap: 8px">
+          <input id="pw" type="{{pwType}}" autocomplete="current-password" value="geheim-2026" style="flex: 1; min-width: 0; height: 48px; box-sizing: border-box; padding: 0 14px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 16px">
+          <button type="button" onClick="{{togglePw}}" aria-pressed="{{pwShown}}" style="height: 48px; padding: 0 14px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface); color: var(--color-text); font: inherit; font-size: 14px; font-weight: 600">{{pwLabel}}</button>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+        <label style="display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px">
+          <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--color-brand)">
+          Angemeldet bleiben
+        </label>
+        <a href="Login.dc.html" style="font-size: 14px; font-weight: 600; text-decoration: none">Passwort vergessen?</a>
+      </div>
+      <a href="Main.dc.html" style="display: grid; place-items: center; height: 52px; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 16px; font-weight: 700; text-decoration: none">Anmelden</a>
+    </form>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+      <p style="margin: 0; font-size: 15px; font-weight: 700">Noch keine Gruppe?</p>
+      <p style="margin: 0; color: var(--color-text-muted); font-size: 14px; line-height: 1.5">Eröffne deine eigene Gruppe oder nutze den Einladungslink, den du bekommen hast.</p>
+      <a href="GruppeEroeffnen.dc.html" style="display: grid; place-items: center; height: 44px; box-sizing: border-box; border: 1px solid var(--color-border-dark); border-radius: 8px; color: var(--color-text); font-size: 15px; font-weight: 600; text-decoration: none">Eigene Gruppe eröffnen</a>
+    </div>
+  </main>
+
+  <footer style="display: flex; justify-content: center; gap: 16px; padding: 16px; font-size: 13px">
+    <a href="Impressum.dc.html">Impressum</a>
+    <a href="Impressum.dc.html">AGB</a>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { show: false };
+  }
+  renderVals() {
+    const show = this.state.show;
+    return {
+      theme: this.props.theme ?? 'light',
+      pwType: show ? 'text' : 'password',
+      pwShown: show ? 'true' : 'false',
+      pwLabel: show ? 'Verbergen' : 'Zeigen',
+      togglePw: () => this.setState({ show: !show })
+    };
+  }
+}
+</script>
+</body>
+</html>

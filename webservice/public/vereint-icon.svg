@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="vereint">
+  <title>vereint</title>
+  <defs>
+    <linearGradient id="vereintIconGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2ec4b6"/>
+      <stop offset="0.55" stop-color="#3a86ff"/>
+      <stop offset="1" stop-color="#8338ec"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Bildmarke im Stil von vereint-logo-mono.svg (offener Rahmen, farbige Linien/Knoten) -->
+  <rect x="16" y="16" width="480" height="480" rx="120" fill="none"
+        stroke="url(#vereintIconGrad)" stroke-width="14"/>
+
+  <!-- Verbindungslinien (uebergreifender Chat / Netzwerk) -->
+  <g stroke="url(#vereintIconGrad)" stroke-width="3.5" stroke-linecap="round"
+     transform="translate(56 56) scale(4)">
+    <line x1="50" y1="50" x2="28" y2="30"/>
+    <line x1="50" y1="50" x2="72" y2="30"/>
+    <line x1="50" y1="50" x2="28" y2="72"/>
+    <line x1="50" y1="50" x2="72" y2="72"/>
+  </g>
+
+  <!-- Knoten: einzelne Gruppen / Stammtische / Vereine -->
+  <g fill="url(#vereintIconGrad)" transform="translate(56 56) scale(4)">
+    <circle cx="28" cy="30" r="8"/>
+    <circle cx="72" cy="30" r="8"/>
+    <circle cx="28" cy="72" r="8"/>
+    <circle cx="72" cy="72" r="8"/>
+  </g>
+
+  <!-- Zentraler Knoten: die verbindende Dachplattform -->
+  <g transform="translate(56 56) scale(4)">
+    <circle cx="50" cy="50" r="11" fill="url(#vereintIconGrad)"/>
+  </g>
+</svg>

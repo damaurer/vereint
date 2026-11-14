@@ -1,0 +1,51 @@
+<div class="vereint-shell">
+  <aside class="vereint-brand" aria-hidden="true">
+    <div class="vereint-brand-inner">
+      <img src="vereint-logo-mono.svg" alt="" class="vereint-brand-logo" width="440" height="140" />
+      <p class="vereint-brand-claim">{{ 'auth.status.brandClaim' | t }}</p>
+      <p class="vereint-brand-sub">{{ 'auth.status.brandSub' | t }}</p>
+    </div>
+    <div class="vereint-brand-nodes"></div>
+  </aside>
+
+  <main class="vereint-main">
+    <header class="vereint-mobile-header">
+      <a class="vereint-mobile-brand" routerLink="/">
+        <img src="vereint-logo.svg" alt="vereint" class="vereint-logo vereint-logo-light" width="440" height="140" />
+        <img src="vereint-logo-mono.svg" alt="vereint" class="vereint-logo vereint-logo-dark" width="440" height="140" />
+      </a>
+    </header>
+
+    <section class="vereint-card" aria-labelledby="status-title">
+      <div class="vereint-card-header">
+        <div class="vereint-card-heading">
+          <p class="vereint-eyebrow">{{ 'auth.status.eyebrow' | t }}</p>
+          <h1 class="vereint-title" id="status-title">{{ title() }}</h1>
+        </div>
+      </div>
+
+      <div class="vereint-card-body">
+        @if (isError()) {
+          <div class="state-card state-error login-error" role="alert">
+            <strong>{{ 'auth.status.loginFailed' | t }}</strong>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        } @else {
+          <p class="vereint-subtitle">{{ 'auth.status.loggedOutMessage' | t }}</p>
+        }
+
+        <div class="login-form">
+          <button id="retry-login" type="button" (click)="retryLogin()">
+            {{ 'auth.status.retryLogin' | t }}
+          </button>
+        </div>
+
+        <p class="open-own">
+          <a routerLink="/gruppe-eroeffnen">{{ 'auth.status.openOwn' | t }}</a>
+        </p>
+      </div>
+    </section>
+
+    <app-legal-links />
+  </main>
+</div>

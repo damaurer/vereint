@@ -1,0 +1,60 @@
+# syntax=docker/dockerfile:1
+
+# Temurin 25 (LTS-Zug seit September 2025), auf ein Patch-Release und per
+# Digest gepinnt (reproduzierbarer Build); Dependabot haelt beides aktuell.
+# Java 21 ist hier nicht moeglich: `baseservice/build.gradle.kts` legt die
+# Toolchain auf `JavaLanguageVersion.of(25)` fest (siehe TICKET-002).
+ARG JDK_IMAGE=eclipse-temurin:25.0.5_8-jdk@sha256:83f4a7fc27df94dcc7b8de04d14cbbba8da14406f921e966969c3b09000aa507
+ARG JRE_IMAGE=eclipse-temurin:25.0.5_8-jre@sha256:ecdc0adb37bde1a281c4d245a3cd535004b1fc8322d560f5b09463b248c81df0
+
+# ---------- Build ----------
+# Der Build laeuft nativ auf der Plattform des Runners; das Jar ist
+# plattformunabhaengig und wird in das amd64- bzw. arm64-Runtime-Image kopiert.
+FROM --platform=$BUILDPLATFORM ${JDK_IMAGE} AS build
+
+WORKDIR /workspace
+
+COPY gradlew gradlew.bat settings.gradle.kts build.gradle.kts ./
+COPY gradle gradle
+RUN ./gradlew dependencies --no-daemon || true
+
+COPY src src
+RUN ./gradlew bootJar --no-daemon -x test
+
+# ---------- Runtime ----------
+FROM ${JRE_IMAGE} AS runtime
+
+WORKDIR /app
+
+# `curl` wird ausschliesslich fuer den Healthcheck auf /api/v1/health benoetigt.
+# `pebble` (Service-Manager aus dem Ubuntu-Basisimage) wird nicht genutzt und
+# bringt eine Go-Laufzeit mit bekannten Schwachstellen mit; daher entfernt.
+# `apt-get upgrade` holt Sicherheitsupdates (z. B. apt selbst), die noch nicht
+# im Basis-Image stecken.
+RUN apt-get update \
+ && apt-get upgrade -y --no-install-recommends \
+ && apt-get install --no-install-recommends -y curl \
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -f /usr/bin/pebble
+
+# Unprivilegierter Benutzer
+RUN addgroup --system --gid 10001 vereint \
+ && adduser --system --uid 10001 --ingroup vereint vereint
+
+COPY --from=build --chown=10001:10001 /workspace/build/libs/*.jar app.jar
+
+# Ablage fuer STORAGE_BACKEND=filesystem. Ein leeres Docker-Volume uebernimmt
+# beim ersten Einhaengen Besitzer und Rechte dieses Verzeichnisses.
+RUN install -d -m 0700 -o 10001 -g 10001 /data/files
+
+USER 10001:10001
+
+ENV PORT=8081 \
+    SERVER_PORT=8081
+
+EXPOSE 8081
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=12 --start-period=40s \
+  CMD curl -f http://127.0.0.1:8081/actuator/health || exit 1
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

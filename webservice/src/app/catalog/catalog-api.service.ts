@@ -1,0 +1,266 @@
+import { Injectable, inject } from '@angular/core';
+import type { Observable } from 'rxjs';
+import { ApiClient } from '../api/api-client.service';
+
+export interface DrinkBarcodeDto {
+  id: string;
+  barcode: string;
+  active: boolean;
+}
+
+export interface DrinkSummaryDto {
+  id: string;
+  name: string;
+  category?: string | null;
+  defaultPrice: number;
+  costPrice?: number;
+  currency: string;
+  status: string;
+  active: boolean;
+  catalogVersion: number;
+  tallyCategoryId?: string | null;
+  tallyCategoryName?: string | null;
+  tallyCategoryPrice?: number | null;
+}
+
+export interface DrinkDto {
+  id: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  defaultPrice: number;
+  costPrice?: number;
+  currency: string;
+  imageReference?: string | null;
+  catalogVersion: number;
+  status: string;
+  active: boolean;
+  proposedById?: string | null;
+  approvedById?: string | null;
+  barcodes: DrinkBarcodeDto[];
+  createdAt: string;
+  updatedAt: string;
+  /** Herkunft aus der gemeinsamen Getränkedatenbank (`null` = nicht geteilt). */
+  libraryDrinkId?: string | null;
+  /** Füllmenge einer Portion in ml und Kalorien je Portion (für die Statistik). */
+  volumeMl?: number | null;
+  kcalPerServing?: number | null;
+  /** Strich-Kategorie; ihr Preis überschreibt im Event den Verkaufspreis. */
+  tallyCategoryId?: string | null;
+  tallyCategoryName?: string | null;
+  tallyCategoryPrice?: number | null;
+}
+
+/** Getränk, das einer Strich-Kategorie zugeordnet ist. */
+export interface TallyCategoryDrinkDto {
+  id: string;
+  name: string;
+  defaultPrice: number;
+  currency: string;
+}
+
+/** Strich-Kategorie: eine Spalte der Strichliste mit Preis je Strich. */
+export interface TallyCategoryDto {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  sortOrder: number;
+  drinks: TallyCategoryDrinkDto[];
+}
+
+/** Füllmenge und Kalorien; beim Ändern ersetzt das Objekt beide Werte (`null` = keine Angabe). */
+export interface DrinkNutrition {
+  volumeMl: number | null;
+  kcalPerServing: number | null;
+}
+
+/** Eintrag der stammtischübergreifenden Getränkedatenbank (ohne Preise). */
+export interface DrinkLibraryEntryDto {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  barcodes: string[];
+  /** Katalogeintrag dieses Stammtischs, falls schon übernommen. */
+  catalogDrinkId: string | null;
+  volumeMl?: number | null;
+  kcalPerServing?: number | null;
+}
+
+export interface ProposeDrinkRequest {
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  defaultPrice: number;
+  costPrice?: number | null;
+  currency?: string | null;
+  imageReference?: string | null;
+  barcodes?: string[] | null;
+  /** Eintrag der Getränkedatenbank, aus dem das Getränk übernommen wird. */
+  libraryDrinkId?: string | null;
+  nutrition?: DrinkNutrition | null;
+  /** Strich-Kategorie (nur wer den Katalog pflegt). */
+  tallyCategoryId?: string | null;
+}
+
+export interface UpdateDrinkRequest {
+  name?: string | null;
+  description?: string | null;
+  category?: string | null;
+  defaultPrice?: number | null;
+  costPrice?: number | null;
+  currency?: string | null;
+  imageReference?: string | null;
+  active?: boolean | null;
+  nutrition?: DrinkNutrition | null;
+  /** Strich-Kategorie; leer = ohne Kategorie, weglassen = unverändert. */
+  tallyCategoryId?: string | null;
+}
+
+export interface AddBarcodeRequest {
+  barcode: string;
+}
+
+export interface FoodSummaryDto {
+  id: string;
+  name: string;
+  category?: string | null;
+  defaultPrice: number;
+  costPrice?: number;
+  currency: string;
+  active: boolean;
+}
+
+export interface FoodDto {
+  id: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  defaultPrice: number;
+  costPrice: number;
+  currency: string;
+  active: boolean;
+  createdById?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateFoodRequest {
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  defaultPrice: number;
+  costPrice?: number | null;
+  currency?: string | null;
+}
+
+export interface UpdateFoodRequest {
+  name?: string | null;
+  description?: string | null;
+  category?: string | null;
+  defaultPrice?: number | null;
+  costPrice?: number | null;
+  currency?: string | null;
+  active?: boolean | null;
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CatalogApiService {
+  private readonly api = inject(ApiClient);
+
+  listDrinks(status?: string): Observable<DrinkSummaryDto[]> {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    return this.api.get<DrinkSummaryDto[]>(`/drinks${query}`);
+  }
+
+  getDrink(id: string): Observable<DrinkDto> {
+    return this.api.get<DrinkDto>(`/drinks/${encodeURIComponent(id)}`);
+  }
+
+  getDrinkByBarcode(barcode: string): Observable<DrinkDto> {
+    return this.api.get<DrinkDto>(`/drinks/barcode/${encodeURIComponent(barcode)}`);
+  }
+
+  proposeDrink(request: ProposeDrinkRequest): Observable<DrinkDto> {
+    return this.api.post<DrinkDto>('/drinks', request);
+  }
+
+  updateDrink(id: string, request: UpdateDrinkRequest): Observable<DrinkDto> {
+    return this.api.put<DrinkDto>(`/drinks/${encodeURIComponent(id)}`, request);
+  }
+
+  approveDrink(id: string): Observable<DrinkDto> {
+    return this.api.post<DrinkDto>(`/drinks/${encodeURIComponent(id)}/approve`, {});
+  }
+
+  rejectDrink(id: string): Observable<DrinkDto> {
+    return this.api.post<DrinkDto>(`/drinks/${encodeURIComponent(id)}/reject`, {});
+  }
+
+  addBarcode(id: string, request: AddBarcodeRequest): Observable<DrinkBarcodeDto> {
+    return this.api.post<DrinkBarcodeDto>(`/drinks/${encodeURIComponent(id)}/barcodes`, request);
+  }
+
+  removeBarcode(id: string, barcodeId: string): Observable<void> {
+    return this.api.delete<void>(`/drinks/${encodeURIComponent(id)}/barcodes/${encodeURIComponent(barcodeId)}`);
+  }
+
+  /** Sucht in der gemeinsamen Getränkedatenbank nach Text oder Strichcode. */
+  searchLibrary(query: { q?: string; barcode?: string }): Observable<DrinkLibraryEntryDto[]> {
+    const params = query.barcode
+      ? `barcode=${encodeURIComponent(query.barcode)}`
+      : `q=${encodeURIComponent(query.q ?? '')}`;
+    return this.api.get<DrinkLibraryEntryDto[]>(`/drink-library?${params}`);
+  }
+
+  /** Teilt ein freigegebenes Getränk dieses Stammtischs in die Getränkedatenbank. */
+  shareToLibrary(id: string): Observable<DrinkLibraryEntryDto> {
+    return this.api.post<DrinkLibraryEntryDto>(`/drinks/${encodeURIComponent(id)}/share-to-library`, {});
+  }
+
+  /** Strich-Kategorien in Spaltenreihenfolge samt Getränken. */
+  listTallyCategories(): Observable<TallyCategoryDto[]> {
+    return this.api.get<TallyCategoryDto[]>('/tally-categories');
+  }
+
+  createTallyCategory(request: { name: string; price: number }): Observable<TallyCategoryDto> {
+    return this.api.post<TallyCategoryDto>('/tally-categories', request);
+  }
+
+  updateTallyCategory(id: string, request: { name?: string; price?: number }): Observable<TallyCategoryDto> {
+    return this.api.put<TallyCategoryDto>(`/tally-categories/${encodeURIComponent(id)}`, request);
+  }
+
+  reorderTallyCategories(ids: string[]): Observable<TallyCategoryDto[]> {
+    return this.api.put<TallyCategoryDto[]>('/tally-categories/order', { ids });
+  }
+
+  deleteTallyCategory(id: string): Observable<void> {
+    return this.api.delete<void>(`/tally-categories/${encodeURIComponent(id)}`);
+  }
+
+  /** Ordnet ein Getränk einer Strich-Kategorie zu (`''` = ohne Kategorie). */
+  assignTallyCategory(drinkId: string, tallyCategoryId: string): Observable<DrinkDto> {
+    return this.api.put<DrinkDto>(`/drinks/${encodeURIComponent(drinkId)}`, { tallyCategoryId });
+  }
+
+  listFoods(active?: boolean): Observable<FoodSummaryDto[]> {
+    const query = active !== undefined ? `?active=${active}` : '';
+    return this.api.get<FoodSummaryDto[]>(`/food${query}`);
+  }
+
+  getFood(id: string): Observable<FoodDto> {
+    return this.api.get<FoodDto>(`/food/${encodeURIComponent(id)}`);
+  }
+
+  createFood(request: CreateFoodRequest): Observable<FoodDto> {
+    return this.api.post<FoodDto>('/food', request);
+  }
+
+  updateFood(id: string, request: UpdateFoodRequest): Observable<FoodDto> {
+    return this.api.put<FoodDto>(`/food/${encodeURIComponent(id)}`, request);
+  }
+}

@@ -1,0 +1,57 @@
+# Einstiegspunkt des lokalen und des E2E-Stacks (local/compose.yaml) und
+# Vorbild fuer den Reverse Proxy in Produktion (gleiche Grenzen und Header).
+{$PUBLIC_DOMAIN} {
+	encode zstd gzip
+
+	# Groesster legitimer Request ist ein Bild-Upload (6 MB, siehe baseservice).
+	# Einzige Ausnahme: Bilder und kurze Videos in Moments (bis 100 MiB, siehe
+	# MomentMediaService); sie stroemen ungepuffert bis in den Dateispeicher.
+	@momentMedia path_regexp momentMedia ^/api/v1/moments/[^/]+/media$
+	@otherRequests not path_regexp ^/api/v1/moments/[^/]+/media$
+	request_body @momentMedia {
+		max_size 110MB
+	}
+	request_body @otherRequests {
+		max_size 8MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Browser-Funktionen, die die App nicht braucht, sind abgeschaltet.
+		# Die Kamera bleibt fuer den Barcode-Scan, der Standort fuer die freiwillige
+		# Standortfreigabe in Moments auf der eigenen Seite erlaubt.
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(self), payment=(), usb=(), display-capture=(), browsing-topics=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+		-X-Powered-By
+	}
+
+	# Keycloak-Verwaltung (Admin-Konsole und Master-Realm) ist ueber Caddy
+	# nicht erreichbar, lokal nur direkt am Keycloak-Port.
+	handle /kc/admin* {
+		respond 404
+	}
+	handle /kc/realms/master* {
+		respond 404
+	}
+	# Dynamische Client-Registrierung wird nicht genutzt.
+	@clientRegistration path_regexp ^/kc/realms/[^/]+/clients-registrations(/|$)
+	handle @clientRegistration {
+		respond 404
+	}
+
+	handle /kc/* {
+		reverse_proxy keycloak:8080
+	}
+
+	handle {
+		reverse_proxy webservice:8080
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

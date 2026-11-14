@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        S3-kompatibler Bildspeicher (TICKET-014). PostgreSQL speichert ausschließlich
+        die Metadaten; die Binärdaten liegen im Objektspeicher. Zieldatenbank ist
+        PostgreSQL, H2 bleibt für die schnellen Spring-Context-Tests zugelassen.
+    -->
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 301. Metadatentabelle für Bilder -->
+    <changeSet id="301-create-image-assets" author="junie">
+        <createTable tableName="image_assets">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="storage_key" type="VARCHAR(512)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_image_assets_storage_key"/>
+            </column>
+            <column name="owner_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_image_assets_owner" references="users(id)"/>
+            </column>
+            <column name="purpose" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_id" type="${uuid.type}"/>
+            <column name="content_type" type="VARCHAR(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="size_bytes" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="width" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="height" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="image_version" type="INTEGER" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(32)" defaultValue="active">
+                <constraints nullable="false"/>
+            </column>
+            <column name="original_filename" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="image_assets" indexName="idx_image_assets_purpose_target">
+            <column name="purpose"/>
+            <column name="target_id"/>
+        </createIndex>
+        <createIndex tableName="image_assets" indexName="idx_image_assets_owner">
+            <column name="owner_id"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="image_assets" indexName="idx_image_assets_owner"/>
+            <dropIndex tableName="image_assets" indexName="idx_image_assets_purpose_target"/>
+            <dropTable tableName="image_assets"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 302. CHECK-Constraints für Zweck und Status -->
+    <changeSet id="302-image-assets-checks" author="junie">
+        <sql>
+            ALTER TABLE image_assets
+            ADD CONSTRAINT ck_image_assets_purpose
+            CHECK (purpose IN ('profile', 'event', 'drink', 'moment'))
+        </sql>
+        <sql>
+            ALTER TABLE image_assets
+            ADD CONSTRAINT ck_image_assets_status
+            CHECK (status IN ('active', 'deleted'))
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE image_assets DROP CONSTRAINT ck_image_assets_status</sql>
+            <sql>ALTER TABLE image_assets DROP CONSTRAINT ck_image_assets_purpose</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

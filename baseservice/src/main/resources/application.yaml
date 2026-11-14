@@ -1,0 +1,150 @@
+server:
+  port: ${SPRING_PORT:8081}
+  # Request-Größenlimits gegen DoS (relevant ab dem Bild-Upload aus TICKET-014)
+  max-http-request-header-size: 16KB
+  tomcat:
+    max-http-form-post-size: 2MB
+    max-swallow-size: 2MB
+
+spring:
+  application:
+    name: baseservice
+  # Benutzerseitige Fehler- und Validierungstexte (i18n/messages*.properties);
+  # Sprache aus Accept-Language, siehe vereint.i18n und docs/baseservice/i18n.md
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  datasource:
+    url: ${VEREINT_DB_URL:jdbc:postgresql://localhost:5432/vereint}
+    username: ${VEREINT_DB_USERNAME:vereint}
+    password: ${VEREINT_DB_PASSWORD:change-me-vereint-db-password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+  liquibase:
+    enabled: ${EV_LIQUIBASE_ENABLED:true}
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    contexts: ${EV_LIQUIBASE_CONTEXTS:prod}
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8082/realms/vereint}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8082/realms/vereint/protocol/openid-connect/certs}
+
+vereint:
+  i18n:
+    # Sprachen der Fehlertexte; default-locale ist Standard- und Rückfallsprache.
+    # Neue Sprache: i18n/messages_<code>.properties anlegen und hier ergänzen.
+    supported-locales: ${VEREINT_I18N_SUPPORTED_LOCALES:de,en}
+    default-locale: de
+  tenancy:
+    # Nur Entwicklung/E2E: Konten ohne Mitgliedschaft treten „Meine Gruppe"
+    # mit ihren Keycloak-Realmrollen bei. In Produktion aus (nur per Einladung).
+    bootstrap-realm-roles: ${TENANCY_BOOTSTRAP_REALM_ROLES:false}
+  cors:
+    # Ausschließlich explizite Ursprünge; Wildcards werden verworfen
+    allowed-origins: ${VEREIN_CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  storage:
+    # Speicher für Bilder und Videos (TICKET-014). STORAGE_BACKEND wählt
+    # s3 (S3-kompatibel), filesystem (Verzeichnis STORAGE_DIRECTORY, z. B. auf
+    # einem eigenen Server) oder memory. Ohne Angabe: S3_ENABLED=true heißt s3,
+    # sonst memory. Die S3-Secrets stammen ausschließlich aus S3_* und
+    # gelangen nie in Browser oder SSR-HTML.
+    backend: ${STORAGE_BACKEND:}
+    directory: ${STORAGE_DIRECTORY:}
+    enabled: ${S3_ENABLED:false}
+    endpoint: ${S3_ENDPOINT:http://localhost:9000}
+    bucket: ${S3_BUCKET:vereint}
+    region: ${S3_REGION:us-east-1}
+    access-key: ${S3_ACCESS_KEY:}
+    secret-key: ${S3_SECRET_KEY:}
+    path-style-access: ${S3_PATH_STYLE_ACCESS:true}
+    url-ttl-seconds: ${S3_URL_TTL_SECONDS:900}
+  encryption:
+    # Anwendungsverschlüsselung für Chat-Nachrichten, Benachrichtigungen und
+    # Bilddateien (AES-256-GCM). Der Schlüssel ist ein Secret (32 Byte, Base64)
+    # und stammt ausschließlich aus DATA_ENCRYPTION_KEY. Ist enabled=true, startet
+    # der Service ohne Schlüssel nicht. DATA_ENCRYPTION_KEY_PREVIOUS dient nur der
+    # Rotation und wird ausschließlich zum Entschlüsseln genutzt.
+    # In Produktion (Liquibase-Kontext oder Spring-Profil `prod`) bricht der
+    # Start ohne Verschlüsselung ab (StartupSafetyChecks); Klartext nur bewusst
+    # mit DATA_ENCRYPTION_ALLOW_PLAINTEXT=true.
+    enabled: ${DATA_ENCRYPTION_ENABLED:false}
+    allow-plaintext: ${DATA_ENCRYPTION_ALLOW_PLAINTEXT:false}
+    key: ${DATA_ENCRYPTION_KEY:}
+    previous-key: ${DATA_ENCRYPTION_KEY_PREVIOUS:}
+  push:
+    # Web Push mit VAPID (TICKET-020). Ist enabled=false, greift der No-Op-Sender;
+    # Benachrichtigungen werden weiterhin gespeichert, aber nicht zugestellt. Der
+    # private Schlüssel ist ein Secret und stammt ausschließlich aus VAPID_* und
+    # gelangt nie in Browser oder SSR-HTML.
+    enabled: ${VAPID_ENABLED:false}
+    subject: ${VAPID_SUBJECT:}
+    public-key: ${VAPID_PUBLIC_KEY:}
+    private-key: ${VAPID_PRIVATE_KEY:}
+    ttl-seconds: ${VAPID_TTL_SECONDS:2419200}
+  registration:
+    # Registrierung neuer Mitglieder per Einladungslink. Der Fachservice legt
+    # das Konto über die Keycloak-Admin-API mit dem vertraulichen Client
+    # `vereint-registration` an (nur `manage-users`). Das Secret stammt
+    # ausschließlich aus KEYCLOAK_REGISTRATION_CLIENT_SECRET. Ohne Secret
+    # antwortet die Registrierung mit 503.
+    enabled: ${REGISTRATION_ENABLED:false}
+    keycloak-url: ${KEYCLOAK_ADMIN_BASE_URL:http://localhost:8082}
+    realm: ${KEYCLOAK_REALM:vereint}
+    client-id: ${KEYCLOAK_REGISTRATION_CLIENT_ID:vereint-registration}
+    client-secret: ${KEYCLOAK_REGISTRATION_CLIENT_SECRET:}
+  signup:
+    # Personen registrieren sich selbst und eröffnen ihre Gruppe.
+    # Braucht die Kontoanlage über Keycloak (registration). Standardmäßig aus:
+    # erst einschalten, wenn Impressum, AGB und Datenschutzerklärung fertig sind.
+    # Einladungslinks funktionieren auch ohne.
+    enabled: ${SIGNUP_ENABLED:false}
+    # Höchstzahl aktiver Stammtische, die eine Person selbst eröffnet.
+    max-owned: ${SIGNUP_MAX_OWNED:3}
+  legal:
+    # Gültige Fassung der AGB (Datum wie `TERMS_VERSION` im Frontend). Wer ein
+    # Konto anlegt oder eine Gruppe eröffnet, stimmt dieser Fassung zu; alle
+    # anderen Konten werden nach dem Login gefragt, bevor die App nutzbar ist.
+    terms-version: ${TERMS_VERSION:2026-11-11}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      # Detailinformationen nur für authentifizierte Administratoren
+      show-details: when-authorized
+      show-components: when-authorized
+      roles: ADMIN
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  info:
+    build:
+      enabled: true
+    env:
+      enabled: false
+
+springdoc:
+  # Die API-Beschreibung verrät jeden Endpunkt samt Parametern. Standardmäßig
+  # aus; lokal mit API_DOCS_ENABLED=true einschalten.
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:false}
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:false}
+    path: /swagger-ui.html

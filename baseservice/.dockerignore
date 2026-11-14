@@ -1,0 +1,10 @@
+# Lokale Secrets und Build-Artefakte bleiben ausserhalb des Build-Kontexts.
+.env
+.env.*
+.gradle
+build
+out
+.idea
+*.iml
+Dockerfile
+.dockerignore

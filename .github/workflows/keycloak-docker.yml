@@ -1,0 +1,75 @@
+name: keycloak CI/CD
+
+# Diese Action ist ausschliesslich fuer den `keycloak` zustaendig und
+# wird nur ausgefuehrt, wenn sich etwas im Ordner `keycloak/` oder an
+# diesem Workflow selbst geaendert hat (siehe `paths`-Filter).
+#
+# Bei jedem Pull Request und Push: Docker-Image (Realm-Import und Login-Theme
+# eingebaut) bauen und mit Trivy auf bekannte Schwachstellen pruefen
+# (behebbare HIGH/CRITICAL-Funde lassen den Lauf fehlschlagen).
+#
+# Das Image wird nicht veroeffentlicht: Es laeuft nur im lokalen Stack und in
+# den E2E-Tests (keycloak/README.md).
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - qs
+    paths:
+      - 'keycloak/**'
+      - '.github/workflows/keycloak-docker.yml'
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - develop
+      - main
+      - qs
+    paths:
+      - 'keycloak/**'
+      - '.github/workflows/keycloak-docker.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keycloak-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TRIVY_IMAGE: aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969
+
+jobs:
+  docker:
+    name: Docker Image bauen und pruefen
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Docker Buildx einrichten
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Image fuer den Scan bauen
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: keycloak
+          file: keycloak/Dockerfile
+          load: true
+          tags: keycloak:scan
+          cache-from: type=gha,scope=keycloak
+          cache-to: type=gha,scope=keycloak,mode=max
+
+      - name: Image mit Trivy auf Schwachstellen pruefen
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$PWD/.trivyignore:/.trivyignore:ro" \
+            "$TRIVY_IMAGE" image \
+            --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \
+            --ignorefile /.trivyignore \
+            keycloak:scan

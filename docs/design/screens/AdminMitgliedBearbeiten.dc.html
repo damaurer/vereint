@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Administration: Mitglied bearbeiten</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/vereint/tokens.css">
+<link rel="stylesheet" href="ds/vereint/components/bundle.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--color-brand)}a:hover{color:var(--color-brand-strong)}
+</style>
+</helmet>
+<div data-theme="{{theme}}" style="width: 100%; min-height: 960px; box-sizing: border-box; display: flex; flex-wrap: wrap; background-color: var(--color-bg); color: var(--color-text); font-family: var(--font-sans)">
+  <dc-import name="Sidebar" active="admin" hint-size="260px,960px"></dc-import>
+  <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="height: 60px; display: flex; align-items: center; gap: 12px; padding: 0 24px; border-bottom: 1px solid var(--color-border); background-color: var(--color-surface)">
+      <a href="AdminMitglieder.dc.html" style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; text-decoration: none">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>
+        Mitglieder
+      </a>
+      <h1 style="margin: 0; flex: 1; font-size: 18px; font-weight: 800">Jonas Keller</h1>
+      <span style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px 0 4px; border: 1px solid var(--color-border); border-radius: 999px; font-size: 14px; font-weight: 600"><span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 999px; background-image: var(--vereint-gradient); color: #ffffff; font-size: 12px; font-weight: 800">SW</span>Sabine Wolf</span>
+    </header>
+    <main style="width: 100%; max-width: 1120px; box-sizing: border-box; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 20px; padding: 28px 24px; align-items: flex-start">
+      <section style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 18px; padding: 20px; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+        <div style="display: flex; align-items: center; gap: 14px">
+          <span style="display: grid; place-items: center; width: 56px; height: 56px; border-radius: 999px; background-color: var(--color-brand); color: var(--color-on-brand); font-size: 20px; font-weight: 800">JK</span>
+          <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 20px; font-weight: 800">Jonas Keller</span><span style="color: var(--color-text-muted); font-size: 14px">jonas@example.de · Mitglied seit 17.10.2026</span></span>
+        </div>
+        <fieldset style="margin: 0; display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--color-border); border-radius: 10px">
+          <legend style="padding: 0 4px; font-size: 14px; font-weight: 700">Rollen</legend>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px">
+            <sc-for list="{{roles}}" as="r" hint-placeholder-count="4">
+              <label style="display: flex; align-items: center; gap: 10px; min-height: 40px; font-size: 15px">
+                <input type="checkbox" checked="{{r.checked}}" onChange="{{r.flip}}" style="width: 20px; height: 20px; accent-color: var(--color-brand)">
+                <span style="display: flex; flex-direction: column"><span style="font-weight: 600">{{r.label}}</span><span style="color: var(--color-text-muted); font-size: 12px">{{r.hint}}</span></span>
+              </label>
+            </sc-for>
+          </div>
+          <a href="Rollen.dc.html" style="font-size: 13px; font-weight: 600; text-decoration: none">Eigene Rollen in den Gruppeneinstellungen verwalten</a>
+        </fieldset>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <label for="sub" style="font-size: 14px; font-weight: 600">Vorstandsamt</label>
+            <select id="sub" style="height: 44px; padding: 0 10px; border: 1px solid var(--color-border-dark); border-radius: 8px; background-color: var(--color-surface-raised); color: var(--color-text); font: inherit; font-size: 15px">
+              <option>keines</option><option>Vorsitz</option><option>Kassenwart</option><option>Schriftwart</option><option>Beisitzer</option>
+            </select>
+          </div>
+          <label style="display: flex; align-items: center; gap: 10px; align-self: end; min-height: 44px; font-size: 15px">
+            <input type="checkbox" checked="{{inactive}}" onChange="{{flipInactive}}" style="width: 20px; height: 20px; accent-color: var(--color-danger)">
+            Konto deaktivieren
+          </label>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <button type="button" onClick="{{save}}" style="height: 44px; padding: 0 20px; border: none; border-radius: 8px; background-color: var(--color-brand); color: var(--color-on-brand); font: inherit; font-size: 15px; font-weight: 700">Speichern</button>
+          <span role="status" style="color: var(--color-success); font-size: 14px; font-weight: 700">{{saved}}</span>
+        </div>
+      </section>
+
+      <section style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-size: 17px; font-weight: 700">Audit-Protokoll</h2>
+        <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: 12px; background-color: var(--color-surface)">
+          <sc-for list="{{audit}}" as="a" hint-placeholder-count="4">
+            <li style="{{a.row}}">
+              <span style="font-size: 14px; font-weight: 700">{{a.title}}</span>
+              <span style="color: var(--color-text-muted); font-size: 13px">{{a.detail}}</span>
+              <span style="color: var(--color-text-muted); font-size: 12px">{{a.meta}}</span>
+            </li>
+          </sc-for>
+        </ol>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { roles: { member: true }, inactive: false, saved: '', log: [] };
+  }
+  renderVals() {
+    const R = [['member', 'Mitglied', 'Events, Chat, Guthaben'], ['board', 'Vorstand', 'Kasse, Katalog, Mitteilungen'], ['admin', 'Admin', 'Mitglieder, Rollen, Gruppe'], ['tablet', 'Thekenterminal', 'Striche für andere buchen']];
+    const s = this.state;
+    const base = [
+      { title: 'Finanzen · Kauf', detail: 'Helles 0,5 l · 3,50 € · per Scan', meta: 'Jonas Keller · 17.10., 10:25' },
+      { title: 'Kommunikation · Rundbrief empfangen', detail: '„Mitgliederversammlung am 15. November“', meta: 'Thomas Berger · 17.10., 10:24' },
+      { title: 'Konto · Beitritt', detail: 'Über Einladungslink von Thomas Berger', meta: 'System · 17.10., 09:58' }
+    ];
+    const audit = s.log.concat(base).slice(0, 4);
+    return {
+      theme: this.props.theme ?? 'light',
+      roles: R.map(([id, label, hint]) => ({ label, hint, checked: !!s.roles[id], flip: () => this.setState({ roles: { ...s.roles, [id]: !s.roles[id] }, saved: '' }) })),
+      inactive: s.inactive,
+      flipInactive: () => this.setState({ inactive: !s.inactive, saved: '' }),
+      saved: s.saved,
+      save: () => {
+        const names = R.filter(([id]) => s.roles[id]).map(([, l]) => l).join(', ') || 'keine';
+        this.setState({ saved: 'Gespeichert.', log: [{ title: 'Administration · Rollen geändert', detail: 'Neu: ' + names + (s.inactive ? ' · deaktiviert' : ''), meta: 'Sabine Wolf · gerade eben' }].concat(s.log) });
+      },
+      audit: audit.map((a, i) => ({ ...a, row: 'display: flex; flex-direction: column; gap: 3px; padding: 12px 16px' + (i ? '; border-top: 1px solid var(--color-border)' : '') }))
+    };
+  }
+}
+</script>
+</body>
+</html>

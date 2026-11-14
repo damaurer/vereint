@@ -1,0 +1,17 @@
+# Caddyfile der E2E-Tests: Caddyfile des Stacks (local/Caddyfile)
+# unveraendert, nur mit einer Test-CA statt Let's Encrypt. Die CA erzeugt
+# e2e/stack.sh bei jedem Start neu; webservice und Playwright vertrauen ihr.
+{
+	local_certs
+	skip_install_trust
+	pki {
+		ca local {
+			root {
+				cert /e2e-ca/root.crt
+				key /e2e-ca/root.key
+			}
+		}
+	}
+}
+
+import /etc/caddy/Caddyfile.prod
