@@ -8,6 +8,7 @@ import de.maurer.baseservice.dto.StartMomentRequest
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.ResourceNotFoundException
+import de.maurer.baseservice.live.LiveUpdateHub
 import de.maurer.baseservice.push.PushDispatcher
 import de.maurer.baseservice.push.PushMessage
 import de.maurer.baseservice.security.UserPrincipal
@@ -69,6 +70,10 @@ class PersonalNetworkIntegrationTest @Autowired constructor(
 
     @MockitoSpyBean
     private lateinit var pushDispatcher: PushDispatcher
+
+    /** Wie in [ChatReceiptsIntegrationTest]: gleiche Overrides, damit beide Klassen einen Spring-Kontext teilen. */
+    @MockitoSpyBean
+    private lateinit var liveUpdateHub: LiveUpdateHub
 
     private lateinit var platform: UserPrincipal
     private lateinit var adminB: UserPrincipal

@@ -7,6 +7,7 @@ import de.maurer.baseservice.dto.SendMessageRequest
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.live.LiveEvent
 import de.maurer.baseservice.live.LiveUpdateHub
+import de.maurer.baseservice.push.PushDispatcher
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.ConversationService
@@ -48,6 +49,10 @@ class ChatReceiptsIntegrationTest @Autowired constructor(
 
     @MockitoSpyBean
     private lateinit var liveUpdateHub: LiveUpdateHub
+
+    /** Wie in [PersonalNetworkIntegrationTest]: gleiche Overrides, damit beide Klassen einen Spring-Kontext teilen. */
+    @MockitoSpyBean
+    private lateinit var pushDispatcher: PushDispatcher
 
     private lateinit var adminB: UserPrincipal
     private lateinit var stammtischB: UUID
