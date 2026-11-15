@@ -44,5 +44,6 @@
     <include file="db/changelog/changes/025-rounds.xml"/>
     <include file="db/changelog/changes/026-statistic-records.xml"/>
     <include file="db/changelog/changes/027-foreign-drinks.xml"/>
+    <include file="db/changelog/changes/028-chat-receipts-and-outbox.xml"/>
 
 </databaseChangeLog>

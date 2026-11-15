@@ -178,6 +178,7 @@ export const ICONS = {
   plus: [l(12, 5, 12, 19), l(5, 12, 19, 12)],
   minus: [l(5, 12, 19, 12)],
   check: [p('M5 12.5 9.5 17 19 7.5')],
+  checkDouble: [p('M2.5 12.5 7 17 16.5 7.5'), p('M12 16.5l.5.5 9.5-9.5')],
   'chevron-right': [p('M9.5 5.5 16 12l-6.5 6.5')],
   'chevron-left': [p('M14.5 5.5 8 12l6.5 6.5')],
   'chevron-down': [p('M5.5 9.5 12 16l6.5-6.5')],

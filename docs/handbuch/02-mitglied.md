@@ -61,7 +61,7 @@ Auf der **Startseite** steht außerdem immer dein nächster Termin.
 
 <img src="bilder/m-event-chat.png" alt="Event-Chat" width="300" align="right">
 
-**Event-Chat**: Alle Eingeladenen eines Events können hier miteinander schreiben, zum Beispiel für Fahrgemeinschaften. Nachricht unten eintippen und **Senden**. Den Chat findest du auch unter **Chat** in der Liste der Event-Chats.
+**Event-Chat**: Alle Eingeladenen eines Events können hier miteinander schreiben, zum Beispiel für Fahrgemeinschaften. Nachricht unten eintippen und senden. Es ist derselbe Chat wie unter **Chat** in der Liste der Event-Chats, mit Reaktionen, Haken und „schreibt…“ (siehe [Chat](#chat)).
 
 <br clear="right">
 
@@ -99,7 +99,11 @@ Unter **Chat** (untere Leiste) stehen oben der **Gruppenchat** für alle Mitglie
 
 Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vorstand eine **Infotafel** anheften, etwa einen wichtigen Termin.
 
-- Unten Nachricht eintippen und senden.
+- Unten Nachricht eintippen und senden. Neue Nachrichten und Reaktionen der anderen erscheinen sofort, ohne Neuladen.
+- Haken neben deinen Nachrichten: **✓** gesendet, **✓✓** bei allen angekommen, **✓✓ blau** von allen gelesen. Im Gruppen- und Event-Chat zeigt ein Antippen bzw. Darüberfahren, bei wie vielen die Nachricht schon angekommen ist und wie viele sie gelesen haben.
+- Tippt gerade jemand, steht über dem Eingabefeld zum Beispiel „Anna schreibt…“.
+- Ohne Netz kannst du trotzdem schreiben: Die Nachricht steht mit einer **Uhr** da und geht von allein hinaus, sobald du wieder Netz hast, auch wenn du die App zwischendurch schließt. Klappt es nicht (zum Beispiel weil das Event abgesagt wurde), steht **Nicht gesendet** darunter, mit **Erneut senden** und **Verwerfen**. Beim Abmelden werden ungesendete Nachrichten gelöscht.
+- Mit eingeschaltetem Push bekommst du neue Nachrichten im Gruppenchat und in den Chats deiner Events aufs Handy, mit Name und Text. Je Chat gibt es eine Benachrichtigung, die neueste ersetzt die vorige.
 - Mit **+** unter einer Nachricht reagierst du mit einem Emoji.
 - **← Zurück** führt zur Liste.
 
@@ -113,6 +117,7 @@ Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vor
 - Bestehende Gespräche stehen unter **Gespräche**; mit dem Suchfeld findest du sie schnell. **Freunde** oben rechts führt zur Freundesliste.
 - Seid ihr weder befreundet noch in einer gemeinsamen Gruppe, bleibt das Gespräch lesbar, neue Nachrichten gehen aber nicht mehr.
 - Mit eingeschaltetem Push bekommst du neue Direktnachrichten aufs Handy, egal welche Gruppe gerade gewählt ist. Ein Tipp darauf öffnet das Gespräch.
+- Haken, „schreibt…“ und Schreiben ohne Netz funktionieren wie im [Chat](#chat).
 
 <br clear="right">
 

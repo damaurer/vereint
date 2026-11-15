@@ -55,6 +55,12 @@ Thekenterminals.
 ## Chat und Mitteilungen
 
 - Gruppenchat, Event-Chats und Direktnachrichten, mit Zähler für ungelesene Nachrichten am Chat-Eintrag.
+- Live: Neue Nachrichten, Reaktionen und Mitteilungen erscheinen sofort, ohne Neuladen; Zähler gleichen sich über alle eigenen Geräte ab.
+- Haken wie bei bekannten Messengern an eigenen Nachrichten: einer = gesendet, zwei = zugestellt (auf einem Gerät angekommen), zwei farbige = gelesen. In Gruppen- und Event-Chats wechseln die Haken erst, wenn alle Empfänger so weit sind; ein Antippen bzw. Darüberfahren zeigt „Zugestellt an 3 von 5, gelesen von 2“.
+- „… schreibt…“ über dem Eingabefeld, solange jemand im offenen Chat tippt (Gruppen-, Event-Chat und Direktnachrichten).
+- Offline schreiben: Ohne Netz wartet eine Nachricht mit Uhr-Symbol auf dem Gerät und geht automatisch hinaus, sobald das Netz zurück ist, auch nach einem Neuladen der App. Doppelt kommt sie dabei nie an. Lehnt der Server sie ab (z. B. Event abgesagt), lässt sie sich erneut senden oder verwerfen. Beim Abmelden wird die Warteschlange geleert.
+- Der Event-Chat auf der Eventseite ist derselbe Verlauf wie unter *Chat*, mit Reaktionen, Haken und Tipp-Anzeige.
+- Web-Push für neue Nachrichten im Gruppenchat und in Event-Chats (Absender und Text, je Chat eine Benachrichtigung). Pushes aus anderen Gruppen zeigen ihren Inhalt, und ein Tipp darauf wechselt in die Gruppe.
 - Direktnachrichten sind gruppenübergreifend: ein Gespräch je Person, schreiben
   darf man Freunden und Personen aus den eigenen Gruppen.
 - Mitteilungen (Glocke oben) und Rundbriefe des Vorstands, auf Wunsch als

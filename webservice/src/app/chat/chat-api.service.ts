@@ -55,9 +55,18 @@ export class ChatApiService {
     return this.api.get<ChatMessageDto[]>(`${this.path(conversationId, type)}/messages`);
   }
 
-  /** Sendet eine Nachricht. */
-  send(conversationId: string, message: string, type?: ConversationType): Observable<ChatMessageDto> {
-    return this.api.post<ChatMessageDto>(`${this.path(conversationId, type)}/messages`, { message });
+  /**
+   * Sendet eine Nachricht. Mit `clientId` darf die App dieselbe Nachricht nach
+   * einem Verbindungsabbruch erneut senden, ohne dass sie doppelt ankommt.
+   */
+  send(conversationId: string, message: string, type?: ConversationType, clientId?: string): Observable<ChatMessageDto> {
+    const body = clientId ? { message, clientId } : { message };
+    return this.api.post<ChatMessageDto>(`${this.path(conversationId, type)}/messages`, body);
+  }
+
+  /** „schreibt gerade…“ an die anderen im Gespräch (`POST …/typing`). */
+  typing(conversationId: string, type?: ConversationType): Observable<void> {
+    return this.api.post<void>(`${this.path(conversationId, type)}/typing`, {});
   }
 
   /** Setzt den Lesestand auf jetzt. */

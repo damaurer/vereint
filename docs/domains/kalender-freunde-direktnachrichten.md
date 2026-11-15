@@ -59,10 +59,12 @@ Bereiche etwas aus einer Gruppe, in der er nicht selbst aktives Mitglied ist.
 
 - Eine neue Direktnachricht, eine neue Freundschaftsanfrage und eine
   angenommene Anfrage lösen bei der jeweils anderen Person einen Web-Push aus,
-  egal welche Gruppe dort gerade gewählt ist. Gruppenchats bleiben ohne Push.
+  egal welche Gruppe dort gerade gewählt ist. Neue Nachrichten in Gruppen- und
+  Event-Chats lösen ebenfalls einen Push aus (siehe
+  [Kommunikation & Push](chat-and-push-notifications.md)).
 - Wie alle Pushes tragen sie keinen Inhalt. Der Service Worker lädt
-  `/api/v1/notifications` (Mitteilungen der gewählten Gruppe) und
-  `/api/v1/personal-notifications` und zeigt die neueste ungelesene Mitteilung.
+  `/api/v1/personal-notifications` (alles Ungelesene über alle Gruppen) und
+  zeigt den neuesten Eintrag.
 - Die persönlichen Mitteilungen werden nicht gespeichert, sondern aus den Daten
   berechnet: je Gespräch die neueste ungelesene Nachricht, jede offene Anfrage
   an mich und für 15 Minuten jede eigene Anfrage, die angenommen wurde. Sie
@@ -84,8 +86,8 @@ Migration `019-friends-and-direct-messages.xml`:
 | :--- | :--- |
 | `friendships` | Je Paar eine Zeile (`pair_key` = sortierte Konto-IDs), Status `pending` oder `accepted` |
 | `direct_conversations` | Je Paar ein Gespräch (`pair_key`) |
-| `direct_participants` | Die beiden Beteiligten mit Lesestand (`last_read_at`) |
-| `direct_messages` | Nachrichten (verschlüsselt) |
+| `direct_participants` | Die beiden Beteiligten mit Lesestand (`last_read_at`) und Zustellstand (`last_delivered_at`, Zugestellt-Haken) |
+| `direct_messages` | Nachrichten (verschlüsselt), mit der von der App vergebenen `client_id` gegen Doppelte beim Offline-Versand |
 | `direct_reactions` | Emoji-Reaktionen |
 
 Diese Tabellen gehören wie `users` den Konten und keiner Gruppe. Sie haben

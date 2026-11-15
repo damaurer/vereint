@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from '../support/fixtures';
 import type { Role } from '../support/users';
+import { waitForSettled } from '../support/settle';
 
 /**
  * Jede Seite einmal pro Rolle aufrufen: Sie muss rendern (Ueberschrift),
@@ -54,7 +55,7 @@ for (const [role, paths] of Object.entries(pages) as [Role, string[]][]) {
         await page.goto(path);
         await expect(page).toHaveURL(new RegExp(`${path.replace(/\//g, '\\/')}$`));
         await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
-        await page.waitForLoadState('networkidle');
+        await waitForSettled(page);
       });
     }
     expect(problems).toEqual([]);

@@ -42,5 +42,11 @@ und `E2E-Tests` laufen immer. Gebaut und gescannt wird bei jedem Pull Request
 und Push. Nur nach einem Merge auf `qs` oder `main` werden baseservice und
 webservice für `linux/amd64` und `linux/arm64` nach
 `ghcr.io/damaurer/vereint-<dienst>` gepusht, getaggt mit Commit-SHA und Branch-Namen.
+Das `:qs`-Image des webservice wird mit `APP_STAGE=qs` gebaut. Es liefert
+unter denselben Adressen ein eigenes Manifest („Vereint QS“, orange
+Statusleiste) und orange Icons mit QS-Schild aus `webservice/public/qs/` aus.
+So lassen sich die installierte QS-App und die Produktiv-App auf dem Gerät
+unterscheiden. `:main` bleibt unverändert. Die PNG-Icons entstehen mit
+`node scripts/qs-icons/render.mjs` aus den SVG-Quellen.
 Mit *Run workflow* lassen sich die Image-Workflows auch von Hand starten.
 Ausgerollt wird außerhalb dieses Repositorys.

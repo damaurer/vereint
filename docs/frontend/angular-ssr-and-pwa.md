@@ -52,13 +52,15 @@ Die Progressive Web App (`pwa/`, Service Worker `public/vereint-sw.js`, Regeln g
 
 ### 2. VAPID Web Push im Service Worker
 - Der Service Worker registriert einen `push`-Event-Listener.
-- Der Server sendet Pushes **ohne Nutzlast**; beim Push-Dienst (Google, Mozilla, Apple) landen also keine Inhalte. Der Service Worker lädt mit der Sitzung `/api/v1/notifications` (Mitteilungen der gewählten Gruppe) und `/api/v1/personal-notifications` (Direktnachrichten und Freundschaftsanfragen über alle Gruppen) nach, nimmt die neueste ungelesene Mitteilung und zeigt sie als Systembenachrichtigung. Ohne gültige Sitzung erscheint nur „Du hast eine neue Mitteilung.“
+- Der Server sendet Pushes **ohne Nutzlast**; beim Push-Dienst (Google, Mozilla, Apple) landen also keine Inhalte. Der Service Worker lädt mit der Sitzung `/api/v1/personal-notifications` nach (Mitteilungen und Chats aller eigenen Gruppen, Direktnachrichten, Freundschaftsanfragen), nimmt den neuesten ungelesenen Eintrag und zeigt ihn als Systembenachrichtigung. Chats und Direktnachrichten teilen sich je Gespräch einen Tag (`renotify`), eine neue Nachricht ersetzt die vorige. Ohne gültige Sitzung erscheint nur „Du hast eine neue Mitteilung.“
 - Bei Event-Einladungen bietet die Benachrichtigung die Aktionen „Zusagen“ und „Absagen“, die direkt `PUT /api/v1/events/{id}/rsvp` aufrufen.
-- Ein Klick öffnet den Link der Mitteilung (z. B. das Event), sonst `/notifications`.
-- Die Mitteilungen gehören zu einer Gruppe; der Service Worker lädt sie über den API-Proxy und damit für die im Browser gewählte Gruppe. Die Zahl ungelesener Mitteilungen erscheint als App-Badge, wo das Betriebssystem es unterstützt.
+- Ein Klick öffnet den Link der Mitteilung (z. B. das Event oder den Chat), sonst `/notifications`. Trägt der Eintrag eine `stammtischId`, wählt der Service Worker vorher diese Gruppe (`POST /api/auth/stammtisch`), damit Link und „Zusagen“/„Absagen“ in der richtigen Gruppe landen.
+- Die Zahl ungelesener Einträge über alle Gruppen erscheint als App-Badge, wo das Betriebssystem es unterstützt.
+- Solange die App offen ist, kommen Änderungen zusätzlich über die Live-Verbindung (`LiveUpdatesService`, `GET /api/v1/live`, siehe [Kommunikation & Push](../domains/chat-and-push-notifications.md#3-live-verbindung-server-sent-events)).
 - Opt-in pro Gerät im Profil und auf der Mitteilungsseite (`PwaSettingsComponent`, `PushNotificationsService`). Beim App-Start wird ein bestehendes Abo erneut beim Server angemeldet und bei geändertem VAPID-Schlüssel ersetzt.
 - iPhone/iPad: Web Push gibt es nur in der installierten App (Home-Bildschirm, iOS 16.4+). Das Profil zeigt dafür die Installationsanleitung.
 
 ### 3. Installation
 - Manifest mit Icons (inkl. maskable), Shortcuts (Events, Chat, Guthaben, Mitteilungen) und `start_url` `/dashboard`.
+- QS-Variante: Mit `APP_STAGE=qs` liefert der BFF unter denselben Adressen `public/qs/manifest.webmanifest` („Vereint QS“) und die orangen QS-Icons aus (`stage-assets.middleware.ts`). Favicon, Apple Touch Icon und das Icon der Push-Mitteilungen wechseln dadurch mit.
 - `InstallPromptService` fängt `beforeinstallprompt` ab; das Profil zeigt dann „Installieren“. Auf iOS erscheint die Anleitung „Teilen → Zum Home-Bildschirm“.

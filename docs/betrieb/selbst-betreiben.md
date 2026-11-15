@@ -29,7 +29,7 @@ Ein komplettes, lauffähiges Beispiel aller Dienste ist
 | **Keycloak** | Realm aus [`keycloak/realm-export.json`](../../keycloak/realm-export.json) mit Login-Theme [`keycloak/themes/vereint`](../../keycloak/themes/vereint); Platzhalter siehe [keycloak/README.md](../../keycloak/README.md). Eigener Keycloak oder ein vorhandener mit eigenem Realm. |
 | **PostgreSQL** | Ab Version 17. Der baseservice verbindet sich als eigener Benutzer **ohne** Superuser-Rechte, dem die Datenbank gehört, sonst greift die Trennung der Gruppen per Row-Level-Security nicht ([`local/postgres/init-databases.sh`](../../local/postgres/init-databases.sh), [stammtische.md](../domains/stammtische.md#trennung)). |
 | **Dateien** | `STORAGE_BACKEND=filesystem` mit einem dauerhaften Volume unter `STORAGE_DIRECTORY` (das Image legt `/data/files` für Benutzer 10001 an), oder S3 mit `STORAGE_BACKEND=s3`. |
-| **Reverse Proxy mit HTTPS** | Leitet alles an den webservice. Anfragen höchstens 8 MB, außer auf dem Upload-Pfad `/api/v1/moments/<id>/media` (bis 110 MB, ungepuffert). Kamera und Standort per `Permissions-Policy` nur für die eigene Seite. Vorbild: [`local/Caddyfile`](../../local/Caddyfile). |
+| **Reverse Proxy mit HTTPS** | Leitet alles an den webservice. Anfragen höchstens 8 MB, außer auf dem Upload-Pfad `/api/v1/moments/<id>/media` (bis 110 MB, ungepuffert). Die Live-Verbindung `/api/v1/live` (Server-Sent Events) läuft ungepuffert und unkomprimiert durch und darf mindestens 10 Minuten offen bleiben; ein Proxy, der Antworten puffert (z. B. Traefik-Middleware `buffering`), braucht dafür eine eigene Route ohne diese Middleware. Ohne das funktioniert die App weiter, Chats aktualisieren sich dann aber nur alle 10 Sekunden. Kamera und Standort per `Permissions-Policy` nur für die eigene Seite. Vorbild: [`local/Caddyfile`](../../local/Caddyfile). |
 | **Backups** | Datenbank und Datei-Volume regelmäßig und außer Haus sichern, am besten auch direkt vor jedem Update. |
 
 ## Konfiguration
@@ -56,6 +56,7 @@ Ein komplettes, lauffähiges Beispiel aller Dienste ist
 | `SPRING_API_BASE_URL` | Interne Adresse des baseservice |
 | `KEYCLOAK_ISSUER_URI`, `KEYCLOAK_REALM`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET` | Login über den Client `vereint-web` |
 | `SESSION_SECRET`, optional `SESSION_SECRET_PREVIOUS`, `SESSION_COOKIE_SECURE=true` | Sitzungs-Cookie |
+| `APP_STAGE` | `prod` (Standard) oder `qs`: QS zeigt als installierte App eigenes Icon und den Namen „Vereint QS“. Im `:qs`-Image schon gesetzt |
 
 Alle Secrets mindestens 32 Zeichen, zum Beispiel `openssl rand -hex 32`;
 `DATA_ENCRYPTION_KEY` mit `openssl rand -base64 32`. Weitere Variablen:

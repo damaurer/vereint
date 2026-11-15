@@ -202,15 +202,18 @@ Fachlich: [Einladungslinks](../domains/member-invites.md).
 | `PUT` | `/api/v1/conversations/club/pin` | Infotafel im Gruppenchat setzen (`PinNoteRequest`) | `chat.moderate` oder `event.manage` |
 | `GET` / `POST` | `/api/v1/conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/read` | Als gelesen markieren | Mitglied der Unterhaltung |
+| `POST` | `/api/v1/conversations/{conversationId}/typing` | „schreibt gerade…“ an die anderen Lesenden (`204`, höchstens alle 2 s je Person) | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Mitglied der Unterhaltung |
 | `GET` | `/api/v1/direct-conversations` | Eigene Direktnachrichten über alle Gruppen | Angemeldet |
 | `GET` | `/api/v1/direct-conversations/unread-count` | Ungelesene Direktnachrichten | Angemeldet |
 | `POST` | `/api/v1/direct-conversations` | Gespräch beginnen oder bestehendes liefern (`StartDirectConversationRequest`) | Freunde oder gemeinsame Gruppe |
 | `GET` / `POST` | `/api/v1/direct-conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden (senden nur mit Freundschaft oder gemeinsamer Gruppe) | Beteiligte |
 | `POST` | `/api/v1/direct-conversations/{conversationId}/read` | Als gelesen markieren | Beteiligte |
+| `POST` | `/api/v1/direct-conversations/{conversationId}/typing` | „schreibt gerade…“ an das Gegenüber (`204`) | Beteiligte mit Schreibrecht |
 | `POST` | `/api/v1/direct-conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Beteiligte |
 | `GET` | `/api/v1/notifications` | Eigene Mitteilungen | Angemeldet |
-| `GET` | `/api/v1/personal-notifications` | Persönliche Mitteilungen für Push: ungelesene Direktnachrichten, Freundschaftsanfragen, frisch angenommene Anfragen (ohne Gruppe) | Angemeldet |
+| `GET` | `/api/v1/personal-notifications` | Alles Ungelesene über alle eigenen Gruppen für Push: Mitteilungen, Gruppen- und Event-Chats, Direktnachrichten, Freundschaftsanfragen, frisch angenommene Anfragen; Einträge aus Gruppen tragen `stammtischId` (ohne Gruppe) | Angemeldet |
+| `GET` | `/api/v1/live` | Live-Verbindung (`text/event-stream`): Signale `ready`, `ping`, `chat`, `direct`, `read`, `notification` ohne Inhalt; endet nach 10 Minuten (ohne Gruppe) | Angemeldet |
 | `GET` | `/api/v1/notifications/unread-count` | Anzahl ungelesener Mitteilungen | Angemeldet |
 | `POST` | `/api/v1/notifications/read-all` | Alle als gelesen markieren | Angemeldet |
 | `POST` | `/api/v1/notifications/{notificationId}/read` | Eine Mitteilung als gelesen markieren | Angemeldet |
@@ -220,7 +223,7 @@ Fachlich: [Einladungslinks](../domains/member-invites.md).
 | `POST` | `/api/v1/notifications` | Mitteilung an ein Mitglied senden (`SendNotificationRequest`) | `notifications.broadcast` |
 | `POST` | `/api/v1/notifications/broadcast` | Mitteilung an alle Mitglieder der Gruppe (`BroadcastNotificationRequest`) | `notifications.broadcast` |
 
-Neue Nachrichten holt die App per Polling; einen WebSocket-Endpunkt gibt es nicht.
+Neue Nachrichten meldet `GET /api/v1/live` sofort; ohne Live-Verbindung fragt die App regelmäßig ab.
 
 
 ### 7a. Kalender und Freunde (`CalendarController`, `FriendController`)

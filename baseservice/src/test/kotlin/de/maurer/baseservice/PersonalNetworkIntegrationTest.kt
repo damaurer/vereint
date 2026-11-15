@@ -8,6 +8,7 @@ import de.maurer.baseservice.dto.StartMomentRequest
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.ResourceNotFoundException
+import de.maurer.baseservice.live.LiveUpdateHub
 import de.maurer.baseservice.push.PushDispatcher
 import de.maurer.baseservice.push.PushMessage
 import de.maurer.baseservice.security.UserPrincipal
@@ -19,7 +20,10 @@ import de.maurer.baseservice.service.EventService
 import de.maurer.baseservice.service.FriendService
 import de.maurer.baseservice.service.MemberInviteService
 import de.maurer.baseservice.service.MomentService
+import de.maurer.baseservice.service.NotificationService
 import de.maurer.baseservice.service.PersonalAlertService
+import de.maurer.baseservice.service.ChatNotifier
+import de.maurer.baseservice.dto.BroadcastNotificationRequest
 import de.maurer.baseservice.service.PlatformService
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.DefaultStammtischExtension.Companion.DEFAULT_STAMMTISCH_ID
@@ -60,11 +64,16 @@ class PersonalNetworkIntegrationTest @Autowired constructor(
     private val directMessageService: DirectMessageService,
     private val conversationService: ConversationService,
     private val calendarService: CalendarService,
-    private val personalAlertService: PersonalAlertService
+    private val personalAlertService: PersonalAlertService,
+    private val notificationService: NotificationService
 ) {
 
     @MockitoSpyBean
     private lateinit var pushDispatcher: PushDispatcher
+
+    /** Wie in [ChatReceiptsIntegrationTest]: gleiche Overrides, damit beide Klassen einen Spring-Kontext teilen. */
+    @MockitoSpyBean
+    private lateinit var liveUpdateHub: LiveUpdateHub
 
     private lateinit var platform: UserPrincipal
     private lateinit var adminB: UserPrincipal
@@ -290,5 +299,52 @@ class PersonalNetworkIntegrationTest @Autowired constructor(
         assertTrue(personalAlertService.alerts(alice, Instant.now().plus(1, ChronoUnit.HOURS)).isEmpty())
         directMessageService.markRead(conversation, bob)
         assertTrue(personalAlertService.alerts(bob).isEmpty())
+    }
+
+    @Test
+    fun `group chats push to the other members and show up with their group in personal notifications`() {
+        val alice = person("Alice")
+        val bob = person("Bob")
+        val aliceId = idOf(alice)
+        val bobId = idOf(bob)
+        joinB(alice)
+        joinB(bob)
+        val aliceInB = alice.copy(stammtischId = stammtischB.toString())
+        val bobInB = bob.copy(stammtischId = stammtischB.toString())
+        Mockito.clearInvocations(pushDispatcher)
+
+        val club = UUID.fromString(asB { conversationService.clubSummary(aliceInB) }.id)
+        asB { conversationService.sendMessage(club, SendMessageRequest(message = "Wer kommt heute?"), aliceInB) }
+        asB { conversationService.sendMessage(club, SendMessageRequest(message = "Ich bring Brezeln"), aliceInB) }
+
+        // Push an alle anderen Mitglieder, nicht an die Absenderin.
+        assertEquals(2, pushTypesFor(bobId).count { it == ChatNotifier.TYPE_CHAT_MESSAGE })
+        assertTrue(pushTypesFor(aliceId).none { it == ChatNotifier.TYPE_CHAT_MESSAGE })
+
+        // Der Service Worker sieht die Nachricht, egal welche Gruppe gerade gewählt ist.
+        val chat = TenantContext.runWithoutTenant { personalAlertService.alerts(bob) }.single()
+        assertEquals(ChatNotifier.TYPE_CHAT_MESSAGE, chat.type)
+        assertEquals("Alice in Gruppe B", chat.title)
+        assertEquals("Ich bring Brezeln", chat.body)
+        assertEquals("/chat?id=$club", chat.link)
+        assertEquals(stammtischB.toString(), chat.stammtischId)
+        assertTrue(personalAlertService.alerts(alice).none { it.type == ChatNotifier.TYPE_CHAT_MESSAGE })
+
+        asB { conversationService.markRead(club, bobInB) }
+        assertTrue(personalAlertService.alerts(bob).isEmpty())
+
+        // Mitteilungen einer Gruppe erscheinen ebenfalls mit ihrer Gruppe.
+        asB {
+            notificationService.broadcast(
+                BroadcastNotificationRequest(userIds = listOf(bobId.toString()), title = "Rundbrief", body = "Treffen um 8"),
+                adminB
+            )
+        }
+        val broadcast = personalAlertService.alerts(bob).single()
+        assertEquals("Rundbrief", broadcast.title)
+        assertEquals(stammtischB.toString(), broadcast.stammtischId)
+        // Bob aus der anderen Gruppe sieht keine Chats der Gruppe B.
+        val carol = person("Carol")
+        assertTrue(personalAlertService.alerts(carol).isEmpty())
     }
 }

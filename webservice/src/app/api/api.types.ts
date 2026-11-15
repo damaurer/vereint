@@ -763,6 +763,21 @@ export interface ChatMessageDto {
   imageUrl: string | null;
   createdAt: string;
   reactions?: ChatReaction[];
+  /** Id, die die App beim Senden vergeben hat (nur eigene Nachrichten). */
+  clientId?: string | null;
+  /** Haken (nur eigene Nachrichten). */
+  receipt?: MessageReceipt | null;
+}
+
+/**
+ * Stand einer eigenen Nachricht: `sent` ein Haken, `delivered` zwei Haken,
+ * `read` zwei farbige Haken. In Gruppen erst, wenn alle Empfänger so weit sind.
+ */
+export interface MessageReceipt {
+  status: 'sent' | 'delivered' | 'read';
+  recipients: number;
+  delivered: number;
+  read: number;
 }
 
 export interface PinnedNote {

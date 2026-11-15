@@ -62,9 +62,10 @@ webservice/src/
 ├── server.ts                               # Haupt-Einstiegspunkt, Middleware-Pipeline & Serverstart
 └── server/
     ├── api/                                # Proxy für Fachservice-Aufrufe
-    │   ├── api-proxy.middleware.ts         # apiProxy & mediaStreamProxy: /api/v1 an Spring Boot (Bearer, X-Stammtisch-Id)
+    │   ├── api-proxy.middleware.ts         # apiProxy, mediaStreamProxy & liveStreamProxy: /api/v1 an Spring Boot (Bearer, X-Stammtisch-Id)
     │   ├── api-proxy.middleware.spec.ts    # Tests für Proxy, Header-Stripping & Fehlerbehandlung
-    │   └── media-stream-proxy.spec.ts      # Tests für ungepuffertes Streaming von Moment-Medien
+    │   ├── media-stream-proxy.spec.ts      # Tests für ungepuffertes Streaming von Moment-Medien
+    │   └── live-stream-proxy.spec.ts       # Tests für die Live-Verbindung (Server-Sent Events)
     │
     ├── auth/                               # Authentifizierung, Session & OIDC
     │   ├── auth.middleware.ts              # attachIdentity: Liest & validiert Session je Request
@@ -173,6 +174,7 @@ In Produktions- oder Container-Umgebungen (Docker/Kubernetes) werden Umgebungsva
 | `SESSION_DURATION_MINUTES` | `1440` (24h) | Nein | Session-Lebensdauer in Minuten (muss mit Keycloak `ssoSessionMaxLifespan` übereinstimmen). |
 | `SESSION_DURATION_DAYS` | `1` | Nein | Alternative Angabe der Session-Lebensdauer in Tagen. |
 | `SESSION_COOKIE_SECURE` | In Prod: `true`, sonst `false` | Nein | Erzwingt das `Secure`-Attribut am Cookie. In Produktion **Pflicht**. Zusammen mit einer `PUBLIC_BASE_URL` mit `https://` heißen alle Cookies `__Host-…` ([Cookie-Namen](03-authentication-and-session.md#cookie-namen-mit-__host-)). |
+| `APP_STAGE` | `prod` | Nein | `qs` liefert Manifest („Vereint QS“) und Icons mit QS-Kennung aus `public/qs/` aus, damit die installierte QS-App von der Produktiv-App unterscheidbar ist. Das `:qs`-Image setzt den Wert bereits. |
 | `NG_ALLOWED_HOSTS` | *(leer)* | Nein | Zusätzliche Hosts (kommagetrennt), für die Angular SSR rendern darf; Host aus `PUBLIC_BASE_URL` ist immer erlaubt. |
 
 ---

@@ -66,6 +66,12 @@ COPY --from=deps --chown=10001:10001 /app/node_modules ./node_modules
 COPY --from=build --chown=10001:10001 /app/dist ./dist
 COPY --chown=10001:10001 package.json ./
 
+# Umgebung der Installation: `qs` liefert Manifest und Icons der QS-App aus
+# (siehe docs/betrieb/branches-und-ci.md). Die CI baut das `:qs`-Image mit
+# `APP_STAGE=qs`; zur Laufzeit kann `APP_STAGE` ueberschrieben werden.
+ARG APP_STAGE=prod
+ENV APP_STAGE=${APP_STAGE}
+
 USER 10001:10001
 
 EXPOSE 8080
