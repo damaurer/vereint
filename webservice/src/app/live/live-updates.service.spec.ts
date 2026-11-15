@@ -92,6 +92,18 @@ describe('LiveUpdatesService', () => {
     ]);
   });
 
+  it('passes on typing signals with who is typing and receipt signals', () => {
+    service.start();
+    latest().fire('ready');
+    latest().fire('typing', JSON.stringify({ type: 'typing', conversationId: 'c1', userId: 'u1', name: 'Anna' }));
+    latest().fire('receipt', JSON.stringify({ type: 'receipt', conversationId: 'c1' }));
+
+    expect(events).toEqual([
+      { type: 'typing', stammtischId: null, conversationId: 'c1', userId: 'u1', name: 'Anna' },
+      { type: 'receipt', stammtischId: null, conversationId: 'c1' },
+    ]);
+  });
+
   it('filters by type and always includes resync', () => {
     const chat: LiveEvent[] = [];
     service.on('chat').subscribe((event) => chat.push(event));

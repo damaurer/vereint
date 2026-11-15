@@ -2,6 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { translate } from '../i18n/i18n.service';
 import { AuthMeResponse, AuthSessionUser } from './auth.types';
+import { clearChatOutbox } from '../chat/chat-outbox-storage';
 
 /**
  * Anmeldung über Keycloak.
@@ -107,6 +108,8 @@ export class AuthService {
   async signOut(): Promise<void> {
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => undefined);
     this.clearClientState();
+    // Ungesendete Chat-Nachrichten bleiben nicht auf einem geteilten Gerät liegen.
+    clearChatOutbox();
   }
 
   /**

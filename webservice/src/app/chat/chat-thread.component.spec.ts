@@ -1,11 +1,15 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { Subject, filter, of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ConversationSummary } from '../api/api.types';
+import { ApiError } from '../api/api-client.service';
+import { AuthService } from '../auth/auth.service';
+import { LiveUpdatesService, type LiveEvent, type LiveEventType } from '../live/live-updates.service';
 import { ChatApiService } from './chat-api.service';
-import { CHAT_POLL_INTERVAL_MS, ChatThreadComponent } from './chat-thread.component';
+import { CHAT_POLL_INTERVAL_MS, ChatThreadComponent, TYPING_DISPLAY_MS } from './chat-thread.component';
+import { ChatOutboxService } from './chat-outbox.service';
 import { ChatUnreadStore } from './chat-unread.store';
 import { chatMessage, summary } from './chat-test-data';
 
@@ -15,8 +19,20 @@ describe('ChatThreadComponent', () => {
     send: ReturnType<typeof vi.fn>;
     markRead: ReturnType<typeof vi.fn>;
     toggleReaction: ReturnType<typeof vi.fn>;
+    typing: ReturnType<typeof vi.fn>;
   };
   let store: { count: ReturnType<typeof signal<number>>; refresh: ReturnType<typeof vi.fn> };
+  let liveEvents: Subject<LiveEvent>;
+  const live = () => ({
+    connected: signal(false),
+    events$: liveEvents.asObservable(),
+    on: (...types: LiveEventType[]) =>
+      liveEvents.pipe(filter((event) => event.type === 'resync' || types.includes(event.type))),
+  });
+  /** Wartet, bis die Warteschlange gesendet hat (Promises statt Zeitgeber). */
+  const settle = async () => {
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+  };
 
   const create = async (conversation: ConversationSummary = summary()) => {
     TestBed.configureTestingModule({
@@ -25,6 +41,11 @@ describe('ChatThreadComponent', () => {
         provideRouter([]),
         { provide: ChatApiService, useValue: api },
         { provide: ChatUnreadStore, useValue: store },
+        { provide: LiveUpdatesService, useValue: live() },
+        {
+          provide: AuthService,
+          useValue: { getSession: () => Promise.resolve({ uid: 'kc-me', stammtisch: { id: 'st-1', name: 'Test' } }) },
+        },
       ],
     });
     const fixture = TestBed.createComponent(ChatThreadComponent);
@@ -53,8 +74,11 @@ describe('ChatThreadComponent', () => {
       toggleReaction: vi.fn(() =>
         of(chatMessage({ reactions: [{ emoji: '🍺', count: 3, reactedByMe: true }] })),
       ),
+      typing: vi.fn(() => of(undefined)),
     };
     store = { count: signal(0), refresh: vi.fn() };
+    liveEvents = new Subject<LiveEvent>();
+    localStorage.clear();
   });
 
   afterEach(() => vi.useRealTimers());
@@ -110,26 +134,116 @@ describe('ChatThreadComponent', () => {
     expect(api.toggleReaction).toHaveBeenCalledWith('c-club', 'm-1', '🍺', 'club');
   });
 
-  it('sends a message and clears the draft', async () => {
+  it('sends a message with its own client id and clears the draft', async () => {
     const fixture = await create();
     const component = fixture.componentInstance as unknown as { draft: string; send: () => void };
     component.draft = 'Prost!';
     component.send();
-    fixture.detectChanges();
-    expect(api.send).toHaveBeenCalledWith('c-club', 'Prost!', 'club');
     expect(component.draft).toBe('');
+    await settle();
+    fixture.detectChanges();
+    expect(api.send).toHaveBeenCalledWith('c-club', 'Prost!', 'club', expect.any(String));
     expect(root(fixture).textContent).toContain('Prost!');
+    expect(root(fixture).querySelector('.chat-message.is-pending')).toBeNull();
+    expect(TestBed.inject(ChatOutboxService).entries()).toEqual([]);
   });
 
-  it('keeps the draft and shows a neutral message when sending fails', async () => {
-    api.send.mockReturnValue(throwError(() => new Error('offline')));
+  it('keeps a message in the queue while offline and sends it when the network is back', async () => {
+    api.send.mockReturnValueOnce(throwError(() => new ApiError(0, 'network_error', '')));
     const fixture = await create();
     const component = fixture.componentInstance as unknown as { draft: string; send: () => void };
     component.draft = 'Prost!';
     component.send();
+    await settle();
     fixture.detectChanges();
-    expect(component.draft).toBe('Prost!');
-    expect(root(fixture).textContent).toContain('konnte nicht gesendet werden');
+    const pending = root(fixture).querySelector('.chat-message.is-pending');
+    expect(pending?.textContent).toContain('Prost!');
+    expect(pending?.querySelector('[data-status="pending"]')).toBeTruthy();
+    expect(pending?.textContent).toContain('sobald du wieder Netz hast');
+    const clientId = api.send.mock.calls[0][3] as string;
+
+    // Netz zurück: dieselbe Nachricht mit derselben Id, keine doppelte Blase.
+    api.send.mockReturnValueOnce(
+      of(chatMessage({ id: 'm-3', senderId: 'u-me', message: 'Prost!', clientId, receipt: { status: 'sent', recipients: 3, delivered: 0, read: 0 } })),
+    );
+    globalThis.dispatchEvent(new Event('online'));
+    await settle();
+    fixture.detectChanges();
+    expect(api.send).toHaveBeenCalledTimes(2);
+    expect(api.send.mock.calls[1][3]).toBe(clientId);
+    expect(root(fixture).querySelector('.chat-message.is-pending')).toBeNull();
+    expect(root(fixture).querySelectorAll('.chat-message.is-own').length).toBe(2);
+  });
+
+  it('marks a message the server rejects as failed and lets the user retry or discard it', async () => {
+    api.send.mockReturnValue(throwError(() => new ApiError(403, 'access_denied', '')));
+    const fixture = await create();
+    const component = fixture.componentInstance as unknown as { draft: string; send: () => void };
+    component.draft = 'Prost!';
+    component.send();
+    await settle();
+    fixture.detectChanges();
+    const failed = root(fixture).querySelector('.chat-message.is-failed');
+    expect(failed?.textContent).toContain('Nicht gesendet');
+    const discard = Array.from(failed!.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+      button.textContent?.includes('Verwerfen'),
+    );
+    discard!.click();
+    fixture.detectChanges();
+    expect(root(fixture).querySelector('.chat-message.is-failed')).toBeNull();
+  });
+
+  it('shows ticks on own messages: one, two and two coloured ones', async () => {
+    api.messages.mockReturnValue(
+      of([
+        chatMessage({ id: 'm-a', senderId: 'u-me', message: 'Eins', receipt: { status: 'sent', recipients: 3, delivered: 1, read: 0 } }),
+        chatMessage({ id: 'm-b', senderId: 'u-me', message: 'Zwei', receipt: { status: 'delivered', recipients: 3, delivered: 3, read: 1 } }),
+        chatMessage({ id: 'm-c', senderId: 'u-me', message: 'Drei', receipt: { status: 'read', recipients: 3, delivered: 3, read: 3 } }),
+        chatMessage({ id: 'm-d', message: 'Fremd' }),
+      ]),
+    );
+    const fixture = await create();
+    const receipts = Array.from(root(fixture).querySelectorAll<HTMLElement>('.chat-receipt'));
+    expect(receipts.map((element) => element.dataset['status'])).toEqual(['sent', 'delivered', 'read']);
+    expect(receipts[0].getAttribute('aria-label')).toBe('Zugestellt an 1 von 3, gelesen von 0');
+    expect(receipts[2].classList.contains('is-read')).toBe(true);
+    expect(receipts[2].getAttribute('aria-label')).toBe('Von allen gelesen');
+  });
+
+  it('reloads the messages when the receipts of this chat change', async () => {
+    await create();
+    expect(api.messages).toHaveBeenCalledTimes(1);
+    liveEvents.next({ type: 'receipt', conversationId: 'c-other' });
+    expect(api.messages).toHaveBeenCalledTimes(1);
+    liveEvents.next({ type: 'receipt', conversationId: 'c-club' });
+    expect(api.messages).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows who is typing and hides it after a few seconds', async () => {
+    vi.useFakeTimers();
+    const fixture = await create();
+    liveEvents.next({ type: 'typing', conversationId: 'c-club', userId: 'u-anna', name: 'Anna' });
+    liveEvents.next({ type: 'typing', conversationId: 'c-other', userId: 'u-bob', name: 'Bob' });
+    liveEvents.next({ type: 'typing', conversationId: 'c-club', userId: 'u-me', name: 'Ich' });
+    fixture.detectChanges();
+    expect(root(fixture).querySelector('.chat-typing')?.textContent).toContain('Anna schreibt…');
+    liveEvents.next({ type: 'typing', conversationId: 'c-club', userId: 'u-carl', name: 'Carl' });
+    fixture.detectChanges();
+    expect(root(fixture).querySelector('.chat-typing')?.textContent).toContain('Anna und Carl schreiben…');
+    vi.advanceTimersByTime(TYPING_DISPLAY_MS + 10);
+    fixture.detectChanges();
+    expect(root(fixture).querySelector('.chat-typing')?.textContent?.trim()).toBe('');
+  });
+
+  it('reports typing at most every few seconds', async () => {
+    const fixture = await create();
+    const component = fixture.componentInstance as unknown as { draft: string; onDraftChange: () => void };
+    component.draft = 'H';
+    component.onDraftChange();
+    component.draft = 'Ha';
+    component.onDraftChange();
+    expect(api.typing).toHaveBeenCalledTimes(1);
+    expect(api.typing).toHaveBeenCalledWith('c-club', 'club');
   });
 
   it('disables the composer when the conversation is read-only', async () => {

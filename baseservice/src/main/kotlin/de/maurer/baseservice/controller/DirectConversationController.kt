@@ -71,6 +71,13 @@ class DirectConversationController(
     fun read(@PathVariable conversationId: String): ResponseEntity<ConversationSummaryDto> =
         ResponseEntity.ok(directMessageService.markRead(conversationId(conversationId), authContext.getRequiredPrincipal()))
 
+    @PostMapping("/{conversationId}/typing")
+    @Operation(summary = "Schreibt gerade", description = "Zeigt dem Gegenüber für einige Sekunden „schreibt gerade…“; höchstens alle 2 Sekunden je Person")
+    fun typing(@PathVariable conversationId: String): ResponseEntity<Void> {
+        directMessageService.typing(conversationId(conversationId), authContext.getRequiredPrincipal())
+        return ResponseEntity.noContent().build()
+    }
+
     @PostMapping("/{conversationId}/messages/{messageId}/reactions")
     @Operation(summary = "Reaktion umschalten", description = "Setzt oder entfernt die eigene Reaktion auf eine Nachricht")
     fun react(
