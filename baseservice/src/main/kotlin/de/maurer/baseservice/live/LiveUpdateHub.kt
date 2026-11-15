@@ -1,5 +1,6 @@
 package de.maurer.baseservice.live
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
@@ -27,17 +28,25 @@ import jakarta.annotation.PreDestroy
  * - `direct`: Nachricht oder Reaktion in einer Direktnachricht
  * - `read`: eigener Lesestand hat sich geändert (Zähler auf anderen Geräten)
  * - `notification`: neue Mitteilung (Einladung, Rundbrief, Freunde …)
+ * - `receipt`: eigene Nachrichten wurden zugestellt oder gelesen (Haken)
+ * - `typing`: jemand schreibt gerade in diesem Gespräch; trägt nur Id und
+ *   Anzeigenamen der Person, die alle Lesenden ohnehin sehen
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class LiveEvent(
     val type: String,
     val stammtischId: String? = null,
-    val conversationId: String? = null
+    val conversationId: String? = null,
+    val userId: String? = null,
+    val name: String? = null
 ) {
     companion object {
         const val CHAT = "chat"
         const val DIRECT = "direct"
         const val READ = "read"
         const val NOTIFICATION = "notification"
+        const val RECEIPT = "receipt"
+        const val TYPING = "typing"
     }
 }
 

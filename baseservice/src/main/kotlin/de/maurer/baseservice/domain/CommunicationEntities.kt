@@ -84,7 +84,11 @@ class ConversationMemberEntity(
 
     /** Zeitpunkt der zuletzt gelesenen Nachricht; Grundlage für ungelesene Zähler. */
     @Column(name = "last_read_at")
-    var lastReadAt: Instant? = null
+    var lastReadAt: Instant? = null,
+
+    /** Bis zu dieser Nachricht ist der Chat auf einem Gerät angekommen (Zugestellt-Haken). */
+    @Column(name = "last_delivered_at")
+    var lastDeliveredAt: Instant? = null
 ) : StammtischScoped()
 
 @Entity
@@ -113,6 +117,10 @@ class ChatMessageEntity(
 
     @Column(name = "image_url", length = 512)
     var imageUrl: String? = null,
+
+    /** Id, die die App vergeben hat; verhindert Doppelte beim erneuten Senden. */
+    @Column(name = "client_id", length = 64, updatable = false)
+    var clientId: String? = null,
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

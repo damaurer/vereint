@@ -12,6 +12,9 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
 - **Direktnachrichten**: 1:1-Gespräche, gruppenübergreifend: genau ein Gespräch je Personenpaar, schreiben darf man Freunden und Personen aus den eigenen Gruppen (`/direktnachrichten`). Details in [Kalender, Freunde und Direktnachrichten](kalender-freunde-direktnachrichten.md).
 - **Gast-Chat**: Gäste mit gültigem Einladungstoken lesen und schreiben im Chat ihres Events, ohne Benutzerkonto.
 - **Reaktionen**: Emoji-Reaktionen auf einzelne Nachrichten.
+- **Haken (Zugestellt/Gelesen)**: Eigene Nachrichten tragen einen Stand `sent` (ein Haken), `delivered` (zwei Haken) oder `read` (zwei farbige Haken). Zugestellt ist eine Nachricht, sobald die App der Empfängerin die Chat-Liste, den Verlauf oder den Ungelesen-Zähler geladen hat oder ihr Service Worker nach einem Push nachgeladen hat. Gelesen ist sie, sobald der Chat bei ihr sichtbar offen war. In Gruppen- und Event-Chats zählen alle, die den Chat lesen dürfen (wie beim Push), und die Haken wechseln erst, wenn alle so weit sind; die Zahlen dazu (`delivered`, `read` von `recipients`) stehen im Tooltip. Siehe [Haken, Tippen, Offline-Versand](#4-haken-schreibt-gerade-und-offline-versand).
+- **„schreibt gerade…“**: Tippt jemand im offenen Chat, sehen die anderen Lesenden einige Sekunden „Anna schreibt…“. Nichts davon wird gespeichert.
+- **Offline-Versand**: Ohne Netz bleibt eine Nachricht in einer Warteschlange auf dem Gerät und geht automatisch hinaus, sobald das Netz zurück ist. Eine von der App vergebene `clientId` verhindert, dass sie doppelt ankommt.
 - **Ungelesen-Zähler**: Je Mitglied und Unterhaltung wird der Lesestand gespeichert (`conversation_members.last_read_at`, bei Direktnachrichten `direct_participants.last_read_at`); die App zeigt die Zahl ungelesener Nachrichten der gewählten Gruppe plus aller Direktnachrichten als Badge am Chat-Eintrag der Navigation.
 - **Aktualisierung (live)**: Neue Nachrichten, Reaktionen, Lesestände und Mitteilungen erscheinen sofort. Die App hält dafür eine Live-Verbindung (Server-Sent Events, `GET /api/v1/live`); der Server meldet darüber nur, *was* sich geändert hat, die App lädt es dann wie gewohnt über die REST-Endpunkte. Steht die Verbindung nicht (Netz weg, Proxy puffert), fragt die App wie früher alle 10 Sekunden ab. Siehe [Live-Verbindung](#3-live-verbindung-server-sent-events).
 - **Verschlüsselung**: Nachrichten werden vor dem Speichern mit AES-256-GCM verschlüsselt (`DATA_ENCRYPTION_KEY`).
@@ -53,6 +56,7 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
   - `ConversationService`: Gruppenchat, Lesestand und Reaktionen.
   - `DirectMessageService`: gruppenübergreifende Direktnachrichten.
   - `NotificationService`: Mitteilungen anlegen und den Push-Versand auslösen.
+  - `ChatReceipts`: Zugestellt-/Gelesen-Haken; `TypingSignals`: „schreibt gerade…“ (siehe Abschnitt 4).
   - `ChatNotifier`: meldet neue Nachrichten und Reaktionen in Gruppen-, Event- und Moment-Chats als Live-Signal und neue Nachrichten im Gruppen- und Event-Chat als Push weiter.
   - `PersonalAlertService`: alles Ungelesene einer Person über alle Gruppen (`/api/v1/personal-notifications`), aus dem der Service Worker den Inhalt eines Pushs nimmt.
   - `LiveUpdateHub` / `LiveController`: Live-Verbindungen (`GET /api/v1/live`) und Verteilung der Signale.
@@ -70,6 +74,15 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
 - Die Verbindungen liegen im Speicher der einen baseservice-Instanz. Bei mehreren Instanzen bräuchte es einen gemeinsamen Verteiler (z. B. PostgreSQL `LISTEN/NOTIFY`).
 - In der App bündelt `LiveUpdatesService` die Verbindung. Kommt sie wieder oder kehrt die App in den Vordergrund, schickt er `resync` und alle offenen Ansichten laden neu. Bleiben 70 Sekunden ohne Lebenszeichen, baut er die Verbindung neu auf.
 - Ein Reverse Proxy vor der App darf `/api/v1/live` weder puffern noch komprimieren (siehe [Selbst betreiben](../betrieb/selbst-betreiben.md)).
+- Zusätzlich: `receipt` (eigene Nachrichten in `conversationId` wurden zugestellt oder gelesen; nur an deren Absender) und `typing` (mit `userId` und `name` der tippenden Person; an die anderen Lesenden).
+
+### 4. Haken, „schreibt gerade…“ und Offline-Versand
+- **Speicherung**: Neben `last_read_at` merkt sich jede Mitgliedschaft `last_delivered_at` (`conversation_members`, `direct_participants`; Changelog `028-chat-receipts-and-outbox.xml`). Beides sind nur Zeitstempel. Wer den Gruppenchat noch nie geöffnet hat, bekommt beim ersten Zustellen eine Mitgliedschaft mit Beitritt = Anlage des Chats, damit der Ungelesen-Zähler unverändert rechnet.
+- **`ChatReceipts`**: setzt `last_delivered_at` (nur wenn neue Nachrichten anderer da sind, also kein Schreiben bei jeder Abfrage) und meldet den Absendern der betroffenen Nachrichten `receipt`. Aufrufer: `ConversationService.listConversations`/`listMessages`/`unreadCount`/`markRead`, `DirectMessageService.list`/`messages`/`unreadTotal`/`markRead` und `PersonalAlertService.markDelivered` (nach `GET /api/v1/personal-notifications`, je Gruppe in deren Kontext). Beim Laden des Verlaufs rechnet es für eigene Nachrichten `MessageReceiptDto` aus.
+- **`TypingSignals`**: `POST /api/v1/conversations/{id}/typing` bzw. `/api/v1/direct-conversations/{id}/typing` (204, nur wer schreiben darf). Höchstens ein Signal je Person und Gespräch alle 2 Sekunden; die App meldet beim Tippen höchstens alle 3 Sekunden und blendet die Anzeige nach 6 Sekunden ohne neues Signal aus.
+- **Doppelte vermeiden**: `SendMessageRequest.clientId` (bis 64 Zeichen, `A-Z a-z 0-9 - _`), eindeutig je Absenderin (`uk_chat_messages_sender_client`, `uk_direct_messages_sender_client`). Kommt dieselbe `clientId` noch einmal, liefert der Server die schon gespeicherte Nachricht zurück; in einem anderen Gespräch ist sie ein `400`.
+- **Warteschlange in der App** (`ChatOutboxService`): Jede Nachricht geht zuerst in die Warteschlange (`localStorage`, Schlüssel `vereint.chat.outbox`) und von dort der Reihe nach an den Server. Netzfehler, `401`, `408`, `429` und `5xx` lassen sie warten (erneut beim Ereignis `online`, beim Wiederverbinden der Live-Verbindung, im Vordergrund und nach 2, 5, 15, 30, 60 Sekunden); andere Fehler markieren sie als nicht gesendet. Gesendet wird nur, was das angemeldete Konto geschrieben hat, und Gruppenchats nur in ihrer Gruppe. Einträge älter als eine Woche fallen weg, beim Abmelden wird alles geleert. Die Warteschlange liegt **unverschlüsselt** im Browser des Geräts, bis die Nachricht gesendet ist.
+- Die Eventseite bettet denselben Verlauf ein (`ChatThreadComponent` mit `embedded`).
 
 ---
 
@@ -85,12 +98,22 @@ data class ChatMessageDto(
     val message: String,
     val imageUrl: String?,
     val createdAt: Instant,
-    val reactions: List<ChatReactionDto> = emptyList()
+    val reactions: List<ChatReactionDto> = emptyList(),
+    val clientId: String? = null,          // nur eigene Nachrichten
+    val receipt: MessageReceiptDto? = null // nur eigene Nachrichten
+)
+
+data class MessageReceiptDto(
+    val status: String,   // sent | delivered | read
+    val recipients: Int,
+    val delivered: Int,
+    val read: Int
 )
 
 data class SendMessageRequest(
     @field:NotBlank @field:Size(max = 4000) val message: String? = null,
-    @field:Size(max = 512) val imageUrl: String? = null
+    @field:Size(max = 512) val imageUrl: String? = null,
+    @field:Size(max = 64) @field:Pattern(regexp = "^[A-Za-z0-9_-]+$") val clientId: String? = null
 )
 
 data class RegisterPushSubscriptionRequest(

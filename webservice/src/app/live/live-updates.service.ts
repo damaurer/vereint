@@ -20,18 +20,22 @@ export const LIVE_RETRY_MAX_MS = 5 * 60_000;
  * - `direct`: Nachricht oder Reaktion in einer Direktnachricht
  * - `read`: eigener Lesestand hat sich geändert (anderes Gerät)
  * - `notification`: neue Mitteilung
+ * - `receipt`: eigene Nachrichten wurden zugestellt oder gelesen
+ * - `typing`: jemand schreibt gerade (`userId`, `name`)
  * - `resync`: Verbindung kam zurück oder die App wieder in den Vordergrund;
  *   dazwischen kann etwas verpasst worden sein, also alles neu laden
  */
-export type LiveEventType = 'chat' | 'direct' | 'read' | 'notification' | 'resync';
+export type LiveEventType = 'chat' | 'direct' | 'read' | 'notification' | 'receipt' | 'typing' | 'resync';
 
 export interface LiveEvent {
   type: LiveEventType;
   stammtischId?: string | null;
   conversationId?: string | null;
+  userId?: string | null;
+  name?: string | null;
 }
 
-const SERVER_EVENTS: LiveEventType[] = ['chat', 'direct', 'read', 'notification'];
+const SERVER_EVENTS: LiveEventType[] = ['chat', 'direct', 'read', 'notification', 'receipt', 'typing'];
 
 /**
  * Live-Verbindung der App über Server-Sent Events.
@@ -157,7 +161,10 @@ export class LiveUpdatesService implements OnDestroy {
 function parse(type: LiveEventType, data: string | undefined): LiveEvent {
   try {
     const value = JSON.parse(data ?? '{}') as Partial<LiveEvent>;
-    return { type, stammtischId: value.stammtischId ?? null, conversationId: value.conversationId ?? null };
+    const event: LiveEvent = { type, stammtischId: value.stammtischId ?? null, conversationId: value.conversationId ?? null };
+    if (value.userId) event.userId = value.userId;
+    if (value.name) event.name = value.name;
+    return event;
   } catch {
     return { type };
   }

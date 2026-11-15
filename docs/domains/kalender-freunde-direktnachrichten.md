@@ -86,8 +86,8 @@ Migration `019-friends-and-direct-messages.xml`:
 | :--- | :--- |
 | `friendships` | Je Paar eine Zeile (`pair_key` = sortierte Konto-IDs), Status `pending` oder `accepted` |
 | `direct_conversations` | Je Paar ein Gespräch (`pair_key`) |
-| `direct_participants` | Die beiden Beteiligten mit Lesestand (`last_read_at`) |
-| `direct_messages` | Nachrichten (verschlüsselt) |
+| `direct_participants` | Die beiden Beteiligten mit Lesestand (`last_read_at`) und Zustellstand (`last_delivered_at`, Zugestellt-Haken) |
+| `direct_messages` | Nachrichten (verschlüsselt), mit der von der App vergebenen `client_id` gegen Doppelte beim Offline-Versand |
 | `direct_reactions` | Emoji-Reaktionen |
 
 Diese Tabellen gehören wie `users` den Konten und keiner Gruppe. Sie haben

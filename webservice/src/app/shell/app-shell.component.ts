@@ -30,6 +30,7 @@ import { NotificationsApiService } from '../notifications/notifications-api.serv
 import { UnreadBadgeStore } from '../notifications/unread-badge.store';
 import { CHAT_LIST_REFRESH_MS } from '../chat/chat-api.service';
 import { ChatUnreadStore } from '../chat/chat-unread.store';
+import { ChatOutboxService } from '../chat/chat-outbox.service';
 import { LiveUpdatesService } from '../live/live-updates.service';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
@@ -320,6 +321,8 @@ export class AppShellComponent implements OnInit, OnDestroy {
         this.refreshChatUnread();
         // Sofortige Aktualisierung von Chats und Mitteilungen (nicht am Thekentablet).
         if (session && !this.kiosk()) live.start();
+        // Offline geschriebene Chat-Nachrichten senden, egal auf welcher Seite die App startet.
+        if (session && !this.kiosk()) void this.injector.get(ChatOutboxService).start();
       });
       this.liveSub = live.events$.subscribe((event) => {
         if (event.type === 'notification' || event.type === 'resync') this.refreshUnread();

@@ -54,7 +54,8 @@ class PersonalAlertService(
     private val conversationMemberRepository: ConversationMemberRepository,
     private val chatMessageRepository: ChatMessageRepository,
     private val eventRepository: EventRepository,
-    private val eventParticipantRepository: EventParticipantRepository
+    private val eventParticipantRepository: EventParticipantRepository,
+    private val chatReceipts: ChatReceipts
 ) {
 
     fun alerts(principal: UserPrincipal, now: Instant = Instant.now()): List<NotificationDto> {
@@ -106,6 +107,24 @@ class PersonalAlertService(
             tenantTransactions.readInStammtisch(membership.stammtischId) { groupAlerts(caller, membership) }
         }
         return (direct + friends + groups).sortedByDescending { it.createdAt }
+    }
+
+    /**
+     * Der Service Worker hat nach einem Push nachgeladen: Alle Chats und
+     * Direktnachrichten sind damit auf diesem Gerät angekommen (Zugestellt-Haken).
+     * Jede Gruppe in einer eigenen Transaktion in ihrem Kontext.
+     */
+    @Transactional
+    fun markDelivered(principal: UserPrincipal) {
+        val caller = userService.getOrCreateUser(principal)
+        participantRepository.findByUserId(caller.id).forEach { participant ->
+            participant.conversation?.let { chatReceipts.deliveredDirect(it, caller, participant) }
+        }
+        memberships.memberships(caller.id).forEach { membership ->
+            tenantTransactions.inStammtisch(membership.stammtischId) {
+                readableChats(caller).forEach { (conversation, _) -> chatReceipts.delivered(conversation, caller) }
+            }
+        }
     }
 
     /** Ungelesene Chats und Mitteilungen in einer Gruppe; läuft in deren Kontext. */

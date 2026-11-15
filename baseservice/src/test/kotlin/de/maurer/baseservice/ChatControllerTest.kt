@@ -120,6 +120,18 @@ class ChatControllerTest {
     }
 
     @Test
+    fun `POST messages rejects a client id with invalid characters with 400`() {
+        mockMvc.perform(
+            post("/api/v1/events/$eventId/chat/messages")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"message\":\"Hallo\",\"clientId\":\"nicht erlaubt!\"}")
+                .with(jwt().jwt { it.subject("sub-owner") })
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.code").value("validation_failed"))
+    }
+
+    @Test
     fun `GET messages returns the messages`() {
         `when`(chatService.listMessages(anyUuid(), anyPrincipal()))
             .thenReturn(listOf(sampleMessage(ChatService.SENDER_TYPE_MEMBER)))

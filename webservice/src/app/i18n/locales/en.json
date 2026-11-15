@@ -149,11 +149,6 @@
       },
       "chat": {
         "heading": "Event chat",
-        "empty": "No messages yet. Write the first one!",
-        "closed": "The event is cancelled or archived. The chat is read-only.",
-        "message": "Message",
-        "placeholder": "Write a message",
-        "send": "Send",
         "loading": "Loading the chat.",
         "unavailable": "The chat is not available to you."
       },
@@ -690,6 +685,25 @@
       "pickerStarting": "Opening…",
       "toFriends": "Friends",
       "friend": "Friend"
+    },
+    "receipt": {
+      "pending": "Waiting for network",
+      "sent": "Sent",
+      "delivered": "Delivered",
+      "read": "Read",
+      "readAll": "Read by everyone",
+      "groupProgress": "Delivered to {delivered} of {total}, read by {read}"
+    },
+    "outbox": {
+      "waiting": "Will be sent as soon as you are back online.",
+      "failed": "Not sent.",
+      "retry": "Send again",
+      "discard": "Discard"
+    },
+    "typing": {
+      "one": "{name} is typing…",
+      "two": "{first} and {second} are typing…",
+      "many": "Several people are typing…"
     }
   },
   "calendar": {

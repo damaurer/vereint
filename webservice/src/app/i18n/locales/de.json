@@ -143,11 +143,6 @@
       },
       "chat": {
         "heading": "Event-Chat",
-        "empty": "Noch keine Nachrichten. Schreib die erste!",
-        "closed": "Das Event ist abgesagt oder archiviert. Der Chat ist nur noch lesbar.",
-        "message": "Nachricht",
-        "placeholder": "Nachricht schreiben",
-        "send": "Senden",
         "loading": "Der Chat wird geladen.",
         "unavailable": "Der Chat ist für dich nicht verfügbar."
       },
@@ -678,6 +673,25 @@
       "pickerStarting": "Wird geöffnet…",
       "toFriends": "Freunde",
       "friend": "Freund"
+    },
+    "receipt": {
+      "pending": "Wartet auf Netz",
+      "sent": "Gesendet",
+      "delivered": "Zugestellt",
+      "read": "Gelesen",
+      "readAll": "Von allen gelesen",
+      "groupProgress": "Zugestellt an {delivered} von {total}, gelesen von {read}"
+    },
+    "outbox": {
+      "waiting": "Wird gesendet, sobald du wieder Netz hast.",
+      "failed": "Nicht gesendet.",
+      "retry": "Erneut senden",
+      "discard": "Verwerfen"
+    },
+    "typing": {
+      "one": "{name} schreibt…",
+      "two": "{first} und {second} schreiben…",
+      "many": "Mehrere schreiben…"
     }
   },
   "calendar": {

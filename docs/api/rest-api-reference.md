@@ -202,12 +202,14 @@ Fachlich: [Einladungslinks](../domains/member-invites.md).
 | `PUT` | `/api/v1/conversations/club/pin` | Infotafel im Gruppenchat setzen (`PinNoteRequest`) | `chat.moderate` oder `event.manage` |
 | `GET` / `POST` | `/api/v1/conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/read` | Als gelesen markieren | Mitglied der Unterhaltung |
+| `POST` | `/api/v1/conversations/{conversationId}/typing` | „schreibt gerade…“ an die anderen Lesenden (`204`, höchstens alle 2 s je Person) | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Mitglied der Unterhaltung |
 | `GET` | `/api/v1/direct-conversations` | Eigene Direktnachrichten über alle Gruppen | Angemeldet |
 | `GET` | `/api/v1/direct-conversations/unread-count` | Ungelesene Direktnachrichten | Angemeldet |
 | `POST` | `/api/v1/direct-conversations` | Gespräch beginnen oder bestehendes liefern (`StartDirectConversationRequest`) | Freunde oder gemeinsame Gruppe |
 | `GET` / `POST` | `/api/v1/direct-conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden (senden nur mit Freundschaft oder gemeinsamer Gruppe) | Beteiligte |
 | `POST` | `/api/v1/direct-conversations/{conversationId}/read` | Als gelesen markieren | Beteiligte |
+| `POST` | `/api/v1/direct-conversations/{conversationId}/typing` | „schreibt gerade…“ an das Gegenüber (`204`) | Beteiligte mit Schreibrecht |
 | `POST` | `/api/v1/direct-conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Beteiligte |
 | `GET` | `/api/v1/notifications` | Eigene Mitteilungen | Angemeldet |
 | `GET` | `/api/v1/personal-notifications` | Alles Ungelesene über alle eigenen Gruppen für Push: Mitteilungen, Gruppen- und Event-Chats, Direktnachrichten, Freundschaftsanfragen, frisch angenommene Anfragen; Einträge aus Gruppen tragen `stammtischId` (ohne Gruppe) | Angemeldet |
