@@ -62,4 +62,5 @@ Die Progressive Web App (`pwa/`, Service Worker `public/vereint-sw.js`, Regeln g
 
 ### 3. Installation
 - Manifest mit Icons (inkl. maskable), Shortcuts (Events, Chat, Guthaben, Mitteilungen) und `start_url` `/dashboard`.
+- QS-Variante: Mit `APP_STAGE=qs` liefert der BFF unter denselben Adressen `public/qs/manifest.webmanifest` („Vereint QS“) und die orangen QS-Icons aus (`stage-assets.middleware.ts`). Favicon, Apple Touch Icon und das Icon der Push-Mitteilungen wechseln dadurch mit.
 - `InstallPromptService` fängt `beforeinstallprompt` ab; das Profil zeigt dann „Installieren“. Auf iOS erscheint die Anleitung „Teilen → Zum Home-Bildschirm“.

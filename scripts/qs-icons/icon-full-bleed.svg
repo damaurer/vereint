@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Wie public/qs/vereint-app-icon.svg, ohne Eckenradius (Apple Touch Icon). -->
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f59e0b"/><stop offset="0.55" stop-color="#f97316"/><stop offset="1" stop-color="#dc2626"/></linearGradient></defs>
+  <rect width="512" height="512" fill="url(#g)"/>
+  <g transform="translate(256 206) scale(0.7) translate(-256 -256)"><g stroke="#fff" stroke-width="22" stroke-linecap="round"><line x1="256" y1="256" x2="164" y2="164"/><line x1="256" y1="256" x2="348" y2="164"/><line x1="256" y1="256" x2="164" y2="348"/><line x1="256" y1="256" x2="348" y2="348"/></g><g fill="#fff"><circle cx="164" cy="164" r="44"/><circle cx="348" cy="164" r="44"/><circle cx="164" cy="348" r="44"/><circle cx="348" cy="348" r="44"/><circle cx="256" cy="256" r="58"/></g></g>
+  <rect x="126" y="338" width="260" height="112" rx="56" fill="#fff"/>
+  <text x="256" y="394" text-anchor="middle" dominant-baseline="central" font-family="Inter, Helvetica, Arial, sans-serif" font-weight="800" font-size="88" letter-spacing="4" fill="#c2410c">QS</text>
+</svg>

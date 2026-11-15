@@ -31,6 +31,18 @@ export interface ServerEnvironment {
   readonly keycloakClientSecret: string;
   readonly keycloakRequestTimeoutMs: number;
   readonly keycloakRequestRetries: number;
+  /**
+   * Umgebung der Installation (`APP_STAGE`). `qs` liefert Manifest und Icons
+   * der QS-App aus, damit installierte QS- und Produktiv-Apps unterscheidbar
+   * bleiben (siehe `stage-assets.middleware.ts`). Standard: `prod`.
+   */
+  readonly appStage: AppStage;
+}
+
+export type AppStage = 'prod' | 'qs';
+
+export function resolveAppStage(value: string | undefined): AppStage {
+  return value?.trim().toLowerCase() === 'qs' ? 'qs' : 'prod';
 }
 
 interface NodeProcess {
@@ -111,6 +123,7 @@ export function resolveServerEnvironment(env: Record<string, string | undefined>
     keycloakClientSecret: readSecret(env['KEYCLOAK_CLIENT_SECRET']),
     keycloakRequestTimeoutMs: readNumber(env['KEYCLOAK_REQUEST_TIMEOUT_MS'], DEFAULT_KEYCLOAK_REQUEST_TIMEOUT_MS),
     keycloakRequestRetries: readOptionalNumber(env['KEYCLOAK_REQUEST_RETRIES'], DEFAULT_KEYCLOAK_REQUEST_RETRIES),
+    appStage: resolveAppStage(env['APP_STAGE']),
   };
 }
 

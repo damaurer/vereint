@@ -56,6 +56,7 @@ Ein komplettes, lauffähiges Beispiel aller Dienste ist
 | `SPRING_API_BASE_URL` | Interne Adresse des baseservice |
 | `KEYCLOAK_ISSUER_URI`, `KEYCLOAK_REALM`, `KEYCLOAK_CLIENT_ID`, `KEYCLOAK_CLIENT_SECRET` | Login über den Client `vereint-web` |
 | `SESSION_SECRET`, optional `SESSION_SECRET_PREVIOUS`, `SESSION_COOKIE_SECURE=true` | Sitzungs-Cookie |
+| `APP_STAGE` | `prod` (Standard) oder `qs`: QS zeigt als installierte App eigenes Icon und den Namen „Vereint QS“. Im `:qs`-Image schon gesetzt |
 
 Alle Secrets mindestens 32 Zeichen, zum Beispiel `openssl rand -hex 32`;
 `DATA_ENCRYPTION_KEY` mit `openssl rand -base64 32`. Weitere Variablen:
