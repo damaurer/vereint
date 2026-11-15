@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { MOMENT_MEDIA_PATH } from './api-proxy.middleware';
+import { LIVE_PATH, MOMENT_MEDIA_PATH } from './api-proxy.middleware';
 
 function findRepoFile(relativePath: string): string {
   const fromCwd = resolve(process.cwd(), relativePath);
@@ -53,5 +53,10 @@ describe('local/Caddyfile', () => {
   it('setzt 110MB für Uploads und 8MB für alles andere', () => {
     expect(caddyfile).toMatch(/request_body @momentMedia \{\s*max_size 110MB\s*\}/);
     expect(caddyfile).toMatch(/request_body @otherRequests \{\s*max_size 8MB\s*\}/);
+  });
+
+  it('komprimiert die Live-Verbindung nicht (sonst puffert Caddy die Signale)', () => {
+    expect(caddyfile).toContain(`@compressible not path ${LIVE_PATH}`);
+    expect(caddyfile).toMatch(/encode @compressible zstd gzip/);
   });
 });

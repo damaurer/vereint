@@ -7,6 +7,8 @@ import {
   type NotificationItem,
 } from './notifications-api.service';
 import { UnreadBadgeStore } from './unread-badge.store';
+import { LiveUpdatesService } from '../live/live-updates.service';
+import type { Subscription } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { formatDateTime, formatDayTime } from '../member/member-format';
 import { StatusBadgeComponent, type StatusTone } from '../ui';
@@ -302,6 +304,8 @@ import { translate } from '../i18n/i18n.service';
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
   private readonly notificationsApi = inject(NotificationsApiService);
+  private readonly live = inject(LiveUpdatesService);
+  private liveSub?: Subscription;
 
   protected readonly load = new AsyncState<NotificationItem[]>();
   /** Geteilt mit dem Glocken-Badge in der Shell. */
@@ -316,10 +320,24 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.reload();
+    // Neue Mitteilungen erscheinen sofort, ohne Ladeanzeige.
+    this.liveSub = this.live.on('notification').subscribe(() => this.refreshQuietly());
   }
 
   ngOnDestroy(): void {
     this.load.destroy();
+    this.liveSub?.unsubscribe();
+  }
+
+  private refreshQuietly(): void {
+    if (!this.load.isSuccess()) return;
+    this.notificationsApi.list().subscribe({
+      next: (items) => {
+        this.load.data.set(items);
+        this.unreadCount.set(items.filter((i) => !i.read).length);
+      },
+      error: () => undefined,
+    });
   }
 
   protected reload(): void {

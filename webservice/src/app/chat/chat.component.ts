@@ -19,6 +19,7 @@ import { TranslatePipe } from '../i18n';
 import { CHAT_LIST_REFRESH_MS, ChatApiService } from './chat-api.service';
 import { CHAT_LAYOUT_STYLES } from './chat-styles';
 import { ChatThreadComponent } from './chat-thread.component';
+import { LiveUpdatesService } from '../live/live-updates.service';
 
 interface ChatPageData {
   myId: string;
@@ -150,6 +151,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   private readonly api = inject(ChatApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly live = inject(LiveUpdatesService);
+  private liveSub?: Subscription;
 
   protected readonly load = new AsyncState<ChatPageData>();
   protected readonly data = signal<ChatPageData | null>(null);
@@ -193,7 +196,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     // Private Chats ausschließlich im Browser laden; SSR bleibt inhaltsleer.
     if (!isPlatformBrowser(this.platformId)) return;
     this.reload();
+    // Neue Nachrichten und Lesestände kommen sofort; die Abfrage ist nur der Rückfall.
+    this.liveSub = this.live.on('chat', 'read').subscribe(() => this.refreshList());
     this.listTimer = setInterval(() => {
+      if (this.live.connected()) return;
       if (typeof document === 'undefined' || document.visibilityState !== 'hidden') this.refreshList();
     }, CHAT_LIST_REFRESH_MS);
   }
@@ -201,6 +207,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.load.destroy();
     this.listSub?.unsubscribe();
+    this.liveSub?.unsubscribe();
     if (this.listTimer !== null) clearInterval(this.listTimer);
     this.listTimer = null;
   }

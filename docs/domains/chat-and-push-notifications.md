@@ -13,12 +13,16 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
 - **Gast-Chat**: Gäste mit gültigem Einladungstoken lesen und schreiben im Chat ihres Events, ohne Benutzerkonto.
 - **Reaktionen**: Emoji-Reaktionen auf einzelne Nachrichten.
 - **Ungelesen-Zähler**: Je Mitglied und Unterhaltung wird der Lesestand gespeichert (`conversation_members.last_read_at`, bei Direktnachrichten `direct_participants.last_read_at`); die App zeigt die Zahl ungelesener Nachrichten der gewählten Gruppe plus aller Direktnachrichten als Badge am Chat-Eintrag der Navigation.
-- **Aktualisierung**: Die App fragt neue Nachrichten regelmäßig ab (Polling, alle 10 Sekunden); einen WebSocket-Kanal gibt es nicht.
+- **Aktualisierung (live)**: Neue Nachrichten, Reaktionen, Lesestände und Mitteilungen erscheinen sofort. Die App hält dafür eine Live-Verbindung (Server-Sent Events, `GET /api/v1/live`); der Server meldet darüber nur, *was* sich geändert hat, die App lädt es dann wie gewohnt über die REST-Endpunkte. Steht die Verbindung nicht (Netz weg, Proxy puffert), fragt die App wie früher alle 10 Sekunden ab. Siehe [Live-Verbindung](#3-live-verbindung-server-sent-events).
 - **Verschlüsselung**: Nachrichten werden vor dem Speichern mit AES-256-GCM verschlüsselt (`DATA_ENCRYPTION_KEY`).
 
 ### 2. Mitteilungen & Push-Benachrichtigungen
 - **Mitteilungen** entstehen bei Event-Einladungen, Erinnerungen und Absagen, neuen Moments, Runden („Thomas gibt eine Runde aus“, Typ `round`, an die Eingeladenen) sowie Nachrichten des Vorstands. Sie gehören zur Gruppe, in der sie entstehen.
-- **Web Push**: Browserbasierte Benachrichtigungen (auch bei geschlossener App) für diese Mitteilungen. Nachrichten in Gruppen- und Event-Chats lösen keinen Push aus; sie erscheinen über den Ungelesen-Zähler. Direktnachrichten und Freundschaftsanfragen lösen gruppenübergreifend einen Push aus (siehe [Kalender, Freunde und Direktnachrichten](kalender-freunde-direktnachrichten.md#push-benachrichtigungen)). Bei Event-Einladungen bietet die Benachrichtigung „Zusagen“ und „Absagen“ an.
+- **Web Push**: Browserbasierte Benachrichtigungen (auch bei geschlossener App) für diese Mitteilungen, für neue Nachrichten im Gruppenchat und in Event-Chats sowie für Direktnachrichten und Freundschaftsanfragen (siehe [Kalender, Freunde und Direktnachrichten](kalender-freunde-direktnachrichten.md#push-benachrichtigungen)).
+  - Chat-Pushes gehen an alle, die den Chat lesen dürfen, außer an die Absenderin: im Gruppenchat an alle aktiven Mitglieder, im Event-Chat an Veranstalter und Eingeladene, deren Einladung schon verschickt ist. Moment-Chats (24 Stunden) lösen keinen Push aus.
+  - Die Benachrichtigung zeigt „Name in Chat“ und den Text. Je Chat gibt es eine Benachrichtigung; eine neue Nachricht ersetzt die vorige.
+  - Pushes zeigen Inhalte aus **allen** eigenen Gruppen richtig an, nicht nur aus der gerade gewählten. Ein Tipp darauf wechselt zuerst in die Gruppe des Eintrags und öffnet dann Chat, Event oder Mitteilungen.
+  - Bei Event-Einladungen bietet die Benachrichtigung „Zusagen“ und „Absagen“ an.
 - **Nachrichten des Vorstands**: Wer `notifications.broadcast` hat, schickt eine Mitteilung an ein Mitglied (`SendNotificationRequest`) oder an ausgewählte bzw. alle Mitglieder der Gruppe (`BroadcastNotificationRequest`).
 
 ---
@@ -49,11 +53,23 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
   - `ConversationService`: Gruppenchat, Lesestand und Reaktionen.
   - `DirectMessageService`: gruppenübergreifende Direktnachrichten.
   - `NotificationService`: Mitteilungen anlegen und den Push-Versand auslösen.
+  - `ChatNotifier`: meldet neue Nachrichten und Reaktionen in Gruppen-, Event- und Moment-Chats als Live-Signal und neue Nachrichten im Gruppen- und Event-Chat als Push weiter.
+  - `PersonalAlertService`: alles Ungelesene einer Person über alle Gruppen (`/api/v1/personal-notifications`), aus dem der Service Worker den Inhalt eines Pushs nimmt.
+  - `LiveUpdateHub` / `LiveController`: Live-Verbindungen (`GET /api/v1/live`) und Verteilung der Signale.
   - `EventInvitationService`: Einladungen, Erinnerungen und Absagen zu Events.
-  - `PushDispatcher`: Stellt nach dem Commit im Hintergrund zu und entfernt ungültige Abos (`404`/`410`).
+  - `PushDispatcher`: Stellt nach dem Commit im Hintergrund zu und entfernt ungültige Abos (`404`/`410`). Offene Geräte bekommen zusätzlich sofort ein Live-Signal `notification`.
   - `VapidPushSender`: Erzeugt RFC-8292-konforme VAPID-Header und sendet Pushes ohne Nutzlast; der Service Worker lädt den Inhalt autorisiert nach.
   - `NoOpPushSender`: Fallback ohne konfigurierte VAPID-Keys.
 - **Entitäten**: `ConversationEntity`, `ConversationMemberEntity`, `ChatMessageEntity`, `NotificationEntity`, `PushSubscriptionEntity`.
+
+### 3. Live-Verbindung (Server-Sent Events)
+- `GET /api/v1/live` liefert einen Ereignisstrom (`text/event-stream`) für die eigenen Geräte, ohne gewählte Gruppe. Der BFF hängt wie bei allen API-Aufrufen das Token an und reicht den Strom ungepuffert und unkomprimiert durch (`liveStreamProxy`).
+- Ereignisse: `ready` (Verbindung steht), `ping` (Lebenszeichen alle 25 Sekunden), `chat` und `direct` (Nachricht oder Reaktion, mit `conversationId`), `read` (eigener Lesestand auf einem anderen Gerät), `notification` (neue Mitteilung). Die Daten enthalten nur Art, Gruppe und Gespräch, nie Text. Was sich geändert hat, lädt die App über die normalen, berechtigten Endpunkte.
+- Signale gehen erst nach dem Commit hinaus. Empfänger folgen den Leserechten wie beim Push (`ChatNotifier`); Direktnachrichten erreichen beide Beteiligten.
+- Der Server beendet jede Verbindung nach 10 Minuten. Der Browser baut sie dann neu auf und bekommt dabei vom BFF ein frisches Token; ein gesperrtes Konto erhält spätestens dann keine Signale mehr.
+- Die Verbindungen liegen im Speicher der einen baseservice-Instanz. Bei mehreren Instanzen bräuchte es einen gemeinsamen Verteiler (z. B. PostgreSQL `LISTEN/NOTIFY`).
+- In der App bündelt `LiveUpdatesService` die Verbindung. Kommt sie wieder oder kehrt die App in den Vordergrund, schickt er `resync` und alle offenen Ansichten laden neu. Bleiben 70 Sekunden ohne Lebenszeichen, baut er die Verbindung neu auf.
+- Ein Reverse Proxy vor der App darf `/api/v1/live` weder puffern noch komprimieren (siehe [Selbst betreiben](../betrieb/selbst-betreiben.md)).
 
 ---
 

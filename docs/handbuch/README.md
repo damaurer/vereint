@@ -28,7 +28,7 @@ Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mit
 
 ## Gut zu wissen: noch nicht fertige Bereiche
 
-- Push-Nachrichten kommen erst an, wenn der Betreiber Push auf dem Server eingerichtet hat. Bist du in mehreren Gruppen, zeigt eine Push-Nachricht aus einer anderen als der gerade offenen Gruppe manchmal nur „Du hast eine neue Mitteilung“.
+- Push-Nachrichten kommen erst an, wenn der Betreiber Push auf dem Server eingerichtet hat. Ist deine Anmeldung abgelaufen, zeigt eine Push-Nachricht nur „Du hast eine neue Mitteilung“.
 - Die Seite **Plattform** (`/plattform`) ist nur für das Vereint-Team und wird hier nicht weiter beschrieben.
 - **Impressum** und **AGB** zeigen oben den Hinweis „Entwurf“, solange der Betreiber seine Angaben noch nicht eingetragen hat.
 

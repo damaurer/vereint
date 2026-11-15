@@ -19,7 +19,12 @@ data class NotificationDto(
     val read: Boolean,
     val createdAt: Instant,
     /** Ziel in der App, z. B. `/events/{id}`; `null` ohne eigenes Ziel. */
-    val link: String? = null
+    val link: String? = null,
+    /**
+     * Gruppe des Eintrags, nur in den persönlichen Mitteilungen gesetzt. Der
+     * Service Worker wechselt beim Antippen in diese Gruppe.
+     */
+    val stammtischId: String? = null
 )
 
 /** Anzahl ungelesener Benachrichtigungen des Aufrufers. */

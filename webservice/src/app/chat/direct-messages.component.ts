@@ -22,6 +22,7 @@ import { CHAT_LIST_REFRESH_MS, ChatApiService } from './chat-api.service';
 import { CHAT_LAYOUT_STYLES } from './chat-styles';
 import { IconComponent } from '../ui/icon.component';
 import { ChatThreadComponent } from './chat-thread.component';
+import { LiveUpdatesService } from '../live/live-updates.service';
 
 interface DirectPageData {
   myId: string;
@@ -350,6 +351,8 @@ export class DirectMessagesComponent implements OnInit, OnDestroy {
   private readonly api = inject(ChatApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly live = inject(LiveUpdatesService);
+  private liveSub?: Subscription;
 
   protected readonly load = new AsyncState<DirectPageData>();
   protected readonly directory = new AsyncState<FriendContact[]>();
@@ -402,7 +405,10 @@ export class DirectMessagesComponent implements OnInit, OnDestroy {
     // Private Konversationen ausschließlich im Browser laden; SSR bleibt leer.
     if (!isPlatformBrowser(this.platformId)) return;
     this.reload();
+    // Neue Nachrichten und Lesestände kommen sofort; die Abfrage ist nur der Rückfall.
+    this.liveSub = this.live.on('direct', 'read').subscribe(() => this.refreshList());
     this.listTimer = setInterval(() => {
+      if (this.live.connected()) return;
       if (typeof document === 'undefined' || document.visibilityState !== 'hidden') this.refreshList();
     }, CHAT_LIST_REFRESH_MS);
   }
@@ -411,6 +417,7 @@ export class DirectMessagesComponent implements OnInit, OnDestroy {
     this.load.destroy();
     this.directory.destroy();
     this.listSub?.unsubscribe();
+    this.liveSub?.unsubscribe();
     if (this.listTimer !== null) clearInterval(this.listTimer);
     this.listTimer = null;
   }

@@ -55,6 +55,8 @@ Thekenterminals.
 ## Chat und Mitteilungen
 
 - Gruppenchat, Event-Chats und Direktnachrichten, mit Zähler für ungelesene Nachrichten am Chat-Eintrag.
+- Live: Neue Nachrichten, Reaktionen und Mitteilungen erscheinen sofort, ohne Neuladen; Zähler gleichen sich über alle eigenen Geräte ab.
+- Web-Push für neue Nachrichten im Gruppenchat und in Event-Chats (Absender und Text, je Chat eine Benachrichtigung). Pushes aus anderen Gruppen zeigen ihren Inhalt, und ein Tipp darauf wechselt in die Gruppe.
 - Direktnachrichten sind gruppenübergreifend: ein Gespräch je Person, schreiben
   darf man Freunden und Personen aus den eigenen Gruppen.
 - Mitteilungen (Glocke oben) und Rundbriefe des Vorstands, auf Wunsch als

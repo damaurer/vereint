@@ -1,6 +1,9 @@
 package de.maurer.baseservice.push
 
+import de.maurer.baseservice.live.LiveEvent
+import de.maurer.baseservice.live.LiveUpdateHub
 import de.maurer.baseservice.repository.PushSubscriptionRepository
+import de.maurer.baseservice.tenancy.TenantContext
 import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,16 +27,19 @@ import java.util.concurrent.TimeUnit
 class PushDispatcher internal constructor(
     private val pushSubscriptionRepository: PushSubscriptionRepository,
     private val pushSender: PushSender,
+    private val liveUpdateHub: LiveUpdateHub?,
     private val executor: ExecutorService
 ) {
 
     @Autowired
     constructor(
         pushSubscriptionRepository: PushSubscriptionRepository,
-        pushSender: PushSender
+        pushSender: PushSender,
+        liveUpdateHub: LiveUpdateHub
     ) : this(
         pushSubscriptionRepository,
         pushSender,
+        liveUpdateHub,
         Executors.newFixedThreadPool(2) { runnable ->
             Thread(runnable, "push-dispatch").apply { isDaemon = true }
         }
@@ -41,9 +47,19 @@ class PushDispatcher internal constructor(
 
     private val log = LoggerFactory.getLogger(PushDispatcher::class.java)
 
-    /** Plant die Zustellung von [message] an alle Abonnements der [userIds]. */
-    fun dispatch(userIds: Collection<UUID>, message: PushMessage) {
+    /**
+     * Plant die Zustellung von [message] an alle Abonnements der [userIds]. Mit
+     * [live] bekommen offene Geräte zusätzlich sofort ein Live-Signal
+     * `notification`, damit Zähler und Listen nicht auf die nächste Abfrage warten.
+     */
+    fun dispatch(userIds: Collection<UUID>, message: PushMessage, live: Boolean = true) {
         if (userIds.isEmpty()) return
+        if (live) {
+            liveUpdateHub?.publish(
+                userIds,
+                LiveEvent(type = LiveEvent.NOTIFICATION, stammtischId = TenantContext.stammtischId()?.toString())
+            )
+        }
         val recipients = userIds.toList()
         val task = Runnable { recipients.forEach { deliverSafely(it, message) } }
 

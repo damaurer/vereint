@@ -21,6 +21,8 @@ import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
+import de.maurer.baseservice.live.LiveEvent
+import de.maurer.baseservice.live.LiveUpdateHub
 import de.maurer.baseservice.repository.ChatMessageRepository
 import de.maurer.baseservice.repository.ChatReactionRepository
 import de.maurer.baseservice.repository.ConversationMemberRepository
@@ -61,7 +63,9 @@ class ConversationService(
     private val userService: UserService,
     private val chatService: ChatService,
     private val directMessageService: DirectMessageService,
-    private val statisticsRecorder: StatisticsRecorder
+    private val statisticsRecorder: StatisticsRecorder,
+    private val chatNotifier: ChatNotifier,
+    private val liveUpdateHub: LiveUpdateHub
 ) {
 
     fun listConversations(principal: UserPrincipal): List<ConversationSummaryDto> {
@@ -115,6 +119,8 @@ class ConversationService(
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireReadable(conversationId, caller, principal)
         membership(conversation, caller).lastReadAt = Instant.now()
+        // Zähler auf den anderen Geräten der Person gleich mitziehen.
+        liveUpdateHub.publish(listOf(caller.id), LiveEvent(LiveEvent.READ, TenantContext.stammtischId()?.toString(), conversation.id.toString()))
         return toSummary(conversation, caller, principal)
     }
 
@@ -151,6 +157,7 @@ class ConversationService(
             }
         }
         chatReactionRepository.flush()
+        chatNotifier.changed(conversation)
         return withReactions(listOf(message), caller).first()
     }
 

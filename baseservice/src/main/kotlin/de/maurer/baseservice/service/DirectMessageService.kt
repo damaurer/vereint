@@ -27,6 +27,8 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.Identifiers
 import de.maurer.baseservice.tenancy.SharedGroups
 import org.springframework.stereotype.Service
+import de.maurer.baseservice.live.LiveEvent
+import de.maurer.baseservice.live.LiveUpdateHub
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.util.UUID
@@ -56,7 +58,8 @@ class DirectMessageService(
     private val userService: UserService,
     private val friendService: FriendService,
     private val sharedGroups: SharedGroups,
-    private val pushDispatcher: PushDispatcher
+    private val pushDispatcher: PushDispatcher,
+    private val liveUpdateHub: LiveUpdateHub
 ) {
 
     @Transactional(readOnly = true)
@@ -135,9 +138,12 @@ class DirectMessageService(
         )
         // Eigene Nachrichten gelten als gelesen.
         participant.lastReadAt = saved.createdAt
+        // Beide Seiten sehen die Nachricht sofort, auch auf weiteren eigenen Geräten.
+        liveUpdateHub.publish(listOf(caller.id, partner.id), LiveEvent(LiveEvent.DIRECT, conversationId = conversation.id.toString()))
         pushDispatcher.dispatch(
             listOf(partner.id),
-            PushMessage(title = caller.displayName, body = "", type = PersonalAlertService.TYPE_DIRECT_MESSAGE)
+            PushMessage(title = caller.displayName, body = "", type = PersonalAlertService.TYPE_DIRECT_MESSAGE),
+            live = false
         )
         return toMessageDto(saved)
     }
@@ -147,6 +153,7 @@ class DirectMessageService(
         val participant = requireParticipant(conversationId, caller)
         participant.lastReadAt = Instant.now()
         participantRepository.flush()
+        liveUpdateHub.publish(listOf(caller.id), LiveEvent(LiveEvent.READ, conversationId = conversationId.toString()))
         return toSummary(participant.conversation!!, caller, reachableIds(caller))
     }
 
@@ -167,6 +174,8 @@ class DirectMessageService(
             reactionRepository.save(DirectReactionEntity(message = message, user = caller, emoji = emoji))
         }
         reactionRepository.flush()
+        val participants = participantRepository.findByConversationId(conversation.id).mapNotNull { it.user?.id }
+        liveUpdateHub.publish(participants, LiveEvent(LiveEvent.DIRECT, conversationId = conversation.id.toString()))
         return withReactions(listOf(message), caller).first()
     }
 
