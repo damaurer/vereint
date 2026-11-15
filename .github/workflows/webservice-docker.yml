@@ -124,6 +124,10 @@ jobs:
           push: true
           provenance: true
           sbom: true
+          # Das `:qs`-Image traegt eigenes Manifest und eigene Icons
+          # ("Vereint QS"), damit die installierte QS-App erkennbar bleibt.
+          build-args: |
+            APP_STAGE=${{ github.ref_name == 'qs' && 'qs' || 'prod' }}
           cache-from: type=gha,scope=webservice
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}

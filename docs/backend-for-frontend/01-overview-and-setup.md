@@ -173,6 +173,7 @@ In Produktions- oder Container-Umgebungen (Docker/Kubernetes) werden Umgebungsva
 | `SESSION_DURATION_MINUTES` | `1440` (24h) | Nein | Session-Lebensdauer in Minuten (muss mit Keycloak `ssoSessionMaxLifespan` übereinstimmen). |
 | `SESSION_DURATION_DAYS` | `1` | Nein | Alternative Angabe der Session-Lebensdauer in Tagen. |
 | `SESSION_COOKIE_SECURE` | In Prod: `true`, sonst `false` | Nein | Erzwingt das `Secure`-Attribut am Cookie. In Produktion **Pflicht**. Zusammen mit einer `PUBLIC_BASE_URL` mit `https://` heißen alle Cookies `__Host-…` ([Cookie-Namen](03-authentication-and-session.md#cookie-namen-mit-__host-)). |
+| `APP_STAGE` | `prod` | Nein | `qs` liefert Manifest („Vereint QS“) und Icons mit QS-Kennung aus `public/qs/` aus, damit die installierte QS-App von der Produktiv-App unterscheidbar ist. Das `:qs`-Image setzt den Wert bereits. |
 | `NG_ALLOWED_HOSTS` | *(leer)* | Nein | Zusätzliche Hosts (kommagetrennt), für die Angular SSR rendern darf; Host aus `PUBLIC_BASE_URL` ist immer erlaubt. |
 
 ---

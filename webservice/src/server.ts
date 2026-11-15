@@ -17,6 +17,7 @@ import {
   isPrivateDeliveryPath,
   securityHeaders,
 } from './server/authorization/delivery.middleware';
+import { stageAssets } from './server/authorization/stage-assets.middleware';
 import { sanitizeTransferState } from './server/authorization/transfer-state';
 import { assertServerEnvironment, serverEnvironment, ssrAllowedHosts } from './server/config/environment';
 import { authRoutes } from './server/routes/auth.routes';
@@ -68,6 +69,8 @@ app.use('/api/invites', inviteRoutes);
 app.use('/api/v1', mediaStreamProxy);
 app.use('/api/v1', express.raw({ type: 'multipart/form-data', limit: API_PROXY_MAX_UPLOAD }), apiProxy);
 app.use(authorizePages);
+// QS-Installationen liefern eigenes Manifest und eigene Icons aus.
+app.use(stageAssets(serverEnvironment.appStage));
 // `cacheControl: false`: Die Cache-Regeln stammen ausschließlich aus
 // `applyDeliveryHeaders` und dürfen nicht doppelt vergeben werden.
 app.use(

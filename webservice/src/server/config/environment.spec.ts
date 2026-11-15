@@ -155,6 +155,14 @@ describe('resolveServerEnvironment', () => {
   });
 });
 
+describe('appStage', () => {
+  it('defaults to prod and accepts qs case-insensitively', () => {
+    expect(resolveServerEnvironment(completeEnv).appStage).toBe('prod');
+    expect(resolveServerEnvironment({ ...completeEnv, APP_STAGE: ' QS ' }).appStage).toBe('qs');
+    expect(resolveServerEnvironment({ ...completeEnv, APP_STAGE: 'staging' }).appStage).toBe('prod');
+  });
+});
+
 describe('assertServerEnvironment', () => {
   it('accepts a complete configuration', () => {
     const env = resolveServerEnvironment(completeEnv);
