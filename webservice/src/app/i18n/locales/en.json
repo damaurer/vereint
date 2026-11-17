@@ -2024,14 +2024,14 @@
       },
       "count": "Events",
       "attendances": "Attendances",
-      "perEvent": "{{value}} per event",
+      "perEvent": "{value} per event",
       "compare": "Events compared"
     },
     "crossEvents": {
       "eyebrow": "All my groups",
       "title": "Events across groups",
       "intro": "All events from your groups that you may see. Shows totals, averages and your own values, no names of other people.",
-      "mine": "You attended {{attended}} events and made {{purchases}} tallies."
+      "mine": "You attended {attended} events and made {purchases} tallies."
     },
     "groupEvents": {
       "title": "Group events"
@@ -2069,8 +2069,8 @@
       "title": "Event statistics",
       "back": "Back to the event",
       "answers": "Replies to the invitation",
-      "reactions": "{{reactions}} reactions, {{media}} photos/videos",
-      "chatReactions": "{{count}} reactions",
+      "reactions": "{reactions} reactions, {media} photos/videos",
+      "chatReactions": "{count} reactions",
       "consumers": "Tallies per person"
     },
     "settings": {
@@ -2089,7 +2089,7 @@
         "confirm": "Really delete all statistics of this group? This cannot be undone."
       },
       "confirmDelete": "Yes, delete permanently",
-      "deleted": "{{count}} entries deleted."
+      "deleted": "{count} entries deleted."
     }
   },
   "guest": {

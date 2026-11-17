@@ -1991,14 +1991,14 @@
       },
       "count": "Events",
       "attendances": "Teilnahmen",
-      "perEvent": "{{value}} je Event",
+      "perEvent": "{value} je Event",
       "compare": "Events im Vergleich"
     },
     "crossEvents": {
       "eyebrow": "Alle meine Gruppen",
       "title": "Events übergreifend",
       "intro": "Alle Events aus deinen Gruppen, die du sehen darfst. Gezeigt werden Summen, Durchschnitte und deine eigenen Werte, keine Namen anderer Personen.",
-      "mine": "Du warst bei {{attended}} Events dabei und hast {{purchases}} Striche gemacht."
+      "mine": "Du warst bei {attended} Events dabei und hast {purchases} Striche gemacht."
     },
     "groupEvents": {
       "title": "Events der Gruppe"
@@ -2036,8 +2036,8 @@
       "title": "Event-Statistik",
       "back": "Zurück zum Event",
       "answers": "Antworten auf die Einladung",
-      "reactions": "{{reactions}} Reaktionen, {{media}} Bilder/Videos",
-      "chatReactions": "{{count}} Reaktionen",
+      "reactions": "{reactions} Reaktionen, {media} Bilder/Videos",
+      "chatReactions": "{count} Reaktionen",
       "consumers": "Striche je Person"
     },
     "settings": {
@@ -2056,7 +2056,7 @@
         "confirm": "Wirklich alle Statistikdaten dieser Gruppe löschen? Das lässt sich nicht rückgängig machen."
       },
       "confirmDelete": "Ja, endgültig löschen",
-      "deleted": "{{count}} Einträge gelöscht."
+      "deleted": "{count} Einträge gelöscht."
     }
   },
   "guest": {
