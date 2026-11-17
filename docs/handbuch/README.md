@@ -35,7 +35,7 @@ Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mit
 ## Zwei Arten von Bildern
 
 - **`bilder/`** enthält echte Aufnahmen der laufenden App. Sie stehen in den Leitfäden 01 bis 06 und zeigen den aktuellen Stand.
-- **`screens/`** enthält die Bildschirme aus dem Design-Entwurf, gerendert aus [`docs/design/screens`](../design/screens/README.md). Sie stehen im Kapitel [Die App Bildschirm für Bildschirm](07-alle-screens.md) und zeigen das Zielbild, auch für Funktionen, die noch nicht umgesetzt sind. Solche Abschnitte tragen den Hinweis **Neu im Entwurf**.
+- **`screens/`** enthält die Bildschirme aus dem Design-Entwurf, gerendert aus [`docs/design/screens`](../design/screens/README.md). Sie stehen im Kapitel [Die App Bildschirm für Bildschirm](07-alle-screens.md) und zeigen das Zielbild des Designs. Bildschirme, die es im Entwurf nicht gibt, zeigt dieses Kapitel mit Bildern aus `bilder/`.
 
 ## Bilder neu erzeugen
 
