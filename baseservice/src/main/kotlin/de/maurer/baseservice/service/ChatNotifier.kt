@@ -8,6 +8,9 @@ import de.maurer.baseservice.push.PushDispatcher
 import de.maurer.baseservice.push.PushMessage
 import de.maurer.baseservice.repository.ConversationMemberRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
+import de.maurer.baseservice.repository.StammtischRepository
+import de.maurer.baseservice.error.Messages
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.tenancy.StammtischMembers
 import de.maurer.baseservice.tenancy.TenantContext
 import org.springframework.stereotype.Component
@@ -25,9 +28,9 @@ import java.util.UUID
  * - Moment-Chat: wer den Chat schon geöffnet hat (Mitglied der Konversation);
  *   dafür gibt es keinen Push, weil diese Chats nach 24 Stunden enden
  *
- * Den Inhalt eines Pushs lädt der Service Worker über die persönlichen
- * Mitteilungen nach ([PersonalAlertService]); Push und Live-Signal selbst
- * tragen keinen Chattext.
+ * Der Push trägt Titel („Anna in Gruppe“), Text und Ziel verschlüsselt zum
+ * Gerät ([de.maurer.baseservice.push.WebPushEncryption]); das Live-Signal
+ * trägt keinen Chattext.
  */
 @Component
 class ChatNotifier(
@@ -35,7 +38,8 @@ class ChatNotifier(
     private val eventParticipantRepository: EventParticipantRepository,
     private val conversationMemberRepository: ConversationMemberRepository,
     private val liveUpdateHub: LiveUpdateHub,
-    private val pushDispatcher: PushDispatcher
+    private val pushDispatcher: PushDispatcher,
+    private val stammtischRepository: StammtischRepository
 ) {
 
     /** Neue Nachricht: Live-Signal an alle Leser (auch die eigenen anderen Geräte), Push an alle anderen. */
@@ -46,13 +50,30 @@ class ChatNotifier(
         if (conversation.type == ConversationService.TYPE_CLUB || conversation.type == ConversationService.TYPE_EVENT) {
             val recipients = audience - setOfNotNull(message.sender?.id)
             val senderName = message.sender?.displayName ?: message.guest?.displayName ?: ChatService.UNKNOWN_SENDER_NAME
+            val link = "/chat?id=${conversation.id}"
             pushDispatcher.dispatch(
                 recipients,
-                PushMessage(title = senderName, body = "", type = TYPE_CHAT_MESSAGE),
+                PushMessage(
+                    title = text(Msg("notification.chat.title", senderName, chatTitle(conversation))),
+                    body = message.message.ifBlank { text(Msg("notification.chat.image")) },
+                    type = TYPE_CHAT_MESSAGE,
+                    link = link,
+                    stammtischId = TenantContext.stammtischId()?.toString(),
+                    // Je Chat eine Benachrichtigung: eine neue ersetzt die vorige.
+                    tag = link
+                ),
                 live = false
             )
         }
     }
+
+    /** Name des Chats wie in den persönlichen Mitteilungen: Event-Titel oder Name der Gruppe. */
+    private fun chatTitle(conversation: ConversationEntity): String =
+        conversation.event?.title
+            ?: TenantContext.stammtischId()?.let { stammtischRepository.findById(it).orElse(null)?.name }
+            ?: "Vereint"
+
+    private fun text(msg: Msg): String = Messages.defaultText(msg).trim()
 
     /** Reaktion oder sonstige Änderung ohne Push. */
     fun changed(conversation: ConversationEntity) {
