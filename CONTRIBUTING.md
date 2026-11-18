@@ -11,7 +11,8 @@ Pull Requests, Fehlerberichte und Ideen sind willkommen.
    stellen. `qs` und `main` sind Auslieferungs-Branches
    ([Branches und CI](docs/betrieb/branches-und-ci.md)).
 3. Lokal testen: `node local/vereint.mjs test` führt Backend-, Frontend- und
-   E2E-Tests aus ([local/README.md](local/README.md)).
+   E2E-Tests aus ([local/README.md](local/README.md)). Pull Requests nach
+   `develop` bekommen keine CI; geprüft wird erst nach dem Merge.
 4. Ändert sich eine Funktion oder der Betrieb, die passende Datei unter `docs/`
    im selben Pull Request anpassen.
 
@@ -21,7 +22,7 @@ Pull Requests, Fehlerberichte und Ideen sind willkommen.
   formulieren („Gruppe“, „Treffen“), Vereint ist für Gruppen aller Art.
 - Neue Tabellen mit Gruppendaten brauchen `stammtisch_id`, eine RLS-Policy und
   `StammtischScoped` ([docs/domains/stammtische.md](docs/domains/stammtische.md)).
-- Keine Secrets einchecken. Jeder Pull Request läuft durch Gitleaks.
+- Keine Secrets einchecken. Jeder Stand auf `develop` läuft durch Gitleaks.
 - Sicherheitslücken bitte vertraulich melden, siehe [SECURITY.md](SECURITY.md).
 
 ## Lizenz

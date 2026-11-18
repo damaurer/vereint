@@ -4,7 +4,8 @@ name: webservice CI/CD
 # wird nur ausgefuehrt, wenn sich etwas im Ordner `webservice/` oder an
 # diesem Workflow selbst geaendert hat (siehe `paths`-Filter).
 #
-# Bei jedem Pull Request und Push:
+# Bei Push auf develop, qs und main und bei Pull Requests develop -> qs und
+# qs -> main:
 #   1. Tests ausfuehren
 #   2. Docker-Image bauen und mit Trivy auf bekannte Schwachstellen pruefen
 #      (behebbare HIGH/CRITICAL-Funde lassen den Lauf fehlschlagen)
@@ -28,7 +29,6 @@ on:
   workflow_dispatch:
   pull_request:
     branches:
-      - develop
       - main
       - qs
     paths:
@@ -52,6 +52,15 @@ env:
 jobs:
   test:
     name: Tests ausfuehren
+    # Nur fuer main, qs und develop und fuer Pull Requests develop -> qs und
+    # qs -> main aus diesem Repository (siehe docs/betrieb/branches-und-ci.md).
+    if: >-
+      (github.event_name != 'pull_request'
+        && contains(fromJSON('["main", "qs", "develop"]'), github.ref_name))
+      || (github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.full_name == github.repository
+        && ((github.base_ref == 'qs' && github.head_ref == 'develop')
+          || (github.base_ref == 'main' && github.head_ref == 'qs')))
     runs-on: ubuntu-24.04
 
     steps:

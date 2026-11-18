@@ -8,11 +8,22 @@
 | `qs` | Qualitätssicherung vor dem Release |
 | `main` | Produktion. Nach einem Merge landen neu gebaute Images als `:main` in GitHub Packages ([Vereint selbst betreiben](selbst-betreiben.md)) |
 
-Feature-Branches gehen per Pull Request nach `develop`. Die Prüfungen laufen nur
-für Pull Requests in diese drei Branches; ein Pull Request, der auf einem
-anderen Feature-Branch aufsetzt, bekommt CI erst, wenn er auf `develop` zeigt.
+Feature-Branches gehen per Pull Request nach `develop`. Die Workflows laufen nur
+in diesen Fällen:
 
-## Was vor jedem Merge geprüft wird
+- bei einem Push auf `develop`, `qs` oder `main` (also nach jedem Merge),
+- bei einem Pull Request von `develop` nach `qs` und von `qs` nach `main`,
+  jeweils aus diesem Repository (nicht aus einem Fork),
+- von Hand (*Run workflow*) auf einem dieser drei Branches, `Security`
+  zusätzlich jeden Montag auf `develop`.
+
+Pull Requests von Feature-Branches nach `develop` bekommen keine CI; geprüft
+wird erst der Stand auf `develop` nach dem Merge. Vor dem Merge nach `develop`
+deshalb lokal testen (`node local/vereint.mjs test`). Jeder andere
+Pull Request (zum Beispiel ein Feature-Branch direkt nach `qs`) zeigt die Jobs
+nur als übersprungen.
+
+## Was geprüft wird
 
 | Workflow | Prüft |
 | :--- | :--- |
@@ -31,15 +42,16 @@ Ausgenommen ist das Playwright-Image des Seed-Dienstes in
 Hand angehoben.
 
 Für `main`, `qs` und `develop` sollte in GitHub ein Branch-Schutz gelten: Pull
-Request vor dem Merge, die CI-Checks als Pflicht, kein Force-Push und kein
-Löschen.
+Request vor dem Merge, kein Force-Push und kein Löschen. CI-Checks als Pflicht
+nur für `qs` und `main`; für `develop` meldet kein Pull Request Checks, ein
+Pflicht-Check bliebe dort für immer offen.
 
 ## Images
 
 Die drei Image-Workflows laufen nur, wenn sich ihr Ordner (`baseservice/`,
 `webservice/`, `keycloak/`) oder der Workflow selbst geändert hat; `Security`
-und `E2E-Tests` laufen immer. Gebaut und gescannt wird bei jedem Pull Request
-und Push. Nur nach einem Merge auf `qs` oder `main` werden baseservice und
+und `E2E-Tests` laufen immer. Gebaut und gescannt wird bei jedem Lauf (siehe
+oben, wann die Workflows laufen). Nur nach einem Merge auf `qs` oder `main` werden baseservice und
 webservice für `linux/amd64` und `linux/arm64` nach
 `ghcr.io/damaurer/vereint-<dienst>` gepusht, getaggt mit Commit-SHA und Branch-Namen.
 Das `:qs`-Image des webservice wird mit `APP_STAGE=qs` gebaut. Es liefert
