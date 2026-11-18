@@ -522,7 +522,7 @@
     },
     "scan": {
       "title": "Pay for a drink",
-      "description": "Scan a barcode and pay with your credit or add it to statistics."
+      "description": "Scan a barcode or pick a drink from the catalogue, then pay with credit or record it for the statistics."
     },
     "boardMoments": {
       "title": "Moment topics & reactions",
@@ -2218,6 +2218,26 @@
       "remove": "Remove",
       "removedTitle": "Drink removed",
       "removedMessage": "{drink} no longer counts in the statistics."
+    },
+    "source": {
+      "label": "How do you want to find the drink?",
+      "camera": "Scan",
+      "catalog": "Pick from catalogue"
+    },
+    "catalog": {
+      "title": "Pick a drink",
+      "intro": "Pick the drink from your group's drinks catalogue. Before anything is charged or recorded you see the price and your credit and choose what should happen.",
+      "searchLabel": "Search drinks",
+      "searchPlaceholder": "e.g. lager or lemonade",
+      "listLabel": "Drinks in the catalogue",
+      "loading": "Loading catalogue …",
+      "error": "The catalogue could not be loaded.",
+      "reload": "Reload",
+      "empty": "Your group's catalogue has no drink with a price right now. You can still scan the drink.",
+      "noMatch": "No drink matches your search.",
+      "priceHint": "Catalogue prices. If a self-service event is running, its price applies after you pick.",
+      "retry": "Back to the list",
+      "next": "Pick next drink"
     }
   },
   "kiosk": {

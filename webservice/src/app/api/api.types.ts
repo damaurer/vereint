@@ -233,7 +233,8 @@ export interface CreditPurchaseOption {
  * Statistik an ist, `foreignDrink` (nur Statistik).
  */
 export interface PurchasePreview {
-  barcode: string;
+  /** `null`, wenn das Getränk aus dem Katalog gewählt statt gescannt wurde. */
+  barcode: string | null;
   /** `null`, wenn das Getränk nur in der Getränkedatenbank steht. */
   drinkId: string | null;
   drinkName: string;
@@ -246,6 +247,25 @@ export interface PurchasePreview {
   foreignDrink?: boolean;
   libraryDrinkId?: string | null;
 }
+
+/**
+ * Getränk, das ein Mitglied statt zu scannen aus dem Katalog der Gruppe wählen
+ * kann (`GET /api/v1/ledger/purchases/catalog`, Issue #122): freigegeben, aktiv,
+ * mit Preis. `unitPrice` ist der Katalogpreis; an einem laufenden Event gilt
+ * nach der Auswahl dessen Preis.
+ */
+export interface PurchasableDrink {
+  id: string;
+  name: string;
+  category: string | null;
+  imageReference: string | null;
+  unitPrice: string;
+  currency: string;
+  volumeMl?: number | null;
+}
+
+/** Welches Getränk: gescannter Strichcode (Text) oder aus dem Katalog gewählt (`drinkId`). */
+export type DrinkRef = string | { drinkId: string };
 
 /** Erfasstes Fremdgetränk (`POST /api/v1/statistics/foreign-drinks`): nur Statistik, ohne Buchung. */
 export interface ForeignDrink {

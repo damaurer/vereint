@@ -161,7 +161,8 @@ class LedgerServiceTest {
                 mock(DrinkLibraryBarcodeRepository::class.java),
                 eventRepository,
                 eventParticipantRepository,
-                eventDrinkRepository
+                eventDrinkRepository,
+                mock(de.maurer.baseservice.repository.DrinkCatalogRepository::class.java)
             )
         )
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: adminId)).thenReturn(emptyList())

@@ -18,7 +18,7 @@ Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm
 | sehen, wer was getrunken hat, mit Litern und Kalorien | **Mehr → Statistik** → **Getränkestatistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
 | eine Runde ausgeben | Im laufenden Event **Runde ausgeben** → Personen anhaken → **Runde für … ausgeben** |
-| ein Getränk selbst bezahlen oder nur für die Statistik erfassen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen |
+| ein Getränk selbst bezahlen oder nur für die Statistik erfassen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen oder **Aus Katalog wählen** |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
 | beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments** |
@@ -157,7 +157,7 @@ Unter **Mehr → Freunde** führst du deine Freundesliste. Sie gilt über alle G
 
 Vereint führt für dich ein Guthabenkonto, die „Bierkasse“. Alles, was an der Theke auf deinen Namen angeschrieben wird, wird davon abgezogen.
 
-- Oben steht der **aktuelle Stand**. **Bezahlen** öffnet direkt den Strichcode-Scanner.
+- Oben steht der **aktuelle Stand**. **Bezahlen** öffnet direkt den Strichcode-Scanner; dort kannst du auch **Aus Katalog wählen**.
 - In der **Historie** siehst du jede Buchung. Mit **Alle**, **Aufladungen** und **Ausgaben** filterst du die Liste.
 
 **Aufladen**: Gib das Geld beim Kassenwart ab. Er bucht den Betrag ein, danach erscheint er hier als „Aufladung“. Selbst aufladen kannst du nicht.
@@ -168,7 +168,7 @@ Ein Guthaben kann auch ins Minus gehen. Dann bitte zeitnah beim Kassenwart ausgl
 
 ## Getränk selbst bezahlen
 
-Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst mit deinem Guthaben. Was nach dem Scannen passiert, hängt davon ab, ob du gerade bei einem Event bist:
+Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst mit deinem Guthaben. Du scannst den Strichcode oder wählst das Getränk aus dem Getränkekatalog (siehe [Aus dem Katalog wählen](#aus-dem-katalog-wählen)). Was danach passiert, hängt davon ab, ob du gerade bei einem Event bist:
 
 - **Du nimmst an einem laufenden Event mit Selbstbedienung teil**: Das Getränk wird über das Event gebucht, zum Preis des Events. Eine andere Wahl gibt es dann nicht.
 - **Sonst** entscheidest du selbst (siehe [Ohne laufendes Event](#ohne-laufendes-event-bezahlen-oder-nur-erfassen)): mit Guthaben bezahlen oder das Getränk nur in die Statistik aufnehmen.
@@ -177,7 +177,7 @@ Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst 
 
 1. **Mehr → Bezahlen** oder auf der Startseite **Getränk bezahlen** öffnen.
 2. Den **Strichcode** der Flasche in den Rahmen halten. Beim ersten Mal fragt das Handy, ob Vereint die Kamera benutzen darf.
-3. Klappt das Scannen nicht, die Nummer unter dem Strichcode eintippen und **Suchen** tippen.
+3. Klappt das Scannen nicht, die Nummer unter dem Strichcode eintippen und **Suchen** tippen. Hat die Flasche keinen Strichcode, wähle das Getränk aus dem Katalog (siehe unten).
 
 <br clear="right">
 
@@ -196,13 +196,23 @@ Reicht dein Guthaben nicht, warnt Vereint dich vorher. Du kannst trotzdem bezahl
 
 Vertippt oder das falsche Getränk erwischt? Mit **Rückgängig** nimmst du den Kauf innerhalb von **10 Minuten** selbst zurück. Danach hilft der Kassenwart. **Nächstes Getränk scannen** startet gleich den nächsten Kauf.
 
-Wird ein Strichcode nicht erkannt, ist das Getränk weder im Katalog noch in der Getränkedatenbank oder hat noch keinen Strichcode. Sag dem Vorstand Bescheid.
+Wird ein Strichcode nicht erkannt, ist das Getränk weder im Katalog noch in der Getränkedatenbank oder hat noch keinen Strichcode. Wähle es dann aus dem Katalog oder sag dem Vorstand Bescheid.
+
+### Aus dem Katalog wählen
+
+Statt zu scannen kannst du das Getränk auch aus einer Liste antippen, etwa wenn die Kamera nicht will, das Etikett fehlt oder das Getränk keinen Strichcode hat.
+
+1. Unter **Bezahlen** oben von **Scannen** auf **Aus Katalog wählen** wechseln.
+2. Vereint zeigt die Getränke aus dem Getränkekatalog deiner Gruppe, die man bezahlen kann: freigegeben, im Sortiment und mit Preis. Im Feld **Getränk suchen** findest du ein Getränk nach Name oder Sorte.
+3. Das Getränk antippen. Danach geht es **genau wie nach einem Scan** weiter: Bei einem laufenden Event mit Selbstbedienung zahlst du über das Event zu dessen Preis, sonst wählst du zwischen **Mit Guthaben bezahlen** und **Nur in die Statistik** (siehe unten). Erst die Bestätigung bucht, **Rückgängig** geht ebenso 10 Minuten lang.
+
+Der Preis in der Liste ist der Katalogpreis. Läuft gerade ein Event mit Selbstbedienung, zeigt Vereint nach dem Antippen den Preis des Events. **Nächstes Getränk wählen** bringt dich zurück zur Liste. Fehlt ein Getränk in der Liste, hat es im Katalog keinen Preis oder ist nicht im Sortiment; dann hilft der Vorstand.
 
 ### Ohne laufendes Event: bezahlen oder nur erfassen
 
 <img src="bilder/m-bezahlen-fremd.png" alt="Nach dem Scan: bezahlen oder nur in die Statistik" width="300" align="right">
 
-Bist du gerade bei keinem laufenden Event mit Selbstbedienung, fragt Vereint nach dem Scannen, was mit dem Getränk passieren soll:
+Bist du gerade bei keinem laufenden Event mit Selbstbedienung, fragt Vereint nach dem Scannen oder der Auswahl aus dem Katalog, was mit dem Getränk passieren soll:
 
 - **Mit Guthaben bezahlen**: Es gilt der Preis aus dem Getränkekatalog der Gruppe. Vereint zeigt Preis und dein Guthaben vorher und nachher; erst **… bezahlen** bucht ab. Der Haken **In die Statistik aufnehmen** ist gesetzt. Nimmst du ihn weg, wird nur bezahlt und der Kauf zählt in keiner Statistik. Hat das Getränk im Katalog keinen Preis, kannst du es nicht bezahlen.
 - **Nur in die Statistik (Fremdgetränk)**: Für ein Getränk, das du woanders gekauft hast. Es wird nichts abgebucht. Mit **In die Statistik aufnehmen** zählt es in deiner Statistik und in der Statistik der Gruppe, die du gerade gewählt hast, aber bei keinem Event. Das geht auch mit Getränken, die nur in der gemeinsamen Getränkedatenbank stehen.

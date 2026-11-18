@@ -12,7 +12,7 @@ löschen lassen sie sich nicht.
 
 | Rolle in der App | Code | Darf |
 | :--- | :--- | :--- |
-| **Mitglied** | `member` | Events sehen und zusagen, Chat, eigenes Guthaben und Käufe, per Barcode bezahlen, Getränke vorschlagen, Moments, Statistiken |
+| **Mitglied** | `member` | Events sehen und zusagen, Chat, eigenes Guthaben und Käufe, per Barcode oder aus dem Katalog bezahlen, Getränke vorschlagen, Moments, Statistiken |
 | **Vorstand** | `board` | Zusätzlich Events anlegen und verwalten, Guthaben aller Mitglieder buchen (Kasse), Katalog pflegen und freigeben, Einkaufspreise, Rundbriefe und Infotafel, Einladungslinks, Moment-Typen und Reaktionen, Kiosk-Geräte entsperren, fremde Bilder und Videos aus Moments entfernen |
 | **Admin** | `admin` | Alles vom Vorstand, dazu Mitglieder und Rollen verwalten, Konten deaktivieren, Audit-Protokoll aller Mitglieder, Gruppe umbenennen und Bild ändern, Daten exportieren, das Thekenterminal bedienen |
 | **Theke** (in der Administration „Thekenterminal“) | `tabletRecorder` | Das Thekenterminal bedienen (Striche für Mitglieder buchen), Kiosk-Modus mit PIN starten |

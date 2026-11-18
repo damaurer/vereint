@@ -1,5 +1,8 @@
 package de.maurer.baseservice.dto
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import io.swagger.v3.oas.annotations.media.Schema
+import jakarta.validation.constraints.AssertTrue
 import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.NotBlank
@@ -61,7 +64,8 @@ data class CorrectionRequest(
 /**
  * PWA-Barcodekauf eines Mitglieds (`purchase`, `source = pwaBarcode`).
  *
- * Der Client liefert ausschließlich Event und gescannten Barcode; Käufer, Preis,
+ * Der Client liefert ausschließlich Event und gescannten Barcode (oder statt des
+ * Barcodes die Katalog-ID des gewählten Getränks); Käufer, Preis,
  * Währung, Getränk und Abrechnungsmodus bestimmt der Server anhand des Eventgetränks
  * (siehe `docs/domains/ledger-and-finance.md`). Der belastete Käufer ist immer
  * der angemeldete Benutzer.
@@ -70,23 +74,45 @@ data class PurchaseRequest(
     @field:NotBlank(message = "eventId {validation.notBlank}")
     val eventId: String? = null,
 
-    @field:NotBlank(message = "barcode {validation.notBlank}")
     @field:Size(max = 128, message = "barcode {validation.size.max}")
-    val barcode: String? = null
-)
+    val barcode: String? = null,
+
+    /** Statt [barcode]: Getränk aus dem Katalog der Gruppe gewählt (Issue #122). */
+    @field:Size(max = 64, message = "drinkId {validation.size.max}")
+    val drinkId: String? = null
+) {
+    /** Genau eines: gescannter [barcode] oder aus dem Katalog gewählte [drinkId]. */
+    @get:JsonIgnore
+    @get:Schema(hidden = true)
+    @get:AssertTrue(message = "barcode/drinkId {validation.drinkSelection}")
+    val isDrinkSelected: Boolean
+        get() = barcode.isNullOrBlank() != drinkId.isNullOrBlank()
+}
 
 /**
- * Vorschau eines Barcodekaufs, bevor das Mitglied bestätigt. Ohne `eventId`
+ * Vorschau eines Barcodekaufs, bevor das Mitglied bestätigt. Genau eines von
+ * `barcode` (gescannt) und `drinkId` (aus dem Katalog gewählt) ist anzugeben.
+ * Ohne `eventId`
  * liefert der Server alle laufenden Events des Mitglieds, an denen das Getränk
  * per Selbstbedienung verkauft wird.
  */
 data class PurchasePreviewRequest(
-    @field:NotBlank(message = "barcode {validation.notBlank}")
     @field:Size(max = 128, message = "barcode {validation.size.max}")
     val barcode: String? = null,
 
-    val eventId: String? = null
-)
+    val eventId: String? = null,
+
+    /** Statt [barcode]: Getränk aus dem Katalog der Gruppe gewählt (Issue #122). */
+    @field:Size(max = 64, message = "drinkId {validation.size.max}")
+    val drinkId: String? = null
+) {
+    /** Genau eines: gescannter [barcode] oder aus dem Katalog gewählte [drinkId]. */
+    @get:JsonIgnore
+    @get:Schema(hidden = true)
+    @get:AssertTrue(message = "barcode/drinkId {validation.drinkSelection}")
+    val isDrinkSelected: Boolean
+        get() = barcode.isNullOrBlank() != drinkId.isNullOrBlank()
+}
 
 /** Ein Event, an dem das gescannte Getränk gekauft werden kann, mit dessen Preis. */
 data class PurchaseOptionDto(
@@ -108,9 +134,10 @@ data class PurchaseOptionDto(
  *   (Fremdgetränk). Zugleich heißt es, dass ein Guthabenkauf in die Statistik
  *   eingehen würde; nur dann lässt er sich davon ausnehmen.
  * - [drinkId] ist `null`, wenn das Getränk nur in der Getränkedatenbank steht.
+ * - [barcode] ist `null`, wenn das Getränk aus dem Katalog gewählt wurde.
  */
 data class PurchasePreviewDto(
-    val barcode: String,
+    val barcode: String?,
     val drinkId: String?,
     val drinkName: String,
     val imageReference: String?,
@@ -120,6 +147,21 @@ data class PurchasePreviewDto(
     val creditPurchase: CreditPurchaseOptionDto? = null,
     val foreignDrink: Boolean = false,
     val libraryDrinkId: String? = null
+)
+
+/**
+ * Getränk, das ein Mitglied statt zu scannen aus dem Katalog der Gruppe wählen
+ * kann (Issue #122): freigegeben, aktiv und mit Preis. [unitPrice] ist der
+ * Katalogpreis; an einem laufenden Event gilt nach der Auswahl dessen Preis.
+ */
+data class PurchasableDrinkDto(
+    val id: String,
+    val name: String,
+    val category: String?,
+    val imageReference: String?,
+    val unitPrice: BigDecimal,
+    val currency: String,
+    val volumeMl: Int? = null
 )
 
 /** Preis eines Guthabenkaufs ohne Event (Katalogpreis der Gruppe). */
@@ -134,12 +176,22 @@ data class CreditPurchaseOptionDto(
  * kein Statistikeintrag.
  */
 data class CreditPurchaseRequest(
-    @field:NotBlank(message = "barcode {validation.notBlank}")
     @field:Size(max = 128, message = "barcode {validation.size.max}")
     val barcode: String? = null,
 
-    val recordStatistics: Boolean? = true
-)
+    val recordStatistics: Boolean? = true,
+
+    /** Statt [barcode]: Getränk aus dem Katalog der Gruppe gewählt (Issue #122). */
+    @field:Size(max = 64, message = "drinkId {validation.size.max}")
+    val drinkId: String? = null
+) {
+    /** Genau eines: gescannter [barcode] oder aus dem Katalog gewählte [drinkId]. */
+    @get:JsonIgnore
+    @get:Schema(hidden = true)
+    @get:AssertTrue(message = "barcode/drinkId {validation.drinkSelection}")
+    val isDrinkSelected: Boolean
+        get() = barcode.isNullOrBlank() != drinkId.isNullOrBlank()
+}
 
 /** Beleg-Snapshot eines Kaufs; unveränderlich (siehe `docs/domains/ledger-and-finance.md`). */
 data class PurchaseSnapshotDto(
