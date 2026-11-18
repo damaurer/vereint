@@ -517,7 +517,7 @@
     },
     "scan": {
       "title": "Getränk bezahlen",
-      "description": "Strichcode scannen und mit Guthaben bezahlen oder für die Statistik erfassen."
+      "description": "Strichcode scannen oder Getränk aus dem Katalog wählen und mit Guthaben bezahlen oder für die Statistik erfassen."
     },
     "boardMoments": {
       "title": "Moment-Themen & Reaktionen",
@@ -2186,6 +2186,26 @@
       "remove": "Entfernen",
       "removedTitle": "Getränk entfernt",
       "removedMessage": "{drink} zählt nicht mehr in der Statistik."
+    },
+    "source": {
+      "label": "Wie möchtest du das Getränk finden?",
+      "camera": "Scannen",
+      "catalog": "Aus Katalog wählen"
+    },
+    "catalog": {
+      "title": "Getränk wählen",
+      "intro": "Wähle das Getränk aus dem Getränkekatalog deiner Gruppe. Bevor etwas abgebucht oder erfasst wird, siehst du Preis und Guthaben und wählst, was passieren soll.",
+      "searchLabel": "Getränk suchen",
+      "searchPlaceholder": "z. B. Helles oder Limo",
+      "listLabel": "Getränke im Katalog",
+      "loading": "Katalog wird geladen …",
+      "error": "Der Katalog konnte nicht geladen werden.",
+      "reload": "Erneut laden",
+      "empty": "Im Katalog deiner Gruppe gibt es gerade kein Getränk mit Preis. Du kannst das Getränk aber scannen.",
+      "noMatch": "Kein Getränk passt zu deiner Suche.",
+      "priceHint": "Preise aus dem Katalog. Läuft gerade ein Event mit Selbstbedienung, gilt nach der Auswahl dessen Preis.",
+      "retry": "Zurück zur Auswahl",
+      "next": "Nächstes Getränk wählen"
     }
   },
   "kiosk": {

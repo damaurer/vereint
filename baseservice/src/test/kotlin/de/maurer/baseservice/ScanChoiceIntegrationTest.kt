@@ -67,7 +67,8 @@ import java.util.UUID
  * bleibt alles beim Kauf über das Event. Sonst gibt es den Guthabenkauf zum
  * Katalogpreis (wahlweise ohne Statistik) und das Fremdgetränk (nur Statistik,
  * ohne Event). Die Schalter Nutzer > Gruppe gelten; Rücknahme und Entfernen
- * gehen 10 Minuten lang.
+ * gehen 10 Minuten lang. Statt zu scannen lässt sich das Getränk auch aus dem
+ * Katalog der Gruppe wählen (Issue #122); danach gilt dasselbe.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -153,6 +154,12 @@ class ScanChoiceIntegrationTest @Autowired constructor(
 
     private fun payWithCredit(code: String, record: Boolean = true, key: String = "credit-${UUID.randomUUID()}") =
         inGroup { ledgerService.purchaseWithCredit(CreditPurchaseRequest(barcode = code, recordStatistics = record), key, anna()) }
+
+    private fun previewDrink(drinkId: UUID, who: UserPrincipal = anna()) =
+        inGroup { ledgerService.previewBarcodePurchase(PurchasePreviewRequest(drinkId = drinkId.toString()), who) }
+
+    private fun payDrinkWithCredit(drinkId: UUID, record: Boolean = true, key: String = "credit-${UUID.randomUUID()}") =
+        inGroup { ledgerService.purchaseWithCredit(CreditPurchaseRequest(drinkId = drinkId.toString(), recordStatistics = record), key, anna()) }
 
     private fun foreign(code: String, key: String = "foreign-${UUID.randomUUID()}", who: UserPrincipal = anna()) =
         inGroup { foreignDrinks.record(ForeignDrinkRequest(barcode = code), key, who) }
@@ -346,6 +353,127 @@ class ScanChoiceIntegrationTest @Autowired constructor(
         assertEquals(330, drinks.drinks.single().volumeMl)
         assertEquals(140, drinks.kcal)
         assertEquals(StatisticsService.CATEGORY_NON_ALCOHOLIC, drinks.drinks.single().category)
+    }
+
+    @Test
+    fun `a member picks a payable drink from the catalogue and continues like after a scan`() {
+        val (cola, _) = drink("Cola", "2.20")
+        val noBarcode = inGroup {
+            drinkCatalogRepository.saveAndFlush(
+                DrinkCatalogEntity(
+                    name = "Spezi $suffix", category = "Limo", defaultPrice = BigDecimal("1.80"), costPrice = BigDecimal("0.80"),
+                    volumeMl = 500, status = DrinkStatus.approved, active = true
+                )
+            )
+        }
+        drink("Wasser", "0.00")
+        val (inactive, _) = drink("Alt", "2.00")
+        inGroup { drinkCatalogRepository.saveAndFlush(inactive.apply { active = false }) }
+        val (proposed, _) = drink("Neu", "2.00")
+        inGroup { drinkCatalogRepository.saveAndFlush(proposed.apply { status = DrinkStatus.proposed }) }
+
+        // Nur freigegeben, aktiv und mit Preis; nach Namen sortiert.
+        val payable = inGroup { ledgerService.listPayableDrinks(anna()) }.filter { it.name.endsWith(suffix) }
+        assertEquals(listOf(cola.name, noBarcode.name), payable.map { it.name })
+        assertEquals(BigDecimal("2.20"), payable.first().unitPrice)
+        assertEquals("EUR", payable.first().currency)
+
+        // Danach dieselbe Wahl wie nach einem Scan, auch für ein Getränk ohne Strichcode.
+        val choice = previewDrink(noBarcode.id)
+        assertNull(choice.barcode)
+        assertEquals(noBarcode.id.toString(), choice.drinkId)
+        assertTrue(choice.options.isEmpty())
+        assertEquals(BigDecimal("1.80"), choice.creditPurchase?.unitPrice)
+        assertTrue(choice.foreignDrink)
+
+        val key = "catalog-credit-$suffix"
+        val entry = payDrinkWithCredit(noBarcode.id, key = key)
+        assertNull(entry.eventId)
+        assertEquals(BigDecimal("1.80"), entry.amount)
+        assertEquals("pwaBarcode", entry.source, "lässt sich wie ein Barcodekauf zurücknehmen")
+        assertNull(entry.snapshot?.barcode)
+        assertEquals(noBarcode.name, entry.snapshot?.drinkName)
+        assertEquals(entry.id, payDrinkWithCredit(noBarcode.id, key = key).id, "Wiederholung bucht nicht doppelt")
+        assertEquals(UUID.fromString(entry.id), records(StatisticFeature.PURCHASE).single().sourceId)
+        assertEquals(BigDecimal("18.20"), inGroup { ledgerService.getMemberBalance(annaUser.id, anna()) }.creditBalance)
+        inGroup { ledgerService.undoBarcodePurchase(UUID.fromString(entry.id), "catalog-undo-$suffix", anna()) }
+        assertTrue(records(StatisticFeature.PURCHASE).isEmpty())
+        assertEquals(BigDecimal("20.00"), inGroup { ledgerService.getMemberBalance(annaUser.id, anna()) }.creditBalance)
+
+        // Ohne Statistik und als Fremdgetränk wie nach dem Scan.
+        payDrinkWithCredit(cola.id, record = false)
+        assertTrue(records(StatisticFeature.PURCHASE).isEmpty())
+        val foreign = inGroup { foreignDrinks.record(ForeignDrinkRequest(drinkId = cola.id.toString()), "catalog-foreign-$suffix", anna()) }
+        assertEquals(cola.id.toString(), foreign.drinkId)
+        assertNull(records(StatisticFeature.FOREIGN_DRINK).single().eventId)
+
+        // Nicht bezahlbare Katalogeinträge lassen sich nicht wählen.
+        assertThrows(ResourceNotFoundException::class.java) { previewDrink(inactive.id) }
+        assertThrows(ResourceNotFoundException::class.java) { payDrinkWithCredit(proposed.id) }
+    }
+
+    @Test
+    fun `a catalogue pick at a running self-service event goes through the event`() {
+        val (helles, _) = drink("Helles", "3.00")
+        val (cola, _) = drink("Cola", "2.20")
+        val event = activeEvent(helles)
+
+        val atEvent = previewDrink(helles.id)
+        assertEquals(listOf(event.id.toString()), atEvent.options.map { it.eventId })
+        assertNull(atEvent.creditPurchase)
+        val notSold = assertThrows(ApiException::class.java) { previewDrink(cola.id) }
+        assertEquals(ErrorCode.DRINK_NOT_IN_EVENT, notSold.errorCode)
+        val credit = assertThrows(ApiException::class.java) { payDrinkWithCredit(cola.id) }
+        assertEquals(ErrorCode.CREDIT_PURCHASE_AT_EVENT, credit.errorCode)
+
+        val entry = inGroup {
+            ledgerService.purchaseByBarcode(PurchaseRequest(eventId = event.id.toString(), drinkId = helles.id.toString()), "catalog-event-$suffix", anna())
+        }
+        assertEquals(event.id.toString(), entry.eventId)
+        assertEquals(BigDecimal("2.00"), entry.amount)
+        assertEquals(event.id, records(StatisticFeature.PURCHASE).single().eventId)
+    }
+
+    @Test
+    fun `a request names either a barcode or a catalogue drink`() {
+        val (cola, code) = drink("Cola", "2.20")
+        assertThrows(InvalidRequestException::class.java) {
+            inGroup { ledgerService.previewBarcodePurchase(PurchasePreviewRequest(barcode = code, drinkId = cola.id.toString()), anna()) }
+        }
+        assertThrows(InvalidRequestException::class.java) {
+            inGroup { ledgerService.previewBarcodePurchase(PurchasePreviewRequest(), anna()) }
+        }
+        assertThrows(InvalidRequestException::class.java) {
+            inGroup { ledgerService.previewBarcodePurchase(PurchasePreviewRequest(drinkId = "keine-uuid"), anna()) }
+        }
+        assertThrows(ResourceNotFoundException::class.java) { previewDrink(UUID.randomUUID()) }
+    }
+
+    @Test
+    fun `a drink from another group's catalogue can neither be listed nor bought`() {
+        val platform = UserPrincipal(
+            subject = "kc-scan-platform-other-${UUID.randomUUID()}", displayName = "Plattform",
+            roles = setOf(UserRole.ADMIN), platformAdmin = true
+        )
+        val otherGroup = UUID.fromString(platformService.create(CreateStammtischRequest(name = "Andere $suffix"), platform).id)
+        val foreignCatalogue = TenantContext.runIn(otherGroup) {
+            drinkCatalogRepository.saveAndFlush(
+                DrinkCatalogEntity(
+                    name = "Fremdbier $suffix", category = "Bier", defaultPrice = BigDecimal("4.00"),
+                    status = DrinkStatus.approved, active = true
+                )
+            )
+        }
+
+        assertTrue(inGroup { ledgerService.listPayableDrinks(anna()) }.none { it.id == foreignCatalogue.id.toString() })
+        assertThrows(ResourceNotFoundException::class.java) { previewDrink(foreignCatalogue.id) }
+        assertThrows(ResourceNotFoundException::class.java) { payDrinkWithCredit(foreignCatalogue.id) }
+        assertThrows(ResourceNotFoundException::class.java) {
+            inGroup { foreignDrinks.record(ForeignDrinkRequest(drinkId = foreignCatalogue.id.toString()), "other-foreign-$suffix", anna()) }
+        }
+        assertTrue(inGroup { ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(annaUser.id) }.none { it.entryType == LedgerEntryType.purchase })
+        assertTrue(records(StatisticFeature.FOREIGN_DRINK).isEmpty())
+        assertEquals(BigDecimal("20.00"), inGroup { ledgerService.getMemberBalance(annaUser.id, anna()) }.creditBalance)
     }
 
     @Test

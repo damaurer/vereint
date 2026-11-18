@@ -386,10 +386,11 @@ Dein Konto in der Bierkasse der Gruppe.
 
 <img src="screens/bezahlen.png" alt="Getränk scannen" width="300" align="right">
 
-Ein Getränk selbst mit Guthaben bezahlen, etwa am Kühlschrank ohne Thekendienst. Bei einem laufenden Event mit Selbstbedienung, an dem du teilnimmst, läuft der Kauf über das Event. Sonst wählst du nach dem Scan **Mit Guthaben bezahlen** (Katalogpreis, wahlweise ohne Statistik) oder **Nur in die Statistik (Fremdgetränk)**; Einzelheiten im [Handbuch für Mitglieder](02-mitglied.md#ohne-laufendes-event-bezahlen-oder-nur-erfassen).
+Ein Getränk selbst mit Guthaben bezahlen, etwa am Kühlschrank ohne Thekendienst. Bei einem laufenden Event mit Selbstbedienung, an dem du teilnimmst, läuft der Kauf über das Event. Statt zu scannen kannst du oben auf **Aus Katalog wählen** wechseln und das Getränk aus der Liste antippen; danach geht es gleich weiter wie nach einem Scan. Sonst wählst du nach dem Scan **Mit Guthaben bezahlen** (Katalogpreis, wahlweise ohne Statistik) oder **Nur in die Statistik (Fremdgetränk)**; Einzelheiten im [Handbuch für Mitglieder](02-mitglied.md#ohne-laufendes-event-bezahlen-oder-nur-erfassen).
 
 - Oben rechts steht dein **Guthaben**.
 - **Kamerafenster**: Strichcode in den Rahmen halten. Die Kamera fragt beim ersten Mal nach Erlaubnis.
+- **Scannen** / **Aus Katalog wählen** oben schaltet zwischen Kamera und Getränkeliste um. Die Liste zeigt nur bezahlbare Getränke der Gruppe (mit Preis, im Sortiment) und hat ein Suchfeld.
 - **Oder Nummer unter dem Strichcode eintippen**, falls der Scan nicht klappt.
 - Nach dem Erkennen erscheinen **Getränk**, Herkunft im Katalog, **Preis** und **Guthaben danach**.
 - **Weiter: … bezahlen** führt zur Bestätigung. Abgebucht wird noch nicht.
