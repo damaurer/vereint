@@ -62,7 +62,7 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
   - `LiveUpdateHub` / `LiveController`: Live-Verbindungen (`GET /api/v1/live`) und Verteilung der Signale.
   - `EventInvitationService`: Einladungen, Erinnerungen und Absagen zu Events.
   - `PushDispatcher`: Stellt nach dem Commit im Hintergrund zu und entfernt ungültige Abos (`404`/`410`). Offene Geräte bekommen zusätzlich sofort ein Live-Signal `notification`.
-  - `VapidPushSender`: Erzeugt RFC-8292-konforme VAPID-Header und sendet Pushes ohne Nutzlast; der Service Worker lädt den Inhalt autorisiert nach.
+  - `VapidPushSender`: Erzeugt RFC-8292-konforme VAPID-Header und sendet Titel, Text, Ziel und Gruppe als nach RFC 8291 verschlüsselte Nutzlast (`WebPushEncryption`), mit `Urgency: high` und `Topic` je Gespräch. Der Service Worker zeigt den Push sofort an, ohne nachzuladen.
   - `NoOpPushSender`: Fallback ohne konfigurierte VAPID-Keys.
 - **Entitäten**: `ConversationEntity`, `ConversationMemberEntity`, `ChatMessageEntity`, `NotificationEntity`, `PushSubscriptionEntity`.
 
@@ -158,10 +158,10 @@ sequenceDiagram
     Spring->>DB: Push-Abos des Kontos laden
     loop Für jedes aktive Abonnement
         Note over Spring: Nach dem Commit, im Hintergrund:<br/>signiert VAPID JWT mit privatem Server-Key
-        Spring->>PushService: POST <endpoint> (ohne Nutzlast, Authorization: vapid t=...)
+        Spring->>PushService: POST <endpoint> (verschlüsselte Nutzlast aes128gcm, Authorization: vapid t=..., Urgency: high)
         PushService-->>Spring: 201 Created
         PushService->>Member: Push Event an Service Worker
-        Member->>Spring: GET /api/v1/notifications (Sitzung, gewählte Gruppe)
-        Member->>Member: Zeigt neueste ungelesene Mitteilung als System-Notification
+        Member->>Member: Entschlüsselt (Browser) und zeigt Titel und Text als System-Notification
+        Member->>Spring: GET /api/v1/personal-notifications (falls Sitzung gültig: Badge, Zugestellt-Haken)
     end
 ```

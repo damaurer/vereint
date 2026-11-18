@@ -201,7 +201,7 @@ class PersonalAlertService(
         const val TYPE_DIRECT_MESSAGE = "direct_message"
         const val TYPE_FRIEND_REQUEST = "friend_request"
         const val TYPE_FRIEND_ACCEPTED = "friend_accepted"
-        private const val FRIENDS_LINK = "/freunde"
+        const val FRIENDS_LINK = "/freunde"
         private val ACCEPTED_WINDOW: Duration = Duration.ofMinutes(15)
         private const val MAX_NOTIFICATIONS_PER_GROUP = 20
     }

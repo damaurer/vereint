@@ -20,6 +20,7 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.AuditService
 import de.maurer.baseservice.service.NotificationService
+import de.maurer.baseservice.tenancy.TenantContext
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.StammtischTestSupport
 import org.junit.jupiter.api.Assertions.*
@@ -235,7 +236,18 @@ class NotificationServiceTest {
 
         assertEquals("Hi", dto.title)
         assertEquals("invite", dto.type)
-        verify(pushDispatcher).dispatch(listOf(otherId), PushMessage(title = "Hi", body = "Text", type = "invite"))
+        verify(pushDispatcher).dispatch(
+            listOf(otherId),
+            PushMessage(
+                title = "Hi",
+                body = "Text",
+                type = "invite",
+                link = NotificationService.NOTIFICATIONS_LINK,
+                stammtischId = TenantContext.stammtischId()?.toString(),
+                tag = dto.id,
+                notificationId = dto.id
+            )
+        )
         verify(pushSender, never()).send(anyTarget(), anyMessage())
         verify(auditService).recordNotification(
             eq(admin) ?: admin,
@@ -246,18 +258,28 @@ class NotificationServiceTest {
     }
 
     @Test
-    fun `notifyUsers stores one notification per recipient and dispatches once`() {
+    fun `notifyUsers stores one notification per recipient and pushes each with its link`() {
         val first = caller()
         val second = other()
         `when`(notificationRepository.save(anyNotification())).thenAnswer { it.arguments[0] }
 
-        val stored = service.notifyUsers(listOf(first, second), "Neuer Moment", "Sei dabei", "moment")
+        val stored = service.notifyUsers(listOf(first, second), "Neuer Moment", "Sei dabei", "moment", "/moments?momentId=m1")
 
         assertEquals(2, stored.size)
-        verify(pushDispatcher).dispatch(
-            listOf(callerId, otherId),
-            PushMessage(title = "Neuer Moment", body = "Sei dabei", type = "moment")
-        )
+        stored.forEach { notification ->
+            verify(pushDispatcher).dispatch(
+                listOf(notification.user!!.id),
+                PushMessage(
+                    title = "Neuer Moment",
+                    body = "Sei dabei",
+                    type = "moment",
+                    link = "/moments?momentId=m1",
+                    stammtischId = TenantContext.stammtischId()?.toString(),
+                    tag = notification.id.toString(),
+                    notificationId = notification.id.toString()
+                )
+            )
+        }
     }
 
     @Test
