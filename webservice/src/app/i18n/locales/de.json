@@ -183,6 +183,7 @@
       "treasurerTitle": "Kassenwart",
       "treasurerHint": "Guthaben wird vom Kassenwart verwaltet. Änderungen bedürfen einer Freigabe.",
       "historyHeading": "Historie",
+      "noteLabel": "Notiz",
       "emptyTitle": "Keine Buchungen",
       "emptyMessage": "Für dein Konto liegen noch keine Buchungen vor.",
       "filter": {

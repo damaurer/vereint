@@ -20,6 +20,8 @@ Das System unterscheidet vier elementare Buchungstypen (`entryType`):
 3. **Guthaben-Auszahlung (`payout`)**:
    - Rückzahlung von Guthaben, z. B. beim Verlassen der Gruppe.
    - Verringert das Guthaben.
+
+   **Notiz (Issue #121)**: Die optionale Notiz (`note`, max. 255 Zeichen) einer Aufladung oder Auszahlung steht nicht in `ledger_entries`, sondern als letztes Feld im Audit-Eintrag der Buchung (`audit_logs.details`, `…; note=<Text>`, `-` = keine). Das DTO liefert sie als `note`, sowohl in der Antwort auf `POST /topups`/`/payouts` als auch in `GET /members/{memberId}/entries` (eine Abfrage für alle Buchungen, gruppengetrennt wie jede Abfrage). Sichtbar ist sie damit dem Mitglied selbst und allen mit `LEDGER_READ`. Käufe und Korrekturen liefern keine `note`.
 4. **Korrekturbuchung / Stornierung (`correction`)**:
    - Revisionssichere Gegenbuchung zu einer früheren Fehlbuchung.
    - Da Einträge niemals gelöscht werden dürfen (*Append-Only*), hebt ein Storno den Ursprungsbetrag über einen referenzierten Gegeneintrag auf (`reverses_entry_id`). Eine Buchung lässt sich nur einmal stornieren (`409 ledger_already_corrected`).

@@ -210,6 +210,8 @@ export interface LedgerEntry {
   /** Wer getrunken hat, wenn die Buchung auf eine Runde ging. */
   beneficiaryId?: string | null;
   beneficiaryDisplayName?: string | null;
+  /** Notiz der Kasse zu einer Ein- oder Auszahlung (Issue #121). */
+  note?: string | null;
 }
 
 /** Ein laufendes Event, an dem das gescannte Getränk gekauft werden kann. */

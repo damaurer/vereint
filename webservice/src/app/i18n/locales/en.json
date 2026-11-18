@@ -189,6 +189,7 @@
       "treasurerTitle": "Treasurer",
       "treasurerHint": "Balances are managed by the treasurer. Changes require approval.",
       "historyHeading": "History",
+      "noteLabel": "Note",
       "emptyTitle": "No transactions",
       "emptyMessage": "There are no transactions on your account yet.",
       "filter": {

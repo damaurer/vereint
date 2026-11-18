@@ -538,6 +538,11 @@ interface AuditLogRepository :
     JpaRepository<AuditLogEntity, UUID>,
     JpaSpecificationExecutor<AuditLogEntity> {
     fun findByTargetEntityAndTargetId(targetEntity: String, targetId: String): List<AuditLogEntity>
+    fun findByTargetEntityAndActionInAndTargetIdIn(
+        targetEntity: String,
+        actions: Collection<String>,
+        targetIds: Collection<String>
+    ): List<AuditLogEntity>
     fun findByActorId(actorId: UUID): List<AuditLogEntity>
 }
 
