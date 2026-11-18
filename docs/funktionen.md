@@ -86,6 +86,9 @@ Thekenterminals.
   (Käufe mit Getränke- bzw. Speisenname, Aufladungen, Korrekturen).
 - Aufladen können Mitglieder **nicht selbst**. Vorstand und Administration buchen
   Guthaben in der Kasse über eine Mitgliederauswahl.
+- Die Notiz, die die Kasse beim Ein- oder Auszahlen angibt, steht dezent unter der
+  Buchung: im eigenen Verlauf des Mitglieds und im Verlauf in der Kasse. Andere
+  Mitglieder sehen sie nicht.
 - Das Guthaben darf wie bei der Strichliste ins Minus gehen.
 - Technisch ein unveränderliches Kassenbuch mit Idempotenzschlüssel gegen
   Doppelbuchungen: [docs/domains/ledger-and-finance.md](domains/ledger-and-finance.md)

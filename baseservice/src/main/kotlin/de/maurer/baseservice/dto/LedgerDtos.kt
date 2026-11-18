@@ -180,7 +180,9 @@ data class LedgerEntryDto(
     val roundId: String? = null,
     /** Wer getrunken hat, wenn die Buchung auf eine Runde ging. */
     val beneficiaryId: String? = null,
-    val beneficiaryDisplayName: String? = null
+    val beneficiaryDisplayName: String? = null,
+    /** Notiz der Kasse zu einer Ein- oder Auszahlung; sonst `null` (Issue #121). */
+    val note: String? = null
 )
 
 /**

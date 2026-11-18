@@ -252,6 +252,11 @@ interface MemberLedger {
                           {{ 'board.treasury.booking.pick' | t }}
                         </button>
                       }
+                      @if (entry.note) {
+                        <span class="member-list-note treasury-entry-note">
+                          <span class="visually-hidden">{{ 'member.wallet.noteLabel' | t }}: </span>{{ entry.note }}
+                        </span>
+                      }
                     </li>
                   }
                 </ul>
@@ -466,6 +471,9 @@ interface MemberLedger {
       }
       .treasury-entry .member-amount {
         margin-left: auto;
+      }
+      .treasury-entry-note {
+        flex: 1 1 100%;
       }
       .treasury-entry-chosen {
         outline: 2px solid var(--color-brand);

@@ -200,6 +200,16 @@ describe('TreasuryComponent', () => {
     expect(titles).toEqual(['Aufladung', 'Kauf']);
   });
 
+  it('shows the note of a booking in the member history', async () => {
+    api.listEntries.mockReturnValue(of([olderEntry, { ...entry, note: 'Bar beim Stammtisch' }]));
+    const fixture = await create();
+    await openAlice(fixture);
+    const notes = Array.from(root(fixture).querySelectorAll('#treasury-panel .treasury-entry-note')).map(
+      (n) => n.textContent?.trim(),
+    );
+    expect(notes).toEqual(['Notiz: Bar beim Stammtisch']);
+  });
+
   it('books a topup for the selected member and refreshes the views', async () => {
     const fixture = await create();
     await openAlice(fixture);

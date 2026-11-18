@@ -417,6 +417,15 @@ a:focus-visible {
   font-size: 0.85rem;
 }
 
+/* Freitext-Notiz einer Buchung (Ein-/Auszahlung), dezent unter der Metazeile. */
+.member-list-note {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
 .member-amount {
   color: var(--color-text);
   font-weight: 700;

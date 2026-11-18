@@ -54,6 +54,7 @@ class LedgerService(
     private val userService: UserService,
     private val auditService: AuditService,
     private val snapshots: LedgerSnapshots,
+    private val notes: LedgerNotes,
     private val statisticsRecorder: StatisticsRecorder,
     private val scanRules: BarcodeScanRules
 ) {
@@ -94,7 +95,9 @@ class LedgerService(
         val caller = userService.getOrCreateUser(principal)
         requireCanReadMember(caller, principal, memberId)
         requireUser(memberId)
-        return snapshots.attach(ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(memberId)).map { toDto(it) }
+        val entries = snapshots.attach(ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(memberId))
+        val notesById = notes.notesFor(entries)
+        return entries.map { toDto(it, notesById[it.id]) }
     }
 
     @Transactional(readOnly = true)
@@ -834,7 +837,7 @@ class LedgerService(
         val existing = ledgerEntryRepository.findByIdempotencyKey(cmd.key).orElse(null)
         if (existing != null) {
             if (matchesReplay(existing, cmd.entryType, cmd.member, cmd.amount, cmd.currency)) {
-                return toDto(snapshots.attach(existing))
+                return toDto(snapshots.attach(existing), notes.noteFor(existing))
             }
             throw IdempotencyConflictException(
                 Msg("error.idempotency.conflict", cmd.key),
@@ -871,14 +874,17 @@ class LedgerService(
         } else if (cmd.recordStatistics) {
             statisticsRecorder.ledgerEntry(saved)
         }
+        val note = LedgerNotes.normalize(cmd.note)
+        // Das Notizfeld muss zuletzt stehen: LedgerNotes liest es von dort für die Anzeige.
         auditService.recordLedgerEntry(
             cmd.actor,
             cmd.auditAction,
             saved.id,
             "type=${cmd.entryType}; member=${cmd.member.id}; amount=${cmd.amount.setScale(2)} ${cmd.currency}; " +
-                "reverses=${cmd.reversesEntry?.id ?: "-"}; note=${cmd.note?.trim()?.ifBlank { null } ?: "-"}"
+                "reverses=${cmd.reversesEntry?.id ?: "-"}; note=${note ?: "-"}"
         )
-        return toDto(saved)
+        val shownNote = note.takeIf { cmd.entryType == LedgerEntryType.topup || cmd.entryType == LedgerEntryType.payout }
+        return toDto(saved, shownNote)
     }
 
     private fun matchesReplay(
@@ -1036,7 +1042,7 @@ class LedgerService(
         return trimmed.uppercase()
     }
 
-    private fun toDto(entry: LedgerEntryEntity): LedgerEntryDto {
+    private fun toDto(entry: LedgerEntryEntity, note: String? = null): LedgerEntryDto {
         val snapshot = entry.purchaseSnapshot?.let {
             PurchaseSnapshotDto(
                 itemType = it.itemType,
@@ -1072,7 +1078,8 @@ class LedgerService(
             tallyCategoryName = entry.tallyCategory?.name,
             roundId = entry.round?.id?.toString(),
             beneficiaryId = entry.beneficiary?.id?.toString(),
-            beneficiaryDisplayName = entry.beneficiary?.displayName
+            beneficiaryDisplayName = entry.beneficiary?.displayName,
+            note = note
         )
     }
 

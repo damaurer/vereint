@@ -162,6 +162,8 @@ Vereint führt für dich ein Guthabenkonto, die „Bierkasse“. Alles, was an d
 
 **Aufladen**: Gib das Geld beim Kassenwart ab. Er bucht den Betrag ein, danach erscheint er hier als „Aufladung“. Selbst aufladen kannst du nicht.
 
+Hat der Kassenwart beim Ein- oder Auszahlen eine **Notiz** eingetragen (z. B. „Bareinzahlung beim Treffen“), steht sie klein unter der Buchung. Die Notiz siehst nur du und der Vorstand.
+
 Ein Guthaben kann auch ins Minus gehen. Dann bitte zeitnah beim Kassenwart ausgleichen.
 
 <br clear="right">

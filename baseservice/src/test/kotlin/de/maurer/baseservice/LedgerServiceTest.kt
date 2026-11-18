@@ -11,6 +11,7 @@ import de.maurer.baseservice.error.ApiException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.IdempotencyConflictException
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.repository.AuditLogRepository
 import de.maurer.baseservice.repository.DrinkBarcodeRepository
 import de.maurer.baseservice.repository.DrinkLibraryBarcodeRepository
 import de.maurer.baseservice.repository.EventDrinkRepository
@@ -26,6 +27,7 @@ import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.AuditService
 import de.maurer.baseservice.service.BarcodeScanRules
 import de.maurer.baseservice.service.LedgerService
+import de.maurer.baseservice.service.LedgerNotes
 import de.maurer.baseservice.service.LedgerSnapshots
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.StammtischTestSupport
@@ -81,6 +83,9 @@ class LedgerServiceTest {
 
     @Mock
     private lateinit var auditService: AuditService
+
+    @Mock
+    private lateinit var auditLogRepository: AuditLogRepository
 
     private lateinit var ledgerService: LedgerService
 
@@ -155,6 +160,7 @@ class LedgerServiceTest {
             userService,
             auditService,
             LedgerSnapshots(purchaseSnapshotRepository),
+            LedgerNotes(auditLogRepository),
             mock(de.maurer.baseservice.service.StatisticsRecorder::class.java),
             BarcodeScanRules(
                 drinkBarcodeRepository,
@@ -1014,5 +1020,79 @@ class LedgerServiceTest {
             ledgerService.undoTabletPurchase(tabletEventId, original.id, admin(), "idem-undo-6")
         }
         assertEquals(ErrorCode.LEDGER_ALREADY_CORRECTED, error.errorCode)
+    }
+
+    @Test
+    fun `topup returns the trimmed note and records it last in the audit details`() {
+        `when`(userService.getOrCreateUser(adminPrincipal())).thenReturn(admin())
+        `when`(userRepository.findById(memberId)).thenReturn(Optional.of(member()))
+        `when`(ledgerEntryRepository.save(anyLedgerEntry())).thenAnswer { it.arguments[0] }
+
+        val dto = ledgerService.topup(
+            TopupRequest(memberId = memberId.toString(), amount = BigDecimal("20.00"), note = "  Bar; Sommerfest  "),
+            "idem-topup-note",
+            adminPrincipal()
+        )
+
+        assertEquals("Bar; Sommerfest", dto.note)
+        verify(auditService).recordLedgerEntry(
+            any(),
+            eq(AuditService.ACTION_LEDGER_TOPUP) ?: AuditService.ACTION_LEDGER_TOPUP,
+            any(UUID::class.java) ?: adminId,
+            endsWith("; note=Bar; Sommerfest") ?: ""
+        )
+    }
+
+    @Test
+    fun `member entries carry the notes of own topups and payouts but not of purchases`() {
+        `when`(userService.getOrCreateUser(memberPrincipal())).thenReturn(member())
+        `when`(userRepository.findById(memberId)).thenReturn(Optional.of(member()))
+        val topup = LedgerEntryEntity(
+            entryType = LedgerEntryType.topup, member = member(), amount = BigDecimal("10.00"),
+            actor = admin(), idempotencyKey = "t-note"
+        )
+        val payout = LedgerEntryEntity(
+            entryType = LedgerEntryType.payout, member = member(), amount = BigDecimal("4.00"),
+            actor = admin(), idempotencyKey = "p-note"
+        )
+        val purchase = LedgerEntryEntity(
+            entryType = LedgerEntryType.purchase, member = member(), amount = BigDecimal("2.50"),
+            actor = member(), idempotencyKey = "k-note"
+        )
+        `when`(ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(memberId))
+            .thenReturn(listOf(topup, payout, purchase))
+        val details = "type=topup; member=$memberId; amount=10.00 EUR; reverses=-; note="
+        `when`(
+            auditLogRepository.findByTargetEntityAndActionInAndTargetIdIn(
+                eq(AuditService.TARGET_LEDGER) ?: "",
+                anyCollection<String>() ?: emptyList(),
+                anyCollection<String>() ?: emptyList()
+            )
+        ).thenReturn(
+            listOf(
+                AuditLogEntity(
+                    action = AuditService.ACTION_LEDGER_TOPUP, targetEntity = AuditService.TARGET_LEDGER,
+                    targetId = topup.id.toString(), details = details + "Bar bezahlt"
+                ),
+                AuditLogEntity(
+                    action = AuditService.ACTION_LEDGER_PAYOUT, targetEntity = AuditService.TARGET_LEDGER,
+                    targetId = payout.id.toString(), details = details + "-"
+                )
+            )
+        )
+
+        val entries = ledgerService.listMemberEntries(memberId, memberPrincipal())
+
+        assertEquals("Bar bezahlt", entries.first { it.id == topup.id.toString() }.note)
+        assertNull(entries.first { it.id == payout.id.toString() }.note)
+        assertNull(entries.first { it.id == purchase.id.toString() }.note)
+    }
+
+    @Test
+    fun `note extraction reads the trailing note field only`() {
+        assertEquals("a; note=b", LedgerNotes.extractNote("type=topup; reverses=-; note=a; note=b"))
+        assertNull(LedgerNotes.extractNote("type=topup; reverses=-; note=-"))
+        assertNull(LedgerNotes.extractNote("type=topup; reverses=-"))
+        assertNull(LedgerNotes.extractNote(null))
     }
 }

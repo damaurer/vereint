@@ -54,8 +54,10 @@ Hier verwaltet der Kassenwart die Bierkasse.
 
 Tippe auf ein Mitglied. Es öffnen sich sein Guthaben, alle seine Buchungen und die Formulare zum Buchen:
 
-1. **Guthaben aufladen**: Betrag und eine Notiz (z. B. „Bareinzahlung beim Treffen“) eintragen, **Aufladen** tippen. Das Mitglied sieht die Aufladung sofort in seinem Guthaben.
+1. **Guthaben aufladen**: Betrag und eine Notiz (z. B. „Bareinzahlung beim Treffen“) eintragen, **Aufladen** tippen. Das Mitglied sieht die Aufladung sofort in seinem Guthaben, die Notiz steht klein darunter.
 2. **Guthaben auszahlen**: genauso, wenn jemand Guthaben bar zurückbekommt, etwa beim Austritt.
+
+Notizen von Ein- und Auszahlungen stehen auch in der Buchungsliste des Mitglieds hier in der Kasse unter der jeweiligen Buchung. Schreib deshalb nichts hinein, was das Mitglied nicht lesen soll.
 3. **Buchung korrigieren**: Buchungen werden nie gelöscht. Eine falsche Buchung hebst du mit einer Gegenbuchung auf: Buchung in der Auswahl wählen (oder in der Liste darunter auf **Zur Korrektur wählen** tippen), einen Grund eintragen und **Korrigieren** tippen. Beide Buchungen bleiben sichtbar, so ist jede Änderung nachvollziehbar.
 
 **Schließen** klappt das Mitglied wieder zu. Jede Buchung wird genau einmal ausgeführt, auch wenn du versehentlich doppelt tippst.
