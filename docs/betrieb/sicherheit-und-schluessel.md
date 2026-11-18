@@ -106,5 +106,9 @@ rotiert man ebenso mit `SESSION_SECRET_PREVIOUS`.
   Schwachstellen (Trivy) geprüft.
 - GitHub Actions sind auf Commit-SHAs gepinnt, Images auf genaue Versionen
   (teils zusätzlich auf Digests); Dependabot hält beides aktuell.
+- Die Images `:main` und `:qs` werden nach dem Push mit cosign signiert
+  ([Signierte Images](branches-und-ci.md#signierte-images)). Den privaten
+  Schlüssel `cosign.key` und sein Passwort offline aufbewahren; wer sie hat,
+  kann Images signieren, die ein prüfender Server ausrollt.
 
 Mehr: [docs/architecture/security-and-auth.md](../architecture/security-and-auth.md)
