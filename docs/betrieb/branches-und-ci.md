@@ -16,8 +16,8 @@ anderen Feature-Branch aufsetzt, bekommt CI erst, wenn er auf `develop` zeigt.
 
 | Workflow | Prüft |
 | :--- | :--- |
-| `baseservice CI/CD` | Tests (JDK 25), Docker-Image bauen, Trivy-Scan des Images |
-| `webservice CI/CD` | Tests, Docker-Image bauen, Trivy-Scan des Images |
+| `baseservice CI/CD` | Tests (JDK 25), Docker-Image bauen, Trivy-Scan des Images; auf `main`/`qs` zusätzlich pushen und signieren |
+| `webservice CI/CD` | Tests, Docker-Image bauen, Trivy-Scan des Images; auf `main`/`qs` zusätzlich pushen und signieren |
 | `keycloak CI/CD` | Keycloak-Image mit Realm und Theme bauen und scannen (nur für den lokalen Stack und die E2E-Tests, wird nicht veröffentlicht) |
 | `Security` | Gitleaks (Secrets in der gesamten Historie), Trivy auf Abhängigkeiten und Konfiguration, Verweise auf nicht vorhandene Markdown-Dateien; zusätzlich jeden Montag |
 | `E2E-Tests` | Playwright gegen den kompletten Stack ([E2E-Tests](../../e2e/README.md)) |
@@ -50,3 +50,36 @@ unterscheiden. `:main` bleibt unverändert. Die PNG-Icons entstehen mit
 `node scripts/qs-icons/render.mjs` aus den SVG-Quellen.
 Mit *Run workflow* lassen sich die Image-Workflows auch von Hand starten.
 Ausgerollt wird außerhalb dieses Repositorys.
+
+## Signierte Images
+
+Gepusht wird in einem eigenen Job (`Image pushen und signieren`), der nur bei
+einem Push oder einem Start von Hand auf `main` oder `qs` läuft. Er liegt im
+GitHub-Environment `signatur-main` bzw. `signatur-qs` und signiert nach dem
+Push den Digest, auf den `:main` bzw. `:qs` zeigt, mit
+[cosign](https://github.com/sigstore/cosign) 2.6.5. Die Signatur liegt neben
+dem Image in GitHub Packages; ein öffentliches Transparenz-Log wird nicht
+benutzt (`--tlog-upload=false`). Wer die Images ausrollt, prüft passend dazu
+mit dem öffentlichen Schlüssel und ohne Log, zum Beispiel:
+
+```bash
+cosign verify --key cosign.pub --insecure-ignore-tlog=true \
+  ghcr.io/damaurer/vereint-baseservice:main
+```
+
+Einrichten (einmalig, in *Settings → Environments*):
+
+1. Schlüsselpaar erzeugen: `cosign generate-key-pair` (fragt nach einem
+   Passwort, legt `cosign.key` und `cosign.pub` an).
+2. Environments `signatur-main` und `signatur-qs` anlegen, jeweils mit den
+   Secrets `COSIGN_PRIVATE_KEY` (Inhalt von `cosign.key`) und
+   `COSIGN_PASSWORD`. Unter *Deployment branches and tags* nur `main` bzw.
+   `qs` zulassen, damit kein anderer Branch an den Schlüssel kommt.
+3. `cosign.pub` dort hinterlegen, wo vor dem Ausrollen geprüft wird.
+   `cosign.key` und das Passwort offline aufbewahren
+   ([Sicherheit und Schlüssel](sicherheit-und-schluessel.md)).
+
+Fehlt das Secret, schlägt der Job nach dem Push fehl: Das Image liegt dann
+unsigniert in GitHub Packages und wird von einem prüfenden Server nicht
+ausgerollt. cosign 3 legt Signaturen anders ab; die Version im Workflow
+(`COSIGN_IMAGE`) nur zusammen mit der Prüfseite anheben.

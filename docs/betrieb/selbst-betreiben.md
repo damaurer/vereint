@@ -14,6 +14,8 @@ GitHub Packages, getaggt mit dem Commit (`<sha>`) und dem Branch-Namen
 (`:main`, `:qs`). Ein Image wird nur neu gebaut, wenn sich sein Ordner
 geändert hat; `:main` zeigt also immer auf den neuesten Stand beider Dienste,
 der `<sha>`-Tag nur auf den Commit, der das Image gebaut hat.
+Die Branch-Tags sind mit cosign signiert und lassen sich vor dem Ausrollen
+prüfen ([Signierte Images](branches-und-ci.md#signierte-images)).
 
 Bis November 2026 hießen die Images `ghcr.io/damaurer/baseservice` und
 `ghcr.io/damaurer/webservice`. Unter den alten Namen kommen keine neuen
