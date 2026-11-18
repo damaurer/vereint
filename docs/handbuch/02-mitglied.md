@@ -18,7 +18,7 @@ Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm
 | sehen, wer was getrunken hat, mit Litern und Kalorien | **Mehr → Statistik** → **Getränkestatistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
 | eine Runde ausgeben | Im laufenden Event **Runde ausgeben** → Personen anhaken → **Runde für … ausgeben** |
-| ein Getränk selbst bezahlen oder nur für die Statistik erfassen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen |
+| ein Getränk selbst bezahlen oder nur für die Statistik erfassen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen oder **Aus Katalog wählen** |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
 | beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments** |
@@ -157,10 +157,12 @@ Unter **Mehr → Freunde** führst du deine Freundesliste. Sie gilt über alle G
 
 Vereint führt für dich ein Guthabenkonto, die „Bierkasse“. Alles, was an der Theke auf deinen Namen angeschrieben wird, wird davon abgezogen.
 
-- Oben steht der **aktuelle Stand**. **Bezahlen** öffnet direkt den Strichcode-Scanner.
+- Oben steht der **aktuelle Stand**. **Bezahlen** öffnet direkt den Strichcode-Scanner; dort kannst du auch **Aus Katalog wählen**.
 - In der **Historie** siehst du jede Buchung. Mit **Alle**, **Aufladungen** und **Ausgaben** filterst du die Liste.
 
 **Aufladen**: Gib das Geld beim Kassenwart ab. Er bucht den Betrag ein, danach erscheint er hier als „Aufladung“. Selbst aufladen kannst du nicht.
+
+Hat der Kassenwart beim Ein- oder Auszahlen eine **Notiz** eingetragen (z. B. „Bareinzahlung beim Treffen“), steht sie klein unter der Buchung. Die Notiz siehst nur du und der Vorstand.
 
 Ein Guthaben kann auch ins Minus gehen. Dann bitte zeitnah beim Kassenwart ausgleichen.
 
@@ -168,7 +170,7 @@ Ein Guthaben kann auch ins Minus gehen. Dann bitte zeitnah beim Kassenwart ausgl
 
 ## Getränk selbst bezahlen
 
-Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst mit deinem Guthaben. Was nach dem Scannen passiert, hängt davon ab, ob du gerade bei einem Event bist:
+Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst mit deinem Guthaben. Du scannst den Strichcode oder wählst das Getränk aus dem Getränkekatalog (siehe [Aus dem Katalog wählen](#aus-dem-katalog-wählen)). Was danach passiert, hängt davon ab, ob du gerade bei einem Event bist:
 
 - **Du nimmst an einem laufenden Event mit Selbstbedienung teil**: Das Getränk wird über das Event gebucht, zum Preis des Events. Eine andere Wahl gibt es dann nicht.
 - **Sonst** entscheidest du selbst (siehe [Ohne laufendes Event](#ohne-laufendes-event-bezahlen-oder-nur-erfassen)): mit Guthaben bezahlen oder das Getränk nur in die Statistik aufnehmen.
@@ -177,7 +179,7 @@ Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst 
 
 1. **Mehr → Bezahlen** oder auf der Startseite **Getränk bezahlen** öffnen.
 2. Den **Strichcode** der Flasche in den Rahmen halten. Beim ersten Mal fragt das Handy, ob Vereint die Kamera benutzen darf.
-3. Klappt das Scannen nicht, die Nummer unter dem Strichcode eintippen und **Suchen** tippen.
+3. Klappt das Scannen nicht, die Nummer unter dem Strichcode eintippen und **Suchen** tippen. Hat die Flasche keinen Strichcode, wähle das Getränk aus dem Katalog (siehe unten).
 
 <br clear="right">
 
@@ -196,11 +198,23 @@ Reicht dein Guthaben nicht, warnt Vereint dich vorher. Du kannst trotzdem bezahl
 
 Vertippt oder das falsche Getränk erwischt? Mit **Rückgängig** nimmst du den Kauf innerhalb von **10 Minuten** selbst zurück. Danach hilft der Kassenwart. **Nächstes Getränk scannen** startet gleich den nächsten Kauf.
 
-Wird ein Strichcode nicht erkannt, ist das Getränk weder im Katalog noch in der Getränkedatenbank oder hat noch keinen Strichcode. Sag dem Vorstand Bescheid.
+Wird ein Strichcode nicht erkannt, ist das Getränk weder im Katalog noch in der Getränkedatenbank oder hat noch keinen Strichcode. Wähle es dann aus dem Katalog oder sag dem Vorstand Bescheid.
+
+### Aus dem Katalog wählen
+
+Statt zu scannen kannst du das Getränk auch aus einer Liste antippen, etwa wenn die Kamera nicht will, das Etikett fehlt oder das Getränk keinen Strichcode hat.
+
+1. Unter **Bezahlen** oben von **Scannen** auf **Aus Katalog wählen** wechseln.
+2. Vereint zeigt die Getränke aus dem Getränkekatalog deiner Gruppe, die man bezahlen kann: freigegeben, im Sortiment und mit Preis. Im Feld **Getränk suchen** findest du ein Getränk nach Name oder Sorte.
+3. Das Getränk antippen. Danach geht es **genau wie nach einem Scan** weiter: Bei einem laufenden Event mit Selbstbedienung zahlst du über das Event zu dessen Preis, sonst wählst du zwischen **Mit Guthaben bezahlen** und **Nur in die Statistik** (siehe unten). Erst die Bestätigung bucht, **Rückgängig** geht ebenso 10 Minuten lang.
+
+Der Preis in der Liste ist der Katalogpreis. Läuft gerade ein Event mit Selbstbedienung, zeigt Vereint nach dem Antippen den Preis des Events. **Nächstes Getränk wählen** bringt dich zurück zur Liste. Fehlt ein Getränk in der Liste, hat es im Katalog keinen Preis oder ist nicht im Sortiment; dann hilft der Vorstand.
 
 ### Ohne laufendes Event: bezahlen oder nur erfassen
 
-Bist du gerade bei keinem laufenden Event mit Selbstbedienung, fragt Vereint nach dem Scannen, was mit dem Getränk passieren soll:
+<img src="bilder/m-bezahlen-fremd.png" alt="Nach dem Scan: bezahlen oder nur in die Statistik" width="300" align="right">
+
+Bist du gerade bei keinem laufenden Event mit Selbstbedienung, fragt Vereint nach dem Scannen oder der Auswahl aus dem Katalog, was mit dem Getränk passieren soll:
 
 - **Mit Guthaben bezahlen**: Es gilt der Preis aus dem Getränkekatalog der Gruppe. Vereint zeigt Preis und dein Guthaben vorher und nachher; erst **… bezahlen** bucht ab. Der Haken **In die Statistik aufnehmen** ist gesetzt. Nimmst du ihn weg, wird nur bezahlt und der Kauf zählt in keiner Statistik. Hat das Getränk im Katalog keinen Preis, kannst du es nicht bezahlen.
 - **Nur in die Statistik (Fremdgetränk)**: Für ein Getränk, das du woanders gekauft hast. Es wird nichts abgebucht. Mit **In die Statistik aufnehmen** zählt es in deiner Statistik und in der Statistik der Gruppe, die du gerade gewählt hast, aber bei keinem Event. Das geht auch mit Getränken, die nur in der gemeinsamen Getränkedatenbank stehen.
@@ -213,7 +227,7 @@ Hast du **Meine Statistik erfassen** ausgeschaltet oder hat die Gruppe ihre Stat
 
 ## Eine Runde ausgeben
 
-<img src="screens/runde-handy.png" alt="Runde am eigenen Handy ausgeben" width="300" align="right">
+<img src="bilder/m-runde.png" alt="Runde am eigenen Handy ausgeben" width="300" align="right">
 
 Eine Runde gibst du **an deinem eigenen Handy** aus, bezahlt wird **von deinem Guthaben**. Das geht, solange ein Event läuft, zu dem du gehörst. Öffne das Event und tippe auf **Runde ausgeben**.
 
@@ -303,7 +317,7 @@ Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, K
 
 Unter **Mehr → Statistik** siehst du Auswertungen deiner Gruppe. Alle Mitglieder sehen dieselben Zahlen, mit Namen. Die Statistiken sind Spaß-Fakten, keine Gesundheitsangabe, und bleiben in der Gruppe (siehe AGB, Abschnitt „Statistiken“).
 
-Oben wählst du den **Zeitraum**: **30 Tage**, **90 Tage** oder **Jahr** (das laufende Kalenderjahr ab 1. Januar). Er bleibt erhalten, wenn du zwischen den Statistikseiten wechselst.
+Oben wählst du den **Zeitraum**: **30 Tage**, **90 Tage** oder **Dieses Jahr** (das laufende Kalenderjahr ab 1. Januar). Er bleibt erhalten, wenn du zwischen den Statistikseiten wechselst.
 
 - **Gruppe**, **Du** und **Dein Platz**: Striche der ganzen Gruppe, deine eigenen und dein Platz in der Rangliste.
 - **Rangliste** mit Balken; dein Eintrag ist hervorgehoben.
@@ -313,15 +327,41 @@ Oben wählst du den **Zeitraum**: **30 Tage**, **90 Tage** oder **Jahr** (das la
 
 **Alle Statistiken im Überblick** fasst alles auf einer Seite zusammen, am besten am Rechner: Mitglieder, Events, Zusagen je Event und je Mitglied (mit **Da gewesen**: Events mit mindestens einem Strich oder Kauf), Getränke je Woche, nach Wochentag und Uhrzeit, **Wer trinkt was?** nach Bier, Alkoholfrei, Schnaps, Wein & Sekt, die beliebtesten Getränke, Rundengeber, Moments, Chat und Rekorde. Den **Umsatz** sehen dort nur Vorstand und Kasse.
 
-**Events der Gruppe** vergleicht alle Events der Gruppe im Zeitraum: Antworten als Balken (Zugesagt, Vielleicht, Abgesagt, Keine Antwort), Teilnehmende, Striche, Moments und Chat. Ein Tipp auf ein Event öffnet seine **Event-Statistik**; die erreichst du auch auf der Eventseite über **Statistik**. **Funktionen** zeigt je Funktion, wie oft sie benutzt und wie darauf geantwortet wurde, zum Beispiel Events und Zusagen, Moments und Reaktionen, Einladungslinks und Beitritte.
+<br clear="right">
+
+### Events der Gruppe und Event-Statistik
+
+<img src="bilder/m-statistik-events.png" alt="Events der Gruppe im Vergleich" width="300" align="right">
+
+**Events der Gruppe im Vergleich** (unter **Weitere Statistiken**) vergleicht alle Events der Gruppe im Zeitraum, die du auch in deiner Eventliste siehst. Oben stehen Events, Teilnahmen, Zusagequote und Striche, jeweils mit dem Durchschnitt je Event. Unter **Events im Vergleich** zeigt je Event ein Balken die Antworten (Zugesagt, Vielleicht, Abgesagt, Keine Antwort), dazu Teilnehmende, Striche, Moments und Chat. Ein Tipp auf ein Event öffnet seine **Event-Statistik**.
+
+<br clear="right">
+
+<img src="bilder/m-event-statistik.png" alt="Event-Statistik" width="300" align="right">
+
+Die **Event-Statistik** erreichst du auch auf der Eventseite über **Statistik**. Sie zeigt für ein einzelnes Event die **Antworten auf die Einladung**, Teilnehmende, Striche, Runden, Moments mit Reaktionen und Bildern, Chat-Nachrichten mit Reaktionen und **Striche je Person**. Ist die Statistik für das Event ausgeschaltet, steht das oben auf der Seite.
+
+<br clear="right">
+
+### Funktionen
+
+<img src="bilder/m-statistik-funktionen.png" alt="Statistik der Funktionen" width="300" align="right">
+
+**Funktionen: ausgelöst und Antworten** zeigt je Funktion der Gruppe, wie oft sie im Zeitraum benutzt wurde und wie darauf geantwortet wurde: zum Beispiel Events und die Zusagen darauf, Moments und ihre Reaktionen, Chat-Nachrichten und Reaktionen, Runden und bedachte Personen, Einladungslinks und Beitritte, Striche und Käufe nach Herkunft (Strichliste, Barcode-Kauf) sowie Fremdgetränke.
 
 <br clear="right">
 
 ### Meine Statistik
 
-Unter **Mehr → Meine Statistik** siehst du nur für dich, was du ausgelöst hast, über alle deine Gruppen: Striche, Zusagen, Teilnahmen, Moments, Chatnachrichten und mehr, aufgeschlüsselt nach Funktion und nach Gruppe. **Events übergreifend** vergleicht alle Events deiner Gruppen, die du sehen darfst, mit Summen, Durchschnitten und deinen eigenen Werten. Namen anderer Personen stehen dort nicht.
+<img src="bilder/m-statistik-ich.png" alt="Meine Statistik" width="300" align="right">
+
+Unter **Mehr → Meine Statistik** siehst du nur für dich, was du ausgelöst hast, über alle deine Gruppen: Striche und Käufe, Zusagen, Teilnahmen, Moments, Chatnachrichten und mehr, aufgeschlüsselt **Nach Funktion** und **Nach Gruppe**. Niemand sonst sieht diese Seite. **Alle meine Events (gruppenübergreifend)** öffnet **Events übergreifend**: Es vergleicht alle Events deiner Gruppen, die du sehen darfst, mit Summen, Durchschnitten und deinen eigenen Werten. Namen anderer Personen stehen dort nicht.
+
+<br clear="right">
 
 ### Statistik ausschalten oder löschen
+
+<img src="bilder/profil-statistik.png" alt="Statistik in Mein Konto" width="300" align="right">
 
 In **Mein Konto** steht der Abschnitt **Statistik**:
 
@@ -329,6 +369,8 @@ In **Mein Konto** steht der Abschnitt **Statistik**:
 - **Meine erfassten Statistikdaten löschen**: löscht nach einer Rückfrage alles, was über dich erfasst wurde, in allen Gruppen. Deine Buchungen und dein Guthaben bleiben. Das Löschen steht im Protokoll der Gruppe.
 
 Direktnachrichten werden nie erfasst. Ein storniertes Getränk verschwindet wieder aus der Statistik. Fremdgetränke (siehe [Ohne laufendes Event](#ohne-laufendes-event-bezahlen-oder-nur-erfassen)) zählen in deiner Statistik und in der Gruppenstatistik, aber in keiner Event-Statistik.
+
+<br clear="right">
 
 ## Eine Gruppe verlassen
 

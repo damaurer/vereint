@@ -28,6 +28,7 @@ import de.maurer.baseservice.tenancy.StammtischAccess
 import de.maurer.baseservice.tenancy.StammtischMembers
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import de.maurer.baseservice.tenancy.TenantContext
 import java.util.UUID
 
 /**
@@ -160,7 +161,7 @@ class NotificationService(
             NotificationEntity(user = target, title = title, body = body, type = type)
         )
 
-        pushDispatcher.dispatch(listOf(target.id), PushMessage(title = title, body = body, type = type))
+        push(notification)
 
         auditService.recordNotification(
             caller,
@@ -211,7 +212,7 @@ class NotificationService(
         val notification = notificationRepository.save(
             NotificationEntity(user = target, title = title, body = body, type = type, link = link)
         )
-        pushDispatcher.dispatch(listOf(target.id), PushMessage(title = title, body = body, type = type))
+        push(notification)
         return notification
     }
 
@@ -228,8 +229,29 @@ class NotificationService(
         val notifications = targets.map {
             notificationRepository.save(NotificationEntity(user = it, title = title, body = body, type = type, link = link))
         }
-        pushDispatcher.dispatch(targets.map { it.id }, PushMessage(title = title, body = body, type = type))
+        notifications.forEach(::push)
         return notifications
+    }
+
+    /**
+     * Stellt eine gespeicherte Mitteilung per Web Push zu: mit Titel, Text und
+     * Ziel, damit ein Tipp darauf in der richtigen Gruppe direkt dorthin führt.
+     * Ohne eigenes Ziel öffnet sich die Mitteilungsliste.
+     */
+    private fun push(notification: NotificationEntity) {
+        val userId = notification.user?.id ?: return
+        pushDispatcher.dispatch(
+            listOf(userId),
+            PushMessage(
+                title = notification.title,
+                body = notification.body,
+                type = notification.type,
+                link = notification.link ?: NOTIFICATIONS_LINK,
+                stammtischId = TenantContext.stammtischId()?.toString(),
+                tag = notification.id.toString(),
+                notificationId = notification.id.toString()
+            )
+        )
     }
 
     // --- Interne Helfer ---
@@ -276,5 +298,6 @@ class NotificationService(
 
     companion object {
         const val DEFAULT_TYPE = "general"
+        const val NOTIFICATIONS_LINK = "/notifications"
     }
 }

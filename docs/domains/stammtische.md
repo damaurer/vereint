@@ -194,11 +194,6 @@ sofern sie noch „Mein Stammtisch“ hieß; der Name lässt sich unter **Gruppe
 
 ## Bekannte Grenzen
 
-- **Push-Benachrichtigungen** kommen ohne Inhalt an; der Service Worker holt den
-  Text über die API in der gerade gewählten Gruppe. Kommt die Mitteilung aus
-  einer anderen Gruppe, zeigt das Gerät die neueste ungelesene Mitteilung
-  der gewählten Gruppe oder den allgemeinen Hinweis „Du hast eine neue
-  Mitteilung.“. Die Mitteilung selbst liegt korrekt in der anderen Gruppe.
 - Der Rollen-Cache im Fachservice (`StammtischAccess`) ist pro Instanz und wird
   nur auf der Instanz geleert, die die Rolle ändert; bei mehreren Instanzen
   greifen Rollenänderungen auf den übrigen erst nach einem Neustart (heute läuft

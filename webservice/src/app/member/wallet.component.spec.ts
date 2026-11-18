@@ -205,6 +205,15 @@ describe('WalletComponent', () => {
     expect(html(fixture)).toContain('Runde: Felix Braun · Helles');
   });
 
+  it('shows the note of a top-up only where one exists', async () => {
+    api.listEntries.mockReturnValue(of([{ ...entries[0], note: 'Bar beim Stammtisch' }, entries[1]]));
+    const fixture = await create();
+    const notes = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.member-list-note'),
+    ).map((node) => node.textContent?.trim());
+    expect(notes).toEqual(['Notiz: Bar beim Stammtisch']);
+  });
+
   it('shows an empty state when there are no entries', async () => {
     api.listEntries.mockReturnValue(of([]));
     const fixture = await create();

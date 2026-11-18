@@ -111,4 +111,11 @@ describe('dictionaries', () => {
       expect(strip(placeholders(english.get(key)!)), key).toEqual(strip(placeholders(text)));
     }
   });
+
+  it('uses single braces for placeholders, because translateWith only replaces {name}', () => {
+    const doubleBraces = (dictionary: unknown) =>
+      JSON.stringify(dictionary).match(/\{\{\s*\w+\s*\}\}/g) ?? [];
+    expect(doubleBraces(de)).toEqual([]);
+    expect(doubleBraces(en)).toEqual([]);
+  });
 });

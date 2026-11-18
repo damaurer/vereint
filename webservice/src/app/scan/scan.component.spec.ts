@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
-import type { ForeignDrink, LedgerEntry, PurchasePreview } from '../api/api.types';
+import type { ForeignDrink, LedgerEntry, PurchasableDrink, PurchasePreview } from '../api/api.types';
 import { MemberApiService } from '../member/member-api.service';
 import { BARCODE_SCANNER, BarcodeScanner } from './barcode-scanner';
 import { ScanComponent } from './scan.component';
@@ -36,6 +36,11 @@ const foreignDrink: ForeignDrink = {
   removableUntil: '2026-10-14T18:10:00Z',
 };
 
+const catalog: PurchasableDrink[] = [
+  { id: 'g-1', name: 'Helles', category: 'Bier', imageReference: null, unitPrice: '2.20', currency: 'EUR' },
+  { id: 'g-2', name: 'Zitronenlimo', category: 'Limo', imageReference: null, unitPrice: '1.80', currency: 'EUR' },
+];
+
 const entry = {
   id: 'l-1',
   amount: '2.50',
@@ -51,6 +56,7 @@ describe('ScanComponent', () => {
     purchaseWithCredit: ReturnType<typeof vi.fn>;
     recordForeignDrink: ReturnType<typeof vi.fn>;
     removeForeignDrink: ReturnType<typeof vi.fn>;
+    listPayableDrinks: ReturnType<typeof vi.fn>;
   };
   let scanner: BarcodeScanner & { emit: (code: string) => void; stop: ReturnType<typeof vi.fn> };
 
@@ -95,6 +101,7 @@ describe('ScanComponent', () => {
       purchaseWithCredit: vi.fn(() => of({ ...entry, amount: '2.20' })),
       recordForeignDrink: vi.fn(() => of(foreignDrink)),
       removeForeignDrink: vi.fn(() => of(undefined)),
+      listPayableDrinks: vi.fn(() => of(catalog)),
     };
     let onCode: (code: string) => void = () => undefined;
     const stop = vi.fn();
@@ -350,6 +357,138 @@ describe('ScanComponent', () => {
       await settle(fixture);
       expect(api.recordForeignDrink.mock.calls[0][1]).toBe(api.recordForeignDrink.mock.calls[1][1]);
       expect(text(fixture)).toContain('Erfasst');
+    });
+  });
+
+  describe('choosing from the catalogue', () => {
+    const items = (fixture: { nativeElement: unknown }) =>
+      Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('.picker-item'));
+
+    const openCatalog = async () => {
+      const fixture = await create();
+      click(fixture, 'Aus Katalog wählen');
+      await settle(fixture);
+      return fixture;
+    };
+
+    it('starts with the camera and switches to the catalogue list', async () => {
+      const fixture = await create();
+      expect(scanner.start).toHaveBeenCalled();
+      expect(api.listPayableDrinks).not.toHaveBeenCalled();
+
+      click(fixture, 'Aus Katalog wählen');
+      await settle(fixture);
+
+      expect(scanner.stop).toHaveBeenCalled();
+      expect(api.listPayableDrinks).toHaveBeenCalledTimes(1);
+      expect(text(fixture)).toContain('Getränk wählen');
+      expect(items(fixture).map((b) => b.textContent?.trim())).toEqual([
+        expect.stringContaining('Helles'),
+        expect.stringContaining('Zitronenlimo'),
+      ]);
+      expect(text(fixture)).toContain('2,20');
+      expect(api.previewPurchase).not.toHaveBeenCalled();
+    });
+
+    it('filters the list by name or category', async () => {
+      const fixture = await openCatalog();
+      const search = (fixture.nativeElement as HTMLElement).querySelector<HTMLInputElement>(
+        'input[name=catalogSearch]',
+      )!;
+      search.value = 'limo';
+      search.dispatchEvent(new Event('input'));
+      await settle(fixture);
+      expect(items(fixture).map((b) => b.textContent)).toEqual([expect.stringContaining('Zitronenlimo')]);
+
+      search.value = 'gibt es nicht';
+      search.dispatchEvent(new Event('input'));
+      await settle(fixture);
+      expect(items(fixture)).toEqual([]);
+      expect(text(fixture)).toContain('Kein Getränk passt');
+    });
+
+    it('continues like after a scan and pays with credit by catalogue id', async () => {
+      api.previewPurchase.mockReturnValue(of({ ...choicePreview, barcode: null }));
+      const fixture = await openCatalog();
+
+      items(fixture)[0].click();
+      await settle(fixture);
+
+      expect(api.previewPurchase).toHaveBeenCalledWith({ drinkId: 'g-1' });
+      expect(text(fixture)).toContain('Mit Guthaben bezahlen');
+      expect(text(fixture)).toContain('Nur in die Statistik');
+      expect(api.purchaseWithCredit).not.toHaveBeenCalled();
+
+      click(fixture, '2,20');
+      await settle(fixture);
+      expect(api.purchaseWithCredit).toHaveBeenCalledWith({ drinkId: 'g-1' }, true, expect.any(String));
+      expect(text(fixture)).toContain('Bezahlt');
+
+      click(fixture, 'Rückgängig');
+      await settle(fixture);
+      expect(api.undoPurchase).toHaveBeenCalledWith('l-1', expect.any(String));
+
+      click(fixture, 'Nächstes Getränk wählen');
+      await settle(fixture);
+      expect(items(fixture).length).toBe(2);
+    });
+
+    it('buys through the running event when the drink is sold there', async () => {
+      const fixture = await openCatalog();
+      items(fixture)[0].click();
+      await settle(fixture);
+
+      expect(text(fixture)).toContain('Vereinsabend');
+      click(fixture, '2,50');
+      await settle(fixture);
+      expect(api.purchaseByBarcode).toHaveBeenCalledWith('e-1', { drinkId: 'g-1' }, expect.any(String));
+      expect(api.purchaseWithCredit).not.toHaveBeenCalled();
+    });
+
+    it('records a foreign drink by catalogue id', async () => {
+      api.previewPurchase.mockReturnValue(of({ ...choicePreview, barcode: null }));
+      const fixture = await openCatalog();
+      items(fixture)[1].click();
+      await settle(fixture);
+
+      const foreign = (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLInputElement>(
+        'input[name=choice]',
+      )[1];
+      foreign.click();
+      await settle(fixture);
+      click(fixture, 'In die Statistik aufnehmen');
+      await settle(fixture);
+      expect(api.recordForeignDrink).toHaveBeenCalledWith({ drinkId: 'g-2' }, expect.any(String));
+    });
+
+    it('shows the server message and returns to the list after an error', async () => {
+      api.previewPurchase.mockReturnValue(
+        throwError(() => new ApiError(404, 'drink_not_in_event', 'Kein laufendes Event bietet das an')),
+      );
+      const fixture = await openCatalog();
+      items(fixture)[0].click();
+      await settle(fixture);
+
+      expect(text(fixture)).toContain('Kein laufendes Event bietet das an');
+      click(fixture, 'Zurück zur Auswahl');
+      await settle(fixture);
+      expect(items(fixture).length).toBe(2);
+    });
+
+    it('explains an empty catalogue and a failed load', async () => {
+      api.listPayableDrinks.mockReturnValueOnce(of([]));
+      const fixture = await openCatalog();
+      expect(text(fixture)).toContain('kein Getränk mit Preis');
+
+      click(fixture, 'Scannen');
+      await settle(fixture);
+      api.listPayableDrinks.mockReturnValueOnce(throwError(() => new ApiError(500, 'internal', 'x')));
+      click(fixture, 'Aus Katalog wählen');
+      await settle(fixture);
+      expect(text(fixture)).toContain('Katalog konnte nicht geladen werden');
+      click(fixture, 'Erneut laden');
+      await settle(fixture);
+      expect(items(fixture).length).toBe(2);
     });
   });
 });

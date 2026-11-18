@@ -4,11 +4,14 @@
  * Aufgaben:
  * - Offline: öffentliche statische Assets cachen und bei fehlendem Netz statt
  *   einer Fehlerseite des Browsers `/offline.html` zeigen.
- * - Web Push: Der Server sendet Pushes ohne Nutzlast. Der Worker lädt das
- *   Ungelesene aller Gruppen autorisiert über `/api/v1/personal-notifications`
- *   nach (Mitteilungen, Gruppen- und Event-Chats, Direktnachrichten, Freunde)
- *   und zeigt das Neueste als Systembenachrichtigung an. Chats und
+ * - Web Push: Jeder Push trägt Titel, Text und Ziel verschlüsselt (RFC 8291).
+ *   Der Worker zeigt ihn sofort an, ohne erst etwas nachzuladen; das klappt
+ *   auch mit abgelaufener Sitzung und schlechtem Netz. Danach lädt er, wenn die
+ *   Sitzung noch gilt, `/api/v1/personal-notifications` für App-Badge und
+ *   Zugestellt-Haken. Kommt ein Push ohne Inhalt (ältere Server), lädt er wie
+ *   früher das Neueste von dort, höchstens einige Sekunden lang. Chats und
  *   Direktnachrichten teilen sich je Gespräch einen Tag, neue ersetzen ältere.
+ *   Ein Tipp öffnet das Ziel der Mitteilung im offenen Fenster oder in einem neuen.
  *   Gehört der Eintrag zu einer anderen Gruppe als der gewählten, wechselt ein
  *   Tipp darauf zuerst in diese Gruppe. Einladungen zu Events tragen die
  *   Aktionen „Zusagen“/„Absagen“, die direkt `PUT /api/v1/events/{id}/rsvp` aufrufen.
@@ -146,26 +149,73 @@ async function remember(request, response) {
 // --- Web Push ---
 
 self.addEventListener('push', (event) => {
-  event.waitUntil(showLatestNotification());
+  const payload = readPayload(event);
+  event.waitUntil(payload ? showFromPayload(payload) : showLatestNotification());
 });
+
+/** Höchstdauer für Nachladen im Push: iOS beendet zu langsame Worker und entzieht dann das Abo. */
+const FETCH_TIMEOUT_MS = 8000;
+
+function readPayload(event) {
+  try {
+    const value = event.data ? event.data.json() : null;
+    return value && typeof value === 'object' && typeof value.title === 'string' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+async function showFromPayload(payload) {
+  const link = isAppLink(payload.url) ? payload.url : '/notifications';
+  let data = { url: link };
+  if (typeof payload.stammtischId === 'string') data = { ...data, stammtischId: payload.stammtischId };
+  let actions;
+  const eventId = eventIdFromLink(link);
+  if (payload.type === 'event_invitation' && eventId) {
+    data = { ...data, eventId, notificationId: payload.notificationId };
+    actions = [
+      { action: 'accept', title: 'Zusagen' },
+      { action: 'decline', title: 'Absagen' },
+    ];
+  }
+  const key = typeof payload.tag === 'string' && payload.tag ? payload.tag : link;
+  await self.registration.showNotification(payload.title || 'Vereint', {
+    body: truncate(payload.body, 180),
+    tag: `vereint-${key}`,
+    renotify: true,
+    icon: NOTIFICATION_ICON,
+    lang: 'de',
+    data,
+    ...(actions ? { actions } : {}),
+  });
+  // Erst nach der Anzeige: Badge und Zugestellt-Haken, falls die Sitzung noch gilt.
+  const lists = await Promise.all(NOTIFICATION_SOURCES.map(loadUnread));
+  if (lists.some((list) => list !== null)) await updateAppBadge(lists.flat().filter(Boolean).length);
+}
 
 // Gruppenübergreifend: Mitteilungen und Chats aller eigenen Gruppen samt Direktnachrichten und Freunden.
 const NOTIFICATION_SOURCES = ['/api/v1/personal-notifications'];
 /** Je Gespräch eine Benachrichtigung: neue Nachrichten ersetzen die vorige. */
 const CONVERSATION_TYPES = ['direct_message', 'chat_message'];
 
+/** Ungelesenes der Quelle oder `null`, wenn es nicht zu laden war (keine Sitzung, kein Netz, zu langsam). */
 async function loadUnread(path) {
+  const controller = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS) : null;
   try {
     const response = await fetch(path, {
       credentials: 'same-origin',
       cache: 'no-store',
       headers: { accept: 'application/json' },
+      ...(controller ? { signal: controller.signal } : {}),
     });
-    if (!response.ok) return [];
+    if (!response.ok) return null;
     const items = await response.json();
-    return Array.isArray(items) ? items.filter((item) => !item.read) : [];
+    return Array.isArray(items) ? items.filter((item) => !item.read) : null;
   } catch {
-    return [];
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -180,6 +230,7 @@ async function showLatestNotification() {
     const lists = await Promise.all(NOTIFICATION_SOURCES.map(loadUnread));
     const unread = lists
       .flat()
+      .filter(Boolean)
       .sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0));
     await updateAppBadge(unread.length);
     const latest = unread[0];
@@ -304,15 +355,33 @@ async function answerInvitation(data, status, fallbackHref) {
   }
 }
 
+/**
+ * Öffnet [href] in einem offenen Fenster der App (bevorzugt dem sichtbaren)
+ * oder in einem neuen. Scheitert das Umleiten des offenen Fensters (etwa weil
+ * es noch nicht von diesem Worker gesteuert wird), öffnet sich ein neues.
+ */
 async function openOrFocus(href) {
-  const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+  const windows = (await self.clients.matchAll({ type: 'window', includeUncontrolled: true })).filter(
+    (client) => new URL(client.url).origin === self.location.origin,
+  );
+  windows.sort((a, b) => Number(b.focused) - Number(a.focused) || visibilityRank(b) - visibilityRank(a));
   for (const client of windows) {
-    if (new URL(client.url).origin !== self.location.origin) continue;
-    await client.focus();
-    if ('navigate' in client) await client.navigate(href);
-    return;
+    try {
+      const focused = client.focused ? client : await client.focus();
+      const target = focused || client;
+      if ('navigate' in target) {
+        const navigated = await target.navigate(href);
+        if (navigated) return;
+      }
+    } catch {
+      // Nächstes Fenster versuchen oder ein neues öffnen.
+    }
   }
-  await self.clients.openWindow(href);
+  if (self.clients.openWindow) await self.clients.openWindow(href);
+}
+
+function visibilityRank(client) {
+  return client.visibilityState === 'visible' ? 1 : 0;
 }
 
 // Der Push-Dienst kann ein Abonnement austauschen; dann neu beim Server anmelden.

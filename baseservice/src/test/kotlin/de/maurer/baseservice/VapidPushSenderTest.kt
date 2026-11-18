@@ -76,7 +76,7 @@ class VapidPushSenderTest {
     }
 
     @Test
-    fun `posts an empty vapid request and maps the push service status`() {
+    fun `posts an encrypted vapid request and maps the push service status`() {
         val keyPair = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }
             .generateKeyPair()
         val properties = PushProperties(
@@ -87,14 +87,24 @@ class VapidPushSenderTest {
             ttlSeconds = 60
         )
         val received = mutableListOf<Map<String, String?>>()
+        val bodies = mutableListOf<ByteArray>()
+        val device = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }
+            .generateKeyPair()
+        val authSecret = ByteArray(16) { (it * 7).toByte() }
+        val p256dh = urlEncoder.encodeToString(encodePublicPoint(device.public as ECPublicKey))
+        val auth = urlEncoder.encodeToString(authSecret)
         val server = HttpServer.create(InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0)
         server.createContext("/") { exchange ->
             received += mapOf(
                 "method" to exchange.requestMethod,
                 "authorization" to exchange.requestHeaders.getFirst("Authorization"),
                 "ttl" to exchange.requestHeaders.getFirst("TTL"),
-                "length" to exchange.requestHeaders.getFirst("Content-Length")
+                "length" to exchange.requestHeaders.getFirst("Content-Length"),
+                "urgency" to exchange.requestHeaders.getFirst("Urgency"),
+                "encoding" to exchange.requestHeaders.getFirst("Content-Encoding"),
+                "topic" to exchange.requestHeaders.getFirst("Topic")
             )
+            bodies += exchange.requestBody.readAllBytes()
             val status = if (exchange.requestURI.path.endsWith("gone")) 410 else 201
             exchange.sendResponseHeaders(status, -1)
             exchange.close()
@@ -104,8 +114,16 @@ class VapidPushSenderTest {
             val base = "http://127.0.0.1:${server.address.port}"
             val sender = VapidPushSender(properties, objectMapper)
 
-            val ok = sender.send(PushTarget("s1", "$base/live", "p", "a"), PushMessage("t", "b", "general"))
-            val gone = sender.send(PushTarget("s2", "$base/gone", "p", "a"), PushMessage("t", "b", "general"))
+            val message = PushMessage(
+                title = "Anna in Stammtisch",
+                body = "Bin gleich da",
+                type = "chat_message",
+                link = "/chat?id=42",
+                stammtischId = "group-1",
+                tag = "/chat?id=42"
+            )
+            val ok = sender.send(PushTarget("s1", "$base/live", p256dh, auth), message)
+            val gone = sender.send(PushTarget("s2", "$base/gone", p256dh, auth), message)
 
             assertTrue(ok.success, "Zustellung muss gelingen: ${ok.error}")
             assertEquals(201, ok.statusCode)
@@ -113,7 +131,17 @@ class VapidPushSenderTest {
             assertTrue(gone.gone)
             assertEquals("POST", received[0]["method"])
             assertEquals("60", received[0]["ttl"])
-            assertEquals("0", received[0]["length"])
+            assertEquals("high", received[0]["urgency"])
+            assertEquals("aes128gcm", received[0]["encoding"])
+            assertTrue(received[0]["topic"]!!.matches(Regex("[A-Za-z0-9_-]{1,32}")))
+            assertEquals(bodies[0].size.toString(), received[0]["length"])
+
+            // Nur das Gerät mit privatem Schlüssel und auth-Geheimnis liest den Inhalt.
+            val json = objectMapper.readTree(WebPushTestDecryption.decrypt(bodies[0], device, authSecret))
+            assertEquals("Anna in Stammtisch", json["title"].asText())
+            assertEquals("Bin gleich da", json["body"].asText())
+            assertEquals("/chat?id=42", json["url"].asText())
+            assertEquals("group-1", json["stammtischId"].asText())
             assertTrue(received[0]["authorization"]!!.startsWith("vapid t="))
             assertTrue(received[0]["authorization"]!!.endsWith("k=${properties.publicKey}"))
         } finally {

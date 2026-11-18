@@ -86,6 +86,9 @@ Thekenterminals.
   (Käufe mit Getränke- bzw. Speisenname, Aufladungen, Korrekturen).
 - Aufladen können Mitglieder **nicht selbst**. Vorstand und Administration buchen
   Guthaben in der Kasse über eine Mitgliederauswahl.
+- Die Notiz, die die Kasse beim Ein- oder Auszahlen angibt, steht dezent unter der
+  Buchung: im eigenen Verlauf des Mitglieds und im Verlauf in der Kasse. Andere
+  Mitglieder sehen sie nicht.
 - Das Guthaben darf wie bei der Strichliste ins Minus gehen.
 - Technisch ein unveränderliches Kassenbuch mit Idempotenzschlüssel gegen
   Doppelbuchungen: [docs/domains/ledger-and-finance.md](domains/ledger-and-finance.md)
@@ -104,15 +107,20 @@ Thekenterminals.
   beenden; Rückgängig am Terminal bucht dem Geber zurück und gibt den Platz
   wieder frei. Im Kontoauszug des Gebers steht „Runde: Name · Getränk“.
 
-## Bezahlen per Barcode
+## Bezahlen per Barcode oder aus dem Katalog
 
 - Unter *Bezahlen* (Menü und Dashboard) scannt das Mitglied den EAN-Barcode des
   Getränks mit der Handykamera, alternativ per Eingabe.
+- Alternativ wählt es oben *Aus Katalog wählen* und tippt das Getränk in einer
+  durchsuchbaren Liste an (Issue #122). Die Liste zeigt nur Getränke aus dem
+  Katalog der eigenen Gruppe, die freigegeben, im Sortiment und mit Preis
+  sind, auch solche ohne Barcode. Danach geht es genau wie nach einem Scan
+  weiter (gleiche Wahl, Buchung, Statistik und 10 Minuten Rückgängig).
 - Nach Bestätigung von Getränk und Preis wird vom Guthaben abgebucht.
 - Ein eigener Kauf lässt sich 10 Minuten lang rückgängig machen.
 - Bei einem laufenden Event mit Selbstbedienung, an dem das Mitglied
   teilnimmt, läuft der Kauf über das Event (Event- oder Kategoriepreis).
-- Sonst wählt das Mitglied nach dem Scan:
+- Sonst wählt das Mitglied nach dem Scan bzw. der Auswahl:
   - *Mit Guthaben bezahlen*: Preis aus dem Katalog der Gruppe, ohne Event;
     nur, wenn das Getränk dort einen Preis hat. Mit dem Haken *In die
     Statistik aufnehmen* lässt sich der Kauf aus der Statistik heraushalten.

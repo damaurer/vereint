@@ -20,8 +20,6 @@ import { StatisticsSettingsComponent } from '../statistics/statistics-settings.c
  * persönliche Angaben) über die geteilten UI-Primitive und erlaubt die Pflege
  * von Anzeigename und E-Mail. Rollen, Status und Berechtigungen sind reine
  * Anzeige; ihre Vergabe erfolgt ausschließlich administrativ im Fachservice.
- * Der `BeerWithMe`-Schalter (Standortfreigabe) ist rein clientseitig und löst
- * keine serverseitige Mutation aus.
  */
 @Component({
   selector: 'app-member-profile',
@@ -181,7 +179,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   protected readonly saving = signal(false);
   protected readonly saveError = signal<string | null>(null);
   protected readonly saved = signal(false);
-  protected readonly beerWithMe = signal(false);
   protected readonly formatDateTime = formatDateTime;
 
   /** Datum ohne Uhrzeit („17.10.2026“). */
@@ -222,15 +219,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.reload();
-  }
-
-  /**
-   * Schaltet die `BeerWithMe`-Standortfreigabe rein clientseitig um. Der
-   * eigentliche Geolocation-Zugriff erfolgt ausschließlich im Browser; es wird
-   * kein Serverzustand verändert.
-   */
-  protected toggleBeerWithMe(): void {
-    this.beerWithMe.update((active) => !active);
   }
 
   ngOnDestroy(): void {

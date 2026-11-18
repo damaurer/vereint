@@ -417,6 +417,15 @@ a:focus-visible {
   font-size: 0.85rem;
 }
 
+/* Freitext-Notiz einer Buchung (Ein-/Auszahlung), dezent unter der Metazeile. */
+.member-list-note {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
 .member-amount {
   color: var(--color-text);
   font-weight: 700;
@@ -975,8 +984,8 @@ a:focus-visible {
 
 .shell-more-grid {
   display: grid;
-  /* Breit genug für das längste Wort („Direktnachrichten“), damit nichts mitten im Wort
-     umbricht; auf sehr schmalen Handys bleiben es trotzdem zwei Spalten. */
+  /* Drei Spalten; lange Wörter („Gruppeneinstellungen“) trennt .shell-more-link
+     innerhalb der Kachel, statt über den Rand zu ragen. */
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-1);
 }
@@ -995,8 +1004,15 @@ a:focus-visible {
   font-size: 0.8rem;
   font-weight: 600;
   text-align: center;
-  overflow-wrap: break-word;
-  hyphens: manual;
+  /* `anywhere` zählt beim Breitenbedarf mit, `break-word` nicht: nur so bleibt ein
+     langes Wort in der schmalen Kachel. Mit Silbentrennung bricht es an einer Silbe. */
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+.shell-more-link > span {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .shell-more-link:hover,

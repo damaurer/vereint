@@ -11,15 +11,26 @@ data class PushTarget(
 )
 
 /**
- * Inhalt einer Push-Benachrichtigung. Der Versand nutzt bewusst keine
- * verschlüsselte Nutzlast; die eigentlichen Inhalte werden serverseitig in
- * `notifications` gespeichert und vom Client autorisiert nachgeladen. Titel und
- * Text dienen dem Service Worker als Fallback-Anzeige.
+ * Inhalt einer Push-Benachrichtigung.
+ *
+ * Der Inhalt reist Ende-zu-Ende-verschlüsselt (RFC 8291) zum Gerät: Der
+ * Push-Dienst von Google, Apple oder Mozilla sieht nur Chiffretext. Der Service
+ * Worker zeigt die Benachrichtigung damit sofort an, auch wenn die Sitzung im
+ * Browser abgelaufen ist oder das Netz langsam ist, und kennt das Klickziel.
+ *
+ * - [link]: app-interner Pfad, den ein Tipp auf die Benachrichtigung öffnet
+ * - [stammtischId]: Gruppe des Eintrags; der Service Worker wählt sie vor dem Öffnen
+ * - [tag]: gleiche Tags ersetzen einander (z. B. je Chat eine Benachrichtigung)
+ * - [notificationId]: gespeicherte Mitteilung, etwa zum Beantworten einer Einladung
  */
 data class PushMessage(
     val title: String,
     val body: String,
-    val type: String
+    val type: String,
+    val link: String? = null,
+    val stammtischId: String? = null,
+    val tag: String? = null,
+    val notificationId: String? = null
 )
 
 /**

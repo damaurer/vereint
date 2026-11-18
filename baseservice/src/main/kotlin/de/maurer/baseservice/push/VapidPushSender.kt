@@ -9,6 +9,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.security.AlgorithmParameters
 import java.security.KeyFactory
+import java.security.MessageDigest
 import java.security.Signature
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.ECParameterSpec
@@ -18,13 +19,20 @@ import java.time.Instant
 import java.util.Base64
 
 /**
- * Web-Push-Versand über VAPID (RFC 8292) ohne verschlüsselte Nutzlast (TICKET-020).
+ * Web-Push-Versand über VAPID (RFC 8292) mit verschlüsselter Nutzlast (RFC 8291).
  *
  * Der Sender authentifiziert sich beim Push-Dienst mit einem ES256-signierten
- * VAPID-Token. Eine Nutzlast wird bewusst nicht übertragen: die eigentlichen
- * Inhalte liegen geschützt in `notifications` und werden vom Client autorisiert
- * nachgeladen. So bleiben private Daten aus dem Push-Kanal fern und es ist keine
- * RFC-8291-Verschlüsselung nötig.
+ * VAPID-Token. Titel, Text und Klickziel reisen als JSON, verschlüsselt mit den
+ * Schlüsseln des Abonnements (`p256dh`, `auth`), sodass nur das Gerät sie lesen
+ * kann ([WebPushEncryption]). Früher kamen Pushes ohne Inhalt, und der Service
+ * Worker musste ihn mit der Browser-Sitzung nachladen. War die Sitzung
+ * abgelaufen oder das Netz langsam, zeigte er nur einen neutralen Hinweis ohne
+ * Ziel, und iOS entzieht Abos, deren Pushes nicht schnell genug eine
+ * Benachrichtigung zeigen.
+ *
+ * `Urgency: high` sorgt dafür, dass Android-Geräte im Ruhemodus den Push sofort
+ * zustellen statt ihn bis zum nächsten Wartungsfenster zurückzuhalten. `Topic`
+ * ersetzt beim Push-Dienst noch nicht zugestellte Pushes desselben Gesprächs.
  *
  * Der private VAPID-Schlüssel ist ein Secret und verlässt den Spring-Service
  * nicht; nur der öffentliche Schlüssel wird über den [PushSender.publicKey] an
@@ -49,15 +57,19 @@ class VapidPushSender(
     override fun send(target: PushTarget, message: PushMessage): PushDeliveryResult {
         return try {
             val token = buildVapidToken(target.endpoint)
-            val request = HttpRequest.newBuilder()
+            val body = WebPushEncryption.encrypt(payloadOf(message), target.p256dh, target.auth)
+            val builder = HttpRequest.newBuilder()
                 .uri(URI.create(target.endpoint))
                 .timeout(Duration.ofSeconds(15))
                 .header("Authorization", "vapid t=$token, k=${properties.publicKey}")
                 .header("TTL", ttlSeconds().toString())
-                // Kein eigener `Content-Length`-Header: der HttpClient setzt ihn für
-                // `noBody()` selbst und lehnt ihn als eingeschränkten Header ab.
-                .POST(HttpRequest.BodyPublishers.noBody())
-                .build()
+                .header("Urgency", "high")
+                .header("Content-Encoding", "aes128gcm")
+                .header("Content-Type", "application/octet-stream")
+            topicOf(message.tag)?.let { builder.header("Topic", it) }
+            // Kein eigener `Content-Length`-Header: der HttpClient setzt ihn selbst
+            // und lehnt ihn als eingeschränkten Header ab.
+            val request = builder.POST(HttpRequest.BodyPublishers.ofByteArray(body)).build()
 
             val response = httpClient.send(request, HttpResponse.BodyHandlers.discarding())
             val status = response.statusCode()
@@ -76,6 +88,33 @@ class VapidPushSender(
             PushDeliveryResult(target.subscriptionId, success = false, error = ex.javaClass.simpleName)
         }
     }
+
+    /** JSON für den Service Worker; Texte gekürzt, damit die Nutzlast klein bleibt (max. ca. 4 KB). */
+    internal fun payloadOf(message: PushMessage): ByteArray {
+        val payload = linkedMapOf<String, Any>(
+            "title" to truncate(message.title, MAX_TITLE_LENGTH),
+            "body" to truncate(message.body, MAX_BODY_LENGTH),
+            "type" to message.type
+        )
+        message.link?.takeIf { it.startsWith("/") && !it.startsWith("//") }?.let { payload["url"] = it }
+        message.stammtischId?.let { payload["stammtischId"] = it }
+        message.tag?.let { payload["tag"] = it }
+        message.notificationId?.let { payload["notificationId"] = it }
+        return objectMapper.writeValueAsBytes(payload)
+    }
+
+    /**
+     * `Topic` darf höchstens 32 Zeichen aus dem base64url-Alphabet enthalten
+     * (RFC 8030); daher ein Hash des Tags.
+     */
+    internal fun topicOf(tag: String?): String? {
+        if (tag.isNullOrBlank()) return null
+        val digest = MessageDigest.getInstance("SHA-256").digest(tag.toByteArray())
+        return urlEncoder.encodeToString(digest.copyOf(24))
+    }
+
+    private fun truncate(value: String, max: Int): String =
+        if (value.length > max) value.take(max - 1) + "…" else value
 
     private fun ttlSeconds(): Long = properties.ttlSeconds.coerceIn(0, MAX_TTL_SECONDS)
 
@@ -158,5 +197,7 @@ class VapidPushSender(
     companion object {
         private const val COMPONENT_LENGTH = 32
         private const val MAX_TTL_SECONDS = 2_419_200L
+        private const val MAX_TITLE_LENGTH = 120
+        private const val MAX_BODY_LENGTH = 400
     }
 }

@@ -18,6 +18,8 @@ const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM ?? 'vereint';
 
 /** Zweite Gruppe für die Seite „Gruppe wählen“; Felix leitet sie, Jonas ist Mitglied. */
 export const SECOND_GROUP_NAME = 'Kegelclub Alle Neune';
+/** Strichcode eines Katalog-Getränks, das bei keinem Event angeboten wird. */
+export const SCAN_CHOICE_BARCODE = '4001234500080';
 
 /** Demo-Personen; die Passwörter existieren nur lokal. */
 export const PEOPLE = {
@@ -92,16 +94,58 @@ export async function seedKeycloakUsers() {
   }
 }
 
+/** Die Live-Verbindung der App bleibt offen; sie zählt nicht als laufende Anfrage. */
+const LONG_LIVED = ['/api/v1/live'];
+const pendingRequests = new WeakMap();
+
+function trackRequests(page) {
+  const existing = pendingRequests.get(page);
+  if (existing) return existing;
+  const pending = new Set();
+  page.on('request', (request) => {
+    let path = '';
+    try {
+      path = new URL(request.url()).pathname;
+    } catch {
+      // ungültige URL: zählt normal mit
+    }
+    if (!LONG_LIVED.includes(path)) pending.add(request);
+  });
+  page.on('requestfinished', (request) => pending.delete(request));
+  page.on('requestfailed', (request) => pending.delete(request));
+  pendingRequests.set(page, pending);
+  return pending;
+}
+
+/**
+ * Wartet, bis die Seite geladen ist und 500 ms lang keine Anfrage mehr läuft.
+ * Ersetzt `waitForLoadState('networkidle')`, das bei offener Live-Verbindung
+ * (`/api/v1/live`, Server-Sent Events) nie eintritt.
+ */
+export async function waitForSettled(page, timeoutMs = 15_000) {
+  const pending = trackRequests(page);
+  await page.waitForLoadState('load');
+  const deadline = Date.now() + timeoutMs;
+  let quietSince = Date.now();
+  while (Date.now() < deadline) {
+    if (pending.size > 0) quietSince = Date.now();
+    else if (Date.now() - quietSince >= 500) return;
+    await page.waitForTimeout(50);
+  }
+  throw new Error(`Seite kommt nicht zur Ruhe, offen: ${[...pending].map((r) => r.url()).join(', ')}`);
+}
+
 /** Meldet eine Person über den Keycloak-Login der App an. */
 export async function login(browser, person, contextOptions = {}) {
   const context = await browser.newContext({ locale: 'de-DE', timezoneId: 'Europe/Berlin', ...contextOptions });
   const page = await context.newPage();
+  trackRequests(page);
   await page.goto(`${APP_URL}/`);
   await page.fill('#username', person.username);
   await page.fill('#password', person.password);
   await page.click('#kc-login');
   await page.waitForURL((url) => url.origin === new URL(APP_URL).origin && !url.pathname.startsWith('/api/'));
-  await page.waitForLoadState('networkidle');
+  await waitForSettled(page);
   await acceptTerms(context, page);
   return { context, page };
 }
@@ -121,7 +165,7 @@ async function acceptTerms(context, page) {
   }
   if (new URL(page.url()).pathname === '/agb-zustimmen') {
     await page.goto(`${APP_URL}/`);
-    await page.waitForLoadState('networkidle');
+    await waitForSettled(page);
   }
 }
 
@@ -217,6 +261,9 @@ export async function seedAppData(sessions) {
     ['Spezi 0,5 l', 'Alkoholfrei', '2.50', '0.75', '4001234500059'],
     ['Wasser 0,5 l', 'Alkoholfrei', '1.50', '0.35', '4001234500066'],
     ['Obstler 2 cl', 'Schnaps', '2.00', '0.60', '4001234500073'],
+    // Steht im Katalog, aber auf keiner Getränkeliste: zeigt beim Scannen die Wahl
+    // zwischen Bezahlen und Fremdgetränk.
+    ['Kellerbier 0,5 l', 'Bier', '3.60', '1.20', SCAN_CHOICE_BARCODE],
   ];
   const drinks = [];
   for (const [name, category, price, cost, barcode] of drinkSpecs) {
@@ -251,7 +298,9 @@ export async function seedAppData(sessions) {
   }
 
   const sublist = await api.board.post('/sublists', { name: 'Stammtisch-Standard', description: 'Die üblichen Getränke für den Vereinsabend.' });
-  for (const drink of drinks) await api.board.post(`/sublists/${sublist.id}/items`, { drinkId: drink.id });
+  for (const drink of drinks.filter((d) => !d.name.startsWith('Kellerbier'))) {
+    await api.board.post(`/sublists/${sublist.id}/items`, { drinkId: drink.id });
+  }
 
   // Events.
   const allMembers = ['member', 'board', 'admin', 'jonas', 'mia', 'felix'];

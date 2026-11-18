@@ -183,6 +183,7 @@
       "treasurerTitle": "Kassenwart",
       "treasurerHint": "Guthaben wird vom Kassenwart verwaltet. Änderungen bedürfen einer Freigabe.",
       "historyHeading": "Historie",
+      "noteLabel": "Notiz",
       "emptyTitle": "Keine Buchungen",
       "emptyMessage": "Für dein Konto liegen noch keine Buchungen vor.",
       "filter": {
@@ -202,12 +203,6 @@
     "loadingMessage": "Das Profil wird abgerufen.",
     "unavailable": "Profil nicht verfügbar",
     "noRoles": "keine Rollen",
-    "beerWithMe": {
-      "title": "BeerWithMe Status",
-      "hint": "Verfügbar für ein spontanes Bier in der Nähe.",
-      "short": "Spontanes Bier",
-      "shortHint": "Freunde sehen, dass du Zeit hast"
-    },
     "theme": {
       "title": "Darstellung",
       "system": "System",
@@ -510,7 +505,7 @@
     },
     "tablet": {
       "title": "Thekenterminal",
-      "description": "Manuelle Getränkeerfassung für den Drink Recorder."
+      "description": "Striche für Getränke und Speisen an der Theke erfassen."
     },
     "statistics": {
       "title": "Statistik",
@@ -522,7 +517,7 @@
     },
     "scan": {
       "title": "Getränk bezahlen",
-      "description": "Strichcode scannen und mit Guthaben bezahlen oder für die Statistik erfassen."
+      "description": "Strichcode scannen oder Getränk aus dem Katalog wählen und mit Guthaben bezahlen oder für die Statistik erfassen."
     },
     "boardMoments": {
       "title": "Moment-Themen & Reaktionen",
@@ -1181,7 +1176,7 @@
       "startHint": "Im Kiosk-Modus bleibt dieses Gerät auf dem Thekenterminal, auch nach Schließen und Neuöffnen. Beim Start vergibst du eine PIN; nur mit ihr lässt sich der Modus hier wieder verlassen. Vorstand und Administration können das Gerät jederzeit aus der Ferne entsperren."
     },
     "header": {
-      "eyebrow": "Drink Recorder",
+      "eyebrow": "Theke",
       "terminalTitle": "Strichliste Terminal",
       "title": "Thekenterminal",
       "intro": "Strichliste für aktive Events."
@@ -1282,7 +1277,7 @@
       "saveRoles": "Rollen speichern",
       "boardRole": "Vorstands-Unterrolle",
       "noBoardRole": "keine",
-      "drinkRecorder": "Drink Recorder",
+      "drinkRecorder": "Thekendienst (Thekenterminal)",
       "saveProfile": "Profil speichern",
       "disabled": "Deaktiviert",
       "saveStatus": "Status speichern",
@@ -1991,14 +1986,14 @@
       },
       "count": "Events",
       "attendances": "Teilnahmen",
-      "perEvent": "{{value}} je Event",
+      "perEvent": "{value} je Event",
       "compare": "Events im Vergleich"
     },
     "crossEvents": {
       "eyebrow": "Alle meine Gruppen",
       "title": "Events übergreifend",
       "intro": "Alle Events aus deinen Gruppen, die du sehen darfst. Gezeigt werden Summen, Durchschnitte und deine eigenen Werte, keine Namen anderer Personen.",
-      "mine": "Du warst bei {{attended}} Events dabei und hast {{purchases}} Striche gemacht."
+      "mine": "Du warst bei {attended} Events dabei und hast {purchases} Striche gemacht."
     },
     "groupEvents": {
       "title": "Events der Gruppe"
@@ -2036,8 +2031,8 @@
       "title": "Event-Statistik",
       "back": "Zurück zum Event",
       "answers": "Antworten auf die Einladung",
-      "reactions": "{{reactions}} Reaktionen, {{media}} Bilder/Videos",
-      "chatReactions": "{{count}} Reaktionen",
+      "reactions": "{reactions} Reaktionen, {media} Bilder/Videos",
+      "chatReactions": "{count} Reaktionen",
       "consumers": "Striche je Person"
     },
     "settings": {
@@ -2056,7 +2051,7 @@
         "confirm": "Wirklich alle Statistikdaten dieser Gruppe löschen? Das lässt sich nicht rückgängig machen."
       },
       "confirmDelete": "Ja, endgültig löschen",
-      "deleted": "{{count}} Einträge gelöscht."
+      "deleted": "{count} Einträge gelöscht."
     }
   },
   "guest": {
@@ -2191,6 +2186,26 @@
       "remove": "Entfernen",
       "removedTitle": "Getränk entfernt",
       "removedMessage": "{drink} zählt nicht mehr in der Statistik."
+    },
+    "source": {
+      "label": "Wie möchtest du das Getränk finden?",
+      "camera": "Scannen",
+      "catalog": "Aus Katalog wählen"
+    },
+    "catalog": {
+      "title": "Getränk wählen",
+      "intro": "Wähle das Getränk aus dem Getränkekatalog deiner Gruppe. Bevor etwas abgebucht oder erfasst wird, siehst du Preis und Guthaben und wählst, was passieren soll.",
+      "searchLabel": "Getränk suchen",
+      "searchPlaceholder": "z. B. Helles oder Limo",
+      "listLabel": "Getränke im Katalog",
+      "loading": "Katalog wird geladen …",
+      "error": "Der Katalog konnte nicht geladen werden.",
+      "reload": "Erneut laden",
+      "empty": "Im Katalog deiner Gruppe gibt es gerade kein Getränk mit Preis. Du kannst das Getränk aber scannen.",
+      "noMatch": "Kein Getränk passt zu deiner Suche.",
+      "priceHint": "Preise aus dem Katalog. Läuft gerade ein Event mit Selbstbedienung, gilt nach der Auswahl dessen Preis.",
+      "retry": "Zurück zur Auswahl",
+      "next": "Nächstes Getränk wählen"
     }
   },
   "kiosk": {

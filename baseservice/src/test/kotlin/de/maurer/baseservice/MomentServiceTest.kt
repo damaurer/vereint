@@ -176,7 +176,7 @@ class MomentServiceTest {
 
         verify(momentSessionRepository).save(any(MomentSessionEntity::class.java) ?: MomentSessionEntity())
         verify(chatService).createMomentConversation(any(EventEntity::class.java) ?: ev, eq("Gemeinsames Anstoßen") ?: "Gemeinsames Anstoßen")
-        verify(notificationService).notifyUsers(anyCollection(), anyString(), anyString(), eq("moment") ?: "moment", isNull())
+        verify(notificationService).notifyUsers(anyCollection(), anyString(), anyString(), eq("moment") ?: "moment", startsWith("/events/") ?: "")
         verify(auditService).recordMomentAction(
             eq(caller) ?: caller,
             eq(AuditService.ACTION_MOMENT_STARTED) ?: "",
@@ -618,7 +618,7 @@ class MomentServiceTest {
         assertEquals("Gemeinsames Anstoßen", result.title)
         verify(chatService).createMomentConversation(isNull(), eq("Gemeinsames Anstoßen") ?: "")
         verify(notificationService).notifyUsers(
-            eq(listOf(otherUser, ownerUser)) ?: emptyList(), anyString(), anyString(), eq("moment") ?: "moment", isNull()
+            eq(listOf(otherUser, ownerUser)) ?: emptyList(), anyString(), anyString(), eq("moment") ?: "moment", startsWith("/moments?momentId=") ?: ""
         )
     }
 

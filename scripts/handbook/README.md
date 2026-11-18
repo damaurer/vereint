@@ -44,6 +44,14 @@ Nur lokal verwenden: Das Skript ändert Benutzer im Keycloak-Entwicklungsrealm.
 
 Neue Bilder ergänzt man als Eintrag in `SHOTS` in `capture.mjs`.
 
+Ist für die Playwright-Version kein eigener Browser installiert (etwa in einer
+Cloud-Umgebung), zeigt `HANDBOOK_CHROMIUM` auf ein vorhandenes Chromium, zum Beispiel
+`HANDBOOK_CHROMIUM=/opt/pw-browsers/chromium-1243/chrome-linux64/chrome`.
+
+Die App hält eine Live-Verbindung offen (`/api/v1/live`). Deshalb warten die Skripte
+nicht auf `networkidle`, sondern mit `waitForSettled` aus `seed.mjs`, bis 500 ms lang
+keine andere Anfrage mehr läuft.
+
 ### Mit dem lokalen Stack aufnehmen
 
 Es geht auch mit dem Stack aus [`local/`](../../local/README.md), ohne Java auf dem

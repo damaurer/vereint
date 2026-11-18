@@ -14,6 +14,7 @@ import de.maurer.baseservice.dto.SendMessageRequest
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Messages
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.push.PushDispatcher
@@ -166,7 +167,14 @@ class DirectMessageService(
         liveUpdateHub.publish(listOf(caller.id, partner.id), LiveEvent(LiveEvent.DIRECT, conversationId = conversation.id.toString()))
         pushDispatcher.dispatch(
             listOf(partner.id),
-            PushMessage(title = caller.displayName, body = "", type = PersonalAlertService.TYPE_DIRECT_MESSAGE),
+            PushMessage(
+                title = Messages.defaultText(Msg("notification.direct.title", caller.displayName)).trim(),
+                body = saved.message,
+                type = PersonalAlertService.TYPE_DIRECT_MESSAGE,
+                link = "/direktnachrichten?id=${conversation.id}",
+                // Je Gespräch eine Benachrichtigung: eine neue ersetzt die vorige.
+                tag = "/direktnachrichten?id=${conversation.id}"
+            ),
             live = false
         )
         return ownMessageDto(saved, conversation, caller)
