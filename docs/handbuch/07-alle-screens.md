@@ -209,7 +209,6 @@ Kontodaten und persönliche Einstellungen.
 - **Darstellung**: **System**, **Hell** oder **Dunkel**.
 - **Sprache**: **Deutsch** oder **English**, gilt sofort für die ganze App.
 - **Mitteilungen auf diesem Gerät**: Push ein- oder ausschalten.
-- **Spontanes Bier**: Freunde sehen, dass du gerade Zeit hast. Der Schalter ist noch eine Vorschau und hat keine Wirkung.
 - **App auf diesem Gerät**: **Installieren** legt Vereint auf den Startbildschirm.
 - **Statistik**: **Meine Statistik erfassen** ein- oder ausschalten, **Meine Statistik** öffnen und **Meine erfassten Statistikdaten löschen** (siehe [Meine Statistik](#meine-statistik)).
 

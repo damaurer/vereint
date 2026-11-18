@@ -202,12 +202,6 @@
     "loadingMessage": "Das Profil wird abgerufen.",
     "unavailable": "Profil nicht verfügbar",
     "noRoles": "keine Rollen",
-    "beerWithMe": {
-      "title": "BeerWithMe Status",
-      "hint": "Verfügbar für ein spontanes Bier in der Nähe.",
-      "short": "Spontanes Bier",
-      "shortHint": "Freunde sehen, dass du Zeit hast"
-    },
     "theme": {
       "title": "Darstellung",
       "system": "System",
@@ -510,7 +504,7 @@
     },
     "tablet": {
       "title": "Thekenterminal",
-      "description": "Manuelle Getränkeerfassung für den Drink Recorder."
+      "description": "Striche für Getränke und Speisen an der Theke erfassen."
     },
     "statistics": {
       "title": "Statistik",
@@ -1181,7 +1175,7 @@
       "startHint": "Im Kiosk-Modus bleibt dieses Gerät auf dem Thekenterminal, auch nach Schließen und Neuöffnen. Beim Start vergibst du eine PIN; nur mit ihr lässt sich der Modus hier wieder verlassen. Vorstand und Administration können das Gerät jederzeit aus der Ferne entsperren."
     },
     "header": {
-      "eyebrow": "Drink Recorder",
+      "eyebrow": "Theke",
       "terminalTitle": "Strichliste Terminal",
       "title": "Thekenterminal",
       "intro": "Strichliste für aktive Events."
@@ -1282,7 +1276,7 @@
       "saveRoles": "Rollen speichern",
       "boardRole": "Vorstands-Unterrolle",
       "noBoardRole": "keine",
-      "drinkRecorder": "Drink Recorder",
+      "drinkRecorder": "Thekendienst (Thekenterminal)",
       "saveProfile": "Profil speichern",
       "disabled": "Deaktiviert",
       "saveStatus": "Status speichern",

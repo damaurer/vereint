@@ -208,12 +208,6 @@
     "loadingMessage": "Loading your profile.",
     "unavailable": "Profile not available",
     "noRoles": "no roles",
-    "beerWithMe": {
-      "title": "BeerWithMe status",
-      "hint": "Up for a spontaneous beer nearby.",
-      "short": "Spontaneous beer",
-      "shortHint": "Friends see that you have time"
-    },
     "theme": {
       "title": "Appearance",
       "system": "System",
@@ -1214,7 +1208,7 @@
       "startHint": "In kiosk mode this device stays on the bar terminal, even after closing and reopening. You set a PIN when starting; only that PIN leaves the mode here. The board and administrators can unlock the device remotely at any time."
     },
     "header": {
-      "eyebrow": "Drink Recorder",
+      "eyebrow": "Bar",
       "terminalTitle": "Tally sheet terminal",
       "title": "Bar terminal",
       "intro": "Tally sheet for active events."
