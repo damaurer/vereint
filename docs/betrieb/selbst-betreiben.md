@@ -8,7 +8,8 @@ entscheidet der Betreiber; das Repository rollt nichts aus.
 | `ghcr.io/damaurer/vereint-baseservice` | Fachservice (Spring Boot), REST-API, Liquibase-Migrationen | 8081 |
 | `ghcr.io/damaurer/vereint-webservice` | Oberfläche (Angular SSR) und BFF mit Session-Cookie | 8080 |
 
-Gebaut und mit Trivy geprüft werden beide bei jedem Pull Request. Nach einem
+Gebaut und mit Trivy geprüft werden beide nach jedem Merge auf `develop`,
+`qs` oder `main` und bei Pull Requests nach `qs` und `main`. Nach einem
 Merge auf `qs` oder `main` landen sie für `linux/amd64` und `linux/arm64` in
 GitHub Packages, getaggt mit dem Commit (`<sha>`) und dem Branch-Namen
 (`:main`, `:qs`). Ein Image wird nur neu gebaut, wenn sich sein Ordner

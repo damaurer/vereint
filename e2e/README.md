@@ -6,8 +6,9 @@ Postgres, Bilder und Videos im Dateispeicher wie in Produktion und
 Caddy mit einer eigenen Test-CA). Die App
 läuft dabei wie in Produktion unter HTTPS, hier unter `https://vereint.test:8443`.
 
-In GitHub Actions laufen die Tests bei jedem Pull Request und Push auf
-`develop`, `qs` und `main` (`.github/workflows/e2e.yml`).
+In GitHub Actions laufen die Tests bei jedem Push auf `develop`, `qs` und
+`main` und bei Pull Requests `develop` → `qs` und `qs` → `main`
+(`.github/workflows/e2e.yml`).
 
 ## Lokal ausführen
 

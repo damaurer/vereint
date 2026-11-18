@@ -21,8 +21,9 @@ Getränkedatenbank stammt aus Open Food Facts und steht unter der ODbL 1.0
 - **Demo-Zugänge:** Die Passwörter in `.env.example` und im Entwicklungs-Realm
   (`admin-demo-2026` usw.) gelten nur lokal; Produktion erzeugt eigene Werte.
 - **Workflows:** Kein Workflow nutzt `pull_request_target` oder selbst gehostete
-  Runner. Pull Requests aus Forks laufen ohne Secrets; Images werden nur nach
-  einem Merge auf `qs` oder `main` veröffentlicht.
+  Runner. Pull Requests aus Forks starten keine Jobs (CI läuft nur für Pull
+  Requests `develop` → `qs` und `qs` → `main` aus diesem Repository); Images
+  werden nur nach einem Merge auf `qs` oder `main` veröffentlicht.
 
 ## Was öffentlich sichtbar wird
 
@@ -47,7 +48,8 @@ Getränkedatenbank stammt aus Open Food Facts und steht unter der ODbL 1.0
    scanning* und *Push protection* einschalten (für öffentliche Repos
    kostenlos).
 5. **Settings → Branches:** Schutzregeln für `develop`, `qs` und `main`
-   (Pull Request nötig, Prüfungen müssen grün sein).
+   (Pull Request nötig; Prüfungen als Pflicht nur für `qs` und `main`, siehe
+   [Branches und CI](branches-und-ci.md)).
 
 Danach sind GitHub Actions für das Repository kostenlos; das monatliche Limit
 privater Repositories gilt nicht mehr. Die Container-Images unter

@@ -93,8 +93,9 @@ baseservice mit AES-256-GCM, bevor sie gespeichert werden.
 
 ## 🚢 Betrieb
 
-- Gearbeitet wird auf `develop`. Jeder Pull Request nach `develop`, `qs` oder `main`
-  muss Tests, Sicherheitsscans und E2E-Tests bestehen.
+- Gearbeitet wird auf `develop`. Tests, Sicherheitsscans und E2E-Tests laufen
+  nach jedem Merge auf `develop`, `qs` oder `main` und bei Pull Requests
+  `develop` → `qs` und `qs` → `main`.
 - Nach einem Merge auf `qs` oder `main` landen geänderte Images in GitHub
   Packages (`:<commit>`, `:qs`, `:main`). Ausgerollt wird außerhalb dieses
   Repositorys.
