@@ -404,6 +404,25 @@ interface ConversationMemberRepository : JpaRepository<ConversationMemberEntity,
         @Param("conversationId") conversationId: UUID,
         @Param("userId") userId: UUID
     ): Int
+
+    /**
+     * Wie [insertUserIfAbsent], aber mit vorgegebenem Beitritt. Für Lesende, die
+     * den Chat noch nie geöffnet haben: Mit dem Beitritt zur Anlage des Chats
+     * zählt Ungelesenes genauso wie ganz ohne Zeile.
+     */
+    @Modifying
+    @Query(
+        value = "INSERT INTO conversation_members (id, stammtisch_id, conversation_id, user_id, joined_at) " +
+            "VALUES (:id, :stammtischId, :conversationId, :userId, :joinedAt) ON CONFLICT DO NOTHING",
+        nativeQuery = true
+    )
+    fun insertUserJoinedIfAbsent(
+        @Param("id") id: UUID,
+        @Param("stammtischId") stammtischId: UUID,
+        @Param("conversationId") conversationId: UUID,
+        @Param("userId") userId: UUID,
+        @Param("joinedAt") joinedAt: Instant
+    ): Int
 }
 
 @Repository
@@ -438,6 +457,41 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
         @Param("userId") userId: UUID,
         @Param("after") after: Instant
     ): Long
+
+    /** Zeitpunkt der neuesten Nachricht anderer (Mitglieder oder Gäste) nach `after`; `null`, wenn keine. */
+    @Query(
+        """
+        select max(m.createdAt) from ChatMessageEntity m left join m.sender s
+        where m.conversation.id = :conversationId
+          and m.createdAt > :after
+          and (s is null or s.id <> :userId)
+        """
+    )
+    fun latestForeignAfter(
+        @Param("conversationId") conversationId: UUID,
+        @Param("userId") userId: UUID,
+        @Param("after") after: Instant
+    ): Instant?
+
+    /** Wer im Zeitraum (`after`, `until`] geschrieben hat, ohne `userId`; Empfänger der Haken-Signale. */
+    @Query(
+        """
+        select distinct s.id from ChatMessageEntity m join m.sender s
+        where m.conversation.id = :conversationId
+          and m.createdAt > :after
+          and m.createdAt <= :until
+          and s.id <> :userId
+        """
+    )
+    fun senderIdsBetween(
+        @Param("conversationId") conversationId: UUID,
+        @Param("userId") userId: UUID,
+        @Param("after") after: Instant,
+        @Param("until") until: Instant
+    ): List<UUID>
+
+    /** Bereits gespeicherte Nachricht zu einer App-Id (erneutes Senden nach Verbindungsabbruch). */
+    fun findBySenderIdAndClientId(senderId: UUID, clientId: String): Optional<ChatMessageEntity>
 }
 
 @Repository
@@ -484,6 +538,11 @@ interface AuditLogRepository :
     JpaRepository<AuditLogEntity, UUID>,
     JpaSpecificationExecutor<AuditLogEntity> {
     fun findByTargetEntityAndTargetId(targetEntity: String, targetId: String): List<AuditLogEntity>
+    fun findByTargetEntityAndActionInAndTargetIdIn(
+        targetEntity: String,
+        actions: Collection<String>,
+        targetIds: Collection<String>
+    ): List<AuditLogEntity>
     fun findByActorId(actorId: UUID): List<AuditLogEntity>
 }
 
@@ -629,6 +688,41 @@ interface DirectMessageRepository : JpaRepository<DirectMessageEntity, UUID> {
         @Param("userId") userId: UUID,
         @Param("after") after: Instant
     ): Long
+
+    /** Zeitpunkt der neuesten Nachricht anderer (Mitglieder oder Gäste) nach `after`; `null`, wenn keine. */
+    @Query(
+        """
+        select max(m.createdAt) from DirectMessageEntity m left join m.sender s
+        where m.conversation.id = :conversationId
+          and m.createdAt > :after
+          and (s is null or s.id <> :userId)
+        """
+    )
+    fun latestForeignAfter(
+        @Param("conversationId") conversationId: UUID,
+        @Param("userId") userId: UUID,
+        @Param("after") after: Instant
+    ): Instant?
+
+    /** Wer im Zeitraum (`after`, `until`] geschrieben hat, ohne `userId`; Empfänger der Haken-Signale. */
+    @Query(
+        """
+        select distinct s.id from DirectMessageEntity m join m.sender s
+        where m.conversation.id = :conversationId
+          and m.createdAt > :after
+          and m.createdAt <= :until
+          and s.id <> :userId
+        """
+    )
+    fun senderIdsBetween(
+        @Param("conversationId") conversationId: UUID,
+        @Param("userId") userId: UUID,
+        @Param("after") after: Instant,
+        @Param("until") until: Instant
+    ): List<UUID>
+
+    /** Bereits gespeicherte Nachricht zu einer App-Id (erneutes Senden nach Verbindungsabbruch). */
+    fun findBySenderIdAndClientId(senderId: UUID, clientId: String): Optional<DirectMessageEntity>
 }
 
 @Repository

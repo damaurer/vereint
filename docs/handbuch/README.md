@@ -28,14 +28,14 @@ Die Rollen bauen aufeinander auf: Vorstand und Administratoren sind zugleich Mit
 
 ## Gut zu wissen: noch nicht fertige Bereiche
 
-- Push-Nachrichten kommen erst an, wenn der Betreiber Push auf dem Server eingerichtet hat. Bist du in mehreren Gruppen, zeigt eine Push-Nachricht aus einer anderen als der gerade offenen Gruppe manchmal nur „Du hast eine neue Mitteilung“.
+- Push-Nachrichten kommen erst an, wenn der Betreiber Push auf dem Server eingerichtet hat. Ist deine Anmeldung abgelaufen, zeigt eine Push-Nachricht nur „Du hast eine neue Mitteilung“.
 - Die Seite **Plattform** (`/plattform`) ist nur für das Vereint-Team und wird hier nicht weiter beschrieben.
 - **Impressum** und **AGB** zeigen oben den Hinweis „Entwurf“, solange der Betreiber seine Angaben noch nicht eingetragen hat.
 
 ## Zwei Arten von Bildern
 
 - **`bilder/`** enthält echte Aufnahmen der laufenden App. Sie stehen in den Leitfäden 01 bis 06 und zeigen den aktuellen Stand.
-- **`screens/`** enthält die Bildschirme aus dem Design-Entwurf, gerendert aus [`docs/design/screens`](../design/screens/README.md). Sie stehen im Kapitel [Die App Bildschirm für Bildschirm](07-alle-screens.md) und zeigen das Zielbild, auch für Funktionen, die noch nicht umgesetzt sind. Solche Abschnitte tragen den Hinweis **Neu im Entwurf**.
+- **`screens/`** enthält die Bildschirme aus dem Design-Entwurf, gerendert aus [`docs/design/screens`](../design/screens/README.md). Sie stehen im Kapitel [Die App Bildschirm für Bildschirm](07-alle-screens.md) und zeigen das Zielbild des Designs. Bildschirme, die es im Entwurf nicht gibt, zeigt dieses Kapitel mit Bildern aus `bilder/`.
 
 ## Bilder neu erzeugen
 

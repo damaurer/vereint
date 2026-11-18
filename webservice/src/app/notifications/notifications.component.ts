@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { describeApiError } from '../api/api-client.service';
 import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
 import {
@@ -7,6 +7,8 @@ import {
   type NotificationItem,
 } from './notifications-api.service';
 import { UnreadBadgeStore } from './unread-badge.store';
+import { LiveUpdatesService } from '../live/live-updates.service';
+import type { Subscription } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { formatDateTime, formatDayTime } from '../member/member-format';
 import { StatusBadgeComponent, type StatusTone } from '../ui';
@@ -16,7 +18,7 @@ import { translate } from '../i18n/i18n.service';
 
 @Component({
   selector: 'app-notifications',
-  imports: [StateComponent, StatusBadgeComponent, PwaSettingsComponent, RouterLink, TranslatePipe],
+  imports: [StateComponent, StatusBadgeComponent, PwaSettingsComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="notifications-title">
@@ -73,7 +75,13 @@ import { translate } from '../i18n/i18n.service';
                 <li class="notification-item" [class.unread]="!item.read">
                   <div class="notification-head">
                     <span class="unread-dot" [class.visible]="!item.read" aria-hidden="true"></span>
-                    <h3 class="item-title">{{ item.title }}</h3>
+                    <h3 class="item-title">
+                      @if (item.link) {
+                        <a class="item-target" [attr.href]="item.link" (click)="open($event, item)">{{ item.title }}</a>
+                      } @else {
+                        {{ item.title }}
+                      }
+                    </h3>
                     <vereint-status-badge
                       [label]="typeLabel(item.type)"
                       [tone]="typeTone(item.type)"
@@ -115,7 +123,7 @@ import { translate } from '../i18n/i18n.service';
                         }
                       }
                       @if (item.link) {
-                        <a class="btn-secondary-sm item-open" [routerLink]="item.link">
+                        <a class="btn-secondary-sm item-open" [attr.href]="item.link" (click)="open($event, item)">
                           {{ (eventIdOf(item.link) ? 'notifications.openEvent' : 'notifications.open') | t }}
                         </a>
                       }
@@ -207,6 +215,14 @@ import { translate } from '../i18n/i18n.service';
         font-weight: 700;
         line-height: 1.35;
         color: var(--color-text);
+      }
+      .item-target {
+        color: inherit;
+        text-decoration: none;
+      }
+      .item-target:hover,
+      .item-target:focus-visible {
+        text-decoration: underline;
       }
       .item-body {
         margin: 0 0 0 1rem;
@@ -302,6 +318,9 @@ import { translate } from '../i18n/i18n.service';
 })
 export class NotificationsComponent implements OnInit, OnDestroy {
   private readonly notificationsApi = inject(NotificationsApiService);
+  private readonly live = inject(LiveUpdatesService);
+  private readonly router = inject(Router);
+  private liveSub?: Subscription;
 
   protected readonly load = new AsyncState<NotificationItem[]>();
   /** Geteilt mit dem Glocken-Badge in der Shell. */
@@ -316,10 +335,24 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.reload();
+    // Neue Mitteilungen erscheinen sofort, ohne Ladeanzeige.
+    this.liveSub = this.live.on('notification').subscribe(() => this.refreshQuietly());
   }
 
   ngOnDestroy(): void {
     this.load.destroy();
+    this.liveSub?.unsubscribe();
+  }
+
+  private refreshQuietly(): void {
+    if (!this.load.isSuccess()) return;
+    this.notificationsApi.list().subscribe({
+      next: (items) => {
+        this.load.data.set(items);
+        this.unreadCount.set(items.filter((i) => !i.read).length);
+      },
+      error: () => undefined,
+    });
   }
 
   protected reload(): void {
@@ -344,6 +377,23 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       },
       error: () => this.busy.set(false),
     });
+  }
+
+  /**
+   * Öffnet das Ziel einer Mitteilung und markiert sie als gelesen. Links mit
+   * Query (`/chat?id=…`, `/moments?momentId=…`) gehen über `navigateByUrl`,
+   * weil `routerLink` mit einem String das `?` mitkodieren würde.
+   */
+  protected open(event: MouseEvent, item: NotificationItem): void {
+    if (!item.link) return;
+    // Neuer Tab oder Fenster: dem Browser überlassen.
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (!item.read) {
+      this.notificationsApi.markRead(item.id).subscribe({ error: () => undefined });
+      this.unreadCount.update((c) => Math.max(0, c - 1));
+    }
+    void this.router.navigateByUrl(item.link);
   }
 
   protected markAllAsRead(): void {

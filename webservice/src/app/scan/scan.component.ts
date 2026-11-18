@@ -3,11 +3,19 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ApiError, describeApiError } from '../api/api-client.service';
 import { newIdempotencyKey } from '../api/idempotency';
-import type { ForeignDrink, LedgerEntry, PurchaseOption, PurchasePreview } from '../api/api.types';
+import type {
+  DrinkRef,
+  ForeignDrink,
+  LedgerEntry,
+  PurchasableDrink,
+  PurchaseOption,
+  PurchasePreview,
+} from '../api/api.types';
 import { TranslatePipe, translate } from '../i18n';
 import { MemberApiService } from '../member/member-api.service';
 import { formatMoney } from '../member/member-format';
 import { BarcodeScannerComponent } from './barcode-scanner.component';
+import { CatalogPickerComponent } from './catalog-picker.component';
 
 type Step =
   | 'scan'
@@ -24,14 +32,19 @@ type Step =
 /** Wahl ohne laufendes Event: mit Guthaben bezahlen oder nur für die Statistik erfassen. */
 type Choice = 'credit' | 'foreign';
 
+/** Wie das Getränk gefunden wird: mit der Kamera scannen oder aus dem Katalog wählen (Issue #122). */
+type Source = 'camera' | 'catalog';
+
 /** So lange darf ein Mitglied einen eigenen Kauf selbst zurücknehmen (wie am Tablet). */
 export const UNDO_WINDOW_MS = 10 * 60 * 1000;
 
 /**
- * Getränk per Strichcode bezahlen oder für die Statistik erfassen.
+ * Getränk per Strichcode oder aus dem Katalog bezahlen oder für die Statistik erfassen.
  *
- * Ablauf: Strichcode mit der Kamera scannen (oder Nummer eintippen), Getränk,
+ * Ablauf: Strichcode mit der Kamera scannen (oder Nummer eintippen) oder das
+ * Getränk aus dem Getränkekatalog der Gruppe wählen (Issue #122), Getränk,
  * Preis und Guthaben danach ansehen, bestätigen. Erst die Bestätigung bucht.
+ * Nach der Auswahl aus dem Katalog gilt genau dasselbe wie nach einem Scan.
  *
  * - Bei einem laufenden Event mit Selbstbedienung, an dem die Person
  *   teilnimmt, läuft der Kauf über das Event (wie bisher).
@@ -47,37 +60,64 @@ export const UNDO_WINDOW_MS = 10 * 60 * 1000;
  */
 @Component({
   selector: 'app-scan',
-  imports: [FormsModule, RouterLink, TranslatePipe, BarcodeScannerComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, BarcodeScannerComponent, CatalogPickerComponent],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="scan-title">
         <span class="eyebrow">{{ 'scan.eyebrow' | t }}</span>
-        <h1 id="scan-title">{{ 'scan.title' | t }}</h1>
+        <h1 id="scan-title">
+          {{ (source() === 'catalog' ? 'scan.catalog.title' : 'scan.title') | t }}
+        </h1>
 
         @switch (step()) {
           @case ('scan') {
-            <p class="member-muted">{{ 'scan.intro' | t }}</p>
-            <vereint-barcode-scanner (detected)="lookup($event)" />
-            <form class="member-form scan-manual" (submit)="submitManual($event)">
-              <label class="member-field">
-                <span>{{ 'scan.manual.label' | t }}</span>
-                <input
-                  [(ngModel)]="manualCode"
-                  name="barcode"
-                  inputmode="numeric"
-                  autocomplete="off"
-                  maxlength="128"
-                  [placeholder]="'scan.manual.placeholder' | t"
-                />
-              </label>
+            <div class="scan-source" role="group" [attr.aria-label]="'scan.source.label' | t">
               <button
-                type="submit"
-                class="member-button member-button-ghost"
-                [disabled]="!manualCode.trim()"
+                type="button"
+                class="scan-source-option"
+                [class.is-active]="source() === 'camera'"
+                [attr.aria-pressed]="source() === 'camera'"
+                (click)="setSource('camera')"
               >
-                {{ 'scan.manual.submit' | t }}
+                {{ 'scan.source.camera' | t }}
               </button>
-            </form>
+              <button
+                type="button"
+                class="scan-source-option"
+                [class.is-active]="source() === 'catalog'"
+                [attr.aria-pressed]="source() === 'catalog'"
+                (click)="setSource('catalog')"
+              >
+                {{ 'scan.source.catalog' | t }}
+              </button>
+            </div>
+            @if (source() === 'catalog') {
+              <p class="member-muted">{{ 'scan.catalog.intro' | t }}</p>
+              <vereint-catalog-picker (picked)="pick($event)" />
+            } @else {
+              <p class="member-muted">{{ 'scan.intro' | t }}</p>
+              <vereint-barcode-scanner (detected)="lookup($event)" />
+              <form class="member-form scan-manual" (submit)="submitManual($event)">
+                <label class="member-field">
+                  <span>{{ 'scan.manual.label' | t }}</span>
+                  <input
+                    [(ngModel)]="manualCode"
+                    name="barcode"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    maxlength="128"
+                    [placeholder]="'scan.manual.placeholder' | t"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  class="member-button member-button-ghost"
+                  [disabled]="!manualCode.trim()"
+                >
+                  {{ 'scan.manual.submit' | t }}
+                </button>
+              </form>
+            }
           }
           @case ('loading') {
             <p class="member-muted" role="status">{{ 'scan.loading' | t }}</p>
@@ -87,7 +127,7 @@ export const UNDO_WINDOW_MS = 10 * 60 * 1000;
               <h2 class="member-subtitle">{{ 'scan.notFound.title' | t }}</h2>
               <p class="member-hint member-hint-error">{{ error() }}</p>
               <button type="button" class="member-button" (click)="restart()">
-                {{ 'scan.retry' | t }}
+                {{ (source() === 'catalog' ? 'scan.catalog.retry' : 'scan.retry') | t }}
               </button>
             </div>
           }
@@ -291,7 +331,7 @@ export const UNDO_WINDOW_MS = 10 * 60 * 1000;
                 }
                 <div class="scan-actions">
                   <button type="button" class="member-button" (click)="restart()">
-                    {{ 'scan.done.next' | t }}
+                    {{ nextKey() | t }}
                   </button>
                   @if (canUndo()) {
                     <button
@@ -324,7 +364,7 @@ export const UNDO_WINDOW_MS = 10 * 60 * 1000;
                 }
                 <div class="scan-actions">
                   <button type="button" class="member-button" (click)="restart()">
-                    {{ 'scan.done.next' | t }}
+                    {{ nextKey() | t }}
                   </button>
                   @if (canUndo()) {
                     <button
@@ -345,7 +385,7 @@ export const UNDO_WINDOW_MS = 10 * 60 * 1000;
               <h2 class="member-subtitle">{{ 'scan.foreign.removedTitle' | t }}</h2>
               <p>{{ 'scan.foreign.removedMessage' | t: { drink: foreign()?.drinkName ?? '' } }}</p>
               <button type="button" class="member-button" (click)="restart()">
-                {{ 'scan.done.next' | t }}
+                {{ nextKey() | t }}
               </button>
             </div>
           }
@@ -359,7 +399,7 @@ export const UNDO_WINDOW_MS = 10 * 60 * 1000;
                 }}
               </p>
               <button type="button" class="member-button" (click)="restart()">
-                {{ 'scan.done.next' | t }}
+                {{ nextKey() | t }}
               </button>
             </div>
           }
@@ -369,6 +409,34 @@ export const UNDO_WINDOW_MS = 10 * 60 * 1000;
   `,
   styles: [
     `
+      .scan-source {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.25rem;
+        margin: 0.5rem 0 0.75rem;
+        padding: 0.25rem;
+        border: 1px solid var(--color-border);
+        border-radius: 0.6rem;
+        background: var(--color-surface-muted);
+      }
+
+      .scan-source-option {
+        min-height: 2.75rem;
+        padding: 0.5rem 0.75rem;
+        border: 0;
+        border-radius: 0.45rem;
+        background: transparent;
+        color: var(--color-text);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .scan-source-option.is-active {
+        background: var(--color-brand);
+        color: var(--color-on-brand);
+      }
+
       .scan-manual {
         grid-template-columns: 1fr auto;
         align-items: end;
@@ -468,6 +536,15 @@ export class ScanComponent implements OnDestroy {
   protected readonly paidWithoutStatistics = signal(false);
   protected readonly foreign = signal<ForeignDrink | null>(null);
   protected manualCode = '';
+  /** Scannen oder aus dem Katalog wählen; bleibt nach einem Kauf für das nächste Getränk erhalten. */
+  protected readonly source = signal<Source>('camera');
+  /** Das Getränk des laufenden Vorgangs: gescannter Strichcode oder Katalog-ID. */
+  private drinkRef: DrinkRef | null = null;
+
+  /** Text für „nächstes Getränk“: scannen oder wählen, je nach Weg. */
+  protected readonly nextKey = computed(() =>
+    this.source() === 'catalog' ? 'scan.catalog.next' : 'scan.done.next',
+  );
 
   /** Ein Schlüssel je Bezahlvorgang: Wiederholen nach Netzfehler bucht nicht doppelt. */
   private payKey: string | null = null;
@@ -510,11 +587,26 @@ export class ScanComponent implements OnDestroy {
     if (code) this.lookup(code);
   }
 
+  /** Wechselt zwischen Scannen und Auswahl aus dem Katalog. */
+  setSource(source: Source): void {
+    this.source.set(source);
+  }
+
   /** Sucht das Getränk zum Strichcode und zeigt Preis und Guthaben zur Bestätigung. */
   lookup(barcode: string): void {
+    this.loadPreview(barcode);
+  }
+
+  /** Getränk aus dem Katalog gewählt: weiter wie nach einem Scan (Issue #122). */
+  pick(drink: PurchasableDrink): void {
+    this.loadPreview({ drinkId: drink.id });
+  }
+
+  private loadPreview(ref: DrinkRef): void {
+    this.drinkRef = ref;
     this.step.set('loading');
     this.error.set(null);
-    this.api.previewPurchase(barcode).subscribe({
+    this.api.previewPurchase(ref).subscribe({
       next: (preview) => {
         this.preview.set(preview);
         this.selected.set(preview.options.length === 1 ? preview.options[0] : null);
@@ -545,7 +637,8 @@ export class ScanComponent implements OnDestroy {
    */
   pay(): void {
     const preview = this.preview();
-    if (!preview || this.step() === 'paying') return;
+    const ref = this.drinkRef;
+    if (!preview || !ref || this.step() === 'paying') return;
     const option = this.selected();
     const atEvent = preview.options.length > 0;
     if (atEvent ? !option : this.choice() !== 'credit' || !preview.creditPurchase) return;
@@ -554,8 +647,8 @@ export class ScanComponent implements OnDestroy {
     this.step.set('paying');
     const withStatistics = !preview.foreignDrink || this.recordStatistics();
     const request = atEvent
-      ? this.api.purchaseByBarcode(option!.eventId, preview.barcode, this.payKey)
-      : this.api.purchaseWithCredit(preview.barcode, withStatistics, this.payKey);
+      ? this.api.purchaseByBarcode(option!.eventId, ref, this.payKey)
+      : this.api.purchaseWithCredit(ref, withStatistics, this.payKey);
     request.subscribe({
       next: (entry) => {
         this.receipt.set(entry);
@@ -575,11 +668,12 @@ export class ScanComponent implements OnDestroy {
   /** Erfasst das Getränk nur für die Statistik (Fremdgetränk); es wird nichts abgebucht. */
   recordForeign(): void {
     const preview = this.preview();
-    if (!preview || !preview.foreignDrink || this.step() === 'recording') return;
+    const ref = this.drinkRef;
+    if (!preview || !ref || !preview.foreignDrink || this.step() === 'recording') return;
     this.foreignKey ??= newIdempotencyKey();
     this.error.set(null);
     this.step.set('recording');
-    this.api.recordForeignDrink(preview.barcode, this.foreignKey).subscribe({
+    this.api.recordForeignDrink(ref, this.foreignKey).subscribe({
       next: (drink) => {
         this.foreign.set(drink);
         this.foreignKey = null;
@@ -644,8 +738,9 @@ export class ScanComponent implements OnDestroy {
     });
   }
 
-  /** Zurück zur Kamera für das nächste Getränk. */
+  /** Zurück zur Kamera bzw. zur Katalogauswahl für das nächste Getränk. */
   restart(): void {
+    this.drinkRef = null;
     this.clearUndoTimer();
     this.canUndo.set(false);
     this.preview.set(null);

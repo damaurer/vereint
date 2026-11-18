@@ -328,3 +328,90 @@ export const mediaStreamProxy: RequestHandler = (req, res, next) => {
     upstreamRequest.end();
   }
 };
+
+/** Live-Verbindung der App (Server-Sent Events, siehe `LiveController` im Fachservice). */
+export const LIVE_PATH = '/api/v1/live';
+
+/** Der Fachservice schickt alle 25 Sekunden ein Lebenszeichen; bleibt es länger aus, ist die Verbindung tot. */
+export const LIVE_STREAM_IDLE_TIMEOUT_MS = 70_000;
+
+/**
+ * Reicht die Live-Verbindung ungepuffert und unkomprimiert durch. Wie bei
+ * `apiProxy` hängt Express das Token der Session an; der Browser sieht es nie.
+ * Der Fachservice beendet die Verbindung nach zehn Minuten, der Browser baut
+ * sie dann neu auf und bekommt dabei ein frisches Token.
+ */
+export const liveStreamProxy: RequestHandler = (req, res) => {
+  const traceId = requestId(req);
+  const instance = req.originalUrl;
+  if (req.method !== 'GET') {
+    sendProblem(res, 405, 'method_not_allowed', 'Nur GET ist erlaubt.', instance, traceId);
+    return;
+  }
+  const accessToken = req.sessionData?.tokens.accessToken;
+  if (!accessToken) {
+    sendProblem(
+      res,
+      401,
+      'oidc_session_expired',
+      'Für den Zugriff auf die fachliche API ist eine gültige Sitzung erforderlich.',
+      instance,
+      traceId,
+    );
+    return;
+  }
+  const targetUrl = resolveTargetUrl(LIVE_PATH);
+  if (!targetUrl) {
+    sendProblem(res, 400, 'invalid_request', 'Ungültiger API-Pfad.', instance, traceId);
+    return;
+  }
+
+  const headers: Record<string, string> = {};
+  forwardHeaders(req, traceId, accessToken).forEach((value, key) => {
+    headers[key] = value;
+  });
+  headers['accept'] = 'text/event-stream';
+
+  const target = new URL(targetUrl);
+  const client = target.protocol === 'https:' ? https : http;
+  const upstreamRequest = client.request(target, { method: 'GET', headers }, (upstream) => {
+    const status = upstream.statusCode ?? 502;
+    res.status(status);
+    for (const [key, value] of Object.entries(upstream.headers)) {
+      if (value === undefined || STRIPPED_STREAM_RESPONSE_HEADERS.has(key.toLowerCase())) continue;
+      if (key.toLowerCase() === 'content-length' && status === 200) continue;
+      res.setHeader(key, value);
+    }
+    // `no-transform` hält die Kompression (Express, Proxys) heraus, die sonst puffert.
+    res.setHeader('Cache-Control', 'private, no-cache, no-store, no-transform');
+    res.setHeader('Vary', 'Cookie');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (!res.getHeader('x-request-id')) res.setHeader('x-request-id', traceId);
+    res.flushHeaders();
+    upstream.on('error', () => res.destroy());
+    upstream.pipe(res);
+  });
+
+  upstreamRequest.setTimeout(LIVE_STREAM_IDLE_TIMEOUT_MS, () => {
+    upstreamRequest.destroy(new Error('Live-Verbindung ohne Lebenszeichen'));
+  });
+  upstreamRequest.on('error', () => {
+    if (!res.headersSent) {
+      sendProblem(
+        res,
+        503,
+        'service_unavailable',
+        'Der Fachservice ist derzeit nicht erreichbar.',
+        instance,
+        traceId,
+      );
+    } else {
+      res.destroy();
+    }
+  });
+  // Schließt der Browser die Verbindung, endet sie auch beim Fachservice.
+  res.on('close', () => {
+    if (!res.writableFinished) upstreamRequest.destroy();
+  });
+  upstreamRequest.end();
+};

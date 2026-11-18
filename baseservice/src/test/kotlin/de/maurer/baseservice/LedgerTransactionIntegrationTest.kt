@@ -5,6 +5,7 @@ import de.maurer.baseservice.domain.LedgerEntryEntity
 import de.maurer.baseservice.domain.LedgerEntryType
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.dto.CorrectionRequest
+import de.maurer.baseservice.dto.PayoutRequest
 import de.maurer.baseservice.dto.TopupRequest
 import de.maurer.baseservice.repository.IdempotencyRecordRepository
 import de.maurer.baseservice.repository.LedgerEntryRepository
@@ -93,6 +94,31 @@ class LedgerTransactionIntegrationTest @Autowired constructor(
                 .isPresent,
             "Der Idempotenz-Datensatz muss im selben Vorgang persistiert werden"
         )
+    }
+
+    /** Issue #121: Die Notiz einer Ein-/Auszahlung erscheint im Kontoauszug des Mitglieds. */
+    @Test
+    fun `member sees the notes of own topups and payouts in the entry list`() {
+        val member = newUser("member")
+        val adminSubject = "kc-admin-${UUID.randomUUID()}"
+        ledgerService.topup(
+            TopupRequest(memberId = member.id.toString(), amount = BigDecimal("20.00"), note = "Bar beim Stammtisch"),
+            "topup-${UUID.randomUUID()}",
+            adminPrincipal(adminSubject)
+        )
+        ledgerService.payout(
+            PayoutRequest(memberId = member.id.toString(), amount = BigDecimal("5.00"), note = "  "),
+            "payout-${UUID.randomUUID()}",
+            adminPrincipal(adminSubject)
+        )
+
+        val entries = ledgerService.listMemberEntries(
+            member.id,
+            UserPrincipal(subject = member.keycloakSubject, displayName = member.displayName, roles = setOf(UserRole.MEMBER))
+        )
+
+        assertEquals("Bar beim Stammtisch", entries.single { it.entryType == LedgerEntryType.topup.name }.note)
+        assertNull(entries.single { it.entryType == LedgerEntryType.payout.name }.note)
     }
 
     @Test

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 320. Zugestellt-Haken: Neben dem Lesestand (`last_read_at`) merkt sich
+         jede Mitgliedschaft, bis zu welcher Nachricht der Chat auf einem ihrer
+         Geräte angekommen ist (App hat Liste oder Verlauf geladen, oder der
+         Service Worker hat nach einem Push nachgeladen). Nur Zeitstempel, kein
+         Inhalt. `conversation_members` hat bereits stammtisch_id und
+         Row-Level-Security; `direct_participants` gehört keiner Gruppe. -->
+    <changeSet id="320-chat-delivered-at" author="claude">
+        <addColumn tableName="conversation_members">
+            <column name="last_delivered_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </addColumn>
+        <addColumn tableName="direct_participants">
+            <column name="last_delivered_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="conversation_members" columnName="last_delivered_at"/>
+            <dropColumn tableName="direct_participants" columnName="last_delivered_at"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 321. Offline-Versand: Die App vergibt jeder Nachricht eine eigene Id
+         (`client_id`), bevor sie sie sendet. Schickt sie nach einem
+         Verbindungsabbruch dieselbe Nachricht noch einmal, erkennt der Server
+         sie daran und legt keine zweite an. Eindeutig je Absenderin; Gäste
+         (sender_id null) nutzen das nicht. -->
+    <changeSet id="321-chat-client-id" author="claude">
+        <addColumn tableName="chat_messages">
+            <column name="client_id" type="VARCHAR(64)"/>
+        </addColumn>
+        <addColumn tableName="direct_messages">
+            <column name="client_id" type="VARCHAR(64)"/>
+        </addColumn>
+        <addUniqueConstraint tableName="chat_messages" columnNames="sender_id, client_id"
+                             constraintName="uk_chat_messages_sender_client"/>
+        <addUniqueConstraint tableName="direct_messages" columnNames="sender_id, client_id"
+                             constraintName="uk_direct_messages_sender_client"/>
+        <rollback>
+            <dropUniqueConstraint tableName="chat_messages" constraintName="uk_chat_messages_sender_client"/>
+            <dropUniqueConstraint tableName="direct_messages" constraintName="uk_direct_messages_sender_client"/>
+            <dropColumn tableName="chat_messages" columnName="client_id"/>
+            <dropColumn tableName="direct_messages" columnName="client_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

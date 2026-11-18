@@ -51,9 +51,10 @@ Für die eigene Person lehnt der Fachservice Rollen-, Berechtigungs- und Status�
 | `GET` | `/api/v1/ledger/members/{memberId}/balance` | Guthaben und Kennzahlen eines Mitglieds (`MemberBalanceDto`) | eigenes Konto oder `ledger.read` |
 | `GET` | `/api/v1/ledger/members/{memberId}/entries` | Buchungen eines Mitglieds (`List<LedgerEntryDto>`) | eigenes Konto oder `ledger.read` |
 | `GET` | `/api/v1/ledger/events/{eventId}/summary` | Abrechnung eines Events (`EventLedgerSummaryDto`) | `ledger.read` oder `event.manage` |
-| `POST` | `/api/v1/ledger/purchases/preview` | Preis und Event zu einem Barcode vorab ermitteln; ohne laufendes Event mit Selbstbedienung stattdessen `creditPurchase` (Katalogpreis oder `null`) und `foreignDrink` (Fremdgetränk möglich), `drinkId` ist `null` bei Getränken nur aus der Getränkedatenbank | `purchase.self` |
-| `POST` | `/api/v1/ledger/purchases` | Barcode-Kauf ausführen (`PurchaseRequest` + `Idempotency-Key`) | `purchase.self` |
-| `POST` | `/api/v1/ledger/purchases/credit` | Guthabenkauf ohne Event zum Katalogpreis (`{ barcode, recordStatistics }` + `Idempotency-Key`); `409 credit_purchase_at_event` bei Teilnahme an einem laufenden Event mit Selbstbedienung, `404 no_catalog_price` ohne Preis | `purchase.self` |
+| `GET` | `/api/v1/ledger/purchases/catalog` | Getränke des Gruppenkatalogs, die man statt zu scannen wählen und bezahlen kann (freigegeben, aktiv, mit Preis): `id`, `name`, `category`, `unitPrice`, `currency` (Issue #122) | `purchase.self` |
+| `POST` | `/api/v1/ledger/purchases/preview` | Preis und Event zu einem Barcode oder einem aus dem Katalog gewählten Getränk (`drinkId` statt `barcode`, genau eines von beiden) vorab ermitteln; ohne laufendes Event mit Selbstbedienung stattdessen `creditPurchase` (Katalogpreis oder `null`) und `foreignDrink` (Fremdgetränk möglich), `drinkId` ist `null` bei Getränken nur aus der Getränkedatenbank | `purchase.self` |
+| `POST` | `/api/v1/ledger/purchases` | Barcode-Kauf ausführen (`PurchaseRequest` mit `barcode` oder `drinkId` + `Idempotency-Key`) | `purchase.self` |
+| `POST` | `/api/v1/ledger/purchases/credit` | Guthabenkauf ohne Event zum Katalogpreis (`{ barcode` oder `drinkId, recordStatistics }` + `Idempotency-Key`); `409 credit_purchase_at_event` bei Teilnahme an einem laufenden Event mit Selbstbedienung, `404 no_catalog_price` ohne Preis | `purchase.self` |
 | `POST` | `/api/v1/ledger/purchases/{entryId}/undo` | Eigenen Barcode-Kauf innerhalb von 10 Minuten zurücknehmen (+ `Idempotency-Key`) | `purchase.self` |
 | `POST` | `/api/v1/ledger/topups` | Guthaben aufladen (`TopupRequest` + `Idempotency-Key`) | `ledger.correct` |
 | `POST` | `/api/v1/ledger/payouts` | Guthaben auszahlen (`PayoutRequest` + `Idempotency-Key`) | `ledger.correct` |
@@ -202,15 +203,18 @@ Fachlich: [Einladungslinks](../domains/member-invites.md).
 | `PUT` | `/api/v1/conversations/club/pin` | Infotafel im Gruppenchat setzen (`PinNoteRequest`) | `chat.moderate` oder `event.manage` |
 | `GET` / `POST` | `/api/v1/conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/read` | Als gelesen markieren | Mitglied der Unterhaltung |
+| `POST` | `/api/v1/conversations/{conversationId}/typing` | „schreibt gerade…“ an die anderen Lesenden (`204`, höchstens alle 2 s je Person) | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Mitglied der Unterhaltung |
 | `GET` | `/api/v1/direct-conversations` | Eigene Direktnachrichten über alle Gruppen | Angemeldet |
 | `GET` | `/api/v1/direct-conversations/unread-count` | Ungelesene Direktnachrichten | Angemeldet |
 | `POST` | `/api/v1/direct-conversations` | Gespräch beginnen oder bestehendes liefern (`StartDirectConversationRequest`) | Freunde oder gemeinsame Gruppe |
 | `GET` / `POST` | `/api/v1/direct-conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden (senden nur mit Freundschaft oder gemeinsamer Gruppe) | Beteiligte |
 | `POST` | `/api/v1/direct-conversations/{conversationId}/read` | Als gelesen markieren | Beteiligte |
+| `POST` | `/api/v1/direct-conversations/{conversationId}/typing` | „schreibt gerade…“ an das Gegenüber (`204`) | Beteiligte mit Schreibrecht |
 | `POST` | `/api/v1/direct-conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Beteiligte |
 | `GET` | `/api/v1/notifications` | Eigene Mitteilungen | Angemeldet |
-| `GET` | `/api/v1/personal-notifications` | Persönliche Mitteilungen für Push: ungelesene Direktnachrichten, Freundschaftsanfragen, frisch angenommene Anfragen (ohne Gruppe) | Angemeldet |
+| `GET` | `/api/v1/personal-notifications` | Alles Ungelesene über alle eigenen Gruppen für Push: Mitteilungen, Gruppen- und Event-Chats, Direktnachrichten, Freundschaftsanfragen, frisch angenommene Anfragen; Einträge aus Gruppen tragen `stammtischId` (ohne Gruppe) | Angemeldet |
+| `GET` | `/api/v1/live` | Live-Verbindung (`text/event-stream`): Signale `ready`, `ping`, `chat`, `direct`, `read`, `notification` ohne Inhalt; endet nach 10 Minuten (ohne Gruppe) | Angemeldet |
 | `GET` | `/api/v1/notifications/unread-count` | Anzahl ungelesener Mitteilungen | Angemeldet |
 | `POST` | `/api/v1/notifications/read-all` | Alle als gelesen markieren | Angemeldet |
 | `POST` | `/api/v1/notifications/{notificationId}/read` | Eine Mitteilung als gelesen markieren | Angemeldet |
@@ -220,7 +224,7 @@ Fachlich: [Einladungslinks](../domains/member-invites.md).
 | `POST` | `/api/v1/notifications` | Mitteilung an ein Mitglied senden (`SendNotificationRequest`) | `notifications.broadcast` |
 | `POST` | `/api/v1/notifications/broadcast` | Mitteilung an alle Mitglieder der Gruppe (`BroadcastNotificationRequest`) | `notifications.broadcast` |
 
-Neue Nachrichten holt die App per Polling; einen WebSocket-Endpunkt gibt es nicht.
+Neue Nachrichten meldet `GET /api/v1/live` sofort; ohne Live-Verbindung fragt die App regelmäßig ab.
 
 
 ### 7a. Kalender und Freunde (`CalendarController`, `FriendController`)
@@ -247,7 +251,7 @@ Gruppenübergreifend und ohne gewählte Gruppe, siehe [Kalender, Freunde und Dir
 | `GET` | `/api/v1/statistics/events` | Übergreifende Event-Statistik über alle sichtbaren Events der eigenen Gruppen, ohne fremde Namen (`zeitraum`); ohne gewählte Gruppe | angemeldet |
 | `GET` | `/api/v1/statistics/group-events` | Events der Gruppe zusammengefasst und im Vergleich (`zeitraum`) | Mitglied |
 | `GET` | `/api/v1/statistics/features` | Je Funktion ausgelöst und beantwortet (`zeitraum`) | Mitglied |
-| `POST` | `/api/v1/statistics/foreign-drinks` | Fremdgetränk nur für die Statistik erfassen, ohne Buchung und ohne Event (`{ barcode }` + `Idempotency-Key`); `409 statistics_disabled` bei ausgeschalteter Statistik, `409 credit_purchase_at_event` bei Teilnahme an einem laufenden Event mit Selbstbedienung | `purchase.self` |
+| `POST` | `/api/v1/statistics/foreign-drinks` | Fremdgetränk nur für die Statistik erfassen, ohne Buchung und ohne Event (`{ barcode }` oder `{ drinkId }` + `Idempotency-Key`); `409 statistics_disabled` bei ausgeschalteter Statistik, `409 credit_purchase_at_event` bei Teilnahme an einem laufenden Event mit Selbstbedienung | `purchase.self` |
 | `DELETE` | `/api/v1/statistics/foreign-drinks/{id}` | Eigenes Fremdgetränk innerhalb von 10 Minuten entfernen (`204`) | `purchase.self` |
 | `GET` | `/api/v1/events/{id}/statistics` | Statistik eines Events | wer das Event sehen darf |
 | `GET`, `PUT` | `/api/v1/me/statistics-settings` | Schalter „Meine Statistik erfassen“ (`{ "enabled": true }`) | angemeldet |

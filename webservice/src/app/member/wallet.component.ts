@@ -113,6 +113,11 @@ type LedgerFilter = 'all' | 'topup' | 'spend';
                     @if (entry.tallyCategoryName) { {{ entry.tallyCategoryName }} · }
                     {{ formatShortDateTime(entry.createdAt) }}
                   </span>
+                  @if (entry.note) {
+                    <span class="member-list-note">
+                      <span class="visually-hidden">{{ 'member.wallet.noteLabel' | t }}: </span>{{ entry.note }}
+                    </span>
+                  }
                   <span
                     class="member-amount"
                     [class.member-amount-positive]="delta(entry, view.entries) > 0"

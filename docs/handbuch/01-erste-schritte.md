@@ -77,7 +77,7 @@ Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, w
 **Am Handy** steht unten eine Leiste mit den vier wichtigsten Bereichen: **Start**, **Events**, **Chat** und **Guthaben**. Alles andere findest du unter **Mehr**, sortiert nach:
 
 - **Gruppe**: Moments, Direktnachrichten, Statistik
-- **Mein Konto**: Kalender, Freunde, Bezahlen, Käufe, Mitteilungen, Profil, Gruppeneinstellungen
+- **Mein Konto**: Kalender, Freunde, Bezahlen, Käufe, Meine Statistik, Mitteilungen, Profil, Gruppeneinstellungen
 - **Theke**: Getränkekatalog, Getränkelisten, Thekenterminal
 - **Verwaltung**: nur für Vorstand und Administration (dort stehen dann auch die Gruppeneinstellungen)
 
@@ -134,7 +134,6 @@ Unter **Mehr → Profil** siehst du deine Kontodaten und deine Rollen.
 - **Darstellung**: **System** folgt der Einstellung deines Geräts, **Hell** und **Dunkel** legen das Aussehen fest.
 - **Sprache**: **Deutsch** oder **English**. Die Wahl gilt sofort für die ganze App und auch für die Anmeldeseite. Hast du nichts gewählt, nimmt Vereint die Sprache deines Browsers.
 - **Sicherheit**: **Zwei-Faktor-Anmeldung einrichten** öffnet die Kontoverwaltung. Dort hinterlegst du eine Authenticator-App (z. B. Google Authenticator); danach fragt die Anmeldung nach Passwort und einem 6-stelligen Code. Das ist freiwillig, für Vorstand und Administration aber empfohlen.
-- **BeerWithMe Status** ist eine Vorschau und wird noch nicht an andere übertragen.
 
 <br clear="right">
 
@@ -151,7 +150,7 @@ Ist Vereint installiert, steht dort „Vereint ist installiert.“
 
 ## Mitteilungen aufs Handy (Push)
 
-Unter **Mitteilungen auf diesem Gerät** schaltest du Push-Nachrichten ein. Dann bekommst du Mitteilungen der Gruppe, Einladungen und Erinnerungen zu Events auch, wenn Vereint geschlossen ist.
+Unter **Mitteilungen auf diesem Gerät** schaltest du Push-Nachrichten ein. Dann bekommst du Mitteilungen der Gruppe, Einladungen und Erinnerungen zu Events, neue Chat- und Direktnachrichten auch, wenn Vereint geschlossen ist. Das gilt für alle deine Gruppen; ein Tipp auf die Nachricht wechselt bei Bedarf in die richtige Gruppe.
 
 1. Schalter einschalten.
 2. Das Handy fragt einmal, ob Vereint Mitteilungen senden darf. Mit **Erlauben** bestätigen.

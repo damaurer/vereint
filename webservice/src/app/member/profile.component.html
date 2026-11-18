@@ -113,23 +113,7 @@
         </div>
       </div>
 
-      <vereint-pwa-settings>
-        <div class="profile-toggle">
-          <div class="profile-toggle-text">
-            <span class="profile-toggle-title" id="beer-label">{{ 'profile.beerWithMe.short' | t }}</span>
-            <span class="member-muted">{{ 'profile.beerWithMe.shortHint' | t }}</span>
-          </div>
-          <input
-            id="beerWithMe"
-            type="checkbox"
-            role="switch"
-            aria-labelledby="beer-label"
-            [checked]="beerWithMe()"
-            [attr.aria-checked]="beerWithMe()"
-            (change)="toggleBeerWithMe()"
-          />
-        </div>
-      </vereint-pwa-settings>
+      <vereint-pwa-settings />
 
       <h2 class="member-subtitle">{{ 'profile.personalDetails' | t }}</h2>
       <dl class="member-detail-list">

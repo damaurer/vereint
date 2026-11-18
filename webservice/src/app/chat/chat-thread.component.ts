@@ -10,6 +10,7 @@ import {
   PLATFORM_ID,
   SimpleChanges,
   ViewChild,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -17,7 +18,7 @@ import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import type { Subscription } from 'rxjs';
-import type { ChatMessageDto, ConversationSummary } from '../api/api.types';
+import type { ChatMessageDto, ConversationSummary, MessageReceipt } from '../api/api.types';
 import { describeApiError } from '../api/api-client.service';
 import { formatDateTime } from '../member/member-format';
 import { AvatarBadgeComponent, InfoPanelComponent } from '../ui';
@@ -27,9 +28,17 @@ import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
 import { ChatApiService } from './chat-api.service';
 import { ChatUnreadStore } from './chat-unread.store';
+import { LiveUpdatesService } from '../live/live-updates.service';
+import { ChatOutboxService, type OutboxEntry } from './chat-outbox.service';
 
-/** Abstand der Abfrage neuer Nachrichten (es gibt keine Websockets). */
+/** Abstand der Abfrage neuer Nachrichten, solange keine Live-Verbindung steht. */
 export const CHAT_POLL_INTERVAL_MS = 10_000;
+
+/** Höchstens so oft meldet die App beim Tippen „schreibt gerade…“. */
+export const TYPING_SEND_INTERVAL_MS = 3_000;
+
+/** So lange bleibt „schreibt gerade…“ ohne neues Signal stehen. */
+export const TYPING_DISPLAY_MS = 6_000;
 
 /** Getränke-Emoji für Composer und Schnellreaktion. */
 export const DRINK_EMOJI = '🍺';
@@ -41,10 +50,18 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
  * Verlauf einer Konversation mit Infotafel, Nachrichten, Reaktionen und
  * Composer. Wird von Gruppenchat und Direktnachrichten gemeinsam genutzt.
  *
- * Lädt die Nachrichten beim Öffnen, markiert die Konversation als gelesen und
- * fragt alle 10 Sekunden nach neuen Nachrichten, solange die Seite sichtbar
- * ist. Neue Nachrichten setzen den Lesestand erneut. Nur im Browser aktiv; im
- * SSR-HTML erscheinen keine privaten Inhalte.
+ * Lädt die Nachrichten beim Öffnen und markiert die Konversation als gelesen,
+ * sobald sie sichtbar ist. Neue Nachrichten, Reaktionen und Haken kommen über
+ * die Live-Verbindung; ohne sie fragt der Verlauf alle 10 Sekunden nach.
+ *
+ * Wie bei bekannten Messengern:
+ * - Eigene Nachrichten tragen Haken: einer = beim Server, zwei = auf den
+ *   Geräten aller Empfänger, zwei farbige = von allen gelesen.
+ * - Wer gerade tippt, erscheint als „… schreibt…“ über dem Eingabefeld.
+ * - Ohne Netz geht eine Nachricht in die Warteschlange ([ChatOutboxService]),
+ *   erscheint mit Uhr und wird automatisch gesendet, sobald das Netz zurück ist.
+ *
+ * Nur im Browser aktiv; im SSR-HTML erscheinen keine privaten Inhalte.
  */
 @Component({
   selector: 'app-chat-thread',
@@ -58,18 +75,20 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
     TranslatePipe,
   ],
   template: `
-    <div class="chat-thread">
-      <header class="chat-thread-head">
-        <button type="button" class="chat-back" (click)="back.emit()">{{ 'chat.thread.back' | t }}</button>
-        <div class="chat-thread-title">
-          <strong>{{ conversation.title }}</strong>
-          @if (conversation.type === 'event' && conversation.eventId) {
-            <a class="chat-thread-sub" [routerLink]="['/events', conversation.eventId]">{{
-              'chat.thread.toEvent' | t
-            }}</a>
-          }
-        </div>
-      </header>
+    <div class="chat-thread" [class.is-embedded]="embedded">
+      @if (!embedded) {
+        <header class="chat-thread-head">
+          <button type="button" class="chat-back" (click)="back.emit()">{{ 'chat.thread.back' | t }}</button>
+          <div class="chat-thread-title">
+            <strong>{{ conversation.title }}</strong>
+            @if (conversation.type === 'event' && conversation.eventId) {
+              <a class="chat-thread-sub" [routerLink]="['/events', conversation.eventId]">{{
+                'chat.thread.toEvent' | t
+              }}</a>
+            }
+          </div>
+        </header>
+      }
 
       @if (conversation.pinned; as pinned) {
         <vereint-info-panel [title]="'chat.thread.pinnedTitle' | t: { name: pinned.authorName }">
@@ -93,7 +112,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
               [message]="'chat.thread.loadingMessage' | t"
             />
           }
-        } @else if (messages()!.length === 0) {
+        } @else if (messages()!.length === 0 && pending().length === 0) {
           <vereint-state
             kind="empty"
             [title]="'chat.thread.emptyTitle' | t"
@@ -112,6 +131,18 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                     <span class="chat-message-guest">{{ 'chat.thread.guest' | t }}</span>
                   }
                   <span class="chat-message-time">{{ formatDateTime(message.createdAt) }}</span>
+                  @if (isOwn(message) && message.receipt; as receipt) {
+                    <span
+                      class="chat-receipt"
+                      [class.is-read]="receipt.status === 'read'"
+                      [attr.data-status]="receipt.status"
+                      role="img"
+                      [attr.aria-label]="receiptLabel(receipt)"
+                      [attr.title]="receiptLabel(receipt)"
+                    >
+                      <vereint-icon [name]="receipt.status === 'sent' ? 'check' : 'checkDouble'" />
+                    </span>
+                  }
                 </div>
                 <p class="chat-bubble">{{ message.message }}</p>
                 @if (message.imageUrl) {
@@ -160,8 +191,36 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
               </div>
             </article>
           }
+          @for (entry of pending(); track entry.clientId) {
+            <article class="chat-message is-own is-pending" [class.is-failed]="entry.state === 'failed'">
+              <vereint-avatar-badge class="chat-message-avatar" [name]="'chat.you' | t" />
+              <div class="chat-message-body">
+                <div class="chat-message-head">
+                  <span class="chat-message-author">{{ 'chat.you' | t }}</span>
+                  <span class="chat-message-time">{{ formatDateTime(entry.createdAt) }}</span>
+                  @if (entry.state === 'pending') {
+                    <span class="chat-receipt" data-status="pending" role="img" [attr.aria-label]="'chat.receipt.pending' | t" [attr.title]="'chat.receipt.pending' | t">
+                      <vereint-icon name="clock" />
+                    </span>
+                  }
+                </div>
+                <p class="chat-bubble">{{ entry.message }}</p>
+                @if (entry.state === 'failed') {
+                  <div class="chat-failed" role="alert">
+                    <span>{{ 'chat.outbox.failed' | t }}</span>
+                    <button type="button" class="chat-failed-action" (click)="retrySend(entry)">{{ 'chat.outbox.retry' | t }}</button>
+                    <button type="button" class="chat-failed-action" (click)="discardSend(entry)">{{ 'chat.outbox.discard' | t }}</button>
+                  </div>
+                } @else {
+                  <p class="chat-pending-hint">{{ 'chat.outbox.waiting' | t }}</p>
+                }
+              </div>
+            </article>
+          }
         }
       </div>
+
+      <p class="chat-typing" aria-live="polite">{{ typingText() }}</p>
 
       @if (actionError()) {
         <p class="manage-action-error" role="alert">{{ actionError() }}</p>
@@ -178,7 +237,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
             maxlength="2000"
             [placeholder]="'chat.composer.placeholder' | t"
             [(ngModel)]="draft"
-            [disabled]="sending()"
+            (ngModelChange)="onDraftChange()"
           />
           <button
             type="button"
@@ -192,7 +251,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
             type="submit"
             class="chat-send"
             [attr.aria-label]="'chat.composer.send' | t"
-            [disabled]="sending() || draft.trim().length === 0"
+            [disabled]="draft.trim().length === 0"
           >
             <vereint-icon name="send" />
           </button>
@@ -390,11 +449,59 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         opacity: 0.5;
         cursor: default;
       }
+      .chat-receipt {
+        display: inline-flex;
+        align-items: center;
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+      }
+      .chat-receipt.is-read {
+        color: var(--color-info, #2f8fdc);
+      }
+      .chat-message.is-pending .chat-bubble {
+        opacity: 0.75;
+      }
+      .chat-message.is-failed .chat-bubble {
+        border-color: var(--color-danger, #c0392b);
+      }
+      .chat-pending-hint {
+        margin: 0.25rem 0 0;
+        color: var(--color-text-muted);
+        font-size: 0.8rem;
+      }
+      .chat-failed {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--space-2);
+        margin-top: 0.3rem;
+        color: var(--color-danger, #c0392b);
+        font-size: 0.85rem;
+      }
+      .chat-failed-action {
+        border: none;
+        background: none;
+        color: var(--color-brand);
+        font: inherit;
+        cursor: pointer;
+        padding: 0.4rem 0.2rem;
+        min-height: 2.25rem;
+      }
+      .chat-typing {
+        margin: 0;
+        min-height: 1.2rem;
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+        font-style: italic;
+      }
       .chat-readonly {
         margin: 0;
         padding-top: var(--space-2);
         border-top: 1px solid var(--color-border);
         color: var(--color-text-muted);
+      }
+      .chat-thread.is-embedded .chat-history {
+        max-height: min(55vh, 32rem);
       }
       @media (min-width: 641px) {
         .chat-back {
@@ -409,11 +516,17 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   private readonly unreadStore = inject(ChatUnreadStore);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly document = inject(DOCUMENT);
+  private readonly live = inject(LiveUpdatesService);
+  private readonly outbox = inject(ChatOutboxService);
+  private liveSub?: Subscription;
+  private outboxSub?: Subscription;
 
   /** Die geöffnete Konversation. */
   @Input({ required: true }) conversation!: ConversationSummary;
   /** Eigene Benutzer-ID, um eigene Nachrichten zu erkennen. */
   @Input() myId: string | null = null;
+  /** In eine andere Seite eingebettet (Event-Seite): ohne Kopfzeile. */
+  @Input() embedded = false;
 
   /** Lesestand wurde gesetzt; liefert die aktualisierte Zusammenfassung. */
   @Output() readonly read = new EventEmitter<ConversationSummary>();
@@ -426,10 +539,33 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
 
   protected readonly messages = signal<ChatMessageDto[] | null>(null);
   protected readonly loadError = signal<string | null>(null);
-  protected readonly sending = signal(false);
   protected readonly reacting = signal(false);
   protected readonly actionError = signal<string | null>(null);
   protected readonly pickerFor = signal<string | null>(null);
+
+  /** Id der offenen Konversation als Signal, für die wartenden Nachrichten. */
+  private readonly conversationId = signal<string | null>(null);
+
+  /** Wartende und abgelehnte eigene Nachrichten, die der Verlauf noch nicht kennt. */
+  protected readonly pending = computed<OutboxEntry[]>(() => {
+    const id = this.conversationId();
+    if (!id) return [];
+    const known = new Set((this.messages() ?? []).map((message) => message.clientId).filter(Boolean));
+    return this.outbox.entries().filter((entry) => entry.conversationId === id && !known.has(entry.clientId));
+  });
+
+  /** Wer gerade tippt: Id → Name und bis wann es angezeigt wird. */
+  private readonly typers = signal<ReadonlyMap<string, { name: string; until: number }>>(new Map());
+  protected readonly typingText = computed(() => {
+    const names = [...this.typers().values()].map((typer) => typer.name);
+    if (names.length === 0) return '';
+    if (names.length === 1) return translate('chat.typing.one', { name: names[0] });
+    if (names.length === 2) return translate('chat.typing.two', { first: names[0], second: names[1] });
+    return translate('chat.typing.many');
+  });
+  private typingTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastTypingSent = 0;
+  private readPending = false;
 
   protected draft = '';
   protected readonly drinkEmoji = DRINK_EMOJI;
@@ -439,7 +575,10 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   private loadSub?: Subscription;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private readonly onVisibility = () => {
-    if (this.isVisible()) this.refresh();
+    if (!this.isVisible()) return;
+    // Was im Hintergrund ankam, gilt erst jetzt als gelesen.
+    if (this.readPending) this.markRead();
+    this.refresh();
   };
 
   private get browser(): boolean {
@@ -448,8 +587,27 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
 
   ngOnInit(): void {
     if (!this.browser) return;
+    void this.outbox.start();
+    // Neue Nachrichten, Reaktionen und Haken dieses Chats kommen sofort an.
+    this.liveSub = this.live.on('chat', 'direct', 'receipt', 'typing').subscribe((event) => {
+      if (event.type === 'typing') {
+        if (event.conversationId === this.conversation?.id) this.showTyping(event.userId, event.name);
+        return;
+      }
+      if (event.type === 'resync' || event.conversationId === this.conversation?.id) this.refresh();
+    });
+    // Aus der Warteschlange angekommen: wartende Blase durch die echte ersetzen.
+    this.outboxSub = this.outbox.delivered$.subscribe(({ entry, message }) => {
+      if (entry.conversationId !== this.conversation?.id) return;
+      this.messages.update((list) =>
+        list?.some((existing) => existing.id === message.id) ? list : [...(list ?? []), message],
+      );
+      this.sent.emit(message);
+      this.scrollToEnd();
+    });
+    // Rückfall, solange keine Live-Verbindung steht.
     this.pollTimer = setInterval(() => {
-      if (this.isVisible()) this.refresh();
+      if (!this.live.connected() && this.isVisible()) this.refresh();
     }, CHAT_POLL_INTERVAL_MS);
     this.document.addEventListener('visibilitychange', this.onVisibility);
   }
@@ -464,12 +622,18 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     this.loadError.set(null);
     this.actionError.set(null);
     this.pickerFor.set(null);
+    this.typers.set(new Map());
+    this.readPending = false;
     this.draft = '';
+    this.conversationId.set(this.conversation.id);
     this.refresh();
   }
 
   ngOnDestroy(): void {
     this.loadSub?.unsubscribe();
+    this.liveSub?.unsubscribe();
+    this.outboxSub?.unsubscribe();
+    if (this.typingTimer !== null) clearTimeout(this.typingTimer);
     if (this.pollTimer !== null) clearInterval(this.pollTimer);
     this.pollTimer = null;
     if (this.browser) this.document.removeEventListener('visibilitychange', this.onVisibility);
@@ -490,7 +654,8 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
         this.loadError.set(null);
         if (hasNew) {
           this.scrollToEnd();
-          if (isFirst || this.hasForeignAfter(before, messages)) this.markRead();
+          this.clearTypersWhoSent(before, messages);
+          if (isFirst || this.hasForeignAfter(before, messages)) this.markReadWhenVisible();
         }
       },
       error: (error: unknown) => {
@@ -504,30 +669,51 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     return !!this.myId && message.senderType === 'member' && message.senderId === this.myId;
   }
 
-  /** Sendet die Composer-Nachricht und leert das Feld. */
+  /**
+   * Gibt die Composer-Nachricht in die Warteschlange und leert das Feld. Die
+   * Warteschlange sendet sofort; ohne Netz wartet die Nachricht sichtbar mit
+   * Uhr und geht hinaus, sobald das Netz zurück ist.
+   */
   protected send(): void {
     const text = this.draft.trim();
     const id = this.conversation?.id;
-    if (!text || !id || this.sending() || !this.conversation.canWrite) return;
-
-    this.sending.set(true);
+    if (!text || !id || !this.conversation.canWrite) return;
+    this.draft = '';
+    this.lastTypingSent = 0;
     this.actionError.set(null);
-    this.api.send(id, text, this.conversation.type).subscribe({
-      next: (message) => {
-        this.sending.set(false);
-        this.draft = '';
-        if (id !== this.conversation.id) return;
-        this.messages.update((list) =>
-          list?.some((entry) => entry.id === message.id) ? list : [...(list ?? []), message],
-        );
-        this.sent.emit(message);
-        this.scrollToEnd();
-      },
-      error: () => {
-        // Neutrale Meldung; die Nachricht bleibt zum erneuten Senden im Feld.
-        this.actionError.set(translate('chat.composer.sendFailed'));
-        this.sending.set(false);
-      },
+    void this.outbox.enqueue(id, this.conversation.type, text);
+    this.scrollToEnd();
+  }
+
+  protected retrySend(entry: OutboxEntry): void {
+    this.outbox.retry(entry.clientId);
+  }
+
+  protected discardSend(entry: OutboxEntry): void {
+    this.outbox.discard(entry.clientId);
+  }
+
+  /** Beim Tippen höchstens alle paar Sekunden „schreibt gerade…“ melden. */
+  protected onDraftChange(): void {
+    const id = this.conversation?.id;
+    if (!id || !this.conversation.canWrite || this.draft.trim().length === 0) return;
+    if (globalThis.navigator?.onLine === false) return;
+    const now = Date.now();
+    if (now - this.lastTypingSent < TYPING_SEND_INTERVAL_MS) return;
+    this.lastTypingSent = now;
+    // Nicht kritisch: ohne Signal sieht das Gegenüber einfach nichts.
+    this.api.typing(id, this.conversation.type).subscribe({ error: () => undefined });
+  }
+
+  /** Zugänglicher Text zu den Haken einer eigenen Nachricht. */
+  protected receiptLabel(receipt: MessageReceipt): string {
+    const group = this.conversation.type !== 'direct' && receipt.recipients > 1;
+    if (!group) return translate(`chat.receipt.${receipt.status}`);
+    if (receipt.status === 'read') return translate('chat.receipt.readAll');
+    return translate('chat.receipt.groupProgress', {
+      read: receipt.read,
+      delivered: receipt.delivered,
+      total: receipt.recipients,
     });
   }
 
@@ -561,7 +747,14 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+  /** Gelesen gilt erst, wenn der Chat auch zu sehen ist. */
+  private markReadWhenVisible(): void {
+    if (this.isVisible()) this.markRead();
+    else this.readPending = true;
+  }
+
   private markRead(): void {
+    this.readPending = false;
     const id = this.conversation.id;
     this.api.markRead(id, this.conversation.type).subscribe({
       next: (summary) => {
@@ -577,6 +770,34 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   private hasForeignAfter(before: ChatMessageDto[] | null, after: ChatMessageDto[]): boolean {
     const known = new Set((before ?? []).map((message) => message.id));
     return after.some((message) => !known.has(message.id) && !this.isOwn(message));
+  }
+
+  private showTyping(userId: string | null | undefined, name: string | null | undefined): void {
+    if (!userId || !name || userId === this.myId) return;
+    const until = Date.now() + TYPING_DISPLAY_MS;
+    this.typers.update((current) => new Map(current).set(userId, { name, until }));
+    this.scheduleTypingCleanup();
+  }
+
+  /** Wer eine Nachricht geschickt hat, tippt nicht mehr. */
+  private clearTypersWhoSent(before: ChatMessageDto[] | null, after: ChatMessageDto[]): void {
+    if (this.typers().size === 0) return;
+    const known = new Set((before ?? []).map((message) => message.id));
+    const senders = new Set(after.filter((message) => !known.has(message.id)).map((message) => message.senderId));
+    if (senders.size === 0) return;
+    this.typers.update((current) => new Map([...current].filter(([userId]) => !senders.has(userId))));
+  }
+
+  private scheduleTypingCleanup(): void {
+    if (this.typingTimer !== null) clearTimeout(this.typingTimer);
+    const next = Math.min(...[...this.typers().values()].map((typer) => typer.until));
+    if (!Number.isFinite(next)) return;
+    this.typingTimer = setTimeout(() => {
+      this.typingTimer = null;
+      const now = Date.now();
+      this.typers.update((current) => new Map([...current].filter(([, typer]) => typer.until > now)));
+      this.scheduleTypingCleanup();
+    }, Math.max(0, next - Date.now()));
   }
 
   private isVisible(): boolean {

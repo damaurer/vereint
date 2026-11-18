@@ -55,6 +55,12 @@ Thekenterminals.
 ## Chat und Mitteilungen
 
 - Gruppenchat, Event-Chats und Direktnachrichten, mit Zähler für ungelesene Nachrichten am Chat-Eintrag.
+- Live: Neue Nachrichten, Reaktionen und Mitteilungen erscheinen sofort, ohne Neuladen; Zähler gleichen sich über alle eigenen Geräte ab.
+- Haken wie bei bekannten Messengern an eigenen Nachrichten: einer = gesendet, zwei = zugestellt (auf einem Gerät angekommen), zwei farbige = gelesen. In Gruppen- und Event-Chats wechseln die Haken erst, wenn alle Empfänger so weit sind; ein Antippen bzw. Darüberfahren zeigt „Zugestellt an 3 von 5, gelesen von 2“.
+- „… schreibt…“ über dem Eingabefeld, solange jemand im offenen Chat tippt (Gruppen-, Event-Chat und Direktnachrichten).
+- Offline schreiben: Ohne Netz wartet eine Nachricht mit Uhr-Symbol auf dem Gerät und geht automatisch hinaus, sobald das Netz zurück ist, auch nach einem Neuladen der App. Doppelt kommt sie dabei nie an. Lehnt der Server sie ab (z. B. Event abgesagt), lässt sie sich erneut senden oder verwerfen. Beim Abmelden wird die Warteschlange geleert.
+- Der Event-Chat auf der Eventseite ist derselbe Verlauf wie unter *Chat*, mit Reaktionen, Haken und Tipp-Anzeige.
+- Web-Push für neue Nachrichten im Gruppenchat und in Event-Chats (Absender und Text, je Chat eine Benachrichtigung). Pushes aus anderen Gruppen zeigen ihren Inhalt, und ein Tipp darauf wechselt in die Gruppe.
 - Direktnachrichten sind gruppenübergreifend: ein Gespräch je Person, schreiben
   darf man Freunden und Personen aus den eigenen Gruppen.
 - Mitteilungen (Glocke oben) und Rundbriefe des Vorstands, auf Wunsch als
@@ -80,6 +86,9 @@ Thekenterminals.
   (Käufe mit Getränke- bzw. Speisenname, Aufladungen, Korrekturen).
 - Aufladen können Mitglieder **nicht selbst**. Vorstand und Administration buchen
   Guthaben in der Kasse über eine Mitgliederauswahl.
+- Die Notiz, die die Kasse beim Ein- oder Auszahlen angibt, steht dezent unter der
+  Buchung: im eigenen Verlauf des Mitglieds und im Verlauf in der Kasse. Andere
+  Mitglieder sehen sie nicht.
 - Das Guthaben darf wie bei der Strichliste ins Minus gehen.
 - Technisch ein unveränderliches Kassenbuch mit Idempotenzschlüssel gegen
   Doppelbuchungen: [docs/domains/ledger-and-finance.md](domains/ledger-and-finance.md)
@@ -98,15 +107,20 @@ Thekenterminals.
   beenden; Rückgängig am Terminal bucht dem Geber zurück und gibt den Platz
   wieder frei. Im Kontoauszug des Gebers steht „Runde: Name · Getränk“.
 
-## Bezahlen per Barcode
+## Bezahlen per Barcode oder aus dem Katalog
 
 - Unter *Bezahlen* (Menü und Dashboard) scannt das Mitglied den EAN-Barcode des
   Getränks mit der Handykamera, alternativ per Eingabe.
+- Alternativ wählt es oben *Aus Katalog wählen* und tippt das Getränk in einer
+  durchsuchbaren Liste an (Issue #122). Die Liste zeigt nur Getränke aus dem
+  Katalog der eigenen Gruppe, die freigegeben, im Sortiment und mit Preis
+  sind, auch solche ohne Barcode. Danach geht es genau wie nach einem Scan
+  weiter (gleiche Wahl, Buchung, Statistik und 10 Minuten Rückgängig).
 - Nach Bestätigung von Getränk und Preis wird vom Guthaben abgebucht.
 - Ein eigener Kauf lässt sich 10 Minuten lang rückgängig machen.
 - Bei einem laufenden Event mit Selbstbedienung, an dem das Mitglied
   teilnimmt, läuft der Kauf über das Event (Event- oder Kategoriepreis).
-- Sonst wählt das Mitglied nach dem Scan:
+- Sonst wählt das Mitglied nach dem Scan bzw. der Auswahl:
   - *Mit Guthaben bezahlen*: Preis aus dem Katalog der Gruppe, ohne Event;
     nur, wenn das Getränk dort einen Preis hat. Mit dem Haken *In die
     Statistik aufnehmen* lässt sich der Kauf aus der Statistik heraushalten.

@@ -34,7 +34,8 @@ import java.util.UUID
  *
  * Das Getränk darf aus dem Katalog der Gruppe stammen oder nur in der
  * Getränkedatenbank stehen. Ist die Statistik für die Person oder die Gruppe
- * ausgeschaltet, ist das Erfassen nicht möglich. Ein eigenes Fremdgetränk lässt
+ * ausgeschaltet, ist das Erfassen nicht möglich. Statt gescannt kann das
+ * Getränk auch aus dem Katalog der Gruppe gewählt sein (Issue #122). Ein eigenes Fremdgetränk lässt
  * sich wie ein eigener Kauf [REMOVE_WINDOW] lang wieder entfernen.
  */
 @Service
@@ -61,16 +62,16 @@ class ForeignDrinkService(
     ): ForeignDrinkDto {
         val caller = requireMember(principal)
         val key = requireKey(idempotencyKey)
-        val barcode = BarcodeScanRules.normalizeBarcode(request.barcode)
+        val selected = scanRules.resolve(request.barcode, request.drinkId)
         val sourceId = UUID.nameUUIDFromBytes("foreign-drink:${caller.id}:$key".toByteArray(StandardCharsets.UTF_8))
         recordRepository.findFirstByFeatureAndSourceId(StatisticFeature.FOREIGN_DRINK, sourceId)
             ?.takeIf { it.actorUserId == caller.id }
             ?.let { return toDto(it) }
 
-        val drink = scanRules.catalogDrink(barcode)
-        val library = if (drink == null) scanRules.libraryDrink(barcode) else null
+        val drink = selected.catalog
+        val library = selected.library
         if (drink == null && library == null) {
-            throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", barcode), ErrorCode.NOT_FOUND)
+            throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", selected.reference), ErrorCode.NOT_FOUND)
         }
         if (scanRules.atSelfServiceEvent(caller)) {
             throw ApiException(

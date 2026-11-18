@@ -56,7 +56,7 @@ Bilddateien, Fotos und Videos aus Moments (in 64-KiB-Blöcken, damit Videos gest
 
 ## 📲 Web-Push-Zustellung (`PushSender.kt`)
 
-Benachrichtigungen (z. B. Event-Einladungen und Erinnerungen, Rundnachrichten) werden über das standardisierte Web-Push-Protokoll (VAPID / RFC 8292) an Browser und PWA-Clients zugestellt. Der Push trägt **keine Nutzlast**: Er weckt nur den Service Worker, die Inhalte lädt der Client berechtigt aus `notifications` nach. Push-Abonnements gehören zum Konto, nicht zu einer Gruppe.
+Benachrichtigungen (z. B. Event-Einladungen und Erinnerungen, Rundnachrichten) werden über das standardisierte Web-Push-Protokoll (VAPID / RFC 8292) an Browser und PWA-Clients zugestellt. Der Push trägt Titel, Text, Ziel-Link und Gruppe als JSON, verschlüsselt nach RFC 8291 (`aes128gcm`) mit den Schlüsseln des Abonnements; der Push-Dienst sieht nur Chiffretext. Gesendet wird mit `Urgency: high`, damit Android-Geräte im Ruhemodus nicht verzögern. Push-Abonnements gehören zum Konto, nicht zu einer Gruppe.
 
 ```mermaid
 sequenceDiagram
@@ -70,7 +70,7 @@ sequenceDiagram
   Note over Base: Speichert PushSubscriptionEntity in PostgreSQL
   Note over Base: Ein Ereignis tritt ein (z. B. Event-Einladung)
   Base->>Push: send(target, message)
-  Push->>Gateway: POST <endpoint> (VAPID JWT Header, ohne Nutzlast)
+  Push->>Gateway: POST <endpoint> (VAPID JWT Header, verschlüsselte Nutzlast)
   alt Zustellung erfolgreich
     Gateway-->>Push: 201 Created
     Push-->>Base: PushDeliveryResult(success=true)
@@ -90,7 +90,7 @@ sequenceDiagram
 
 ## 💬 Chat (`ChatService.kt`, `ConversationService.kt`)
 
-Chats laufen ausschließlich über REST; es gibt keine WebSocket-Endpunkte. Die Oberfläche fragt geöffnete Chats regelmäßig neu ab (`CHAT_POLL_INTERVAL_MS`, 10 Sekunden).
+Chats laufen über REST. Änderungen meldet der Server sofort über die Live-Verbindung `GET /api/v1/live` (Server-Sent Events, `LiveUpdateHub`); die Signale tragen keinen Inhalt, die Oberfläche lädt danach über REST nach. Steht keine Live-Verbindung, fragt die Oberfläche geöffnete Chats wie bisher alle 10 Sekunden ab (`CHAT_POLL_INTERVAL_MS`). Neue Nachrichten im Gruppen- und Event-Chat lösen außerdem einen Web Push aus (`ChatNotifier`). Details in [Kommunikation & Push](../domains/chat-and-push-notifications.md#3-live-verbindung-server-sent-events).
 
 - **Gruppenchat und Direktchats**: `/api/v1/conversations` (Lesestand, Reaktionen, Infotafel).
 - **Event-Chat**: `/api/v1/events/{eventId}/chat` für Owner, Teilnehmer sowie Personen mit `chat.moderate` oder `event.manage`.

@@ -164,12 +164,24 @@ data class StatisticsDeletedDto(
     val deleted: Int
 )
 
-/** Fremdgetränk erfassen (Issue #110): nur der gescannte Strichcode. */
+/**
+ * Fremdgetränk erfassen (Issue #110): der gescannte Strichcode oder, statt
+ * dessen, die Katalog-ID eines aus dem Katalog gewählten Getränks (Issue #122).
+ */
 data class ForeignDrinkRequest(
-    @field:jakarta.validation.constraints.NotBlank(message = "barcode {validation.notBlank}")
     @field:jakarta.validation.constraints.Size(max = 128, message = "barcode {validation.size.max}")
-    val barcode: String? = null
-)
+    val barcode: String? = null,
+
+    @field:jakarta.validation.constraints.Size(max = 64, message = "drinkId {validation.size.max}")
+    val drinkId: String? = null
+) {
+    /** Genau eines: gescannter [barcode] oder aus dem Katalog gewählte [drinkId]. */
+    @get:com.fasterxml.jackson.annotation.JsonIgnore
+    @get:Schema(hidden = true)
+    @get:jakarta.validation.constraints.AssertTrue(message = "barcode/drinkId {validation.drinkSelection}")
+    val isDrinkSelected: Boolean
+        get() = barcode.isNullOrBlank() != drinkId.isNullOrBlank()
+}
 
 @Schema(description = "Ein erfasstes Fremdgetränk: nur in der Statistik, ohne Buchung und ohne Event")
 data class ForeignDrinkDto(

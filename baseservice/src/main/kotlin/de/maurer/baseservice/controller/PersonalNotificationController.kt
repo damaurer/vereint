@@ -24,6 +24,11 @@ class PersonalNotificationController(
         summary = "Persönliche Mitteilungen",
         description = "Ungelesene Direktnachrichten, offene Freundschaftsanfragen und frisch angenommene Freundschaften, neueste zuerst"
     )
-    fun list(): ResponseEntity<List<NotificationDto>> =
-        ResponseEntity.ok(personalAlertService.alerts(authContext.getRequiredPrincipal()))
+    fun list(): ResponseEntity<List<NotificationDto>> {
+        val principal = authContext.getRequiredPrincipal()
+        val alerts = personalAlertService.alerts(principal)
+        // Was der Service Worker hier lädt, ist auf dem Gerät angekommen.
+        personalAlertService.markDelivered(principal)
+        return ResponseEntity.ok(alerts)
+    }
 }

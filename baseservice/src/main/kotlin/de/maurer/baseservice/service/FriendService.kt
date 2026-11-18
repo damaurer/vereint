@@ -8,6 +8,7 @@ import de.maurer.baseservice.dto.FriendsOverviewDto
 import de.maurer.baseservice.dto.SharedGroupDto
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Messages
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.push.PushDispatcher
@@ -108,11 +109,11 @@ class FriendService(
         val friendship = when {
             existing == null -> friendshipRepository.save(
                 FriendshipEntity(pairKey = pairKey(caller.id, target.id), requester = caller, addressee = target)
-            ).also { push(target, PersonalAlertService.TYPE_FRIEND_REQUEST) }
+            ).also { push(target, caller, PersonalAlertService.TYPE_FRIEND_REQUEST) }
             existing.status == FriendshipStatus.pending && existing.addressee?.id == caller.id -> existing.apply {
                 status = FriendshipStatus.accepted
                 acceptedAt = Instant.now()
-            }.also { push(target, PersonalAlertService.TYPE_FRIEND_ACCEPTED) }
+            }.also { push(target, caller, PersonalAlertService.TYPE_FRIEND_ACCEPTED) }
             else -> existing
         }
         return toContact(target, statusOf(friendship, caller.id), friendship.acceptedAt, groups)
@@ -127,7 +128,7 @@ class FriendService(
         friendship.status = FriendshipStatus.accepted
         friendship.acceptedAt = Instant.now()
         val other = requireActiveUser(otherId)
-        push(other, PersonalAlertService.TYPE_FRIEND_ACCEPTED)
+        push(other, caller, PersonalAlertService.TYPE_FRIEND_ACCEPTED)
         return toContact(other, STATUS_FRIEND, friendship.acceptedAt, sharedGroups.between(caller.id, otherId))
     }
 
@@ -146,9 +147,20 @@ class FriendService(
             .map { it.status == FriendshipStatus.accepted }
             .orElse(false)
 
-    /** Push ohne Inhalt: Titel und Text liefert erst der autorisierte Abruf. */
-    private fun push(target: UserEntity, type: String) =
-        pushDispatcher.dispatch(listOf(target.id), PushMessage(title = PUSH_TITLE, body = "", type = type))
+    /** Push an [target] über eine Anfrage oder Annahme von [from]; ein Tipp öffnet die Freundesliste. */
+    private fun push(target: UserEntity, from: UserEntity, type: String) {
+        val prefix = if (type == PersonalAlertService.TYPE_FRIEND_REQUEST) "notification.friend.request" else "notification.friend.accepted"
+        pushDispatcher.dispatch(
+            listOf(target.id),
+            PushMessage(
+                title = Messages.defaultText(Msg("$prefix.title")).trim(),
+                body = Messages.defaultText(Msg("$prefix.body", from.displayName)).trim(),
+                type = type,
+                link = PersonalAlertService.FRIENDS_LINK,
+                tag = "$type-${from.id}"
+            )
+        )
+    }
 
     private fun requireActiveUser(userId: UUID): UserEntity =
         userRepository.findById(userId).filter { !it.disabled }.orElseThrow { notFound(userId) }
@@ -176,7 +188,6 @@ class FriendService(
     private fun notFound(userId: UUID) = ResourceNotFoundException(Msg("error.user.notFound", userId), ErrorCode.NOT_FOUND)
 
     companion object {
-        private const val PUSH_TITLE = "Vereint"
         const val STATUS_FRIEND = "friend"
         const val STATUS_INCOMING = "incoming"
         const val STATUS_OUTGOING = "outgoing"

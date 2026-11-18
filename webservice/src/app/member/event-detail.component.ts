@@ -9,7 +9,7 @@ import { AsyncState } from './async-state';
 import { MemberApiService, rsvpLabelKey, rsvpTone, type RsvpAnswer } from './member-api.service';
 import { eventStatusLabel, formatDateTime, formatEventWhen, formatTime } from './member-format';
 import type {
-  ChatMessageDto,
+  ConversationSummary,
   EventDetail,
   EventParticipant,
   EventStatus,
@@ -21,6 +21,7 @@ import { AvatarBadgeComponent, StatusBadgeComponent, type StatusTone } from '../
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
+import { ChatThreadComponent } from '../chat/chat-thread.component';
 
 interface EventDetailView {
   event: EventDetail;
@@ -29,9 +30,6 @@ interface EventDetailView {
   history: MomentSummaryDto[];
   profile: MemberProfile | null;
 }
-
-/** Abstand der Chat-Aktualisierung, solange die Seite offen ist. */
-export const EVENT_CHAT_POLL_MS = 10_000;
 
 /** In diesen Status ist der Event-Chat nur noch lesbar. */
 const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
@@ -44,12 +42,21 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
  * neutrale Fehlermeldung (`deny by default`). Kopf mit „Route öffnen“ nutzt die
  * Karten-App ausschließlich clientseitig. Eingeladene antworten über
  * `PUT /events/{id}/rsvp`; die Teilnehmerliste zeigt jede Antwort. Der
- * Event-Chat läuft über die Konversations-Endpunkte und wird alle zehn
- * Sekunden aktualisiert, solange die Seite offen ist.
+ * Event-Chat ist derselbe Verlauf wie unter „Chat“ ([ChatThreadComponent]):
+ * live, mit Haken, „schreibt gerade…“ und Offline-Versand.
  */
 @Component({
   selector: 'app-member-event-detail',
-  imports: [StateComponent, IconComponent, FormsModule, RouterLink, AvatarBadgeComponent, StatusBadgeComponent, TranslatePipe],
+  imports: [
+    StateComponent,
+    IconComponent,
+    FormsModule,
+    RouterLink,
+    AvatarBadgeComponent,
+    StatusBadgeComponent,
+    TranslatePipe,
+    ChatThreadComponent,
+  ],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="event-title">
@@ -189,46 +196,9 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
             <h2 id="event-chat-title" class="member-subtitle">{{ 'member.eventDetail.chat.heading' | t }}</h2>
             @if (chatError(); as error) {
               <p class="member-muted" role="status">{{ error }}</p>
-            } @else if (chatLoaded()) {
-              @if (messages().length === 0) {
-                <p class="member-muted">{{ 'member.eventDetail.chat.empty' | t }}</p>
-              } @else {
-                <ol class="chat-messages" aria-live="polite">
-                  @for (message of messages(); track message.id) {
-                    <li class="chat-message" [class.is-mine]="isMine(message, view.profile)">
-                      <span class="chat-sender">{{ message.senderName }}</span>
-                      <span class="chat-text">{{ message.message }}</span>
-                      <time class="chat-time" [attr.datetime]="message.createdAt">{{ formatDateTime(message.createdAt) }}</time>
-                    </li>
-                  }
-                </ol>
-              }
-              @if (chatReadOnly(view.event.status)) {
-                <p class="member-muted chat-closed">{{ 'member.eventDetail.chat.closed' | t }}</p>
-              }
-              <form class="chat-composer" (ngSubmit)="sendMessage()">
-                <label class="chat-field">
-                  <span class="visually-hidden">{{ 'member.eventDetail.chat.message' | t }}</span>
-                  <input
-                    name="chatDraft"
-                    [(ngModel)]="chatDraft"
-                    maxlength="4000"
-                    autocomplete="off"
-                    [placeholder]="'member.eventDetail.chat.placeholder' | t"
-                    [disabled]="chatReadOnly(view.event.status)"
-                  />
-                </label>
-                <button
-                  type="submit"
-                  class="member-button chat-send"
-                  [disabled]="chatReadOnly(view.event.status) || chatSending()"
-                >
-                  <vereint-icon name="send" /> {{ 'member.eventDetail.chat.send' | t }}
-                </button>
-              </form>
-              @if (chatSendError(); as error) {
-                <p class="member-hint rsvp-error" role="alert">{{ error }}</p>
-              }
+            } @else if (chatConversation(); as conversation) {
+              <!-- Derselbe Verlauf wie im Chat: Haken, „schreibt gerade…“, Offline-Versand. -->
+              <app-chat-thread [conversation]="conversation" [myId]="view.profile?.id ?? null" [embedded]="true" />
             } @else {
               <p class="member-muted">{{ 'member.eventDetail.chat.loading' | t }}</p>
             }
@@ -500,16 +470,9 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     { value: 'declined', labelKey: 'member.rsvp.decline' },
   ];
 
-  /** Event-Chat: Konversation, Nachrichten und Eingabe. */
-  protected readonly messages = signal<ChatMessageDto[]>([]);
-  protected readonly chatLoaded = signal(false);
+  /** Event-Chat: die Konversation als Eintrag für den gemeinsamen Chat-Verlauf. */
+  protected readonly chatConversation = signal<ConversationSummary | null>(null);
   protected readonly chatError = signal<string | null>(null);
-  protected readonly chatSending = signal(false);
-  protected readonly chatSendError = signal<string | null>(null);
-  protected chatDraft = '';
-  private conversationId: string | null = null;
-  private lastReadMessageId: string | null = null;
-  private pollTimer: ReturnType<typeof setInterval> | null = null;
   private chatSubscription?: Subscription;
 
   private get eventId(): string {
@@ -522,7 +485,6 @@ export class EventDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.load.destroy();
-    this.stopPolling();
     this.chatSubscription?.unsubscribe();
   }
 
@@ -601,74 +563,28 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     return READ_ONLY_CHAT_STATUS.includes(status);
   }
 
-  protected isMine(message: ChatMessageDto, profile: MemberProfile | null): boolean {
-    return !!profile && message.senderType === 'member' && message.senderId === profile.id;
-  }
-
-  /** Ermittelt die Konversation, lädt die Nachrichten und startet die Aktualisierung. */
+  /** Ermittelt die Konversation; Nachrichten, Lesestand und Senden übernimmt der Chat-Verlauf. */
   private openChat(eventId: string): void {
-    this.stopPolling();
     this.chatSubscription?.unsubscribe();
-    this.chatLoaded.set(false);
+    this.chatConversation.set(null);
     this.chatError.set(null);
     this.chatSubscription = this.api.getEventConversation(eventId).subscribe({
       next: (conversation) => {
-        this.conversationId = conversation.id;
-        this.refreshMessages();
-        if (isPlatformBrowser(this.platformId)) {
-          this.pollTimer = setInterval(() => this.refreshMessages(), EVENT_CHAT_POLL_MS);
-        }
+        const event = this.load.data()?.event;
+        this.chatConversation.set({
+          id: conversation.id,
+          type: 'event',
+          title: event?.title ?? '',
+          eventId,
+          partnerId: null,
+          partnerName: null,
+          lastMessage: null,
+          unreadCount: 0,
+          pinned: null,
+          canWrite: !!event && !this.chatReadOnly(event.status),
+        });
       },
       error: () => this.chatError.set(translate('member.eventDetail.chat.unavailable')),
-    });
-  }
-
-  /** Lädt die Nachrichten neu und setzt bei neuen Nachrichten den Lesestand. */
-  protected refreshMessages(): void {
-    const conversationId = this.conversationId;
-    if (!conversationId) return;
-    this.api.listConversationMessages(conversationId).subscribe({
-      next: (messages) => {
-        this.messages.set(messages);
-        this.chatLoaded.set(true);
-        this.markRead(conversationId, messages);
-      },
-      error: (error: unknown) => {
-        if (!this.chatLoaded()) this.chatError.set(describeApiError(error));
-      },
-    });
-  }
-
-  private markRead(conversationId: string, messages: ChatMessageDto[]): void {
-    const last = messages.at(-1);
-    if (!last || last.id === this.lastReadMessageId) return;
-    this.lastReadMessageId = last.id;
-    this.api.markConversationRead(conversationId).subscribe({ error: () => undefined });
-  }
-
-  private stopPolling(): void {
-    if (this.pollTimer) clearInterval(this.pollTimer);
-    this.pollTimer = null;
-  }
-
-  protected sendMessage(): void {
-    const message = this.chatDraft.trim();
-    const conversationId = this.conversationId;
-    const status = this.load.data()?.event.status;
-    if (!message || !conversationId || !status || this.chatReadOnly(status)) return;
-    this.chatSending.set(true);
-    this.chatSendError.set(null);
-    this.api.sendConversationMessage(conversationId, message).subscribe({
-      next: (sent) => {
-        this.chatSending.set(false);
-        this.chatDraft = '';
-        this.messages.update((list) => (list.some((m) => m.id === sent.id) ? list : [...list, sent]));
-        this.lastReadMessageId = sent.id;
-      },
-      error: (error: unknown) => {
-        this.chatSending.set(false);
-        this.chatSendError.set(describeApiError(error));
-      },
     });
   }
 

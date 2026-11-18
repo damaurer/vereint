@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import {
@@ -121,6 +121,26 @@ describe('NotificationsComponent', () => {
     expect(text).toContain('Erinnerung');
     expect(text).toContain('Abgesagt');
     expect(root.querySelector('.item-accept')).toBeNull();
+  });
+
+  it('opens the target from the title and marks the notification read', async () => {
+    api.list.mockReturnValue(
+      of([
+        { ...mockNotifications[0], id: 'n-6', title: 'Neuer Moment: Anstoßen', link: '/moments?momentId=m-1' },
+        { ...mockNotifications[1], id: 'n-7', title: 'Ohne Ziel' },
+      ]),
+    );
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    const targets = Array.from(root.querySelectorAll<HTMLAnchorElement>('.item-target'));
+    expect(targets.map((a) => a.getAttribute('href'))).toEqual(['/moments?momentId=m-1']);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    targets[0].click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(api.markRead).toHaveBeenCalledWith('n-6');
+    expect(navigate).toHaveBeenCalledWith('/moments?momentId=m-1');
   });
 
   it('answers an event invitation and marks it read', async () => {

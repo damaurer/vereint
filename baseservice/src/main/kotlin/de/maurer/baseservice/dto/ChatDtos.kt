@@ -1,6 +1,7 @@
 package de.maurer.baseservice.dto
 
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 import java.time.Instant
 
@@ -17,7 +18,16 @@ data class SendMessageRequest(
     val message: String? = null,
 
     @field:Size(max = 512, message = "imageUrl {validation.size.max}")
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
+
+    /**
+     * Von der App vergebene Id der Nachricht. Sendet die App nach einem
+     * Verbindungsabbruch erneut, liefert der Server die schon gespeicherte
+     * Nachricht zurück, statt eine zweite anzulegen.
+     */
+    @field:Size(max = 64, message = "clientId {validation.size.max}")
+    @field:Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "clientId {validation.clientId}")
+    val clientId: String? = null
 )
 
 /**
@@ -47,8 +57,34 @@ data class ChatMessageDto(
     val message: String,
     val imageUrl: String?,
     val createdAt: Instant,
-    val reactions: List<ChatReactionDto> = emptyList()
+    val reactions: List<ChatReactionDto> = emptyList(),
+    /** App-Id beim Senden (nur bei eigenen Nachrichten gesetzt). */
+    val clientId: String? = null,
+    /** Haken; nur bei eigenen Nachrichten. */
+    val receipt: MessageReceiptDto? = null
 )
+
+/**
+ * Stand einer eigenen Nachricht wie bei bekannten Messengern:
+ * - `sent`: beim Server angekommen (ein Haken)
+ * - `delivered`: auf den Geräten aller Empfänger angekommen (zwei Haken)
+ * - `read`: von allen Empfängern gelesen (zwei farbige Haken)
+ *
+ * In Gruppen zählen `delivered` und `read` mit, wie viele der `recipients`
+ * so weit sind; die Haken wechseln erst, wenn es alle sind.
+ */
+data class MessageReceiptDto(
+    val status: String,
+    val recipients: Int,
+    val delivered: Int,
+    val read: Int
+) {
+    companion object {
+        const val SENT = "sent"
+        const val DELIVERED = "delivered"
+        const val READ = "read"
+    }
+}
 
 /** Zusammengefasste Reaktionen auf eine Nachricht. */
 data class ChatReactionDto(

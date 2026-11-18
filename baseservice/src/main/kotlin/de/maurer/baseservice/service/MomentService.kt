@@ -111,7 +111,9 @@ class MomentService(
         if (recipients.isNotEmpty()) {
             val notifTitle = "Neuer Moment: ${saved.title}"
             val notifBody = "${caller.displayName} hat den Moment '${saved.title}' gestartet. Sei dabei!"
-            notificationService.notifyUsers(recipients, notifTitle, notifBody, NOTIFICATION_TYPE_MOMENT)
+            // Ein Tipp auf die Mitteilung öffnet genau diesen Moment.
+            val link = event?.let { "/events/${it.id}/moments?momentId=${saved.id}" } ?: "/moments?momentId=${saved.id}"
+            notificationService.notifyUsers(recipients, notifTitle, notifBody, NOTIFICATION_TYPE_MOMENT, link)
         }
 
         auditService.recordMomentAction(

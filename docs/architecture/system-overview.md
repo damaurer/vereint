@@ -84,7 +84,7 @@ graph TD
   - **Gemeinsame Getränkedatenbank**: gruppenübergreifende Stammdaten ohne Preise (`DrinkLibraryService`).
 - **Storage & Push**:
   - Integrierter S3-Client (`S3ObjectStorage`) für Bilder sowie Fotos und Videos aus Moments. Alle Dateien werden vor dem Speichern mit `DATA_ENCRYPTION_KEY` verschlüsselt und nur über berechtigungsgeprüfte Endpunkte des baseservice ausgeliefert, nie über direkte S3-Links.
-  - VAPID Web Push Sender (`VapidPushSender`, RFC 8292) ohne Nutzlast: Der Push weckt nur den Service Worker, die Inhalte lädt der Client berechtigt aus `notifications` nach.
+  - VAPID Web Push Sender (`VapidPushSender`, RFC 8292) mit nach RFC 8291 verschlüsselter Nutzlast (Titel, Text, Ziel): Der Service Worker zeigt den Push sofort an, ohne Sitzung und ohne Nachladen.
 
 ### 4. Daten- & Infrastrukturschicht
 - **PostgreSQL 18**: Relationale Datenbank für Transaktionsdaten, Buchungsjournal (Append-Only Trigger), Benutzer und Events.

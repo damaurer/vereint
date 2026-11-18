@@ -21,6 +21,9 @@ import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
+import de.maurer.baseservice.live.LiveEvent
+import de.maurer.baseservice.live.LiveUpdateHub
+import de.maurer.baseservice.live.TypingSignals
 import de.maurer.baseservice.repository.ChatMessageRepository
 import de.maurer.baseservice.repository.ChatReactionRepository
 import de.maurer.baseservice.repository.ConversationMemberRepository
@@ -61,7 +64,11 @@ class ConversationService(
     private val userService: UserService,
     private val chatService: ChatService,
     private val directMessageService: DirectMessageService,
-    private val statisticsRecorder: StatisticsRecorder
+    private val statisticsRecorder: StatisticsRecorder,
+    private val chatNotifier: ChatNotifier,
+    private val liveUpdateHub: LiveUpdateHub,
+    private val chatReceipts: ChatReceipts,
+    private val typingSignals: TypingSignals
 ) {
 
     fun listConversations(principal: UserPrincipal): List<ConversationSummaryDto> {
@@ -72,6 +79,8 @@ class ConversationService(
         val summaries = listOf(club) + events
         return summaries
             .distinctBy { it.id }
+            // Die Liste zeigt die neueste Nachricht: damit ist der Chat zugestellt.
+            .onEach { chatReceipts.delivered(it, caller) }
             .map { toSummary(it, caller, principal) }
             .sortedWith(
                 compareBy<ConversationSummaryDto> { it.type != TYPE_CLUB }
@@ -89,33 +98,70 @@ class ConversationService(
     fun listMessages(conversationId: UUID, principal: UserPrincipal): List<ChatMessageDto> {
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireReadable(conversationId, caller, principal)
+        chatReceipts.delivered(conversation, caller)
         val messages = chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(conversation.id)
-        return withReactions(messages, caller)
+        val receipts = chatReceipts.receiptsFor(conversation, messages, caller, chatNotifier.audienceOf(conversation))
+        return withReactions(messages, caller).map { dto ->
+            receipts[UUID.fromString(dto.id)]?.let { dto.copy(receipt = it) } ?: dto
+        }
     }
 
     fun sendMessage(conversationId: UUID, request: SendMessageRequest, principal: UserPrincipal): ChatMessageDto {
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireReadable(conversationId, caller, principal)
+        // Erneutes Senden nach Verbindungsabbruch: die schon gespeicherte Nachricht zurückgeben.
+        val clientId = request.clientId?.trim()?.ifBlank { null }
+        if (clientId != null) {
+            chatMessageRepository.findBySenderIdAndClientId(caller.id, clientId).orElse(null)?.let { existing ->
+                if (existing.conversation?.id != conversation.id) {
+                    throw InvalidRequestException(Msg("error.chat.clientIdUsed"), ErrorCode.INVALID_REQUEST)
+                }
+                return ownMessageDto(existing, conversation, caller)
+            }
+        }
         conversation.event?.let { chatService.requireEventOpenForChat(it) }
         val saved = chatMessageRepository.save(
             ChatMessageEntity(
                 conversation = conversation,
                 sender = caller,
                 message = chatService.requireMessageText(request.message),
-                imageUrl = chatService.normalizeImageUrl(request.imageUrl)
+                imageUrl = chatService.normalizeImageUrl(request.imageUrl),
+                clientId = clientId
             )
         )
         chatService.recordMessage(saved, caller, conversation.event)
         // Eigene Nachrichten gelten als gelesen.
         membership(conversation, caller).lastReadAt = saved.createdAt
-        return chatService.toMessageDto(saved)
+        return ownMessageDto(saved, conversation, caller)
     }
 
     fun markRead(conversationId: UUID, principal: UserPrincipal): ConversationSummaryDto {
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireReadable(conversationId, caller, principal)
-        membership(conversation, caller).lastReadAt = Instant.now()
+        val member = membership(conversation, caller)
+        val previousRead = member.lastReadAt
+        member.lastReadAt = Instant.now()
+        chatReceipts.read(conversation, caller, member, previousRead)
+        // Zähler auf den anderen Geräten der Person gleich mitziehen.
+        liveUpdateHub.publish(listOf(caller.id), LiveEvent(LiveEvent.READ, TenantContext.stammtischId()?.toString(), conversation.id.toString()))
         return toSummary(conversation, caller, principal)
+    }
+
+    /**
+     * „schreibt gerade…“: meldet den anderen Lesenden, dass [principal] tippt.
+     * Nur wer schreiben darf, sendet das Signal.
+     */
+    fun typing(conversationId: UUID, principal: UserPrincipal) {
+        val caller = userService.getOrCreateUser(principal)
+        val conversation = requireReadable(conversationId, caller, principal)
+        conversation.event?.let { chatService.requireEventOpenForChat(it) }
+        typingSignals.typing(
+            userId = caller.id,
+            name = caller.displayName,
+            conversationId = conversation.id,
+            stammtischId = TenantContext.stammtischId()?.toString(),
+            audience = chatNotifier.audienceOf(conversation)
+        )
     }
 
     fun toggleReaction(
@@ -151,6 +197,7 @@ class ConversationService(
             }
         }
         chatReactionRepository.flush()
+        chatNotifier.changed(conversation)
         return withReactions(listOf(message), caller).first()
     }
 
@@ -277,8 +324,17 @@ class ConversationService(
                     ChatReactionDto(emoji = emoji, count = list.size, reactedByMe = list.any { it.user?.id == caller.id })
                 }
                 .sortedByDescending { it.count }
-            chatService.toMessageDto(message).copy(reactions = reactions)
+            chatService.toMessageDto(message).copy(
+                reactions = reactions,
+                clientId = message.clientId.takeIf { message.sender?.id == caller.id }
+            )
         }
+    }
+
+    /** Eigene Nachricht mit App-Id und aktuellen Haken. */
+    private fun ownMessageDto(message: ChatMessageEntity, conversation: ConversationEntity, caller: UserEntity): ChatMessageDto {
+        val receipt = chatReceipts.receiptsFor(conversation, listOf(message), caller, chatNotifier.audienceOf(conversation))[message.id]
+        return chatService.toMessageDto(message).copy(clientId = message.clientId, receipt = receipt)
     }
 
     private fun parseUuid(value: String?, field: String): UUID {

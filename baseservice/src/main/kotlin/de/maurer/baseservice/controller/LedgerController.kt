@@ -87,12 +87,20 @@ class LedgerController(
     @PostMapping("/purchases/preview")
     @Operation(
         summary = "Barcodekauf vorab prüfen",
-        description = "Liefert Getränk, Preis je laufendem Event, eigenes Guthaben und außerhalb eines Events die Wahl zwischen Guthabenkauf und Fremdgetränk zu einem gescannten Barcode, ohne zu buchen"
+        description = "Liefert Getränk, Preis je laufendem Event, eigenes Guthaben und außerhalb eines Events die Wahl zwischen Guthabenkauf und Fremdgetränk zu einem gescannten Barcode oder einem aus dem Katalog gewählten Getränk (drinkId), ohne zu buchen"
     )
     fun previewPurchase(@Valid @RequestBody request: PurchasePreviewRequest): ResponseEntity<PurchasePreviewDto> {
         val principal = authContext.getRequiredPrincipal()
         return ResponseEntity.ok(ledgerService.previewBarcodePurchase(request, principal))
     }
+
+    @GetMapping("/purchases/catalog")
+    @Operation(
+        summary = "Getränke zur Auswahl ohne Scan",
+        description = "Listet die Getränke des Katalogs der Gruppe, die ein Mitglied statt zu scannen auswählen und bezahlen kann (freigegeben, aktiv, mit Preis); danach weiter mit der Vorschau per drinkId"
+    )
+    fun listPayableDrinks(): ResponseEntity<List<PurchasableDrinkDto>> =
+        ResponseEntity.ok(ledgerService.listPayableDrinks(authContext.getRequiredPrincipal()))
 
     @PostMapping("/purchases/{entryId}/undo")
     @Operation(

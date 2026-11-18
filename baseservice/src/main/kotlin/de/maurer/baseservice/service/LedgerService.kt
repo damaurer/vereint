@@ -54,6 +54,7 @@ class LedgerService(
     private val userService: UserService,
     private val auditService: AuditService,
     private val snapshots: LedgerSnapshots,
+    private val notes: LedgerNotes,
     private val statisticsRecorder: StatisticsRecorder,
     private val scanRules: BarcodeScanRules
 ) {
@@ -94,7 +95,9 @@ class LedgerService(
         val caller = userService.getOrCreateUser(principal)
         requireCanReadMember(caller, principal, memberId)
         requireUser(memberId)
-        return snapshots.attach(ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(memberId)).map { toDto(it) }
+        val entries = snapshots.attach(ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(memberId))
+        val notesById = notes.notesFor(entries)
+        return entries.map { toDto(it, notesById[it.id]) }
     }
 
     @Transactional(readOnly = true)
@@ -367,12 +370,13 @@ class LedgerService(
             )
         }
 
-        val barcode = normalizeBarcode(request.barcode)
-        val drink = resolveDrinkByBarcode(barcode)
+        val selected = scanRules.resolve(request.barcode, request.drinkId)
+        val barcode = selected.barcode
+        val drink = requireCatalogDrink(selected)
         val eventDrink = eventDrinkRepository.findByEventIdAndDrinkId(event.id, drink.id).orElseThrow {
             ApiException(
                 ErrorCode.DRINK_NOT_IN_EVENT,
-                Msg("error.ledger.drinkNotInEvent", barcode),
+                Msg("error.ledger.drinkNotInEvent", selected.reference),
                 HttpStatus.NOT_FOUND
             )
         }
@@ -407,7 +411,7 @@ class LedgerService(
                 actor = caller,
                 reversesEntry = null,
                 auditAction = AuditService.ACTION_LEDGER_PURCHASE,
-                note = "event=${event.id}; barcode=$barcode",
+                note = "event=${event.id}; ${selectionNote(selected)}",
                 snapshotFactory = {
                     PurchaseSnapshotEntity(
                         ledgerEntry = it,
@@ -445,8 +449,9 @@ class LedgerService(
     fun previewBarcodePurchase(request: PurchasePreviewRequest, principal: UserPrincipal): PurchasePreviewDto {
         val caller = userService.getOrCreateUser(principal)
         requireMember(caller, principal)
-        val barcode = normalizeBarcode(request.barcode)
-        val drink = scanRules.catalogDrink(barcode)
+        val selected = scanRules.resolve(request.barcode, request.drinkId)
+        val barcode = selected.barcode
+        val drink = selected.catalog
         val requestedEventId = request.eventId?.trim()?.ifBlank { null }?.let { parseId(it, "eventId") }
 
         val options = drink?.let { eventOptions(it, caller, principal, requestedEventId) }.orEmpty()
@@ -464,9 +469,9 @@ class LedgerService(
             )
         }
 
-        val library = if (drink == null) scanRules.libraryDrink(barcode) else null
+        val library = selected.library
         if (drink == null && library == null) {
-            throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", barcode), ErrorCode.NOT_FOUND)
+            throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", selected.reference), ErrorCode.NOT_FOUND)
         }
         val name = drink?.name ?: library!!.name
         // Mit Event-Bezug oder während eines laufenden Events mit Selbstbedienung: kein Kauf ohne Event.
@@ -528,6 +533,30 @@ class LedgerService(
             }
 
     /**
+     * Getränke, die ein Mitglied statt zu scannen aus dem Katalog der Gruppe
+     * wählen kann (Issue #122): freigegeben, aktiv und mit Preis. Nach der
+     * Auswahl geht es mit [previewBarcodePurchase] (Katalog-ID statt Strichcode)
+     * weiter wie nach einem Scan. Nur der Katalog der aktuellen Gruppe ist
+     * sichtbar.
+     */
+    @Transactional(readOnly = true)
+    fun listPayableDrinks(principal: UserPrincipal): List<PurchasableDrinkDto> {
+        val caller = userService.getOrCreateUser(principal)
+        requireMember(caller, principal)
+        return scanRules.payableCatalogDrinks().map {
+            PurchasableDrinkDto(
+                id = it.id.toString(),
+                name = it.name,
+                category = it.category,
+                imageReference = it.imageReference,
+                unitPrice = it.defaultPrice.setScale(2),
+                currency = normalizeCurrency(it.currency),
+                volumeMl = it.volumeMl
+            )
+        }
+    }
+
+    /**
      * Kauf mit Guthaben ohne Event (Issue #110): nur, solange das Mitglied an
      * keinem laufenden Event mit Selbstbedienung teilnimmt (dort gilt
      * [purchaseByBarcode]). Es gilt der Preis aus dem Katalog der Gruppe; ohne
@@ -545,8 +574,9 @@ class LedgerService(
         val caller = userService.getOrCreateUser(principal)
         requireMember(caller, principal)
         val key = requireIdempotencyKey(idempotencyKey)
-        val barcode = normalizeBarcode(request.barcode)
-        val drink = resolveDrinkByBarcode(barcode)
+        val selected = scanRules.resolve(request.barcode, request.drinkId)
+        val barcode = selected.barcode
+        val drink = requireCatalogDrink(selected)
         val replay = ledgerEntryRepository.findByIdempotencyKey(key).isPresent
         if (!replay && scanRules.atSelfServiceEvent(caller)) {
             throw ApiException(
@@ -582,7 +612,7 @@ class LedgerService(
                 source = PurchaseSource.pwaBarcode,
                 actor = caller,
                 auditAction = AuditService.ACTION_LEDGER_PURCHASE,
-                note = "credit; barcode=$barcode; statistics=$recordStatistics",
+                note = "credit; ${selectionNote(selected)}; statistics=$recordStatistics",
                 recordStatistics = recordStatistics,
                 snapshotFactory = {
                     PurchaseSnapshotEntity(
@@ -834,7 +864,7 @@ class LedgerService(
         val existing = ledgerEntryRepository.findByIdempotencyKey(cmd.key).orElse(null)
         if (existing != null) {
             if (matchesReplay(existing, cmd.entryType, cmd.member, cmd.amount, cmd.currency)) {
-                return toDto(snapshots.attach(existing))
+                return toDto(snapshots.attach(existing), notes.noteFor(existing))
             }
             throw IdempotencyConflictException(
                 Msg("error.idempotency.conflict", cmd.key),
@@ -871,14 +901,17 @@ class LedgerService(
         } else if (cmd.recordStatistics) {
             statisticsRecorder.ledgerEntry(saved)
         }
+        val note = LedgerNotes.normalize(cmd.note)
+        // Das Notizfeld muss zuletzt stehen: LedgerNotes liest es von dort für die Anzeige.
         auditService.recordLedgerEntry(
             cmd.actor,
             cmd.auditAction,
             saved.id,
             "type=${cmd.entryType}; member=${cmd.member.id}; amount=${cmd.amount.setScale(2)} ${cmd.currency}; " +
-                "reverses=${cmd.reversesEntry?.id ?: "-"}; note=${cmd.note?.trim()?.ifBlank { null } ?: "-"}"
+                "reverses=${cmd.reversesEntry?.id ?: "-"}; note=${note ?: "-"}"
         )
-        return toDto(saved)
+        val shownNote = note.takeIf { cmd.entryType == LedgerEntryType.topup || cmd.entryType == LedgerEntryType.payout }
+        return toDto(saved, shownNote)
     }
 
     private fun matchesReplay(
@@ -994,11 +1027,14 @@ class LedgerService(
      * Löst einen Barcode auf ein freigegebenes, aktives Getränk auf. Nicht freigegebene
      * oder inaktive Getränke werden wie ein unbekannter Barcode behandelt.
      */
-    private fun resolveDrinkByBarcode(barcode: String): DrinkCatalogEntity =
-        scanRules.catalogDrink(barcode)
-            ?: throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", barcode), ErrorCode.NOT_FOUND)
+    /** Getränk aus dem Katalog der Gruppe; ein Eintrag nur in der Getränkedatenbank reicht zum Bezahlen nicht. */
+    private fun requireCatalogDrink(selected: BarcodeScanRules.SelectedDrink): DrinkCatalogEntity =
+        selected.catalog
+            ?: throw ResourceNotFoundException(Msg("error.drink.barcodeNotFound", selected.reference), ErrorCode.NOT_FOUND)
 
-    private fun normalizeBarcode(value: String?): String = BarcodeScanRules.normalizeBarcode(value)
+    /** Herkunft des Getränks für die Buchungsnotiz: gescannt oder aus dem Katalog gewählt. */
+    private fun selectionNote(selected: BarcodeScanRules.SelectedDrink): String =
+        selected.barcode?.let { "barcode=$it" } ?: "catalog=${selected.catalog?.id}"
 
     /** Auch frühere Mitglieder: Kontoauszüge bleiben nach dem Austritt lesbar. */
     private fun requireUser(id: UUID): UserEntity = members.requireKnownUser(id)
@@ -1036,7 +1072,7 @@ class LedgerService(
         return trimmed.uppercase()
     }
 
-    private fun toDto(entry: LedgerEntryEntity): LedgerEntryDto {
+    private fun toDto(entry: LedgerEntryEntity, note: String? = null): LedgerEntryDto {
         val snapshot = entry.purchaseSnapshot?.let {
             PurchaseSnapshotDto(
                 itemType = it.itemType,
@@ -1072,7 +1108,8 @@ class LedgerService(
             tallyCategoryName = entry.tallyCategory?.name,
             roundId = entry.round?.id?.toString(),
             beneficiaryId = entry.beneficiary?.id?.toString(),
-            beneficiaryDisplayName = entry.beneficiary?.displayName
+            beneficiaryDisplayName = entry.beneficiary?.displayName,
+            note = note
         )
     }
 

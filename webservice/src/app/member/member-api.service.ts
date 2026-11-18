@@ -21,6 +21,8 @@ import type {
   MomentSummaryDto,
   MomentTypeDto,
   PurchasePreview,
+  PurchasableDrink,
+  DrinkRef,
   ForeignDrink,
   RsvpStatus,
   SaveMomentReactionRequest,
@@ -121,48 +123,59 @@ export class MemberApiService {
     return this.api.get<LedgerEntry[]>(`/ledger/members/${encodeURIComponent(memberId)}/entries`);
   }
 
-  /** Getränk, Preis und Guthaben zu einem gescannten Strichcode (`POST /api/v1/ledger/purchases/preview`). */
-  previewPurchase(barcode: string, eventId?: string): Observable<PurchasePreview> {
+  /**
+   * Getränke des Gruppenkatalogs, die man statt zu scannen wählen und bezahlen
+   * kann (`GET /api/v1/ledger/purchases/catalog`, Issue #122).
+   */
+  listPayableDrinks(): Observable<PurchasableDrink[]> {
+    return this.api.get<PurchasableDrink[]>('/ledger/purchases/catalog');
+  }
+
+  /**
+   * Getränk, Preis und Guthaben zu einem gescannten Strichcode oder einem aus dem
+   * Katalog gewählten Getränk (`POST /api/v1/ledger/purchases/preview`).
+   */
+  previewPurchase(drink: DrinkRef, eventId?: string): Observable<PurchasePreview> {
     return this.api.post<PurchasePreview>(
       '/ledger/purchases/preview',
-      eventId ? { barcode, eventId } : { barcode },
+      eventId ? { ...drinkBody(drink), eventId } : drinkBody(drink),
     );
   }
 
-  /** Bezahlt ein gescanntes Getränk mit Guthaben (`POST /api/v1/ledger/purchases`). */
+  /** Bezahlt ein gescanntes oder gewähltes Getränk am Event mit Guthaben (`POST /api/v1/ledger/purchases`). */
   purchaseByBarcode(
     eventId: string,
-    barcode: string,
+    drink: DrinkRef,
     idempotencyKey: string,
   ): Observable<LedgerEntry> {
     return this.api.post<LedgerEntry>(
       '/ledger/purchases',
-      { eventId, barcode },
+      { eventId, ...drinkBody(drink) },
       { 'Idempotency-Key': idempotencyKey },
     );
   }
 
   /**
-   * Bezahlt ein gescanntes Getränk ohne Event mit Guthaben zum Katalogpreis
+   * Bezahlt ein gescanntes oder gewähltes Getränk ohne Event mit Guthaben zum Katalogpreis
    * (`POST /api/v1/ledger/purchases/credit`); mit `recordStatistics = false` ohne Statistikeintrag.
    */
   purchaseWithCredit(
-    barcode: string,
+    drink: DrinkRef,
     recordStatistics: boolean,
     idempotencyKey: string,
   ): Observable<LedgerEntry> {
     return this.api.post<LedgerEntry>(
       '/ledger/purchases/credit',
-      { barcode, recordStatistics },
+      { ...drinkBody(drink), recordStatistics },
       { 'Idempotency-Key': idempotencyKey },
     );
   }
 
-  /** Erfasst ein gescanntes Getränk nur für die Statistik (`POST /api/v1/statistics/foreign-drinks`). */
-  recordForeignDrink(barcode: string, idempotencyKey: string): Observable<ForeignDrink> {
+  /** Erfasst ein gescanntes oder gewähltes Getränk nur für die Statistik (`POST /api/v1/statistics/foreign-drinks`). */
+  recordForeignDrink(drink: DrinkRef, idempotencyKey: string): Observable<ForeignDrink> {
     return this.api.post<ForeignDrink>(
       '/statistics/foreign-drinks',
-      { barcode },
+      drinkBody(drink),
       { 'Idempotency-Key': idempotencyKey },
     );
   }
@@ -241,6 +254,11 @@ export class MemberApiService {
       ? this.api.put<MomentReactionDto>(`/moment-config/reactions/${encodeURIComponent(id)}`, payload)
       : this.api.post<MomentReactionDto>('/moment-config/reactions', payload);
   }
+}
+
+/** Anfragekörper: Strichcode als Text oder Katalog-ID eines gewählten Getränks. */
+function drinkBody(drink: DrinkRef): { barcode: string } | { drinkId: string } {
+  return typeof drink === 'string' ? { barcode: drink } : { drinkId: drink.drinkId };
 }
 
 /** `?eventId=…` für Moment-Listen, die auf ein Event gefiltert werden. */

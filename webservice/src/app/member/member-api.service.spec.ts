@@ -19,6 +19,36 @@ describe('MemberApiService', () => {
 
   afterEach(() => httpMock.verify());
 
+  it('lists the payable catalogue drinks', () => {
+    service.listPayableDrinks().subscribe();
+    const req = httpMock.expectOne('/api/v1/ledger/purchases/catalog');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
+  it('sends a scanned barcode or a catalogue drink id when previewing, paying and recording', () => {
+    service.previewPurchase('4006381333931').subscribe();
+    expect(httpMock.expectOne('/api/v1/ledger/purchases/preview').request.body).toEqual({
+      barcode: '4006381333931',
+    });
+    service.previewPurchase({ drinkId: 'd-1' }).subscribe();
+    expect(httpMock.expectOne('/api/v1/ledger/purchases/preview').request.body).toEqual({ drinkId: 'd-1' });
+
+    service.purchaseByBarcode('e-1', { drinkId: 'd-1' }, 'k-1').subscribe();
+    const event = httpMock.expectOne('/api/v1/ledger/purchases');
+    expect(event.request.body).toEqual({ eventId: 'e-1', drinkId: 'd-1' });
+    expect(event.request.headers.get('Idempotency-Key')).toBe('k-1');
+
+    service.purchaseWithCredit({ drinkId: 'd-1' }, false, 'k-2').subscribe();
+    expect(httpMock.expectOne('/api/v1/ledger/purchases/credit').request.body).toEqual({
+      drinkId: 'd-1',
+      recordStatistics: false,
+    });
+
+    service.recordForeignDrink({ drinkId: 'd-1' }, 'k-3').subscribe();
+    expect(httpMock.expectOne('/api/v1/statistics/foreign-drinks').request.body).toEqual({ drinkId: 'd-1' });
+  });
+
   it('calls the profile endpoint', () => {
     service.loadProfile().subscribe();
     const req = httpMock.expectOne('/api/v1/users/me');

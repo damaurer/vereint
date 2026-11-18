@@ -4,6 +4,10 @@ import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { ApiError } from '../api/api-client.service';
 import type { ChatMessageDto, EventDetail, EventParticipant, MemberProfile, MomentSessionDto, MomentSummaryDto } from '../api/api.types';
+import { signal } from '@angular/core';
+import { AuthService } from '../auth/auth.service';
+import { ChatApiService } from '../chat/chat-api.service';
+import { ChatUnreadStore } from '../chat/chat-unread.store';
 import { EventDetailComponent } from './event-detail.component';
 import { MemberApiService } from './member-api.service';
 
@@ -110,6 +114,13 @@ describe('EventDetailComponent', () => {
     sendConversationMessage: ReturnType<typeof vi.fn>;
     markConversationRead: ReturnType<typeof vi.fn>;
   };
+  let chatApi: {
+    messages: ReturnType<typeof vi.fn>;
+    send: ReturnType<typeof vi.fn>;
+    markRead: ReturnType<typeof vi.fn>;
+    toggleReaction: ReturnType<typeof vi.fn>;
+    typing: ReturnType<typeof vi.fn>;
+  };
 
   const create = async () => {
     TestBed.configureTestingModule({
@@ -117,6 +128,9 @@ describe('EventDetailComponent', () => {
       providers: [
         provideRouter([]),
         { provide: MemberApiService, useValue: api },
+        { provide: ChatApiService, useValue: chatApi },
+        { provide: ChatUnreadStore, useValue: { count: signal(0), refresh: vi.fn() } },
+        { provide: AuthService, useValue: { getSession: () => Promise.resolve({ uid: 'kc-1', stammtisch: null }) } },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: (key: string) => (key === 'eventId' ? 'e-1' : null) } } },
@@ -149,6 +163,13 @@ describe('EventDetailComponent', () => {
         of({ ...chatMessages[0], id: 'msg-2', senderId: 'u-1', senderName: 'Alice', message }),
       ),
       markConversationRead: vi.fn(() => of({})),
+    };
+    chatApi = {
+      messages: vi.fn(() => of(chatMessages)),
+      send: vi.fn(),
+      markRead: vi.fn(() => of({})),
+      toggleReaction: vi.fn(),
+      typing: vi.fn(() => of(undefined)),
     };
   });
 
@@ -236,49 +257,27 @@ describe('EventDetailComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('.detail-chip-round')).toBeNull();
   });
 
-  it('shows the event chat, marks it read and sends messages', async () => {
+  it('embeds the shared chat thread for the event chat', async () => {
     const fixture = await create();
-    expect(api.getEventConversation).toHaveBeenCalledWith('e-1');
-    expect(api.listConversationMessages).toHaveBeenCalledWith('c-9');
-    expect(api.markConversationRead).toHaveBeenCalledWith('c-9');
-    expect(html(fixture)).toContain('Wer bringt Kohle mit?');
-
-    const cmp = fixture.componentInstance as unknown as { chatDraft: string; sendMessage(): void };
-    cmp.chatDraft = '  Ich!  ';
-    cmp.sendMessage();
+    await fixture.whenStable();
     fixture.detectChanges();
-    expect(api.sendConversationMessage).toHaveBeenCalledWith('c-9', 'Ich!');
-    expect(html(fixture)).toContain('Ich!');
-    expect(cmp.chatDraft).toBe('');
+    const root = fixture.nativeElement as HTMLElement;
+    expect(api.getEventConversation).toHaveBeenCalledWith('e-1');
+    expect(chatApi.messages).toHaveBeenCalledWith('c-9', 'event');
+    expect(chatApi.markRead).toHaveBeenCalledWith('c-9', 'event');
+    const thread = root.querySelector('section.event-chat app-chat-thread');
+    expect(thread?.textContent).toContain('Wer bringt Kohle mit?');
+    // Eingebettet: ohne eigene Kopfzeile, mit Eingabefeld.
+    expect(thread?.querySelector('.chat-thread-head')).toBeNull();
+    expect(thread?.querySelector('.chat-composer input')).toBeTruthy();
   });
 
-  it('polls the chat while the page is open and stops on destroy', async () => {
-    vi.useFakeTimers();
-    try {
-      const fixture = await create();
-      expect(api.listConversationMessages).toHaveBeenCalledTimes(1);
-      vi.advanceTimersByTime(10_000);
-      expect(api.listConversationMessages).toHaveBeenCalledTimes(2);
-      // Gleiche letzte Nachricht: kein erneutes Lesen.
-      expect(api.markConversationRead).toHaveBeenCalledTimes(1);
-      fixture.destroy();
-      vi.advanceTimersByTime(30_000);
-      expect(api.listConversationMessages).toHaveBeenCalledTimes(2);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('disables the chat composer for cancelled events', async () => {
+  it('shows the event chat read-only for cancelled events', async () => {
     api.getEvent.mockReturnValue(of({ ...event, status: 'cancelled' }));
     const fixture = await create();
     const root = fixture.nativeElement as HTMLElement;
-    expect((root.querySelector('.chat-composer input') as HTMLInputElement).disabled).toBe(true);
-    expect((root.querySelector('.chat-send') as HTMLButtonElement).disabled).toBe(true);
-    const cmp = fixture.componentInstance as unknown as { chatDraft: string; sendMessage(): void };
-    cmp.chatDraft = 'Hallo';
-    cmp.sendMessage();
-    expect(api.sendConversationMessage).not.toHaveBeenCalled();
+    expect(root.querySelector('section.event-chat .chat-composer')).toBeNull();
+    expect(html(fixture)).toContain('kannst du nicht mehr schreiben');
   });
 
   it('shows a hint when the chat is not available', async () => {

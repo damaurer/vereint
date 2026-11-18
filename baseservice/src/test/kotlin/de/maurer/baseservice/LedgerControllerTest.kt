@@ -5,6 +5,7 @@ import de.maurer.baseservice.dto.CorrectionRequest
 import de.maurer.baseservice.dto.LedgerEntryDto
 import de.maurer.baseservice.dto.MemberBalanceDto
 import de.maurer.baseservice.dto.PayoutRequest
+import de.maurer.baseservice.dto.PurchasableDrinkDto
 import de.maurer.baseservice.dto.PurchaseRequest
 import de.maurer.baseservice.dto.TopupRequest
 import de.maurer.baseservice.security.UserPrincipal
@@ -155,6 +156,60 @@ class LedgerControllerTest {
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.code").value("validation_failed"))
             .andExpect(jsonPath("$.traceId").exists())
+    }
+
+    @Test
+    fun `POST purchases accepts a catalogue drink instead of a barcode`() {
+        `when`(ledgerService.purchaseByBarcode(anyPurchase(), anyKey(), anyPrincipal()))
+            .thenReturn(sampleEntry("purchase").copy(source = "pwaBarcode"))
+
+        mockMvc.perform(
+            post("/api/v1/ledger/purchases")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", "purchase-2")
+                .content("{\"eventId\":\"${UUID.randomUUID()}\",\"drinkId\":\"${UUID.randomUUID()}\"}")
+                .with(jwt().jwt { it.subject("sub-member").claim("realm_access", mapOf("roles" to listOf("member"))) })
+        )
+            .andExpect(status().isCreated)
+    }
+
+    @Test
+    fun `POST purchases rejects a barcode together with a catalogue drink with 400`() {
+        mockMvc.perform(
+            post("/api/v1/ledger/purchases/credit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Idempotency-Key", "purchase-3")
+                .content("{\"barcode\":\"4000000000001\",\"drinkId\":\"${UUID.randomUUID()}\"}")
+                .with(jwt().jwt { it.subject("sub-member") })
+        )
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.code").value("validation_failed"))
+    }
+
+    @Test
+    fun `GET purchases catalog lists the payable catalogue drinks`() {
+        `when`(ledgerService.listPayableDrinks(anyPrincipal())).thenReturn(
+            listOf(
+                PurchasableDrinkDto(
+                    id = UUID.randomUUID().toString(), name = "Helles", category = "Bier", imageReference = null,
+                    unitPrice = BigDecimal("2.50"), currency = "EUR", volumeMl = 500
+                )
+            )
+        )
+
+        mockMvc.perform(
+            get("/api/v1/ledger/purchases/catalog")
+                .with(jwt().jwt { it.subject("sub-member").claim("realm_access", mapOf("roles" to listOf("member"))) })
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].name").value("Helles"))
+            .andExpect(jsonPath("$[0].unitPrice").value(2.5))
+    }
+
+    @Test
+    fun `GET purchases catalog returns 401 when unauthenticated`() {
+        mockMvc.perform(get("/api/v1/ledger/purchases/catalog"))
+            .andExpect(status().isUnauthorized)
     }
 
     @Test

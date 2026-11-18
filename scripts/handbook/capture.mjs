@@ -15,7 +15,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
-import { APP_URL, PEOPLE, SECOND_GROUP_NAME, login, seedAppData, seedKeycloakUsers } from './seed.mjs';
+import { APP_URL, PEOPLE, SCAN_CHOICE_BARCODE, SECOND_GROUP_NAME, apiFor, login, seedAppData, seedKeycloakUsers, waitForSettled } from './seed.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(HERE, '../../docs/handbuch/bilder');
@@ -27,7 +27,7 @@ const TABLET = { viewport: { width: 1180, height: 820 }, deviceScaleFactor: 2, h
 const DESKTOP = { viewport: { width: 1280, height: 860 }, deviceScaleFactor: 2 };
 
 const settle = async (page) => {
-  await page.waitForLoadState('networkidle');
+  await waitForSettled(page);
   await page.waitForTimeout(600);
 };
 
@@ -60,7 +60,8 @@ const tallyCell = (page, member, column) =>
 
 /**
  * Bildliste. `who` ist die angemeldete Person, `device` die Bildschirmgröße,
- * `run` bereitet die Ansicht vor. `data` enthält IDs aus dem Seed.
+ * `run` bereitet die Ansicht vor, das optionale `after` räumt danach auf.
+ * `data` enthält IDs aus dem Seed.
  */
 const SHOTS = [
   // Erste Schritte
@@ -157,6 +158,33 @@ const SHOTS = [
   },
   { id: 'm-direkt', who: 'member', device: PHONE, run: async (page) => open(page, '/direktnachrichten') },
   { id: 'm-statistik', who: 'member', device: PHONE, run: async (page) => open(page, '/statistik') },
+  { id: 'm-statistik-ich', who: 'member', device: PHONE, run: async (page) => open(page, '/statistik/ich') },
+  {
+    id: 'm-statistik-events',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/statistik/gruppe/events');
+      await page.getByRole('link', { name: 'Dieses Jahr' }).click();
+      await settle(page);
+    },
+  },
+  { id: 'm-statistik-funktionen', who: 'member', device: PHONE, run: async (page) => open(page, '/statistik/funktionen') },
+  {
+    id: 'm-event-statistik',
+    who: 'member',
+    device: PHONE,
+    run: async (page, data) => open(page, `/events/${data.events.stammtisch.id}/statistik`),
+  },
+  {
+    id: 'profil-statistik',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/profile');
+      await scrollToHeading(page, 'Statistik');
+    },
+  },
   { id: 'm-guthaben', who: 'member', device: PHONE, run: async (page) => open(page, '/wallet') },
   { id: 'm-kaeufe', who: 'member', device: PHONE, run: async (page) => open(page, '/purchases') },
   { id: 'm-mitteilungen', who: 'member', device: PHONE, run: async (page) => open(page, '/notifications') },
@@ -221,6 +249,26 @@ const SHOTS = [
     run: async (page) => {
       await page.getByRole('button', { name: /bezahlen$/ }).click();
       await settle(page);
+    },
+  },
+  {
+    // Ohne laufendes Selbstbedienungs-Event: Getränk nur für die Statistik erfassen.
+    // Lena sagt dafür kurz den laufenden Stammtisch ab und danach wieder zu; das
+    // Kellerbier steht auf keiner Getränkeliste eines Events.
+    id: 'm-bezahlen-fremd',
+    who: 'member',
+    device: PHONE,
+    run: async (page, data) => {
+      await apiFor(page.context()).put(`/events/${data.events.stammtisch.id}/rsvp`, { status: 'declined' });
+      await open(page, '/scan');
+      await page.getByRole('textbox').first().fill(SCAN_CHOICE_BARCODE);
+      await page.getByRole('button', { name: 'Suchen' }).click();
+      await settle(page);
+      await page.getByRole('radio', { name: /Nur in die Statistik/ }).check();
+      await page.waitForTimeout(300);
+    },
+    after: async (page, data) => {
+      await apiFor(page.context()).put(`/events/${data.events.stammtisch.id}/rsvp`, { status: 'accepted' });
     },
   },
 
@@ -381,7 +429,7 @@ const SHOTS = [
     run: async (page) => {
       await openTerminal(page);
       await tallyCell(page, 'Felix Braun', 'Bier').click();
-      await page.getByRole('listitem').filter({ hasText: 'Helles' }).click();
+      await page.locator('.picker-card').filter({ hasText: 'Helles' }).click();
       await settle(page);
     },
   },
@@ -509,7 +557,12 @@ async function main() {
   await seedKeycloakUsers();
 
   // --lang: Datums- und Zeitfelder des Browsers im deutschen Format.
-  const browser = await chromium.launch({ args: ['--lang=de-DE'], env: { ...process.env, LANG: 'de_DE.UTF-8', LANGUAGE: 'de' } });
+  const browser = await chromium.launch({
+    args: ['--lang=de-DE'],
+    env: { ...process.env, LANG: 'de_DE.UTF-8', LANGUAGE: 'de' },
+    // Optional ein vorhandenes Chromium, falls Playwright keinen eigenen Browser installiert hat.
+    ...(process.env.HANDBOOK_CHROMIUM ? { executablePath: process.env.HANDBOOK_CHROMIUM } : {}),
+  });
   try {
     let data;
     if (reuse) {
@@ -544,6 +597,7 @@ async function main() {
         : await (await browser.newContext({ locale: 'de-DE', timezoneId: 'Europe/Berlin', ...shot.device })).newPage();
       await shot.run(page, data);
       await page.screenshot({ path: join(OUT_DIR, `${shot.id}.png`) });
+      if (shot.after) await shot.after(page, data);
       console.log(`✓ ${shot.id}`);
     }
   } finally {

@@ -14,6 +14,7 @@ import de.maurer.baseservice.dto.SendMessageRequest
 import de.maurer.baseservice.error.AccessDeniedException
 import de.maurer.baseservice.error.ErrorCode
 import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Messages
 import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.error.ResourceNotFoundException
 import de.maurer.baseservice.push.PushDispatcher
@@ -27,6 +28,9 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.support.Identifiers
 import de.maurer.baseservice.tenancy.SharedGroups
 import org.springframework.stereotype.Service
+import de.maurer.baseservice.live.LiveEvent
+import de.maurer.baseservice.live.LiveUpdateHub
+import de.maurer.baseservice.live.TypingSignals
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
 import java.util.UUID
@@ -56,29 +60,37 @@ class DirectMessageService(
     private val userService: UserService,
     private val friendService: FriendService,
     private val sharedGroups: SharedGroups,
-    private val pushDispatcher: PushDispatcher
+    private val pushDispatcher: PushDispatcher,
+    private val liveUpdateHub: LiveUpdateHub,
+    private val chatReceipts: ChatReceipts,
+    private val typingSignals: TypingSignals
 ) {
 
-    @Transactional(readOnly = true)
     fun list(principal: UserPrincipal): List<ConversationSummaryDto> {
         val caller = userService.getOrCreateUser(principal)
         val reachable = reachableIds(caller)
         return participantRepository.findByUserId(caller.id)
-            .mapNotNull { it.conversation }
+            .mapNotNull { participant ->
+                // Die Liste zeigt die neueste Nachricht: damit ist das Gespräch zugestellt.
+                participant.conversation?.also { chatReceipts.deliveredDirect(it, caller, participant) }
+            }
             .map { toSummary(it, caller, reachable) }
             .sortedByDescending { it.lastMessage?.createdAt ?: Instant.EPOCH }
     }
 
-    @Transactional(readOnly = true)
     fun unreadCount(principal: UserPrincipal): ChatUnreadCountDto {
         val caller = userService.getOrCreateUser(principal)
         return ChatUnreadCountDto(unread = unreadTotal(caller))
     }
 
-    /** Summe ungelesener Direktnachrichten über alle eigenen Gespräche. */
+    /**
+     * Summe ungelesener Direktnachrichten über alle eigenen Gespräche. Der Zähler
+     * steht in der App: was er zählt, ist damit zugestellt.
+     */
     fun unreadTotal(caller: UserEntity): Long =
         participantRepository.findByUserId(caller.id).sumOf { participant ->
             val conversation = participant.conversation ?: return@sumOf 0L
+            chatReceipts.deliveredDirect(conversation, caller, participant)
             unreadFor(conversation, participant, caller)
         }
 
@@ -106,11 +118,16 @@ class DirectMessageService(
         return toSummary(conversation, caller, setOf(partner.id))
     }
 
-    @Transactional(readOnly = true)
     fun messages(conversationId: UUID, principal: UserPrincipal): List<ChatMessageDto> {
         val caller = userService.getOrCreateUser(principal)
-        val conversation = requireParticipant(conversationId, caller).conversation!!
-        return withReactions(messageRepository.findByConversationIdOrderByCreatedAtAsc(conversation.id), caller)
+        val participant = requireParticipant(conversationId, caller)
+        val conversation = participant.conversation!!
+        chatReceipts.deliveredDirect(conversation, caller, participant)
+        val messages = messageRepository.findByConversationIdOrderByCreatedAtAsc(conversation.id)
+        val receipts = chatReceipts.receiptsForDirect(conversation, messages, caller)
+        return withReactions(messages, caller).map { dto ->
+            receipts[UUID.fromString(dto.id)]?.let { dto.copy(receipt = it) } ?: dto
+        }
     }
 
     fun send(conversationId: UUID, request: SendMessageRequest, principal: UserPrincipal): ChatMessageDto {
@@ -121,6 +138,16 @@ class DirectMessageService(
         if (partner == null || partner.disabled || !canMessage(caller.id, partner.id)) {
             throw AccessDeniedException(Msg("error.chat.directNotAllowed"), ErrorCode.ACCESS_DENIED)
         }
+        // Erneutes Senden nach Verbindungsabbruch: die schon gespeicherte Nachricht zurückgeben.
+        val clientId = request.clientId?.trim()?.ifBlank { null }
+        if (clientId != null) {
+            messageRepository.findBySenderIdAndClientId(caller.id, clientId).orElse(null)?.let { existing ->
+                if (existing.conversation?.id != conversation.id) {
+                    throw InvalidRequestException(Msg("error.chat.clientIdUsed"), ErrorCode.INVALID_REQUEST)
+                }
+                return ownMessageDto(existing, conversation, caller)
+            }
+        }
         val text = request.message?.trim()
         if (text.isNullOrEmpty()) {
             throw InvalidRequestException(Msg("error.field.blank", "message"), ErrorCode.INVALID_REQUEST)
@@ -130,24 +157,55 @@ class DirectMessageService(
                 conversation = conversation,
                 sender = caller,
                 message = text,
-                imageUrl = request.imageUrl?.trim()?.ifBlank { null }
+                imageUrl = request.imageUrl?.trim()?.ifBlank { null },
+                clientId = clientId
             )
         )
         // Eigene Nachrichten gelten als gelesen.
         participant.lastReadAt = saved.createdAt
+        // Beide Seiten sehen die Nachricht sofort, auch auf weiteren eigenen Geräten.
+        liveUpdateHub.publish(listOf(caller.id, partner.id), LiveEvent(LiveEvent.DIRECT, conversationId = conversation.id.toString()))
         pushDispatcher.dispatch(
             listOf(partner.id),
-            PushMessage(title = caller.displayName, body = "", type = PersonalAlertService.TYPE_DIRECT_MESSAGE)
+            PushMessage(
+                title = Messages.defaultText(Msg("notification.direct.title", caller.displayName)).trim(),
+                body = saved.message,
+                type = PersonalAlertService.TYPE_DIRECT_MESSAGE,
+                link = "/direktnachrichten?id=${conversation.id}",
+                // Je Gespräch eine Benachrichtigung: eine neue ersetzt die vorige.
+                tag = "/direktnachrichten?id=${conversation.id}"
+            ),
+            live = false
         )
-        return toMessageDto(saved)
+        return ownMessageDto(saved, conversation, caller)
     }
 
     fun markRead(conversationId: UUID, principal: UserPrincipal): ConversationSummaryDto {
         val caller = userService.getOrCreateUser(principal)
         val participant = requireParticipant(conversationId, caller)
+        val previousRead = participant.lastReadAt
         participant.lastReadAt = Instant.now()
+        chatReceipts.readDirect(participant.conversation!!, caller, participant, previousRead)
         participantRepository.flush()
+        liveUpdateHub.publish(listOf(caller.id), LiveEvent(LiveEvent.READ, conversationId = conversationId.toString()))
         return toSummary(participant.conversation!!, caller, reachableIds(caller))
+    }
+
+    /** „schreibt gerade…“ an das Gegenüber, solange man ihm schreiben darf. */
+    fun typing(conversationId: UUID, principal: UserPrincipal) {
+        val caller = userService.getOrCreateUser(principal)
+        val conversation = requireParticipant(conversationId, caller).conversation!!
+        val partner = partnerOf(conversation, caller)
+        if (partner == null || partner.disabled || !canMessage(caller.id, partner.id)) {
+            throw AccessDeniedException(Msg("error.chat.directNotAllowed"), ErrorCode.ACCESS_DENIED)
+        }
+        typingSignals.typing(
+            userId = caller.id,
+            name = caller.displayName,
+            conversationId = conversation.id,
+            stammtischId = null,
+            audience = listOf(partner.id)
+        )
     }
 
     fun toggleReaction(conversationId: UUID, messageId: UUID, emojiValue: String?, principal: UserPrincipal): ChatMessageDto {
@@ -167,6 +225,8 @@ class DirectMessageService(
             reactionRepository.save(DirectReactionEntity(message = message, user = caller, emoji = emoji))
         }
         reactionRepository.flush()
+        val participants = participantRepository.findByConversationId(conversation.id).mapNotNull { it.user?.id }
+        liveUpdateHub.publish(participants, LiveEvent(LiveEvent.DIRECT, conversationId = conversation.id.toString()))
         return withReactions(listOf(message), caller).first()
     }
 
@@ -235,6 +295,13 @@ class DirectMessageService(
         )
     }
 
+    /** Eigene Nachricht mit App-Id und aktuellen Haken. */
+    private fun ownMessageDto(message: DirectMessageEntity, conversation: DirectConversationEntity, caller: UserEntity): ChatMessageDto =
+        toMessageDto(message).copy(
+            clientId = message.clientId,
+            receipt = chatReceipts.receiptsForDirect(conversation, listOf(message), caller)[message.id]
+        )
+
     private fun withReactions(messages: List<DirectMessageEntity>, caller: UserEntity): List<ChatMessageDto> {
         if (messages.isEmpty()) return emptyList()
         val byMessage = reactionRepository.findByMessageIdIn(messages.map { it.id }).groupBy { it.message?.id }
@@ -245,7 +312,10 @@ class DirectMessageService(
                     ChatReactionDto(emoji = emoji, count = list.size, reactedByMe = list.any { it.user?.id == caller.id })
                 }
                 .sortedByDescending { it.count }
-            toMessageDto(message).copy(reactions = reactions)
+            toMessageDto(message).copy(
+                reactions = reactions,
+                clientId = message.clientId.takeIf { message.sender?.id == caller.id }
+            )
         }
     }
 }

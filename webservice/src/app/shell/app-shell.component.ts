@@ -30,6 +30,8 @@ import { NotificationsApiService } from '../notifications/notifications-api.serv
 import { UnreadBadgeStore } from '../notifications/unread-badge.store';
 import { CHAT_LIST_REFRESH_MS } from '../chat/chat-api.service';
 import { ChatUnreadStore } from '../chat/chat-unread.store';
+import { ChatOutboxService } from '../chat/chat-outbox.service';
+import { LiveUpdatesService } from '../live/live-updates.service';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
 import { BreakpointService } from './breakpoint.service';
@@ -176,6 +178,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
   readonly backLink = signal<string>('');
   private routerSub: Subscription | null = null;
   private chatTimer: ReturnType<typeof setInterval> | null = null;
+  private liveSub: Subscription | null = null;
 
   /** Aktueller Viewport (Signal des Breakpoint-Service). */
   readonly viewport;
@@ -311,12 +314,23 @@ export class AppShellComponent implements OnInit, OnDestroy {
       });
 
     if (isPlatformBrowser(this.platformId)) {
+      const live = this.injector.get(LiveUpdatesService);
       void this.auth.getSession().then((session) => {
         this.sessionSignal.set(session);
         this.refreshUnread();
         this.refreshChatUnread();
+        // Sofortige Aktualisierung von Chats und Mitteilungen (nicht am Thekentablet).
+        if (session && !this.kiosk()) live.start();
+        // Offline geschriebene Chat-Nachrichten senden, egal auf welcher Seite die App startet.
+        if (session && !this.kiosk()) void this.injector.get(ChatOutboxService).start();
       });
+      this.liveSub = live.events$.subscribe((event) => {
+        if (event.type === 'notification' || event.type === 'resync') this.refreshUnread();
+        if (event.type !== 'notification') this.refreshChatUnread();
+      });
+      // Rückfall, solange keine Live-Verbindung steht.
       this.chatTimer = setInterval(() => {
+        if (live.connected()) return;
         if (typeof document === 'undefined' || document.visibilityState !== 'hidden') {
           this.refreshChatUnread();
         }
@@ -355,6 +369,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routerSub?.unsubscribe();
+    this.liveSub?.unsubscribe();
     if (this.chatTimer !== null) clearInterval(this.chatTimer);
     this.chatTimer = null;
   }
@@ -397,6 +412,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     this.closeMenus();
     // Im Kiosk-Modus gibt es kein Abmelden; erst die PIN beendet den Modus.
     if (this.kiosk()) return;
+    this.injector.get(LiveUpdatesService).stop();
     void this.injector.get(AuthNavigationService).logout();
   }
 }
