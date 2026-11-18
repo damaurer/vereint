@@ -202,12 +202,6 @@
     "loadingMessage": "Das Profil wird abgerufen.",
     "unavailable": "Profil nicht verfügbar",
     "noRoles": "keine Rollen",
-    "beerWithMe": {
-      "title": "BeerWithMe Status",
-      "hint": "Verfügbar für ein spontanes Bier in der Nähe.",
-      "short": "Spontanes Bier",
-      "shortHint": "Freunde sehen, dass du Zeit hast"
-    },
     "theme": {
       "title": "Darstellung",
       "system": "System",
@@ -510,7 +504,7 @@
     },
     "tablet": {
       "title": "Thekenterminal",
-      "description": "Manuelle Getränkeerfassung für den Drink Recorder."
+      "description": "Striche für Getränke und Speisen an der Theke erfassen."
     },
     "statistics": {
       "title": "Statistik",
@@ -1181,7 +1175,7 @@
       "startHint": "Im Kiosk-Modus bleibt dieses Gerät auf dem Thekenterminal, auch nach Schließen und Neuöffnen. Beim Start vergibst du eine PIN; nur mit ihr lässt sich der Modus hier wieder verlassen. Vorstand und Administration können das Gerät jederzeit aus der Ferne entsperren."
     },
     "header": {
-      "eyebrow": "Drink Recorder",
+      "eyebrow": "Theke",
       "terminalTitle": "Strichliste Terminal",
       "title": "Thekenterminal",
       "intro": "Strichliste für aktive Events."
@@ -1282,7 +1276,7 @@
       "saveRoles": "Rollen speichern",
       "boardRole": "Vorstands-Unterrolle",
       "noBoardRole": "keine",
-      "drinkRecorder": "Drink Recorder",
+      "drinkRecorder": "Thekendienst (Thekenterminal)",
       "saveProfile": "Profil speichern",
       "disabled": "Deaktiviert",
       "saveStatus": "Status speichern",
@@ -1991,14 +1985,14 @@
       },
       "count": "Events",
       "attendances": "Teilnahmen",
-      "perEvent": "{{value}} je Event",
+      "perEvent": "{value} je Event",
       "compare": "Events im Vergleich"
     },
     "crossEvents": {
       "eyebrow": "Alle meine Gruppen",
       "title": "Events übergreifend",
       "intro": "Alle Events aus deinen Gruppen, die du sehen darfst. Gezeigt werden Summen, Durchschnitte und deine eigenen Werte, keine Namen anderer Personen.",
-      "mine": "Du warst bei {{attended}} Events dabei und hast {{purchases}} Striche gemacht."
+      "mine": "Du warst bei {attended} Events dabei und hast {purchases} Striche gemacht."
     },
     "groupEvents": {
       "title": "Events der Gruppe"
@@ -2036,8 +2030,8 @@
       "title": "Event-Statistik",
       "back": "Zurück zum Event",
       "answers": "Antworten auf die Einladung",
-      "reactions": "{{reactions}} Reaktionen, {{media}} Bilder/Videos",
-      "chatReactions": "{{count}} Reaktionen",
+      "reactions": "{reactions} Reaktionen, {media} Bilder/Videos",
+      "chatReactions": "{count} Reaktionen",
       "consumers": "Striche je Person"
     },
     "settings": {
@@ -2056,7 +2050,7 @@
         "confirm": "Wirklich alle Statistikdaten dieser Gruppe löschen? Das lässt sich nicht rückgängig machen."
       },
       "confirmDelete": "Ja, endgültig löschen",
-      "deleted": "{{count}} Einträge gelöscht."
+      "deleted": "{count} Einträge gelöscht."
     }
   },
   "guest": {

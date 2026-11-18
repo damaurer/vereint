@@ -208,12 +208,6 @@
     "loadingMessage": "Loading your profile.",
     "unavailable": "Profile not available",
     "noRoles": "no roles",
-    "beerWithMe": {
-      "title": "BeerWithMe status",
-      "hint": "Up for a spontaneous beer nearby.",
-      "short": "Spontaneous beer",
-      "shortHint": "Friends see that you have time"
-    },
     "theme": {
       "title": "Appearance",
       "system": "System",
@@ -1214,7 +1208,7 @@
       "startHint": "In kiosk mode this device stays on the bar terminal, even after closing and reopening. You set a PIN when starting; only that PIN leaves the mode here. The board and administrators can unlock the device remotely at any time."
     },
     "header": {
-      "eyebrow": "Drink Recorder",
+      "eyebrow": "Bar",
       "terminalTitle": "Tally sheet terminal",
       "title": "Bar terminal",
       "intro": "Tally sheet for active events."
@@ -2024,14 +2018,14 @@
       },
       "count": "Events",
       "attendances": "Attendances",
-      "perEvent": "{{value}} per event",
+      "perEvent": "{value} per event",
       "compare": "Events compared"
     },
     "crossEvents": {
       "eyebrow": "All my groups",
       "title": "Events across groups",
       "intro": "All events from your groups that you may see. Shows totals, averages and your own values, no names of other people.",
-      "mine": "You attended {{attended}} events and made {{purchases}} tallies."
+      "mine": "You attended {attended} events and made {purchases} tallies."
     },
     "groupEvents": {
       "title": "Group events"
@@ -2069,8 +2063,8 @@
       "title": "Event statistics",
       "back": "Back to the event",
       "answers": "Replies to the invitation",
-      "reactions": "{{reactions}} reactions, {{media}} photos/videos",
-      "chatReactions": "{{count}} reactions",
+      "reactions": "{reactions} reactions, {media} photos/videos",
+      "chatReactions": "{count} reactions",
       "consumers": "Tallies per person"
     },
     "settings": {
@@ -2089,7 +2083,7 @@
         "confirm": "Really delete all statistics of this group? This cannot be undone."
       },
       "confirmDelete": "Yes, delete permanently",
-      "deleted": "{{count}} entries deleted."
+      "deleted": "{count} entries deleted."
     }
   },
   "guest": {

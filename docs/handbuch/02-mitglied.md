@@ -200,6 +200,8 @@ Wird ein Strichcode nicht erkannt, ist das Getränk weder im Katalog noch in der
 
 ### Ohne laufendes Event: bezahlen oder nur erfassen
 
+<img src="bilder/m-bezahlen-fremd.png" alt="Nach dem Scan: bezahlen oder nur in die Statistik" width="300" align="right">
+
 Bist du gerade bei keinem laufenden Event mit Selbstbedienung, fragt Vereint nach dem Scannen, was mit dem Getränk passieren soll:
 
 - **Mit Guthaben bezahlen**: Es gilt der Preis aus dem Getränkekatalog der Gruppe. Vereint zeigt Preis und dein Guthaben vorher und nachher; erst **… bezahlen** bucht ab. Der Haken **In die Statistik aufnehmen** ist gesetzt. Nimmst du ihn weg, wird nur bezahlt und der Kauf zählt in keiner Statistik. Hat das Getränk im Katalog keinen Preis, kannst du es nicht bezahlen.
@@ -213,7 +215,7 @@ Hast du **Meine Statistik erfassen** ausgeschaltet oder hat die Gruppe ihre Stat
 
 ## Eine Runde ausgeben
 
-<img src="screens/runde-handy.png" alt="Runde am eigenen Handy ausgeben" width="300" align="right">
+<img src="bilder/m-runde.png" alt="Runde am eigenen Handy ausgeben" width="300" align="right">
 
 Eine Runde gibst du **an deinem eigenen Handy** aus, bezahlt wird **von deinem Guthaben**. Das geht, solange ein Event läuft, zu dem du gehörst. Öffne das Event und tippe auf **Runde ausgeben**.
 
@@ -303,7 +305,7 @@ Fehlt dir ein Getränk? Mit **Getränk vorschlagen** schlägst du es mit Name, K
 
 Unter **Mehr → Statistik** siehst du Auswertungen deiner Gruppe. Alle Mitglieder sehen dieselben Zahlen, mit Namen. Die Statistiken sind Spaß-Fakten, keine Gesundheitsangabe, und bleiben in der Gruppe (siehe AGB, Abschnitt „Statistiken“).
 
-Oben wählst du den **Zeitraum**: **30 Tage**, **90 Tage** oder **Jahr** (das laufende Kalenderjahr ab 1. Januar). Er bleibt erhalten, wenn du zwischen den Statistikseiten wechselst.
+Oben wählst du den **Zeitraum**: **30 Tage**, **90 Tage** oder **Dieses Jahr** (das laufende Kalenderjahr ab 1. Januar). Er bleibt erhalten, wenn du zwischen den Statistikseiten wechselst.
 
 - **Gruppe**, **Du** und **Dein Platz**: Striche der ganzen Gruppe, deine eigenen und dein Platz in der Rangliste.
 - **Rangliste** mit Balken; dein Eintrag ist hervorgehoben.
@@ -313,15 +315,41 @@ Oben wählst du den **Zeitraum**: **30 Tage**, **90 Tage** oder **Jahr** (das la
 
 **Alle Statistiken im Überblick** fasst alles auf einer Seite zusammen, am besten am Rechner: Mitglieder, Events, Zusagen je Event und je Mitglied (mit **Da gewesen**: Events mit mindestens einem Strich oder Kauf), Getränke je Woche, nach Wochentag und Uhrzeit, **Wer trinkt was?** nach Bier, Alkoholfrei, Schnaps, Wein & Sekt, die beliebtesten Getränke, Rundengeber, Moments, Chat und Rekorde. Den **Umsatz** sehen dort nur Vorstand und Kasse.
 
-**Events der Gruppe** vergleicht alle Events der Gruppe im Zeitraum: Antworten als Balken (Zugesagt, Vielleicht, Abgesagt, Keine Antwort), Teilnehmende, Striche, Moments und Chat. Ein Tipp auf ein Event öffnet seine **Event-Statistik**; die erreichst du auch auf der Eventseite über **Statistik**. **Funktionen** zeigt je Funktion, wie oft sie benutzt und wie darauf geantwortet wurde, zum Beispiel Events und Zusagen, Moments und Reaktionen, Einladungslinks und Beitritte.
+<br clear="right">
+
+### Events der Gruppe und Event-Statistik
+
+<img src="bilder/m-statistik-events.png" alt="Events der Gruppe im Vergleich" width="300" align="right">
+
+**Events der Gruppe im Vergleich** (unter **Weitere Statistiken**) vergleicht alle Events der Gruppe im Zeitraum, die du auch in deiner Eventliste siehst. Oben stehen Events, Teilnahmen, Zusagequote und Striche, jeweils mit dem Durchschnitt je Event. Unter **Events im Vergleich** zeigt je Event ein Balken die Antworten (Zugesagt, Vielleicht, Abgesagt, Keine Antwort), dazu Teilnehmende, Striche, Moments und Chat. Ein Tipp auf ein Event öffnet seine **Event-Statistik**.
+
+<br clear="right">
+
+<img src="bilder/m-event-statistik.png" alt="Event-Statistik" width="300" align="right">
+
+Die **Event-Statistik** erreichst du auch auf der Eventseite über **Statistik**. Sie zeigt für ein einzelnes Event die **Antworten auf die Einladung**, Teilnehmende, Striche, Runden, Moments mit Reaktionen und Bildern, Chat-Nachrichten mit Reaktionen und **Striche je Person**. Ist die Statistik für das Event ausgeschaltet, steht das oben auf der Seite.
+
+<br clear="right">
+
+### Funktionen
+
+<img src="bilder/m-statistik-funktionen.png" alt="Statistik der Funktionen" width="300" align="right">
+
+**Funktionen: ausgelöst und Antworten** zeigt je Funktion der Gruppe, wie oft sie im Zeitraum benutzt wurde und wie darauf geantwortet wurde: zum Beispiel Events und die Zusagen darauf, Moments und ihre Reaktionen, Chat-Nachrichten und Reaktionen, Runden und bedachte Personen, Einladungslinks und Beitritte, Striche und Käufe nach Herkunft (Strichliste, Barcode-Kauf) sowie Fremdgetränke.
 
 <br clear="right">
 
 ### Meine Statistik
 
-Unter **Mehr → Meine Statistik** siehst du nur für dich, was du ausgelöst hast, über alle deine Gruppen: Striche, Zusagen, Teilnahmen, Moments, Chatnachrichten und mehr, aufgeschlüsselt nach Funktion und nach Gruppe. **Events übergreifend** vergleicht alle Events deiner Gruppen, die du sehen darfst, mit Summen, Durchschnitten und deinen eigenen Werten. Namen anderer Personen stehen dort nicht.
+<img src="bilder/m-statistik-ich.png" alt="Meine Statistik" width="300" align="right">
+
+Unter **Mehr → Meine Statistik** siehst du nur für dich, was du ausgelöst hast, über alle deine Gruppen: Striche und Käufe, Zusagen, Teilnahmen, Moments, Chatnachrichten und mehr, aufgeschlüsselt **Nach Funktion** und **Nach Gruppe**. Niemand sonst sieht diese Seite. **Alle meine Events (gruppenübergreifend)** öffnet **Events übergreifend**: Es vergleicht alle Events deiner Gruppen, die du sehen darfst, mit Summen, Durchschnitten und deinen eigenen Werten. Namen anderer Personen stehen dort nicht.
+
+<br clear="right">
 
 ### Statistik ausschalten oder löschen
+
+<img src="bilder/profil-statistik.png" alt="Statistik in Mein Konto" width="300" align="right">
 
 In **Mein Konto** steht der Abschnitt **Statistik**:
 
@@ -329,6 +357,8 @@ In **Mein Konto** steht der Abschnitt **Statistik**:
 - **Meine erfassten Statistikdaten löschen**: löscht nach einer Rückfrage alles, was über dich erfasst wurde, in allen Gruppen. Deine Buchungen und dein Guthaben bleiben. Das Löschen steht im Protokoll der Gruppe.
 
 Direktnachrichten werden nie erfasst. Ein storniertes Getränk verschwindet wieder aus der Statistik. Fremdgetränke (siehe [Ohne laufendes Event](#ohne-laufendes-event-bezahlen-oder-nur-erfassen)) zählen in deiner Statistik und in der Gruppenstatistik, aber in keiner Event-Statistik.
+
+<br clear="right">
 
 ## Eine Gruppe verlassen
 

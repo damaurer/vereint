@@ -2,21 +2,15 @@
 
 Dieses Kapitel geht jeden Bildschirm von Vereint einzeln durch: was du darauf siehst, wozu die einzelnen Bereiche da sind, was ein Tipp auslöst und wohin es von dort weitergeht. Die Leitfäden der einzelnen Rollen erklären die Abläufe; hier steht das Nachschlagewerk zu jedem Screen.
 
-> **Entwurf / Vorlage.** Dieses Kapitel ist die Vorlage für das Aussehen der App, kein Leitfaden. Alles ohne den Hinweis „Neu im Entwurf“ ist in der App umgesetzt (PR #84) und wird mit echten Bildern in den Leitfäden erklärt: [Erste Schritte](01-erste-schritte.md), [Mitglied](02-mitglied.md), [Vorstand](03-vorstand.md), [Administration](04-administration.md), [Thekenterminal](05-thekenterminal.md) und [Gast](06-gast.md).
+> **Nachschlagewerk.** Alle hier beschriebenen Bildschirme sind in der App umgesetzt. Die Abläufe mit echten Bildern stehen in den Leitfäden: [Erste Schritte](01-erste-schritte.md), [Mitglied](02-mitglied.md), [Vorstand](03-vorstand.md), [Administration](04-administration.md), [Thekenterminal](05-thekenterminal.md) und [Gast](06-gast.md).
 
-**Woher die Bilder stammen.** Die Bilder in diesem Kapitel sind keine Aufnahmen der laufenden App. Sie stammen aus dem **Design-Entwurf** von Vereint, der alle Bildschirme mit Beispieldaten zeigt. Die Quelldateien liegen unter [`docs/design/screens`](../design/screens/README.md). Aufbau und Funktionen entsprechen der App, einzelne Beschriftungen, Abstände und Farben können aber abweichen. Echte Aufnahmen der App stehen in den Leitfäden der Rollen.
-
-**Neu im Entwurf.** Einige Bildschirme zeigen Funktionen, die es in der App noch nicht gibt. Sie sind mit diesem Hinweis markiert:
-
-> **Neu im Entwurf**: Beschreibt geplantes Verhalten. Bis es umgesetzt ist, gilt der jeweilige Leitfaden.
-
-Das betrifft vor allem die **Statistiken** zu Getränken, Kalorien, Events und Zusagen.
+**Woher die Bilder stammen.** Die meisten Bilder in diesem Kapitel stammen aus dem **Design-Entwurf** von Vereint, der alle Bildschirme mit Beispieldaten zeigt. Die Quelldateien liegen unter [`docs/design/screens`](../design/screens/README.md). Aufbau und Funktionen entsprechen der App, einzelne Beschriftungen, Abstände und Farben können aber abweichen. Bildschirme, die nach dem Entwurf dazugekommen sind (etwa die neuen Statistikseiten und die Wahl nach dem Scannen), zeigen echte Aufnahmen der App aus den Leitfäden.
 
 ## Inhalt
 
 - [Grundaufbau jeder Seite](#grundaufbau-jeder-seite)
 - [Einstieg und Konto](#einstieg-und-konto): Anmelden, Registrieren, Gruppe eröffnen, Einladung als Gast, Gruppe wählen, Abmelden, Fehlerseiten, Impressum
-- [Mitglied](#mitglied): Start, Mehr, Mitteilungen, Profil, Events, Chat, Moments, Kalender, Freunde, Guthaben, Bezahlen, Käufe, Katalog, Runde ausgeben, Statistiken
+- [Mitglied](#mitglied): Start, Mehr, Mitteilungen, Profil, Events, Chat, Moments, Kalender, Freunde, Guthaben, Bezahlen, Käufe, Katalog, Runde ausgeben, Statistiken (Gruppe, Getränke, Übersicht, Events, Funktionen, Event-Statistik, Meine Statistik)
 - [Vorstand](#vorstand): Vorstandsübersicht, Events verwalten, Abrechnung, Kasse, Kommunikation, Moments, Katalog, Getränkedatenbank, Getränkelisten, Strich-Kategorien, Kiosk-Geräte
 - [Thekenterminal](#thekenterminal): Strichliste, Rückgängig, Laufende Runden, Kiosk-Modus
 - [Administration](#administration): Mitglieder und Rollen, Mitglied bearbeiten, Einladen, Gruppeneinstellungen, Rollen und Berechtigungen, Plattform
@@ -215,8 +209,8 @@ Kontodaten und persönliche Einstellungen.
 - **Darstellung**: **System**, **Hell** oder **Dunkel**.
 - **Sprache**: **Deutsch** oder **English**, gilt sofort für die ganze App.
 - **Mitteilungen auf diesem Gerät**: Push ein- oder ausschalten.
-- **Spontanes Bier**: Freunde sehen, dass du gerade Zeit hast. In der App heißt das derzeit „BeerWithMe Status“ und ist noch eine Vorschau.
 - **App auf diesem Gerät**: **Installieren** legt Vereint auf den Startbildschirm.
+- **Statistik**: **Meine Statistik erfassen** ein- oder ausschalten, **Meine Statistik** öffnen und **Meine erfassten Statistikdaten löschen** (siehe [Meine Statistik](#meine-statistik)).
 
 <br clear="right">
 
@@ -247,6 +241,7 @@ Alles zu einem Termin auf einer Seite.
   - **Event-Chat** mit allen Eingeladenen,
   - **Moments** mit der Zahl laufender Moments,
   - **Runde ausgeben** (siehe [Runde ausgeben](#runde-ausgeben)).
+- **Statistik** öffnet die [Event-Statistik](#event-statistik).
 - **Deine Antwort**: **Zusagen**, **Vielleicht** oder **Absagen**. Die aktuelle Wahl ist hervorgehoben und lässt sich bis zum Event ändern.
 - **Anwesenheit**: Zusammenfassung („5 zugesagt · 1 offen“) und die Liste der Eingeladenen mit ihrer Antwort.
 
@@ -262,6 +257,7 @@ Jedes Mitglied kann ein Event anlegen und ist dann Gastgeber.
 - **Eingeladene**: Mitglieder einzeln anhaken oder **Alle Mitglieder einladen**. Oben steht, wie viele ausgewählt sind.
 - **Benachrichtigen**: **Sofort** beim Veröffentlichen oder **Zu einem Zeitpunkt**, etwa eine Woche vorher.
 - **Erinnerung**: **1 Tag vorher**, **1 Woche vorher** oder **Keine**.
+- **Statistik für dieses Event**: aus heißt, im Event wird nichts erfasst.
 - **Event veröffentlichen** verschickt die Einladungen. **Abbrechen** verwirft alles.
 
 Danach verwaltest du das Event unter [Event verwalten](#event-verwalten).
@@ -276,8 +272,8 @@ Der Chat aller Eingeladenen eines Events, etwa für Fahrgemeinschaften oder Absp
 
 - Kopfzeile mit dem Eventnamen.
 - Läuft gerade ein Moment, steht oben ein Hinweis („Moment läuft: …“) mit **Ansehen**.
-- Nachrichten anderer stehen links mit Name und Uhrzeit, eigene rechts.
-- Unten **Nachricht** eintippen und senden.
+- Nachrichten anderer stehen links mit Name und Uhrzeit, eigene rechts. Neue Nachrichten erscheinen sofort.
+- Unten **Nachricht** eintippen und senden. Haken, „schreibt…“ und Senden ohne Netz wie im [Gruppenchat](#gruppenchat).
 
 <br clear="right">
 
@@ -300,8 +296,10 @@ Die Übersicht aller Unterhaltungen der Gruppe.
 Der Chat aller Mitglieder.
 
 - Oben die **Infotafel**: ein vom Vorstand angehefteter Hinweis, etwa ein wichtiger Termin. Sie bleibt stehen, auch wenn weiter geschrieben wird (siehe [Kommunikation](#kommunikation)).
-- Darunter die Nachrichten mit Kürzel, Name und Uhrzeit.
-- Unten **Nachricht** eintippen und senden.
+- Darunter die Nachrichten mit Kürzel, Name und Uhrzeit. Neue Nachrichten und Reaktionen erscheinen sofort, ohne Neuladen.
+- Neben eigenen Nachrichten stehen Haken: **✓** gesendet, **✓✓** bei allen angekommen, **✓✓ blau** von allen gelesen. Antippen oder Darüberfahren zeigt, bei wie vielen sie angekommen ist und wie viele sie gelesen haben.
+- Schreibt gerade jemand, steht über dem Eingabefeld zum Beispiel „Anna schreibt…“.
+- Unten **Nachricht** eintippen und senden. Ohne Netz steht die Nachricht mit einer **Uhr** da und geht hinaus, sobald wieder Netz da ist. Klappt das nicht, stehen **Nicht gesendet**, **Erneut senden** und **Verwerfen** darunter.
 
 <br clear="right">
 
@@ -314,6 +312,7 @@ Gespräche zu zweit, **über alle Gruppen**: Mit jeder Person gibt es genau ein 
 - **Freunde** oben rechts führt zur [Freundesliste](#freunde).
 - **Gespräche durchsuchen** filtert nach Namen.
 - **Gespräche** mit Zahl: jede Zeile mit Kürzel, Name, Zeit und letzter Nachricht.
+- Im Gespräch gibt es dieselben Haken, „schreibt…“ und das Senden ohne Netz wie im [Gruppenchat](#gruppenchat).
 
 <br clear="right">
 
@@ -403,6 +402,17 @@ Ein Getränk selbst mit Guthaben bezahlen, etwa am Kühlschrank ohne Thekendiens
 
 <br clear="right">
 
+<img src="bilder/m-bezahlen-fremd.png" alt="Wahl nach dem Scan" width="300" align="right">
+
+**Was soll passieren?** Bist du bei keinem laufenden Event mit Selbstbedienung, erscheint nach dem Scan diese Wahl:
+
+- **Mit Guthaben bezahlen** zum Preis aus dem Getränkekatalog der Gruppe. Darunter stehen Preis, Guthaben jetzt und danach sowie der Haken **In die Statistik aufnehmen**; ohne Haken wird nur bezahlt. Hat das Getränk keinen Katalogpreis, fehlt diese Wahl.
+- **Nur in die Statistik (Fremdgetränk)**: nichts wird abgebucht. **In die Statistik aufnehmen** zählt das Getränk in deiner Statistik und der Gruppenstatistik, aber bei keinem Event. Ist deine Statistik oder die der Gruppe aus, fehlt diese Wahl.
+
+Danach kannst du den Kauf 10 Minuten lang mit **Rückgängig** zurücknehmen bzw. das Fremdgetränk mit **Entfernen** wieder austragen.
+
+<br clear="right">
+
 <img src="screens/bezahlt.png" alt="Bezahlt" width="300" align="right">
 
 **Bezahlt**: Bestätigung mit Getränk, Betrag und **neuem Guthaben**.
@@ -462,8 +472,9 @@ Eine Runde gibt jede Person **nur am eigenen Handy** und **mit dem eigenen Gutha
 
 Der Einstieg in die Auswertungen der Gruppe. Alle Statistiken sind **für alle Mitglieder sichtbar**.
 
-- **Getränkestatistik: wer, was, wie viel, kcal** und **Alle Statistiken im Überblick** führen zu den ausführlichen Auswertungen.
-- **Zeitraum**: **30 Tage**, **90 Tage** oder **Jahr** (das laufende Kalenderjahr ab 1. Januar). Der Zeitraum gilt auch auf den beiden anderen Statistikseiten.
+- **Weitere Statistiken**: **Getränkestatistik: wer, was, wie viel, kcal**, **Alle Statistiken im Überblick**, **Events der Gruppe im Vergleich**, **Funktionen: ausgelöst und Antworten**, **Meine Statistik** und **Alle meine Events (gruppenübergreifend)**.
+- Ist die Statistik für die Gruppe oder für dich ausgeschaltet, steht oben ein Hinweis.
+- **Zeitraum**: **30 Tage**, **90 Tage** oder **Dieses Jahr** (das laufende Kalenderjahr ab 1. Januar). Der Zeitraum gilt auch auf den anderen Statistikseiten.
 - Kennzahlen: Striche der **Gruppe**, **deine** Striche und **dein Platz**.
 - **Rangliste** mit Balken; dein Eintrag ist hervorgehoben.
 - **Zusagequote**: Anteil der Einladungen, auf die mit „Zusagen“ geantwortet wurde.
@@ -476,7 +487,7 @@ Der Einstieg in die Auswertungen der Gruppe. Alle Statistiken sind **für alle M
 
 Wer hat wie viel von was getrunken, über die ganze Gruppe.
 
-- **Zeitraum**: 30 Tage, 90 Tage oder Jahr.
+- **Zeitraum**: 30 Tage, 90 Tage oder Dieses Jahr.
 - Kennzahlen: **Getränke**, **Liter** und **Kalorien** der Gruppe.
 - **Ø Getränke der Gruppe** **je Event**, **je Tag**, **je Woche** und **je Monat**.
 - Ansicht **Nach Mitglied** oder **Nach Getränk**, sortiert **Nach Anzahl** oder nach Kalorien.
@@ -489,7 +500,7 @@ Wer hat wie viel von was getrunken, über die ganze Gruppe.
 
 <img src="screens/statistik-uebersicht.png" alt="Statistik-Übersicht" width="720">
 
-Alle Kennzahlen der Gruppe auf einer Seite, gedacht für den Rechner. Sichtbar für alle Mitglieder. Oben rechts der **Zeitraum** (30 Tage, 90 Tage, Jahr).
+Alle Kennzahlen der Gruppe auf einer Seite, gedacht für den Rechner. Sichtbar für alle Mitglieder. Oben rechts der **Zeitraum** (30 Tage, 90 Tage, Dieses Jahr).
 
 **Kennzahlen**: **Mitglieder** (aktiv und neu), **Events** mit Ø Teilnehmenden, **Zusagequote**, **Getränke** mit Ø je Event, **Liter** mit Ø je Woche, **Kalorien** mit Ø je Mitglied, **Umsatz** mit Ø je Event (nur für Vorstand und Kasse) und **Getränke je Monat**.
 
@@ -512,6 +523,55 @@ Alle Kennzahlen der Gruppe auf einer Seite, gedacht für den Rechner. Sichtbar f
 **Gemeinschaft**: **Top-Rundengeber**, **Moments** (gestartet, Reaktionen, Fotos und Videos), **Chat** (Nachrichten, aktivste Person, Event-Chats) und **Rekorde** (meiste Getränke an einem Abend, längste Serie dabei, schnellste Zusage). Rundengeber zählt, wer eine Runde oder einen ganzen Abend ausgegeben hat.
 
 Auf dem Handy stehen die Abschnitte untereinander.
+
+### Events der Gruppe
+
+<img src="bilder/m-statistik-events.png" alt="Events der Gruppe" width="300" align="right">
+
+Alle Events der Gruppe im Zeitraum, die du auch in der Eventliste siehst.
+
+- Kennzahlen: **Events**, **Teilnahmen** und **Striche** (jeweils mit Ø je Event) und **Zusagequote**.
+- **Events im Vergleich**: je Event ein Balken mit **Zugesagt**, **Vielleicht**, **Abgesagt** und **Keine Antwort**, dazu Teilnehmende, Striche, Moments und Chat-Nachrichten. Events mit ausgeschalteter Statistik tragen „Statistik aus“.
+- Ein Tipp auf ein Event öffnet die [Event-Statistik](#event-statistik).
+
+<br clear="right">
+
+### Event-Statistik
+
+<img src="bilder/m-event-statistik.png" alt="Event-Statistik" width="300" align="right">
+
+Die Zahlen eines einzelnen Events, erreichbar über **Statistik** im [Event](#event) oder aus [Events der Gruppe](#events-der-gruppe).
+
+- **Antworten auf die Einladung** als Balken.
+- **Teilnehmende**, **Striche**, **Runden**, **Moments** (mit Reaktionen und Bildern/Videos) und **Chat-Nachrichten** (mit Reaktionen).
+- **Striche je Person** als Rangliste.
+- **Zurück zum Event** führt zur Eventseite.
+
+<br clear="right">
+
+### Funktionen
+
+<img src="bilder/m-statistik-funktionen.png" alt="Funktionen" width="300" align="right">
+
+Wie oft jede Funktion der Gruppe im Zeitraum ausgelöst wurde und wie darauf geantwortet wurde.
+
+- Je Funktion eine Karte mit **ausgelöst** und, wo es passt, der Zahl der Antworten: Events und Antworten (Zugesagt, Vielleicht, Abgesagt), Moments und Reaktionen, Bilder und Videos, Chat-Nachrichten nach Gruppen-, Event- und Moment-Chat, Runden und bedachte Personen, Einladungslinks und Beitritte.
+- **Striche und Käufe** nach Herkunft (Strichliste, Barcode-Kauf), **Fremdgetränke** nach Katalog oder Getränkedatenbank, **Aufladungen**.
+
+<br clear="right">
+
+### Meine Statistik
+
+<img src="bilder/m-statistik-ich.png" alt="Meine Statistik" width="300" align="right">
+
+Nur für dich: alles, was du ausgelöst hast, über alle deine Gruppen und Events. Erreichbar über **Mehr → Meine Statistik** oder im Profil.
+
+- **Alle meine Events (gruppenübergreifend)** öffnet **Events übergreifend**: alle Events aus deinen Gruppen, die du sehen darfst, mit Summen, Durchschnitten und deinen eigenen Werten („Du warst bei … Events dabei“), ohne Namen anderer Personen.
+- **Zeitraum** wie auf den anderen Statistikseiten.
+- Kennzahlen: **Striche und Käufe**, **Zusagen**, **Teilnahmen**.
+- **Nach Funktion** und **Nach Gruppe** als Balken. Gruppen mit ausgeschalteter Statistik tragen „Statistik aus“.
+
+<br clear="right">
 
 ---
 
@@ -813,7 +873,8 @@ Die Administration ist für die Arbeit am Rechner gebaut. Links steht die Seiten
 - Kopf mit Gruppenname, Mitgliederzahl und **Gruppe wechseln**.
 - **Name** der Gruppe ändern und **Speichern**.
 - **Bild** hochladen (PNG, JPEG oder GIF; große Bilder werden verkleinert). Ohne Bild erscheint das Kürzel.
-- **Daten exportieren**: alle Daten der Gruppe als JSON-Datei, mit Mitgliedern, Events, Katalog, Buchungen und Chats.
+- **Daten exportieren**: alle Daten der Gruppe als JSON-Datei, mit Mitgliedern, Events, Katalog, Buchungen, Chats und Statistikdaten.
+- **Statistik**: **Statistik in dieser Gruppe** ein- oder ausschalten und **Statistikdaten der Gruppe löschen** (Buchungen und Guthaben bleiben).
 - **Rollen & Berechtigungen verwalten**.
 - **Gruppe verlassen** mit Warnung. Ist man die letzte Person, die Mitglieder und Rollen verwalten darf, ist das Verlassen gesperrt, bis jemand anderes die Rolle hat.
 
@@ -855,7 +916,9 @@ Nur für das Vereint-Team, das die Installation betreibt.
 | mein Guthaben sehen | [Guthaben](#guthaben), [Käufe](#käufe) | Mitglied |
 | ein Getränk selbst bezahlen | [Bezahlen](#bezahlen) | Mitglied |
 | eine Runde ausgeben | [Runde ausgeben](#runde-ausgeben) | Mitglied |
-| Statistiken sehen | [Statistik](#statistik), [Getränkestatistik](#getränkestatistik), [Statistik-Übersicht](#statistik-übersicht) | alle Mitglieder |
+| Statistiken sehen | [Statistik](#statistik), [Getränkestatistik](#getränkestatistik), [Statistik-Übersicht](#statistik-übersicht), [Events der Gruppe](#events-der-gruppe), [Funktionen](#funktionen) | alle Mitglieder |
+| meine eigenen Zahlen sehen oder die Erfassung ausschalten | [Meine Statistik](#meine-statistik), [Profil](#profil) | alle |
+| ein Getränk nur für die Statistik erfassen | [Bezahlen](#bezahlen) | Mitglied |
 | Guthaben einbuchen | [Kasse](#kasse-und-finanzen), [Konto buchen](#mitgliedskonto-buchen) | Vorstand |
 | einen Abend abrechnen | [Eventabrechnung](#eventabrechnung) | Vorstand |
 | allen etwas mitteilen | [Kommunikation](#kommunikation) | Vorstand |
