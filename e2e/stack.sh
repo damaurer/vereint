@@ -5,6 +5,7 @@
 #   e2e/stack.sh up      Images aus den Dockerfiles bauen und Stack starten
 #   e2e/stack.sh down    Stack samt Daten entfernen
 #   e2e/stack.sh logs    Logs aller Dienste
+#   e2e/stack.sh status  Zustand je Container (Exit-Code, OOM-Kill, Neustarts)
 #
 # Mit E2E_SKIP_BUILD=1 werden bereits vorhandene Images vereint-e2e/* genutzt.
 # Alle Secrets sind Wegwerfwerte, die bei jedem `up` neu erzeugt werden und nur
@@ -67,12 +68,22 @@ case "${1:-}" in
   logs)
     compose logs --no-color "${@:2}"
     ;;
+  status)
+    # Zeigt, ob ein Dienst waehrend der Tests abgestuerzt ist: Ein Neustart
+    # (`restart: unless-stopped`) faellt in den Tests nur als kurze 503 auf.
+    for id in $(compose ps -aq); do
+      docker inspect --format \
+        '{{.Name}}: {{.State.Status}}, Neustarts {{.RestartCount}}, OOM-Kill {{.State.OOMKilled}}, Exit-Code {{.State.ExitCode}}, gestartet {{.State.StartedAt}}' \
+        "$id"
+    done
+    docker stats --no-stream --format '{{.Name}}: {{.MemUsage}}' $(compose ps -q) || true
+    ;;
   env)
     # Gibt einzelne Werte fuer die Tests aus, z. B. `stack.sh env KEYCLOAK_ADMIN_PASSWORD`.
     grep "^$2=" "$ENV_FILE" | cut -d= -f2-
     ;;
   *)
-    echo "Aufruf: $0 up|down|logs|env NAME" >&2
+    echo "Aufruf: $0 up|down|logs|status|env NAME" >&2
     exit 2
     ;;
 esac
