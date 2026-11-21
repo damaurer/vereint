@@ -72,6 +72,10 @@ allOpen {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // Die Testsuite hält viele Spring-Kontexte (H2, PostgreSQL, Mocks) im
+    // Cache. Mit Gradles Vorgabe von 512 MB lief der Test-JVM in CI der
+    // Heap aus ("Java heap space" beim Laden eines weiteren Kontexts).
+    maxHeapSize = "1g"
     testLogging {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         showExceptions = true
