@@ -62,9 +62,9 @@ Unter der Anmeldung steht außerdem „Noch keine Gruppe? **Eigene Gruppe eröff
 
 Die Startseite zeigt auf einen Blick:
 
-- dein **Guthaben** mit **Bezahlen** (Getränk scannen) und dem Link zum **Kontoauszug**,
+- dein **Guthaben** mit **Buchen** (Getränk scannen) und dem Link zum **Kontoauszug**,
 - deinen **nächsten Termin** mit Zu- oder Absage; ein Tipp auf die Karte öffnet das Event,
-- wie viele **Events** und **Buchungen** du hast.
+- wie viele **Events** und **Buchungen** du hast; ein Tipp darauf öffnet die Events bzw. dein Guthaben mit allen Buchungen.
 
 Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, wie viele davon noch ungelesen sind. Auch am Reiter **Chat** zeigt eine rote Zahl ungelesene Nachrichten.
 
@@ -77,7 +77,7 @@ Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, w
 **Am Handy** steht unten eine Leiste mit den vier wichtigsten Bereichen: **Start**, **Events**, **Chat** und **Guthaben**. Alles andere findest du unter **Mehr**, sortiert nach:
 
 - **Gruppe**: Moments, Direktnachrichten, Statistik
-- **Mein Konto**: Kalender, Freunde, Bezahlen, Käufe, Meine Statistik, Mitteilungen, Profil, Gruppeneinstellungen
+- **Mein Konto**: Kalender, Freunde, Buchen, Käufe, Meine Statistik, Mitteilungen, Profil, Gruppeneinstellungen
 - **Theke**: Getränkekatalog, Getränkelisten, Thekenterminal
 - **Verwaltung**: nur für Vorstand und Administration (dort stehen dann auch die Gruppeneinstellungen)
 

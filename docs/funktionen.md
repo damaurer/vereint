@@ -109,7 +109,7 @@ Thekenterminals.
 
 ## Bezahlen per Barcode oder aus dem Katalog
 
-- Unter *Bezahlen* (Menü und Dashboard) scannt das Mitglied den EAN-Barcode des
+- Unter *Buchen* (Menü, Guthaben und Dashboard) scannt das Mitglied den EAN-Barcode des
   Getränks mit der Handykamera, alternativ per Eingabe.
 - Alternativ wählt es oben *Aus Katalog wählen* und tippt das Getränk in einer
   durchsuchbaren Liste an (Issue #122). Die Liste zeigt nur Getränke aus dem

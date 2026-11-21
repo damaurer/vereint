@@ -77,6 +77,7 @@
       "declined": "You declined",
       "maybe": "You answered maybe",
       "statementShort": "Statement",
+      "book": "Book",
       "statEventsHint": "this month",
       "statEntriesHint": "in total"
     },
@@ -302,7 +303,7 @@
       "communications": "Communications",
       "admin": "Administration",
       "tablet": "Bar terminal",
-      "scan": "Pay",
+      "scan": "Book",
       "stammtisch": "Group settings",
       "calendar": "Calendar",
       "friends": "Friends",
@@ -522,7 +523,7 @@
       "description": "Plan a new event and invite members."
     },
     "scan": {
-      "title": "Pay for a drink",
+      "title": "Book a drink",
       "description": "Scan a barcode or pick a drink from the catalogue, then pay with credit or record it for the statistics."
     },
     "boardMoments": {
