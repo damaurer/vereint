@@ -820,6 +820,9 @@ export interface ConversationSummary {
   unreadCount: number;
   pinned: PinnedNote | null;
   canWrite: boolean;
+  /** Gruppe von Gruppen- und Event-Chats in der gemeinsamen Chat-Liste; Direktnachrichten haben keine. */
+  stammtischId?: string | null;
+  stammtischName?: string | null;
 }
 
 // --- Freunde (`/api/v1/friends`, gruppenübergreifend) ---

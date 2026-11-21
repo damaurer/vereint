@@ -263,8 +263,8 @@ describe('EventDetailComponent', () => {
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
     expect(api.getEventConversation).toHaveBeenCalledWith('e-1');
-    expect(chatApi.messages).toHaveBeenCalledWith('c-9', 'event');
-    expect(chatApi.markRead).toHaveBeenCalledWith('c-9', 'event');
+    expect(chatApi.messages).toHaveBeenCalledWith('c-9', 'event', undefined);
+    expect(chatApi.markRead).toHaveBeenCalledWith('c-9', 'event', undefined);
     const thread = root.querySelector('section.event-chat app-chat-thread');
     expect(thread?.textContent).toContain('Wer bringt Kohle mit?');
     // Eingebettet: ohne eigene Kopfzeile, mit Eingabefeld.

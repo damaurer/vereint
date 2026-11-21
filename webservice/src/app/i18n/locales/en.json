@@ -291,7 +291,6 @@
       "chat": "Chat",
       "wallet": "Balance",
       "moments": "Moments",
-      "direct": "Direct messages",
       "purchases": "Purchases",
       "notifications": "Notifications",
       "catalog": "Drinks catalogue",
@@ -475,12 +474,8 @@
       "description": "Reusable drinks lists."
     },
     "chat": {
-      "title": "Chat",
-      "description": "Member and event chats."
-    },
-    "directMessages": {
-      "title": "Direct messages",
-      "description": "Personal one-to-one conversations."
+      "title": "Chats",
+      "description": "Group chats, event chats and direct messages in one list."
     },
     "notifications": {
       "title": "Notifications",
@@ -608,9 +603,7 @@
     }
   },
   "chat": {
-    "eyebrow": "Group chat",
-    "title": "Chat",
-    "toDirectMessages": "Direct messages →",
+    "title": "Chats",
     "loadingMessage": "Loading conversations.",
     "unavailable": "Chat unavailable",
     "online": "online",
@@ -620,16 +613,57 @@
     },
     "you": "You",
     "list": {
-      "ariaLabel": "Conversations",
-      "newMessage": "+ New message",
-      "groupOnline": "{count} online",
+      "ariaLabel": "All chats",
+      "newMessage": "New message",
       "clubChat": "Group chat",
-      "eventChats": "Event chats",
-      "noEventChats": "You have no event chats right now. They appear once you are invited to an event.",
-      "noMessages": "No messages yet"
+      "noMessages": "No messages yet",
+      "searchLabel": "Search chats",
+      "searchPlaceholder": "Search",
+      "emptyTitle": "No chats",
+      "emptyStart": "You have no chats yet. Start one with the plus button above.",
+      "emptyFiltered": "No chat matches your search or filter.",
+      "noneSelectedTitle": "No chat selected",
+      "noneSelectedMessage": "Pick a chat on the left or write a new message with the plus button."
+    },
+    "filter": {
+      "ariaLabel": "Filter chats",
+      "all": "All",
+      "unread": "Unread",
+      "club": "Groups",
+      "event": "Events",
+      "direct": "Direct"
+    },
+    "kind": {
+      "event": "Event",
+      "direct": "Direct message"
+    },
+    "compose": {
+      "title": "New message",
+      "title_club": "To a group",
+      "title_event": "To an event chat",
+      "title_direct": "To a person",
+      "kindHint": "Where should the message go?",
+      "changeKind": "Choose another kind",
+      "club": "Group",
+      "clubHint": "To the group chat of one of your groups",
+      "event": "Event",
+      "eventHint": "To the chat of an event you are invited to",
+      "direct": "Direct message",
+      "directHint": "To a person from your groups or your friends list",
+      "personLabel": "Search person",
+      "personPlaceholder": "Enter a name…",
+      "contactsLoading": "Loading your contacts.",
+      "contactsUnavailable": "Contacts unavailable",
+      "nobodyTitle": "Nobody found",
+      "nobodyMessage": "You can write to friends and people from your groups.",
+      "opening": "Opening…",
+      "friend": "Friend",
+      "noTargetsTitle": "Nothing to choose",
+      "noEvents": "You are not invited to any open event right now. Event chats appear once you are invited.",
+      "noGroups": "You are not in any group whose chat you can write to."
     },
     "thread": {
-      "back": "← Back",
+      "back": "Back",
       "membersOnline": {
         "one": "{count} member online",
         "other": "{count} members online"
@@ -645,7 +679,8 @@
       "image": "Image attached to the message",
       "reactionLabel": "Reaction {emoji}, {count}",
       "reactWith": "React with {emoji}",
-      "reactionFailed": "The reaction could not be saved. Please try again."
+      "reactionFailed": "The reaction could not be saved. Please try again.",
+      "toEventIn": "To the event · {group}"
     },
     "composer": {
       "attach": "Add attachment",
@@ -656,31 +691,6 @@
       "attachUnavailable": "Attachments are currently unavailable.",
       "readOnly": "You can no longer write in this chat.",
       "readOnlyDirect": "You are neither friends nor share a group. The history stays readable, but you cannot send new messages."
-    },
-    "direct": {
-      "eyebrow": "Across all groups",
-      "title": "One-to-one chats",
-      "badge": "DMs",
-      "toGroupChat": "← To the group chat",
-      "unavailable": "Direct messages unavailable",
-      "searchLabel": "Search conversations",
-      "searchPlaceholder": "Search conversations…",
-      "conversations": "Conversations ({count})",
-      "emptyTitle": "No conversations",
-      "emptyMessage": "There are no matching one-to-one chats.",
-      "emptyStart": "You have no direct chats yet. Start one with \"New message\".",
-      "noneSelectedTitle": "No conversation selected",
-      "noneSelectedMessage": "Pick a conversation on the left or start a new one.",
-      "pickerTitle": "New message",
-      "pickerSearchLabel": "Find a person",
-      "pickerSearchPlaceholder": "Type a name…",
-      "pickerLoading": "Loading your contacts.",
-      "pickerUnavailable": "Contacts unavailable",
-      "pickerEmptyTitle": "Nobody found",
-      "pickerEmptyMessage": "You can write to friends and people from your groups.",
-      "pickerStarting": "Opening…",
-      "toFriends": "Friends",
-      "friend": "Friend"
     },
     "receipt": {
       "pending": "Waiting for network",
@@ -731,7 +741,7 @@
   "friends": {
     "eyebrow": "Across all groups",
     "title": "Friends",
-    "toDirect": "To direct messages",
+    "toDirect": "To the chats",
     "intro": "Friends stay, even when you no longer share a group.",
     "unavailable": "Friends list unavailable",
     "loadingMessage": "Loading your friends.",

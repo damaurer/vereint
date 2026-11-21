@@ -9,13 +9,18 @@ import type {
   MemberProfile,
 } from '../api/api.types';
 
+/** Header, mit dem ein Gruppen- oder Event-Chat der Liste seine Gruppe nennt (siehe BFF). */
+export const CHAT_GROUP_HEADER = 'X-Vereint-Chat-Group';
+
 /** Abstand, in dem Konversationslisten und Chat-Badge aufgefrischt werden. */
 export const CHAT_LIST_REFRESH_MS = 30_000;
 
 /**
- * Datenzugriff der Chat-Oberflächen. Gruppen- und Event-Chats liegen unter
- * `/api/v1/conversations...` (gewählte Gruppe), Direktnachrichten
- * gruppenübergreifend unter `/api/v1/direct-conversations...`.
+ * Datenzugriff der Chat-Oberflächen. Die gemeinsame Liste aller Chats liegt
+ * unter `/api/v1/chats`. Gruppen- und Event-Chats liegen unter
+ * `/api/v1/conversations...`: ohne `group` in der gewählten Gruppe, mit
+ * `group` in dieser Gruppe (Header [CHAT_GROUP_HEADER]). Direktnachrichten
+ * liegen gruppenübergreifend unter `/api/v1/direct-conversations...`.
  *
  * Formuliert ausschließlich die Aufrufe; welche Konversationen sichtbar und
  * beschreibbar sind, entscheidet der Fachservice (`deny by default`). Private
@@ -28,6 +33,19 @@ export class ChatApiService {
   /** Eigenes Profil (`GET /users/me`), u. a. für die eigene Benutzer-ID. */
   me(): Observable<MemberProfile> {
     return this.api.get<MemberProfile>('/users/me');
+  }
+
+  /**
+   * Alle eigenen Chats in einer Liste: Gruppenchats und Event-Chats aller
+   * eigenen Gruppen sowie Direktnachrichten, neueste Nachricht zuerst (`GET /chats`).
+   */
+  allChats(): Observable<ConversationSummary[]> {
+    return this.api.get<ConversationSummary[]>('/chats');
+  }
+
+  /** Ungelesene Nachrichten über alle Chats der Liste (`GET /chats/unread-count`). */
+  allUnreadCount(): Observable<{ unread: number }> {
+    return this.api.get<{ unread: number }>('/chats/unread-count');
   }
 
   /** Gruppenchat und Event-Chats der gewählten Gruppe, Gruppenchat zuerst (`GET /conversations`). */
@@ -51,27 +69,33 @@ export class ChatApiService {
   }
 
   /** Nachrichten einer Konversation, älteste zuerst. */
-  messages(conversationId: string, type?: ConversationType): Observable<ChatMessageDto[]> {
-    return this.api.get<ChatMessageDto[]>(`${this.path(conversationId, type)}/messages`);
+  messages(conversationId: string, type?: ConversationType, group?: string | null): Observable<ChatMessageDto[]> {
+    return this.api.get<ChatMessageDto[]>(`${this.path(conversationId, type)}/messages`, this.headers(type, group));
   }
 
   /**
    * Sendet eine Nachricht. Mit `clientId` darf die App dieselbe Nachricht nach
    * einem Verbindungsabbruch erneut senden, ohne dass sie doppelt ankommt.
    */
-  send(conversationId: string, message: string, type?: ConversationType, clientId?: string): Observable<ChatMessageDto> {
+  send(
+    conversationId: string,
+    message: string,
+    type?: ConversationType,
+    clientId?: string,
+    group?: string | null,
+  ): Observable<ChatMessageDto> {
     const body = clientId ? { message, clientId } : { message };
-    return this.api.post<ChatMessageDto>(`${this.path(conversationId, type)}/messages`, body);
+    return this.api.post<ChatMessageDto>(`${this.path(conversationId, type)}/messages`, body, this.headers(type, group));
   }
 
   /** „schreibt gerade…“ an die anderen im Gespräch (`POST …/typing`). */
-  typing(conversationId: string, type?: ConversationType): Observable<void> {
-    return this.api.post<void>(`${this.path(conversationId, type)}/typing`, {});
+  typing(conversationId: string, type?: ConversationType, group?: string | null): Observable<void> {
+    return this.api.post<void>(`${this.path(conversationId, type)}/typing`, {}, this.headers(type, group));
   }
 
   /** Setzt den Lesestand auf jetzt. */
-  markRead(conversationId: string, type?: ConversationType): Observable<ConversationSummary> {
-    return this.api.post<ConversationSummary>(`${this.path(conversationId, type)}/read`, {});
+  markRead(conversationId: string, type?: ConversationType, group?: string | null): Observable<ConversationSummary> {
+    return this.api.post<ConversationSummary>(`${this.path(conversationId, type)}/read`, {}, this.headers(type, group));
   }
 
   /** Schaltet die eigene Reaktion mit diesem Emoji um. */
@@ -80,10 +104,12 @@ export class ChatApiService {
     messageId: string,
     emoji: string,
     type?: ConversationType,
+    group?: string | null,
   ): Observable<ChatMessageDto> {
     return this.api.post<ChatMessageDto>(
       `${this.path(conversationId, type)}/messages/${encodeURIComponent(messageId)}/reactions`,
       { emoji },
+      this.headers(type, group),
     );
   }
 
@@ -93,6 +119,11 @@ export class ChatApiService {
    */
   contacts(): Observable<FriendContact[]> {
     return this.api.get<FriendContact[]>('/friends/contacts');
+  }
+
+  /** Gruppe eines Gruppen- oder Event-Chats aus der gemeinsamen Liste. */
+  private headers(type?: ConversationType, group?: string | null): Record<string, string> | undefined {
+    return type !== 'direct' && group ? { [CHAT_GROUP_HEADER]: group } : undefined;
   }
 
   private path(conversationId: string, type?: ConversationType): string {

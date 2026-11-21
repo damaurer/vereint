@@ -197,6 +197,8 @@ Fachlich: [Einladungslinks](../domains/member-invites.md).
 | `GET` | `/api/v1/events/{eventId}/chat/conversations/{conversationId}` | Einzelne Unterhaltung des Events | wie oben |
 | `GET` / `POST` | `/api/v1/events/{eventId}/chat/conversations/{conversationId}/messages` | Nachrichten dieser Unterhaltung | wie oben |
 | `GET` / `POST` | `/api/v1/events/{eventId}/chat/guest/messages` | Nachrichten als Gast lesen bzw. senden | Gast (`X-Guest-Token`) |
+| `GET` | `/api/v1/chats` | Alle eigenen Chats in einer Liste: Gruppen- und Event-Chats aller eigenen Gruppen (mit `stammtischId`, `stammtischName`) und Direktnachrichten, neueste Nachricht zuerst; ohne gewählte Gruppe | Angemeldet |
+| `GET` | `/api/v1/chats/unread-count` | Ungelesene Nachrichten über alle Chats dieser Liste | Angemeldet |
 | `GET` | `/api/v1/conversations` | Eigene Unterhaltungen der Gruppe (Gruppenchat, Event-Chats) | Mitglied |
 | `GET` | `/api/v1/conversations/unread-count` | Ungelesene Nachrichten der Gruppe plus aller Direktnachrichten | Mitglied |
 | `GET` | `/api/v1/conversations/club` | Gruppenchat | Mitglied |

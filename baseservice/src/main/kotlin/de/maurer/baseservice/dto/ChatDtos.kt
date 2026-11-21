@@ -103,7 +103,9 @@ data class ChatMessagePreviewDto(
 /**
  * Eintrag der Chat-Übersicht: Vereinschat (`club`), Direktnachricht (`direct`)
  * oder Event-Chat (`event`). `partnerId`/`partnerName` gibt es nur bei
- * Direktnachrichten; die Infotafel nur im Vereinschat.
+ * Direktnachrichten; die Infotafel nur im Vereinschat. `stammtischId` und
+ * `stammtischName` nennt die gemeinsame Chat-Liste (`/api/v1/chats`) bei
+ * Gruppen- und Event-Chats; Direktnachrichten gehören keiner Gruppe.
  */
 data class ConversationSummaryDto(
     val id: String,
@@ -115,7 +117,9 @@ data class ConversationSummaryDto(
     val lastMessage: ChatMessagePreviewDto?,
     val unreadCount: Long,
     val pinned: PinnedNoteDto?,
-    val canWrite: Boolean
+    val canWrite: Boolean,
+    val stammtischId: String? = null,
+    val stammtischName: String? = null
 )
 
 data class PinnedNoteDto(

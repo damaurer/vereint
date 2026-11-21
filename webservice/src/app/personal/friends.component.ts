@@ -34,7 +34,7 @@ interface FriendsPage {
         <span class="eyebrow">{{ 'friends.eyebrow' | t }}</span>
         <div class="fr-head">
           <h1 id="friends-title">{{ 'friends.title' | t }}</h1>
-          <a class="member-back" routerLink="/direktnachrichten">{{ 'friends.toDirect' | t }}</a>
+          <a class="member-back" routerLink="/chat">{{ 'friends.toDirect' | t }}</a>
         </div>
         <p>{{ 'friends.intro' | t }}</p>
 
@@ -393,7 +393,7 @@ export class FriendsComponent implements OnInit, OnDestroy {
     this.chat.startDirect(person.userId).subscribe({
       next: (conversation) => {
         this.busy.set(null);
-        void this.router.navigate(['/direktnachrichten'], { queryParams: { id: conversation.id } });
+        void this.router.navigate(['/chat'], { queryParams: { id: conversation.id } });
       },
       error: (error: unknown) => {
         this.busy.set(null);

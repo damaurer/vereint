@@ -152,11 +152,21 @@ const SHOTS = [
     device: PHONE,
     run: async (page) => {
       await open(page, '/chat');
-      await page.locator('button.chat-conversation').first().click();
+      await page.locator('button.chat-conversation[data-type="club"]').first().click();
       await settle(page);
     },
   },
-  { id: 'm-direkt', who: 'member', device: PHONE, run: async (page) => open(page, '/direktnachrichten') },
+  {
+    // „Neue Nachricht“: erst die Art (Gruppe, Event, Direktnachricht), dann wohin.
+    id: 'm-direkt',
+    who: 'member',
+    device: PHONE,
+    run: async (page) => {
+      await open(page, '/chat');
+      await page.getByRole('button', { name: 'Neue Nachricht' }).click();
+      await settle(page);
+    },
+  },
   { id: 'm-statistik', who: 'member', device: PHONE, run: async (page) => open(page, '/statistik') },
   { id: 'm-statistik-ich', who: 'member', device: PHONE, run: async (page) => open(page, '/statistik/ich') },
   {

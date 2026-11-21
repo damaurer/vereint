@@ -97,7 +97,7 @@ describe('ChatThreadComponent', () => {
 
   it('marks the conversation read when opened and refreshes the chat badge', async () => {
     const fixture = await create();
-    expect(api.markRead).toHaveBeenCalledWith('c-club', 'club');
+    expect(api.markRead).toHaveBeenCalledWith('c-club', 'club', undefined);
     expect(store.refresh).toHaveBeenCalled();
     expect(fixture.componentInstance).toBeTruthy();
   });
@@ -118,7 +118,7 @@ describe('ChatThreadComponent', () => {
     expect(reaction?.textContent).toContain('2');
     reaction!.click();
     fixture.detectChanges();
-    expect(api.toggleReaction).toHaveBeenCalledWith('c-club', 'm-1', '🍺', 'club');
+    expect(api.toggleReaction).toHaveBeenCalledWith('c-club', 'm-1', '🍺', 'club', undefined);
     expect(root(fixture).querySelector('.chat-reaction')?.textContent).toContain('3');
     expect(root(fixture).querySelector('.chat-reaction.is-active')).toBeTruthy();
   });
@@ -131,7 +131,7 @@ describe('ChatThreadComponent', () => {
       (button) => button.textContent?.includes('🍺'),
     );
     beer!.click();
-    expect(api.toggleReaction).toHaveBeenCalledWith('c-club', 'm-1', '🍺', 'club');
+    expect(api.toggleReaction).toHaveBeenCalledWith('c-club', 'm-1', '🍺', 'club', undefined);
   });
 
   it('sends a message with its own client id and clears the draft', async () => {
@@ -142,7 +142,7 @@ describe('ChatThreadComponent', () => {
     expect(component.draft).toBe('');
     await settle();
     fixture.detectChanges();
-    expect(api.send).toHaveBeenCalledWith('c-club', 'Prost!', 'club', expect.any(String));
+    expect(api.send).toHaveBeenCalledWith('c-club', 'Prost!', 'club', expect.any(String), 'st-1');
     expect(root(fixture).textContent).toContain('Prost!');
     expect(root(fixture).querySelector('.chat-message.is-pending')).toBeNull();
     expect(TestBed.inject(ChatOutboxService).entries()).toEqual([]);
@@ -243,7 +243,7 @@ describe('ChatThreadComponent', () => {
     component.draft = 'Ha';
     component.onDraftChange();
     expect(api.typing).toHaveBeenCalledTimes(1);
-    expect(api.typing).toHaveBeenCalledWith('c-club', 'club');
+    expect(api.typing).toHaveBeenCalledWith('c-club', 'club', undefined);
   });
 
   it('disables the composer when the conversation is read-only', async () => {

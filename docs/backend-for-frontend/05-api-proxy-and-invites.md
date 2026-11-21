@@ -53,6 +53,7 @@ Um Header-Kollisionen und Sicherheitslecks zu verhindern, entfernt der Proxy fol
 ### 2. Header-Injektion (Request)
 - `Authorization`: `Bearer <accessToken>` aus der Session.
 - `X-Stammtisch-Id`: gewählte Gruppe aus dem HttpOnly-Cookie `vereint.stammtisch` (nur mit Session). Der Fachservice prüft die Mitgliedschaft selbst.
+  Ausnahme für die gemeinsame Chat-Liste: Bei `/api/v1/conversations/{id}/…` darf die App die Gruppe des Chats im Header `X-Vereint-Chat-Group` (UUID) nennen; dann gilt diese statt des Cookies. Das gewährt nichts zusätzlich, denn die Gruppe ließe sich auch über die Gruppenauswahl setzen, und der Fachservice prüft die Mitgliedschaft. Der Header selbst geht nicht an Spring weiter.
 - `X-Request-Id`: Vorhandene `X-Request-Id` (falls `^[\w.-]{1,128}$`) oder neu generierte UUIDv4 (`requestId`).
 - `Accept`: Standardmäßig `application/json`, falls vom Client nicht gesetzt.
 

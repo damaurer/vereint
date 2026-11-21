@@ -74,7 +74,7 @@ class PersonalAlertService(
                 type = TYPE_DIRECT_MESSAGE,
                 read = false,
                 createdAt = latest.createdAt,
-                link = "/direktnachrichten?id=${conversation.id}"
+                link = "/chat?id=${conversation.id}"
             )
         }
         val friends = friendshipRepository.findInvolving(caller.id).mapNotNull { friendship ->

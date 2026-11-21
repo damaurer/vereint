@@ -171,9 +171,9 @@ class DirectMessageService(
                 title = Messages.defaultText(Msg("notification.direct.title", caller.displayName)).trim(),
                 body = saved.message,
                 type = PersonalAlertService.TYPE_DIRECT_MESSAGE,
-                link = "/direktnachrichten?id=${conversation.id}",
+                link = "/chat?id=${conversation.id}",
                 // Je Gespräch eine Benachrichtigung: eine neue ersetzt die vorige.
-                tag = "/direktnachrichten?id=${conversation.id}"
+                tag = "/chat?id=${conversation.id}"
             ),
             live = false
         )

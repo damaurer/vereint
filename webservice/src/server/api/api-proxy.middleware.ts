@@ -3,7 +3,12 @@ import { randomUUID } from 'node:crypto';
 import http from 'node:http';
 import https from 'node:https';
 import { serverEnvironment } from '../config/environment';
-import { readStammtischCookie, STAMMTISCH_HEADER } from '../stammtisch/stammtisch-cookie';
+import {
+  CHAT_GROUP_HEADER,
+  readChatGroupHeader,
+  readStammtischCookie,
+  STAMMTISCH_HEADER,
+} from '../stammtisch/stammtisch-cookie';
 
 /**
  * Auslieferungs-Proxy für die fachliche API (`/api/v1/*`).
@@ -34,6 +39,7 @@ const STRIPPED_REQUEST_HEADERS = new Set([
   'content-length',
   'accept-encoding',
   'x-stammtisch-id',
+  CHAT_GROUP_HEADER,
 ]);
 
 /** Antwort-Header, die der Proxy nicht selbst weiterreicht. */
@@ -109,9 +115,10 @@ function forwardHeaders(req: Request, traceId: string, accessToken?: string): He
   }
   if (accessToken) {
     headers.set('authorization', `Bearer ${accessToken}`);
-    // Der Stammtisch kommt nur aus dem Cookie des BFF; der Fachservice prüft
-    // die Mitgliedschaft selbst.
-    const stammtischId = readStammtischCookie(req);
+    // Der Stammtisch kommt aus dem Cookie des BFF, bei einzelnen Chats der
+    // gemeinsamen Chat-Liste aus deren Gruppe; der Fachservice prüft die
+    // Mitgliedschaft selbst.
+    const stammtischId = readChatGroupHeader(req) ?? readStammtischCookie(req);
     if (stammtischId) headers.set(STAMMTISCH_HEADER, stammtischId);
   }
   headers.set('x-request-id', traceId);

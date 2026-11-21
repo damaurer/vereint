@@ -55,8 +55,8 @@ export interface OutboxDelivery {
  * erneuten Senden und legt sie nicht doppelt an. Nachrichten gehen der Reihe
  * nach hinaus.
  *
- * Gesendet wird nur, was das angemeldete Konto geschrieben hat, und
- * Gruppenchats nur, solange ihre Gruppe gewählt ist. Die Warteschlange liegt
+ * Gesendet wird nur, was das angemeldete Konto geschrieben hat; Gruppenchats
+ * gehen mit ihrer Gruppe hinaus, auch wenn gerade eine andere gewählt ist. Die Warteschlange liegt
  * unverschlüsselt im Browser dieses Geräts und wird beim Abmelden geleert.
  */
 @Injectable({ providedIn: 'root' })
@@ -124,13 +124,18 @@ export class ChatOutboxService implements OnDestroy {
   }
 
   /** Nimmt eine Nachricht auf und versucht sofort, sie zu senden. */
-  async enqueue(conversationId: string, type: ConversationType, message: string): Promise<OutboxEntry> {
+  async enqueue(
+    conversationId: string,
+    type: ConversationType,
+    message: string,
+    stammtischId?: string | null,
+  ): Promise<OutboxEntry> {
     await this.start();
     const entry: OutboxEntry = {
       clientId: newClientId(),
       conversationId,
       type,
-      stammtischId: type === 'direct' ? null : this.group,
+      stammtischId: type === 'direct' ? null : (stammtischId ?? this.group),
       owner: this.owner ?? '',
       message,
       createdAt: new Date().toISOString(),
@@ -179,7 +184,7 @@ export class ChatOutboxService implements OnDestroy {
         if (!this.entries().some((current) => current.clientId === entry.clientId && current.state === 'pending')) continue;
         try {
           const message = await firstValueFrom(
-            this.api.send(entry.conversationId, entry.message, entry.type, entry.clientId),
+            this.api.send(entry.conversationId, entry.message, entry.type, entry.clientId, entry.stammtischId),
           );
           this.update((list) => list.filter((current) => current.clientId !== entry.clientId));
           this.retryIndex = 0;
@@ -221,13 +226,17 @@ export class ChatOutboxService implements OnDestroy {
     }
   }
 
-  /** Was jetzt gesendet werden darf: eigenes Konto, Gruppenchats nur in der gewählten Gruppe. */
+  /**
+   * Was jetzt gesendet werden darf: eigenes Konto. Gruppenchats gehen mit ihrer
+   * Gruppe hinaus, unabhängig von der gewählten; ohne bekannte Gruppe nur in
+   * der gewählten.
+   */
   private sendable(): OutboxEntry[] {
     return this.entries().filter(
       (entry) =>
         entry.state === 'pending' &&
         entry.owner === (this.owner ?? '') &&
-        (entry.type === 'direct' || entry.stammtischId === this.group),
+        (entry.type === 'direct' || !!entry.stammtischId || this.group === null),
     );
   }
 

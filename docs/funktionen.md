@@ -54,7 +54,9 @@ Thekenterminals.
 
 ## Chat und Mitteilungen
 
-- Gruppenchat, Event-Chats und Direktnachrichten, mit Zähler für ungelesene Nachrichten am Chat-Eintrag.
+- Alle Chats auf einer Seite wie bei bekannten Messengern: Gruppenchats und Event-Chats aller eigenen Gruppen und die Direktnachrichten in einer Liste, neueste Nachricht zuerst, mit Vorschau, Uhrzeit und Ungelesen-Zahl. Suche und Filter (Alle, Ungelesen, Gruppen, Events, Direkt) statt Unterseiten. Chats anderer Gruppen öffnen, ohne die Gruppe zu wechseln. Am Handy öffnet ein Chat im Vollbild, am Rechner steht er neben der Liste.
+- „Neue Nachricht“ fragt zuerst die Art (Gruppe, Event, Direktnachricht) und dann das Ziel: eine eigene Gruppe, ein Event, zu dem man eingeladen ist, oder eine Person aus den eigenen Gruppen bzw. der Freundesliste.
+- Zähler für ungelesene Nachrichten am Chat-Eintrag, über alle eigenen Chats.
 - Live: Neue Nachrichten, Reaktionen und Mitteilungen erscheinen sofort, ohne Neuladen; Zähler gleichen sich über alle eigenen Geräte ab.
 - Haken wie bei bekannten Messengern an eigenen Nachrichten: einer = gesendet, zwei = zugestellt (auf einem Gerät angekommen), zwei farbige = gelesen. In Gruppen- und Event-Chats wechseln die Haken erst, wenn alle Empfänger so weit sind; ein Antippen bzw. Darüberfahren zeigt „Zugestellt an 3 von 5, gelesen von 2“.
 - „… schreibt…“ über dem Eingabefeld, solange jemand im offenen Chat tippt (Gruppen-, Event-Chat und Direktnachrichten).

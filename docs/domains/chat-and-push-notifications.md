@@ -39,7 +39,10 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
     - `GET /messages`, `POST /messages`: Nachrichten lesen bzw. als Mitglied senden (`SendMessageRequest`)
     - `GET /conversations/{conversationId}`, `GET|POST /conversations/{conversationId}/messages`: einzelne Unterhaltung des Events
     - `GET /guest/messages`, `POST /guest/messages`: als Gast lesen bzw. senden (Header `X-Guest-Token`)
-  - `ConversationController`: Gruppenchat und Event-Chats unter `/api/v1/conversations`
+  - `ChatOverviewController`: gemeinsame Chat-Liste unter `/api/v1/chats`, ohne gewählte Gruppe
+    - `GET /`: Gruppenchats und Event-Chats aller eigenen Gruppen plus Direktnachrichten, neueste Nachricht zuerst. Gruppen- und Event-Chats tragen `stammtischId` und `stammtischName`. Der `ChatOverviewService` liest jede Gruppe in einer eigenen Transaktion in deren Kontext (wie der Kalender), sichtbar ist dasselbe wie in `GET /api/v1/conversations` der Gruppe.
+    - `GET /unread-count`: ungelesene Nachrichten über alle diese Chats (Badge am Chat-Eintrag)
+  - `ConversationController`: Gruppenchat und Event-Chats unter `/api/v1/conversations`. Öffnet die App einen Chat aus der gemeinsamen Liste, nennt sie dessen Gruppe im Header `X-Vereint-Chat-Group`; der BFF setzt daraus `X-Stammtisch-Id` (nur für `/api/v1/conversations/{id}/…`), der Fachservice prüft die Mitgliedschaft wie immer.
     - `GET /`: eigene Unterhaltungen der Gruppe; `GET /unread-count`: ungelesene Nachrichten (inklusive Direktnachrichten)
     - `GET /club`: Gruppenchat; `PUT /club/pin`: Infotafel setzen (`PinNoteRequest`)
     - `GET|POST /{conversationId}/messages`, `POST /{conversationId}/read`

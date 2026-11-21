@@ -115,7 +115,7 @@ Erscheint nach der Anmeldung, wenn jemand in mehreren Gruppen ist, und jederzeit
 
 - Jede Gruppe steht mit **Kürzel**, **Name**, **deiner Rolle** und **Mitgliederzahl** in einer Zeile.
 - **Aktuell** markiert die gerade offene Gruppe. Ein Tipp auf eine andere wechselt hinein; Events, Chat, Guthaben und Katalog zeigen danach deren Daten.
-- **Freunde**, **Kalender** und **Direktnachrichten** gelten über alle Gruppen, sie ändern sich beim Wechsel nicht.
+- **Freunde**, **Kalender** und der **Chat** gelten über alle Gruppen, sie ändern sich beim Wechsel nicht.
 - **Neue Gruppe eröffnen** unten zeigt, wie viele der drei eigenen Gruppen noch frei sind.
 
 <br clear="right">
@@ -176,7 +176,7 @@ Die Startseite beantwortet die drei häufigsten Fragen: Wie viel Guthaben habe i
 
 Alles, was nicht in die untere Leiste passt, sortiert nach Bereichen:
 
-- **Gruppe**: [Moments](#moments), [Direktnachrichten](#direktnachrichten), [Statistik](#statistik)
+- **Gruppe**: [Moments](#moments), [Statistik](#statistik)
 - **Mein Konto**: [Kalender](#kalender), [Freunde](#freunde), [Buchen](#buchen), [Käufe](#käufe), [Mitteilungen](#mitteilungen), [Profil](#profil)
 - **Theke**: [Getränkekatalog](#getränkekatalog), [Getränkelisten](#getränkelisten), [Thekenterminal](#strichliste)
 - **Verwaltung**, nur mit den Rechten dazu: [Vorstand](#vorstandsübersicht), [Administration](#mitglieder-und-rollen), [Gruppe](#gruppeneinstellungen)
@@ -281,11 +281,13 @@ Der Chat aller Eingeladenen eines Events, etwa für Fahrgemeinschaften oder Absp
 
 <img src="screens/chat.png" alt="Chatübersicht" width="300" align="right">
 
-Die Übersicht aller Unterhaltungen der Gruppe.
+Alle Chats in einer Liste, über alle eigenen Gruppen, neueste Nachricht zuerst.
 
-- **Direktnachrichten** oben rechts wechselt zu den [Gesprächen zu zweit](#direktnachrichten).
-- **Gruppenchat**: eine Zeile für die ganze Gruppe mit letzter Nachricht, Uhrzeit und Zahl ungelesener Nachrichten.
-- **Event-Chats**: ein Chat je Event, ebenfalls mit letzter Nachricht. Steht dort „Noch keine Nachrichten“, hat noch niemand geschrieben.
+- **+** oben rechts: [Neue Nachricht](#neue-nachricht).
+- **Suchfeld**: sucht nach Name, Gruppe und letzter Nachricht.
+- **Alle**, **Ungelesen**, **Gruppen**, **Events**, **Direkt**: grenzen die Liste ein; bei **Ungelesen** steht die Zahl der Chats mit neuen Nachrichten.
+- Jede Zeile: Bild bzw. Kürzel, Name, Uhrzeit der letzten Nachricht, Vorschau und Zahl ungelesener Nachrichten. Gruppenchats heißen wie ihre Gruppe, Direktnachrichten wie die Person. Event-Chats tragen **Event** und den Namen ihrer Gruppe.
+- Am Handy öffnet ein Chat im Vollbild, der Pfeil oben links führt zurück. Am Rechner und Tablet steht der Chat rechts neben der Liste.
 
 <br clear="right">
 
@@ -293,7 +295,7 @@ Die Übersicht aller Unterhaltungen der Gruppe.
 
 <img src="screens/gruppenchat.png" alt="Gruppenchat" width="300" align="right">
 
-Der Chat aller Mitglieder.
+Der Chat aller Mitglieder einer Gruppe. Oben stehen der Name der Gruppe und „Gruppenchat“.
 
 - Oben die **Infotafel**: ein vom Vorstand angehefteter Hinweis, etwa ein wichtiger Termin. Sie bleibt stehen, auch wenn weiter geschrieben wird (siehe [Kommunikation](#kommunikation)).
 - Darunter die Nachrichten mit Kürzel, Name und Uhrzeit. Neue Nachrichten und Reaktionen erscheinen sofort, ohne Neuladen.
@@ -301,18 +303,20 @@ Der Chat aller Mitglieder.
 - Schreibt gerade jemand, steht über dem Eingabefeld zum Beispiel „Anna schreibt…“.
 - Unten **Nachricht** eintippen und senden. Ohne Netz steht die Nachricht mit einer **Uhr** da und geht hinaus, sobald wieder Netz da ist. Klappt das nicht, stehen **Nicht gesendet**, **Erneut senden** und **Verwerfen** darunter.
 
+Event-Chats und Direktnachrichten sehen genauso aus. Im Event-Chat führt der Link unter dem Namen zum Event.
+
 <br clear="right">
 
-### Direktnachrichten
+### Neue Nachricht
 
-<img src="screens/direktnachrichten.png" alt="Direktnachrichten" width="300" align="right">
+<img src="screens/direktnachrichten.png" alt="Neue Nachricht" width="300" align="right">
 
-Gespräche zu zweit, **über alle Gruppen**: Mit jeder Person gibt es genau ein Gespräch.
+Öffnet sich über das **+** im [Chat](#chat).
 
-- **Freunde** oben rechts führt zur [Freundesliste](#freunde).
-- **Gespräche durchsuchen** filtert nach Namen.
-- **Gespräche** mit Zahl: jede Zeile mit Kürzel, Name, Zeit und letzter Nachricht.
-- Im Gespräch gibt es dieselben Haken, „schreibt…“ und das Senden ohne Netz wie im [Gruppenchat](#gruppenchat).
+- Erster Schritt: **Gruppe**, **Event** oder **Direktnachricht** wählen.
+- **Gruppe**: alle eigenen Gruppen. **Event**: Events, zu denen man eingeladen ist oder die man angelegt hat. **Direktnachricht**: alle aus den eigenen Gruppen und alle Freunde, mit Suchfeld; unter dem Namen die gemeinsamen Gruppen.
+- Nach der Auswahl öffnet sich der Chat. Mit jeder Person gibt es genau ein Gespräch, **über alle Gruppen**; ein bestehendes Gespräch wird wieder geöffnet.
+- **Andere Art wählen** führt zurück zum ersten Schritt.
 
 <br clear="right">
 
@@ -913,7 +917,7 @@ Nur für das Vereint-Team, das die Installation betreibt.
 | die Gruppe wechseln | [Gruppe wählen](#gruppe-wählen) | alle |
 | zu- oder absagen | [Events](#events), [Event](#event) | Mitglied |
 | einen Termin planen | [Event anlegen](#event-anlegen) | Mitglied |
-| schreiben | [Chat](#chat), [Gruppenchat](#gruppenchat), [Direktnachrichten](#direktnachrichten) | Mitglied |
+| schreiben | [Chat](#chat), [Gruppenchat](#gruppenchat), [Neue Nachricht](#neue-nachricht) | Mitglied |
 | mein Guthaben sehen | [Guthaben](#guthaben), [Käufe](#käufe) | Mitglied |
 | ein Getränk selbst bezahlen | [Buchen](#buchen) | Mitglied |
 | eine Runde ausgeben | [Runde ausgeben](#runde-ausgeben) | Mitglied |

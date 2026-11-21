@@ -53,7 +53,6 @@ export const PRIMARY_NAV: readonly NavItem[] = [
  */
 export const SECONDARY_NAV: readonly NavItem[] = [
   { id: 'moments', labelKey: 'nav.items.moments', icon: 'moments', route: '/moments' },
-  { id: 'direct', labelKey: 'nav.items.direct', icon: 'direct-message', route: '/direktnachrichten' },
   { id: 'calendar', labelKey: 'nav.items.calendar', icon: 'calendar', route: '/kalender' },
   { id: 'friends', labelKey: 'nav.items.friends', icon: 'friends', route: '/freunde' },
   { id: 'scan', labelKey: 'nav.items.scan', icon: 'camera', route: '/scan' },
@@ -133,7 +132,7 @@ export interface NavSection {
 
 const SECTION_LAYOUT: readonly { id: NavSection['id']; labelKey: string; ids: readonly string[] }[] = [
   // Reihenfolge und Gruppierung nach dem Design-Entwurf (docs/design/screens: Mehr, Seitenleiste).
-  { id: 'club', labelKey: 'nav.sections.club', ids: ['home', 'events', 'moments', 'chat', 'direct', 'statistik'] },
+  { id: 'club', labelKey: 'nav.sections.club', ids: ['home', 'events', 'moments', 'chat', 'statistik'] },
   {
     id: 'account',
     labelKey: 'nav.sections.account',
