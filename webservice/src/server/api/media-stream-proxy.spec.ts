@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type Server } from 'node:http';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { SessionData } from '../auth/auth.types';
 import { applyTestEnvironmentOverrides } from '../config/environment';
-import { MOMENT_MEDIA_PATH, mediaStreamProxy } from './api-proxy.middleware';
+import { MEDIA_STREAM_PATH, mediaStreamProxy } from './api-proxy.middleware';
 
 /**
  * Streaming-Proxy für Bilder und Videos in Moments gegen einen echten
@@ -89,10 +89,32 @@ describe('mediaStreamProxy', () => {
   const mediaPath = '/api/v1/moments/m-1/media';
 
   it('matches only the upload and content paths of moment media', () => {
-    expect(MOMENT_MEDIA_PATH.test(mediaPath)).toBe(true);
-    expect(MOMENT_MEDIA_PATH.test(`${mediaPath}/abc/content`)).toBe(true);
-    expect(MOMENT_MEDIA_PATH.test('/api/v1/moments/m-1/responses')).toBe(false);
-    expect(MOMENT_MEDIA_PATH.test(`${mediaPath}/abc`)).toBe(false);
+    expect(MEDIA_STREAM_PATH.test(mediaPath)).toBe(true);
+    expect(MEDIA_STREAM_PATH.test(`${mediaPath}/abc/content`)).toBe(true);
+    expect(MEDIA_STREAM_PATH.test('/api/v1/moments/m-1/responses')).toBe(false);
+    expect(MEDIA_STREAM_PATH.test(`${mediaPath}/abc`)).toBe(false);
+  });
+
+  it('also streams photos and videos of chats and direct messages', () => {
+    expect(MEDIA_STREAM_PATH.test('/api/v1/conversations/c-1/media')).toBe(true);
+    expect(MEDIA_STREAM_PATH.test('/api/v1/conversations/c-1/media/abc/content')).toBe(true);
+    expect(MEDIA_STREAM_PATH.test('/api/v1/direct-conversations/d-1/media')).toBe(true);
+    expect(MEDIA_STREAM_PATH.test('/api/v1/direct-conversations/d-1/media/abc/content')).toBe(true);
+    expect(MEDIA_STREAM_PATH.test('/api/v1/conversations/c-1/messages')).toBe(false);
+  });
+
+  it('sends a chat photo of another group with the group named in ?chatGroup', async () => {
+    const group = '33333333-3333-4333-8333-333333333333';
+    await fetch(`${baseUrl}/api/v1/conversations/c-1/media/m-1/content?chatGroup=${group}`, {
+      headers: { cookie: 'vereint.stammtisch=11111111-1111-4111-8111-111111111111' },
+    });
+    expect(lastUpstream?.headers['x-stammtisch-id']).toBe(group);
+
+    // Für andere Pfade zählt der Parameter nicht.
+    await fetch(`${baseUrl}/api/v1/moments/m-1/media/x/content?chatGroup=${group}`, {
+      headers: { cookie: 'vereint.stammtisch=11111111-1111-4111-8111-111111111111' },
+    });
+    expect(lastUpstream?.headers['x-stammtisch-id']).toBe('11111111-1111-4111-8111-111111111111');
   });
 
   it('streams an upload with its length and the session token to the backend', async () => {

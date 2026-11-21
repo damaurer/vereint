@@ -285,7 +285,6 @@
       "chat": "Chat",
       "wallet": "Guthaben",
       "moments": "Moments",
-      "direct": "Direktnachrichten",
       "purchases": "Käufe",
       "notifications": "Mitteilungen",
       "catalog": "Getränkekatalog",
@@ -469,12 +468,8 @@
       "description": "Wiederverwendbare Getränkelisten."
     },
     "chat": {
-      "title": "Chat",
-      "description": "Mitglieds- und Event-Chats."
-    },
-    "directMessages": {
-      "title": "Direktnachrichten",
-      "description": "Persönliche Einzelgespräche."
+      "title": "Chats",
+      "description": "Gruppenchats, Event-Chats und Direktnachrichten in einer Liste."
     },
     "notifications": {
       "title": "Mitteilungen",
@@ -602,25 +597,70 @@
     }
   },
   "chat": {
-    "eyebrow": "Gruppenchat",
-    "title": "Chat",
-    "toDirectMessages": "Direktnachrichten →",
+    "title": "Chats",
     "loadingMessage": "Die Konversationen werden abgerufen.",
     "unavailable": "Chat nicht verfügbar",
     "online": "online",
     "unread": "{count} ungelesen",
     "you": "Du",
     "list": {
-      "ariaLabel": "Konversationen",
-      "newMessage": "+ Neue Nachricht",
-      "groupOnline": "{count} online",
+      "ariaLabel": "Alle Chats",
+      "newMessage": "Neue Nachricht",
       "clubChat": "Gruppenchat",
-      "eventChats": "Event-Chats",
-      "noEventChats": "Du hast gerade keine Event-Chats. Sie erscheinen, sobald du zu einem Event eingeladen bist.",
-      "noMessages": "Noch keine Nachrichten"
+      "noMessages": "Noch keine Nachrichten",
+      "searchLabel": "Chats durchsuchen",
+      "searchPlaceholder": "Suchen",
+      "emptyTitle": "Keine Chats",
+      "emptyStart": "Du hast noch keine Chats. Starte einen mit dem Plus oben.",
+      "emptyFiltered": "Kein Chat passt zu Suche oder Filter.",
+      "noneSelectedTitle": "Kein Chat ausgewählt",
+      "noneSelectedMessage": "Wähle links einen Chat oder schreibe mit dem Plus eine neue Nachricht.",
+      "photo": "📷 Foto",
+      "video": "🎥 Video"
+    },
+    "filter": {
+      "ariaLabel": "Chats filtern",
+      "all": "Alle",
+      "unread": "Ungelesen",
+      "club": "Gruppen",
+      "event": "Events",
+      "direct": "Direkt",
+      "moment": "Moments"
+    },
+    "kind": {
+      "event": "Event",
+      "direct": "Direktnachricht",
+      "moment": "Moment"
+    },
+    "compose": {
+      "title": "Neue Nachricht",
+      "title_club": "An eine Gruppe",
+      "title_event": "In einen Event-Chat",
+      "title_direct": "An eine Person",
+      "kindHint": "Wohin soll die Nachricht gehen?",
+      "changeKind": "Andere Art wählen",
+      "club": "Gruppe",
+      "clubHint": "In den Gruppenchat einer deiner Gruppen",
+      "event": "Event",
+      "eventHint": "In den Chat eines Events, zu dem du eingeladen bist",
+      "direct": "Direktnachricht",
+      "directHint": "An eine Person aus deinen Gruppen oder deiner Freundesliste",
+      "personLabel": "Person suchen",
+      "personPlaceholder": "Name eingeben…",
+      "contactsLoading": "Deine Kontakte werden abgerufen.",
+      "contactsUnavailable": "Kontakte nicht verfügbar",
+      "nobodyTitle": "Niemand gefunden",
+      "nobodyMessage": "Schreiben kannst du Freunden und Personen aus deinen Gruppen.",
+      "opening": "Wird geöffnet…",
+      "friend": "Freund",
+      "noTargetsTitle": "Nichts zur Auswahl",
+      "noEvents": "Du bist gerade zu keinem offenen Event eingeladen. Event-Chats erscheinen, sobald du eingeladen bist.",
+      "noGroups": "Du bist in keiner Gruppe, in deren Chat du schreiben kannst.",
+      "moment": "Moment",
+      "momentHint": "Einen Moment starten: alle sehen ihn sofort, 24 Stunden lang mit eigenem Chat"
     },
     "thread": {
-      "back": "← Zurück",
+      "back": "Zurück",
       "membersOnline": "{count} Mitglieder online",
       "pinnedTitle": "Infotafel von {name}",
       "emptyTitle": "Noch keine Nachrichten",
@@ -633,7 +673,10 @@
       "image": "Bild zur Nachricht",
       "reactionLabel": "Reaktion {emoji}, {count}",
       "reactWith": "Mit {emoji} reagieren",
-      "reactionFailed": "Die Reaktion konnte nicht gespeichert werden. Bitte erneut versuchen."
+      "reactionFailed": "Die Reaktion konnte nicht gespeichert werden. Bitte erneut versuchen.",
+      "toEventIn": "Zum Event · {group}",
+      "momentUntil": "Moment · offen bis {time}",
+      "toMoment": "Zum Moment"
     },
     "composer": {
       "attach": "Anhang hinzufügen",
@@ -643,32 +686,14 @@
       "sendFailed": "Nachricht konnte nicht gesendet werden. Bitte erneut versuchen.",
       "attachUnavailable": "Anhänge sind derzeit nicht verfügbar.",
       "readOnly": "In diesem Chat kannst du nicht mehr schreiben.",
-      "readOnlyDirect": "Ihr seid weder befreundet noch in einer gemeinsamen Gruppe. Der Verlauf bleibt lesbar, neue Nachrichten gehen nicht."
-    },
-    "direct": {
-      "eyebrow": "Über alle Gruppen",
-      "title": "Einzelgespräche",
-      "badge": "DMs",
-      "toGroupChat": "← Zum Gruppenchat",
-      "unavailable": "Direktnachrichten nicht verfügbar",
-      "searchLabel": "Gespräche durchsuchen",
-      "searchPlaceholder": "Gespräche durchsuchen…",
-      "conversations": "Gespräche ({count})",
-      "emptyTitle": "Keine Konversationen",
-      "emptyMessage": "Es gibt keine passenden Einzelgespräche.",
-      "emptyStart": "Du hast noch keine Einzelgespräche. Starte eins mit „Neue Nachricht“.",
-      "noneSelectedTitle": "Kein Gespräch ausgewählt",
-      "noneSelectedMessage": "Wähle links ein Gespräch oder starte ein neues.",
-      "pickerTitle": "Neue Nachricht",
-      "pickerSearchLabel": "Person suchen",
-      "pickerSearchPlaceholder": "Name eingeben…",
-      "pickerLoading": "Deine Kontakte werden abgerufen.",
-      "pickerUnavailable": "Kontakte nicht verfügbar",
-      "pickerEmptyTitle": "Niemand gefunden",
-      "pickerEmptyMessage": "Schreiben kannst du Freunden und Personen aus deinen Gruppen.",
-      "pickerStarting": "Wird geöffnet…",
-      "toFriends": "Freunde",
-      "friend": "Freund"
+      "readOnlyDirect": "Ihr seid weder befreundet noch in einer gemeinsamen Gruppe. Der Verlauf bleibt lesbar, neue Nachrichten gehen nicht.",
+      "attachMedia": "Foto oder Video anhängen",
+      "removeMedia": "Anhang entfernen",
+      "uploading": "Wird hochgeladen… {percent} %",
+      "uploadFailed": "Hochladen fehlgeschlagen",
+      "mediaLimit": "Höchstens {max} Fotos oder Videos je Nachricht.",
+      "waitForUpload": "Warte, bis alle Anhänge hochgeladen sind.",
+      "mediaOffline": "Fotos und Videos lassen sich nur mit Internet hochladen."
     },
     "receipt": {
       "pending": "Wartet auf Netz",
@@ -688,6 +713,13 @@
       "one": "{name} schreibt…",
       "two": "{first} und {second} schreiben…",
       "many": "Mehrere schreiben…"
+    },
+    "media": {
+      "photo": "Foto",
+      "video": "Video",
+      "photos": "{count} Fotos",
+      "open": "Foto in voller Größe öffnen",
+      "pendingCount": "{count} Anhänge"
     }
   },
   "calendar": {
@@ -719,7 +751,7 @@
   "friends": {
     "eyebrow": "Über alle Gruppen",
     "title": "Freunde",
-    "toDirect": "Zu den Direktnachrichten",
+    "toDirect": "Zu den Chats",
     "intro": "Freunde bleiben, auch wenn ihr keine Gruppe mehr teilt.",
     "unavailable": "Freundesliste nicht verfügbar",
     "loadingMessage": "Deine Freunde werden abgerufen.",
@@ -2453,6 +2485,27 @@
       "overviewTitle": "Laufende Runden",
       "displayOnly": "Nur Anzeige",
       "overviewHint": "Eine Runde gibt jede Person in der App am eigenen Handy aus und zahlt mit ihrem eigenen Guthaben. Am Terminal wird nichts ausgegeben. Wer eingeladen ist, bekommt wie gewohnt einen Strich, er geht dann auf die Runde."
+    }
+  },
+  "emoji": {
+    "title": "Emoji auswählen",
+    "search": "Emoji suchen (englisch, z. B. beer)",
+    "results": "Suchergebnisse",
+    "none": "Kein Emoji gefunden",
+    "open": "Emoji einfügen",
+    "more": "Weitere Emojis",
+    "groups": {
+      "recent": "Zuletzt verwendet",
+      "smileys_emotion": "Smileys und Gefühle",
+      "people_body": "Menschen und Körper",
+      "animals_nature": "Tiere und Natur",
+      "food_drink": "Essen und Trinken",
+      "travel_places": "Reisen und Orte",
+      "activities": "Aktivitäten",
+      "objects": "Gegenstände",
+      "symbols": "Symbole",
+      "flags": "Flaggen",
+      "component": "Bausteine"
     }
   }
 }

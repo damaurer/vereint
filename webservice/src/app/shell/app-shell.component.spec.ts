@@ -47,7 +47,7 @@ describe('AppShellComponent', () => {
         {
           provide: ChatApiService,
           useValue: {
-            unreadCount: () => {
+            allUnreadCount: () => {
               chatUnreadCalls += 1;
               return of({ unread: chatUnread });
             },

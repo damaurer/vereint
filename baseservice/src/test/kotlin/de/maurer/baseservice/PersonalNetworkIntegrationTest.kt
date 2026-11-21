@@ -14,6 +14,7 @@ import de.maurer.baseservice.push.PushMessage
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.security.UserRole
 import de.maurer.baseservice.service.CalendarService
+import de.maurer.baseservice.service.ChatOverviewService
 import de.maurer.baseservice.service.ConversationService
 import de.maurer.baseservice.service.DirectMessageService
 import de.maurer.baseservice.service.EventService
@@ -64,6 +65,7 @@ class PersonalNetworkIntegrationTest @Autowired constructor(
     private val directMessageService: DirectMessageService,
     private val conversationService: ConversationService,
     private val calendarService: CalendarService,
+    private val chatOverviewService: ChatOverviewService,
     private val personalAlertService: PersonalAlertService,
     private val notificationService: NotificationService
 ) {
@@ -254,6 +256,65 @@ class PersonalNetworkIntegrationTest @Autowired constructor(
         }
     }
 
+    @Test
+    fun `chat list shows group chats, invited event chats and direct messages of all own groups`() {
+        val owner = person("Owner")
+        val alice = person("Alice")
+        val bob = person("Bob")
+        val carol = person("Carol")
+        joinB(bob)
+        joinB(carol)
+        leaveA(carol)
+        val bobId = idOf(bob)
+        fun <T> asA(block: () -> T): T = TenantContext.runIn(DEFAULT_STAMMTISCH_ID, block)
+
+        val invited = asA {
+            eventService.createEvent(
+                CreateEventRequest(
+                    title = "Treffen mit Bob",
+                    startsAt = Instant.now().plus(2, ChronoUnit.DAYS),
+                    status = "published",
+                    inviteUserIds = listOf(bobId.toString())
+                ),
+                owner
+            )
+        }
+        asB {
+            eventService.createEvent(
+                CreateEventRequest(title = "Ohne Bob", startsAt = Instant.now().plus(3, ChronoUnit.DAYS), status = "published"),
+                adminB
+            )
+        }
+
+        val clubA = asA { conversationService.clubSummary(alice) }
+        val clubB = asB { conversationService.clubSummary(carol) }
+        asB { conversationService.sendMessage(UUID.fromString(clubB.id), SendMessageRequest(message = "Hallo B"), carol) }
+        asA { conversationService.sendMessage(UUID.fromString(clubA.id), SendMessageRequest(message = "Hallo A"), alice) }
+        val direct = directMessageService.start(bobId.toString(), alice)
+        directMessageService.send(UUID.fromString(direct.id), SendMessageRequest(message = "Nur für dich"), alice)
+
+        val bobs = TenantContext.runWithoutTenant { chatOverviewService.overview(bob) }
+        // Neueste Nachricht zuerst, über alle Arten und Gruppen hinweg.
+        assertEquals(listOf(direct.id, clubA.id, clubB.id), bobs.take(3).map { it.id })
+        assertEquals(null, bobs.first().stammtischId)
+        assertEquals("Meine Gruppe", bobs.single { it.id == clubA.id }.stammtischName)
+        assertEquals(stammtischB.toString(), bobs.single { it.id == clubB.id }.stammtischId)
+        val eventChat = bobs.single { it.type == "event" }
+        assertEquals(invited.id, eventChat.eventId)
+        assertEquals(DEFAULT_STAMMTISCH_ID.toString(), eventChat.stammtischId)
+        // Nicht eingeladen: der Event-Chat aus B fehlt.
+        assertTrue(bobs.none { it.title == "Ohne Bob" })
+        assertEquals(1, bobs.single { it.id == clubB.id }.unreadCount)
+        assertEquals(1, bobs.single { it.id == direct.id }.unreadCount)
+        // Der Zähler am Chat-Eintrag zählt alle Chats der Liste zusammen.
+        assertEquals(bobs.sumOf { it.unreadCount }, TenantContext.runWithoutTenant { chatOverviewService.unreadCount(bob).unread })
+
+        // Alice ist nur in A: nichts aus B.
+        val alices = TenantContext.runWithoutTenant { chatOverviewService.overview(alice) }
+        assertTrue(alices.none { it.stammtischId == stammtischB.toString() })
+        assertTrue(alices.any { it.id == direct.id })
+    }
+
     /** Push-Typen, die seit dem letzten Aufruf an [userId] gingen. */
     private fun pushTypesFor(userId: UUID): List<String> =
         Mockito.mockingDetails(pushDispatcher).invocations
@@ -294,7 +355,7 @@ class PersonalNetworkIntegrationTest @Autowired constructor(
         val direct = asB { personalAlertService.alerts(bob) }.single()
         assertEquals("Nachricht von Alice", direct.title)
         assertEquals("Zweite", direct.body)
-        assertEquals("/direktnachrichten?id=$conversation", direct.link)
+        assertEquals("/chat?id=$conversation", direct.link)
         // Eigene Nachrichten und gelesene Gespräche erscheinen nicht.
         assertTrue(personalAlertService.alerts(alice, Instant.now().plus(1, ChronoUnit.HOURS)).isEmpty())
         directMessageService.markRead(conversation, bob)

@@ -158,10 +158,11 @@ class StammtischContextFilter(
             "/api/v1/signup",
             "/api/v1/platform/",
             "/api/v1/drink-library",
-            // Gruppenübergreifend: Kalender, Freundesliste, Direktnachrichten und deren Push-Mitteilungen.
+            // Gruppenübergreifend: Kalender, Freundesliste, Direktnachrichten, gemeinsame Chat-Liste und Push-Mitteilungen.
             "/api/v1/calendar",
             "/api/v1/friends",
             "/api/v1/direct-conversations",
+            "/api/v1/chats",
             "/api/v1/personal-notifications",
             "/api/v1/live",
             "/api/v1/member-invites/preview",

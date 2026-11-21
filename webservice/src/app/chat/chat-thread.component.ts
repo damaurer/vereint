@@ -18,11 +18,12 @@ import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import type { Subscription } from 'rxjs';
-import type { ChatMessageDto, ConversationSummary, MessageReceipt } from '../api/api.types';
+import type { ChatMedia, ChatMessageDto, ConversationSummary, MessageReceipt } from '../api/api.types';
 import { describeApiError } from '../api/api-client.service';
-import { formatDateTime } from '../member/member-format';
+import { formatDateTime, formatDayTime, formatShortDateTime, formatTime } from '../member/member-format';
 import { AvatarBadgeComponent, InfoPanelComponent } from '../ui';
 import { IconComponent } from '../ui/icon.component';
+import type { IconName } from '../ui/icons';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
@@ -30,6 +31,21 @@ import { ChatApiService } from './chat-api.service';
 import { ChatUnreadStore } from './chat-unread.store';
 import { LiveUpdatesService } from '../live/live-updates.service';
 import { ChatOutboxService, type OutboxEntry } from './chat-outbox.service';
+import { ChatMediaGridComponent, type ChatMediaTile } from './chat-media-grid.component';
+import { CHAT_MEDIA_ACCEPT, CHAT_MEDIA_LIMITS, ChatMediaUploader } from './chat-media';
+import { EmojiPickerComponent } from '../ui/emoji-picker.component';
+import { I18nService } from '../i18n/i18n.service';
+import { MediaPrepareError, type PreparedMedia } from '../moments/moment-media';
+
+/** Ein Anhang im Composer: lokal vorbereitet, wird sofort hochgeladen. */
+interface DraftMedia {
+  key: string;
+  prepared: PreparedMedia;
+  progress: number;
+  uploaded: ChatMedia | null;
+  failed: boolean;
+  abort: () => void;
+}
 
 /** Abstand der Abfrage neuer Nachrichten, solange keine Live-Verbindung steht. */
 export const CHAT_POLL_INTERVAL_MS = 10_000;
@@ -73,18 +89,41 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
     IconComponent,
     StateComponent,
     TranslatePipe,
+    ChatMediaGridComponent,
+    EmojiPickerComponent,
   ],
   template: `
-    <div class="chat-thread" [class.is-embedded]="embedded">
+    <div class="chat-thread" [class.is-embedded]="embedded" [class.is-fill]="fill">
       @if (!embedded) {
         <header class="chat-thread-head">
-          <button type="button" class="chat-back" (click)="back.emit()">{{ 'chat.thread.back' | t }}</button>
+          <button type="button" class="chat-back" [attr.aria-label]="'chat.thread.back' | t" (click)="back.emit()">
+            <vereint-icon name="arrow-left" />
+          </button>
+          @if (conversation.type === 'direct') {
+            <vereint-avatar-badge [name]="headTitle()" />
+          } @else {
+            <span class="chat-thread-icon" [attr.data-type]="conversation.type" aria-hidden="true">
+              <vereint-icon [name]="headIcon()" />
+            </span>
+          }
           <div class="chat-thread-title">
-            <strong>{{ conversation.title }}</strong>
+            <strong>{{ headTitle() }}</strong>
             @if (conversation.type === 'event' && conversation.eventId) {
               <a class="chat-thread-sub" [routerLink]="['/events', conversation.eventId]">{{
-                'chat.thread.toEvent' | t
+                conversation.stammtischName
+                  ? ('chat.thread.toEventIn' | t: { group: conversation.stammtischName })
+                  : ('chat.thread.toEvent' | t)
               }}</a>
+            } @else if (conversation.type === 'moment') {
+              <a class="chat-thread-sub" routerLink="/moments" [queryParams]="{ momentId: conversation.momentId }">{{
+                conversation.expiresAt
+                  ? ('chat.thread.momentUntil' | t: { time: untilLabel(conversation.expiresAt) })
+                  : ('chat.thread.toMoment' | t)
+              }}</a>
+            } @else if (conversation.type === 'club') {
+              <span class="chat-thread-sub">{{ 'chat.list.clubChat' | t }}</span>
+            } @else {
+              <span class="chat-thread-sub">{{ 'chat.kind.direct' | t }}</span>
             }
           </div>
         </header>
@@ -96,7 +135,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         </vereint-info-panel>
       }
 
-      <div class="chat-history" #history>
+      <div class="chat-history" #history (scroll)="onHistoryScroll()">
         @if (messages() === null) {
           @if (loadError(); as error) {
             <vereint-state
@@ -119,35 +158,51 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
             [message]="'chat.thread.emptyMessage' | t"
           />
         } @else {
-          @for (message of messages(); track message.id) {
-            <article class="chat-message" [class.is-own]="isOwn(message)">
-              <vereint-avatar-badge class="chat-message-avatar" [name]="message.senderName" />
+          @for (message of messages(); track message.id; let i = $index) {
+            @if (dayBreak(i); as day) {
+              <p class="chat-day"><span>{{ day }}</span></p>
+            }
+            <article class="chat-message" [class.is-own]="isOwn(message)" [class.is-direct]="conversation.type === 'direct'">
+              @if (!isOwn(message) && conversation.type !== 'direct') {
+                <vereint-avatar-badge class="chat-message-avatar" [name]="message.senderName" />
+              }
               <div class="chat-message-body">
-                <div class="chat-message-head">
-                  <span class="chat-message-author">{{
-                    isOwn(message) ? ('chat.you' | t) : message.senderName
-                  }}</span>
-                  @if (message.senderType === 'guest') {
-                    <span class="chat-message-guest">{{ 'chat.thread.guest' | t }}</span>
+                <div class="chat-bubble">
+                  <span class="chat-message-head">
+                    <span class="chat-message-author">{{
+                      isOwn(message) ? ('chat.you' | t) : message.senderName
+                    }}</span>
+                    @if (message.senderType === 'guest') {
+                      <span class="chat-message-guest">{{ 'chat.thread.guest' | t }}</span>
+                    }
+                  </span>
+                  @if (message.media?.length) {
+                    <app-chat-media-grid [tiles]="tilesOf(message)" (loaded)="onMediaLoaded()" />
                   }
-                  <span class="chat-message-time">{{ formatDateTime(message.createdAt) }}</span>
-                  @if (isOwn(message) && message.receipt; as receipt) {
-                    <span
-                      class="chat-receipt"
-                      [class.is-read]="receipt.status === 'read'"
-                      [attr.data-status]="receipt.status"
-                      role="img"
-                      [attr.aria-label]="receiptLabel(receipt)"
-                      [attr.title]="receiptLabel(receipt)"
-                    >
-                      <vereint-icon [name]="receipt.status === 'sent' ? 'check' : 'checkDouble'" />
-                    </span>
+                  @if (message.message) {
+                    <span class="chat-bubble-text">{{ message.message }}</span>
                   }
+                  @if (message.imageUrl) {
+                    <img class="chat-image" [src]="message.imageUrl" [alt]="'chat.thread.image' | t" loading="lazy" />
+                  }
+                  <span class="chat-message-meta">
+                    <time class="chat-message-time" [attr.datetime]="message.createdAt" [attr.title]="formatDateTime(message.createdAt)">{{
+                      formatTime(message.createdAt)
+                    }}</time>
+                    @if (isOwn(message) && message.receipt; as receipt) {
+                      <span
+                        class="chat-receipt"
+                        [class.is-read]="receipt.status === 'read'"
+                        [attr.data-status]="receipt.status"
+                        role="img"
+                        [attr.aria-label]="receiptLabel(receipt)"
+                        [attr.title]="receiptLabel(receipt)"
+                      >
+                        <vereint-icon [name]="receipt.status === 'sent' ? 'check' : 'checkDouble'" />
+                      </span>
+                    }
+                  </span>
                 </div>
-                <p class="chat-bubble">{{ message.message }}</p>
-                @if (message.imageUrl) {
-                  <img class="chat-image" [src]="message.imageUrl" [alt]="'chat.thread.image' | t" loading="lazy" />
-                }
                 <div class="chat-reactions">
                   @for (reaction of message.reactions ?? []; track reaction.emoji) {
                     <button
@@ -186,25 +241,47 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                         {{ emoji }}
                       </button>
                     }
+                    <button
+                      type="button"
+                      class="chat-picker-emoji chat-picker-more"
+                      [attr.aria-label]="'emoji.more' | t"
+                      [attr.aria-expanded]="fullPicker()"
+                      (click)="fullPicker.set(!fullPicker())"
+                    >
+                      …
+                    </button>
                   </div>
+                  @if (fullPicker()) {
+                    <vereint-emoji-picker class="chat-emoji-popup" (pick)="toggleReaction(message, $event)" />
+                  }
                 }
               </div>
             </article>
           }
           @for (entry of pending(); track entry.clientId) {
             <article class="chat-message is-own is-pending" [class.is-failed]="entry.state === 'failed'">
-              <vereint-avatar-badge class="chat-message-avatar" [name]="'chat.you' | t" />
               <div class="chat-message-body">
-                <div class="chat-message-head">
-                  <span class="chat-message-author">{{ 'chat.you' | t }}</span>
-                  <span class="chat-message-time">{{ formatDateTime(entry.createdAt) }}</span>
-                  @if (entry.state === 'pending') {
-                    <span class="chat-receipt" data-status="pending" role="img" [attr.aria-label]="'chat.receipt.pending' | t" [attr.title]="'chat.receipt.pending' | t">
-                      <vereint-icon name="clock" />
-                    </span>
+                <div class="chat-bubble">
+                  <span class="chat-message-head">
+                    <span class="chat-message-author">{{ 'chat.you' | t }}</span>
+                  </span>
+                  @if (entry.mediaIds?.length) {
+                    <span class="chat-bubble-text chat-pending-media">📎 {{ 'chat.media.pendingCount' | t: { count: entry.mediaIds!.length } }}</span>
                   }
+                  @if (entry.message) {
+                    <span class="chat-bubble-text">{{ entry.message }}</span>
+                  }
+                  <span class="chat-message-meta">
+                    <time class="chat-message-time" [attr.datetime]="entry.createdAt" [attr.title]="formatDateTime(entry.createdAt)">{{
+                      formatTime(entry.createdAt)
+                    }}</time>
+                    @if (entry.state === 'pending') {
+                      <span class="chat-receipt" data-status="pending" role="img" [attr.aria-label]="'chat.receipt.pending' | t" [attr.title]="'chat.receipt.pending' | t">
+                        <vereint-icon name="clock" />
+                      </span>
+                    }
+                  </span>
                 </div>
-                <p class="chat-bubble">{{ entry.message }}</p>
                 @if (entry.state === 'failed') {
                   <div class="chat-failed" role="alert">
                     <span>{{ 'chat.outbox.failed' | t }}</span>
@@ -227,7 +304,31 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
       }
 
       @if (conversation.canWrite) {
+        @if (composerPicker()) {
+          <vereint-emoji-picker class="chat-emoji-popup" (pick)="insertEmoji($event)" />
+        }
+        @if (drafts().length > 0) {
+          <app-chat-media-grid class="chat-drafts" [draft]="true" [tiles]="draftTiles()" (remove)="removeDraft($event)" />
+        }
         <form class="chat-composer" (ngSubmit)="send()">
+          <input
+            #fileInput
+            type="file"
+            class="chat-file-input"
+            multiple
+            [accept]="mediaAccept"
+            (change)="onFiles($event)"
+          />
+          <button
+            type="button"
+            class="chat-icon-button chat-attach"
+            [attr.aria-label]="'chat.composer.attachMedia' | t"
+            [attr.title]="'chat.composer.attachMedia' | t"
+            [disabled]="drafts().length >= maxMedia"
+            (click)="fileInput.click()"
+          >
+            <vereint-icon name="attach" />
+          </button>
           <label class="chat-input-label" for="chat-draft">{{ 'chat.composer.placeholder' | t }}</label>
           <input
             id="chat-draft"
@@ -236,22 +337,24 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
             autocomplete="off"
             maxlength="2000"
             [placeholder]="'chat.composer.placeholder' | t"
+            #draftInput
             [(ngModel)]="draft"
             (ngModelChange)="onDraftChange()"
           />
           <button
             type="button"
-            class="chat-icon-button"
-            [attr.aria-label]="'chat.composer.addDrink' | t"
-            (click)="addDrink()"
+            class="chat-icon-button chat-emoji-toggle"
+            [attr.aria-label]="'emoji.open' | t"
+            [attr.aria-expanded]="composerPicker()"
+            (click)="composerPicker.set(!composerPicker())"
           >
-            {{ drinkEmoji }}
+            😊
           </button>
           <button
             type="submit"
             class="chat-send"
             [attr.aria-label]="'chat.composer.send' | t"
-            [disabled]="draft.trim().length === 0"
+            [disabled]="!canSend()"
           >
             <vereint-icon name="send" />
           </button>
@@ -268,6 +371,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
       :host {
         display: block;
         min-width: 0;
+        min-height: 0;
       }
       .chat-thread {
         display: flex;
@@ -279,6 +383,38 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         display: flex;
         align-items: center;
         gap: var(--space-2);
+        padding-bottom: var(--space-2);
+        border-bottom: 1px solid var(--color-border);
+      }
+      .chat-thread-icon {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        background-color: var(--color-brand);
+        color: var(--color-on-brand);
+        font-size: 1.15rem;
+      }
+      .chat-thread-icon[data-type='moment'] {
+        background-color: var(--color-warning-light);
+        color: var(--color-warning);
+      }
+      .chat-thread-icon[data-type='event'] {
+        background-color: var(--color-brand-soft);
+        color: var(--color-brand);
+      }
+      .chat-thread.is-fill {
+        height: 100%;
+      }
+      .chat-thread.is-fill {
+        min-height: 0;
+      }
+      .chat-thread.is-fill .chat-history {
+        flex: 1;
+        min-height: 0;
+        max-height: none;
       }
       .chat-thread-title {
         display: flex;
@@ -287,16 +423,27 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         overflow-wrap: anywhere;
       }
       .chat-thread-sub {
+        color: var(--color-text-muted);
+        font-size: 0.8rem;
+      }
+      a.chat-thread-sub {
         color: var(--color-brand);
-        font-size: 0.85rem;
       }
       .chat-back {
+        flex: none;
+        display: grid;
+        place-items: center;
+        width: 2.5rem;
+        height: 2.5rem;
         border: none;
+        border-radius: 50%;
         background: none;
-        color: var(--color-brand);
-        font: inherit;
+        color: var(--color-text);
+        font-size: 1.2rem;
         cursor: pointer;
-        padding: 0.5rem 0.25rem;
+      }
+      .chat-back:hover {
+        background-color: var(--color-surface-subtle);
       }
       .chat-pinned-text {
         white-space: pre-line;
@@ -304,58 +451,111 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
       .chat-history {
         display: flex;
         flex-direction: column;
-        gap: var(--space-3);
-        padding: var(--space-2) 0;
+        gap: 0.35rem;
+        padding: var(--space-2);
         max-height: min(65vh, 40rem);
         overflow-y: auto;
         overscroll-behavior: contain;
+        border-radius: var(--radius-md);
+        background-color: var(--color-surface-subtle);
+      }
+      /* Datumstrenner zwischen den Tagen, wie bei bekannten Messengern. */
+      .chat-day {
+        display: flex;
+        justify-content: center;
+        margin: var(--space-2) 0 0.25rem;
+      }
+      .chat-day span {
+        padding: 0.15rem 0.65rem;
+        border-radius: var(--radius-sm);
+        background-color: var(--color-surface);
+        color: var(--color-text-muted);
+        font-size: 0.75rem;
+        font-weight: 600;
+        box-shadow: 0 1px 1px rgba(15, 23, 42, 0.08);
       }
       .chat-message {
         display: flex;
-        gap: var(--space-2);
+        gap: 0.4rem;
         align-items: flex-start;
+        max-width: min(85%, 36rem);
+      }
+      .chat-message.is-own {
+        align-self: flex-end;
+        flex-direction: row-reverse;
       }
       .chat-message-avatar {
         flex: none;
       }
       .chat-message-body {
         min-width: 0;
-        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .chat-message.is-own .chat-message-body {
+        align-items: flex-end;
+      }
+      /* Sprechblase: Name oben (nur fremde Nachrichten in Gruppen), Zeit und Haken unten rechts. */
+      .chat-bubble {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-width: 4.5rem;
+        padding: 0.35rem 0.6rem 0.3rem;
+        border-radius: var(--radius-md);
+        border-top-left-radius: 0.2rem;
+        background-color: var(--color-surface);
+        box-shadow: 0 1px 1px rgba(15, 23, 42, 0.1);
+        overflow-wrap: anywhere;
+      }
+      .chat-message.is-own .chat-bubble {
+        border-top-left-radius: var(--radius-md);
+        border-top-right-radius: 0.2rem;
+        background-color: var(--color-brand-soft);
       }
       .chat-message-head {
         display: flex;
         align-items: baseline;
         flex-wrap: wrap;
-        gap: var(--space-2);
+        gap: 0.4rem;
       }
       .chat-message-author {
         color: var(--color-brand);
+        font-size: 0.8rem;
         font-weight: 700;
         overflow-wrap: anywhere;
       }
+      /* Eigene Nachrichten und Direktnachrichten brauchen keinen Namen; Screenreader hören ihn weiter. */
+      .chat-message.is-own .chat-message-author,
+      .chat-message.is-direct .chat-message-author {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
       .chat-message-guest {
         color: var(--color-text-muted);
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         border: 1px solid var(--color-border);
         border-radius: 999px;
         padding: 0 0.4rem;
       }
-      .chat-message-time {
-        color: var(--color-text-muted);
-        font-size: 0.8rem;
-      }
-      .chat-bubble {
-        margin: 0.3rem 0 0;
-        padding: var(--space-2) var(--space-3);
-        border-radius: var(--radius-md);
-        background-color: var(--color-surface-raised);
-        border: 1px solid var(--color-border);
-        overflow-wrap: anywhere;
+      .chat-bubble-text {
         white-space: pre-line;
       }
-      .chat-message.is-own .chat-bubble {
-        background-color: var(--color-brand-soft);
-        border-color: var(--color-brand);
+      .chat-message-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        align-self: flex-end;
+        margin-top: 0.1rem;
+        line-height: 1;
+      }
+      .chat-message-time {
+        color: var(--color-text-muted);
+        font-size: 0.7rem;
       }
       .chat-image {
         display: block;
@@ -368,15 +568,15 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         display: flex;
         flex-wrap: wrap;
         gap: 0.35rem;
-        margin-top: 0.4rem;
+        margin-top: 0.25rem;
       }
       .chat-reaction,
       .chat-picker-emoji {
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
-        min-height: 2rem;
-        padding: 0.15rem 0.55rem;
+        min-height: 1.75rem;
+        padding: 0.1rem 0.5rem;
         border-radius: 999px;
         border: 1px solid var(--color-border);
         background-color: var(--color-surface);
@@ -462,7 +662,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         opacity: 0.75;
       }
       .chat-message.is-failed .chat-bubble {
-        border-color: var(--color-danger, #c0392b);
+        box-shadow: 0 0 0 1px var(--color-danger, #c0392b);
       }
       .chat-pending-hint {
         margin: 0.25rem 0 0;
@@ -500,6 +700,15 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         border-top: 1px solid var(--color-border);
         color: var(--color-text-muted);
       }
+      .chat-file-input {
+        display: none;
+      }
+      .chat-emoji-popup {
+        margin-top: 0.25rem;
+      }
+      .chat-drafts {
+        padding-top: var(--space-2);
+      }
       .chat-thread.is-embedded .chat-history {
         max-height: min(55vh, 32rem);
       }
@@ -527,6 +736,8 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   @Input() myId: string | null = null;
   /** In eine andere Seite eingebettet (Event-Seite): ohne Kopfzeile. */
   @Input() embedded = false;
+  /** Füllt die verfügbare Höhe (Chat-Seite, mobil im Vollbild). */
+  @Input() fill = false;
 
   /** Lesestand wurde gesetzt; liefert die aktualisierte Zusammenfassung. */
   @Output() readonly read = new EventEmitter<ConversationSummary>();
@@ -536,6 +747,34 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   @Output() readonly back = new EventEmitter<void>();
 
   @ViewChild('history') private historyRef?: ElementRef<HTMLElement>;
+  @ViewChild('draftInput') private draftInputRef?: ElementRef<HTMLInputElement>;
+  private readonly uploader = inject(ChatMediaUploader);
+  private readonly i18n = inject(I18nService);
+
+  /** Anhänge im Composer (hochgeladen oder im Upload). */
+  protected readonly drafts = signal<DraftMedia[]>([]);
+  protected readonly draftTiles = computed<ChatMediaTile[]>(() =>
+    this.drafts().map((entry) => ({
+      key: entry.key,
+      kind: entry.prepared.kind,
+      src: entry.prepared.previewUrl,
+      progress: entry.uploaded ? null : entry.progress,
+      failed: entry.failed,
+      removable: true,
+    })),
+  );
+  /** Volle Emoji-Auswahl im Composer bzw. bei der Reaktion. */
+  protected readonly composerPicker = signal(false);
+  protected readonly fullPicker = signal(false);
+  protected readonly mediaAccept = CHAT_MEDIA_ACCEPT;
+  protected readonly maxMedia = CHAT_MEDIA_LIMITS.maxMediaPerResponse;
+  /** Der Entwurf als Signal, damit [canSend] mitzieht. */
+  private readonly draftText = signal('');
+  protected readonly canSend = computed(() => {
+    const drafts = this.drafts();
+    if (drafts.some((entry) => !entry.uploaded)) return false;
+    return this.draftText().trim().length > 0 || drafts.length > 0;
+  });
 
   protected readonly messages = signal<ChatMessageDto[] | null>(null);
   protected readonly loadError = signal<string | null>(null);
@@ -568,9 +807,14 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   private readPending = false;
 
   protected draft = '';
-  protected readonly drinkEmoji = DRINK_EMOJI;
   protected readonly quickReactions = QUICK_REACTIONS;
   protected readonly formatDateTime = formatDateTime;
+  protected readonly formatTime = formatTime;
+
+  /** Ende eines Moment-Chats: heute nur die Uhrzeit, sonst mit Datum. */
+  protected untilLabel(iso: string): string {
+    return dayKey(iso) === dayKey(new Date().toISOString()) ? formatTime(iso) : formatShortDateTime(iso);
+  }
 
   private loadSub?: Subscription;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -580,6 +824,43 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     if (this.readPending) this.markRead();
     this.refresh();
   };
+
+  /**
+   * Datumstrenner vor der Nachricht an Position [index]: „Heute“, „Gestern“
+   * oder das Datum, sobald ein neuer Tag beginnt; sonst leer.
+   */
+  protected dayBreak(index: number): string {
+    const list = this.messages() ?? [];
+    const current = list[index];
+    if (!current) return '';
+    const previous = list[index - 1];
+    if (previous && dayKey(previous.createdAt) === dayKey(current.createdAt)) return '';
+    return formatDayTime(current.createdAt).split(',')[0];
+  }
+
+  /** Titel im Kopf: Gruppenchat heißt wie seine Gruppe, Direktnachrichten wie das Gegenüber. */
+  protected headTitle(): string {
+    const conversation = this.conversation;
+    if (conversation.type === 'direct') return conversation.partnerName ?? conversation.title;
+    if (conversation.type === 'club' && conversation.stammtischName) return conversation.stammtischName;
+    return conversation.title;
+  }
+
+  protected headIcon(): IconName {
+    if (this.conversation.type === 'event') return 'events';
+    if (this.conversation.type === 'moment') return 'sparkle';
+    return 'users';
+  }
+
+  /** Fotos/Videos einer Nachricht; Gruppenchats anderer Gruppen nennen ihre Gruppe in der Adresse. */
+  protected tilesOf(message: ChatMessageDto): ChatMediaTile[] {
+    return (message.media ?? []).map((media) => ({
+      key: media.id,
+      kind: media.kind,
+      src: this.api.mediaUrl(media, this.conversation.type, this.conversation.stammtischId),
+      ratio: media.width && media.height ? media.width / media.height : null,
+    }));
+  }
 
   private get browser(): boolean {
     return isPlatformBrowser(this.platformId);
@@ -625,11 +906,16 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     this.typers.set(new Map());
     this.readPending = false;
     this.draft = '';
+    this.draftText.set('');
+    this.clearDrafts();
+    this.composerPicker.set(false);
+    this.fullPicker.set(false);
     this.conversationId.set(this.conversation.id);
     this.refresh();
   }
 
   ngOnDestroy(): void {
+    this.clearDrafts();
     this.loadSub?.unsubscribe();
     this.liveSub?.unsubscribe();
     this.outboxSub?.unsubscribe();
@@ -645,7 +931,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     const id = this.conversation.id;
     const before = this.messages();
     this.loadSub?.unsubscribe();
-    this.loadSub = this.api.messages(id, this.conversation.type).subscribe({
+    this.loadSub = this.api.messages(id, this.conversation.type, this.conversation.stammtischId).subscribe({
       next: (messages) => {
         if (id !== this.conversation.id) return;
         const isFirst = before === null;
@@ -677,12 +963,102 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   protected send(): void {
     const text = this.draft.trim();
     const id = this.conversation?.id;
-    if (!text || !id || !this.conversation.canWrite) return;
+    if (!id || !this.conversation.canWrite) return;
+    const drafts = this.drafts();
+    if (drafts.some((entry) => !entry.uploaded)) {
+      this.actionError.set(translate('chat.composer.waitForUpload'));
+      return;
+    }
+    const mediaIds = drafts.map((entry) => entry.uploaded!.id);
+    if (!text && mediaIds.length === 0) return;
     this.draft = '';
+    this.draftText.set('');
+    this.clearDrafts();
+    this.composerPicker.set(false);
     this.lastTypingSent = 0;
     this.actionError.set(null);
-    void this.outbox.enqueue(id, this.conversation.type, text);
+    void this.outbox.enqueue(id, this.conversation.type, text, this.conversation.stammtischId, mediaIds);
     this.scrollToEnd();
+  }
+
+  /** Gewählte Dateien prüfen, verkleinern und sofort hochladen. */
+  protected async onFiles(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    if (files.length === 0) return;
+    this.actionError.set(null);
+    if (globalThis.navigator?.onLine === false) {
+      this.actionError.set(translate('chat.composer.mediaOffline'));
+      return;
+    }
+    const free = this.maxMedia - this.drafts().length;
+    if (files.length > free) this.actionError.set(translate('chat.composer.mediaLimit', { max: this.maxMedia }));
+    for (const file of files.slice(0, Math.max(0, free))) {
+      try {
+        const prepared = await this.uploader.prepare(file);
+        this.startUpload(prepared);
+      } catch (error) {
+        this.actionError.set(error instanceof MediaPrepareError ? error.message : translate('chat.composer.uploadFailed'));
+      }
+    }
+  }
+
+  private startUpload(prepared: PreparedMedia): void {
+    const key = `draft-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const conversationId = this.conversation.id;
+    const target = this.api.mediaUpload(conversationId, this.conversation.type, this.conversation.stammtischId);
+    const upload = this.uploader.upload(target, prepared, this.i18n.language(), (progress) =>
+      this.patchDraft(key, { progress }),
+    );
+    this.drafts.update((list) => [
+      ...list,
+      { key, prepared, progress: 0, uploaded: null, failed: false, abort: upload.abort },
+    ]);
+    upload.result.then(
+      (media) => this.patchDraft(key, { uploaded: media, progress: 1 }),
+      (error: unknown) => {
+        if (!this.drafts().some((entry) => entry.key === key)) return;
+        this.patchDraft(key, { failed: true });
+        this.actionError.set(describeApiError(error));
+      },
+    );
+  }
+
+  private patchDraft(key: string, patch: Partial<DraftMedia>): void {
+    this.drafts.update((list) => list.map((entry) => (entry.key === key ? { ...entry, ...patch } : entry)));
+  }
+
+  protected removeDraft(key: string): void {
+    const entry = this.drafts().find((current) => current.key === key);
+    if (!entry) return;
+    if (!entry.uploaded) entry.abort();
+    URL.revokeObjectURL(entry.prepared.previewUrl);
+    this.drafts.update((list) => list.filter((current) => current.key !== key));
+  }
+
+  /** Nicht gesendete Uploads räumt der Server nach einigen Stunden selbst weg. */
+  private clearDrafts(): void {
+    for (const entry of this.drafts()) {
+      if (!entry.uploaded) entry.abort();
+      URL.revokeObjectURL(entry.prepared.previewUrl);
+    }
+    this.drafts.set([]);
+  }
+
+  /** Fügt ein Emoji an der Schreibmarke ein. */
+  protected insertEmoji(emoji: string): void {
+    const input = this.draftInputRef?.nativeElement;
+    const start = input?.selectionStart ?? this.draft.length;
+    const end = input?.selectionEnd ?? this.draft.length;
+    this.draft = `${this.draft.slice(0, start)}${emoji}${this.draft.slice(end)}`;
+    this.draftText.set(this.draft);
+    setTimeout(() => {
+      if (!input) return;
+      input.focus();
+      const position = start + emoji.length;
+      input.setSelectionRange(position, position);
+    });
   }
 
   protected retrySend(entry: OutboxEntry): void {
@@ -695,6 +1071,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
 
   /** Beim Tippen höchstens alle paar Sekunden „schreibt gerade…“ melden. */
   protected onDraftChange(): void {
+    this.draftText.set(this.draft);
     const id = this.conversation?.id;
     if (!id || !this.conversation.canWrite || this.draft.trim().length === 0) return;
     if (globalThis.navigator?.onLine === false) return;
@@ -702,7 +1079,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     if (now - this.lastTypingSent < TYPING_SEND_INTERVAL_MS) return;
     this.lastTypingSent = now;
     // Nicht kritisch: ohne Signal sieht das Gegenüber einfach nichts.
-    this.api.typing(id, this.conversation.type).subscribe({ error: () => undefined });
+    this.api.typing(id, this.conversation.type, this.conversation.stammtischId).subscribe({ error: () => undefined });
   }
 
   /** Zugänglicher Text zu den Haken einer eigenen Nachricht. */
@@ -717,11 +1094,8 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  protected addDrink(): void {
-    this.draft = `${this.draft}${DRINK_EMOJI}`;
-  }
-
   protected togglePicker(messageId: string): void {
+    this.fullPicker.set(false);
     this.pickerFor.update((current) => (current === messageId ? null : messageId));
   }
 
@@ -731,10 +1105,11 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     if (this.reacting()) return;
     this.reacting.set(true);
     this.actionError.set(null);
-    this.api.toggleReaction(id, message.id, emoji, this.conversation.type).subscribe({
+    this.api.toggleReaction(id, message.id, emoji, this.conversation.type, this.conversation.stammtischId).subscribe({
       next: (updated) => {
         this.reacting.set(false);
         this.pickerFor.set(null);
+        this.fullPicker.set(false);
         if (id !== this.conversation.id) return;
         this.messages.update((list) =>
           (list ?? []).map((entry) => (entry.id === updated.id ? updated : entry)),
@@ -756,7 +1131,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   private markRead(): void {
     this.readPending = false;
     const id = this.conversation.id;
-    this.api.markRead(id, this.conversation.type).subscribe({
+    this.api.markRead(id, this.conversation.type, this.conversation.stammtischId).subscribe({
       next: (summary) => {
         this.read.emit(summary);
         this.unreadStore.refresh();
@@ -804,13 +1179,33 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     return this.document.visibilityState !== 'hidden';
   }
 
+  /** Steht der Verlauf unten? Dann bleibt er dort, auch wenn Fotos nachladen. */
+  private atBottom = true;
+
+  protected onHistoryScroll(): void {
+    const element = this.historyRef?.nativeElement;
+    if (!element) return;
+    this.atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 48;
+  }
+
+  protected onMediaLoaded(): void {
+    const element = this.historyRef?.nativeElement;
+    if (element && this.atBottom) element.scrollTop = element.scrollHeight;
+  }
+
   private scrollToEnd(): void {
     if (!this.browser) return;
     setTimeout(() => {
       const element = this.historyRef?.nativeElement;
       if (element) element.scrollTop = element.scrollHeight;
+      this.atBottom = true;
     });
   }
+}
+
+function dayKey(iso: string): string {
+  const date = new Date(iso);
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 }
 
 function lastId(messages: ChatMessageDto[] | null): string | null {

@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { LIVE_PATH, MOMENT_MEDIA_PATH } from './api-proxy.middleware';
+import { LIVE_PATH, MEDIA_STREAM_PATH } from './api-proxy.middleware';
 
 function findRepoFile(relativePath: string): string {
   const fromCwd = resolve(process.cwd(), relativePath);
@@ -30,7 +30,7 @@ describe('local/Caddyfile', () => {
   const uploadPath = '/api/v1/moments/0b4f6a8e-6d0e-4c61-9d5e-1f0a2b3c4d5e/media';
 
   it('erlaubt große Körper genau auf dem Upload-Pfad des BFF', () => {
-    expect(MOMENT_MEDIA_PATH.test(uploadPath)).toBe(true);
+    expect(MEDIA_STREAM_PATH.test(uploadPath)).toBe(true);
     expect(momentMedia.test(uploadPath)).toBe(true);
     expect(otherRequests.test(uploadPath)).toBe(true); // „not“ im Caddyfile: Upload ist ausgenommen
   });
@@ -39,12 +39,20 @@ describe('local/Caddyfile', () => {
     expect(momentMedia.source).toBe(otherRequests.source);
   });
 
+  it('erlaubt große Körper auch für Fotos und Videos in Chats', () => {
+    for (const path of ['/api/v1/conversations/c-1/media', '/api/v1/direct-conversations/d-1/media']) {
+      expect(MEDIA_STREAM_PATH.test(path), path).toBe(true);
+      expect(momentMedia.test(path), path).toBe(true);
+    }
+  });
+
   it('andere API-Pfade bleiben beim kleinen Limit', () => {
     for (const path of [
       '/api/v1/moments/abc',
       '/api/v1/moments/abc/media/def/content',
       '/api/v1/stammtisch/image',
       '/api/v1/events/abc/moments/def/media',
+      '/api/v1/conversations/abc/messages',
     ]) {
       expect(momentMedia.test(path), path).toBe(false);
     }

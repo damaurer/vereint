@@ -39,11 +39,15 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
     - `GET /messages`, `POST /messages`: Nachrichten lesen bzw. als Mitglied senden (`SendMessageRequest`)
     - `GET /conversations/{conversationId}`, `GET|POST /conversations/{conversationId}/messages`: einzelne Unterhaltung des Events
     - `GET /guest/messages`, `POST /guest/messages`: als Gast lesen bzw. senden (Header `X-Guest-Token`)
-  - `ConversationController`: Gruppenchat und Event-Chats unter `/api/v1/conversations`
+  - `ChatOverviewController`: gemeinsame Chat-Liste unter `/api/v1/chats`, ohne gewählte Gruppe
+    - `GET /`: Gruppenchats, Event-Chats und laufende Moment-Chats (24 Stunden nach Start, sichtbar wie der Moment) aller eigenen Gruppen plus Direktnachrichten, neueste Nachricht zuerst. Gruppen- und Event-Chats tragen `stammtischId` und `stammtischName`. Der `ChatOverviewService` liest jede Gruppe in einer eigenen Transaktion in deren Kontext (wie der Kalender), sichtbar ist dasselbe wie in `GET /api/v1/conversations` der Gruppe.
+    - `GET /unread-count`: ungelesene Nachrichten über alle diese Chats (Badge am Chat-Eintrag)
+  - `ConversationController`: Gruppenchat und Event-Chats unter `/api/v1/conversations`. Öffnet die App einen Chat aus der gemeinsamen Liste, nennt sie dessen Gruppe im Header `X-Vereint-Chat-Group`; der BFF setzt daraus `X-Stammtisch-Id` (nur für `/api/v1/conversations/{id}/…`), der Fachservice prüft die Mitgliedschaft wie immer.
     - `GET /`: eigene Unterhaltungen der Gruppe; `GET /unread-count`: ungelesene Nachrichten (inklusive Direktnachrichten)
     - `GET /club`: Gruppenchat; `PUT /club/pin`: Infotafel setzen (`PinNoteRequest`)
     - `GET|POST /{conversationId}/messages`, `POST /{conversationId}/read`
-    - `POST /{conversationId}/messages/{messageId}/reactions`: Reaktion umschalten (`ToggleReactionRequest`)
+    - `POST /{conversationId}/messages/{messageId}/reactions`: Reaktion umschalten (`ToggleReactionRequest`); jedes Emoji (bis 16 Zeichen), die App bietet die volle Unicode-Auswahl
+    - `POST /{conversationId}/media`, `GET /{conversationId}/media/{mediaId}/content`: Fotos und Videos (siehe unten)
   - `DirectConversationController`: Direktnachrichten unter `/api/v1/direct-conversations`, ohne gewählte Gruppe (siehe [Kalender, Freunde und Direktnachrichten](kalender-freunde-direktnachrichten.md))
   - `NotificationController`: Endpunkte unter `/api/v1/notifications`
     - `GET /`: eigene Mitteilungen (`List<NotificationDto>`); `GET /unread-count` (`UnreadCountDto`)
@@ -55,6 +59,7 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
   - `ChatService`: Event-Chat, Gast-Chat und Zugriffsprüfung (Veranstalter, Eingeladene, `chat.moderate`, `event.manage`).
   - `ConversationService`: Gruppenchat, Lesestand und Reaktionen.
   - `DirectMessageService`: gruppenübergreifende Direktnachrichten.
+  - `ChatMediaService`, `ChatMediaAttachments`, `MediaStore`: Fotos und Videos in allen Chats. Die App lädt jede Datei einzeln als rohen Körper hoch (`POST …/media`, wie bei Moments ungepuffert über den BFF) und schickt die Ids mit der Nachricht (`SendMessageRequest.mediaIds`, bis 4). `MediaStore` teilt sich Prüfung, Metadaten-Bereinigung (EXIF/GPS, MP4-Ortsangaben) und Verschlüsselung (`DataEncryptor`-Stromformat) mit den Moments; Grenzen: Fotos 10 MB, Videos MP4/MOV bis 60 s und 100 MB. Tabellen `chat_media` (mit Gruppe und RLS) und `direct_media`; bis zum Senden sieht nur der Eigentümer die Datei, ungesendete Uploads löscht ein stündlicher Job nach 6 Stunden. Abruf nur über `…/media/{id}/content` mit denselben Leserechten wie der Chat; `<img>`/`<video>` aus Chats anderer Gruppen nennen ihre Gruppe als `?chatGroup=`.
   - `NotificationService`: Mitteilungen anlegen und den Push-Versand auslösen.
   - `ChatReceipts`: Zugestellt-/Gelesen-Haken; `TypingSignals`: „schreibt gerade…“ (siehe Abschnitt 4).
   - `ChatNotifier`: meldet neue Nachrichten und Reaktionen in Gruppen-, Event- und Moment-Chats als Live-Signal und neue Nachrichten im Gruppen- und Event-Chat als Push weiter.

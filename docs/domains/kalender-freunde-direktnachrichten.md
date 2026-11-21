@@ -8,7 +8,7 @@ gewählte Gruppe.
 | :--- | :--- | :--- |
 | Persönlicher Kalender | `/kalender` | `GET /api/v1/calendar` |
 | Freundesliste | `/freunde` | `/api/v1/friends` |
-| Direktnachrichten | `/direktnachrichten` | `/api/v1/direct-conversations` |
+| Direktnachrichten | `/chat` (gemeinsame Liste mit Gruppen- und Event-Chats; `/direktnachrichten` leitet dorthin) | `/api/v1/direct-conversations`, Liste `/api/v1/chats` |
 
 Die strikte Trennung der Gruppen bleibt bestehen: Niemand sieht über diese
 Bereiche etwas aus einer Gruppe, in der er nicht selbst aktives Mitglied ist.

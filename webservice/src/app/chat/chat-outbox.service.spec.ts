@@ -51,7 +51,7 @@ describe('ChatOutboxService', () => {
     outbox.delivered$.subscribe(delivered);
     const entry = await outbox.enqueue('c-1', 'club', 'Hallo');
     await settle();
-    expect(api.send).toHaveBeenCalledWith('c-1', 'Hallo', 'club', entry.clientId);
+    expect(api.send).toHaveBeenCalledWith('c-1', 'Hallo', 'club', entry.clientId, 'st-1', undefined);
     expect(delivered).toHaveBeenCalledWith(expect.objectContaining({ entry }));
     expect(outbox.entries()).toEqual([]);
     expect(localStorage.getItem(CHAT_OUTBOX_STORAGE_KEY)).toBeNull();
@@ -108,7 +108,7 @@ describe('ChatOutboxService', () => {
     expect(outbox.entries()).toEqual([]);
   });
 
-  it('only sends group chats while their group is selected and only for the account that wrote them', async () => {
+  it('sends group chats with their own group and only for the account that wrote them', async () => {
     const entries: OutboxEntry[] = [
       { clientId: 'a', conversationId: 'c-1', type: 'club', stammtischId: 'st-2', owner: 'kc-me', message: 'Andere Gruppe', createdAt: new Date().toISOString(), state: 'pending' },
       { clientId: 'b', conversationId: 'c-2', type: 'club', stammtischId: 'st-1', owner: 'kc-other', message: 'Anderes Konto', createdAt: new Date().toISOString(), state: 'pending' },
@@ -118,10 +118,13 @@ describe('ChatOutboxService', () => {
     const outbox = service();
     await outbox.start();
     await settle();
-    expect(api.send.mock.calls.map((call) => call[1])).toEqual(['DM']);
-    expect(outbox.entries().map((entry) => entry.clientId)).toEqual(['a']);
+    expect(api.send.mock.calls.map((call) => [call[1], call[4]])).toEqual([
+      ['Andere Gruppe', 'st-2'],
+      ['DM', null],
+    ]);
+    expect(outbox.entries()).toEqual([]);
     // Die Nachricht des anderen Kontos bleibt auf dem Gerät liegen.
-    expect(stored().map((entry) => entry.clientId).sort()).toEqual(['a', 'b']);
+    expect(stored().map((entry) => entry.clientId)).toEqual(['b']);
   });
 
   it('drops entries older than a week and clears everything on logout', async () => {
