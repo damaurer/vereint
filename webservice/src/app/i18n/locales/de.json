@@ -297,7 +297,7 @@
       "communications": "Kommunikation",
       "admin": "Administration",
       "tablet": "Thekenterminal",
-      "scan": "Bezahlen",
+      "scan": "Buchen",
       "stammtisch": "Gruppeneinstellungen",
       "calendar": "Kalender",
       "friends": "Freunde",
@@ -517,7 +517,7 @@
       "description": "Neues Event planen und Mitglieder einladen."
     },
     "scan": {
-      "title": "Getränk bezahlen",
+      "title": "Getränk buchen",
       "description": "Strichcode scannen oder Getränk aus dem Katalog wählen und mit Guthaben bezahlen oder für die Statistik erfassen."
     },
     "boardMoments": {
