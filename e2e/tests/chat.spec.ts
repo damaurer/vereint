@@ -9,6 +9,14 @@ const thread = (page: Page) => page.locator('app-chat-thread');
 /** Gruppenchat in der gemeinsamen Chat-Liste; er heißt wie die Gruppe. */
 const groupChat = (page: Page) => page.locator('.chat-conversation[data-type="club"]').first();
 
+/**
+ * Direktnachricht mit einer Person in der Chat-Liste. Nur ueber den Typ
+ * eindeutig: die Vorschau des Gruppenchats nennt ebenfalls den Namen dessen,
+ * der dort zuletzt geschrieben hat.
+ */
+const directChat = (page: Page, name: string) =>
+  page.locator('.chat-conversation[data-type="direct"]').filter({ hasText: name });
+
 test.describe('Alle Chats auf einer Seite', () => {
   test('Vorstand pinnt eine Infotafel, Mitglieder schreiben und reagieren im Gruppenchat', async ({ as }) => {
     const board = await as('board');
@@ -95,14 +103,14 @@ test.describe('Alle Chats auf einer Seite', () => {
     // Gruppenchat und Direktnachricht stehen in derselben Liste, ohne Unterseite.
     await member2.page.goto('/chat');
     await expect(groupChat(member2.page)).toBeVisible();
-    await member2.page.getByRole('button', { name: /Mia Mitglied/ }).click();
+    await directChat(member2.page, 'Mia Mitglied').click();
     await expect(thread(member2.page).getByText(text)).toBeVisible();
     await member2.page.getByPlaceholder('Schreibe eine Nachricht…').fill(answer);
     await member2.page.getByRole('button', { name: 'Senden' }).click();
     await expect(thread(member2.page).getByText(answer)).toBeVisible();
 
     await page.reload();
-    await page.getByRole('button', { name: /Max Mitglied/ }).click();
+    await directChat(page, 'Max Mitglied').click();
     await expect(thread(page).getByText(answer)).toBeVisible();
 
     // Der Vorstand sieht das Gespraech weder in seiner Liste noch per API.
