@@ -72,6 +72,12 @@ jobs:
       - name: E2E-Tests ausfuehren
         run: npx playwright test
 
+      # Steht direkt im Job-Log: Neustarts oder ein OOM-Kill erklaeren
+      # kurzzeitige 503 der API ohne Blick in die Artefakte.
+      - name: Zustand der Container
+        if: always()
+        run: ./stack.sh status || true
+
       - name: Logs der Dienste sichern
         if: failure()
         run: ./stack.sh logs > stack-logs.txt 2>&1 || true

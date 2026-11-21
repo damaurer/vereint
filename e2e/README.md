@@ -24,6 +24,12 @@ npx playwright test      # alle Tests; --ui für den interaktiven Modus
 ./stack.sh down          # Stack samt Daten entfernen
 ```
 
+Antwortet die API in einem Lauf plötzlich nur noch mit `503`, ist meist der
+baseservice abgestürzt und startet neu (`restart: unless-stopped`).
+`./stack.sh status` zeigt je Container Neustarts, OOM-Kill und Exit-Code
+sowie den aktuellen Speicherverbrauch; in GitHub Actions steht das im Schritt
+„Zustand der Container“, die Logs aller Dienste liegen im Artefakt `e2e-report`.
+
 `stack.sh up` erzeugt bei jedem Start neue Wegwerf-Secrets (`.env.e2e`) und eine
 neue Test-CA (`.ca/`). Die Testkonten legt `support/global-setup.ts` über die
 Keycloak-Admin-API an, mit zufälligen Passwörtern in `.auth/users.json`.
