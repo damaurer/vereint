@@ -7,10 +7,10 @@
 	encode @compressible zstd gzip
 
 	# Groesster legitimer Request ist ein Bild-Upload (6 MB, siehe baseservice).
-	# Einzige Ausnahme: Bilder und kurze Videos in Moments (bis 100 MiB, siehe
-	# MomentMediaService); sie stroemen ungepuffert bis in den Dateispeicher.
-	@momentMedia path_regexp momentMedia ^/api/v1/moments/[^/]+/media$
-	@otherRequests not path_regexp ^/api/v1/moments/[^/]+/media$
+	# Einzige Ausnahme: Bilder und kurze Videos in Moments und Chats (bis 100 MiB,
+	# siehe MediaStore); sie stroemen ungepuffert bis in den Dateispeicher.
+	@momentMedia path_regexp momentMedia ^/api/v1/(moments|conversations|direct-conversations)/[^/]+/media$
+	@otherRequests not path_regexp ^/api/v1/(moments|conversations|direct-conversations)/[^/]+/media$
 	request_body @momentMedia {
 		max_size 110MB
 	}

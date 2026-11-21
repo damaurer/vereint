@@ -6,6 +6,7 @@ import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.tenancy.StammtischMemberships
 import de.maurer.baseservice.tenancy.TenantTransactions
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.Instant
 
 /**
@@ -42,7 +43,10 @@ class ChatOverviewService(
         }
         val directs = directMessageService.list(principal)
         return (groupChats + directs).sortedWith(
-            compareByDescending<ConversationSummaryDto> { it.lastMessage?.createdAt ?: Instant.EPOCH }
+            compareByDescending<ConversationSummaryDto> {
+                // Ein neuer Moment-Chat ohne Nachricht steht mit seinem Start oben.
+                it.lastMessage?.createdAt ?: it.expiresAt?.minus(MOMENT_CHAT_DURATION) ?: Instant.EPOCH
+            }
                 // Ohne Nachricht: Gruppenchats vor Event-Chats vor Direktnachrichten, dann nach Name.
                 .thenBy { TYPE_ORDER[it.type] ?: TYPE_ORDER.size }
                 .thenBy { it.title.lowercase() }
@@ -54,10 +58,12 @@ class ChatOverviewService(
         ChatUnreadCountDto(unread = overview(principal).sumOf { it.unreadCount })
 
     private companion object {
+        private val MOMENT_CHAT_DURATION: Duration = Duration.ofHours(24)
         val TYPE_ORDER = mapOf(
             ConversationService.TYPE_CLUB to 0,
             ConversationService.TYPE_EVENT to 1,
-            ConversationService.TYPE_DIRECT to 2
+            ConversationService.TYPE_DIRECT to 2,
+            ChatService.CONVERSATION_TYPE_MOMENT to 3
         )
     }
 }

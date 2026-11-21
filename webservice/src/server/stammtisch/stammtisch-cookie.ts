@@ -37,11 +37,25 @@ export function isStammtischId(value: unknown): value is string {
   return typeof value === 'string' && UUID_PATTERN.test(value);
 }
 
-/** Gruppe aus [CHAT_GROUP_HEADER], nur bei Aufrufen eines einzelnen Chats. */
+/**
+ * Fotos und Videos laden `<img>`/`<video>` ohne eigene Header; ihre Gruppe
+ * steht deshalb im Query-Parameter `chatGroup`.
+ */
+export const CHAT_GROUP_QUERY = 'chatGroup';
+
+const CHAT_MEDIA_CONTENT_PATH = /^\/api\/v1\/conversations\/[^/?]+\/media\/[^/?]+\/content$/;
+
+/**
+ * Gruppe aus [CHAT_GROUP_HEADER] (bei Medien-Abrufen auch aus `?chatGroup=`),
+ * nur bei Aufrufen eines einzelnen Chats.
+ */
 export function readChatGroupHeader(req: Request): string | undefined {
-  const path = req.originalUrl.split('?')[0];
+  const [path, query = ''] = req.originalUrl.split('?');
   if (!CHAT_GROUP_PATH.test(path)) return undefined;
-  const value = req.header(CHAT_GROUP_HEADER)?.trim();
+  let value = req.header(CHAT_GROUP_HEADER)?.trim();
+  if (!value && CHAT_MEDIA_CONTENT_PATH.test(path)) {
+    value = new URLSearchParams(query).get(CHAT_GROUP_QUERY)?.trim();
+  }
   return isStammtischId(value) ? value.toLowerCase() : undefined;
 }
 

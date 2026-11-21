@@ -223,12 +223,14 @@ export const apiProxy: RequestHandler = (req, res, next) => {
 };
 
 /**
- * Bilder und Videos in Moments: Upload (`POST …/media`) und Abruf
+ * Bilder und Videos in Moments, Gruppen-/Event-/Moment-Chats und
+ * Direktnachrichten: Upload (`POST …/media`) und Abruf
  * (`GET …/media/{id}/content`). Diese Wege laufen nicht über `apiProxy`, weil
  * Videos weder im Speicher des Webservice gepuffert noch nach 8 Sekunden
  * abgebrochen werden dürfen.
  */
-export const MOMENT_MEDIA_PATH = /^\/api\/v1\/moments\/[^/]+\/media(?:\/[^/]+\/content)?$/;
+export const MEDIA_STREAM_PATH =
+  /^\/api\/v1\/(?:moments|conversations|direct-conversations)\/[^/]+\/media(?:\/[^/]+\/content)?$/;
 
 /** Ohne Datenfluss in diesem Zeitraum wird ein Upload oder Abruf abgebrochen. */
 export const MEDIA_STREAM_IDLE_TIMEOUT_MS = 60_000;
@@ -239,7 +241,7 @@ const STRIPPED_STREAM_RESPONSE_HEADERS = new Set(['transfer-encoding', 'connecti
 const MEDIA_UPLOAD_TYPE = /^(image|video)\/[\w.+-]+$/i;
 
 /**
- * Streaming-Variante des Proxys für Moment-Dateien: Der Request-Körper fließt
+ * Streaming-Variante des Proxys für Fotos und Videos: Der Request-Körper fließt
  * ungepuffert mit seiner `Content-Length` zum Fachservice, die Antwort samt
  * `Range`-Headern (`206`, `Content-Range`) ungepuffert zurück. Größen- und
  * Dauergrenzen prüft Spring; Caddy begrenzt die Körpergröße davor.
@@ -249,7 +251,7 @@ export const mediaStreamProxy: RequestHandler = (req, res, next) => {
   const isContent = path.endsWith('/content');
   const isUpload = req.method === 'POST' && !isContent;
   const isDownload = (req.method === 'GET' || req.method === 'HEAD') && isContent;
-  if (!MOMENT_MEDIA_PATH.test(path) || !(isUpload || isDownload)) {
+  if (!MEDIA_STREAM_PATH.test(path) || !(isUpload || isDownload)) {
     next();
     return;
   }

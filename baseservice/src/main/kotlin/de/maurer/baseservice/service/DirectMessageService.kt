@@ -63,7 +63,8 @@ class DirectMessageService(
     private val pushDispatcher: PushDispatcher,
     private val liveUpdateHub: LiveUpdateHub,
     private val chatReceipts: ChatReceipts,
-    private val typingSignals: TypingSignals
+    private val typingSignals: TypingSignals,
+    private val mediaAttachments: ChatMediaAttachments
 ) {
 
     fun list(principal: UserPrincipal): List<ConversationSummaryDto> {
@@ -148,8 +149,10 @@ class DirectMessageService(
                 return ownMessageDto(existing, conversation, caller)
             }
         }
-        val text = request.message?.trim()
-        if (text.isNullOrEmpty()) {
+        val mediaIds = mediaAttachments.parseIds(request.mediaIds)
+        val text = request.message?.trim().orEmpty()
+        // Ohne Foto oder Video braucht die Nachricht Text.
+        if (text.isEmpty() && mediaIds.isEmpty()) {
             throw InvalidRequestException(Msg("error.field.blank", "message"), ErrorCode.INVALID_REQUEST)
         }
         val saved = messageRepository.save(
@@ -161,6 +164,7 @@ class DirectMessageService(
                 clientId = clientId
             )
         )
+        val media = mediaAttachments.attachDirect(mediaIds, conversation.id, caller.id, saved.id)
         // Eigene Nachrichten gelten als gelesen.
         participant.lastReadAt = saved.createdAt
         // Beide Seiten sehen die Nachricht sofort, auch auf weiteren eigenen Geräten.
@@ -169,7 +173,7 @@ class DirectMessageService(
             listOf(partner.id),
             PushMessage(
                 title = Messages.defaultText(Msg("notification.direct.title", caller.displayName)).trim(),
-                body = saved.message,
+                body = saved.message.ifBlank { Messages.defaultText(ChatNotifier.mediaNotice(media)).trim() },
                 type = PersonalAlertService.TYPE_DIRECT_MESSAGE,
                 link = "/chat?id=${conversation.id}",
                 // Je Gespräch eine Benachrichtigung: eine neue ersetzt die vorige.
@@ -230,6 +234,20 @@ class DirectMessageService(
         return withReactions(listOf(message), caller).first()
     }
 
+    /** Lesezugriff auf ein Gespräch für Beteiligte (sonst `404`). */
+    internal fun requireReadableDirect(conversationId: UUID, caller: UserEntity): DirectConversationEntity =
+        requireParticipant(conversationId, caller).conversation!!
+
+    /** Schreibzugriff: beteiligt und dem Gegenüber darf man noch schreiben. */
+    internal fun requireWritableDirect(conversationId: UUID, caller: UserEntity): DirectConversationEntity {
+        val conversation = requireReadableDirect(conversationId, caller)
+        val partner = partnerOf(conversation, caller)
+        if (partner == null || partner.disabled || !canMessage(caller.id, partner.id)) {
+            throw AccessDeniedException(Msg("error.chat.directNotAllowed"), ErrorCode.ACCESS_DENIED)
+        }
+        return conversation
+    }
+
     // --- Interne Helfer ---
 
     /** Freunde oder Personen mit gemeinsamer Gruppe. */
@@ -272,7 +290,8 @@ class DirectMessageService(
                 ChatMessagePreviewDto(
                     senderName = it.sender?.displayName ?: ChatService.UNKNOWN_SENDER_NAME,
                     message = it.message,
-                    createdAt = it.createdAt
+                    createdAt = it.createdAt,
+                    mediaKind = ChatMediaAttachments.previewKind(mediaAttachments.directMedia(listOf(it.id))[it.id])
                 )
             },
             unreadCount = unreadFor(conversation, own, caller),
@@ -299,12 +318,14 @@ class DirectMessageService(
     private fun ownMessageDto(message: DirectMessageEntity, conversation: DirectConversationEntity, caller: UserEntity): ChatMessageDto =
         toMessageDto(message).copy(
             clientId = message.clientId,
-            receipt = chatReceipts.receiptsForDirect(conversation, listOf(message), caller)[message.id]
+            receipt = chatReceipts.receiptsForDirect(conversation, listOf(message), caller)[message.id],
+            media = mediaAttachments.directMedia(listOf(message.id))[message.id].orEmpty()
         )
 
     private fun withReactions(messages: List<DirectMessageEntity>, caller: UserEntity): List<ChatMessageDto> {
         if (messages.isEmpty()) return emptyList()
         val byMessage = reactionRepository.findByMessageIdIn(messages.map { it.id }).groupBy { it.message?.id }
+        val media = mediaAttachments.directMedia(messages.map { it.id })
         return messages.map { message ->
             val reactions = byMessage[message.id].orEmpty()
                 .groupBy { it.emoji }
@@ -314,7 +335,8 @@ class DirectMessageService(
                 .sortedByDescending { it.count }
             toMessageDto(message).copy(
                 reactions = reactions,
-                clientId = message.clientId.takeIf { message.sender?.id == caller.id }
+                clientId = message.clientId.takeIf { message.sender?.id == caller.id },
+                media = media[message.id].orEmpty()
             )
         }
     }

@@ -77,7 +77,12 @@ class CommunityFeaturesIntegrationTest @Autowired constructor(
         assertEquals(0, conversationService.listConversations(alice).first { it.type == "club" }.unreadCount)
 
         conversationService.markRead(UUID.fromString(club.id), bob)
-        assertEquals(0, conversationService.unreadCount(bob).unread)
+        assertEquals(0, conversationService.listConversations(bob).first { it.type == "club" }.unreadCount)
+        // Der Gesamtzähler enthält auch laufende Moment-Chats anderer Tests.
+        assertEquals(
+            conversationService.listConversations(bob).sumOf { it.unreadCount },
+            conversationService.unreadCount(bob).unread
+        )
 
         val reacted = conversationService.toggleReaction(UUID.fromString(club.id), UUID.fromString(sent.id), "🍺", bob)
         assertEquals(1, reacted.reactions.single().count)
