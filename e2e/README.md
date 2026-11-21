@@ -6,8 +6,9 @@ Postgres, Bilder und Videos im Dateispeicher wie in Produktion und
 Caddy mit einer eigenen Test-CA). Die App
 läuft dabei wie in Produktion unter HTTPS, hier unter `https://vereint.test:8443`.
 
-In GitHub Actions laufen die Tests bei jedem Pull Request und Push auf
-`develop`, `qs` und `main` (`.github/workflows/e2e.yml`).
+In GitHub Actions laufen die Tests bei jedem Push auf `develop`, `qs` und
+`main` und bei Pull Requests `develop` → `qs` und `qs` → `main`
+(`.github/workflows/e2e.yml`).
 
 ## Lokal ausführen
 
@@ -22,6 +23,12 @@ npx playwright install chromium                          # einmalig
 npx playwright test      # alle Tests; --ui für den interaktiven Modus
 ./stack.sh down          # Stack samt Daten entfernen
 ```
+
+Antwortet die API in einem Lauf plötzlich nur noch mit `503`, ist meist der
+baseservice abgestürzt und startet neu (`restart: unless-stopped`).
+`./stack.sh status` zeigt je Container Neustarts, OOM-Kill und Exit-Code
+sowie den aktuellen Speicherverbrauch; in GitHub Actions steht das im Schritt
+„Zustand der Container“, die Logs aller Dienste liegen im Artefakt `e2e-report`.
 
 `stack.sh up` erzeugt bei jedem Start neue Wegwerf-Secrets (`.env.e2e`) und eine
 neue Test-CA (`.ca/`). Die Testkonten legt `support/global-setup.ts` über die

@@ -132,8 +132,15 @@ describe('DashboardComponent', () => {
     const fixture = await create();
     const card = (fixture.nativeElement as HTMLElement).querySelector('vereint-balance-card')!;
     expect(card.querySelector('button')).toBeNull();
-    expect(card.querySelector('a[href="/scan"]')).toBeTruthy();
+    const book = card.querySelector('a[href="/scan"]');
+    expect(book?.textContent).toContain('Buchen');
     expect(card.querySelector('a[href="/wallet"]')).toBeTruthy();
+  });
+
+  it('links the event and booking tiles to their pages', async () => {
+    const fixture = await create();
+    const tiles = (fixture.nativeElement as HTMLElement).querySelectorAll('vereint-stat-card a.ui-stat-card');
+    expect(Array.from(tiles).map((tile) => tile.getAttribute('href'))).toEqual(['/events', '/wallet']);
   });
 
   it('shows a retry state on error', async () => {

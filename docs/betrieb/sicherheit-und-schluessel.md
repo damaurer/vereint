@@ -102,7 +102,8 @@ rotiert man ebenso mit `SESSION_SECRET_PREVIOUS`.
 
 **Lieferkette**
 
-- Jeder Pull Request wird auf eingecheckte Secrets (Gitleaks) und bekannte
+- Jeder Stand auf `develop`, `qs` und `main` und jeder Pull Request nach `qs`
+  und `main` wird auf eingecheckte Secrets (Gitleaks) und bekannte
   Schwachstellen (Trivy) geprüft.
 - GitHub Actions sind auf Commit-SHAs gepinnt, Images auf genaue Versionen
   (teils zusätzlich auf Digests); Dependabot hält beides aktuell.

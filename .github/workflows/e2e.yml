@@ -5,7 +5,8 @@ name: E2E-Tests
 # Dateispeicher, Caddy mit Test-CA) und testet die App mit Playwright
 # im Browser unter https://vereint.test:8443.
 #
-# Laeuft bei jedem Pull Request und Push auf develop, qs und main. Bei
+# Laeuft bei Push auf develop, qs und main und bei Pull Requests
+# develop -> qs und qs -> main. Bei
 # Fehlern liegen Playwright-Report (mit Trace und Video) und die Logs aller
 # Dienste als Artefakt am Lauf. Lokal: siehe e2e/README.md.
 on:
@@ -16,7 +17,6 @@ on:
       - qs
   pull_request:
     branches:
-      - develop
       - main
       - qs
   workflow_dispatch:
@@ -31,6 +31,15 @@ concurrency:
 jobs:
   e2e:
     name: Playwright gegen den echten Stack
+    # Nur fuer main, qs und develop und fuer Pull Requests develop -> qs und
+    # qs -> main aus diesem Repository (siehe docs/betrieb/branches-und-ci.md).
+    if: >-
+      (github.event_name != 'pull_request'
+        && contains(fromJSON('["main", "qs", "develop"]'), github.ref_name))
+      || (github.event_name == 'pull_request'
+        && github.event.pull_request.head.repo.full_name == github.repository
+        && ((github.base_ref == 'qs' && github.head_ref == 'develop')
+          || (github.base_ref == 'main' && github.head_ref == 'qs')))
     # Fest auf 24.04: ubuntu-latest ist seit November 2026 Ubuntu 26.04, dort installiert Playwright 1.56 keinen Chromium.
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -62,6 +71,12 @@ jobs:
 
       - name: E2E-Tests ausfuehren
         run: npx playwright test
+
+      # Steht direkt im Job-Log: Neustarts oder ein OOM-Kill erklaeren
+      # kurzzeitige 503 der API ohne Blick in die Artefakte.
+      - name: Zustand der Container
+        if: always()
+        run: ./stack.sh status || true
 
       - name: Logs der Dienste sichern
         if: failure()

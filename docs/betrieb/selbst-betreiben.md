@@ -8,7 +8,8 @@ entscheidet der Betreiber; das Repository rollt nichts aus.
 | `ghcr.io/damaurer/vereint-baseservice` | Fachservice (Spring Boot), REST-API, Liquibase-Migrationen | 8081 |
 | `ghcr.io/damaurer/vereint-webservice` | Oberfläche (Angular SSR) und BFF mit Session-Cookie | 8080 |
 
-Gebaut und mit Trivy geprüft werden beide bei jedem Pull Request. Nach einem
+Gebaut und mit Trivy geprüft werden beide nach jedem Merge auf `develop`,
+`qs` oder `main` und bei Pull Requests nach `qs` und `main`. Nach einem
 Merge auf `qs` oder `main` landen sie für `linux/amd64` und `linux/arm64` in
 GitHub Packages, getaggt mit dem Commit (`<sha>`) und dem Branch-Namen
 (`:main`, `:qs`). Ein Image wird nur neu gebaut, wenn sich sein Ordner
@@ -32,6 +33,7 @@ Ein komplettes, lauffähiges Beispiel aller Dienste ist
 | **PostgreSQL** | Ab Version 17. Der baseservice verbindet sich als eigener Benutzer **ohne** Superuser-Rechte, dem die Datenbank gehört, sonst greift die Trennung der Gruppen per Row-Level-Security nicht ([`local/postgres/init-databases.sh`](../../local/postgres/init-databases.sh), [stammtische.md](../domains/stammtische.md#trennung)). |
 | **Dateien** | `STORAGE_BACKEND=filesystem` mit einem dauerhaften Volume unter `STORAGE_DIRECTORY` (das Image legt `/data/files` für Benutzer 10001 an), oder S3 mit `STORAGE_BACKEND=s3`. |
 | **Reverse Proxy mit HTTPS** | Leitet alles an den webservice. Anfragen höchstens 8 MB, außer auf dem Upload-Pfad `/api/v1/moments/<id>/media` (bis 110 MB, ungepuffert). Die Live-Verbindung `/api/v1/live` (Server-Sent Events) läuft ungepuffert und unkomprimiert durch und darf mindestens 10 Minuten offen bleiben; ein Proxy, der Antworten puffert (z. B. Traefik-Middleware `buffering`), braucht dafür eine eigene Route ohne diese Middleware. Ohne das funktioniert die App weiter, Chats aktualisieren sich dann aber nur alle 10 Sekunden. Kamera und Standort per `Permissions-Policy` nur für die eigene Seite. Vorbild: [`local/Caddyfile`](../../local/Caddyfile). |
+| **Arbeitsspeicher** | baseservice mindestens 896 MB Container-Limit mit `JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=50 -XX:+ExitOnOutOfMemoryError`: Neben dem Heap braucht die JVM gut 300 MB (Metaspace, Code-Cache, Threads). Mit 70 % von 640 MB kann der Kernel den Container unter Last beenden; die API antwortet dann bis zum Neustart mit 503. Werte wie in [`local/compose.yaml`](../../local/compose.yaml). |
 | **Backups** | Datenbank und Datei-Volume regelmäßig und außer Haus sichern, am besten auch direkt vor jedem Update. |
 
 ## Konfiguration

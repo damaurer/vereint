@@ -10,7 +10,7 @@ Dieses Kapitel geht jeden Bildschirm von Vereint einzeln durch: was du darauf si
 
 - [Grundaufbau jeder Seite](#grundaufbau-jeder-seite)
 - [Einstieg und Konto](#einstieg-und-konto): Anmelden, Registrieren, Gruppe eröffnen, Einladung als Gast, Gruppe wählen, Abmelden, Fehlerseiten, Impressum
-- [Mitglied](#mitglied): Start, Mehr, Mitteilungen, Profil, Events, Chat, Moments, Kalender, Freunde, Guthaben, Bezahlen, Käufe, Katalog, Runde ausgeben, Statistiken (Gruppe, Getränke, Übersicht, Events, Funktionen, Event-Statistik, Meine Statistik)
+- [Mitglied](#mitglied): Start, Mehr, Mitteilungen, Profil, Events, Chat, Moments, Kalender, Freunde, Guthaben, Buchen, Käufe, Katalog, Runde ausgeben, Statistiken (Gruppe, Getränke, Übersicht, Events, Funktionen, Event-Statistik, Meine Statistik)
 - [Vorstand](#vorstand): Vorstandsübersicht, Events verwalten, Abrechnung, Kasse, Kommunikation, Moments, Katalog, Getränkedatenbank, Getränkelisten, Strich-Kategorien, Kiosk-Geräte
 - [Thekenterminal](#thekenterminal): Strichliste, Rückgängig, Laufende Runden, Kiosk-Modus
 - [Administration](#administration): Mitglieder und Rollen, Mitglied bearbeiten, Einladen, Gruppeneinstellungen, Rollen und Berechtigungen, Plattform
@@ -164,9 +164,9 @@ Erreichbar von der Anmeldeseite und ganz unten im Mehr-Menü. Oben wechseln zwei
 Die Startseite beantwortet die drei häufigsten Fragen: Wie viel Guthaben habe ich? Wann ist das nächste Treffen? Was ist neu?
 
 - **Begrüßung** mit Kürzel und Namen.
-- **Dein Guthaben** mit dem aktuellen Stand. **Bezahlen** startet den [Strichcode-Scan](#bezahlen), **Kontoauszug** öffnet das [Guthaben](#guthaben) mit allen Buchungen.
+- **Dein Guthaben** mit dem aktuellen Stand. **Buchen** startet den [Strichcode-Scan](#buchen), **Kontoauszug** öffnet das [Guthaben](#guthaben) mit allen Buchungen.
 - **Nächster Termin**: Titel, Status (z. B. **Aktiv**), Datum, Uhrzeit, Ort und deine Antwort („Du bist dabei“). Ein Tipp öffnet das [Event](#event). **Alle Events** führt zur Liste.
-- **Deine Events** (Anzahl in diesem Monat) und **Buchungen** (seit Monatsbeginn) als Kennzahlen.
+- **Deine Events** (Anzahl in diesem Monat) und **Buchungen** (insgesamt) als Kennzahlen. Ein Tipp auf **Deine Events** öffnet die [Events](#events), ein Tipp auf **Buchungen** das [Guthaben](#guthaben) mit allen Buchungen.
 
 <br clear="right">
 
@@ -177,7 +177,7 @@ Die Startseite beantwortet die drei häufigsten Fragen: Wie viel Guthaben habe i
 Alles, was nicht in die untere Leiste passt, sortiert nach Bereichen:
 
 - **Gruppe**: [Moments](#moments), [Direktnachrichten](#direktnachrichten), [Statistik](#statistik)
-- **Mein Konto**: [Kalender](#kalender), [Freunde](#freunde), [Bezahlen](#bezahlen), [Käufe](#käufe), [Mitteilungen](#mitteilungen), [Profil](#profil)
+- **Mein Konto**: [Kalender](#kalender), [Freunde](#freunde), [Buchen](#buchen), [Käufe](#käufe), [Mitteilungen](#mitteilungen), [Profil](#profil)
 - **Theke**: [Getränkekatalog](#getränkekatalog), [Getränkelisten](#getränkelisten), [Thekenterminal](#strichliste)
 - **Verwaltung**, nur mit den Rechten dazu: [Vorstand](#vorstandsübersicht), [Administration](#mitglieder-und-rollen), [Gruppe](#gruppeneinstellungen)
 
@@ -376,13 +376,13 @@ Die Detailseite eines Moments.
 Dein Konto in der Bierkasse der Gruppe.
 
 - **Aktueller Stand** mit Datum und Uhrzeit. Ein Minus erscheint in Rot.
-- **Aufladen** erklärt, wie Geld aufs Konto kommt; **Bezahlen** startet den Scan.
+- **Aufladen** erklärt, wie Geld aufs Konto kommt; **Buchen** startet den Scan.
 - **Verwaltet vom Kassenwart**: Aufladungen bucht der Kassenwart nach Barzahlung oder Überweisung. Selbst aufladen geht nicht.
 - **Historie** mit Filtern **Alle**, **Aufladungen**, **Ausgaben**. Jede Zeile nennt Artikel, Art (Kauf, Strichliste, Aufladung), Zeit und Betrag; Abbuchungen mit Minus, Aufladungen mit Plus.
 
 <br clear="right">
 
-### Bezahlen
+### Buchen
 
 <img src="screens/bezahlen.png" alt="Getränk scannen" width="300" align="right">
 
@@ -710,7 +710,7 @@ Ein Getränk anlegen oder ändern.
 - **Strich-Kategorie**: in welcher Spalte der Strichliste das Getränk gezählt wird, oder **Ohne**.
 - **Füllmenge (ml)** und **Kalorien je Portion (kcal)**, beide freiwillig. Sie zählen für Liter und Kalorien in der [Getränkestatistik](#getränkestatistik).
 - **Verkaufspreis** (Pflicht) und **Einkaufspreis**. Darunter der Preis, der an der Theke wirklich gilt: Hat das Getränk eine Kategorie, **überschreibt der Kategoriepreis den Verkaufspreis**. Dazu die Marge.
-- **Barcodes**: vorhandene Strichcodes und **Neuer Barcode** mit **Hinzufügen**. Damit funktioniert [Bezahlen per Scan](#bezahlen).
+- **Barcodes**: vorhandene Strichcodes und **Neuer Barcode** mit **Hinzufügen**. Damit funktioniert [Bezahlen per Scan](#buchen).
 - **Im Sortiment**: abwählen, um das Getränk aus dem Verkauf zu nehmen, ohne es zu löschen.
 - **Speichern** oder **Abbrechen**.
 
@@ -915,11 +915,11 @@ Nur für das Vereint-Team, das die Installation betreibt.
 | einen Termin planen | [Event anlegen](#event-anlegen) | Mitglied |
 | schreiben | [Chat](#chat), [Gruppenchat](#gruppenchat), [Direktnachrichten](#direktnachrichten) | Mitglied |
 | mein Guthaben sehen | [Guthaben](#guthaben), [Käufe](#käufe) | Mitglied |
-| ein Getränk selbst bezahlen | [Bezahlen](#bezahlen) | Mitglied |
+| ein Getränk selbst bezahlen | [Buchen](#buchen) | Mitglied |
 | eine Runde ausgeben | [Runde ausgeben](#runde-ausgeben) | Mitglied |
 | Statistiken sehen | [Statistik](#statistik), [Getränkestatistik](#getränkestatistik), [Statistik-Übersicht](#statistik-übersicht), [Events der Gruppe](#events-der-gruppe), [Funktionen](#funktionen) | alle Mitglieder |
 | meine eigenen Zahlen sehen oder die Erfassung ausschalten | [Meine Statistik](#meine-statistik), [Profil](#profil) | alle |
-| ein Getränk nur für die Statistik erfassen | [Bezahlen](#bezahlen) | Mitglied |
+| ein Getränk nur für die Statistik erfassen | [Buchen](#buchen) | Mitglied |
 | Guthaben einbuchen | [Kasse](#kasse-und-finanzen), [Konto buchen](#mitgliedskonto-buchen) | Vorstand |
 | einen Abend abrechnen | [Eventabrechnung](#eventabrechnung) | Vorstand |
 | allen etwas mitteilen | [Kommunikation](#kommunikation) | Vorstand |

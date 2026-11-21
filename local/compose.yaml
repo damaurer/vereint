@@ -158,13 +158,18 @@ services:
       # schalten local/compose.local.yaml und e2e/compose.e2e.yaml es ein.
       SIGNUP_ENABLED: ${SIGNUP_ENABLED:-false}
       SIGNUP_MAX_OWNED: ${SIGNUP_MAX_OWNED:-3}
-      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError
+      # Heap hoechstens die Haelfte des Limits: Metaspace, Code-Cache, Threads
+      # und GC brauchen bei Spring Boot gut 300 MB daneben. Mit 70 % von 640 MB
+      # lag der Fachservice in den E2E-Tests unter Last rund 20 Sekunden lang
+      # brach (503) und war danach wieder da, passend zu einem Neustart nach
+      # Erreichen des Container-Limits.
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=50 -XX:+ExitOnOutOfMemoryError
     depends_on:
       postgres:
         condition: service_healthy
       keycloak:
         condition: service_healthy
-    mem_limit: 640m
+    mem_limit: 896m
 
   webservice:
     <<: *defaults

@@ -1260,6 +1260,19 @@ a:focus-visible {
   background-color: var(--color-surface);
 }
 
+.ui-stat-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.ui-stat-card-link:hover,
+.ui-stat-card-link:focus-visible {
+  border-color: var(--color-border-dark);
+  text-decoration: none;
+}
+
 .ui-stat-icon {
   font-size: 1.4rem;
 }

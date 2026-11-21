@@ -18,7 +18,7 @@ Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm
 | sehen, wer was getrunken hat, mit Litern und Kalorien | **Mehr → Statistik** → **Getränkestatistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
 | eine Runde ausgeben | Im laufenden Event **Runde ausgeben** → Personen anhaken → **Runde für … ausgeben** |
-| ein Getränk selbst bezahlen oder nur für die Statistik erfassen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen oder **Aus Katalog wählen** |
+| ein Getränk selbst bezahlen oder nur für die Statistik erfassen | **Buchen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Buchen**) → Strichcode scannen oder **Aus Katalog wählen** |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
 | beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments** |
@@ -157,7 +157,7 @@ Unter **Mehr → Freunde** führst du deine Freundesliste. Sie gilt über alle G
 
 Vereint führt für dich ein Guthabenkonto, die „Bierkasse“. Alles, was an der Theke auf deinen Namen angeschrieben wird, wird davon abgezogen.
 
-- Oben steht der **aktuelle Stand**. **Bezahlen** öffnet direkt den Strichcode-Scanner; dort kannst du auch **Aus Katalog wählen**.
+- Oben steht der **aktuelle Stand**. **Buchen** öffnet direkt den Strichcode-Scanner; dort kannst du auch **Aus Katalog wählen**.
 - In der **Historie** siehst du jede Buchung. Mit **Alle**, **Aufladungen** und **Ausgaben** filterst du die Liste.
 
 **Aufladen**: Gib das Geld beim Kassenwart ab. Er bucht den Betrag ein, danach erscheint er hier als „Aufladung“. Selbst aufladen kannst du nicht.
@@ -177,7 +177,7 @@ Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst 
 
 <img src="bilder/m-bezahlen.png" alt="Getränk scannen" width="300" align="right">
 
-1. **Mehr → Bezahlen** oder auf der Startseite **Getränk bezahlen** öffnen.
+1. **Mehr → Buchen** oder auf der Startseite **Buchen** öffnen.
 2. Den **Strichcode** der Flasche in den Rahmen halten. Beim ersten Mal fragt das Handy, ob Vereint die Kamera benutzen darf.
 3. Klappt das Scannen nicht, die Nummer unter dem Strichcode eintippen und **Suchen** tippen. Hat die Flasche keinen Strichcode, wähle das Getränk aus dem Katalog (siehe unten).
 
@@ -204,7 +204,7 @@ Wird ein Strichcode nicht erkannt, ist das Getränk weder im Katalog noch in der
 
 Statt zu scannen kannst du das Getränk auch aus einer Liste antippen, etwa wenn die Kamera nicht will, das Etikett fehlt oder das Getränk keinen Strichcode hat.
 
-1. Unter **Bezahlen** oben von **Scannen** auf **Aus Katalog wählen** wechseln.
+1. Unter **Buchen** oben von **Scannen** auf **Aus Katalog wählen** wechseln.
 2. Vereint zeigt die Getränke aus dem Getränkekatalog deiner Gruppe, die man bezahlen kann: freigegeben, im Sortiment und mit Preis. Im Feld **Getränk suchen** findest du ein Getränk nach Name oder Sorte.
 3. Das Getränk antippen. Danach geht es **genau wie nach einem Scan** weiter: Bei einem laufenden Event mit Selbstbedienung zahlst du über das Event zu dessen Preis, sonst wählst du zwischen **Mit Guthaben bezahlen** und **Nur in die Statistik** (siehe unten). Erst die Bestätigung bucht, **Rückgängig** geht ebenso 10 Minuten lang.
 
