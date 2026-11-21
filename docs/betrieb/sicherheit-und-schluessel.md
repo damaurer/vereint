@@ -96,7 +96,7 @@ rotiert man ebenso mit `SESSION_SECRET_PREVIOUS`.
 - Empfohlen und in `local/compose.yaml` umgesetzt: keine Linux-Capabilities,
   `no-new-privileges`, Prozess- und Speicherlimits, Datenbank und baseservice
   ohne direkten Zugang von außen.
-- Der Proxy weist Anfragen über 8 MB ab (Moment-Medien bis 110 MB) und
+- Der Proxy weist Anfragen über 8 MB ab (Fotos und Videos in Moments und Chats bis 110 MB) und
   erlaubt Kamera und Standort nur für die eigene Seite; die
   Keycloak-Verwaltung ist von außen nicht erreichbar.
 

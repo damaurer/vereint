@@ -18,12 +18,45 @@ export function stammtischCookieName(): string {
 /** Header, mit dem der Fachservice den Stammtisch einer Anfrage erhält. */
 export const STAMMTISCH_HEADER = 'X-Stammtisch-Id';
 
+/**
+ * Gruppe eines einzelnen Chats in der gemeinsamen Chat-Liste (`/chat`). Die
+ * Liste zeigt Chats aller eigenen Gruppen; zum Lesen und Schreiben eines
+ * Gruppen- oder Event-Chats nennt die App dessen Gruppe, ohne die gewählte
+ * Gruppe zu wechseln. Gilt nur für `/api/v1/conversations/…` und gewährt wie
+ * der Cookie nichts: Der Fachservice prüft die Mitgliedschaft selbst.
+ */
+export const CHAT_GROUP_HEADER = 'x-vereint-chat-group';
+
+const CHAT_GROUP_PATH = /^\/api\/v1\/conversations\/[^/?]+\//;
+
 const ONE_YEAR_SECONDS = 365 * 24 * 60 * 60;
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function isStammtischId(value: unknown): value is string {
   return typeof value === 'string' && UUID_PATTERN.test(value);
+}
+
+/**
+ * Fotos und Videos laden `<img>`/`<video>` ohne eigene Header; ihre Gruppe
+ * steht deshalb im Query-Parameter `chatGroup`.
+ */
+export const CHAT_GROUP_QUERY = 'chatGroup';
+
+const CHAT_MEDIA_CONTENT_PATH = /^\/api\/v1\/conversations\/[^/?]+\/media\/[^/?]+\/content$/;
+
+/**
+ * Gruppe aus [CHAT_GROUP_HEADER] (bei Medien-Abrufen auch aus `?chatGroup=`),
+ * nur bei Aufrufen eines einzelnen Chats.
+ */
+export function readChatGroupHeader(req: Request): string | undefined {
+  const [path, query = ''] = req.originalUrl.split('?');
+  if (!CHAT_GROUP_PATH.test(path)) return undefined;
+  let value = req.header(CHAT_GROUP_HEADER)?.trim();
+  if (!value && CHAT_MEDIA_CONTENT_PATH.test(path)) {
+    value = new URLSearchParams(query).get(CHAT_GROUP_QUERY)?.trim();
+  }
+  return isStammtischId(value) ? value.toLowerCase() : undefined;
 }
 
 function readLegacyStammtischCookie(req: Request): string | undefined {

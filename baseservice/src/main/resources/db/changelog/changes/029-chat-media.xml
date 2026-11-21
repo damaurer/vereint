@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 330. Fotos und kurze Videos in Gruppen-, Event- und Moment-Chats. Die
+         Dateien liegen wie bei Moments verschlüsselt im Objektspeicher; hier
+         stehen nur Metadaten. `message_id` ist leer, solange der Upload noch zu
+         keiner abgesendeten Nachricht gehört; ein Job räumt solche Uploads
+         nach einigen Stunden weg. -->
+    <changeSet id="330-create-chat-media" author="claude">
+        <createTable tableName="chat_media">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_chat_media_stammtisch" references="stammtische(id)"/>
+            </column>
+            <column name="conversation_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_chat_media_conversation" references="conversations(id)" deleteCascade="true"/>
+            </column>
+            <!-- NULL, solange der Upload noch zu keiner abgesendeten Nachricht gehört -->
+            <column name="message_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_chat_media_message" references="chat_messages(id)" deleteCascade="true"/>
+            </column>
+            <column name="owner_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_chat_media_owner" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="kind" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_type" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="size_bytes" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="storage_key" type="VARCHAR(512)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_chat_media_storage_key"/>
+            </column>
+            <column name="encrypted" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="width" type="INTEGER"/>
+            <column name="height" type="INTEGER"/>
+            <column name="duration_ms" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>ALTER TABLE chat_media ADD CONSTRAINT ck_chat_media_kind CHECK (kind IN ('image', 'video') AND size_bytes &gt; 0)</sql>
+        <createIndex tableName="chat_media" indexName="ix_chat_media_message">
+            <column name="message_id"/>
+        </createIndex>
+        <createIndex tableName="chat_media" indexName="ix_chat_media_conversation_owner">
+            <column name="conversation_id"/>
+            <column name="owner_id"/>
+        </createIndex>
+        <createIndex tableName="chat_media" indexName="ix_chat_media_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="chat_media"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 331. Fotos und Videos in Direktnachrichten. Gehören wie die
+         Direktnachrichten selbst keiner Gruppe. -->
+    <changeSet id="331-create-direct-media" author="claude">
+        <createTable tableName="direct_media">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="conversation_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_direct_media_conversation" references="direct_conversations(id)" deleteCascade="true"/>
+            </column>
+            <!-- NULL, solange der Upload noch zu keiner abgesendeten Nachricht gehört -->
+            <column name="message_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_direct_media_message" references="direct_messages(id)" deleteCascade="true"/>
+            </column>
+            <column name="owner_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_direct_media_owner" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="kind" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_type" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="size_bytes" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="storage_key" type="VARCHAR(512)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_direct_media_storage_key"/>
+            </column>
+            <column name="encrypted" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="width" type="INTEGER"/>
+            <column name="height" type="INTEGER"/>
+            <column name="duration_ms" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>ALTER TABLE direct_media ADD CONSTRAINT ck_direct_media_kind CHECK (kind IN ('image', 'video') AND size_bytes &gt; 0)</sql>
+        <createIndex tableName="direct_media" indexName="ix_direct_media_message">
+            <column name="message_id"/>
+        </createIndex>
+        <createIndex tableName="direct_media" indexName="ix_direct_media_conversation_owner">
+            <column name="conversation_id"/>
+            <column name="owner_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="direct_media"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 332. Row Level Security für chat_media wie in Changeset 165. -->
+    <changeSet id="332-chat-media-row-level-security" author="claude" dbms="postgresql">
+        <sql splitStatements="false">
+            ALTER TABLE chat_media ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE chat_media FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON chat_media
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <rollback>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON chat_media; ALTER TABLE chat_media NO FORCE ROW LEVEL SECURITY; ALTER TABLE chat_media DISABLE ROW LEVEL SECURITY</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

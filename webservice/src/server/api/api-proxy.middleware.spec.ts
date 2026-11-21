@@ -153,6 +153,36 @@ describe('api-proxy.middleware', () => {
     expect(captured?.get('x-stammtisch-id')).toBeNull();
   });
 
+  it('lets a single chat of the chat list name its group, but nothing else', async () => {
+    const urls: string[] = [];
+    const groups: (string | null)[] = [];
+    globalThis.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      const headers = new Headers(init?.headers);
+      urls.push(String(url));
+      groups.push(headers.get('x-stammtisch-id'));
+      expect(headers.get('x-vereint-chat-group')).toBeNull();
+      return new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }) as unknown as typeof fetch;
+    const headers = {
+      Cookie: 'vereint.stammtisch=11111111-1111-4111-8111-111111111111',
+      'X-Vereint-Chat-Group': '33333333-3333-4333-8333-333333333333',
+    };
+
+    await originalFetch(`${baseUrl}/api/v1/conversations/abc/messages`, { headers });
+    await originalFetch(`${baseUrl}/api/v1/conversations`, { headers });
+    await originalFetch(`${baseUrl}/api/v1/events`, { headers });
+    await originalFetch(`${baseUrl}/api/v1/conversations/abc/read`, {
+      headers: { ...headers, 'X-Vereint-Chat-Group': 'keine-uuid' },
+    });
+
+    expect(groups).toEqual([
+      '33333333-3333-4333-8333-333333333333',
+      '11111111-1111-4111-8111-111111111111',
+      '11111111-1111-4111-8111-111111111111',
+      '11111111-1111-4111-8111-111111111111',
+    ]);
+  });
+
   it('forwards multipart uploads byte for byte with their boundary', async () => {
     let captured: { body: Buffer; contentType: string | null } | undefined;
     globalThis.fetch = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {

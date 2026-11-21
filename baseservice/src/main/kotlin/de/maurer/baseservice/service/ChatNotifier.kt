@@ -1,6 +1,7 @@
 package de.maurer.baseservice.service
 
 import de.maurer.baseservice.domain.ChatMessageEntity
+import de.maurer.baseservice.dto.ChatMediaDto
 import de.maurer.baseservice.domain.ConversationEntity
 import de.maurer.baseservice.live.LiveEvent
 import de.maurer.baseservice.live.LiveUpdateHub
@@ -43,7 +44,7 @@ class ChatNotifier(
 ) {
 
     /** Neue Nachricht: Live-Signal an alle Leser (auch die eigenen anderen Geräte), Push an alle anderen. */
-    fun messageSent(message: ChatMessageEntity) {
+    fun messageSent(message: ChatMessageEntity, media: List<ChatMediaDto> = emptyList()) {
         val conversation = message.conversation ?: return
         val audience = audienceOf(conversation)
         publish(conversation, audience)
@@ -55,7 +56,7 @@ class ChatNotifier(
                 recipients,
                 PushMessage(
                     title = text(Msg("notification.chat.title", senderName, chatTitle(conversation))),
-                    body = message.message.ifBlank { text(Msg("notification.chat.image")) },
+                    body = message.message.ifBlank { text(mediaNotice(media)) },
                     type = TYPE_CHAT_MESSAGE,
                     link = link,
                     stammtischId = TenantContext.stammtischId()?.toString(),
@@ -110,6 +111,10 @@ class ChatNotifier(
     }
 
     companion object {
+        /** Push- und Listentext einer Nachricht ohne Text: Foto oder Video. */
+        fun mediaNotice(media: List<ChatMediaDto>): Msg =
+            if (media.isNotEmpty() && media.all { it.kind == "video" }) Msg("notification.chat.video") else Msg("notification.chat.image")
+
         const val TYPE_CHAT_MESSAGE = "chat_message"
     }
 }

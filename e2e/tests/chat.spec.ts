@@ -6,7 +6,10 @@ import { sql } from '../support/stack';
 /** Nachrichtenverlauf ohne die Vorschau in der Konversationsliste. */
 const thread = (page: Page) => page.locator('app-chat-thread');
 
-test.describe('Gruppenchat und Direktnachrichten', () => {
+/** Gruppenchat in der gemeinsamen Chat-Liste; er heißt wie die Gruppe. */
+const groupChat = (page: Page) => page.locator('.chat-conversation[data-type="club"]').first();
+
+test.describe('Alle Chats auf einer Seite', () => {
   test('Vorstand pinnt eine Infotafel, Mitglieder schreiben und reagieren im Gruppenchat', async ({ as }) => {
     const board = await as('board');
     const member = await as('member');
@@ -25,7 +28,7 @@ test.describe('Gruppenchat und Direktnachrichten', () => {
     await test.step('Mitglied sieht die Infotafel und schreibt', async () => {
       const { page } = member;
       await page.goto('/chat');
-      await page.getByRole('button', { name: /^Gruppenchat/ }).click();
+      await groupChat(page).click();
       await expect(page.getByText('Infotafel von Bert Vorstand')).toBeVisible();
       await expect(thread(page).getByText(notice)).toBeVisible();
       await page.getByPlaceholder('Schreibe eine Nachricht…').fill(text);
@@ -38,7 +41,7 @@ test.describe('Gruppenchat und Direktnachrichten', () => {
       await page.goto('/dashboard');
       await expect(page.getByRole('link', { name: /^Chat, \d+ ungelesen$/ }).first()).toBeVisible();
       await page.goto('/chat');
-      await page.getByRole('button', { name: /^Gruppenchat/ }).click();
+      await groupChat(page).click();
       const message = page.locator('article.chat-message').filter({ hasText: text });
       await expect(message).toBeVisible();
       await message.getByRole('button', { name: 'Reaktion hinzufügen' }).click();
@@ -79,15 +82,19 @@ test.describe('Gruppenchat und Direktnachrichten', () => {
     const answer = unique('Klar, um sieben.');
 
     const { page } = member;
-    await page.goto('/direktnachrichten');
-    await page.getByRole('button', { name: /Neue Nachricht/ }).click();
+    // Neue Nachricht: erst die Art waehlen, dann die Person.
+    await page.goto('/chat');
+    await page.getByRole('button', { name: 'Neue Nachricht' }).click();
+    await page.getByRole('button', { name: /^Direktnachricht/ }).click();
     await page.getByLabel('Person suchen').fill('Max');
-    await page.locator('.dm-members').getByRole('button', { name: /Max Mitglied/ }).click();
+    await page.locator('.compose-members').getByRole('button', { name: /Max Mitglied/ }).click();
     await page.getByPlaceholder('Schreibe eine Nachricht…').fill(text);
     await page.getByRole('button', { name: 'Senden' }).click();
     await expect(thread(page).getByText(text)).toBeVisible();
 
-    await member2.page.goto('/direktnachrichten');
+    // Gruppenchat und Direktnachricht stehen in derselben Liste, ohne Unterseite.
+    await member2.page.goto('/chat');
+    await expect(groupChat(member2.page)).toBeVisible();
     await member2.page.getByRole('button', { name: /Mia Mitglied/ }).click();
     await expect(thread(member2.page).getByText(text)).toBeVisible();
     await member2.page.getByPlaceholder('Schreibe eine Nachricht…').fill(answer);

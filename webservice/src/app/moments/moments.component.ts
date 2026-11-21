@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { IconComponent } from '../ui/icon.component';
 import { isPlatformBrowser } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import type {
   EventSummary,
   MomentConfigDto,
@@ -173,7 +173,7 @@ import { translate } from '../i18n/i18n.service';
                       <a
                         class="member-button member-button-ghost btn-sm"
                         [routerLink]="['/chat']"
-                        [queryParams]="{ conversationId: session.conversationId }"
+                        [queryParams]="{ id: session.conversationId }"
                       >
                         <vereint-icon name="chat" /> {{ 'moments.session.chat' | t }}
                       </a>
@@ -728,6 +728,9 @@ import { translate } from '../i18n/i18n.service';
 export class MomentsComponent implements OnInit, OnDestroy {
   private readonly api = inject(MemberApiService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  /** Aus der Chat-Seite gestartet (`?start=chat`): danach geht es in den Chat des Moments. */
+  private startedFromChat = false;
   private readonly platformId = inject(PLATFORM_ID);
   private readonly auth = inject(AuthService);
 
@@ -816,6 +819,11 @@ export class MomentsComponent implements OnInit, OnDestroy {
     if (qMomentId) {
       this.selectedSessionId.set(qMomentId);
     }
+    // „Neue Nachricht → Moment“ auf der Chat-Seite öffnet direkt den Start-Dialog.
+    if (this.route.snapshot.queryParamMap.get('start') === 'chat') {
+      this.startedFromChat = true;
+      this.startModalOpen.set(true);
+    }
 
     this.loadMoments();
   }
@@ -879,10 +887,21 @@ export class MomentsComponent implements OnInit, OnDestroy {
 
   protected closeStartModal(): void {
     this.startModalOpen.set(false);
+    // Abgebrochen: zurück zur Chat-Seite, von der aus gestartet wurde.
+    if (this.startedFromChat) {
+      this.startedFromChat = false;
+      void this.router.navigate(['/chat']);
+    }
   }
 
   protected onMomentStarted(session: MomentSessionDto): void {
-    this.closeStartModal();
+    this.startModalOpen.set(false);
+    if (this.startedFromChat && session.conversationId) {
+      this.startedFromChat = false;
+      void this.router.navigate(['/chat'], { queryParams: { id: session.conversationId } });
+      return;
+    }
+    this.startedFromChat = false;
     this.selectedSessionId.set(session.id);
     this.loadMoments();
   }

@@ -70,11 +70,11 @@ class PersonalAlertService(
             NotificationDto(
                 id = "direct-${latest.id}",
                 title = text(Msg("notification.direct.title", sender.displayName)),
-                body = latest.message,
+                body = latest.message.ifBlank { text(Msg("notification.chat.image")) },
                 type = TYPE_DIRECT_MESSAGE,
                 read = false,
                 createdAt = latest.createdAt,
-                link = "/direktnachrichten?id=${conversation.id}"
+                link = "/chat?id=${conversation.id}"
             )
         }
         val friends = friendshipRepository.findInvolving(caller.id).mapNotNull { friendship ->

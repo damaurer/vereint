@@ -203,11 +203,10 @@ export const routes: Routes = [
     loadComponent: () => import('./chat/chat.component').then((m) => m.ChatComponent),
   },
   {
+    // Früher eigene Seite; Direktnachrichten stehen jetzt in der gemeinsamen Chat-Liste.
+    // Alte Links und Mitteilungen (`/direktnachrichten?id=…`) landen dort, `?id` bleibt erhalten.
     path: 'direktnachrichten',
-    canActivate: [authGuard],
-    data: { title: 'routes.directMessages.title', description: 'routes.directMessages.description', access: 'routes.access.protected' },
-    loadComponent: () =>
-      import('./chat/direct-messages.component').then((m) => m.DirectMessagesComponent),
+    redirectTo: 'chat',
   },
   {
     // Persönlicher Kalender über alle eigenen Gruppen.

@@ -521,6 +521,7 @@ interface MomentSessionRepository : JpaRepository<MomentSessionEntity, UUID> {
     fun findByActiveTrueOrderByCreatedAtDesc(): List<MomentSessionEntity>
     fun findByActiveFalseOrderByCreatedAtDesc(): List<MomentSessionEntity>
     fun findByConversationId(conversationId: UUID): Optional<MomentSessionEntity>
+    fun findByConversationExpiresAtAfter(now: Instant): List<MomentSessionEntity>
     fun countByCreatedAtGreaterThanEqual(from: Instant): Long
 }
 
@@ -634,6 +635,21 @@ interface MomentMediaRepository : JpaRepository<MomentMediaEntity, UUID> {
     fun sumSizeBytes(): Long
 }
 
+
+@Repository
+interface ChatMediaRepository : JpaRepository<ChatMediaEntity, UUID> {
+    fun findByMessageIdIn(messageIds: Collection<UUID>): List<ChatMediaEntity>
+    fun countByConversationIdAndOwnerIdAndMessageIdIsNull(conversationId: UUID, ownerId: UUID): Long
+    fun findByMessageIdIsNullAndCreatedAtBefore(cutoff: Instant): List<ChatMediaEntity>
+    fun findByConversationId(conversationId: UUID): List<ChatMediaEntity>
+}
+
+@Repository
+interface DirectMediaRepository : JpaRepository<DirectMediaEntity, UUID> {
+    fun findByMessageIdIn(messageIds: Collection<UUID>): List<DirectMediaEntity>
+    fun countByConversationIdAndOwnerIdAndMessageIdIsNull(conversationId: UUID, ownerId: UUID): Long
+    fun findByMessageIdIsNullAndCreatedAtBefore(cutoff: Instant): List<DirectMediaEntity>
+}
 
 // --- Persönliche, gruppenübergreifende Daten (keine Gruppe, keine Row-Level-Security) ---
 

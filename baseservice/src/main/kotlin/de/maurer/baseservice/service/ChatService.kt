@@ -9,6 +9,7 @@ import de.maurer.baseservice.domain.EventStatus
 import de.maurer.baseservice.domain.GuestStatus
 import de.maurer.baseservice.domain.StatisticFeature
 import de.maurer.baseservice.domain.UserEntity
+import de.maurer.baseservice.dto.ChatMediaDto
 import de.maurer.baseservice.dto.ChatMessageDto
 import de.maurer.baseservice.dto.ConversationDto
 import de.maurer.baseservice.dto.SendMessageRequest
@@ -203,10 +204,10 @@ class ChatService(
      * Push; siehe [ChatNotifier]) und zählt sie für die Statistik.
      * Direktnachrichten zählen nicht.
      */
-    fun recordMessage(message: ChatMessageEntity, sender: UserEntity?, event: EventEntity?) {
+    fun recordMessage(message: ChatMessageEntity, sender: UserEntity?, event: EventEntity?, media: List<ChatMediaDto> = emptyList()) {
         val type = message.conversation?.type
         if (type == ConversationService.TYPE_DIRECT) return
-        chatNotifier.messageSent(message)
+        chatNotifier.messageSent(message, media)
         statisticsRecorder.record(
             StatisticFeature.CHAT_MESSAGE,
             actor = sender,
@@ -238,6 +239,26 @@ class ChatService(
         val event = conversation.event ?: throw ResourceNotFoundException(Msg("error.chat.eventNotFound"), ErrorCode.NOT_FOUND)
         requireMemberAccess(caller, principal, event)
         return event
+    }
+
+    /**
+     * Lesezugriff auf einen Gruppen-, Event- oder Moment-Chat dieser Gruppe:
+     * den Gruppenchat lesen alle Mitglieder, Event-Chats Owner, Eingeladene und
+     * Vorstand/Administration, Moment-Chats wer den Moment sehen darf.
+     * Direktnachrichten laufen über den [DirectMessageService].
+     */
+    internal fun requireReadableConversation(
+        conversationId: UUID,
+        caller: UserEntity,
+        principal: UserPrincipal
+    ): ConversationEntity {
+        val conversation = requireActiveConversation(conversationId)
+        when (conversation.type) {
+            ConversationService.TYPE_CLUB -> Unit
+            ConversationService.TYPE_DIRECT -> throw AccessDeniedException(Msg("error.chat.directDenied"), ErrorCode.ACCESS_DENIED)
+            else -> requireConversationAccess(conversation, caller, principal)
+        }
+        return conversation
     }
 
     /** Prüft, ob eine Konversation existiert und noch nicht abgelaufen / archiviert ist. */
