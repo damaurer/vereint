@@ -102,7 +102,8 @@ class RowLevelSecurityIntegrationTest @Autowired constructor(
                 String::class.java
             )
         }
-        assertEquals(37, tables.size, "Tabellen mit Policy: $tables")
+        assertEquals(38, tables.size, "Tabellen mit Policy: $tables")
+        assertTrue("chat_media" in tables, "Fotos und Videos im Gruppenchat brauchen eine Policy: $tables")
         assertTrue("tally_categories" in tables, "Strich-Kategorien brauchen eine Policy: $tables")
         assertTrue("rounds" in tables && "round_invitees" in tables, "Runden brauchen eine Policy: $tables")
     }
