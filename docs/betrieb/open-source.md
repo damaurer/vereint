@@ -9,6 +9,8 @@ nicht gebunden und kannst später zusätzlich ein gehostetes Angebot verkaufen.
 Daten von Dritten behalten ihre eigene Lizenz: Der Startbestand der
 Getränkedatenbank stammt aus Open Food Facts und steht unter der ODbL 1.0
 ([Quellenangabe](../../baseservice/src/main/resources/db/changelog/data/README.md)).
+Die Emoji-Liste der Chat-Auswahl kommt aus dem npm-Paket `unicode-emoji-json`
+(MIT), das die Emoji-Daten des Unicode-Konsortiums aufbereitet (Unicode License V3).
 
 ## Was vor dem Öffentlichschalten geprüft wurde
 

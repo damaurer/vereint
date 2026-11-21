@@ -68,4 +68,28 @@ describe('ChatApiService', () => {
     service.contacts().subscribe();
     http.expectOne({ method: 'GET', url: '/api/v1/friends/contacts' }).flush([]);
   });
+
+  it('loads the shared chat list and names the group of a chat from another group', () => {
+    service.allChats().subscribe();
+    http.expectOne({ method: 'GET', url: '/api/v1/chats' }).flush([]);
+
+    service.allUnreadCount().subscribe();
+    http.expectOne({ method: 'GET', url: '/api/v1/chats/unread-count' }).flush({ unread: 0 });
+
+    service.messages('c1', 'event', 'g-b').subscribe();
+    const messages = http.expectOne({ method: 'GET', url: '/api/v1/conversations/c1/messages' });
+    expect(messages.request.headers.get('X-Vereint-Chat-Group')).toBe('g-b');
+    messages.flush([]);
+
+    service.send('c1', 'Hallo', 'club', 'cid-1', 'g-b').subscribe();
+    const send = http.expectOne({ method: 'POST', url: '/api/v1/conversations/c1/messages' });
+    expect(send.request.headers.get('X-Vereint-Chat-Group')).toBe('g-b');
+    send.flush({});
+
+    // Direktnachrichten gehören keiner Gruppe.
+    service.markRead('d1', 'direct', 'g-b').subscribe();
+    const read = http.expectOne({ method: 'POST', url: '/api/v1/direct-conversations/d1/read' });
+    expect(read.request.headers.has('X-Vereint-Chat-Group')).toBe(false);
+    read.flush({});
+  });
 });

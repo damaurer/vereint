@@ -136,9 +136,24 @@ export function uploadMomentMedia(
   language: string,
   onProgress: (fraction: number) => void,
 ): MediaUpload {
+  return uploadMediaFile<MomentMediaDto>(`/moments/${encodeURIComponent(momentId)}/media`, media, language, onProgress);
+}
+
+/**
+ * Lädt eine vorbereitete Datei als rohen Körper an [path] (unter `/api/v1`)
+ * hoch; genutzt von Moments und Chats.
+ */
+export function uploadMediaFile<T>(
+  path: string,
+  media: PreparedMedia,
+  language: string,
+  onProgress: (fraction: number) => void,
+  headers: Record<string, string> = {},
+): { result: Promise<T>; abort: () => void } {
   const xhr = new XMLHttpRequest();
-  const result = new Promise<MomentMediaDto>((resolve, reject) => {
-    xhr.open('POST', `${API_BASE_PATH}/moments/${encodeURIComponent(momentId)}/media`);
+  const result = new Promise<T>((resolve, reject) => {
+    xhr.open('POST', `${API_BASE_PATH}${path}`);
+    for (const [name, value] of Object.entries(headers)) xhr.setRequestHeader(name, value);
     xhr.setRequestHeader('Content-Type', media.contentType);
     xhr.setRequestHeader('Accept', 'application/json');
     xhr.setRequestHeader('Accept-Language', language);
@@ -154,7 +169,7 @@ export function uploadMomentMedia(
       }
       if (xhr.status >= 200 && xhr.status < 300) {
         onProgress(1);
-        resolve(body as unknown as MomentMediaDto);
+        resolve(body as unknown as T);
         return;
       }
       const code = typeof body['code'] === 'string' ? body['code'] : `http_${xhr.status}`;

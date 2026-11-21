@@ -5,6 +5,7 @@ import de.maurer.baseservice.domain.ChatReactionEntity
 import de.maurer.baseservice.domain.ConversationEntity
 import de.maurer.baseservice.domain.ConversationMemberEntity
 import de.maurer.baseservice.domain.EventStatus
+import de.maurer.baseservice.domain.MomentSessionEntity
 import de.maurer.baseservice.domain.StatisticFeature
 import de.maurer.baseservice.domain.StatisticKind
 import de.maurer.baseservice.domain.UserEntity
@@ -30,6 +31,7 @@ import de.maurer.baseservice.repository.ConversationMemberRepository
 import de.maurer.baseservice.repository.ConversationRepository
 import de.maurer.baseservice.repository.EventParticipantRepository
 import de.maurer.baseservice.repository.EventRepository
+import de.maurer.baseservice.repository.MomentSessionRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.tenancy.TenantContext
 import org.springframework.stereotype.Service
@@ -68,20 +70,27 @@ class ConversationService(
     private val chatNotifier: ChatNotifier,
     private val liveUpdateHub: LiveUpdateHub,
     private val chatReceipts: ChatReceipts,
-    private val typingSignals: TypingSignals
+    private val typingSignals: TypingSignals,
+    private val mediaAttachments: ChatMediaAttachments,
+    private val momentSessionRepository: MomentSessionRepository,
+    private val momentAccessPolicy: MomentAccessPolicy
 ) {
 
     fun listConversations(principal: UserPrincipal): List<ConversationSummaryDto> {
         val caller = userService.getOrCreateUser(principal)
         val club = clubConversation()
         val events = eventConversations(caller)
+        val moments = momentConversations(caller, principal)
 
-        val summaries = listOf(club) + events
+        val summaries = listOf(club) + events + moments.keys
         return summaries
             .distinctBy { it.id }
             // Die Liste zeigt die neueste Nachricht: damit ist der Chat zugestellt.
             .onEach { chatReceipts.delivered(it, caller) }
-            .map { toSummary(it, caller, principal) }
+            .map { conversation ->
+                val summary = toSummary(conversation, caller, principal)
+                moments[conversation]?.let { summary.copy(momentId = it.id.toString(), expiresAt = conversation.expiresAt) } ?: summary
+            }
             .sortedWith(
                 compareBy<ConversationSummaryDto> { it.type != TYPE_CLUB }
                     .thenByDescending { it.lastMessage?.createdAt ?: Instant.EPOCH }
@@ -120,16 +129,21 @@ class ConversationService(
             }
         }
         conversation.event?.let { chatService.requireEventOpenForChat(it) }
+        val mediaIds = mediaAttachments.parseIds(request.mediaIds)
+        val text = request.message?.trim().orEmpty()
+        // Ohne Foto oder Video braucht die Nachricht Text.
+        if (mediaIds.isEmpty()) chatService.requireMessageText(text)
         val saved = chatMessageRepository.save(
             ChatMessageEntity(
                 conversation = conversation,
                 sender = caller,
-                message = chatService.requireMessageText(request.message),
+                message = text,
                 imageUrl = chatService.normalizeImageUrl(request.imageUrl),
                 clientId = clientId
             )
         )
-        chatService.recordMessage(saved, caller, conversation.event)
+        val media = mediaAttachments.attachGroup(mediaIds, conversation.id, caller.id, saved.id)
+        chatService.recordMessage(saved, caller, conversation.event, media)
         // Eigene Nachrichten gelten als gelesen.
         membership(conversation, caller).lastReadAt = saved.createdAt
         return ownMessageDto(saved, conversation, caller)
@@ -238,20 +252,20 @@ class ConversationService(
             .map { chatService.requireEventConversation(it) }
     }
 
-    private fun requireReadable(conversationId: UUID, caller: UserEntity, principal: UserPrincipal): ConversationEntity {
-        val conversation = chatService.requireActiveConversation(conversationId)
-        when (conversation.type) {
-            TYPE_CLUB -> Unit
-            // Direktnachrichten laufen über /api/v1/direct-conversations.
-            TYPE_DIRECT -> throw AccessDeniedException(Msg("error.chat.directDenied"), ErrorCode.ACCESS_DENIED)
-            else -> {
-                val event = conversation.event
-                    ?: throw ResourceNotFoundException(Msg("error.chat.eventNotFound"), ErrorCode.NOT_FOUND)
-                chatService.requireMemberAccess(caller, principal, event)
-            }
-        }
-        return conversation
+    /**
+     * Laufende Moment-Chats (24 Stunden nach Start), die [caller] sehen darf,
+     * mit ihrem Moment.
+     */
+    private fun momentConversations(caller: UserEntity, principal: UserPrincipal): Map<ConversationEntity, MomentSessionEntity> {
+        val canView = momentAccessPolicy.viewFilter(caller, principal)
+        return momentSessionRepository.findByConversationExpiresAtAfter(Instant.now())
+            .filter(canView)
+            .mapNotNull { session -> session.conversation?.let { it to session } }
+            .toMap()
     }
+
+    private fun requireReadable(conversationId: UUID, caller: UserEntity, principal: UserPrincipal): ConversationEntity =
+        chatService.requireReadableConversation(conversationId, caller, principal)
 
     private fun membership(conversation: ConversationEntity, user: UserEntity): ConversationMemberEntity {
         chatService.ensureMember(conversation, user)
@@ -287,6 +301,7 @@ class ConversationService(
             type = conversation.type,
             title = when (conversation.type) {
                 TYPE_DIRECT -> partner?.displayName ?: ChatService.UNKNOWN_SENDER_NAME
+                ChatService.CONVERSATION_TYPE_MOMENT -> conversation.title ?: event?.title ?: CLUB_TITLE
                 else -> event?.title ?: conversation.title ?: CLUB_TITLE
             },
             eventId = event?.id?.toString(),
@@ -296,7 +311,8 @@ class ConversationService(
                 ChatMessagePreviewDto(
                     senderName = it.sender?.displayName ?: it.guest?.displayName ?: ChatService.UNKNOWN_SENDER_NAME,
                     message = it.message,
-                    createdAt = it.createdAt
+                    createdAt = it.createdAt,
+                    mediaKind = ChatMediaAttachments.previewKind(mediaAttachments.groupMedia(listOf(it.id))[it.id])
                 )
             },
             unreadCount = unreadFor(conversation, caller),
@@ -317,6 +333,7 @@ class ConversationService(
         if (messages.isEmpty()) return emptyList()
         val byMessage = chatReactionRepository.findByMessageIdIn(messages.map { it.id })
             .groupBy { it.message?.id }
+        val media = mediaAttachments.groupMedia(messages.map { it.id })
         return messages.map { message ->
             val reactions = byMessage[message.id].orEmpty()
                 .groupBy { it.emoji }
@@ -326,7 +343,8 @@ class ConversationService(
                 .sortedByDescending { it.count }
             chatService.toMessageDto(message).copy(
                 reactions = reactions,
-                clientId = message.clientId.takeIf { message.sender?.id == caller.id }
+                clientId = message.clientId.takeIf { message.sender?.id == caller.id },
+                media = media[message.id].orEmpty()
             )
         }
     }
@@ -334,7 +352,11 @@ class ConversationService(
     /** Eigene Nachricht mit App-Id und aktuellen Haken. */
     private fun ownMessageDto(message: ChatMessageEntity, conversation: ConversationEntity, caller: UserEntity): ChatMessageDto {
         val receipt = chatReceipts.receiptsFor(conversation, listOf(message), caller, chatNotifier.audienceOf(conversation))[message.id]
-        return chatService.toMessageDto(message).copy(clientId = message.clientId, receipt = receipt)
+        return chatService.toMessageDto(message).copy(
+            clientId = message.clientId,
+            receipt = receipt,
+            media = mediaAttachments.groupMedia(listOf(message.id))[message.id].orEmpty()
+        )
     }
 
     private fun parseUuid(value: String?, field: String): UUID {

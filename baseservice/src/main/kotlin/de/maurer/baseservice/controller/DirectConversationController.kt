@@ -1,5 +1,6 @@
 package de.maurer.baseservice.controller
 
+import de.maurer.baseservice.dto.ChatMediaDto
 import de.maurer.baseservice.dto.ChatMessageDto
 import de.maurer.baseservice.dto.ChatUnreadCountDto
 import de.maurer.baseservice.dto.ConversationSummaryDto
@@ -8,7 +9,12 @@ import de.maurer.baseservice.dto.StartDirectConversationRequest
 import de.maurer.baseservice.dto.ToggleReactionRequest
 import de.maurer.baseservice.security.AuthContext
 import de.maurer.baseservice.service.DirectMessageService
+import de.maurer.baseservice.service.ChatMediaService
 import de.maurer.baseservice.support.Identifiers
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.HttpHeaders
+import org.springframework.web.bind.annotation.RequestHeader
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
@@ -30,7 +36,8 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Direktnachrichten", description = "Gruppenübergreifende Einzelgespräche")
 class DirectConversationController(
     private val directMessageService: DirectMessageService,
-    private val authContext: AuthContext
+    private val authContext: AuthContext,
+    private val chatMediaService: ChatMediaService
 ) {
 
     private fun conversationId(id: String) = Identifiers.parseUuid(id, "conversationId")
@@ -93,4 +100,39 @@ class DirectConversationController(
                 authContext.getRequiredPrincipal()
             )
         )
+
+    /**
+     * Nimmt ein Foto (JPEG/PNG/GIF) oder ein kurzes Video (MP4/MOV, bis 60 s)
+     * als rohen Körper entgegen: `Content-Type` ist der Dateityp,
+     * `Content-Length` Pflicht. Die Datei wird mit der nächsten Nachricht
+     * (`mediaIds`) sichtbar.
+     */
+    @PostMapping("/{conversationId}/media")
+    @Operation(summary = "Foto oder Video hochladen", description = "Lädt ein Foto oder kurzes Video für die nächste eigene Nachricht hoch")
+    fun uploadMedia(@PathVariable conversationId: String, request: HttpServletRequest): ResponseEntity<ChatMediaDto> {
+        val media = chatMediaService.uploadDirect(
+            conversationId(conversationId),
+            request.contentType,
+            request.contentLengthLong,
+            request.inputStream,
+            authContext.getRequiredPrincipal()
+        )
+        return ResponseEntity.status(HttpStatus.CREATED).body(media)
+    }
+
+    @GetMapping("/{conversationId}/media/{mediaId}/content")
+    @Operation(summary = "Foto oder Video abrufen", description = "Liefert eine Chat-Datei für Berechtigte; Videos mit HTTP-Range")
+    fun mediaContent(
+        @PathVariable conversationId: String,
+        @PathVariable mediaId: String,
+        @RequestHeader(HttpHeaders.RANGE, required = false) rangeHeader: String?,
+        response: HttpServletResponse
+    ) {
+        val content = chatMediaService.prepareDirectContent(
+            conversationId(conversationId),
+            Identifiers.parseUuid(mediaId, "mediaId"),
+            authContext.getRequiredPrincipal()
+        )
+        MediaResponses.send(content, rangeHeader, response, chatMediaService::openRange)
+    }
 }

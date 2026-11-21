@@ -98,7 +98,7 @@ describe('FriendsComponent', () => {
     expect(api['accept']).toHaveBeenCalledWith('u-ina');
     button('Nachricht').click();
     expect(chat['startDirect']).toHaveBeenCalledWith('u-ede');
-    expect(navigate).toHaveBeenCalledWith(['/direktnachrichten'], { queryParams: { id: 'dm-1' } });
+    expect(navigate).toHaveBeenCalledWith(['/chat'], { queryParams: { id: 'dm-1' } });
   });
 
   it('asks before ending a friendship', async () => {

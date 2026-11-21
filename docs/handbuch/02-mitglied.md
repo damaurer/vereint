@@ -10,8 +10,8 @@ Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm
 | :--- | :--- |
 | zu einem Termin zusagen | **Events** → **Zusagen** bei der Einladung, oder direkt in der Push-Nachricht |
 | selbst ein Event planen | **Events** → **Event anlegen** |
-| mit allen in der Gruppe schreiben | **Chat** → **Gruppenchat** |
-| jemandem persönlich schreiben | **Mehr → Direktnachrichten** → **+** |
+| mit allen in der Gruppe schreiben | **Chat** → Zeile mit dem Namen der Gruppe |
+| jemandem persönlich schreiben | **Chat** → **+** → **Direktnachricht** |
 | alle Termine aus allen meinen Gruppen sehen | **Mehr → Kalender** |
 | jemanden als Freund hinzufügen | **Mehr → Freunde** → **Anfragen** |
 | sehen, wer am meisten Striche hat | **Mehr → Statistik** |
@@ -91,33 +91,44 @@ Danach verwaltest du dein Event wie im [Leitfaden Vorstand](03-vorstand.md#ein-e
 
 <img src="bilder/m-chat.png" alt="Chatübersicht" width="300" align="right">
 
-Unter **Chat** (untere Leiste) stehen oben der **Gruppenchat** für alle Mitglieder und darunter die **Event-Chats** deiner Events. Jede Zeile zeigt die letzte Nachricht; eine Zahl rechts steht für ungelesene Nachrichten.
+Unter **Chat** (untere Leiste) stehen alle deine Chats in einer Liste, so wie bei bekannten Messengern: die **Gruppenchats** aller deiner Gruppen, die **Event-Chats** der Events, zu denen du eingeladen bist, deine **Direktnachrichten** und die Chats laufender **Moments**. Oben steht der Chat mit der neuesten Nachricht.
+
+- Jede Zeile zeigt den Namen (Gruppenchats heißen wie ihre Gruppe), die letzte Nachricht und die Uhrzeit. Eine Zahl rechts steht für ungelesene Nachrichten.
+- Bei Event-Chats steht vor der Nachricht **Event** und die Gruppe des Events, bei Moment-Chats **Moment**. Ein Moment-Chat steht 24 Stunden nach dem Start in der Liste, danach verschwindet er.
+- Hat jemand nur ein Foto oder Video geschickt, steht in der Vorschau **📷 Foto** bzw. **🎥 Video**.
+- Mit dem **Suchfeld** findest du Chats nach Name, Gruppe oder Nachricht.
+- Die Knöpfe **Alle**, **Ungelesen**, **Gruppen**, **Events**, **Direkt** und **Moments** grenzen die Liste ein.
+- Chats aus anderen Gruppen öffnen sich direkt, du musst die Gruppe dafür nicht wechseln.
 
 <br clear="right">
 
 <img src="bilder/m-gruppenchat.png" alt="Gruppenchat" width="300" align="right">
 
-Tippe auf eine Unterhaltung, um sie zu öffnen. Oben im Gruppenchat kann der Vorstand eine **Infotafel** anheften, etwa einen wichtigen Termin.
+Tippe auf einen Chat, um ihn zu öffnen. Am Handy füllt er den ganzen Bildschirm, der Pfeil oben links führt zurück zur Liste. Am Rechner und Tablet stehen Liste und Chat nebeneinander. Oben im Gruppenchat kann der Vorstand eine **Infotafel** anheften, etwa einen wichtigen Termin.
 
 - Unten Nachricht eintippen und senden. Neue Nachrichten und Reaktionen der anderen erscheinen sofort, ohne Neuladen.
 - Haken neben deinen Nachrichten: **✓** gesendet, **✓✓** bei allen angekommen, **✓✓ blau** von allen gelesen. Im Gruppen- und Event-Chat zeigt ein Antippen bzw. Darüberfahren, bei wie vielen die Nachricht schon angekommen ist und wie viele sie gelesen haben.
 - Tippt gerade jemand, steht über dem Eingabefeld zum Beispiel „Anna schreibt…“.
 - Ohne Netz kannst du trotzdem schreiben: Die Nachricht steht mit einer **Uhr** da und geht von allein hinaus, sobald du wieder Netz hast, auch wenn du die App zwischendurch schließt. Klappt es nicht (zum Beispiel weil das Event abgesagt wurde), steht **Nicht gesendet** darunter, mit **Erneut senden** und **Verwerfen**. Beim Abmelden werden ungesendete Nachrichten gelöscht.
-- Mit eingeschaltetem Push bekommst du neue Nachrichten im Gruppenchat und in den Chats deiner Events aufs Handy, mit Name und Text. Je Chat gibt es eine Benachrichtigung, die neueste ersetzt die vorige.
-- Mit **+** unter einer Nachricht reagierst du mit einem Emoji.
-- **← Zurück** führt zur Liste.
+- Mit eingeschaltetem Push bekommst du neue Nachrichten aus allen deinen Chats aufs Handy, mit Name und Text. Je Chat gibt es eine Benachrichtigung, die neueste ersetzt die vorige. Ein Tipp darauf öffnet den Chat.
+- **Fotos und Videos**: Die **Büroklammer** links neben dem Eingabefeld öffnet Kamera bzw. Galerie. Bis zu **4** Fotos oder Videos je Nachricht; Videos bis **60 Sekunden** und **100 MB** (MP4 oder MOV), Fotos werden vor dem Hochladen verkleinert. Die Anhänge laden sofort hoch und stehen mit Fortschrittsbalken über dem Eingabefeld; das **✕** nimmt einen wieder heraus. Text dazu ist freiwillig. Fotos öffnen sich mit einem Tipp in voller Größe, Videos spielen direkt im Chat. Sie sind verschlüsselt gespeichert und nur für alle im Chat sichtbar.
+- **Emojis**: Das **😊** rechts neben dem Eingabefeld öffnet die Auswahl mit **allen** Emojis, nach Gruppen sortiert, mit **Zuletzt verwendet** und Suche (englische Namen, z. B. „beer“).
+- Mit **+** unter einer Nachricht reagierst du mit einem Emoji. Die fünf häufigsten stehen gleich da, **…** öffnet die volle Auswahl.
 
 <br clear="right">
 
-<img src="bilder/m-direkt.png" alt="Direktnachrichten" width="300" align="right">
+<img src="bilder/m-direkt.png" alt="Neue Nachricht" width="300" align="right">
 
-**Direktnachrichten** (über **Mehr** oder oben im Chat) sind Gespräche zu zweit, die nur ihr beide seht. Sie gelten über alle Gruppen: Mit jeder Person gibt es genau ein Gespräch, egal in welcher Gruppe du gerade bist.
+**Neue Nachricht**: Das **+** oben neben **Chats** fragt zuerst, wohin die Nachricht gehen soll, und dann, an wen:
 
-- **+** (neben dem Suchfeld): Person wählen und losschreiben. Zur Auswahl stehen alle aus deinen Gruppen und deine Freunde. Unter dem Namen siehst du eure gemeinsamen Gruppen.
-- Bestehende Gespräche stehen unter **Gespräche**; mit dem Suchfeld findest du sie schnell. **Freunde** oben rechts führt zur Freundesliste.
-- Seid ihr weder befreundet noch in einer gemeinsamen Gruppe, bleibt das Gespräch lesbar, neue Nachrichten gehen aber nicht mehr.
-- Mit eingeschaltetem Push bekommst du neue Direktnachrichten aufs Handy, egal welche Gruppe gerade gewählt ist. Ein Tipp darauf öffnet das Gespräch.
-- Haken, „schreibt…“ und Schreiben ohne Netz funktionieren wie im [Chat](#chat).
+- **Gruppe**: in den Gruppenchat einer deiner Gruppen.
+- **Event**: in den Chat eines Events, zu dem du eingeladen bist (oder das du angelegt hast).
+- **Direktnachricht**: an eine Person. Zur Auswahl stehen alle aus deinen Gruppen und deine Freunde; unter dem Namen siehst du eure gemeinsamen Gruppen.
+- **Moment**: startet einen neuen Moment (siehe [Moments](#moments)). Nach dem Start öffnet sich gleich sein Chat.
+
+Danach öffnet sich der Chat und du schreibst los. **Andere Art wählen** führt einen Schritt zurück.
+
+**Direktnachrichten** sind Gespräche zu zweit, die nur ihr beide seht. Sie gelten über alle Gruppen: Mit jeder Person gibt es genau ein Gespräch, egal in welcher Gruppe du gerade bist. Seid ihr weder befreundet noch in einer gemeinsamen Gruppe, bleibt das Gespräch lesbar, neue Nachrichten gehen aber nicht mehr.
 
 <br clear="right">
 

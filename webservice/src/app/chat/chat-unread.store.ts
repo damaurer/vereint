@@ -18,7 +18,7 @@ export class ChatUnreadStore {
 
   refresh(): void {
     if (!this.browser) return;
-    this.api.unreadCount().subscribe({
+    this.api.allUnreadCount().subscribe({
       next: (response) => this.count.set(Math.max(0, response?.unread ?? 0)),
       error: () => this.count.set(0),
     });

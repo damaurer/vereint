@@ -1,5 +1,7 @@
 package de.maurer.baseservice.dto
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+import jakarta.validation.constraints.AssertTrue
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
@@ -13,9 +15,13 @@ import java.time.Instant
  * über den Chat übertragen.
  */
 data class SendMessageRequest(
-    @field:NotBlank(message = "message {validation.notBlank}")
+    /** Text der Nachricht; darf leer sein, wenn Fotos oder Videos dabei sind. */
     @field:Size(max = 4000, message = "message {validation.size.max}")
     val message: String? = null,
+
+    /** Vorher hochgeladene Fotos/Videos (`…/media`), höchstens vier je Nachricht. */
+    @field:Size(max = 4, message = "mediaIds {validation.size.max}")
+    val mediaIds: List<String>? = null,
 
     @field:Size(max = 512, message = "imageUrl {validation.size.max}")
     val imageUrl: String? = null,
@@ -28,7 +34,13 @@ data class SendMessageRequest(
     @field:Size(max = 64, message = "clientId {validation.size.max}")
     @field:Pattern(regexp = "^[A-Za-z0-9_-]+$", message = "clientId {validation.clientId}")
     val clientId: String? = null
-)
+) {
+    /** Eine Nachricht braucht Text oder mindestens ein Foto/Video. */
+    @get:JsonIgnore
+    @get:AssertTrue(message = "message {validation.notBlank}")
+    val hasContent: Boolean
+        get() = !message.isNullOrBlank() || !mediaIds.isNullOrEmpty()
+}
 
 /**
  * Öffentliche Sicht auf eine Konversation. Enthält keine Mitgliederliste, sondern
@@ -61,7 +73,24 @@ data class ChatMessageDto(
     /** App-Id beim Senden (nur bei eigenen Nachrichten gesetzt). */
     val clientId: String? = null,
     /** Haken; nur bei eigenen Nachrichten. */
-    val receipt: MessageReceiptDto? = null
+    val receipt: MessageReceiptDto? = null,
+    /** Fotos und Videos der Nachricht (nur über den Content-Endpunkt abrufbar). */
+    val media: List<ChatMediaDto> = emptyList()
+)
+
+/**
+ * Foto oder Video einer Chatnachricht. [url] zeigt auf den
+ * berechtigungsgeprüften Content-Endpunkt; Videos unterstützen dort HTTP-Range.
+ */
+data class ChatMediaDto(
+    val id: String,
+    val kind: String,
+    val contentType: String,
+    val sizeBytes: Long,
+    val width: Int?,
+    val height: Int?,
+    val durationSeconds: Double?,
+    val url: String
 )
 
 /**
@@ -97,13 +126,17 @@ data class ChatReactionDto(
 data class ChatMessagePreviewDto(
     val senderName: String,
     val message: String,
-    val createdAt: Instant
+    val createdAt: Instant,
+    /** `image` oder `video`, wenn die Nachricht Fotos/Videos enthält. */
+    val mediaKind: String? = null
 )
 
 /**
  * Eintrag der Chat-Übersicht: Vereinschat (`club`), Direktnachricht (`direct`)
  * oder Event-Chat (`event`). `partnerId`/`partnerName` gibt es nur bei
- * Direktnachrichten; die Infotafel nur im Vereinschat.
+ * Direktnachrichten; die Infotafel nur im Vereinschat. `stammtischId` und
+ * `stammtischName` nennt die gemeinsame Chat-Liste (`/api/v1/chats`) bei
+ * Gruppen- und Event-Chats; Direktnachrichten gehören keiner Gruppe.
  */
 data class ConversationSummaryDto(
     val id: String,
@@ -115,7 +148,12 @@ data class ConversationSummaryDto(
     val lastMessage: ChatMessagePreviewDto?,
     val unreadCount: Long,
     val pinned: PinnedNoteDto?,
-    val canWrite: Boolean
+    val canWrite: Boolean,
+    val stammtischId: String? = null,
+    val stammtischName: String? = null,
+    /** Nur bei Moment-Chats: der Moment und wann der Chat schließt (24 Stunden nach Start). */
+    val momentId: String? = null,
+    val expiresAt: Instant? = null
 )
 
 data class PinnedNoteDto(
