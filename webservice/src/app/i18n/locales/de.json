@@ -614,7 +614,9 @@
       "emptyStart": "Du hast noch keine Chats. Starte einen mit dem Plus oben.",
       "emptyFiltered": "Kein Chat passt zu Suche oder Filter.",
       "noneSelectedTitle": "Kein Chat ausgewählt",
-      "noneSelectedMessage": "Wähle links einen Chat oder schreibe mit dem Plus eine neue Nachricht."
+      "noneSelectedMessage": "Wähle links einen Chat oder schreibe mit dem Plus eine neue Nachricht.",
+      "photo": "📷 Foto",
+      "video": "🎥 Video"
     },
     "filter": {
       "ariaLabel": "Chats filtern",
@@ -622,11 +624,13 @@
       "unread": "Ungelesen",
       "club": "Gruppen",
       "event": "Events",
-      "direct": "Direkt"
+      "direct": "Direkt",
+      "moment": "Moments"
     },
     "kind": {
       "event": "Event",
-      "direct": "Direktnachricht"
+      "direct": "Direktnachricht",
+      "moment": "Moment"
     },
     "compose": {
       "title": "Neue Nachricht",
@@ -651,7 +655,9 @@
       "friend": "Freund",
       "noTargetsTitle": "Nichts zur Auswahl",
       "noEvents": "Du bist gerade zu keinem offenen Event eingeladen. Event-Chats erscheinen, sobald du eingeladen bist.",
-      "noGroups": "Du bist in keiner Gruppe, in deren Chat du schreiben kannst."
+      "noGroups": "Du bist in keiner Gruppe, in deren Chat du schreiben kannst.",
+      "moment": "Moment",
+      "momentHint": "Einen Moment starten: alle sehen ihn sofort, 24 Stunden lang mit eigenem Chat"
     },
     "thread": {
       "back": "Zurück",
@@ -668,7 +674,9 @@
       "reactionLabel": "Reaktion {emoji}, {count}",
       "reactWith": "Mit {emoji} reagieren",
       "reactionFailed": "Die Reaktion konnte nicht gespeichert werden. Bitte erneut versuchen.",
-      "toEventIn": "Zum Event · {group}"
+      "toEventIn": "Zum Event · {group}",
+      "momentUntil": "Moment · offen bis {time}",
+      "toMoment": "Zum Moment"
     },
     "composer": {
       "attach": "Anhang hinzufügen",
@@ -678,7 +686,14 @@
       "sendFailed": "Nachricht konnte nicht gesendet werden. Bitte erneut versuchen.",
       "attachUnavailable": "Anhänge sind derzeit nicht verfügbar.",
       "readOnly": "In diesem Chat kannst du nicht mehr schreiben.",
-      "readOnlyDirect": "Ihr seid weder befreundet noch in einer gemeinsamen Gruppe. Der Verlauf bleibt lesbar, neue Nachrichten gehen nicht."
+      "readOnlyDirect": "Ihr seid weder befreundet noch in einer gemeinsamen Gruppe. Der Verlauf bleibt lesbar, neue Nachrichten gehen nicht.",
+      "attachMedia": "Foto oder Video anhängen",
+      "removeMedia": "Anhang entfernen",
+      "uploading": "Wird hochgeladen… {percent} %",
+      "uploadFailed": "Hochladen fehlgeschlagen",
+      "mediaLimit": "Höchstens {max} Fotos oder Videos je Nachricht.",
+      "waitForUpload": "Warte, bis alle Anhänge hochgeladen sind.",
+      "mediaOffline": "Fotos und Videos lassen sich nur mit Internet hochladen."
     },
     "receipt": {
       "pending": "Wartet auf Netz",
@@ -698,6 +713,13 @@
       "one": "{name} schreibt…",
       "two": "{first} und {second} schreiben…",
       "many": "Mehrere schreiben…"
+    },
+    "media": {
+      "photo": "Foto",
+      "video": "Video",
+      "photos": "{count} Fotos",
+      "open": "Foto in voller Größe öffnen",
+      "pendingCount": "{count} Anhänge"
     }
   },
   "calendar": {
@@ -2463,6 +2485,27 @@
       "overviewTitle": "Laufende Runden",
       "displayOnly": "Nur Anzeige",
       "overviewHint": "Eine Runde gibt jede Person in der App am eigenen Handy aus und zahlt mit ihrem eigenen Guthaben. Am Terminal wird nichts ausgegeben. Wer eingeladen ist, bekommt wie gewohnt einen Strich, er geht dann auf die Runde."
+    }
+  },
+  "emoji": {
+    "title": "Emoji auswählen",
+    "search": "Emoji suchen (englisch, z. B. beer)",
+    "results": "Suchergebnisse",
+    "none": "Kein Emoji gefunden",
+    "open": "Emoji einfügen",
+    "more": "Weitere Emojis",
+    "groups": {
+      "recent": "Zuletzt verwendet",
+      "smileys_emotion": "Smileys und Gefühle",
+      "people_body": "Menschen und Körper",
+      "animals_nature": "Tiere und Natur",
+      "food_drink": "Essen und Trinken",
+      "travel_places": "Reisen und Orte",
+      "activities": "Aktivitäten",
+      "objects": "Gegenstände",
+      "symbols": "Symbole",
+      "flags": "Flaggen",
+      "component": "Bausteine"
     }
   }
 }

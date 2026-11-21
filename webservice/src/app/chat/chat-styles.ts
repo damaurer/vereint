@@ -176,6 +176,10 @@ export const CHAT_LAYOUT_STYLES = `
     background-color: var(--color-brand-soft);
     color: var(--color-brand);
   }
+  .chat-conversation-icon[data-type='moment'] {
+    background-color: var(--color-warning-light);
+    color: var(--color-warning);
+  }
   .chat-conversation-icon[data-type='direct'] {
     background-color: var(--color-surface-subtle);
     color: var(--color-text);

@@ -12,6 +12,19 @@ import { CHAT_POLL_INTERVAL_MS, ChatThreadComponent, TYPING_DISPLAY_MS } from '.
 import { ChatOutboxService } from './chat-outbox.service';
 import { ChatUnreadStore } from './chat-unread.store';
 import { chatMessage, summary } from './chat-test-data';
+import { ChatMediaUploader } from './chat-media';
+import type { ChatMedia } from '../api/api.types';
+
+const photo: ChatMedia = {
+  id: 'media-1',
+  kind: 'image',
+  contentType: 'image/jpeg',
+  sizeBytes: 1200,
+  width: 40,
+  height: 30,
+  durationSeconds: null,
+  url: '/api/v1/conversations/c-club/media/media-1/content',
+};
 
 describe('ChatThreadComponent', () => {
   let api: {
@@ -20,7 +33,10 @@ describe('ChatThreadComponent', () => {
     markRead: ReturnType<typeof vi.fn>;
     toggleReaction: ReturnType<typeof vi.fn>;
     typing: ReturnType<typeof vi.fn>;
+    mediaUrl: ReturnType<typeof vi.fn>;
+    mediaUpload: ReturnType<typeof vi.fn>;
   };
+  let uploader: { prepare: ReturnType<typeof vi.fn>; upload: ReturnType<typeof vi.fn> };
   let store: { count: ReturnType<typeof signal<number>>; refresh: ReturnType<typeof vi.fn> };
   let liveEvents: Subject<LiveEvent>;
   const live = () => ({
@@ -41,6 +57,7 @@ describe('ChatThreadComponent', () => {
         provideRouter([]),
         { provide: ChatApiService, useValue: api },
         { provide: ChatUnreadStore, useValue: store },
+        { provide: ChatMediaUploader, useValue: uploader },
         { provide: LiveUpdatesService, useValue: live() },
         {
           provide: AuthService,
@@ -75,6 +92,20 @@ describe('ChatThreadComponent', () => {
         of(chatMessage({ reactions: [{ emoji: '🍺', count: 3, reactedByMe: true }] })),
       ),
       typing: vi.fn(() => of(undefined)),
+      mediaUrl: vi.fn((media: ChatMedia, type: string, group?: string | null) =>
+        type !== 'direct' && group ? `${media.url}?chatGroup=${group}` : media.url,
+      ),
+      mediaUpload: vi.fn((id: string) => ({ path: `/conversations/${id}/media`, headers: {} })),
+    };
+    uploader = {
+      prepare: vi.fn(async (file: File) => ({
+        kind: 'image',
+        blob: file,
+        contentType: 'image/jpeg',
+        previewUrl: 'blob:preview',
+        name: file.name,
+      })),
+      upload: vi.fn(() => ({ result: Promise.resolve(photo), abort: vi.fn() })),
     };
     store = { count: signal(0), refresh: vi.fn() };
     liveEvents = new Subject<LiveEvent>();
@@ -123,6 +154,85 @@ describe('ChatThreadComponent', () => {
     expect(root(fixture).querySelector('.chat-reaction.is-active')).toBeTruthy();
   });
 
+  it('shows photos and videos in the bubble; chats of other groups name their group in the address', async () => {
+    api.messages.mockReturnValue(
+      of([
+        chatMessage({
+          message: '',
+          media: [photo, { ...photo, id: 'media-2', kind: 'video', contentType: 'video/mp4', url: '/api/v1/conversations/c-club/media/media-2/content' }],
+        }),
+      ]),
+    );
+    const fixture = await create(summary({ stammtischId: 'g-b' }));
+    const bubble = root(fixture).querySelector('.chat-bubble')!;
+    expect(bubble.querySelector('img')?.getAttribute('src')).toBe(`${photo.url}?chatGroup=g-b`);
+    expect(bubble.querySelector('video')?.getAttribute('src')).toContain('media-2/content?chatGroup=g-b');
+    // Ohne Text keine leere Textzeile.
+    expect(bubble.querySelector('.chat-bubble-text')).toBeNull();
+  });
+
+  it('attaches a photo, uploads it right away and sends it with the message', async () => {
+    const fixture = await create();
+    const input = root(fixture).querySelector<HTMLInputElement>('.chat-file-input')!;
+    expect(input.getAttribute('accept')).toContain('video/mp4');
+    const file = new File([new Uint8Array([1, 2, 3])], 'grill.jpg', { type: 'image/jpeg' });
+    Object.defineProperty(input, 'files', { value: [file], configurable: true });
+    input.dispatchEvent(new Event('change'));
+    await settle();
+    fixture.detectChanges();
+    expect(uploader.upload).toHaveBeenCalledWith(
+      { path: '/conversations/c-club/media', headers: {} },
+      expect.objectContaining({ name: 'grill.jpg' }),
+      expect.any(String),
+      expect.any(Function),
+    );
+    expect(root(fixture).querySelector('app-chat-media-grid img')?.getAttribute('src')).toBe('blob:preview');
+    // Nur ein Foto, ohne Text: Senden ist möglich.
+    const sendButton = root(fixture).querySelector<HTMLButtonElement>('.chat-send')!;
+    expect(sendButton.disabled).toBe(false);
+    sendButton.click();
+    await settle();
+    expect(api.send).toHaveBeenCalledWith('c-club', '', 'club', expect.any(String), 'st-1', ['media-1']);
+    fixture.detectChanges();
+    expect(root(fixture).querySelector('.chat-drafts')).toBeNull();
+  });
+
+  it('inserts any emoji from the full picker into the draft', async () => {
+    const fixture = await create();
+    const component = fixture.componentInstance as unknown as { draft: string };
+    component.draft = 'Prost ';
+    root(fixture).querySelector<HTMLButtonElement>('.chat-emoji-toggle')!.click();
+    fixture.detectChanges();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(root(fixture).querySelectorAll('vereint-emoji-picker .emoji-tab').length).toBeGreaterThan(5);
+    });
+    const search = root(fixture).querySelector<HTMLInputElement>('.emoji-search-input')!;
+    search.value = 'hedgehog';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    root(fixture).querySelector<HTMLButtonElement>('.emoji-option')!.click();
+    expect(component.draft).toBe('Prost 🦔');
+  });
+
+  it('reacts with any emoji from the full picker', async () => {
+    const fixture = await create();
+    root(fixture).querySelector<HTMLButtonElement>('.chat-reaction-add')!.click();
+    fixture.detectChanges();
+    root(fixture).querySelector<HTMLButtonElement>('.chat-picker-more')!.click();
+    fixture.detectChanges();
+    await vi.waitFor(() => {
+      fixture.detectChanges();
+      expect(root(fixture).querySelectorAll('.emoji-tab').length).toBeGreaterThan(5);
+    });
+    const search = root(fixture).querySelector<HTMLInputElement>('.emoji-search-input')!;
+    search.value = 'pretzel';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    root(fixture).querySelector<HTMLButtonElement>('.emoji-option')!.click();
+    expect(api.toggleReaction).toHaveBeenCalledWith('c-club', 'm-1', '🥨', 'club', undefined);
+  });
+
   it('offers quick reactions including the beer emoji', async () => {
     const fixture = await create();
     root(fixture).querySelector<HTMLButtonElement>('.chat-reaction-add')!.click();
@@ -142,7 +252,7 @@ describe('ChatThreadComponent', () => {
     expect(component.draft).toBe('');
     await settle();
     fixture.detectChanges();
-    expect(api.send).toHaveBeenCalledWith('c-club', 'Prost!', 'club', expect.any(String), 'st-1');
+    expect(api.send).toHaveBeenCalledWith('c-club', 'Prost!', 'club', expect.any(String), 'st-1', undefined);
     expect(root(fixture).textContent).toContain('Prost!');
     expect(root(fixture).querySelector('.chat-message.is-pending')).toBeNull();
     expect(TestBed.inject(ChatOutboxService).entries()).toEqual([]);

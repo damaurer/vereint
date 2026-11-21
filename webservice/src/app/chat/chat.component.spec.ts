@@ -1,6 +1,6 @@
 import { PLATFORM_ID, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FriendContact } from '../api/api.types';
@@ -207,7 +207,7 @@ describe('ChatComponent', () => {
     const options = Array.from(el(fixture).querySelectorAll('.compose-option')).map((option) =>
       option.querySelector('.compose-option-title')?.textContent?.trim(),
     );
-    expect(options).toEqual(['Gruppe', 'Event', 'Direktnachricht']);
+    expect(options).toEqual(['Gruppe', 'Event', 'Direktnachricht', 'Moment']);
     button(fixture, '.compose-option', 'Gruppe').click();
     await settle(fixture);
     const targets = Array.from(el(fixture).querySelectorAll('.compose-target')).map((target) => target.textContent?.trim());
@@ -246,6 +246,42 @@ describe('ChatComponent', () => {
     expect(api['startDirect']).toHaveBeenCalledWith('u-max');
     expect(rowNames(fixture)[0]).toBe('Max Mitglied');
     expect(api['messages']).toHaveBeenCalledWith('dm-new', 'direct', undefined);
+  });
+
+  it('lists running moment chats and shows photos as "📷 Foto" in the preview', async () => {
+    api['allChats'].mockReturnValue(
+      of([
+        summary({
+          id: 'c-moment',
+          type: 'moment',
+          title: 'Moment: Anstoßen',
+          momentId: 'mo-1',
+          expiresAt: '2026-10-15T18:00:00Z',
+          stammtischId: 'g-a',
+          stammtischName: 'Kegelclub',
+          lastMessage: { senderName: 'Anna', message: '', createdAt: '2026-10-14T19:30:00Z', mediaKind: 'image' },
+        }),
+        ...conversations(),
+      ]),
+    );
+    const fixture = await create();
+    const moment = rows(fixture)[0];
+    expect(moment.textContent).toContain('Moment: Anstoßen');
+    expect(moment.textContent).toContain('Moment · Kegelclub');
+    expect(moment.textContent).toContain('Anna: 📷 Foto');
+    button(fixture, '.chat-filter', 'Moments').click();
+    await settle(fixture);
+    expect(rowNames(fixture)).toEqual(['Moment: Anstoßen']);
+  });
+
+  it('new message: "Moment" opens the start dialog of the moments page', async () => {
+    const fixture = await create();
+    const router = TestBed.inject(Router);
+    const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    el(fixture).querySelector<HTMLButtonElement>('.chat-new')!.click();
+    await settle(fixture);
+    button(fixture, '.compose-option', 'Moment').click();
+    expect(navigate).toHaveBeenCalledWith(['/moments'], { queryParams: { start: 'chat' } });
   });
 
   it('shows a retry state on load error', async () => {

@@ -91,12 +91,13 @@ Danach verwaltest du dein Event wie im [Leitfaden Vorstand](03-vorstand.md#ein-e
 
 <img src="bilder/m-chat.png" alt="Chatübersicht" width="300" align="right">
 
-Unter **Chat** (untere Leiste) stehen alle deine Chats in einer Liste, so wie bei bekannten Messengern: die **Gruppenchats** aller deiner Gruppen, die **Event-Chats** der Events, zu denen du eingeladen bist, und deine **Direktnachrichten**. Oben steht der Chat mit der neuesten Nachricht.
+Unter **Chat** (untere Leiste) stehen alle deine Chats in einer Liste, so wie bei bekannten Messengern: die **Gruppenchats** aller deiner Gruppen, die **Event-Chats** der Events, zu denen du eingeladen bist, deine **Direktnachrichten** und die Chats laufender **Moments**. Oben steht der Chat mit der neuesten Nachricht.
 
 - Jede Zeile zeigt den Namen (Gruppenchats heißen wie ihre Gruppe), die letzte Nachricht und die Uhrzeit. Eine Zahl rechts steht für ungelesene Nachrichten.
-- Bei Event-Chats steht vor der Nachricht **Event** und die Gruppe des Events.
+- Bei Event-Chats steht vor der Nachricht **Event** und die Gruppe des Events, bei Moment-Chats **Moment**. Ein Moment-Chat steht 24 Stunden nach dem Start in der Liste, danach verschwindet er.
+- Hat jemand nur ein Foto oder Video geschickt, steht in der Vorschau **📷 Foto** bzw. **🎥 Video**.
 - Mit dem **Suchfeld** findest du Chats nach Name, Gruppe oder Nachricht.
-- Die Knöpfe **Alle**, **Ungelesen**, **Gruppen**, **Events** und **Direkt** grenzen die Liste ein.
+- Die Knöpfe **Alle**, **Ungelesen**, **Gruppen**, **Events**, **Direkt** und **Moments** grenzen die Liste ein.
 - Chats aus anderen Gruppen öffnen sich direkt, du musst die Gruppe dafür nicht wechseln.
 
 <br clear="right">
@@ -110,7 +111,9 @@ Tippe auf einen Chat, um ihn zu öffnen. Am Handy füllt er den ganzen Bildschir
 - Tippt gerade jemand, steht über dem Eingabefeld zum Beispiel „Anna schreibt…“.
 - Ohne Netz kannst du trotzdem schreiben: Die Nachricht steht mit einer **Uhr** da und geht von allein hinaus, sobald du wieder Netz hast, auch wenn du die App zwischendurch schließt. Klappt es nicht (zum Beispiel weil das Event abgesagt wurde), steht **Nicht gesendet** darunter, mit **Erneut senden** und **Verwerfen**. Beim Abmelden werden ungesendete Nachrichten gelöscht.
 - Mit eingeschaltetem Push bekommst du neue Nachrichten aus allen deinen Chats aufs Handy, mit Name und Text. Je Chat gibt es eine Benachrichtigung, die neueste ersetzt die vorige. Ein Tipp darauf öffnet den Chat.
-- Mit **+** unter einer Nachricht reagierst du mit einem Emoji.
+- **Fotos und Videos**: Die **Büroklammer** links neben dem Eingabefeld öffnet Kamera bzw. Galerie. Bis zu **4** Fotos oder Videos je Nachricht; Videos bis **60 Sekunden** und **100 MB** (MP4 oder MOV), Fotos werden vor dem Hochladen verkleinert. Die Anhänge laden sofort hoch und stehen mit Fortschrittsbalken über dem Eingabefeld; das **✕** nimmt einen wieder heraus. Text dazu ist freiwillig. Fotos öffnen sich mit einem Tipp in voller Größe, Videos spielen direkt im Chat. Sie sind verschlüsselt gespeichert und nur für alle im Chat sichtbar.
+- **Emojis**: Das **😊** rechts neben dem Eingabefeld öffnet die Auswahl mit **allen** Emojis, nach Gruppen sortiert, mit **Zuletzt verwendet** und Suche (englische Namen, z. B. „beer“).
+- Mit **+** unter einer Nachricht reagierst du mit einem Emoji. Die fünf häufigsten stehen gleich da, **…** öffnet die volle Auswahl.
 
 <br clear="right">
 
@@ -121,6 +124,7 @@ Tippe auf einen Chat, um ihn zu öffnen. Am Handy füllt er den ganzen Bildschir
 - **Gruppe**: in den Gruppenchat einer deiner Gruppen.
 - **Event**: in den Chat eines Events, zu dem du eingeladen bist (oder das du angelegt hast).
 - **Direktnachricht**: an eine Person. Zur Auswahl stehen alle aus deinen Gruppen und deine Freunde; unter dem Namen siehst du eure gemeinsamen Gruppen.
+- **Moment**: startet einen neuen Moment (siehe [Moments](#moments)). Nach dem Start öffnet sich gleich sein Chat.
 
 Danach öffnet sich der Chat und du schreibst los. **Andere Art wählen** führt einen Schritt zurück.
 

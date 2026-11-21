@@ -789,6 +789,20 @@ export interface ChatMessageDto {
   clientId?: string | null;
   /** Haken (nur eigene Nachrichten). */
   receipt?: MessageReceipt | null;
+  /** Fotos und Videos der Nachricht. */
+  media?: ChatMedia[];
+}
+
+/** Foto oder Video einer Chatnachricht; `url` ist der berechtigungsgeprüfte Abruf. */
+export interface ChatMedia {
+  id: string;
+  kind: 'image' | 'video';
+  contentType: string;
+  sizeBytes: number;
+  width: number | null;
+  height: number | null;
+  durationSeconds: number | null;
+  url: string;
 }
 
 /**
@@ -816,13 +830,22 @@ export interface ConversationSummary {
   eventId: string | null;
   partnerId: string | null;
   partnerName: string | null;
-  lastMessage: { senderName: string; message: string; createdAt: string } | null;
+  lastMessage: {
+    senderName: string;
+    message: string;
+    createdAt: string;
+    /** Foto/Video in der Nachricht (Vorschau „📷 Foto“). */
+    mediaKind?: 'image' | 'video' | null;
+  } | null;
   unreadCount: number;
   pinned: PinnedNote | null;
   canWrite: boolean;
   /** Gruppe von Gruppen- und Event-Chats in der gemeinsamen Chat-Liste; Direktnachrichten haben keine. */
   stammtischId?: string | null;
   stammtischName?: string | null;
+  /** Nur Moment-Chats: der Moment und wann sein Chat schließt. */
+  momentId?: string | null;
+  expiresAt?: string | null;
 }
 
 // --- Freunde (`/api/v1/friends`, gruppenübergreifend) ---

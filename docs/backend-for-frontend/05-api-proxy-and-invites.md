@@ -73,7 +73,8 @@ Pfade mit `..`, `.`, Backslashes oder kodierten Schrägstrichen und Punkten werd
 
 ### 6. Uploads und Medien-Streaming
 - Multipart-Uploads (Bilder, Gruppenbild) puffert der Proxy bis `API_PROXY_MAX_UPLOAD` (`6mb`).
-- Fotos und Videos in Moments (`MOMENT_MEDIA_PATH`: `/api/v1/moments/{id}/media` und `.../media/{id}/content`) laufen über `mediaStreamProxy`: ungepuffert, mit `Content-Length` und `Range`-Unterstützung (`206`). Größen- und Dauergrenzen prüft Spring; der Reverse Proxy lässt auf diesem Pfad große Körper durch, sonst höchstens 8 MB.
+- Fotos und Videos in Moments, Chats und Direktnachrichten (`MEDIA_STREAM_PATH`: `/api/v1/{moments|conversations|direct-conversations}/{id}/media` und `.../media/{id}/content`) laufen über `mediaStreamProxy`: ungepuffert, mit `Content-Length` und `Range`-Unterstützung (`206`). Größen- und Dauergrenzen prüft Spring; der Reverse Proxy lässt auf diesen Upload-Pfaden große Körper durch, sonst höchstens 8 MB.
+- Gruppen-, Event- und Moment-Chats aus der gemeinsamen Chat-Liste nennen ihre Gruppe im Header `X-Vereint-Chat-Group` (nur für `/api/v1/conversations/{id}/…`). `<img>` und `<video>` können keine Header setzen; beim Abruf `…/media/{id}/content` gilt deshalb auch `?chatGroup=<Gruppen-Id>`. Der BFF macht daraus `X-Stammtisch-Id`; der Fachservice prüft die Mitgliedschaft wie immer selbst.
 - Die Live-Verbindung (`LIVE_PATH`: `/api/v1/live`) läuft über `liveStreamProxy`: nur `GET`, ohne das 8-Sekunden-Limit, ungepuffert und unkomprimiert (`no-transform`, `X-Accel-Buffering: no`). Schließt der Browser, endet auch die Verbindung zum Fachservice. Spring beendet sie nach 10 Minuten; der Browser verbindet sich dann neu und der BFF hängt ein frisches Token an.
 
 ### 7. Timeout-Parameter

@@ -33,12 +33,12 @@ interface ChatPageData {
 }
 
 /** Filter-Chips über der Liste; keine eigenen Seiten, nur eine Auswahl. */
-export type ChatFilter = 'all' | 'unread' | 'club' | 'event' | 'direct';
+export type ChatFilter = 'all' | 'unread' | 'club' | 'event' | 'direct' | 'moment';
 
 /** Schritte von „Neue Nachricht“: erst die Art, dann wohin. */
-type ComposeStep = 'kind' | 'club' | 'event' | 'direct';
+type ComposeStep = 'kind' | 'club' | 'event' | 'direct' | 'moment';
 
-const FILTERS: readonly ChatFilter[] = ['all', 'unread', 'club', 'event', 'direct'];
+const FILTERS: readonly ChatFilter[] = ['all', 'unread', 'club', 'event', 'direct', 'moment'];
 
 /**
  * Alle Chats auf einer Seite (`/chat`), aufgebaut wie bei bekannten
@@ -445,6 +445,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     { step: 'club', icon: 'users', titleKey: 'chat.compose.club', hintKey: 'chat.compose.clubHint' },
     { step: 'event', icon: 'events', titleKey: 'chat.compose.event', hintKey: 'chat.compose.eventHint' },
     { step: 'direct', icon: 'direct-message', titleKey: 'chat.compose.direct', hintKey: 'chat.compose.directHint' },
+    { step: 'moment', icon: 'sparkle', titleKey: 'chat.compose.moment', hintKey: 'chat.compose.momentHint' },
   ];
 
   private listTimer: ReturnType<typeof setInterval> | null = null;
@@ -547,6 +548,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   protected iconOf(row: ConversationSummary): IconName {
     if (row.type === 'event') return 'events';
+    if (row.type === 'moment') return 'sparkle';
     if (row.type === 'direct') return 'direct-message';
     return 'users';
   }
@@ -557,6 +559,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       const kind = translate('chat.kind.event');
       return row.stammtischName ? `${kind} · ${row.stammtischName} · ` : `${kind} · `;
     }
+    if (row.type === 'moment') {
+      const kind = translate('chat.kind.moment');
+      return row.stammtischName ? `${kind} · ${row.stammtischName} · ` : `${kind} · `;
+    }
     return '';
   }
 
@@ -564,8 +570,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   protected previewOf(row: ConversationSummary): string {
     const last = row.lastMessage;
     if (!last) return '';
-    if (row.type === 'direct') return last.message;
-    return `${last.senderName}: ${last.message}`;
+    // Nur Foto/Video ohne Text: „📷 Foto“ bzw. „🎥 Video“ wie bei bekannten Messengern.
+    const text = last.message || (last.mediaKind ? translate(last.mediaKind === 'video' ? 'chat.list.video' : 'chat.list.photo') : '');
+    if (row.type === 'direct') return text;
+    return `${last.senderName}: ${text}`;
   }
 
   protected select(id: string): void {
@@ -610,6 +618,12 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   protected chooseKind(step: ComposeStep): void {
     this.startError.set(null);
+    // Ein Moment startet im gewohnten Dialog der Moments-Seite; danach geht es in seinen Chat.
+    if (step === 'moment') {
+      this.composeOpen.set(false);
+      void this.router.navigate(['/moments'], { queryParams: { start: 'chat' } });
+      return;
+    }
     this.step.set(step);
     if (step === 'direct' && !this.directory.isSuccess()) this.loadDirectory();
   }

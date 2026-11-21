@@ -51,7 +51,7 @@ describe('ChatOutboxService', () => {
     outbox.delivered$.subscribe(delivered);
     const entry = await outbox.enqueue('c-1', 'club', 'Hallo');
     await settle();
-    expect(api.send).toHaveBeenCalledWith('c-1', 'Hallo', 'club', entry.clientId, 'st-1');
+    expect(api.send).toHaveBeenCalledWith('c-1', 'Hallo', 'club', entry.clientId, 'st-1', undefined);
     expect(delivered).toHaveBeenCalledWith(expect.objectContaining({ entry }));
     expect(outbox.entries()).toEqual([]);
     expect(localStorage.getItem(CHAT_OUTBOX_STORAGE_KEY)).toBeNull();

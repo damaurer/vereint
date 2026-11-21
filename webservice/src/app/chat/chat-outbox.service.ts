@@ -33,6 +33,8 @@ export interface OutboxEntry {
   /** Konto, das die Nachricht geschrieben hat. */
   owner: string;
   message: string;
+  /** Schon hochgeladene Fotos/Videos, die mit der Nachricht gehen. */
+  mediaIds?: string[];
   createdAt: string;
   state: 'pending' | 'failed';
 }
@@ -129,6 +131,7 @@ export class ChatOutboxService implements OnDestroy {
     type: ConversationType,
     message: string,
     stammtischId?: string | null,
+    mediaIds?: string[],
   ): Promise<OutboxEntry> {
     await this.start();
     const entry: OutboxEntry = {
@@ -138,6 +141,7 @@ export class ChatOutboxService implements OnDestroy {
       stammtischId: type === 'direct' ? null : (stammtischId ?? this.group),
       owner: this.owner ?? '',
       message,
+      ...(mediaIds?.length ? { mediaIds } : {}),
       createdAt: new Date().toISOString(),
       state: 'pending',
     };
@@ -184,7 +188,14 @@ export class ChatOutboxService implements OnDestroy {
         if (!this.entries().some((current) => current.clientId === entry.clientId && current.state === 'pending')) continue;
         try {
           const message = await firstValueFrom(
-            this.api.send(entry.conversationId, entry.message, entry.type, entry.clientId, entry.stammtischId),
+            this.api.send(
+              entry.conversationId,
+              entry.message,
+              entry.type,
+              entry.clientId,
+              entry.stammtischId,
+              entry.mediaIds,
+            ),
           );
           this.update((list) => list.filter((current) => current.clientId !== entry.clientId));
           this.retryIndex = 0;

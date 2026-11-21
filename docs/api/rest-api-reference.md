@@ -197,20 +197,24 @@ Fachlich: [Einladungslinks](../domains/member-invites.md).
 | `GET` | `/api/v1/events/{eventId}/chat/conversations/{conversationId}` | Einzelne Unterhaltung des Events | wie oben |
 | `GET` / `POST` | `/api/v1/events/{eventId}/chat/conversations/{conversationId}/messages` | Nachrichten dieser Unterhaltung | wie oben |
 | `GET` / `POST` | `/api/v1/events/{eventId}/chat/guest/messages` | Nachrichten als Gast lesen bzw. senden | Gast (`X-Guest-Token`) |
-| `GET` | `/api/v1/chats` | Alle eigenen Chats in einer Liste: Gruppen- und Event-Chats aller eigenen Gruppen (mit `stammtischId`, `stammtischName`) und Direktnachrichten, neueste Nachricht zuerst; ohne gewählte Gruppe | Angemeldet |
+| `GET` | `/api/v1/chats` | Alle eigenen Chats in einer Liste: Gruppen-, Event- und laufende Moment-Chats (24 h, mit `momentId`, `expiresAt`) aller eigenen Gruppen (mit `stammtischId`, `stammtischName`) und Direktnachrichten, neueste Nachricht zuerst; `lastMessage.mediaKind` (`image`/`video`) bei Fotos/Videos; ohne gewählte Gruppe | Angemeldet |
 | `GET` | `/api/v1/chats/unread-count` | Ungelesene Nachrichten über alle Chats dieser Liste | Angemeldet |
 | `GET` | `/api/v1/conversations` | Eigene Unterhaltungen der Gruppe (Gruppenchat, Event-Chats) | Mitglied |
 | `GET` | `/api/v1/conversations/unread-count` | Ungelesene Nachrichten der Gruppe plus aller Direktnachrichten | Mitglied |
 | `GET` | `/api/v1/conversations/club` | Gruppenchat | Mitglied |
 | `PUT` | `/api/v1/conversations/club/pin` | Infotafel im Gruppenchat setzen (`PinNoteRequest`) | `chat.moderate` oder `event.manage` |
-| `GET` / `POST` | `/api/v1/conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden | Mitglied der Unterhaltung |
+| `GET` / `POST` | `/api/v1/conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden; `SendMessageRequest.mediaIds` (bis 4) hängt hochgeladene Fotos/Videos an, Text ist dann freiwillig; Antwort mit `media` | Mitglied der Unterhaltung |
+| `POST` | `/api/v1/conversations/{conversationId}/media` | Foto (JPEG/PNG/GIF, 10 MB) oder Video (MP4/MOV, 60 s, 100 MB) als rohen Körper hochladen (`Content-Type`, `Content-Length`); `201` mit `ChatMediaDto`; bis zum Senden nur für den Eigentümer sichtbar, ungesendet nach 6 h gelöscht | Mitglied der Unterhaltung |
+| `GET` | `/api/v1/conversations/{conversationId}/media/{mediaId}/content` | Foto/Video entschlüsselt, mit HTTP-Range (`206`) | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/read` | Als gelesen markieren | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/typing` | „schreibt gerade…“ an die anderen Lesenden (`204`, höchstens alle 2 s je Person) | Mitglied der Unterhaltung |
 | `POST` | `/api/v1/conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Mitglied der Unterhaltung |
 | `GET` | `/api/v1/direct-conversations` | Eigene Direktnachrichten über alle Gruppen | Angemeldet |
 | `GET` | `/api/v1/direct-conversations/unread-count` | Ungelesene Direktnachrichten | Angemeldet |
 | `POST` | `/api/v1/direct-conversations` | Gespräch beginnen oder bestehendes liefern (`StartDirectConversationRequest`) | Freunde oder gemeinsame Gruppe |
-| `GET` / `POST` | `/api/v1/direct-conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden (senden nur mit Freundschaft oder gemeinsamer Gruppe) | Beteiligte |
+| `GET` / `POST` | `/api/v1/direct-conversations/{conversationId}/messages` | Nachrichten lesen bzw. senden (senden nur mit Freundschaft oder gemeinsamer Gruppe); `mediaIds` wie oben | Beteiligte |
+| `POST` | `/api/v1/direct-conversations/{conversationId}/media` | Foto oder Video hochladen, Grenzen wie oben | Beteiligte mit Schreibrecht |
+| `GET` | `/api/v1/direct-conversations/{conversationId}/media/{mediaId}/content` | Foto/Video entschlüsselt, mit HTTP-Range | Beteiligte |
 | `POST` | `/api/v1/direct-conversations/{conversationId}/read` | Als gelesen markieren | Beteiligte |
 | `POST` | `/api/v1/direct-conversations/{conversationId}/typing` | „schreibt gerade…“ an das Gegenüber (`204`) | Beteiligte mit Schreibrecht |
 | `POST` | `/api/v1/direct-conversations/{conversationId}/messages/{messageId}/reactions` | Reaktion setzen oder entfernen | Beteiligte |

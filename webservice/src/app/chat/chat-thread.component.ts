@@ -18,11 +18,12 @@ import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import type { Subscription } from 'rxjs';
-import type { ChatMessageDto, ConversationSummary, MessageReceipt } from '../api/api.types';
+import type { ChatMedia, ChatMessageDto, ConversationSummary, MessageReceipt } from '../api/api.types';
 import { describeApiError } from '../api/api-client.service';
-import { formatDateTime, formatDayTime, formatTime } from '../member/member-format';
+import { formatDateTime, formatDayTime, formatShortDateTime, formatTime } from '../member/member-format';
 import { AvatarBadgeComponent, InfoPanelComponent } from '../ui';
 import { IconComponent } from '../ui/icon.component';
+import type { IconName } from '../ui/icons';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
@@ -30,6 +31,21 @@ import { ChatApiService } from './chat-api.service';
 import { ChatUnreadStore } from './chat-unread.store';
 import { LiveUpdatesService } from '../live/live-updates.service';
 import { ChatOutboxService, type OutboxEntry } from './chat-outbox.service';
+import { ChatMediaGridComponent, type ChatMediaTile } from './chat-media-grid.component';
+import { CHAT_MEDIA_ACCEPT, CHAT_MEDIA_LIMITS, ChatMediaUploader } from './chat-media';
+import { EmojiPickerComponent } from '../ui/emoji-picker.component';
+import { I18nService } from '../i18n/i18n.service';
+import { MediaPrepareError, type PreparedMedia } from '../moments/moment-media';
+
+/** Ein Anhang im Composer: lokal vorbereitet, wird sofort hochgeladen. */
+interface DraftMedia {
+  key: string;
+  prepared: PreparedMedia;
+  progress: number;
+  uploaded: ChatMedia | null;
+  failed: boolean;
+  abort: () => void;
+}
 
 /** Abstand der Abfrage neuer Nachrichten, solange keine Live-Verbindung steht. */
 export const CHAT_POLL_INTERVAL_MS = 10_000;
@@ -73,6 +89,8 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
     IconComponent,
     StateComponent,
     TranslatePipe,
+    ChatMediaGridComponent,
+    EmojiPickerComponent,
   ],
   template: `
     <div class="chat-thread" [class.is-embedded]="embedded" [class.is-fill]="fill">
@@ -85,7 +103,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
             <vereint-avatar-badge [name]="headTitle()" />
           } @else {
             <span class="chat-thread-icon" [attr.data-type]="conversation.type" aria-hidden="true">
-              <vereint-icon [name]="conversation.type === 'event' ? 'events' : 'users'" />
+              <vereint-icon [name]="headIcon()" />
             </span>
           }
           <div class="chat-thread-title">
@@ -95,6 +113,12 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                 conversation.stammtischName
                   ? ('chat.thread.toEventIn' | t: { group: conversation.stammtischName })
                   : ('chat.thread.toEvent' | t)
+              }}</a>
+            } @else if (conversation.type === 'moment') {
+              <a class="chat-thread-sub" routerLink="/moments" [queryParams]="{ momentId: conversation.momentId }">{{
+                conversation.expiresAt
+                  ? ('chat.thread.momentUntil' | t: { time: untilLabel(conversation.expiresAt) })
+                  : ('chat.thread.toMoment' | t)
               }}</a>
             } @else if (conversation.type === 'club') {
               <span class="chat-thread-sub">{{ 'chat.list.clubChat' | t }}</span>
@@ -111,7 +135,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         </vereint-info-panel>
       }
 
-      <div class="chat-history" #history>
+      <div class="chat-history" #history (scroll)="onHistoryScroll()">
         @if (messages() === null) {
           @if (loadError(); as error) {
             <vereint-state
@@ -152,7 +176,12 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                       <span class="chat-message-guest">{{ 'chat.thread.guest' | t }}</span>
                     }
                   </span>
-                  <span class="chat-bubble-text">{{ message.message }}</span>
+                  @if (message.media?.length) {
+                    <app-chat-media-grid [tiles]="tilesOf(message)" (loaded)="onMediaLoaded()" />
+                  }
+                  @if (message.message) {
+                    <span class="chat-bubble-text">{{ message.message }}</span>
+                  }
                   @if (message.imageUrl) {
                     <img class="chat-image" [src]="message.imageUrl" [alt]="'chat.thread.image' | t" loading="lazy" />
                   }
@@ -212,7 +241,19 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                         {{ emoji }}
                       </button>
                     }
+                    <button
+                      type="button"
+                      class="chat-picker-emoji chat-picker-more"
+                      [attr.aria-label]="'emoji.more' | t"
+                      [attr.aria-expanded]="fullPicker()"
+                      (click)="fullPicker.set(!fullPicker())"
+                    >
+                      …
+                    </button>
                   </div>
+                  @if (fullPicker()) {
+                    <vereint-emoji-picker class="chat-emoji-popup" (pick)="toggleReaction(message, $event)" />
+                  }
                 }
               </div>
             </article>
@@ -224,7 +265,12 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                   <span class="chat-message-head">
                     <span class="chat-message-author">{{ 'chat.you' | t }}</span>
                   </span>
-                  <span class="chat-bubble-text">{{ entry.message }}</span>
+                  @if (entry.mediaIds?.length) {
+                    <span class="chat-bubble-text chat-pending-media">📎 {{ 'chat.media.pendingCount' | t: { count: entry.mediaIds!.length } }}</span>
+                  }
+                  @if (entry.message) {
+                    <span class="chat-bubble-text">{{ entry.message }}</span>
+                  }
                   <span class="chat-message-meta">
                     <time class="chat-message-time" [attr.datetime]="entry.createdAt" [attr.title]="formatDateTime(entry.createdAt)">{{
                       formatTime(entry.createdAt)
@@ -258,7 +304,31 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
       }
 
       @if (conversation.canWrite) {
+        @if (composerPicker()) {
+          <vereint-emoji-picker class="chat-emoji-popup" (pick)="insertEmoji($event)" />
+        }
+        @if (drafts().length > 0) {
+          <app-chat-media-grid class="chat-drafts" [draft]="true" [tiles]="draftTiles()" (remove)="removeDraft($event)" />
+        }
         <form class="chat-composer" (ngSubmit)="send()">
+          <input
+            #fileInput
+            type="file"
+            class="chat-file-input"
+            multiple
+            [accept]="mediaAccept"
+            (change)="onFiles($event)"
+          />
+          <button
+            type="button"
+            class="chat-icon-button chat-attach"
+            [attr.aria-label]="'chat.composer.attachMedia' | t"
+            [attr.title]="'chat.composer.attachMedia' | t"
+            [disabled]="drafts().length >= maxMedia"
+            (click)="fileInput.click()"
+          >
+            <vereint-icon name="attach" />
+          </button>
           <label class="chat-input-label" for="chat-draft">{{ 'chat.composer.placeholder' | t }}</label>
           <input
             id="chat-draft"
@@ -267,22 +337,24 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
             autocomplete="off"
             maxlength="2000"
             [placeholder]="'chat.composer.placeholder' | t"
+            #draftInput
             [(ngModel)]="draft"
             (ngModelChange)="onDraftChange()"
           />
           <button
             type="button"
-            class="chat-icon-button"
-            [attr.aria-label]="'chat.composer.addDrink' | t"
-            (click)="addDrink()"
+            class="chat-icon-button chat-emoji-toggle"
+            [attr.aria-label]="'emoji.open' | t"
+            [attr.aria-expanded]="composerPicker()"
+            (click)="composerPicker.set(!composerPicker())"
           >
-            {{ drinkEmoji }}
+            😊
           </button>
           <button
             type="submit"
             class="chat-send"
             [attr.aria-label]="'chat.composer.send' | t"
-            [disabled]="draft.trim().length === 0"
+            [disabled]="!canSend()"
           >
             <vereint-icon name="send" />
           </button>
@@ -324,6 +396,10 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         background-color: var(--color-brand);
         color: var(--color-on-brand);
         font-size: 1.15rem;
+      }
+      .chat-thread-icon[data-type='moment'] {
+        background-color: var(--color-warning-light);
+        color: var(--color-warning);
       }
       .chat-thread-icon[data-type='event'] {
         background-color: var(--color-brand-soft);
@@ -624,6 +700,15 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         border-top: 1px solid var(--color-border);
         color: var(--color-text-muted);
       }
+      .chat-file-input {
+        display: none;
+      }
+      .chat-emoji-popup {
+        margin-top: 0.25rem;
+      }
+      .chat-drafts {
+        padding-top: var(--space-2);
+      }
       .chat-thread.is-embedded .chat-history {
         max-height: min(55vh, 32rem);
       }
@@ -662,6 +747,34 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   @Output() readonly back = new EventEmitter<void>();
 
   @ViewChild('history') private historyRef?: ElementRef<HTMLElement>;
+  @ViewChild('draftInput') private draftInputRef?: ElementRef<HTMLInputElement>;
+  private readonly uploader = inject(ChatMediaUploader);
+  private readonly i18n = inject(I18nService);
+
+  /** Anhänge im Composer (hochgeladen oder im Upload). */
+  protected readonly drafts = signal<DraftMedia[]>([]);
+  protected readonly draftTiles = computed<ChatMediaTile[]>(() =>
+    this.drafts().map((entry) => ({
+      key: entry.key,
+      kind: entry.prepared.kind,
+      src: entry.prepared.previewUrl,
+      progress: entry.uploaded ? null : entry.progress,
+      failed: entry.failed,
+      removable: true,
+    })),
+  );
+  /** Volle Emoji-Auswahl im Composer bzw. bei der Reaktion. */
+  protected readonly composerPicker = signal(false);
+  protected readonly fullPicker = signal(false);
+  protected readonly mediaAccept = CHAT_MEDIA_ACCEPT;
+  protected readonly maxMedia = CHAT_MEDIA_LIMITS.maxMediaPerResponse;
+  /** Der Entwurf als Signal, damit [canSend] mitzieht. */
+  private readonly draftText = signal('');
+  protected readonly canSend = computed(() => {
+    const drafts = this.drafts();
+    if (drafts.some((entry) => !entry.uploaded)) return false;
+    return this.draftText().trim().length > 0 || drafts.length > 0;
+  });
 
   protected readonly messages = signal<ChatMessageDto[] | null>(null);
   protected readonly loadError = signal<string | null>(null);
@@ -694,10 +807,14 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   private readPending = false;
 
   protected draft = '';
-  protected readonly drinkEmoji = DRINK_EMOJI;
   protected readonly quickReactions = QUICK_REACTIONS;
   protected readonly formatDateTime = formatDateTime;
   protected readonly formatTime = formatTime;
+
+  /** Ende eines Moment-Chats: heute nur die Uhrzeit, sonst mit Datum. */
+  protected untilLabel(iso: string): string {
+    return dayKey(iso) === dayKey(new Date().toISOString()) ? formatTime(iso) : formatShortDateTime(iso);
+  }
 
   private loadSub?: Subscription;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -727,6 +844,22 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     if (conversation.type === 'direct') return conversation.partnerName ?? conversation.title;
     if (conversation.type === 'club' && conversation.stammtischName) return conversation.stammtischName;
     return conversation.title;
+  }
+
+  protected headIcon(): IconName {
+    if (this.conversation.type === 'event') return 'events';
+    if (this.conversation.type === 'moment') return 'sparkle';
+    return 'users';
+  }
+
+  /** Fotos/Videos einer Nachricht; Gruppenchats anderer Gruppen nennen ihre Gruppe in der Adresse. */
+  protected tilesOf(message: ChatMessageDto): ChatMediaTile[] {
+    return (message.media ?? []).map((media) => ({
+      key: media.id,
+      kind: media.kind,
+      src: this.api.mediaUrl(media, this.conversation.type, this.conversation.stammtischId),
+      ratio: media.width && media.height ? media.width / media.height : null,
+    }));
   }
 
   private get browser(): boolean {
@@ -773,11 +906,16 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     this.typers.set(new Map());
     this.readPending = false;
     this.draft = '';
+    this.draftText.set('');
+    this.clearDrafts();
+    this.composerPicker.set(false);
+    this.fullPicker.set(false);
     this.conversationId.set(this.conversation.id);
     this.refresh();
   }
 
   ngOnDestroy(): void {
+    this.clearDrafts();
     this.loadSub?.unsubscribe();
     this.liveSub?.unsubscribe();
     this.outboxSub?.unsubscribe();
@@ -825,12 +963,102 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   protected send(): void {
     const text = this.draft.trim();
     const id = this.conversation?.id;
-    if (!text || !id || !this.conversation.canWrite) return;
+    if (!id || !this.conversation.canWrite) return;
+    const drafts = this.drafts();
+    if (drafts.some((entry) => !entry.uploaded)) {
+      this.actionError.set(translate('chat.composer.waitForUpload'));
+      return;
+    }
+    const mediaIds = drafts.map((entry) => entry.uploaded!.id);
+    if (!text && mediaIds.length === 0) return;
     this.draft = '';
+    this.draftText.set('');
+    this.clearDrafts();
+    this.composerPicker.set(false);
     this.lastTypingSent = 0;
     this.actionError.set(null);
-    void this.outbox.enqueue(id, this.conversation.type, text, this.conversation.stammtischId);
+    void this.outbox.enqueue(id, this.conversation.type, text, this.conversation.stammtischId, mediaIds);
     this.scrollToEnd();
+  }
+
+  /** Gewählte Dateien prüfen, verkleinern und sofort hochladen. */
+  protected async onFiles(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    if (files.length === 0) return;
+    this.actionError.set(null);
+    if (globalThis.navigator?.onLine === false) {
+      this.actionError.set(translate('chat.composer.mediaOffline'));
+      return;
+    }
+    const free = this.maxMedia - this.drafts().length;
+    if (files.length > free) this.actionError.set(translate('chat.composer.mediaLimit', { max: this.maxMedia }));
+    for (const file of files.slice(0, Math.max(0, free))) {
+      try {
+        const prepared = await this.uploader.prepare(file);
+        this.startUpload(prepared);
+      } catch (error) {
+        this.actionError.set(error instanceof MediaPrepareError ? error.message : translate('chat.composer.uploadFailed'));
+      }
+    }
+  }
+
+  private startUpload(prepared: PreparedMedia): void {
+    const key = `draft-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const conversationId = this.conversation.id;
+    const target = this.api.mediaUpload(conversationId, this.conversation.type, this.conversation.stammtischId);
+    const upload = this.uploader.upload(target, prepared, this.i18n.language(), (progress) =>
+      this.patchDraft(key, { progress }),
+    );
+    this.drafts.update((list) => [
+      ...list,
+      { key, prepared, progress: 0, uploaded: null, failed: false, abort: upload.abort },
+    ]);
+    upload.result.then(
+      (media) => this.patchDraft(key, { uploaded: media, progress: 1 }),
+      (error: unknown) => {
+        if (!this.drafts().some((entry) => entry.key === key)) return;
+        this.patchDraft(key, { failed: true });
+        this.actionError.set(describeApiError(error));
+      },
+    );
+  }
+
+  private patchDraft(key: string, patch: Partial<DraftMedia>): void {
+    this.drafts.update((list) => list.map((entry) => (entry.key === key ? { ...entry, ...patch } : entry)));
+  }
+
+  protected removeDraft(key: string): void {
+    const entry = this.drafts().find((current) => current.key === key);
+    if (!entry) return;
+    if (!entry.uploaded) entry.abort();
+    URL.revokeObjectURL(entry.prepared.previewUrl);
+    this.drafts.update((list) => list.filter((current) => current.key !== key));
+  }
+
+  /** Nicht gesendete Uploads räumt der Server nach einigen Stunden selbst weg. */
+  private clearDrafts(): void {
+    for (const entry of this.drafts()) {
+      if (!entry.uploaded) entry.abort();
+      URL.revokeObjectURL(entry.prepared.previewUrl);
+    }
+    this.drafts.set([]);
+  }
+
+  /** Fügt ein Emoji an der Schreibmarke ein. */
+  protected insertEmoji(emoji: string): void {
+    const input = this.draftInputRef?.nativeElement;
+    const start = input?.selectionStart ?? this.draft.length;
+    const end = input?.selectionEnd ?? this.draft.length;
+    this.draft = `${this.draft.slice(0, start)}${emoji}${this.draft.slice(end)}`;
+    this.draftText.set(this.draft);
+    setTimeout(() => {
+      if (!input) return;
+      input.focus();
+      const position = start + emoji.length;
+      input.setSelectionRange(position, position);
+    });
   }
 
   protected retrySend(entry: OutboxEntry): void {
@@ -843,6 +1071,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
 
   /** Beim Tippen höchstens alle paar Sekunden „schreibt gerade…“ melden. */
   protected onDraftChange(): void {
+    this.draftText.set(this.draft);
     const id = this.conversation?.id;
     if (!id || !this.conversation.canWrite || this.draft.trim().length === 0) return;
     if (globalThis.navigator?.onLine === false) return;
@@ -865,11 +1094,8 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  protected addDrink(): void {
-    this.draft = `${this.draft}${DRINK_EMOJI}`;
-  }
-
   protected togglePicker(messageId: string): void {
+    this.fullPicker.set(false);
     this.pickerFor.update((current) => (current === messageId ? null : messageId));
   }
 
@@ -883,6 +1109,7 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
       next: (updated) => {
         this.reacting.set(false);
         this.pickerFor.set(null);
+        this.fullPicker.set(false);
         if (id !== this.conversation.id) return;
         this.messages.update((list) =>
           (list ?? []).map((entry) => (entry.id === updated.id ? updated : entry)),
@@ -952,11 +1179,26 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
     return this.document.visibilityState !== 'hidden';
   }
 
+  /** Steht der Verlauf unten? Dann bleibt er dort, auch wenn Fotos nachladen. */
+  private atBottom = true;
+
+  protected onHistoryScroll(): void {
+    const element = this.historyRef?.nativeElement;
+    if (!element) return;
+    this.atBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 48;
+  }
+
+  protected onMediaLoaded(): void {
+    const element = this.historyRef?.nativeElement;
+    if (element && this.atBottom) element.scrollTop = element.scrollHeight;
+  }
+
   private scrollToEnd(): void {
     if (!this.browser) return;
     setTimeout(() => {
       const element = this.historyRef?.nativeElement;
       if (element) element.scrollTop = element.scrollHeight;
+      this.atBottom = true;
     });
   }
 }

@@ -623,7 +623,9 @@
       "emptyStart": "You have no chats yet. Start one with the plus button above.",
       "emptyFiltered": "No chat matches your search or filter.",
       "noneSelectedTitle": "No chat selected",
-      "noneSelectedMessage": "Pick a chat on the left or write a new message with the plus button."
+      "noneSelectedMessage": "Pick a chat on the left or write a new message with the plus button.",
+      "photo": "📷 Photo",
+      "video": "🎥 Video"
     },
     "filter": {
       "ariaLabel": "Filter chats",
@@ -631,11 +633,13 @@
       "unread": "Unread",
       "club": "Groups",
       "event": "Events",
-      "direct": "Direct"
+      "direct": "Direct",
+      "moment": "Moments"
     },
     "kind": {
       "event": "Event",
-      "direct": "Direct message"
+      "direct": "Direct message",
+      "moment": "Moment"
     },
     "compose": {
       "title": "New message",
@@ -660,7 +664,9 @@
       "friend": "Friend",
       "noTargetsTitle": "Nothing to choose",
       "noEvents": "You are not invited to any open event right now. Event chats appear once you are invited.",
-      "noGroups": "You are not in any group whose chat you can write to."
+      "noGroups": "You are not in any group whose chat you can write to.",
+      "moment": "Moment",
+      "momentHint": "Start a moment: everyone sees it right away, with its own chat for 24 hours"
     },
     "thread": {
       "back": "Back",
@@ -680,7 +686,9 @@
       "reactionLabel": "Reaction {emoji}, {count}",
       "reactWith": "React with {emoji}",
       "reactionFailed": "The reaction could not be saved. Please try again.",
-      "toEventIn": "To the event · {group}"
+      "toEventIn": "To the event · {group}",
+      "momentUntil": "Moment · open until {time}",
+      "toMoment": "Open moment"
     },
     "composer": {
       "attach": "Add attachment",
@@ -690,7 +698,14 @@
       "sendFailed": "Message could not be sent. Please try again.",
       "attachUnavailable": "Attachments are currently unavailable.",
       "readOnly": "You can no longer write in this chat.",
-      "readOnlyDirect": "You are neither friends nor share a group. The history stays readable, but you cannot send new messages."
+      "readOnlyDirect": "You are neither friends nor share a group. The history stays readable, but you cannot send new messages.",
+      "attachMedia": "Attach photo or video",
+      "removeMedia": "Remove attachment",
+      "uploading": "Uploading… {percent} %",
+      "uploadFailed": "Upload failed",
+      "mediaLimit": "At most {max} photos or videos per message.",
+      "waitForUpload": "Wait until all attachments are uploaded.",
+      "mediaOffline": "Photos and videos can only be uploaded while online."
     },
     "receipt": {
       "pending": "Waiting for network",
@@ -710,6 +725,13 @@
       "one": "{name} is typing…",
       "two": "{first} and {second} are typing…",
       "many": "Several people are typing…"
+    },
+    "media": {
+      "photo": "Photo",
+      "video": "Video",
+      "photos": "{count} photos",
+      "open": "Open photo in full size",
+      "pendingCount": "{count} attachments"
     }
   },
   "calendar": {
@@ -2496,6 +2518,27 @@
       "overviewTitle": "Running rounds",
       "displayOnly": "Display only",
       "overviewHint": "Everyone buys a round in the app on their own phone and pays from their own balance. Nothing is bought at the terminal. Invited people get their mark as usual, and it goes on the round."
+    }
+  },
+  "emoji": {
+    "title": "Choose an emoji",
+    "search": "Search emoji (e.g. beer)",
+    "results": "Search results",
+    "none": "No emoji found",
+    "open": "Insert emoji",
+    "more": "More emojis",
+    "groups": {
+      "recent": "Recently used",
+      "smileys_emotion": "Smileys and emotion",
+      "people_body": "People and body",
+      "animals_nature": "Animals and nature",
+      "food_drink": "Food and drink",
+      "travel_places": "Travel and places",
+      "activities": "Activities",
+      "objects": "Objects",
+      "symbols": "Symbols",
+      "flags": "Flags",
+      "component": "Components"
     }
   }
 }

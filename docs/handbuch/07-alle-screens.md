@@ -285,8 +285,9 @@ Alle Chats in einer Liste, über alle eigenen Gruppen, neueste Nachricht zuerst.
 
 - **+** oben rechts: [Neue Nachricht](#neue-nachricht).
 - **Suchfeld**: sucht nach Name, Gruppe und letzter Nachricht.
-- **Alle**, **Ungelesen**, **Gruppen**, **Events**, **Direkt**: grenzen die Liste ein; bei **Ungelesen** steht die Zahl der Chats mit neuen Nachrichten.
-- Jede Zeile: Bild bzw. Kürzel, Name, Uhrzeit der letzten Nachricht, Vorschau und Zahl ungelesener Nachrichten. Gruppenchats heißen wie ihre Gruppe, Direktnachrichten wie die Person. Event-Chats tragen **Event** und den Namen ihrer Gruppe.
+- **Alle**, **Ungelesen**, **Gruppen**, **Events**, **Direkt**, **Moments**: grenzen die Liste ein; bei **Ungelesen** steht die Zahl der Chats mit neuen Nachrichten.
+- Jede Zeile: Bild bzw. Kürzel, Name, Uhrzeit der letzten Nachricht, Vorschau und Zahl ungelesener Nachrichten. Gruppenchats heißen wie ihre Gruppe, Direktnachrichten wie die Person. Event-Chats tragen **Event**, Moment-Chats **Moment** und den Namen ihrer Gruppe. Nur Foto oder Video ohne Text: **📷 Foto** bzw. **🎥 Video**.
+- Moment-Chats stehen 24 Stunden nach dem Start des Moments in der Liste.
 - Am Handy öffnet ein Chat im Vollbild, der Pfeil oben links führt zurück. Am Rechner und Tablet steht der Chat rechts neben der Liste.
 
 <br clear="right">
@@ -302,8 +303,11 @@ Der Chat aller Mitglieder einer Gruppe. Oben stehen der Name der Gruppe und „G
 - Neben eigenen Nachrichten stehen Haken: **✓** gesendet, **✓✓** bei allen angekommen, **✓✓ blau** von allen gelesen. Antippen oder Darüberfahren zeigt, bei wie vielen sie angekommen ist und wie viele sie gelesen haben.
 - Schreibt gerade jemand, steht über dem Eingabefeld zum Beispiel „Anna schreibt…“.
 - Unten **Nachricht** eintippen und senden. Ohne Netz steht die Nachricht mit einer **Uhr** da und geht hinaus, sobald wieder Netz da ist. Klappt das nicht, stehen **Nicht gesendet**, **Erneut senden** und **Verwerfen** darunter.
+- **Büroklammer**: bis zu 4 Fotos oder Videos (bis 60 s, 100 MB, MP4/MOV) anhängen; sie laden sofort hoch und stehen mit Fortschritt und **✕** über dem Eingabefeld. Text ist dann freiwillig. In der Nachricht stehen mehrere Fotos als Raster, ein Tipp öffnet ein Foto in voller Größe, Videos spielen direkt.
+- **😊**: Auswahl aller Emojis mit **Zuletzt verwendet**, Reitern je Gruppe und Suche (englische Namen). Das Emoji landet an der Schreibmarke.
+- **+** unter einer Nachricht: fünf schnelle Reaktionen, **…** öffnet die volle Emoji-Auswahl.
 
-Event-Chats und Direktnachrichten sehen genauso aus. Im Event-Chat führt der Link unter dem Namen zum Event.
+Event-Chats, Moment-Chats und Direktnachrichten sehen genauso aus. Im Event-Chat führt der Link unter dem Namen zum Event, im Moment-Chat zum Moment, dort steht auch, bis wann der Chat offen ist.
 
 <br clear="right">
 
@@ -313,7 +317,7 @@ Event-Chats und Direktnachrichten sehen genauso aus. Im Event-Chat führt der Li
 
 Öffnet sich über das **+** im [Chat](#chat).
 
-- Erster Schritt: **Gruppe**, **Event** oder **Direktnachricht** wählen.
+- Erster Schritt: **Gruppe**, **Event**, **Direktnachricht** oder **Moment** wählen. **Moment** öffnet den Start-Dialog der [Moments](#moments); nach dem Start geht es direkt in den Chat des Moments, **Abbrechen** führt zurück zum Chat.
 - **Gruppe**: alle eigenen Gruppen. **Event**: Events, zu denen man eingeladen ist oder die man angelegt hat. **Direktnachricht**: alle aus den eigenen Gruppen und alle Freunde, mit Suchfeld; unter dem Namen die gemeinsamen Gruppen.
 - Nach der Auswahl öffnet sich der Chat. Mit jeder Person gibt es genau ein Gespräch, **über alle Gruppen**; ein bestehendes Gespräch wird wieder geöffnet.
 - **Andere Art wählen** führt zurück zum ersten Schritt.

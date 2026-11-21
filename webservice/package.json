@@ -32,7 +32,8 @@
     "jose": "^6.2.17",
     "leaflet": "^1.9.4",
     "rxjs": "~7.8.0",
-    "tslib": "^2.9.1"
+    "tslib": "^2.9.1",
+    "unicode-emoji-json": "0.9.0"
   },
   "devDependencies": {
     "@angular/build": "^22.2.7",

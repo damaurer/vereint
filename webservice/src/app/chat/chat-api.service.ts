@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { ApiClient } from '../api/api-client.service';
 import type {
+  ChatMedia,
   ChatMessageDto,
   ConversationSummary,
   ConversationType,
@@ -83,8 +84,11 @@ export class ChatApiService {
     type?: ConversationType,
     clientId?: string,
     group?: string | null,
+    mediaIds?: string[],
   ): Observable<ChatMessageDto> {
-    const body = clientId ? { message, clientId } : { message };
+    const body: { message: string; clientId?: string; mediaIds?: string[] } = { message };
+    if (clientId) body.clientId = clientId;
+    if (mediaIds?.length) body.mediaIds = mediaIds;
     return this.api.post<ChatMessageDto>(`${this.path(conversationId, type)}/messages`, body, this.headers(type, group));
   }
 
@@ -119,6 +123,20 @@ export class ChatApiService {
    */
   contacts(): Observable<FriendContact[]> {
     return this.api.get<FriendContact[]>('/friends/contacts');
+  }
+
+  /**
+   * Adresse eines Fotos/Videos für `<img>`/`<video>`. Bilder kennen keine
+   * Header; die Gruppe steht deshalb als `?chatGroup=` dabei.
+   */
+  mediaUrl(media: ChatMedia, type?: ConversationType, group?: string | null): string {
+    if (type === 'direct' || !group) return media.url;
+    return `${media.url}?chatGroup=${encodeURIComponent(group)}`;
+  }
+
+  /** Pfad für den Upload eines Fotos/Videos (unter `/api/v1`) samt Gruppen-Header. */
+  mediaUpload(conversationId: string, type?: ConversationType, group?: string | null) {
+    return { path: `${this.path(conversationId, type)}/media`, headers: this.headers(type, group) ?? {} };
   }
 
   /** Gruppe eines Gruppen- oder Event-Chats aus der gemeinsamen Liste. */
