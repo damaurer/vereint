@@ -164,9 +164,9 @@ Erreichbar von der Anmeldeseite und ganz unten im Mehr-Menü. Oben wechseln zwei
 Die Startseite beantwortet die drei häufigsten Fragen: Wie viel Guthaben habe ich? Wann ist das nächste Treffen? Was ist neu?
 
 - **Begrüßung** mit Kürzel und Namen.
-- **Dein Guthaben** mit dem aktuellen Stand. **Bezahlen** startet den [Strichcode-Scan](#bezahlen), **Kontoauszug** öffnet das [Guthaben](#guthaben) mit allen Buchungen.
+- **Dein Guthaben** mit dem aktuellen Stand. **Buchen** startet den [Strichcode-Scan](#bezahlen), **Kontoauszug** öffnet das [Guthaben](#guthaben) mit allen Buchungen.
 - **Nächster Termin**: Titel, Status (z. B. **Aktiv**), Datum, Uhrzeit, Ort und deine Antwort („Du bist dabei“). Ein Tipp öffnet das [Event](#event). **Alle Events** führt zur Liste.
-- **Deine Events** (Anzahl in diesem Monat) und **Buchungen** (seit Monatsbeginn) als Kennzahlen.
+- **Deine Events** (Anzahl in diesem Monat) und **Buchungen** (insgesamt) als Kennzahlen. Ein Tipp auf **Deine Events** öffnet die [Events](#events), ein Tipp auf **Buchungen** das [Guthaben](#guthaben) mit allen Buchungen.
 
 <br clear="right">
 

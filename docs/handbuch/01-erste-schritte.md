@@ -62,9 +62,9 @@ Unter der Anmeldung steht außerdem „Noch keine Gruppe? **Eigene Gruppe eröff
 
 Die Startseite zeigt auf einen Blick:
 
-- dein **Guthaben** mit **Bezahlen** (Getränk scannen) und dem Link zum **Kontoauszug**,
+- dein **Guthaben** mit **Buchen** (Getränk scannen) und dem Link zum **Kontoauszug**,
 - deinen **nächsten Termin** mit Zu- oder Absage; ein Tipp auf die Karte öffnet das Event,
-- wie viele **Events** und **Buchungen** du hast.
+- wie viele **Events** und **Buchungen** du hast; ein Tipp darauf öffnet die Events bzw. dein Guthaben mit allen Buchungen.
 
 Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, wie viele davon noch ungelesen sind. Auch am Reiter **Chat** zeigt eine rote Zahl ungelesene Nachrichten.
 

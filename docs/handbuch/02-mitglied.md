@@ -18,7 +18,7 @@ Jeden Mitglieder-Bildschirm einzeln erklärt [Die App Bildschirm für Bildschirm
 | sehen, wer was getrunken hat, mit Litern und Kalorien | **Mehr → Statistik** → **Getränkestatistik** |
 | mein Guthaben sehen | **Guthaben** (untere Leiste) |
 | eine Runde ausgeben | Im laufenden Event **Runde ausgeben** → Personen anhaken → **Runde für … ausgeben** |
-| ein Getränk selbst bezahlen oder nur für die Statistik erfassen | **Bezahlen** auf der Startseite oder unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen oder **Aus Katalog wählen** |
+| ein Getränk selbst bezahlen oder nur für die Statistik erfassen | **Buchen** auf der Startseite, **Bezahlen** unter **Guthaben** (oder **Mehr → Bezahlen**) → Strichcode scannen oder **Aus Katalog wählen** |
 | prüfen, was mir an der Theke angeschrieben wurde | **Mehr → Käufe** |
 | Guthaben aufladen | Bargeld beim Kassenwart abgeben, er bucht es ein |
 | beim gemeinsamen Anstoßen mitmachen | **Mehr → Moments**, oder im Event auf **Moments** |
@@ -177,7 +177,7 @@ Steht keine Theke bereit, etwa am Kühlschrank, bezahlst du ein Getränk selbst 
 
 <img src="bilder/m-bezahlen.png" alt="Getränk scannen" width="300" align="right">
 
-1. **Mehr → Bezahlen** oder auf der Startseite **Getränk bezahlen** öffnen.
+1. **Mehr → Bezahlen** oder auf der Startseite **Buchen** öffnen.
 2. Den **Strichcode** der Flasche in den Rahmen halten. Beim ersten Mal fragt das Handy, ob Vereint die Kamera benutzen darf.
 3. Klappt das Scannen nicht, die Nummer unter dem Strichcode eintippen und **Suchen** tippen. Hat die Flasche keinen Strichcode, wähle das Getränk aus dem Katalog (siehe unten).
 

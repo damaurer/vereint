@@ -76,7 +76,7 @@ interface DashboardView {
                 [negative]="isNegative(view.balance.creditBalance)"
               >
                 <a class="member-button dash-pay" routerLink="/scan">
-                  <vereint-icon name="camera" /> {{ 'nav.items.scan' | t }}
+                  <vereint-icon name="camera" /> {{ 'member.dashboard.book' | t }}
                 </a>
                 <a class="dash-more" routerLink="/wallet">
                   {{ 'member.dashboard.statementShort' | t }} <vereint-icon name="chevron-right" />
@@ -149,11 +149,13 @@ interface DashboardView {
               [label]="'member.dashboard.statEvents' | t"
               [value]="eventsThisMonth(view.events)"
               [hint]="'member.dashboard.statEventsHint' | t"
+              link="/events"
             />
             <vereint-stat-card
               [label]="'member.dashboard.statEntries' | t"
               [value]="view.balance.entryCount"
               [hint]="'member.dashboard.statEntriesHint' | t"
+              link="/wallet"
             />
           </div>
 
