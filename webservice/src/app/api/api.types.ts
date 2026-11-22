@@ -744,6 +744,27 @@ export interface MomentMapGeoJsonDto {
   features: GeoJsonFeatureDto[];
 }
 
+/** Ein Moment auf der Weltkarte aller Moments (`GET /api/v1/moments/map`). */
+export interface MomentWorldMapPinDto {
+  momentId: string;
+  title: string;
+  topicType: string;
+  topicName: string;
+  topicEmoji: string | null;
+  active: boolean;
+  eventId: string | null;
+  eventTitle: string | null;
+  creatorName: string;
+  latitude: number;
+  longitude: number;
+  /** `initiator` (Standort des Starters) oder `response` (erster geteilter Beitrag). */
+  locationSource: 'initiator' | 'response';
+  responsesCount: number;
+  locationsCount: number;
+  createdAt: string;
+  completedAt: string | null;
+}
+
 export interface MomentDetailDto {
   session: MomentSessionDto;
   responses: MomentResponseDto[];

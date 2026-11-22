@@ -480,6 +480,55 @@ class MomentServiceTest {
         assertEquals(expiresAt, history.single().completedAt)
     }
 
+    @Test
+    fun `world map places each visible moment at the starter or first shared response location`() {
+        val starterPinned = MomentSessionEntity(
+            id = UUID.randomUUID(), creator = ownerUser, title = "Biergarten", topicType = "toast",
+            active = false, expiresAt = Instant.now().minusSeconds(60), completedAt = Instant.now(),
+            latitude = 48.1, longitude = 11.5
+        )
+        val responsePinned = MomentSessionEntity(
+            id = UUID.randomUUID(), creator = ownerUser, title = "Gebet", topicType = "prayer",
+            active = true, expiresAt = Instant.now().plusSeconds(3600)
+        )
+        val withoutLocation = MomentSessionEntity(
+            id = UUID.randomUUID(), creator = ownerUser, title = "Ohne Ort", topicType = "toast",
+            active = true, expiresAt = Instant.now().plusSeconds(3600)
+        )
+        val eventOnly = MomentSessionEntity(
+            id = UUID.randomUUID(), event = event(), creator = ownerUser, title = "Nur Event", topicType = "toast",
+            visibility = MomentVisibility.event, active = true, expiresAt = Instant.now().plusSeconds(3600),
+            latitude = 50.0, longitude = 8.0
+        )
+        `when`(momentSessionRepository.findAllByOrderByCreatedAtDesc())
+            .thenReturn(listOf(starterPinned, responsePinned, withoutLocation, eventOnly))
+        `when`(eventParticipantRepository.findByEventIdAndUserId(eventId, otherUserId)).thenReturn(Optional.empty())
+        `when`(momentResponseRepository.findByMomentIdInOrderByCreatedAtAsc(anyNonNull(emptyList()))).thenReturn(
+            listOf(
+                MomentResponseEntity(moment = starterPinned, user = participantUser, reaction = "CHEERS", latitude = 48.2, longitude = 11.6),
+                MomentResponseEntity(moment = responsePinned, user = participantUser, statusText = "ohne Ort"),
+                MomentResponseEntity(moment = responsePinned, user = participantUser, statusText = "hier", latitude = 52.5, longitude = 13.4),
+                MomentResponseEntity(moment = withoutLocation, user = participantUser, statusText = "nichts")
+            )
+        )
+
+        val pins = momentService.getWorldMap(otherPrincipal)
+
+        assertEquals(listOf("Biergarten", "Gebet"), pins.map { it.title })
+        val first = pins[0]
+        assertEquals(48.1, first.latitude)
+        assertEquals("initiator", first.locationSource)
+        assertEquals(2, first.locationsCount)
+        assertNotNull(first.completedAt)
+        val second = pins[1]
+        assertEquals(52.5, second.latitude)
+        assertEquals(13.4, second.longitude)
+        assertEquals("response", second.locationSource)
+        assertEquals(2, second.responsesCount)
+        assertEquals(1, second.locationsCount)
+        assertNull(second.completedAt)
+    }
+
     private fun activeSession(caller: UserEntity, topicType: String = "toast") = MomentSessionEntity(
         id = momentId,
         event = event(),

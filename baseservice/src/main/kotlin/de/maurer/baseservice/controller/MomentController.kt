@@ -58,6 +58,18 @@ class MomentController(
         return ResponseEntity.ok(moments)
     }
 
+    @GetMapping("/map")
+    @Operation(
+        summary = "Weltkarte aller Moments",
+        description = "Ein Pin je sichtbarem Moment mit geteiltem Standort (laufend und abgeschlossen); optional nur die eines Events"
+    )
+    fun getWorldMap(
+        @RequestParam("eventId", required = false) eventIdValue: String?
+    ): ResponseEntity<List<MomentWorldMapPinDto>> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(momentService.getWorldMap(principal, eventIdValue?.let { eventId(it) }))
+    }
+
     @GetMapping("/{momentId}")
     @Operation(summary = "Moment-Details abrufen", description = "Liefert die Detailansicht eines Moments inklusive Timeline aller Statusbeiträge und GeoJSON")
     fun getMomentDetail(

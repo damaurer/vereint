@@ -36,7 +36,7 @@ export const LEAFLET_LOADER = new InjectionToken<() => Promise<typeof Leaflet>>(
 export const LEAFLET_STYLESHEET = 'leaflet.css';
 
 /** Hängt das Leaflet-Stylesheet einmalig in den Dokumentkopf. */
-function ensureLeafletStylesheet(doc: Document): void {
+export function ensureLeafletStylesheet(doc: Document): void {
   if (doc.querySelector('link[data-leaflet]')) return;
   const link = doc.createElement('link');
   link.rel = 'stylesheet';

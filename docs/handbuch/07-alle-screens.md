@@ -358,6 +358,7 @@ Ein Moment ist eine kurze gemeinsame Aktion während eines Events, zum Beispiel 
 - **Laufender Moment** als große Karte: **Typ**, verbleibende Zeit („noch 59 Min“), Titel, Nachricht und wer ihn gestartet hat. Kürzel zeigen, wer schon reagiert hat, daneben die Zahl der Antworten.
 - Aktionen: **Reagieren**, **24h-Chat** (ein Chat nur zu diesem Moment) und **Beenden** für die Person, die ihn gestartet hat.
 - **Vergangene Moments** mit Typ, Event, Datum und Zahl der Antworten.
+- Oben **Übersicht | Weltkarte**: Die **Weltkarte** zeigt alle Moments mit geteiltem Standort als Pins; ein Tipp auf einen Pin und **Moment öffnen** zeigt den Moment (siehe [Moments: Weltkarte](#moments-weltkarte)).
 
 Welche Typen und Reaktionen es gibt, legt der Vorstand fest (siehe [Moments: Typen und Reaktionen](#moments-typen-und-reaktionen)).
 
@@ -373,7 +374,21 @@ Die Detailseite eines Moments.
 - **Schnell reagieren**: ein Tipp auf **Anstoßen**, **Gebet**, **Jubel**, **Daumen hoch**, **Feiern** oder **Herz** reagiert sofort.
 - **Status & Text**: eine Reaktion mit eigenem Satz.
 - **Foto/Video**: bis zu vier Bilder oder Videos anhängen. Standort- und Gerätedaten werden entfernt.
-- **Timeline** zeigt alle Reaktionen mit Name und Zeit; **Weltkarte** zeigt, wer den Standort freiwillig geteilt hat.
+- **Timeline** zeigt alle Reaktionen mit Name und Zeit; **Karte** zeigt, wer den Standort freiwillig geteilt hat.
+
+<br clear="right">
+
+### Moments: Weltkarte
+
+<img src="screens/moments-weltkarte.png" alt="Weltkarte aller Moments" width="300" align="right">
+
+Die Weltkarte auf der Moments-Seite.
+
+- Karte von OpenStreetMap mit einem Pin je Ort; das Emoji ist das Thema des Moments, eine Zahl am Pin heißt: mehrere Moments an diesem Ort.
+- Laufende Moments haben einen farbigen Rand, vergangene einen grauen.
+- Ein Tipp auf den Pin listet die Moments mit Datum und Zahl der Standorte; **Moment öffnen** wechselt zur Übersicht mit diesem Moment.
+- Darunter **Moments auf der Karte** als Liste; ein Tipp zeigt den Pin auf der Karte.
+- Ohne Moments mit Standort steht dort ein Hinweis, wie man einen Standort teilt.
 
 <br clear="right">
 

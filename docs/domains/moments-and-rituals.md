@@ -55,6 +55,15 @@ Ein Moment bietet eine Karte mit den Standorten der Teilnehmer, die sich für di
 - **Format**: RFC 7946 GeoJSON FeatureCollection mit Point-Geometrien
 - **Datenschutz**: Nur Antworten mit `consent = true` und gültigen Koordinaten werden einbezogen.
 
+#### Weltkarte aller Moments
+Auf der Moments-Seite schaltet **Übersicht | Weltkarte** auf eine Karte aller Moments, die das Mitglied sehen darf (`?ansicht=karte`; unter `/events/:eventId/moments` nur die des Events).
+
+- **Endpunkt**: `GET /api/v1/moments/map` (optional `?eventId=`), Liste von `MomentWorldMapPinDto`.
+- **Sichtbarkeit**: dieselbe Regel wie Liste und Historie (`MomentAccessPolicy`), laufende und abgeschlossene Moments der aktiven Gruppe, höchstens die neuesten 500.
+- **Ein Pin je Moment**: Standort des Starters; hat er keinen geteilt, der erste geteilte Standort eines Beitrags. Moments ohne geteilten Standort fehlen. Der Pin enthält keine Namen von Beitragenden, nur Titel, Thema, Event, Starter, Zeiten und die Zahl der geteilten Standorte. Die einzelnen Standorte zeigt weiterhin die Karte im Moment.
+- **Darstellung**: Moments im Umkreis von rund 100 m (drei Nachkommastellen) teilen sich einen Pin mit Zahl; das Popup listet sie, ein Tipp öffnet den Moment in der Übersicht. Laufende Moments haben einen farbigen Rand. Unter der Karte steht dieselbe Liste als Tastatur- und Screenreader-freundliche Alternative.
+- **Kacheln**: wie oben OpenStreetMap über Leaflet, keine neue CSP-Freigabe nötig. Im dunklen Design werden die Kacheln per CSS-Filter abgedunkelt (gilt für beide Karten).
+
 ### 6. Kalender-/Event-Verlauf-Archivierung
 Wenn ein Moment abläuft oder fertiggestellt wird, wird die Session abgeschlossen und über `listMomentHistory` in der Moment-Historie bereitgestellt (alle sichtbaren Moments der Gruppe, mit `?eventId=` nur die eines Events). Im Kalender erscheinen weiterhin nur Moments mit Event. Der Abschluss wird zusätzlich über `AuditService` protokolliert:
 
@@ -108,7 +117,8 @@ Zu einem Beitrag lassen sich bis zu **4 Fotos oder Videos** anhängen (höchsten
 - **Komponenten**:
   - `MomentsComponent`: Master-Ansicht mit aktiven Moments, Start-Moment-Modal, Multi-Status-Reaktions-Trigger und Link zu 24h-Chat.
   - `MomentTimelineComponent`: Chronologischer Feed von Teilnehmer-Status-Updates mit Benutzer-Badges.
-  - `MomentMapComponent`: Responsive Welt-Karte mit GeoJSON-Marker-Projektion.
+  - `MomentMapComponent`: Karte der geteilten Standorte eines Moments (GeoJSON).
+  - `MomentsWorldMapComponent`: Weltkarte aller sichtbaren Moments mit Standort (`/api/v1/moments/map`).
   - `EventDetailComponent`: Eingebettete aktive Moments-Schnellaktion und vergangene Moment-Aktivitätszusammenfassungen.
   - `MomentConfigComponent`: Verwaltung der Typen und Reaktionen für den Vorstand (`/board/moments`).
   - `moment-media.ts`: Verkleinern, Prüfen und Hochladen von Fotos und Videos.
@@ -314,7 +324,8 @@ sequenceDiagram
 ### 3. Timeline & Karte anzeigen
 1. Öffne Moment-Details
 2. Sehe chronologische Timeline mit allen Teilnehmer-Updates
-3. Sehe interaktive Welt-Karte mit Standort-Markern (nur für Teilnehmer mit Zustimmung)
+3. Sehe interaktive Karte mit Standort-Markern (nur für Teilnehmer mit Zustimmung)
+4. Für alle Moments auf einmal: oben **Weltkarte** wählen, auf einen Pin tippen und **Moment öffnen**
 
 ### 4. Moment-Chat beitreten
 1. Klicke auf "24h Chat" im Moment-Detail
