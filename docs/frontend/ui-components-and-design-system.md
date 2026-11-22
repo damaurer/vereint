@@ -43,7 +43,9 @@ Alle Komponenten sind **Angular Standalone Components** mit `OnPush`; Texte komm
 
 ### 5. `DataTableComponent` (`data-table.component.ts`)
 - **Zweck**: Einfache Tabelle aus `columns` und `rows`, optional mit eigenem Zellen-Template.
-- **Mobil**: Jede Zelle trägt `data-label` mit dem Spaltentitel; ohne Zeilen erscheint ein Leertext.
+- **Mobil**: Ist der Platz der Tabelle schmaler als 50rem (Handy, Tablet hochkant), wird jede Zeile per Container-Query zu einer Karte (`.ui-table-stack` in `styles.css`). Gemessen wird die Breite der Tabelle, nicht das Fenster, deshalb passt es auch neben der Seitenleiste. Die Spaltentitel stehen dann aus `data-label` klein über jedem Wert; es scrollt nichts seitlich. Mit `mobile` an der Spalte steuert man die Karte: `title` (Kopfzeile ohne Beschriftung, z. B. Name mit Avatar), `full` (eigene Zeile, z. B. E-Mail), `action` (Schaltfläche über die volle Breite), `hidden` (in der Karte ausgeblendet). Ohne Zeilen erscheint ein Leertext.
+- **Andere Tabellen**: Die Tabellen der Statistik-Übersicht (`stats-table` in `statistics/statistics.css`) werden in Panels unter 28rem ebenso zu Blöcken: Name oben, die Zahlen mit Beschriftung darunter. Die Strichliste der Theke (`tablet/tally-grid.component.ts`) bleibt bewusst eine Tabelle wie auf Papier und scrollt seitlich; sie ist für das Thekentablet gedacht.
+- **Neue Tabellen**: `vereint-data-table` verwenden oder einer eigenen `<table>` die Klasse `ui-table ui-table-stack` geben, den Eltern-Container `ui-table-container` nennen und jede Zelle mit `data-label` versehen.
 
 ### 6. `RoleChipComponent` (`role-chip.component.ts`)
 - **Zweck**: Kompakter Chip mit einem Text (`label`), optional hervorgehoben (`tone="accent"`), etwa für Rollen.

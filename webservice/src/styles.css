@@ -1480,6 +1480,27 @@ a:focus-visible {
   color: var(--color-text);
 }
 
+/* Zweitrangige Schaltfläche und Rückmeldungen nach Aktionen (Kasse, Verwaltung). */
+.member-button-secondary {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.member-button-secondary:hover:not(:disabled) {
+  background: var(--color-brand-soft);
+}
+
+.manage-action-error {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.manage-action-info {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
 /* --- Daten-Tabelle --- */
 .ui-table {
   width: 100%;
@@ -1504,6 +1525,106 @@ a:focus-visible {
   color: var(--color-text-muted);
   text-align: center;
   padding: var(--space-4);
+}
+
+/*
+ * Tabellen auf schmalem Platz: Der Container (`.ui-table-container`) misst die
+ * verfügbare Breite, nicht das Fenster. Unter 50rem wird jede Zeile einer
+ * `.ui-table-stack` zu einer Karte; die Zellen stehen in einem Raster, die
+ * Spaltenüberschrift (`data-label`) steht klein über dem Wert. So scrollt keine
+ * Tabelle mehr seitlich. `data-mobile` steuert einzelne Zellen:
+ * `title` (Kopfzeile ohne Beschriftung), `action` (volle Breite, ohne
+ * Beschriftung), `full` (eigene Zeile), `hidden` (in der Karte ausgeblendet).
+ */
+.ui-table-container {
+  display: block;
+  container-type: inline-size;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@container (max-width: 50rem) {
+  .ui-table-stack,
+  .ui-table-stack tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .ui-table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .ui-table-stack tbody tr {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    gap: var(--space-2) var(--space-3);
+    margin: 0 0 var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+  }
+
+  .ui-table-stack tbody td {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .ui-table-stack tbody td::before {
+    content: attr(data-label);
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    overflow-wrap: normal;
+  }
+
+  .ui-table-stack tbody td[data-mobile='title'],
+  .ui-table-stack tbody td[data-mobile='action'],
+  .ui-table-stack tbody td[data-mobile='full'],
+  .ui-table-stack tbody td.ui-table-empty {
+    grid-column: 1 / -1;
+  }
+
+  .ui-table-stack tbody td[data-mobile='title']::before,
+  .ui-table-stack tbody td[data-mobile='action']::before,
+  .ui-table-stack tbody td.ui-table-empty::before {
+    content: none;
+  }
+
+  .ui-table-stack tbody td[data-mobile='title'] {
+    font-weight: 700;
+  }
+
+  .ui-table-stack tbody td[data-mobile='action'] {
+    align-items: stretch;
+  }
+
+  .ui-table-stack tbody td[data-mobile='hidden'] {
+    display: none;
+  }
+
+  .ui-table-stack tbody td.ui-table-empty {
+    align-items: center;
+  }
+
+  .ui-table-stack tbody tr:has(> td.ui-table-empty) {
+    border-style: dashed;
+    background-color: transparent;
+  }
 }
 
 /* --- Overlay / Modal / Bottom-Sheet --- */

@@ -1298,7 +1298,6 @@
       "name": "Name",
       "email": "E-Mail",
       "role": "Rolle",
-      "balance": "Guthaben",
       "status": "Status",
       "joined": "Beitrittsdatum",
       "actions": "Aktionen"
@@ -1520,7 +1519,6 @@
       "infoText": "Jede Buchung zählt nur einmal, auch wenn sie versehentlich doppelt abgeschickt wird.",
       "eventsLoading": "Events werden abgerufen.",
       "unavailable": "Kasse nicht verfügbar",
-      "statEvents": "Events mit Abrechnung",
       "eventsHeading": "Events ({count})",
       "eventsEmpty": "Es sind keine Events mit Abrechnung sichtbar.",
       "summaryButton": "Abrechnung",

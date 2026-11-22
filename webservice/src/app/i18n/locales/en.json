@@ -1331,7 +1331,6 @@
       "name": "Name",
       "email": "Email",
       "role": "Role",
-      "balance": "Balance",
       "status": "Status",
       "joined": "Joined",
       "actions": "Actions"
@@ -1553,7 +1552,6 @@
       "infoText": "Each booking only counts once, even if it is accidentally sent twice.",
       "eventsLoading": "Loading events.",
       "unavailable": "Kitty unavailable",
-      "statEvents": "Events with settlement",
       "eventsHeading": "Events ({count})",
       "eventsEmpty": "No events with a settlement are visible.",
       "summaryButton": "Settlement",
