@@ -60,6 +60,14 @@ Statusänderungen und Stammdatenaktualisierungen laufen über `PUT /api/v1/event
 
 ---
 
+### 5. Wiederkehrende Events (Serien)
+
+- `event_series` speichert Vorlage (Titel, Ort, Beschreibung, Uhrzeit `start_time` in `time_zone`, Dauer, Erinnerung, Statistik, Einladungsvorlauf `invite_lead_days`, Status neuer Termine) und Rhythmus als RFC-5545-`RRULE` (`FREQ`, `INTERVAL`, `BYDAY` mit Position, `BYMONTHDAY`, `BYMONTH`, `COUNT`, `UNTIL`; leer = nur eigene Termine). Zusätzliche und ausgelassene Termine stehen in `extra_dates` / `excluded_dates`. Eingeladene neuer Termine in `event_series_invitees` oder `invite_all_members`. Beide Tabellen haben `stammtisch_id` und Row-Level-Security.
+- Jeder Termin ist ein normales `events`-Eintrag mit `series_id`, `series_date` (ursprünglicher Tag, je Serie eindeutig) und `series_detached` (einzeln geändert).
+- `EventSeriesService.reconcile` legt Termine der nächsten 365 Tage an (höchstens 26 kommende), passt nicht einzeln geänderte kommende Termine an die Vorlage an und entfernt wegfallende: löschen, wenn unberührt, sonst absagen (Antwort, Chatnachricht, Buchung, Runde, Moment oder Gast vorhanden). Vergangene und laufende Termine bleiben unangetastet. Ein Job (`vereint.events.series-check-interval`, Standard `PT6H`) legt nach.
+- `PUT /events/{id}` mit `scope` `this` (Standard, löst den Termin von der Serie), `following` (teilt die Serie am Termin; mit `status=cancelled` endet sie dort) oder `all` (alle kommenden Termine); `recurrence` nur mit `following`/`all`. Bei einem einzelnen Event macht `following` + `recurrence` eine Serie daraus.
+- `POST /events/recurrence-preview` rechnet die nächsten Termine vor, `POST /events/{id}/series/copy-menu` übernimmt Getränke und Speisen in die folgenden Termine, `POST /events/{id}/invitations` mit `scope=following` lädt zu allen folgenden ein.
+
 ## ⚙️ Technische Sicht (Architecture & Implementation)
 
 ### 1. Relevante Komponenten & Klassen

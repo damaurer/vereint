@@ -8,7 +8,7 @@ import type { EventStatus, EventSummary } from '../api/api.types';
 import { EventCardComponent, IconComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
-import { translate } from '../i18n/i18n.service';
+import { activeLocale, translate } from '../i18n/i18n.service';
 
 /**
  * Eventübersicht eines Mitglieds (TICKET-024, Redesign TICKET-034).
@@ -59,13 +59,13 @@ import { translate } from '../i18n/i18n.service';
           } @else {
             <div class="events-tabs" role="group" [attr.aria-label]="'member.events.rangeGroup' | t">
               <button type="button" class="events-tab" [attr.aria-pressed]="range() === 'upcoming'" (click)="range.set('upcoming')">
-                {{ 'member.events.upcoming' | t }} · {{ upcoming(events).length }}
+                {{ 'member.events.upcoming' | t }} · {{ upcomingEntries(events).length }}
               </button>
               <button type="button" class="events-tab" [attr.aria-pressed]="range() === 'past'" (click)="range.set('past')">
                 {{ 'member.events.past' | t }}
               </button>
             </div>
-            @if (visible(events); as list) {
+            @if (entries(events); as list) {
               @if (list.length === 0) {
                 <vereint-state
                   kind="empty"
@@ -74,7 +74,8 @@ import { translate } from '../i18n/i18n.service';
                 />
               }
               <ul class="events-list">
-                @for (event of list; track event.id) {
+                @for (entry of list; track entry.event.id) {
+                  @let event = entry.event;
                   <li>
                     <vereint-event-card
                       [title]="event.title"
@@ -118,6 +119,15 @@ import { translate } from '../i18n/i18n.service';
                         </div>
                       }
                     </vereint-event-card>
+                    @if (entry.more.length) {
+                      <div class="events-series" data-testid="events-series-more">
+                        <vereint-icon name="repeat" />
+                        <span>{{ 'events.recurrence.moreDates' | t }}</span>
+                        @for (next of entry.more; track next.id) {
+                          <a class="events-series-date" [routerLink]="['/events', next.id]">{{ shortWhen(next) }}</a>
+                        }
+                      </div>
+                    }
                   </li>
                 }
               </ul>
@@ -129,6 +139,23 @@ import { translate } from '../i18n/i18n.service';
   `,
   styles: [
     `
+      .events-series {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem 0.5rem;
+        margin: 0.4rem 0 0 0.25rem;
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+      }
+      .events-series-date {
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        background-color: var(--color-surface-muted);
+        color: var(--color-text);
+        font-weight: 600;
+        text-decoration: none;
+      }
       .events-tabs {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -260,6 +287,39 @@ export class EventsComponent implements OnInit, OnDestroy {
     return events
       .filter((event) => !this.isPast(event, now))
       .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
+  }
+
+  /**
+   * Kommende Events, je Serie nur der nächste Termin; die folgenden Termine
+   * der Serie (höchstens drei) stehen als Kurzlinks darunter.
+   */
+  protected upcomingEntries(events: EventSummary[], now: Date = new Date()): { event: EventSummary; more: EventSummary[] }[] {
+    const entries: { event: EventSummary; more: EventSummary[] }[] = [];
+    const bySeries = new Map<string, { event: EventSummary; more: EventSummary[] }>();
+    for (const event of this.upcoming(events, now)) {
+      const entry = event.seriesId ? bySeries.get(event.seriesId) : undefined;
+      if (entry) {
+        if (entry.more.length < 3) entry.more.push(event);
+        continue;
+      }
+      const created = { event, more: [] as EventSummary[] };
+      entries.push(created);
+      if (event.seriesId) bySeries.set(event.seriesId, created);
+    }
+    return entries;
+  }
+
+  /** Einträge des gewählten Reiters. */
+  protected entries(events: EventSummary[], now: Date = new Date()): { event: EventSummary; more: EventSummary[] }[] {
+    if (this.range() === 'upcoming') return this.upcomingEntries(events, now);
+    return this.visible(events, now).map((event) => ({ event, more: [] }));
+  }
+
+  /** „Di, 2. Dez“ für die Kurzlinks weiterer Termine. */
+  protected shortWhen(event: EventSummary): string {
+    return new Intl.DateTimeFormat(activeLocale(), { weekday: 'short', day: 'numeric', month: 'short' }).format(
+      new Date(event.startsAt),
+    );
   }
 
   /** Events des gewählten Reiters; vergangene mit dem jüngsten zuerst. */

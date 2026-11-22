@@ -1,7 +1,11 @@
 package de.maurer.baseservice.controller
 
 import de.maurer.baseservice.dto.*
+import de.maurer.baseservice.error.ErrorCode
+import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.security.AuthContext
+import de.maurer.baseservice.service.EventSeriesService
 import de.maurer.baseservice.service.EventService
 import de.maurer.baseservice.support.Identifiers
 import io.swagger.v3.oas.annotations.Operation
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.*
 @Tag(name = "Events", description = "Events, Event-Owner und Teilnehmerverwaltung")
 class EventController(
     private val eventService: EventService,
+    private val eventSeriesService: EventSeriesService,
     private val authContext: AuthContext
 ) {
 
@@ -32,8 +37,26 @@ class EventController(
     @Operation(summary = "Event anlegen", description = "Legt ein neues Event mit dem aktuellen Benutzer als Owner an")
     fun createEvent(@Valid @RequestBody request: CreateEventRequest): ResponseEntity<EventDto> {
         val principal = authContext.getRequiredPrincipal()
-        val event = eventService.createEvent(request, principal)
+        val event = if (request.recurrence != null) {
+            eventSeriesService.create(request, principal)
+        } else {
+            eventService.createEvent(request, principal)
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(event)
+    }
+
+    @PostMapping("/recurrence-preview")
+    @Operation(summary = "Wiederholung vorschauen", description = "Berechnet die nächsten Termine einer Wiederholung (Zeitzone Europe/Berlin)")
+    fun previewRecurrence(@Valid @RequestBody request: RecurrencePreviewRequest): ResponseEntity<RecurrencePreviewDto> {
+        authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(eventSeriesService.preview(request))
+    }
+
+    @PostMapping("/{id}/series/copy-menu")
+    @Operation(summary = "Getränke und Speisen übernehmen", description = "Übernimmt Getränke und Speisen dieses Termins in alle folgenden Termine der Serie")
+    fun copyMenuToFollowing(@PathVariable id: String): ResponseEntity<Map<String, Int>> {
+        val principal = authContext.getRequiredPrincipal()
+        return ResponseEntity.ok(mapOf("updated" to eventSeriesService.copyMenuToFollowing(eventId(id), principal)))
     }
 
     @GetMapping
@@ -57,7 +80,16 @@ class EventController(
         @Valid @RequestBody request: UpdateEventRequest
     ): ResponseEntity<EventDto> {
         val principal = authContext.getRequiredPrincipal()
-        return ResponseEntity.ok(eventService.updateEvent(eventId(id), request, principal))
+        val scope = request.scope ?: EventSeriesService.SCOPE_THIS
+        if (scope == EventSeriesService.SCOPE_THIS && request.recurrence != null) {
+            throw InvalidRequestException(Msg("error.event.series.recurrenceNeedsScope"), ErrorCode.INVALID_REQUEST)
+        }
+        val updated = if (scope == EventSeriesService.SCOPE_THIS) {
+            eventService.updateEvent(eventId(id), request, principal)
+        } else {
+            eventSeriesService.update(eventId(id), request, principal)
+        }
+        return ResponseEntity.ok(updated)
     }
 
     @GetMapping("/{id}/participants")
@@ -85,6 +117,10 @@ class EventController(
         @Valid @RequestBody request: InviteMembersRequest
     ): ResponseEntity<List<EventParticipantDto>> {
         val principal = authContext.getRequiredPrincipal()
+        if (request.scope == EventSeriesService.SCOPE_FOLLOWING) {
+            eventSeriesService.inviteFollowing(eventId(id), request, principal)
+            return ResponseEntity.ok(eventService.listParticipants(eventId(id), principal))
+        }
         return ResponseEntity.ok(eventService.inviteMembers(eventId(id), request, principal))
     }
 

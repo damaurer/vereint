@@ -100,6 +100,26 @@ Stelle ein Event am Abend selbst auf **Aktiv**, sonst erscheint es nicht am Thek
 
 <br clear="right">
 
+### Termine einer Serie ändern
+
+<img src="bilder/v-serie-aendern.png" alt="Auswahl beim Ändern einer Serie" width="300" align="right">
+
+Bei einem wiederkehrenden Event steht oben der Rhythmus, und im Reiter **Stammdaten** gibt es den Abschnitt **Wiederholung**. Beim Speichern fragt Vereint, welche Termine sich ändern sollen:
+
+- **Nur dieser Termin**: etwa wenn der Stammtisch einmal am Mittwoch ist. Der Termin folgt späteren Änderungen an der Serie dann nicht mehr.
+- **Dieser und alle folgenden Termine**: etwa eine neue Uhrzeit ab Januar. Frühere Termine bleiben, wie sie sind.
+- **Alle kommenden Termine der Serie**: Vergangene und einzeln geänderte Termine bleiben unverändert.
+
+Eine geänderte Wiederholung (anderer Wochentag, Ende, ausgelassene Termine) gilt immer für mehrere Termine. Fallen dadurch Termine weg, löscht Vereint sie. Hat dort schon jemand zu- oder abgesagt, geschrieben, gebucht oder einen Moment gestartet, wird der Termin stattdessen abgesagt, und die Zugesagten bekommen eine Mitteilung.
+
+**Status Abgesagt** mit **Nur dieser Termin** lässt einen Abend ausfallen. Mit **Dieser und alle folgenden Termine** endet die Serie.
+
+Im Reiter **Teilnehmer** lädt **Auch zu allen folgenden Terminen einladen** gleich für die ganze restliche Serie ein. Im Reiter **Getränke & Speisen** übernimmt **Getränke und Speisen in alle folgenden Termine übernehmen** die Auswahl dieses Abends. Neue Termine übernehmen sie ohnehin vom letzten Termin.
+
+Ein einzelnes Event wird zur Serie, wenn du unter **Wiederholung** einen Rhythmus wählst und speicherst.
+
+<br clear="right">
+
 <img src="bilder/v-event-teilnehmer.png" alt="Teilnehmer und Einladungen" width="300" align="right">
 
 Reiter **Teilnehmer**: alle Eingeladenen mit ihrer Antwort (Zugesagt, Vielleicht, Abgesagt, Offen). **Entfernen** nimmt jemanden heraus.

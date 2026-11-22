@@ -87,6 +87,30 @@ Danach verwaltest du dein Event wie im [Leitfaden Vorstand](03-vorstand.md#ein-e
 
 <br clear="right">
 
+### Wiederkehrende Events
+
+<img src="bilder/m-event-wiederholung.png" alt="Wiederholung beim Anlegen eines Events" width="300" align="right">
+
+Der Stammtisch ist jeden Dienstag, der Wirt öffnet jeden letzten Samstag im Monat? Dann lege das Event einmal als Serie an.
+
+1. Beim Anlegen **Beginn** auf den ersten Termin setzen.
+2. Unter **Wiederholung** → **Wiederholen** eine Vorlage wählen, zum Beispiel **Wöchentlich am Dienstag**, **Alle 2 Wochen am Dienstag**, **Monatlich am letzten Samstag**, **Monatlich am 15.** oder **Jährlich am 24. November**. Die Vorlagen passen sich dem Beginn an.
+3. **Benutzerdefiniert …** stellt alles frei ein: alle N Tage, Wochen, Monate oder Jahre, mehrere Wochentage, der wievielte Wochentag im Monat (1. bis 5. oder Letzter, auch mehrere, etwa 1. und 3. Donnerstag), ein Tag im Monat oder der letzte Tag und bei jährlichen Serien die Monate.
+4. **Unregelmäßig: eigene Termine wählen** passt, wenn es keinen festen Rhythmus gibt: Füge die Tage einfach unter **Weitere Termine** hinzu.
+5. **Ende**: **Nie**, **Nach Anzahl Terminen** oder **Am Datum**.
+6. **Termine auslassen** für Feiertage oder den Urlaub des Wirts, **Zusätzliche Termine** für Sondertermine.
+7. **Einladung verschicken**: wie viele Tage vor jedem Termin die Eingeladenen ihre Einladung bekommen (Standard 7 Tage).
+
+Unten zeigt die Vorschau die Regel in Worten und die nächsten Termine. Jeder Termin ist danach ein eigenes Event mit eigener Zu- und Absage, eigenem Chat, eigener Erinnerung und eigener Statistik. Alle beginnen zur gleichen Uhrzeit, auch nach der Zeitumstellung.
+
+<br clear="right">
+
+<img src="bilder/m-events-serie.png" alt="Eventliste mit Serien" width="300" align="right">
+
+In der Eventliste steht von jeder Serie nur der nächste Termin, darunter **Weitere Termine** zum direkten Öffnen. Die Eventseite zeigt den Rhythmus (etwa „Wöchentlich am Dienstag“) und die nächsten Termine der Serie. Im Kalender trägt jeder Termin ein Wiederholungssymbol.
+
+<br clear="right">
+
 ## Chat
 
 <img src="bilder/m-chat.png" alt="Chatübersicht" width="300" align="right">

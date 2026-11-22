@@ -246,4 +246,53 @@ describe('EventManageComponent', () => {
     component.saveEvent();
     expect(serviceStub['updateEvent'].mock.calls[0][1].statisticsEnabled).toBe(true);
   });
+
+  it('asks which dates of a series to change and sends the scope', async () => {
+    const series = {
+      id: 's-1',
+      rrule: 'FREQ=WEEKLY;BYDAY=TU',
+      frequency: 'WEEKLY' as const,
+      interval: 1,
+      weekdays: ['TU' as const],
+      positions: [],
+      monthDays: [],
+      months: [],
+      count: null,
+      until: null,
+      extraDates: [],
+      excludedDates: [],
+      inviteLeadDays: 7,
+      startsOn: '2026-12-01',
+      timeZone: 'Europe/Berlin',
+      occurrenceDate: '2026-12-01',
+      detached: false,
+      inviteAllMembers: false,
+      upcoming: [],
+    };
+    const seriesEvent = event({ status: 'published', startsAt: '2026-12-01T18:30:00Z', series });
+    serviceStub['getEvent'] = vi.fn(() => of(seriesEvent));
+    serviceStub['updateEvent'] = vi.fn(() => of(seriesEvent));
+    const fixture = await createFixture();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('[data-testid="manage-series"]')?.textContent).toContain('Wöchentlich am Dienstag');
+
+    const cmp = fixture.componentInstance as unknown as {
+      saveEvent(): void;
+      scope: string;
+      confirmScope(): void;
+      scopeOpen(): boolean;
+    };
+    cmp.saveEvent();
+    fixture.detectChanges();
+    expect(cmp.scopeOpen()).toBe(true);
+    expect(root.querySelector('[data-testid="series-scope"]')?.textContent).toContain('Dieser und alle folgenden Termine');
+    expect(cmp.scope).toBe('this');
+
+    cmp.scope = 'all';
+    cmp.confirmScope();
+    const payload = serviceStub['updateEvent'].mock.calls[0][1];
+    expect(payload.scope).toBe('all');
+    expect(payload.recurrence).toBeUndefined();
+    expect(payload.inviteOnPublish).toBeUndefined();
+  });
 });

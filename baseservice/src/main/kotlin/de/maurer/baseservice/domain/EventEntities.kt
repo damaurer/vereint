@@ -5,6 +5,8 @@ import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
 import java.util.UUID
 
 @Entity
@@ -53,6 +55,19 @@ class EventEntity(
     /** „Statistik für dieses Event“: aus heißt, im Event wird nichts erfasst. */
     @Column(name = "statistics_enabled", nullable = false)
     var statisticsEnabled: Boolean = true,
+
+    /** Serie, zu der dieser Termin gehört; `null` bei einem einzelnen Event. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "series_id")
+    var series: EventSeriesEntity? = null,
+
+    /** Ursprünglicher Tag des Termins in der Serie; bleibt beim Verschieben gleich. */
+    @Column(name = "series_date")
+    var seriesDate: LocalDate? = null,
+
+    /** Einzeln bearbeitet: Änderungen an der ganzen Serie lassen diesen Termin in Ruhe. */
+    @Column(name = "series_detached", nullable = false)
+    var seriesDetached: Boolean = false,
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -190,4 +205,111 @@ class EventGuestEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
+) : StammtischScoped()
+
+/**
+ * Wiederkehrendes Event: Rhythmus nach RFC 5545 ([rrule], leer = nur eigene
+ * Termine) samt Vorlage für jeden Termin. Die Termine selbst sind normale
+ * [EventEntity]s mit Verweis auf die Serie.
+ */
+@Entity
+@Table(name = "event_series")
+@EntityListeners(AuditingEntityListener::class)
+class EventSeriesEntity(
+    @Id
+    @Column(name = "id", nullable = false)
+    var id: UUID = UUID.randomUUID(),
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    var owner: UserEntity? = null,
+
+    @Column(name = "title", length = 255, nullable = false)
+    var title: String = "",
+
+    @Column(name = "description")
+    var description: String? = null,
+
+    @Column(name = "location", length = 255)
+    var location: String? = null,
+
+    /** Beginn der Serie (Anker für Intervalle wie „alle 2 Wochen“). */
+    @Column(name = "starts_on", nullable = false)
+    var startsOn: LocalDate = LocalDate.now(),
+
+    /** Ortszeit des Beginns jedes Termins in [timeZone]. */
+    @Column(name = "start_time", nullable = false)
+    var startTime: LocalTime = LocalTime.of(19, 0),
+
+    @Column(name = "duration_minutes")
+    var durationMinutes: Int? = null,
+
+    @Column(name = "time_zone", length = 64, nullable = false)
+    var timeZone: String = "Europe/Berlin",
+
+    @Column(name = "rrule", length = 500)
+    var rrule: String? = null,
+
+    /** Zusätzliche Termine, ISO-Daten durch Komma getrennt. */
+    @Column(name = "extra_dates")
+    var extraDates: String? = null,
+
+    /** Ausgelassene Termine, ISO-Daten durch Komma getrennt. */
+    @Column(name = "excluded_dates")
+    var excludedDates: String? = null,
+
+    /** Status neuer Termine: `draft` oder `published`. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 16, nullable = false)
+    var status: EventStatus = EventStatus.published,
+
+    /** Einladung so viele Tage vor jedem Termin; `null` = sofort. */
+    @Column(name = "invite_lead_days")
+    var inviteLeadDays: Int? = null,
+
+    @Column(name = "reminder_hours_before")
+    var reminderHoursBefore: Int? = null,
+
+    @Column(name = "statistics_enabled", nullable = false)
+    var statisticsEnabled: Boolean = true,
+
+    @Column(name = "invite_all_members", nullable = false)
+    var inviteAllMembers: Boolean = false,
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: Instant = Instant.now(),
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: Instant = Instant.now(),
+
+    @Version
+    @Column(name = "version", nullable = false)
+    var version: Long = 0
+) : StammtischScoped()
+
+/** Wer zu jedem neuen Termin einer Serie eingeladen wird. */
+@Entity
+@Table(
+    name = "event_series_invitees",
+    uniqueConstraints = [UniqueConstraint(name = "uk_event_series_invitees_series_user", columnNames = ["series_id", "user_id"])]
+)
+@EntityListeners(AuditingEntityListener::class)
+class EventSeriesInviteeEntity(
+    @Id
+    @Column(name = "id", nullable = false)
+    var id: UUID = UUID.randomUUID(),
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "series_id", nullable = false)
+    var series: EventSeriesEntity? = null,
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    var user: UserEntity? = null,
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: Instant = Instant.now()
 ) : StammtischScoped()

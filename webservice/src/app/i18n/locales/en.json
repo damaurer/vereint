@@ -1816,6 +1816,146 @@
       "tab": "Statistics",
       "switch": "Statistics for this event",
       "hint": "Off means nothing is recorded in this event."
+    },
+    "recurrence": {
+      "title": "Recurrence",
+      "repeat": "Repeat",
+      "hint": "Every date is its own event with its own replies, chat, reminder and statistics.",
+      "preset": {
+        "none": "Does not repeat",
+        "daily": "Daily",
+        "workdays": "Every weekday (Mon–Fri)",
+        "weekly": "Weekly on {weekday}",
+        "biweekly": "Every 2 weeks on {weekday}",
+        "monthlyNth": "Monthly on the {nth} {weekday}",
+        "monthlyLast": "Monthly on the last {weekday}",
+        "monthlyDay": "Monthly on day {day}",
+        "monthlyLastDay": "Monthly on the last day",
+        "yearly": "Yearly on {date}",
+        "irregular": "Irregular: pick your own dates",
+        "custom": "Custom …"
+      },
+      "every": "Every",
+      "unit": {
+        "DAILY": "days",
+        "WEEKLY": "weeks",
+        "MONTHLY": "months",
+        "YEARLY": "years"
+      },
+      "unitLabel": "Frequency",
+      "intervalLabel": "Interval",
+      "weekdays": "On these weekdays",
+      "monthlyMode": "In the month",
+      "modeDay": "On a day of the month",
+      "modeWeekday": "On weekdays",
+      "monthDay": "Day",
+      "lastDay": "Last day",
+      "positions": "Which",
+      "months": "In these months",
+      "end": "Ends",
+      "endNever": "Never",
+      "endCount": "After a number of dates",
+      "endUntil": "On a date",
+      "count": "Number of dates",
+      "until": "Last date no later than",
+      "extra": "Additional dates",
+      "extraIrregular": "More dates",
+      "extraHint": "Dates outside the rhythm, e.g. a special date.",
+      "excluded": "Skip dates",
+      "excludedHint": "For example public holidays or the landlord's vacation.",
+      "add": "Add",
+      "removeDate": "Remove {date}",
+      "lead": "Send invitations",
+      "leadDays": {
+        "one": "1 day before each date",
+        "other": "{count} days before each date"
+      },
+      "leadNow": "Right away for all created dates",
+      "preview": "Next dates",
+      "previewMore": "… and more",
+      "previewEmpty": "This recurrence does not produce any date.",
+      "previewLoading": "Calculating dates …",
+      "and": "and",
+      "position": {
+        "1": "1st",
+        "2": "2nd",
+        "3": "3rd",
+        "4": "4th",
+        "5": "5th",
+        "last": "last"
+      },
+      "summary": {
+        "none": "Once",
+        "irregular": {
+          "one": "Own dates (1 date)",
+          "other": "Own dates ({count} dates)"
+        },
+        "daily": {
+          "one": "Daily",
+          "other": "Every {count} days"
+        },
+        "workdays": "Every weekday (Mon–Fri)",
+        "weekly": {
+          "one": "Weekly on {weekdays}",
+          "other": "Every {count} weeks on {weekdays}"
+        },
+        "monthly": {
+          "one": "Monthly {when}",
+          "other": "Every {count} months {when}"
+        },
+        "yearly": {
+          "one": "Yearly {when} in {months}",
+          "other": "Every {count} years {when} in {months}"
+        },
+        "dayOfMonth": "on day {day}",
+        "lastDay": "on the last day",
+        "nthWeekday": "on the {positions} {weekdays}",
+        "count": {
+          "one": "1 date",
+          "other": "{count} dates"
+        },
+        "until": "until {date}",
+        "yearlyDate": {
+          "one": "Yearly on {dates}",
+          "other": "Every {count} years on {dates}"
+        }
+      },
+      "errors": {
+        "interval": "The interval must be between 1 and 99.",
+        "weekdays": "Please pick at least one weekday.",
+        "positions": "Please pick which weekday of the month is meant.",
+        "months": "Please pick at least one month.",
+        "count": "The number must be between 1 and 500.",
+        "until": "Please enter the end date."
+      },
+      "badge": "Series",
+      "series": "Recurring",
+      "nextDates": "Next dates of the series",
+      "moreDates": "More dates:",
+      "detached": "This date was changed individually.",
+      "scope": {
+        "title": "Change recurring event",
+        "question": "Which dates should change?",
+        "cancelQuestion": "Which dates should be cancelled?",
+        "this": "This date only",
+        "following": "This and all following dates",
+        "all": "All upcoming dates of the series",
+        "thisHint": "This date will no longer follow later changes to the series.",
+        "followingHint": "Earlier dates stay as they are.",
+        "allHint": "Past and individually changed dates stay as they are.",
+        "ruleHint": "A changed recurrence only applies to several dates.",
+        "confirm": "Save",
+        "removedHint": "Dates that no longer fit are deleted. If someone already replied, chatted or booked there, they are cancelled instead."
+      },
+      "inviteFollowing": "Also invite to all following dates",
+      "copyMenu": "Copy drinks and food to all following dates",
+      "copyMenuDone": {
+        "one": "Copied to 1 following date.",
+        "other": "Copied to {count} following dates."
+      },
+      "makeSeries": "Repeat",
+      "calendarHint": "Recurring date",
+      "chipLast": "Last"
     }
   },
   "statistics": {
