@@ -94,7 +94,8 @@ class CalendarService(
                     topicName = null,
                     active = false,
                     stammtischId = groupId,
-                    stammtischName = membership.stammtischName
+                    stammtischName = membership.stammtischName,
+                    seriesId = event.series?.id?.toString()
                 )
             }
 

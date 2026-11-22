@@ -9,6 +9,8 @@ import { TranslatePipe } from '../i18n';
 import { translate } from '../i18n/i18n.service';
 import { REMINDER_HOUR_OPTIONS, localInputToIso, reminderLabelKey } from './event-datetime';
 import { MemberPickerComponent } from './member-picker.component';
+import { RecurrenceEditorComponent } from './recurrence-editor.component';
+import { emptyRecurrence, toRecurrencePayload } from './recurrence';
 
 /** Wann Eingeladene benachrichtigt werden. */
 export type InvitationTiming = 'onPublish' | 'at';
@@ -24,7 +26,7 @@ export type InvitationTiming = 'onPublish' | 'at';
  */
 @Component({
   selector: 'app-event-create',
-  imports: [FormsModule, RouterLink, IconComponent, MemberPickerComponent, TranslatePipe],
+  imports: [FormsModule, RouterLink, IconComponent, MemberPickerComponent, RecurrenceEditorComponent, TranslatePipe],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="create-title">
@@ -57,6 +59,8 @@ export type InvitationTiming = 'onPublish' | 'at';
             </label>
           </div>
 
+          <app-recurrence-editor [form]="recurrence" [start]="form.startsAt" />
+
           <app-member-picker
             [legend]="'events.create.invitees' | t"
             [members]="directory()"
@@ -67,6 +71,7 @@ export type InvitationTiming = 'onPublish' | 'at';
             <p class="create-error" role="alert">{{ error }}</p>
           }
 
+          @if (recurrence.preset === 'none') {
           <fieldset class="create-fieldset">
             <legend>{{ 'events.create.notifyHeading' | t }}</legend>
             <label class="create-radio">
@@ -84,6 +89,7 @@ export type InvitationTiming = 'onPublish' | 'at';
               </label>
             }
           </fieldset>
+          }
 
           <label class="create-field">
             <span>{{ 'events.create.reminder' | t }}</span>
@@ -215,6 +221,8 @@ export class EventCreateComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly reminderOptions = REMINDER_HOUR_OPTIONS;
 
+  /** Wiederholung; „nicht wiederholen“ legt ein einzelnes Event an. */
+  protected readonly recurrence = emptyRecurrence();
   protected selectedIds: string[] = [];
   protected inviteAll = false;
   protected readonly form = {
@@ -249,8 +257,10 @@ export class EventCreateComponent implements OnInit {
     if (!startsAt) return translate('events.create.errors.start');
     const endsAt = localInputToIso(this.form.endsAt);
     if (endsAt && endsAt < startsAt) return translate('events.create.errors.end');
+    const recurrence = toRecurrencePayload(this.recurrence);
+    if (typeof recurrence === 'string') return recurrence;
     let invitationNotifyAt: string | null = null;
-    if (this.form.timing === 'at') {
+    if (!recurrence && this.form.timing === 'at') {
       invitationNotifyAt = localInputToIso(this.form.notifyAt);
       if (!invitationNotifyAt) return translate('events.create.errors.notifyAt');
     }
@@ -265,6 +275,7 @@ export class EventCreateComponent implements OnInit {
       reminderHoursBefore: this.form.reminderHours,
       statisticsEnabled: this.form.statisticsEnabled,
     };
+    if (recurrence) payload.recurrence = recurrence;
     if (this.inviteAll) payload.inviteAllMembers = true;
     else if (this.selectedIds.length > 0) payload.inviteUserIds = [...this.selectedIds];
     return payload;

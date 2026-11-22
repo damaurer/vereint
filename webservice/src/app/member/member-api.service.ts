@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClient } from '../api/api-client.service';
 import type {
+  RecurrencePayload,
+  RecurrencePreview,
   ChatMessageDto,
   ConversationSummary,
   CreateEventPayload,
@@ -72,6 +74,11 @@ export class MemberApiService {
   /** Legt ein Event an (`POST /api/v1/events`); jedes Mitglied darf das. */
   createEvent(payload: CreateEventPayload): Observable<EventDetail> {
     return this.api.post<EventDetail>('/events', payload);
+  }
+
+  /** Nächste Termine einer Wiederholung (`POST /api/v1/events/recurrence-preview`). */
+  previewRecurrence(startsAt: string, recurrence: RecurrencePayload, limit = 8): Observable<RecurrencePreview> {
+    return this.api.post<RecurrencePreview>('/events/recurrence-preview', { startsAt, recurrence, limit });
   }
 
   /** Eigene Antwort auf eine Einladung (`PUT /api/v1/events/{id}/rsvp`). */

@@ -56,7 +56,9 @@ data class CalendarEntryDto(
     val topicName: String?,
     val active: Boolean,
     val stammtischId: String,
-    val stammtischName: String
+    val stammtischName: String,
+    /** Serie, falls das Event ein Termin einer Wiederholung ist. */
+    val seriesId: String? = null
 )
 
 data class CalendarDto(

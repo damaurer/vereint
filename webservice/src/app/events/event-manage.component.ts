@@ -1,17 +1,37 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, forkJoin, of, type Observable } from 'rxjs';
 import { AsyncState } from '../member/async-state';
 import { eventStatusLabel, formatDateTime, formatMoney } from '../member/member-format';
 import { describeApiError } from '../api/api-client.service';
-import type { DirectoryMember, EventDetail, EventParticipant, FoodSummary, MemberProfile } from '../api/api.types';
+import type {
+  DirectoryMember,
+  EventDetail,
+  EventParticipant,
+  FoodSummary,
+  InviteMembersPayload,
+  MemberProfile,
+} from '../api/api.types';
 import type { DrinkSummaryDto } from '../catalog/catalog-api.service';
 import type { SublistSummaryDto } from '../sublists/sublists-api.service';
 import { rsvpLabelKey, rsvpTone } from '../member/member-api.service';
 import { REMINDER_HOUR_OPTIONS, isoToLocalInput, localInputToIso, reminderLabelKey } from './event-datetime';
 import { MemberPickerComponent } from './member-picker.component';
+import { RecurrenceEditorComponent } from './recurrence-editor.component';
 import {
+  describeRecurrence,
+  emptyRecurrence,
+  fromSeries,
+  localDateOf,
+  sameRecurrence,
+  seriesPayload,
+  toRecurrencePayload,
+  type RecurrenceForm,
+} from './recurrence';
+import {
+  IconComponent,
+  ModalComponent,
   StatusBadgeComponent,
   type StatusTone,
 } from '../ui';
@@ -23,6 +43,7 @@ import type {
   EventFood,
   EventStatus,
   Invite,
+  SeriesScope,
   UpdateEventPayload,
 } from './event-manage.types';
 import { StateComponent } from '../ui/state.component';
@@ -71,7 +92,17 @@ type ManageTab = (typeof MANAGE_TABS)[number];
  */
 @Component({
   selector: 'app-event-manage',
-  imports: [StateComponent, FormsModule, RouterLink, StatusBadgeComponent, MemberPickerComponent, TranslatePipe],
+  imports: [
+    StateComponent,
+    FormsModule,
+    RouterLink,
+    StatusBadgeComponent,
+    MemberPickerComponent,
+    RecurrenceEditorComponent,
+    ModalComponent,
+    IconComponent,
+    TranslatePipe,
+  ],
   template: `
     <main class="page-shell">
       <section class="page-card member-card" aria-labelledby="manage-title">
@@ -105,6 +136,17 @@ type ManageTab = (typeof MANAGE_TABS)[number];
               }
             </span>
           </p>
+          @if (head.event.series; as series) {
+            <p class="manage-series" data-testid="manage-series">
+              <vereint-icon name="repeat" />
+              <span>
+                {{ seriesSummary(series) }}
+                @if (series.detached) {
+                  <small class="member-muted">· {{ 'events.recurrence.detached' | t }}</small>
+                }
+              </span>
+            </p>
+          }
 
           @if (!isManager()) {
             <div class="state-card state-error" role="alert">
@@ -158,6 +200,7 @@ type ManageTab = (typeof MANAGE_TABS)[number];
                 <span>{{ 'events.manage.details.end' | t }}</span>
                 <input type="datetime-local" name="endsAt" [(ngModel)]="form.endsAt" />
               </label>
+              <app-recurrence-editor [form]="recurrence" [start]="form.startsAt" />
               <label class="manage-field">
                 <span>{{ 'events.manage.details.status' | t }}</span>
                 <select name="status" [(ngModel)]="form.status">
@@ -166,6 +209,7 @@ type ManageTab = (typeof MANAGE_TABS)[number];
                   }
                 </select>
               </label>
+              @if (recurrence.preset === 'none') {
               <fieldset class="manage-fieldset">
                 <legend>{{ 'events.create.notifyHeading' | t }}</legend>
                 <label class="manage-radio">
@@ -183,6 +227,7 @@ type ManageTab = (typeof MANAGE_TABS)[number];
                   </label>
                 }
               </fieldset>
+              }
               <label class="manage-field">
                 <span>{{ 'events.create.reminder' | t }}</span>
                 <select name="reminder" [(ngModel)]="form.reminderHours">
@@ -200,6 +245,41 @@ type ManageTab = (typeof MANAGE_TABS)[number];
               </label>
               <button type="submit" class="member-button" [disabled]="busy()">{{ 'events.manage.details.save' | t }}</button>
             </form>
+
+            <vereint-modal [open]="scopeOpen()" [title]="'events.recurrence.scope.title' | t" (closed)="scopeOpen.set(false)">
+              <form class="manage-form" data-testid="series-scope" (ngSubmit)="confirmScope()">
+                <fieldset class="manage-fieldset">
+                  <legend>{{ (form.status === 'cancelled' ? 'events.recurrence.scope.cancelQuestion' : 'events.recurrence.scope.question') | t }}</legend>
+                  @for (option of scopeOptions; track option) {
+                    <label class="manage-radio manage-scope">
+                      <input
+                        type="radio"
+                        name="seriesScope"
+                        [value]="option"
+                        [(ngModel)]="scope"
+                        [disabled]="!scopeAllowed(option)"
+                      />
+                      <span>
+                        {{ 'events.recurrence.scope.' + option | t }}<br />
+                        <small class="member-muted">{{ 'events.recurrence.scope.' + option + 'Hint' | t }}</small>
+                      </span>
+                    </label>
+                  }
+                </fieldset>
+                @if (ruleChanged()) {
+                  <p class="member-muted">{{ 'events.recurrence.scope.ruleHint' | t }}</p>
+                }
+                @if (scope !== 'this') {
+                  <p class="member-muted">{{ 'events.recurrence.scope.removedHint' | t }}</p>
+                }
+                <div class="manage-scope-actions">
+                  <button type="button" class="member-button-outline" (click)="scopeOpen.set(false)">{{ 'common.cancel' | t }}</button>
+                  <button type="submit" class="member-button" data-testid="series-scope-confirm" [disabled]="busy()">
+                    {{ 'events.recurrence.scope.confirm' | t }}
+                  </button>
+                </div>
+              </form>
+            </vereint-modal>
 
             }
 
@@ -244,6 +324,12 @@ type ManageTab = (typeof MANAGE_TABS)[number];
                   [(selected)]="inviteIds"
                   [(allMembers)]="inviteAll"
                 />
+                @if (head.event.series) {
+                  <label class="manage-field manage-check">
+                    <input type="checkbox" name="inviteFollowing" data-testid="invite-following" [(ngModel)]="inviteFollowing" />
+                    <span>{{ 'events.recurrence.inviteFollowing' | t }}</span>
+                  </label>
+                }
                 <button
                   type="submit"
                   class="member-button"
@@ -254,6 +340,17 @@ type ManageTab = (typeof MANAGE_TABS)[number];
               </form>
 
               } @else if (tab() === 'drinks') {
+              @if (head.event.series) {
+                <button
+                  type="button"
+                  class="member-button-outline manage-copy-menu"
+                  data-testid="copy-menu"
+                  [disabled]="busy()"
+                  (click)="copyMenu()"
+                >
+                  <vereint-icon name="repeat" /> {{ 'events.recurrence.copyMenu' | t }}
+                </button>
+              }
               <!-- Eventgetränke -->
               <h2 class="member-subtitle">{{ 'events.manage.drinks.heading' | t: { count: data.drinks.length } }}</h2>
               @if (data.drinks.length === 0) {
@@ -541,6 +638,48 @@ type ManageTab = (typeof MANAGE_TABS)[number];
         gap: 0.5rem;
         min-height: 2.5rem;
       }
+      .manage-scope {
+        align-items: flex-start;
+        padding: 0.35rem 0;
+      }
+      .manage-scope input {
+        margin-top: 0.3rem;
+      }
+      .manage-series {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin: 0 0 var(--space-3, 1rem);
+        color: var(--color-text-muted);
+        font-weight: 600;
+      }
+      .manage-scope-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: flex-end;
+      }
+      .manage-scope-actions button,
+      .manage-copy-menu {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        min-height: 2.75rem;
+      }
+      .manage-copy-menu {
+        margin-bottom: var(--space-3, 1rem);
+      }
+      .member-button-outline {
+        padding: 0 1rem;
+        background: transparent;
+        color: var(--color-text);
+        border: 1px solid var(--color-border-dark);
+        border-radius: 0.5rem;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
       .manage-invite {
         flex-direction: column;
         align-items: stretch;
@@ -577,8 +716,9 @@ type ManageTab = (typeof MANAGE_TABS)[number];
 export class EventManageComponent implements OnInit, OnDestroy {
   private readonly service = inject(EventManageService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
-  protected readonly eventId = this.route.snapshot.paramMap.get('eventId') ?? '';
+  protected eventId = this.route.snapshot.paramMap.get('eventId') ?? '';
   protected readonly statusValues = EVENT_STATUS_VALUES;
   protected readonly tabs = MANAGE_TABS;
   protected readonly tab = signal<ManageTab>('details');
@@ -616,6 +756,15 @@ export class EventManageComponent implements OnInit, OnDestroy {
   protected readonly reminderOptions = REMINDER_HOUR_OPTIONS;
   protected inviteIds: string[] = [];
   protected inviteAll = false;
+  /** Bei Serien: auch zu allen folgenden Terminen einladen. */
+  protected inviteFollowing = false;
+  /** Wiederholung im Stammdatenformular. */
+  protected recurrence: RecurrenceForm = emptyRecurrence();
+  /** Auswahl „nur dieser / folgende / alle“ beim Speichern einer Serie. */
+  protected readonly scopeOpen = signal(false);
+  protected readonly scopeOptions: readonly SeriesScope[] = ['this', 'following', 'all'];
+  protected scope: SeriesScope = 'this';
+  private pendingUpdate: UpdateEventPayload | null = null;
   protected drinkForm = { drinkId: '', price: '', costPrice: '', currency: '' };
   protected foodForm = { foodId: '', price: '', costPrice: '', currency: '' };
   protected sublistId = '';
@@ -703,6 +852,7 @@ export class EventManageComponent implements OnInit, OnDestroy {
         this.form.notifyAt = isoToLocalInput(head.event.invitationNotifyAt);
         this.form.reminderHours = head.event.reminderHoursBefore || null;
         this.form.statisticsEnabled = head.event.statisticsEnabled ?? true;
+        this.recurrence = head.event.series ? fromSeries(head.event.series) : emptyRecurrence();
         if (this.isManager()) {
           this.loadSections();
         }
@@ -780,13 +930,96 @@ export class EventManageComponent implements OnInit, OnDestroy {
       this.actionError.set(payload);
       return;
     }
+    const recurrence = toRecurrencePayload(this.recurrence);
+    if (typeof recurrence === 'string') {
+      this.actionError.set(recurrence);
+      return;
+    }
+    const event = this.header.data()?.event;
+    if (event?.series) {
+      // Termin einer Serie: erst fragen, welche Termine sich ändern sollen.
+      this.pendingUpdate = payload;
+      this.scope = this.ruleChanged() ? 'following' : 'this';
+      this.scopeOpen.set(true);
+      return;
+    }
+    if (recurrence) {
+      // Ein einzelnes Event wird ab hier zur Serie.
+      payload.scope = 'following';
+      payload.recurrence = recurrence;
+    }
+    this.sendUpdate(payload);
+  }
+
+  /** Hat sich die Wiederholung gegenüber der gespeicherten Serie geändert? */
+  protected ruleChanged(): boolean {
+    const series = this.header.data()?.event.series;
+    if (!series) return false;
+    const current = toRecurrencePayload(this.recurrence);
+    if (current === null || typeof current === 'string') return false;
+    return !sameRecurrence(current, seriesPayload(series));
+  }
+
+  /** „Nur dieser“ geht nicht mit neuer Regel; mehrere Termine nur mit Entwurf/Veröffentlicht/Abgesagt. */
+  protected scopeAllowed(scope: SeriesScope): boolean {
+    if (scope === 'this') return !this.ruleChanged();
+    return ['draft', 'published', 'cancelled'].includes(this.form.status);
+  }
+
+  protected confirmScope(): void {
+    const payload = this.pendingUpdate;
+    if (!payload || !this.scopeAllowed(this.scope)) return;
+    this.scopeOpen.set(false);
+    if (this.scope === 'this') {
+      this.sendUpdate({ ...payload, scope: 'this' });
+      return;
+    }
+    const { invitationNotifyAt: _at, inviteOnPublish: _onPublish, ...rest } = payload;
+    const update: UpdateEventPayload = { ...rest, scope: this.scope };
+    const recurrence = toRecurrencePayload(this.recurrence);
+    if (this.ruleChanged() && recurrence && typeof recurrence !== 'string') update.recurrence = recurrence;
+    this.sendUpdate(update);
+  }
+
+  private sendUpdate(payload: UpdateEventPayload): void {
     this.busy.set(true);
     this.actionError.set(null);
     this.service.updateEvent(this.eventId, payload).subscribe({
       next: (updated) => {
         this.busy.set(false);
+        this.pendingUpdate = null;
         this.actionInfo.set(translate('events.manage.info.detailsSaved'));
+        if (updated.id !== this.eventId) {
+          // Der Termin fiel mit der neuen Regel weg: weiter zum nächsten Termin der Serie.
+          this.eventId = updated.id;
+          void this.router.navigate(['/events', updated.id, 'manage'], { replaceUrl: true });
+          this.reload();
+          return;
+        }
         this.header.data.set({ event: updated, profile: this.header.data()!.profile });
+        this.recurrence = updated.series ? fromSeries(updated.series) : emptyRecurrence();
+      },
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.actionError.set(describeApiError(error));
+      },
+    });
+  }
+
+  /** Klartext der Serie, z. B. „Monatlich am letzten Samstag“. */
+  protected seriesSummary(series: NonNullable<EventDetail['series']>): string {
+    return describeRecurrence(seriesPayload(series), localDateOf(series.startsOn));
+  }
+
+  /** Getränke und Speisen in alle folgenden Termine übernehmen. */
+  protected copyMenu(): void {
+    this.busy.set(true);
+    this.actionError.set(null);
+    this.actionInfo.set(null);
+    this.service.copyMenuToFollowing(this.eventId).subscribe({
+      next: (result) => {
+        this.busy.set(false);
+        this.actionInfo.set(translate('events.recurrence.copyMenuDone', { count: result.updated }));
       },
       error: (error: unknown) => {
         this.busy.set(false);
@@ -798,10 +1031,12 @@ export class EventManageComponent implements OnInit, OnDestroy {
   /** Lädt die gewählten bzw. alle Mitglieder ein. */
   protected inviteMembers(): void {
     if (!this.inviteAll && this.inviteIds.length === 0) return;
-    const payload = this.inviteAll ? { allMembers: true } : { userIds: [...this.inviteIds] };
+    const payload: InviteMembersPayload = this.inviteAll ? { allMembers: true } : { userIds: [...this.inviteIds] };
+    if (this.inviteFollowing && this.header.data()?.event.series) payload.scope = 'following';
     this.runAction(this.service.inviteMembers(this.eventId, payload), translate('events.manage.info.membersInvited'));
     this.inviteIds = [];
     this.inviteAll = false;
+    this.inviteFollowing = false;
   }
 
   protected removeParticipant(userId: string): void {

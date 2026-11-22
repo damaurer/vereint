@@ -188,7 +188,12 @@ import { PersonalApiService } from './personal-api.service';
                         }}
                         · {{ formatDateTime(entry.startsAt) }}
                       </span>
-                      <span class="cal-entry-title">{{ entry.title }}</span>
+                      <span class="cal-entry-title">
+                        @if (entry.seriesId) {
+                          <vereint-icon name="repeat" [attr.aria-label]="'events.recurrence.calendarHint' | t" />
+                        }
+                        {{ entry.title }}
+                      </span>
                       @if (entry.location) {
                         <span class="cal-entry-meta">
                           {{

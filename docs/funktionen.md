@@ -48,6 +48,29 @@ Thekenterminals.
   aus der Push-Mitteilung zu- oder absagen. Wann eingeladen und erinnert wird,
   ist je Event einstellbar.
 - Jedes Event hat einen eigenen Chat für die Eingeladenen.
+- Wiederkehrende Events (Serien, angelehnt an RFC 5545 `RRULE`): täglich,
+  werktags, wöchentlich an einem oder mehreren Wochentagen, alle N Tage/Wochen/
+  Monate/Jahre, monatlich am Tag X oder am letzten Tag, monatlich am n-ten bzw.
+  letzten Wochentag (auch mehrere, z. B. 1. und 3. Donnerstag), jährlich am
+  Datum oder am n-ten Wochentag eines Monats. Ende nie, nach Anzahl oder am
+  Datum. Einzelne Termine auslassen, zusätzliche Termine ergänzen oder nur
+  eigene, unregelmäßige Termine wählen. Vorschau der nächsten Termine schon
+  beim Anlegen. Jeder Termin ist ein eigenes Event mit eigener Zu-/Absage,
+  eigenem Chat, eigener Erinnerung, eigener Statistik und eigenem Eintrag im
+  Kalender; alle Termine beginnen zur selben Ortszeit (Europe/Berlin, auch über
+  die Zeitumstellung). Angelegt werden die Termine der nächsten 12 Monate,
+  höchstens 26 kommende je Serie; ein Hintergrundjob legt alle 6 Stunden nach.
+  Die Einladung geht je Termin N Tage vorher hinaus (Standard 7).
+- Ändern wie im Kalender: **nur dieser Termin**, **dieser und alle folgenden**
+  (die Serie wird geteilt) oder **alle kommenden Termine**. Vergangene und
+  einzeln geänderte Termine bleiben unverändert. Fällt ein Termin durch eine
+  neue Regel weg, wird er gelöscht; hat dort schon jemand geantwortet,
+  gechattet, gebucht oder einen Moment gestartet, wird er stattdessen abgesagt.
+  Absagen mit „dieser und alle folgenden“ beendet die Serie. Getränke und
+  Speisen eines Termins lassen sich in alle folgenden übernehmen, neue Termine
+  übernehmen sie vom letzten Termin. Einladungen können für alle folgenden
+  Termine gelten; bei „alle Mitglieder“ kommen neue Mitglieder automatisch dazu.
+  Aus einem einzelnen Event wird über **Wiederholung** nachträglich eine Serie.
 - Gäste ohne Konto können über einen Gast-Link zu einem einzelnen Event
   eingeladen werden.
 - Fachliche Details: [docs/domains/events-and-invites.md](domains/events-and-invites.md)

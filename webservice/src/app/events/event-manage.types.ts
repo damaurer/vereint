@@ -7,7 +7,10 @@
  * Fachservice (`deny by default`).
  */
 
-import type { EventStatus } from '../api/api.types';
+import type { EventStatus, RecurrencePayload } from '../api/api.types';
+
+/** Welche Termine einer Serie eine Änderung betrifft. */
+export type SeriesScope = 'this' | 'following' | 'all';
 
 export type { EventStatus } from '../api/api.types';
 
@@ -26,6 +29,10 @@ export interface UpdateEventPayload {
   /** Erinnerung so viele Stunden vor Beginn; `0` = keine. */
   reminderHoursBefore?: number;
   statisticsEnabled?: boolean;
+  /** Bei Serien: nur dieser, dieser und folgende oder alle Termine. */
+  scope?: SeriesScope;
+  /** Neue Wiederholung (nur mit `following` oder `all`). */
+  recurrence?: RecurrencePayload;
 }
 
 /** Teilnehmerrolle innerhalb eines Events. */

@@ -51,6 +51,8 @@ export interface EventSummary {
   location?: string | null;
   /** Eigene Antwort, falls man eingeladen ist. */
   myRsvp?: RsvpStatus | null;
+  /** Serie, falls das Event ein Termin einer Wiederholung ist. */
+  seriesId?: string | null;
 }
 
 /** Antwort eines Eingeladenen; `invited` heißt: noch keine Antwort. */
@@ -86,6 +88,63 @@ export interface EventDetail {
   canManage?: boolean;
   /** „Statistik für dieses Event“; fehlt bei älteren Antworten (dann an). */
   statisticsEnabled?: boolean;
+  /** Serie, falls das Event ein Termin einer Wiederholung ist. */
+  series?: EventSeries | null;
+}
+
+/** Rhythmus einer Wiederholung (angelehnt an RFC 5545). */
+export type RecurrenceFrequency = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'NONE';
+
+/** Wochentag im RRULE-Kürzel. */
+export type WeekdayCode = 'MO' | 'TU' | 'WE' | 'TH' | 'FR' | 'SA' | 'SU';
+
+/** Wiederholung beim Anlegen/Bearbeiten (`recurrence`). */
+export interface RecurrencePayload {
+  frequency: RecurrenceFrequency;
+  interval?: number;
+  weekdays?: WeekdayCode[];
+  /** Position im Monat: 1 … 5, -1 = letzter. */
+  positions?: number[];
+  /** Tage im Monat: 1 … 31, -1 = letzter Tag. */
+  monthDays?: number[];
+  months?: number[];
+  count?: number | null;
+  /** Letzter möglicher Tag (`YYYY-MM-DD`). */
+  until?: string | null;
+  extraDates?: string[];
+  excludedDates?: string[];
+  /** Einladung so viele Tage vor jedem Termin; `null` = sofort. */
+  inviteLeadDays?: number | null;
+}
+
+/** Serie in den Eventdetails. */
+export interface EventSeries {
+  id: string;
+  rrule: string | null;
+  frequency: RecurrenceFrequency;
+  interval: number;
+  weekdays: WeekdayCode[];
+  positions: number[];
+  monthDays: number[];
+  months: number[];
+  count: number | null;
+  until: string | null;
+  extraDates: string[];
+  excludedDates: string[];
+  inviteLeadDays: number | null;
+  startsOn: string;
+  timeZone: string;
+  occurrenceDate: string | null;
+  detached: boolean;
+  inviteAllMembers: boolean;
+  upcoming: { eventId: string; startsAt: string; status: EventStatus }[];
+}
+
+/** Vorschau (`POST /api/v1/events/recurrence-preview`). */
+export interface RecurrencePreview {
+  dates: string[];
+  more: boolean;
+  rrule: string | null;
 }
 
 /** Neues Event (`POST /api/v1/events`). */
@@ -102,12 +161,16 @@ export interface CreateEventPayload {
   inviteAllMembers?: boolean;
   /** „Statistik für dieses Event“; Standard an. */
   statisticsEnabled?: boolean;
+  /** Gesetzt = wiederkehrendes Event; `startsAt` ist der erste mögliche Termin. */
+  recurrence?: RecurrencePayload;
 }
 
 /** Mitglieder einladen (`POST /api/v1/events/{id}/invitations`). */
 export interface InviteMembersPayload {
   userIds?: string[];
   allMembers?: boolean;
+  /** Bei Serien: `following` lädt auch zu allen folgenden Terminen ein. */
+  scope?: 'this' | 'following';
 }
 
 /** Eintrag des Mitgliederverzeichnisses (`GET /api/v1/users/directory`, alle Angemeldeten). */
@@ -914,6 +977,8 @@ export interface CalendarEntry {
   active: boolean;
   stammtischId: string;
   stammtischName: string;
+  /** Serie, falls das Event ein Termin einer Wiederholung ist. */
+  seriesId?: string | null;
 }
 
 export interface CalendarResponse {

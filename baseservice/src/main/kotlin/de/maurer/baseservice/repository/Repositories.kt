@@ -111,6 +111,17 @@ interface EventRepository : JpaRepository<EventEntity, UUID> {
 
     /** Events, die im Zeitraum beginnen (Statistik). */
     fun findByStartsAtBetween(from: Instant, until: Instant): List<EventEntity>
+
+    /** Termine einer Serie, nach ursprünglichem Tag sortiert. */
+    fun findBySeriesIdOrderBySeriesDateAsc(seriesId: UUID): List<EventEntity>
+}
+
+@Repository
+interface EventSeriesRepository : JpaRepository<EventSeriesEntity, UUID>
+
+@Repository
+interface EventSeriesInviteeRepository : JpaRepository<EventSeriesInviteeEntity, UUID> {
+    fun findBySeriesId(seriesId: UUID): List<EventSeriesInviteeEntity>
 }
 
 @Repository
@@ -428,6 +439,8 @@ interface ConversationMemberRepository : JpaRepository<ConversationMemberEntity,
 @Repository
 interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
     fun findByConversationIdOrderByCreatedAtAsc(conversationId: UUID): List<ChatMessageEntity>
+
+    fun countByConversationId(conversationId: UUID): Long
 
     /**
      * Nachrichten im Zeitraum für die Statistik, ohne Inhalt (nichts wird

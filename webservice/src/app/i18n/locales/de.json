@@ -1783,6 +1783,146 @@
       "tab": "Statistik",
       "switch": "Statistik für dieses Event",
       "hint": "Aus heißt: In diesem Event wird nichts erfasst."
+    },
+    "recurrence": {
+      "title": "Wiederholung",
+      "repeat": "Wiederholen",
+      "hint": "Jeder Termin ist ein eigenes Event mit eigener Zu- und Absage, eigenem Chat, eigener Erinnerung und eigener Statistik.",
+      "preset": {
+        "none": "Nicht wiederholen",
+        "daily": "Täglich",
+        "workdays": "Werktags (Mo–Fr)",
+        "weekly": "Wöchentlich am {weekday}",
+        "biweekly": "Alle 2 Wochen am {weekday}",
+        "monthlyNth": "Monatlich am {nth} {weekday}",
+        "monthlyLast": "Monatlich am letzten {weekday}",
+        "monthlyDay": "Monatlich am {day}.",
+        "monthlyLastDay": "Monatlich am letzten Tag",
+        "yearly": "Jährlich am {date}",
+        "irregular": "Unregelmäßig: eigene Termine wählen",
+        "custom": "Benutzerdefiniert …"
+      },
+      "every": "Alle",
+      "unit": {
+        "DAILY": "Tage",
+        "WEEKLY": "Wochen",
+        "MONTHLY": "Monate",
+        "YEARLY": "Jahre"
+      },
+      "unitLabel": "Rhythmus",
+      "intervalLabel": "Abstand",
+      "weekdays": "An diesen Wochentagen",
+      "monthlyMode": "Im Monat",
+      "modeDay": "Am Tag des Monats",
+      "modeWeekday": "An Wochentagen",
+      "monthDay": "Tag",
+      "lastDay": "Letzter Tag",
+      "positions": "Welche",
+      "months": "In diesen Monaten",
+      "end": "Ende",
+      "endNever": "Nie",
+      "endCount": "Nach Anzahl Terminen",
+      "endUntil": "Am Datum",
+      "count": "Anzahl Termine",
+      "until": "Letzter Termin spätestens am",
+      "extra": "Zusätzliche Termine",
+      "extraIrregular": "Weitere Termine",
+      "extraHint": "Termine außerhalb des Rhythmus, z. B. ein Sondertermin.",
+      "excluded": "Termine auslassen",
+      "excludedHint": "Zum Beispiel Feiertage oder Urlaub des Wirts.",
+      "add": "Hinzufügen",
+      "removeDate": "{date} entfernen",
+      "lead": "Einladung verschicken",
+      "leadDays": {
+        "one": "1 Tag vor jedem Termin",
+        "other": "{count} Tage vor jedem Termin"
+      },
+      "leadNow": "Sofort für alle angelegten Termine",
+      "preview": "Nächste Termine",
+      "previewMore": "… und weitere",
+      "previewEmpty": "Diese Wiederholung ergibt keinen Termin.",
+      "previewLoading": "Termine werden berechnet …",
+      "and": "und",
+      "position": {
+        "1": "1.",
+        "2": "2.",
+        "3": "3.",
+        "4": "4.",
+        "5": "5.",
+        "last": "letzten"
+      },
+      "summary": {
+        "none": "Einmalig",
+        "irregular": {
+          "one": "Eigene Termine (1 Termin)",
+          "other": "Eigene Termine ({count} Termine)"
+        },
+        "daily": {
+          "one": "Täglich",
+          "other": "Alle {count} Tage"
+        },
+        "workdays": "Werktags (Mo–Fr)",
+        "weekly": {
+          "one": "Wöchentlich am {weekdays}",
+          "other": "Alle {count} Wochen am {weekdays}"
+        },
+        "monthly": {
+          "one": "Monatlich {when}",
+          "other": "Alle {count} Monate {when}"
+        },
+        "yearly": {
+          "one": "Jährlich {when} im {months}",
+          "other": "Alle {count} Jahre {when} im {months}"
+        },
+        "dayOfMonth": "am {day}.",
+        "lastDay": "am letzten Tag",
+        "nthWeekday": "am {positions} {weekdays}",
+        "count": {
+          "one": "1 Termin",
+          "other": "{count} Termine"
+        },
+        "until": "bis {date}",
+        "yearlyDate": {
+          "one": "Jährlich am {dates}",
+          "other": "Alle {count} Jahre am {dates}"
+        }
+      },
+      "errors": {
+        "interval": "Der Abstand muss zwischen 1 und 99 liegen.",
+        "weekdays": "Bitte mindestens einen Wochentag wählen.",
+        "positions": "Bitte wählen, der wievielte Wochentag gemeint ist.",
+        "months": "Bitte mindestens einen Monat wählen.",
+        "count": "Die Anzahl muss zwischen 1 und 500 liegen.",
+        "until": "Bitte das Enddatum angeben."
+      },
+      "badge": "Serie",
+      "series": "Wiederkehrend",
+      "nextDates": "Nächste Termine der Serie",
+      "moreDates": "Weitere Termine:",
+      "detached": "Dieser Termin wurde einzeln geändert.",
+      "scope": {
+        "title": "Wiederkehrendes Event ändern",
+        "question": "Welche Termine sollen sich ändern?",
+        "cancelQuestion": "Welche Termine sollen abgesagt werden?",
+        "this": "Nur dieser Termin",
+        "following": "Dieser und alle folgenden Termine",
+        "all": "Alle kommenden Termine der Serie",
+        "thisHint": "Der Termin folgt späteren Änderungen an der Serie nicht mehr.",
+        "followingHint": "Frühere Termine bleiben, wie sie sind.",
+        "allHint": "Vergangene und einzeln geänderte Termine bleiben, wie sie sind.",
+        "ruleHint": "Eine geänderte Wiederholung gilt nur für mehrere Termine.",
+        "confirm": "Speichern",
+        "removedHint": "Wegfallende Termine werden gelöscht. Hat dort schon jemand geantwortet, gechattet oder gebucht, werden sie stattdessen abgesagt."
+      },
+      "inviteFollowing": "Auch zu allen folgenden Terminen einladen",
+      "copyMenu": "Getränke und Speisen in alle folgenden Termine übernehmen",
+      "copyMenuDone": {
+        "one": "In 1 folgenden Termin übernommen.",
+        "other": "In {count} folgende Termine übernommen."
+      },
+      "makeSeries": "Wiederholen",
+      "calendarHint": "Wiederkehrender Termin",
+      "chipLast": "Letzter"
     }
   },
   "statistics": {
