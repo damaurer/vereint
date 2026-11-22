@@ -160,6 +160,31 @@ data class MomentMapGeoJsonDto(
     val features: List<GeoJsonFeatureDto> = emptyList()
 )
 
+/**
+ * Ein Moment auf der Weltkarte aller Moments: Standort des Starters oder,
+ * wenn er keinen geteilt hat, der erste geteilte Standort eines Beitrags.
+ */
+data class MomentWorldMapPinDto(
+    val momentId: String,
+    val title: String,
+    val topicType: String,
+    val topicName: String,
+    val topicEmoji: String?,
+    val active: Boolean,
+    val eventId: String?,
+    val eventTitle: String?,
+    val creatorName: String,
+    val latitude: Double,
+    val longitude: Double,
+    /** `initiator` oder `response`: wessen Standort den Pin setzt. */
+    val locationSource: String,
+    val responsesCount: Int,
+    /** Alle geteilten Standorte des Moments (Starter und Beiträge). */
+    val locationsCount: Int,
+    val createdAt: Instant,
+    val completedAt: Instant?
+)
+
 typealias GeoJsonFeatureCollectionDto = MomentMapGeoJsonDto
 
 /**

@@ -18,6 +18,7 @@ import { AsyncState } from '../member/async-state';
 import { MemberApiService } from '../member/member-api.service';
 import { formatDateTime } from '../member/member-format';
 import { MomentMapComponent } from './moment-map.component';
+import { MomentsWorldMapComponent } from './moments-world-map.component';
 import { MomentRespondDialogComponent } from './moment-respond-dialog.component';
 import { MomentStartDialogComponent } from './moment-start-dialog.component';
 import { MomentTimelineComponent } from './moment-timeline.component';
@@ -40,6 +41,7 @@ import { translate } from '../i18n/i18n.service';
     RouterLink,
     MomentTimelineComponent,
     MomentMapComponent,
+    MomentsWorldMapComponent,
     MomentStartDialogComponent,
     MomentRespondDialogComponent,
     TranslatePipe,
@@ -71,6 +73,33 @@ import { translate } from '../i18n/i18n.service';
           </p>
         }
 
+        <!-- Ansicht: Übersicht (Liste) oder Weltkarte aller Moments -->
+        <div class="view-toggles page-view-toggles" role="tablist" [attr.aria-label]="'moments.view.label' | t">
+          <button
+            type="button"
+            class="toggle-btn"
+            role="tab"
+            [class.is-active]="view() === 'list'"
+            [attr.aria-selected]="view() === 'list'"
+            (click)="setView('list')"
+          >
+            <vereint-icon name="moments" /> {{ 'moments.view.list' | t }}
+          </button>
+          <button
+            type="button"
+            class="toggle-btn"
+            role="tab"
+            [class.is-active]="view() === 'map'"
+            [attr.aria-selected]="view() === 'map'"
+            (click)="setView('map')"
+          >
+            <vereint-icon name="location" /> {{ 'moments.view.map' | t }}
+          </button>
+        </div>
+
+        @if (view() === 'map') {
+          <app-moments-world-map [eventId]="routeEventId()" (openMoment)="openFromMap($event)" />
+        } @else {
         <!-- Push-Notification Banner / Schnell-Beitreten -->
         @if (pushJoinBanner(); as banner) {
           <div class="push-alert-banner" role="alert">
@@ -312,6 +341,7 @@ import { translate } from '../i18n/i18n.service';
               </ul>
             </section>
           }
+        }
         }
       </section>
 
@@ -607,6 +637,15 @@ import { translate } from '../i18n/i18n.service';
         cursor: pointer;
         transition: background-color 0.2s ease;
       }
+      .page-view-toggles {
+        align-self: flex-start;
+      }
+      .page-view-toggles .toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-height: 2.5rem;
+      }
       .toggle-btn.is-active {
         background-color: var(--color-brand);
         color: var(--color-on-brand);
@@ -758,6 +797,10 @@ export class MomentsComponent implements OnInit, OnDestroy {
   protected readonly selectedDetail = signal<MomentDetailDto | null>(null);
   protected readonly history = signal<MomentSummaryDto[]>([]);
   protected readonly activeTab = signal<'timeline' | 'map'>('timeline');
+  /** Seitenansicht: Übersicht oder Weltkarte aller Moments (`?ansicht=karte`). */
+  protected readonly view = signal<'list' | 'map'>('list');
+  /** Nach dem Öffnen aus der Weltkarte zum Moment scrollen. */
+  private scrollToDetail = false;
 
   protected readonly routeEventTitle = computed(() => {
     const id = this.routeEventId();
@@ -815,6 +858,9 @@ export class MomentsComponent implements OnInit, OnDestroy {
     this.routeEventId.set(this.route.snapshot.paramMap.get('eventId'));
 
     // Query-Parameter prüfen (z.B. ?momentId=... von Push-Benachrichtigungen)
+    if (this.route.snapshot.queryParamMap.get('ansicht') === 'karte') {
+      this.view.set('map');
+    }
     const qMomentId = this.route.snapshot.queryParamMap.get('momentId');
     if (qMomentId) {
       this.selectedSessionId.set(qMomentId);
@@ -873,7 +919,32 @@ export class MomentsComponent implements OnInit, OnDestroy {
     this.selectedSessionId.set(sessionId);
     this.loadDetailState.run(this.api.getMomentDetail(sessionId), (detail) => {
       this.selectedDetail.set(detail);
+      if (this.scrollToDetail) {
+        this.scrollToDetail = false;
+        setTimeout(() =>
+          document.getElementById('detail-title')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' }),
+        );
+      }
     });
+  }
+
+  /** Wechselt zwischen Übersicht und Weltkarte; die Adresse merkt sich die Ansicht. */
+  protected setView(view: 'list' | 'map'): void {
+    if (this.view() === view) return;
+    this.view.set(view);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { ansicht: view === 'map' ? 'karte' : null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /** Tipp auf einen Moment in der Weltkarte: Übersicht mit diesem Moment öffnen. */
+  protected openFromMap(momentId: string): void {
+    this.setView('list');
+    this.scrollToDetail = true;
+    this.selectSession(momentId);
   }
 
   protected dismissPushBanner(): void {

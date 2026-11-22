@@ -211,9 +211,6 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
                   [tone]="user.roles.includes('admin') ? 'accent' : 'default'"
                 />
               }
-              @case ('balance') {
-                <span class="admin-balance">—</span>
-              }
               @case ('status') {
                 <vereint-status-badge
                   [label]="(user.disabled ? 'admin.members.statusInactive' : 'admin.members.statusActive') | t"
@@ -369,24 +366,31 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
-        min-width: 12rem;
+        min-width: min(12rem, 100%);
+      }
+      .admin-filters .manage-field {
+        flex: 1 1 12rem;
       }
       .manage-field-grow {
         flex: 1 1 18rem;
       }
       .manage-field input,
       .manage-field select {
-        padding: 0.5rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 0.5rem;
+        min-height: 2.75rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        background-color: var(--color-surface-raised);
+        color: inherit;
         font: inherit;
+        min-width: 0;
       }
       .admin-fieldset {
         display: flex;
         flex-wrap: wrap;
         gap: 0.75rem;
-        border: 1px solid #cbd5e1;
-        border-radius: 0.5rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
         padding: 0.5rem 0.75rem;
       }
       .admin-check {
@@ -395,7 +399,7 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
         gap: 0.35rem;
       }
       .admin-disabled {
-        color: #b91c1c;
+        color: var(--color-danger);
       }
       .admin-name {
         --avatar-size: 2.25rem;
@@ -403,9 +407,6 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
         align-items: center;
         gap: 0.65rem;
         font-weight: 700;
-      }
-      .admin-balance {
-        font-weight: 600;
       }
       .admin-pagination {
         display: flex;
@@ -423,11 +424,11 @@ function roleLabel(code: string, groupRoles: readonly StammtischRoleDto[]): stri
         display: block;
       }
       .manage-action-error {
-        color: #b91c1c;
+        color: var(--color-danger);
         font-weight: 600;
       }
       .manage-action-info {
-        color: #15803d;
+        color: var(--color-success);
         font-weight: 600;
       }
       .sr-only {
@@ -523,13 +524,12 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   /** Spalten der Mitgliedertabelle (geteilte `DataTable`, Zellen via Vorlage). */
   protected readonly columns = computed<DataTableColumn<UserSummary>[]>(() => [
-    { key: 'name', header: translate('admin.columns.name') },
-    { key: 'email', header: translate('admin.columns.email') },
+    { key: 'name', header: translate('admin.columns.name'), mobile: 'title' },
+    { key: 'email', header: translate('admin.columns.email'), mobile: 'full' },
     { key: 'role', header: translate('admin.columns.role') },
-    { key: 'balance', header: translate('admin.columns.balance') },
     { key: 'status', header: translate('admin.columns.status') },
     { key: 'joined', header: translate('admin.columns.joined') },
-    { key: 'actions', header: translate('admin.columns.actions') },
+    { key: 'actions', header: translate('admin.columns.actions'), mobile: 'action' },
   ]);
 
   protected readonly trackUser = (_index: number, user: UserSummary): string => user.id;

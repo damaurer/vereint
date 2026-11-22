@@ -328,12 +328,12 @@ const RSVP_PARTS: readonly { key: 'accepted' | 'maybe' | 'declined' | 'noAnswer'
                     <tbody>
                       @for (row of o.rsvpByMember; track row.memberId) {
                         <tr>
-                          <td>{{ row.displayName }}</td>
-                          <td>{{ row.accepted }}</td>
-                          <td>{{ row.maybe }}</td>
-                          <td>{{ row.declined }}</td>
-                          <td>{{ row.attended }}</td>
-                          <td><strong>{{ row.quotePercent === null ? '–' : row.quotePercent + ' %' }}</strong></td>
+                          <td data-mobile="title">{{ row.displayName }}</td>
+                          <td [attr.data-label]="'statistics.overview.table.yes' | t">{{ row.accepted }}</td>
+                          <td [attr.data-label]="'statistics.overview.rsvp.maybe' | t">{{ row.maybe }}</td>
+                          <td [attr.data-label]="'statistics.overview.table.no' | t">{{ row.declined }}</td>
+                          <td [attr.data-label]="'statistics.overview.table.attended' | t">{{ row.attended }}</td>
+                          <td [attr.data-label]="'statistics.overview.table.quote' | t"><strong>{{ row.quotePercent === null ? '–' : row.quotePercent + ' %' }}</strong></td>
                         </tr>
                       }
                     </tbody>
@@ -470,11 +470,11 @@ const RSVP_PARTS: readonly { key: 'accepted' | 'maybe' | 'declined' | 'noAnswer'
                     <tbody>
                       @for (part of o.categories; track part.category) {
                         <tr>
-                          <td><span class="category-name"><span class="stats-legend-dot" [style.background]="color(part.category)"></span>{{ 'statistics.categories.' + part.category | t }}</span></td>
-                          <td>{{ part.count }}</td>
-                          <td>{{ part.sharePercent }}&nbsp;%</td>
-                          <td>{{ fmt(part.liters, 1) }}</td>
-                          <td>{{ fmt(part.kcal) }}</td>
+                          <td data-mobile="title"><span class="category-name"><span class="stats-legend-dot" [style.background]="color(part.category)"></span>{{ 'statistics.categories.' + part.category | t }}</span></td>
+                          <td [attr.data-label]="'statistics.drinks.total' | t">{{ part.count }}</td>
+                          <td [attr.data-label]="'statistics.overview.table.share' | t">{{ part.sharePercent }}&nbsp;%</td>
+                          <td [attr.data-label]="'statistics.drinks.liters' | t">{{ fmt(part.liters, 1) }}</td>
+                          <td data-label="kcal">{{ fmt(part.kcal) }}</td>
                         </tr>
                       }
                     </tbody>

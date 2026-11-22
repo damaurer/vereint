@@ -10,6 +10,13 @@ export interface DataTableColumn<T> {
   header: string;
   /** Optionaler Textzugriff, wenn keine Zell-Vorlage genutzt wird. */
   value?: (row: T) => string;
+  /**
+   * Darstellung in der Kartenansicht schmaler Bildschirme (unter 50rem
+   * Tabellenbreite): `title` = Kopfzeile der Karte ohne Beschriftung,
+   * `action` = Schaltfläche über die volle Breite, `full` = eigene Zeile,
+   * `hidden` = in der Karte ausblenden. Ohne Angabe: Wert mit Beschriftung.
+   */
+  mobile?: 'title' | 'action' | 'full' | 'hidden';
 }
 
 /**
@@ -17,14 +24,18 @@ export interface DataTableColumn<T> {
  *
  * Reine Präsentation: Zeilen und Spalten werden übergeben; komplexe Zellen
  * (Avatar, Chips, Aktionen) werden über eine benannte Zell-Vorlage projiziert.
+ * Ist der verfügbare Platz schmaler als 50rem (Handy, Tablet hochkant), wird
+ * jede Zeile per Container-Query zu einer Karte (`.ui-table-stack` in
+ * `styles.css`); die Spaltenüberschrift steht dann über jedem Wert.
  */
 @Component({
   selector: 'vereint-data-table',
   standalone: true,
   imports: [NgTemplateOutlet, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'ui-table-container' },
   template: `
-    <table class="ui-table">
+    <table class="ui-table ui-table-stack">
       <thead>
         <tr>
           @for (column of columns; track column.key) {
@@ -36,7 +47,7 @@ export interface DataTableColumn<T> {
         @for (row of rows; track trackRow($index, row)) {
           <tr>
             @for (column of columns; track column.key) {
-              <td [attr.data-label]="column.header">
+              <td [attr.data-label]="column.header" [attr.data-mobile]="column.mobile ?? null">
                 @if (cellTemplate) {
                   <ng-container
                     [ngTemplateOutlet]="cellTemplate"

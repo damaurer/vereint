@@ -8,7 +8,7 @@ Jeden Bildschirm der Administration einzeln erklärt [Die App Bildschirm für Bi
 
 <img src="bilder/a-mitglieder.png" alt="Mitgliederliste" width="720">
 
-Unter **Administration** (am Rechner links unter **Verwaltung**, am Handy unter **Mehr**) stehen alle Mitglieder der Gruppe mit E-Mail, Rolle, Status und Beitrittsdatum. Die Einleitung oben nennt die Gruppe, die gerade offen ist.
+Unter **Administration** (am Rechner links unter **Verwaltung**, am Handy unter **Mehr**) stehen alle Mitglieder der Gruppe mit E-Mail, Rolle, Status und Beitrittsdatum. Am Rechner ist das eine Tabelle, am Handy und am Tablet hochkant steht jedes Mitglied als eigene Karte untereinander, mit **Bearbeiten** unten in der Karte. Die Einleitung oben nennt die Gruppe, die gerade offen ist.
 
 - Das **Suchfeld** filtert nach Namen, **Rolle: Alle** nach einer Rolle. Im Rollenfilter stehen auch die eigenen Rollen der Gruppe.
 - In der Spalte **Rolle** stehen die Hauptrolle (z. B. Admin, Vorstand, Kassenwart) und dahinter die eigenen Rollen der Person, etwa „Mitglied · Kasse“.

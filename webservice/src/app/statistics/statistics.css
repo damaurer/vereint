@@ -366,7 +366,71 @@
 }
 
 .stats-table-wrap {
+  container-type: inline-size;
   overflow-x: auto;
+}
+
+/*
+ * Schmale Panels (Handy): Jede Zeile wird ein Block. Der Name steht oben, die
+ * Zahlen darunter nebeneinander, jeweils mit ihrer Spaltenüberschrift
+ * (`data-label`). So scrollt die Tabelle nicht mehr seitlich.
+ */
+@container (max-width: 28rem) {
+  .stats-table,
+  .stats-table tbody {
+    display: block;
+  }
+
+  .stats-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .stats-table tr {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(4.75rem, 1fr));
+    gap: 0.35rem 0.5rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .stats-table tr:last-child {
+    border-bottom: 0;
+  }
+
+  .stats-table td {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  .stats-table td::before {
+    content: attr(data-label);
+    color: var(--color-text-muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  .stats-table td[data-mobile='title'] {
+    grid-column: 1 / -1;
+    font-weight: 700;
+  }
+
+  .stats-table td[data-mobile='title']::before {
+    content: none;
+  }
 }
 
 .ring-row {

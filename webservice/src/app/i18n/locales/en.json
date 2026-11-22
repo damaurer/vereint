@@ -826,7 +826,7 @@
     "detail": {
       "eyebrow": "Selected moment",
       "timelineTab": "Timeline ({count})",
-      "mapTab": "World map ({count})",
+      "mapTab": "Map ({count})",
       "quickLabel": "Quick reaction:",
       "custom": "+ Status & text",
       "shareMedia": "Share photo/video",
@@ -993,7 +993,26 @@
       "fromGallery": "From gallery"
     },
     "allMoments": "All moments",
-    "eventFilter": "Moments for the event “{title}”"
+    "eventFilter": "Moments for the event “{title}”",
+    "view": {
+      "label": "Moments view",
+      "list": "Overview",
+      "map": "World map"
+    },
+    "worldMap": {
+      "title": "World map of all moments",
+      "ariaLabel": "World map with all moments that have a location",
+      "subtitle": "All moments with a shared location, running and finished. Tap a pin to open the moment.",
+      "count": "{count} moments",
+      "emptyTitle": "No moments with a location yet",
+      "emptyMessage": "Whoever starts or responds to a moment can choose to share their location. Those moments then show up here on the map.",
+      "listTitle": "Moments on the map",
+      "live": "Running",
+      "started": "Running since {date}",
+      "ended": "Ended {date}",
+      "locations": "{count} locations",
+      "open": "Open moment →"
+    }
   },
   "catalog": {
     "header": {
@@ -1331,7 +1350,6 @@
       "name": "Name",
       "email": "Email",
       "role": "Role",
-      "balance": "Balance",
       "status": "Status",
       "joined": "Joined",
       "actions": "Actions"
@@ -1553,7 +1571,6 @@
       "infoText": "Each booking only counts once, even if it is accidentally sent twice.",
       "eventsLoading": "Loading events.",
       "unavailable": "Kitty unavailable",
-      "statEvents": "Events with settlement",
       "eventsHeading": "Events ({count})",
       "eventsEmpty": "No events with a settlement are visible.",
       "summaryButton": "Settlement",

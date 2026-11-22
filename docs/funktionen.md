@@ -188,6 +188,11 @@ Thekenterminals.
 
 - Spontane gemeinsame Momente (z. B. Anstoßen) mit Rückmeldungen der
   Mitglieder, freiwilligem Standort auf einer Karte und einem verknüpften Chat.
+- Weltkarte aller Moments (*Moments → Weltkarte*): ein Pin je Moment mit
+  geteiltem Standort, laufende und abgeschlossene, mit derselben Sichtbarkeit
+  wie die Liste. Moments am selben Ort (rund 100 m) teilen sich einen Pin, ein
+  Tipp öffnet den Moment. Kacheln von OpenStreetMap, ohne API-Key; im dunklen
+  Design abgedunkelt.
 - Bis zu vier Fotos oder Videos je Beitrag. Videos höchstens 60 Sekunden und
   100 MB (MP4/MOV). Standort- und Gerätedaten werden entfernt, alles wird
   verschlüsselt gespeichert.

@@ -808,7 +808,7 @@
     "detail": {
       "eyebrow": "Ausgewählter Moment",
       "timelineTab": "Timeline ({count})",
-      "mapTab": "Weltkarte ({count})",
+      "mapTab": "Karte ({count})",
       "quickLabel": "Schnell reagieren:",
       "custom": "+ Status & Text",
       "shareMedia": "Foto/Video teilen",
@@ -960,7 +960,26 @@
       "fromGallery": "Aus Galerie"
     },
     "allMoments": "Alle Moments",
-    "eventFilter": "Moments zum Event „{title}“"
+    "eventFilter": "Moments zum Event „{title}“",
+    "view": {
+      "label": "Ansicht der Moments",
+      "list": "Übersicht",
+      "map": "Weltkarte"
+    },
+    "worldMap": {
+      "title": "Weltkarte aller Moments",
+      "ariaLabel": "Weltkarte mit allen Moments, die einen Standort haben",
+      "subtitle": "Alle Moments mit geteiltem Standort, laufend und abgeschlossen. Tippe auf einen Pin, um den Moment zu öffnen.",
+      "count": "{count} Moments",
+      "emptyTitle": "Noch keine Moments mit Standort",
+      "emptyMessage": "Wer einen Moment startet oder darauf reagiert, kann seinen Standort freiwillig teilen. Solche Moments erscheinen dann hier auf der Karte.",
+      "listTitle": "Moments auf der Karte",
+      "live": "Läuft",
+      "started": "Läuft seit {date}",
+      "ended": "Beendet {date}",
+      "locations": "{count} Standorte",
+      "open": "Moment öffnen →"
+    }
   },
   "catalog": {
     "header": {
@@ -1298,7 +1317,6 @@
       "name": "Name",
       "email": "E-Mail",
       "role": "Rolle",
-      "balance": "Guthaben",
       "status": "Status",
       "joined": "Beitrittsdatum",
       "actions": "Aktionen"
@@ -1520,7 +1538,6 @@
       "infoText": "Jede Buchung zählt nur einmal, auch wenn sie versehentlich doppelt abgeschickt wird.",
       "eventsLoading": "Events werden abgerufen.",
       "unavailable": "Kasse nicht verfügbar",
-      "statEvents": "Events mit Abrechnung",
       "eventsHeading": "Events ({count})",
       "eventsEmpty": "Es sind keine Events mit Abrechnung sichtbar.",
       "summaryButton": "Abrechnung",

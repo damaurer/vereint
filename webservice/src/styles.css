@@ -1480,6 +1480,27 @@ a:focus-visible {
   color: var(--color-text);
 }
 
+/* Zweitrangige Schaltfläche und Rückmeldungen nach Aktionen (Kasse, Verwaltung). */
+.member-button-secondary {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.member-button-secondary:hover:not(:disabled) {
+  background: var(--color-brand-soft);
+}
+
+.manage-action-error {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.manage-action-info {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
 /* --- Daten-Tabelle --- */
 .ui-table {
   width: 100%;
@@ -1504,6 +1525,106 @@ a:focus-visible {
   color: var(--color-text-muted);
   text-align: center;
   padding: var(--space-4);
+}
+
+/*
+ * Tabellen auf schmalem Platz: Der Container (`.ui-table-container`) misst die
+ * verfügbare Breite, nicht das Fenster. Unter 50rem wird jede Zeile einer
+ * `.ui-table-stack` zu einer Karte; die Zellen stehen in einem Raster, die
+ * Spaltenüberschrift (`data-label`) steht klein über dem Wert. So scrollt keine
+ * Tabelle mehr seitlich. `data-mobile` steuert einzelne Zellen:
+ * `title` (Kopfzeile ohne Beschriftung), `action` (volle Breite, ohne
+ * Beschriftung), `full` (eigene Zeile), `hidden` (in der Karte ausgeblendet).
+ */
+.ui-table-container {
+  display: block;
+  container-type: inline-size;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+@container (max-width: 50rem) {
+  .ui-table-stack,
+  .ui-table-stack tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .ui-table-stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .ui-table-stack tbody tr {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    gap: var(--space-2) var(--space-3);
+    margin: 0 0 var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+  }
+
+  .ui-table-stack tbody td {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .ui-table-stack tbody td::before {
+    content: attr(data-label);
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    overflow-wrap: normal;
+  }
+
+  .ui-table-stack tbody td[data-mobile='title'],
+  .ui-table-stack tbody td[data-mobile='action'],
+  .ui-table-stack tbody td[data-mobile='full'],
+  .ui-table-stack tbody td.ui-table-empty {
+    grid-column: 1 / -1;
+  }
+
+  .ui-table-stack tbody td[data-mobile='title']::before,
+  .ui-table-stack tbody td[data-mobile='action']::before,
+  .ui-table-stack tbody td.ui-table-empty::before {
+    content: none;
+  }
+
+  .ui-table-stack tbody td[data-mobile='title'] {
+    font-weight: 700;
+  }
+
+  .ui-table-stack tbody td[data-mobile='action'] {
+    align-items: stretch;
+  }
+
+  .ui-table-stack tbody td[data-mobile='hidden'] {
+    display: none;
+  }
+
+  .ui-table-stack tbody td.ui-table-empty {
+    align-items: center;
+  }
+
+  .ui-table-stack tbody tr:has(> td.ui-table-empty) {
+    border-style: dashed;
+    background-color: transparent;
+  }
 }
 
 /* --- Overlay / Modal / Bottom-Sheet --- */
@@ -2216,4 +2337,76 @@ input[type='checkbox'][role='switch']:disabled {
   .member-back[data-topbar-back] {
     display: none;
   }
+}
+
+/* Weltkarte der Moments: Leaflet erzeugt Pins und Popups außerhalb der Komponente. */
+.world-pin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  border: 3px solid var(--color-text-muted);
+  box-shadow: var(--vereint-shadow);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.world-pin.is-live {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 4px var(--color-brand-soft), var(--vereint-shadow);
+}
+.world-pin-count {
+  position: absolute;
+  top: -0.45rem;
+  right: -0.45rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background-color: var(--color-brand);
+  color: var(--color-on-brand, #fff);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.15rem;
+  text-align: center;
+}
+.world-popup {
+  display: grid;
+  gap: 0.35rem;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+.world-popup-item {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.world-popup-item:hover,
+.world-popup-item:focus-visible {
+  border-color: var(--color-brand);
+}
+.world-popup-item small {
+  color: #6b7280;
+  font-size: 0.72rem;
+}
+.world-popup-open {
+  color: var(--color-brand-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Dunkles Design: Kartenkacheln abdunkeln, Pins und Popups bleiben wie sie sind. */
+:root[data-theme='dark'] .leaflet-tile-pane,
+[data-theme='dark'] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
 }
