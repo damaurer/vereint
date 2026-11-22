@@ -20,6 +20,7 @@ import type {
   MomentSessionDto,
   MomentSummaryDto,
   MomentTypeDto,
+  MomentWorldMapPinDto,
   PurchasePreview,
   PurchasableDrink,
   DrinkRef,
@@ -217,6 +218,11 @@ export class MemberApiService {
   /** GeoJSON Map FeatureCollection für Kartenansicht (`GET /api/v1/moments/{momentId}/map`). */
   getMomentMapGeoJson(momentId: string): Observable<MomentMapGeoJsonDto> {
     return this.api.get<MomentMapGeoJsonDto>(`/moments/${encodeURIComponent(momentId)}/map`);
+  }
+
+  /** Weltkarte: ein Pin je sichtbarem Moment mit Standort; mit `eventId` nur die eines Events (`GET /api/v1/moments/map`). */
+  getMomentsWorldMap(eventId?: string | null): Observable<MomentWorldMapPinDto[]> {
+    return this.api.get<MomentWorldMapPinDto[]>(`/moments/map${eventQuery(eventId)}`);
   }
 
   /** Schließt einen aktiven Moment ab (`POST /api/v1/moments/{momentId}/complete`). */

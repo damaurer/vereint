@@ -353,6 +353,67 @@ class MomentService(
         return sessions.filter { !it.active && canView(it) }.map { toSummaryDto(it, labels) }
     }
 
+    /**
+     * Weltkarte aller Moments, die der Aufrufer sehen darf (laufende und
+     * abgeschlossene); mit [eventId] nur die dieses Events. Dieselbe
+     * Sichtbarkeit wie Liste und Historie ([MomentAccessPolicy]).
+     *
+     * Jeder Moment bekommt höchstens einen Pin: den Standort des Starters oder,
+     * wenn er keinen geteilt hat, den ersten geteilten Standort eines Beitrags.
+     * Moments ohne geteilten Standort fehlen. Namen von Beitragenden stehen
+     * nicht im Pin; die einzelnen Standorte zeigt die Karte im Moment selbst.
+     */
+    @Transactional
+    fun getWorldMap(principal: UserPrincipal, eventId: UUID? = null): List<MomentWorldMapPinDto> {
+        val caller = userService.getOrCreateUser(principal)
+        val now = Instant.now()
+        val sessions = if (eventId != null) {
+            requireEventAccess(caller, principal, requireEvent(eventId))
+            momentSessionRepository.findByEventIdOrderByCreatedAtDesc(eventId)
+        } else {
+            momentSessionRepository.findAllByOrderByCreatedAtDesc()
+        }
+        sessions.filter { it.active && it.expiresAt.isBefore(now) }.forEach { completeMomentInternal(it) }
+
+        val canView = policy.viewFilter(caller, principal)
+        val visible = sessions.filter(canView).take(MAX_WORLD_MAP_MOMENTS)
+        if (visible.isEmpty()) return emptyList()
+
+        val responsesByMoment = momentResponseRepository
+            .findByMomentIdInOrderByCreatedAtAsc(visible.map { it.id })
+            .groupBy { it.moment?.id }
+        val labels = momentConfigService.labels()
+
+        return visible.mapNotNull { session ->
+            val responses = responsesByMoment[session.id].orEmpty()
+            val located = responses.filter { it.latitude != null && it.longitude != null }
+            val starterLocated = session.latitude != null && session.longitude != null
+            val (lat, lon, source) = when {
+                starterLocated -> Triple(session.latitude!!, session.longitude!!, "initiator")
+                located.isNotEmpty() -> Triple(located.first().latitude!!, located.first().longitude!!, "response")
+                else -> return@mapNotNull null
+            }
+            MomentWorldMapPinDto(
+                momentId = session.id.toString(),
+                title = session.title,
+                topicType = session.topicType,
+                topicName = labels.typeName(session.topicType),
+                topicEmoji = labels.typeEmoji(session.topicType),
+                active = session.active,
+                eventId = session.event?.id?.toString(),
+                eventTitle = session.event?.title,
+                creatorName = session.creator?.displayName.orEmpty(),
+                latitude = lat,
+                longitude = lon,
+                locationSource = source,
+                responsesCount = responses.size,
+                locationsCount = located.size + if (starterLocated) 1 else 0,
+                createdAt = session.createdAt,
+                completedAt = if (session.active) null else session.completedAt ?: session.expiresAt
+            )
+        }
+    }
+
     private fun completeMomentInternal(session: MomentSessionEntity): MomentSummaryDto {
         if (session.active) {
             val responses = momentResponseRepository.findByMomentIdOrderByCreatedAtAsc(session.id)
@@ -547,6 +608,9 @@ class MomentService(
 
     companion object {
         const val NOTIFICATION_TYPE_MOMENT = "moment"
+
+        /** Obergrenze der Moments auf der Weltkarte (die neuesten). */
+        const val MAX_WORLD_MAP_MOMENTS = 500
 
         fun toMediaDto(media: MomentMediaEntity, caller: UserEntity, canModerate: Boolean) = MomentMediaDto(
             id = media.id.toString(),

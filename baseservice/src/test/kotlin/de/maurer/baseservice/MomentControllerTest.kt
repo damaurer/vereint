@@ -326,6 +326,38 @@ class MomentControllerTest {
     }
 
     @Test
+    fun `GET world map returns one pin per moment and is not taken for a moment id`() {
+        val pin = MomentWorldMapPinDto(
+            momentId = momentId.toString(),
+            title = "Anstoßen im Biergarten",
+            topicType = "toast",
+            topicName = "Gemeinsames Anstoßen",
+            topicEmoji = "🍻",
+            active = false,
+            eventId = null,
+            eventTitle = null,
+            creatorName = "Anna",
+            latitude = 48.137,
+            longitude = 11.575,
+            locationSource = "initiator",
+            responsesCount = 3,
+            locationsCount = 2,
+            createdAt = Instant.now(),
+            completedAt = Instant.now()
+        )
+        `when`(momentService.getWorldMap(anyPrincipal(), isNull())).thenReturn(listOf(pin))
+
+        mockMvc.perform(
+            get("/api/v1/moments/map")
+                .with(jwt().jwt { it.subject("sub-user") })
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].momentId").value(momentId.toString()))
+            .andExpect(jsonPath("$[0].latitude").value(48.137))
+            .andExpect(jsonPath("$[0].locationSource").value("initiator"))
+    }
+
+    @Test
     fun `invalid UUID path parameters reject with 400 and problem detail`() {
         mockMvc.perform(
             get("/api/v1/moments/invalid-uuid")

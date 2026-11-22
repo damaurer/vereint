@@ -2338,3 +2338,75 @@ input[type='checkbox'][role='switch']:disabled {
     display: none;
   }
 }
+
+/* Weltkarte der Moments: Leaflet erzeugt Pins und Popups außerhalb der Komponente. */
+.world-pin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  border: 3px solid var(--color-text-muted);
+  box-shadow: var(--vereint-shadow);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.world-pin.is-live {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 4px var(--color-brand-soft), var(--vereint-shadow);
+}
+.world-pin-count {
+  position: absolute;
+  top: -0.45rem;
+  right: -0.45rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background-color: var(--color-brand);
+  color: var(--color-on-brand, #fff);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.15rem;
+  text-align: center;
+}
+.world-popup {
+  display: grid;
+  gap: 0.35rem;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+.world-popup-item {
+  display: grid;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.world-popup-item:hover,
+.world-popup-item:focus-visible {
+  border-color: var(--color-brand);
+}
+.world-popup-item small {
+  color: #6b7280;
+  font-size: 0.72rem;
+}
+.world-popup-open {
+  color: var(--color-brand-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Dunkles Design: Kartenkacheln abdunkeln, Pins und Popups bleiben wie sie sind. */
+:root[data-theme='dark'] .leaflet-tile-pane,
+[data-theme='dark'] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+}

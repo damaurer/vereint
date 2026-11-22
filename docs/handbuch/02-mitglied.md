@@ -302,9 +302,15 @@ Ein **Moment** ist eine kurze gemeinsame Aktion während eines Events, zum Beisp
 
 **Fotos und Videos teilen**: Beim Starten unter **Fotos & Videos (optional)** oder später im Moment mit **Foto/Video teilen** hängst du bis zu vier Bilder oder Videos an. Videos dürfen höchstens 60 Sekunden lang und 100 MB groß sein (MP4 oder MOV); zu große Videos am besten in 720p aufnehmen. Standort und Gerätedaten werden vor dem Speichern aus den Dateien entfernt. Eigene Bilder und Videos kannst du mit **Entfernen** wieder löschen.
 
-Die **Timeline** zeigt alle Reaktionen, Bilder und Videos. Wer beim Reagieren den Standort freigibt, erscheint zusätzlich auf der **Weltkarte**. Das ist freiwillig.
+Die **Timeline** zeigt alle Reaktionen, Bilder und Videos. Wer beim Reagieren den Standort freigibt, erscheint zusätzlich auf der **Karte** des Moments. Das ist freiwillig.
 
 Ist ein Moment vorbei, landet er unter **Archivierte Moments & Rituale**.
+
+<br clear="right">
+
+<img src="bilder/m-moments-weltkarte.png" alt="Weltkarte aller Moments" width="300" align="right">
+
+**Weltkarte**: Oben auf der Moments-Seite wechselst du zwischen **Übersicht** und **Weltkarte**. Die Weltkarte zeigt alle Moments mit Standort, laufende und vergangene, die du auch in der Liste sehen darfst. Jeder Moment steht dort, wo ihn jemand gestartet hat (oder, wenn der Starter keinen Standort geteilt hat, wo die erste Reaktion mit Standort herkam). Mehrere Moments am selben Ort teilen sich einen Pin mit einer Zahl. Ein Tipp auf den Pin zeigt die Moments, **Moment öffnen** springt zum Moment. Laufende Moments haben einen farbigen Rand. Unter der Karte stehen dieselben Moments noch einmal als Liste. Auf der Karte landet nur, wer seinen Standort beim Starten oder Reagieren freiwillig teilt.
 
 <br clear="right">
 

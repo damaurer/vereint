@@ -520,6 +520,8 @@ interface MomentSessionRepository : JpaRepository<MomentSessionEntity, UUID> {
     fun findByEventIdIn(eventIds: Collection<UUID>): List<MomentSessionEntity>
     fun findByActiveTrueOrderByCreatedAtDesc(): List<MomentSessionEntity>
     fun findByActiveFalseOrderByCreatedAtDesc(): List<MomentSessionEntity>
+    /** Weltkarte: alle Moments der Gruppe, neueste zuerst. */
+    fun findAllByOrderByCreatedAtDesc(): List<MomentSessionEntity>
     fun findByConversationId(conversationId: UUID): Optional<MomentSessionEntity>
     fun findByConversationExpiresAtAfter(now: Instant): List<MomentSessionEntity>
     fun countByCreatedAtGreaterThanEqual(from: Instant): Long
@@ -529,6 +531,7 @@ interface MomentSessionRepository : JpaRepository<MomentSessionEntity, UUID> {
 interface MomentResponseRepository : JpaRepository<MomentResponseEntity, UUID> {
     fun findByMomentIdOrderByCreatedAtAsc(momentId: UUID): List<MomentResponseEntity>
     fun findByMomentId(momentId: UUID): List<MomentResponseEntity>
+    fun findByMomentIdInOrderByCreatedAtAsc(momentIds: Collection<UUID>): List<MomentResponseEntity>
     fun findByUserId(userId: UUID): List<MomentResponseEntity>
     fun countByMomentId(momentId: UUID): Long
     fun countByCreatedAtGreaterThanEqual(from: Instant): Long
