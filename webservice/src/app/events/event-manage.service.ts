@@ -61,6 +61,11 @@ export class EventManageService {
     return this.api.put<EventDetail>(this.eventPath(eventId), payload);
   }
 
+  /** Übernimmt Getränke und Speisen in alle folgenden Termine der Serie. */
+  copyMenuToFollowing(eventId: string): Observable<{ updated: number }> {
+    return this.api.post<{ updated: number }>(`${this.eventPath(eventId)}/series/copy-menu`, {});
+  }
+
   /** Teilnehmer (`GET /events/{id}/participants`). */
   listParticipants(eventId: string): Observable<EventParticipant[]> {
     return this.api.get<EventParticipant[]>(`${this.eventPath(eventId)}/participants`);

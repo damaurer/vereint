@@ -9,6 +9,7 @@ import { AsyncState } from './async-state';
 import { MemberApiService, rsvpLabelKey, rsvpTone, type RsvpAnswer } from './member-api.service';
 import { eventStatusLabel, formatDateTime, formatEventWhen, formatTime } from './member-format';
 import type {
+  EventSeries,
   ConversationSummary,
   EventDetail,
   EventParticipant,
@@ -20,6 +21,7 @@ import type {
 import { AvatarBadgeComponent, StatusBadgeComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
+import { describeRecurrence, localDateOf, seriesPayload } from '../events/recurrence';
 import { translate } from '../i18n/i18n.service';
 import { ChatThreadComponent } from '../chat/chat-thread.component';
 
@@ -94,11 +96,35 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
                   </button>
                 </li>
               }
+              @if (view.event.series; as series) {
+                <li data-testid="event-series">
+                  <vereint-icon name="repeat" />
+                  <span>{{ seriesSummary(series) }}</span>
+                </li>
+              }
               <li>
                 <vereint-icon name="user" />
                 <span>{{ 'member.eventDetail.organizedBy' | t: { name: view.event.ownerDisplayName } }}</span>
               </li>
             </ul>
+            @if (view.event.series?.upcoming?.length) {
+              <nav class="detail-series" [attr.aria-label]="'events.recurrence.nextDates' | t">
+                <span class="detail-series-label">{{ 'events.recurrence.nextDates' | t }}</span>
+                <ul>
+                  @for (next of view.event.series!.upcoming; track next.eventId) {
+                    <li>
+                      <a
+                        class="detail-chip"
+                        [class.detail-chip-cancelled]="next.status === 'cancelled'"
+                        [routerLink]="['/events', next.eventId]"
+                      >
+                        {{ formatEventWhen(next.startsAt) }}
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </nav>
+            }
           </header>
 
           @if (view.event.description) {
@@ -256,6 +282,29 @@ const READ_ONLY_CHAT_STATUS: readonly EventStatus[] = ['cancelled', 'archived'];
         display: flex;
         align-items: center;
         gap: 0.6rem;
+      }
+      .detail-series {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-top: 0.75rem;
+      }
+      .detail-series-label {
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .detail-series ul {
+        display: flex;
+        gap: 0.4rem;
+        margin: 0;
+        padding: 0 0 0.25rem;
+        list-style: none;
+        overflow-x: auto;
+      }
+      .detail-chip-cancelled {
+        text-decoration: line-through;
+        opacity: 0.7;
       }
       .detail-meta .ui-icon {
         flex-shrink: 0;
@@ -479,14 +528,35 @@ export class EventDetailComponent implements OnInit, OnDestroy {
     return this.route.snapshot.paramMap.get('eventId') ?? '';
   }
 
+  private paramSubscription?: Subscription;
+
   ngOnInit(): void {
-    this.reload();
+    // Zwischen Terminen einer Serie bleibt die Komponente dieselbe: bei neuer Id neu laden.
+    const params = this.route.paramMap;
+    if (!params) {
+      this.reload();
+      return;
+    }
+    let first = true;
+    this.paramSubscription = params.subscribe(() => {
+      if (!first) this.chatSubscription?.unsubscribe();
+      first = false;
+      this.reload();
+    });
   }
 
   ngOnDestroy(): void {
     this.load.destroy();
     this.chatSubscription?.unsubscribe();
+    this.paramSubscription?.unsubscribe();
   }
+
+  /** Klartext der Serie, z. B. „Monatlich am letzten Samstag“. */
+  protected seriesSummary(series: EventSeries): string {
+    return describeRecurrence(seriesPayload(series), localDateOf(series.startsOn));
+  }
+
+  protected readonly formatEventWhen = formatEventWhen;
 
   protected reload(): void {
     const eventId = this.eventId;

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+    <property name="text.type" value="TEXT" dbms="postgresql"/>
+    <property name="text.type" value="VARCHAR(65535)" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 340. Wiederkehrende Events: Eine Serie beschreibt Rhythmus (RFC-5545-RRULE,
+         leer = nur eigene Termine), zusätzliche und ausgelassene Termine sowie die
+         Vorlage für jeden Termin (Titel, Ort, Uhrzeit in der Zeitzone der Serie,
+         Dauer, Einladung, Erinnerung, Statistik). Jeder Termin ist ein normales
+         Event mit eigener Zu-/Absage, eigenem Chat und eigener Statistik.
+         extra_dates und excluded_dates sind ISO-Daten, durch Komma getrennt. -->
+    <changeSet id="340-create-event-series" author="claude">
+        <createTable tableName="event_series">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_series_stammtisch" references="stammtische(id)"/>
+            </column>
+            <column name="owner_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_series_owner" references="users(id)"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="${text.type}"/>
+            <column name="location" type="VARCHAR(255)"/>
+            <column name="starts_on" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_time" type="TIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration_minutes" type="INTEGER"/>
+            <column name="time_zone" type="VARCHAR(64)" defaultValue="Europe/Berlin">
+                <constraints nullable="false"/>
+            </column>
+            <!-- NULL = keine Regel, nur Beginn und zusätzliche Termine -->
+            <column name="rrule" type="VARCHAR(500)"/>
+            <column name="extra_dates" type="VARCHAR(2400)"/>
+            <column name="excluded_dates" type="VARCHAR(2400)"/>
+            <!-- Status neuer Termine: draft oder published -->
+            <column name="status" type="VARCHAR(16)" defaultValue="published">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Einladung so viele Tage vor jedem Termin; NULL = sofort -->
+            <column name="invite_lead_days" type="INTEGER"/>
+            <column name="reminder_hours_before" type="INTEGER"/>
+            <column name="statistics_enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="invite_all_members" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>ALTER TABLE event_series ADD CONSTRAINT ck_event_series_status CHECK (status IN ('draft', 'published'))</sql>
+        <sql>ALTER TABLE event_series ADD CONSTRAINT ck_event_series_lead CHECK (invite_lead_days IS NULL OR invite_lead_days BETWEEN 0 AND 365)</sql>
+        <createIndex tableName="event_series" indexName="idx_event_series_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="event_series"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 341. Wer zu jedem neuen Termin einer Serie eingeladen wird (außer bei
+         „alle Mitglieder“). -->
+    <changeSet id="341-create-event-series-invitees" author="claude">
+        <createTable tableName="event_series_invitees">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_series_invitees_stammtisch" references="stammtische(id)"/>
+            </column>
+            <column name="series_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_series_invitees_series" references="event_series(id)" deleteCascade="true"/>
+            </column>
+            <column name="user_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_event_series_invitees_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="event_series_invitees" columnNames="series_id, user_id"
+                             constraintName="uk_event_series_invitees_series_user"/>
+        <createIndex tableName="event_series_invitees" indexName="idx_event_series_invitees_stammtisch">
+            <column name="stammtisch_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="event_series_invitees"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 342. Termine einer Serie: series_date ist der ursprüngliche Tag des
+         Termins (bleibt auch, wenn der Termin verschoben wird) und je Serie
+         eindeutig. series_detached heißt: einzeln bearbeitet, Änderungen an der
+         ganzen Serie lassen den Termin in Ruhe. -->
+    <changeSet id="342-events-series-reference" author="claude">
+        <addColumn tableName="events">
+            <column name="series_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_events_series" references="event_series(id)"/>
+            </column>
+            <column name="series_date" type="DATE"/>
+            <column name="series_detached" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <addUniqueConstraint tableName="events" columnNames="series_id, series_date"
+                             constraintName="uk_events_series_date"/>
+        <createIndex tableName="events" indexName="idx_events_series">
+            <column name="series_id"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="events" indexName="idx_events_series"/>
+            <dropUniqueConstraint tableName="events" constraintName="uk_events_series_date"/>
+            <dropColumn tableName="events" columnName="series_detached"/>
+            <dropColumn tableName="events" columnName="series_date"/>
+            <dropColumn tableName="events" columnName="series_id"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 343. Row Level Security für die neuen Tabellen wie in Changeset 165. -->
+    <changeSet id="343-event-series-row-level-security" author="claude" dbms="postgresql">
+        <sql splitStatements="false">
+            ALTER TABLE event_series ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE event_series FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON event_series
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+            ALTER TABLE event_series_invitees ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE event_series_invitees FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON event_series_invitees
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <rollback>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON event_series; ALTER TABLE event_series NO FORCE ROW LEVEL SECURITY; ALTER TABLE event_series DISABLE ROW LEVEL SECURITY; DROP POLICY IF EXISTS stammtisch_isolation ON event_series_invitees; ALTER TABLE event_series_invitees NO FORCE ROW LEVEL SECURITY; ALTER TABLE event_series_invitees DISABLE ROW LEVEL SECURITY</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

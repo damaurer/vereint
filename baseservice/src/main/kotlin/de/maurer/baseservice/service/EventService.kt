@@ -212,6 +212,8 @@ class EventService(
                 ?: throw InvalidRequestException(Msg("error.event.invalidStatus", request.status), ErrorCode.INVALID_REQUEST)
         }
 
+        // Einzeln geänderte Termine einer Serie folgen späteren Serienänderungen nicht mehr.
+        if (event.series != null) event.seriesDetached = true
         val saved = eventRepository.save(event)
         if (previousStatus != EventStatus.cancelled && saved.status == EventStatus.cancelled) {
             eventInvitationService.notifyCancelled(saved)
@@ -366,7 +368,15 @@ class EventService(
                 declined = counts[RsvpStatus.declined] ?: 0
             ),
             canManage = canManageEvent(caller, principal, event),
-            statisticsEnabled = event.statisticsEnabled
+            statisticsEnabled = event.statisticsEnabled,
+            series = event.series?.let { series ->
+                val now = Instant.now()
+                val upcoming = eventRepository.findBySeriesIdOrderBySeriesDateAsc(series.id)
+                    .filter { it.id != event.id && !it.startsAt.isBefore(now) && canViewEvent(caller, principal, it) }
+                    .sortedBy { it.startsAt }
+                    .take(UPCOMING_IN_DETAIL)
+                EventSeriesSupport.toDto(series, event, upcoming)
+            }
         )
     }
 
@@ -381,7 +391,8 @@ class EventService(
             ownerId = owner?.id?.toString().orEmpty(),
             ownerDisplayName = owner?.displayName.orEmpty(),
             location = event.location,
-            myRsvp = myRsvp
+            myRsvp = myRsvp,
+            seriesId = event.series?.id?.toString()
         )
     }
 
@@ -399,5 +410,8 @@ class EventService(
 
     companion object {
         const val PARTICIPANT_ROLE_DEFAULT = "participant"
+
+        /** So viele weitere Termine einer Serie zeigen die Eventdetails. */
+        const val UPCOMING_IN_DETAIL = 6
     }
 }

@@ -14,7 +14,11 @@ const directory: DirectoryMember[] = [
 ];
 
 describe('EventCreateComponent', () => {
-  let api: { listDirectory: ReturnType<typeof vi.fn>; createEvent: ReturnType<typeof vi.fn> };
+  let api: {
+    listDirectory: ReturnType<typeof vi.fn>;
+    createEvent: ReturnType<typeof vi.fn>;
+    previewRecurrence?: ReturnType<typeof vi.fn>;
+  };
   let navigate: ReturnType<typeof vi.fn>;
 
   const create = async () => {
@@ -54,7 +58,8 @@ describe('EventCreateComponent', () => {
     api = {
       listDirectory: vi.fn(() => of(directory)),
       createEvent: vi.fn(() => of({ id: 'e-42' })),
-    };
+      previewRecurrence: vi.fn(() => of({ dates: [], more: false, rrule: null })),
+    } as typeof api;
   });
 
   it('lists members by name, sorted, with a search filter', async () => {
@@ -162,5 +167,44 @@ describe('EventCreateComponent', () => {
     fixture.detectChanges();
     expect(text(fixture)).toContain('Rechte');
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('creates a recurring event: last Saturday of the month with a preview', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    api.previewRecurrence = vi.fn(() =>
+      of({ dates: ['2026-11-28T18:00:00Z', '2026-12-26T18:00:00Z'], more: true, rrule: 'FREQ=MONTHLY;BYDAY=-1SA' }),
+    );
+    const fixture = await create();
+    const c = cmp(fixture);
+    c.form.title = 'Wirt öffnet';
+    const root = fixture.nativeElement as HTMLElement;
+    const start = root.querySelector('input[name="startsAt"]') as HTMLInputElement;
+    start.value = '2026-11-28T19:00';
+    start.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const select = root.querySelector('[data-testid="recurrence-preset"]') as HTMLSelectElement;
+    const labels = Array.from(select.options).map((o) => o.textContent?.trim());
+    expect(labels).toContain('Monatlich am letzten Samstag');
+    expect(labels).toContain('Wöchentlich am Samstag');
+    select.value = 'monthlyLast';
+    select.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    await vi.advanceTimersByTimeAsync(300);
+    fixture.detectChanges();
+    expect(text(fixture)).toContain('Monatlich am letzten Samstag');
+    expect(api.previewRecurrence).toHaveBeenCalled();
+    expect(root.querySelectorAll('.rec-preview-list li').length).toBe(2);
+    // Bei Serien gibt es den Einladungsvorlauf statt des Einladungszeitpunkts.
+    expect(root.querySelector('input[name="timing"]')).toBeNull();
+
+    c.submit('published');
+    const payload = api.createEvent.mock.calls[0][0];
+    expect(payload.recurrence).toEqual(
+      expect.objectContaining({ frequency: 'MONTHLY', weekdays: ['SA'], positions: [-1], inviteLeadDays: 7 }),
+    );
+    expect(payload.invitationNotifyAt).toBeNull();
+    vi.useRealTimers();
   });
 });
