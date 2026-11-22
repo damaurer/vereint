@@ -60,6 +60,8 @@ Tippe auf ein Mitglied. Es öffnen sich sein Guthaben, alle seine Buchungen und 
 Notizen von Ein- und Auszahlungen stehen auch in der Buchungsliste des Mitglieds hier in der Kasse unter der jeweiligen Buchung. Schreib deshalb nichts hinein, was das Mitglied nicht lesen soll.
 3. **Buchung korrigieren**: Buchungen werden nie gelöscht. Eine falsche Buchung hebst du mit einer Gegenbuchung auf: Buchung in der Auswahl wählen (oder in der Liste darunter auf **Zur Korrektur wählen** tippen), einen Grund eintragen und **Korrigieren** tippen. Beide Buchungen bleiben sichtbar, so ist jede Änderung nachvollziehbar.
 
+Die drei Formulare sind gleich aufgebaute Karten: am Handy untereinander, am Rechner nebeneinander.
+
 **Schließen** klappt das Mitglied wieder zu. Jede Buchung wird genau einmal ausgeführt, auch wenn du versehentlich doppelt tippst.
 
 <br clear="right">

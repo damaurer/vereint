@@ -169,38 +169,38 @@ interface MemberLedger {
               />
 
               <div class="treasury-actions">
-                <form class="manage-form" (ngSubmit)="topup()">
+                <form class="treasury-form" (ngSubmit)="topup()">
                   <h3 class="treasury-form-title">{{ 'board.treasury.booking.topupTitle' | t }}</h3>
-                  <label class="manage-field">
+                  <label class="treasury-field">
                     <span>{{ 'board.treasury.booking.amount' | t }}</span>
                     <input name="topupAmount" [(ngModel)]="topupForm.amount" inputmode="decimal" required />
                   </label>
-                  <label class="manage-field">
+                  <label class="treasury-field">
                     <span>{{ 'board.treasury.booking.note' | t }}</span>
                     <input name="topupNote" [(ngModel)]="topupForm.note" maxlength="255" />
                   </label>
                   <button type="submit" class="member-button" [disabled]="busy()">{{ 'board.treasury.booking.topup' | t }}</button>
                 </form>
 
-                <form class="manage-form" (ngSubmit)="payout()">
+                <form class="treasury-form" (ngSubmit)="payout()">
                   <h3 class="treasury-form-title">{{ 'board.treasury.booking.payoutTitle' | t }}</h3>
-                  <label class="manage-field">
+                  <label class="treasury-field">
                     <span>{{ 'board.treasury.booking.amount' | t }}</span>
                     <input name="payoutAmount" [(ngModel)]="payoutForm.amount" inputmode="decimal" required />
                   </label>
-                  <label class="manage-field">
+                  <label class="treasury-field">
                     <span>{{ 'board.treasury.booking.note' | t }}</span>
                     <input name="payoutNote" [(ngModel)]="payoutForm.note" maxlength="255" />
                   </label>
                   <button type="submit" class="member-button" [disabled]="busy()">{{ 'board.treasury.booking.payout' | t }}</button>
                 </form>
 
-                <form class="manage-form" (ngSubmit)="correct()">
+                <form class="treasury-form" (ngSubmit)="correct()">
                   <h3 class="treasury-form-title">{{ 'board.treasury.booking.correctionTitle' | t }}</h3>
                   @if (correctable(view.entries).length === 0) {
                     <p class="member-muted">{{ 'board.treasury.booking.noCorrectable' | t }}</p>
                   } @else {
-                    <label class="manage-field">
+                    <label class="treasury-field">
                       <span>{{ 'board.treasury.booking.correctionEntry' | t }}</span>
                       <select name="correctionEntry" [(ngModel)]="correctionForm.originalEntryId" required>
                         <option value="">{{ 'board.treasury.booking.correctionPlaceholder' | t }}</option>
@@ -209,7 +209,7 @@ interface MemberLedger {
                         }
                       </select>
                     </label>
-                    <label class="manage-field">
+                    <label class="treasury-field">
                       <span>{{ 'board.treasury.booking.reason' | t }}</span>
                       <input name="correctionReason" [(ngModel)]="correctionForm.reason" maxlength="255" />
                     </label>
@@ -234,9 +234,11 @@ interface MemberLedger {
                       class="member-list-item treasury-entry"
                       [class.treasury-entry-chosen]="correctionForm.originalEntryId === entry.id"
                     >
-                      <span class="member-list-title">{{ entryTypeLabel(entry.entryType) }}</span>
-                      <span class="member-list-meta">{{ formatDateTime(entry.createdAt) }}</span>
-                      <span class="member-amount" [class.member-amount-negative]="isNegative(entry.amount)">
+                      <span class="treasury-entry-head">
+                        <span class="member-list-title">{{ entryTypeLabel(entry.entryType) }}</span>
+                        <span class="member-list-meta">{{ formatDateTime(entry.createdAt) }}</span>
+                      </span>
+                      <span class="treasury-entry-amount" [class.member-amount-negative]="isNegative(entry.amount)">
                         {{ formatMoney(entry.amount, entry.currency) }}
                       </span>
                       @if (isReversed(entry, view.entries)) {
@@ -276,10 +278,6 @@ interface MemberLedger {
             (retry)="reload()"
           />
         } @else if (events.data(); as list) {
-          <div class="treasury-stats">
-            <vereint-stat-card icon="events" [label]="'board.treasury.statEvents' | t" [value]="list.length" />
-          </div>
-
           <h2 class="member-subtitle">{{ 'board.treasury.eventsHeading' | t: { count: list.length } }}</h2>
           @if (list.length === 0) {
             <vereint-state
@@ -290,7 +288,7 @@ interface MemberLedger {
           } @else {
             <ul class="member-list">
               @for (event of list; track event.id) {
-                <li class="member-list-item board-row">
+                <li class="member-list-item treasury-event">
                   <span class="member-list-title">{{ event.title }}</span>
                   <vereint-status-badge
                     [label]="eventStatusLabel(event.status)"
@@ -298,7 +296,7 @@ interface MemberLedger {
                   />
                   <button
                     type="button"
-                    class="member-button"
+                    class="member-button member-button-secondary"
                     [disabled]="busy()"
                     (click)="loadSummary(event.id)"
                   >
@@ -313,7 +311,7 @@ interface MemberLedger {
             <p class="manage-action-error" role="alert">{{ serr }}</p>
           }
           @if (summary(); as sum) {
-            <div class="state-card" role="status">
+            <div class="state-card treasury-summary" role="status">
               <strong>{{ 'board.treasury.summary.title' | t }}</strong>
               <span>{{ 'board.treasury.summary.revenue' | t: { amount: formatMoney(sum.revenueTotal, sum.currency) } }}</span>
               @if (sum.costTotal) {
@@ -332,28 +330,12 @@ interface MemberLedger {
   `,
   styles: [
     `
-      .manage-form {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        align-items: end;
-        margin: 0.75rem 0 1rem;
-      }
-      .manage-field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        min-width: min(12rem, 100%);
-        flex: 1 1 12rem;
-      }
-      .manage-field input,
-      .manage-field select {
-        padding: 0.5rem;
-        border: 1px solid var(--color-border, #cbd5e1);
-        border-radius: 0.5rem;
-        font: inherit;
-        min-width: 0;
-      }
+      /*
+       * Einheitliche Maße auf allen Bildschirmen: Eingabefelder und Knöpfe
+       * sind immer 2.75rem hoch, Karten nutzen --radius-lg und die Farb-Tokens
+       * (hell/dunkel). Die drei Buchungsformulare stehen als Karten in einem
+       * Raster, das sich nach der verfügbaren Breite richtet (1 bis 3 Spalten).
+       */
       .treasury-note {
         margin: 0 0 var(--space-3);
         padding: 0.6rem 0.75rem;
@@ -366,10 +348,14 @@ interface MemberLedger {
         display: block;
         margin: 0 0 var(--space-3);
       }
-      .treasury-search input {
+      .treasury-search input,
+      .treasury-field input,
+      .treasury-field select {
+        box-sizing: border-box;
         width: 100%;
+        min-width: 0;
         min-height: 2.75rem;
-        padding: 0.6rem 0.9rem;
+        padding: 0.5rem 0.75rem;
         border: 1px solid var(--color-border);
         border-radius: var(--radius-md);
         background-color: var(--color-surface-raised);
@@ -382,7 +368,7 @@ interface MemberLedger {
         padding: 0;
         border: 1px solid var(--color-border);
         border-radius: var(--radius-lg);
-        background-color: var(--color-surface-raised);
+        background-color: var(--color-surface);
         overflow: hidden;
       }
       .treasury-members > li + li {
@@ -391,6 +377,7 @@ interface MemberLedger {
       .treasury-member {
         --avatar-size: 2.25rem;
         width: 100%;
+        min-height: 3.5rem;
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -432,11 +419,12 @@ interface MemberLedger {
         font-size: 0.8rem;
       }
       .treasury-panel {
-        margin: 1rem 0 1.5rem;
-        padding: 1rem;
-        border: 1px solid var(--color-border, #cbd5e1);
-        border-radius: var(--radius-md, 0.75rem);
-        scroll-margin-top: 1rem;
+        margin: var(--space-3) 0 var(--space-4);
+        padding: var(--space-3);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-surface);
+        scroll-margin-top: 4.5rem;
       }
       .treasury-panel-head {
         display: flex;
@@ -446,48 +434,99 @@ interface MemberLedger {
       }
       .treasury-panel-head .member-subtitle {
         margin: 0;
+        min-width: 0;
+        overflow-wrap: anywhere;
       }
       .treasury-id {
-        margin: 0.15rem 0 0.75rem;
+        margin: 0.15rem 0 var(--space-2);
         color: var(--color-text-muted);
         font-size: 0.75rem;
         overflow-wrap: anywhere;
       }
       .treasury-actions {
         display: grid;
-        gap: 0.5rem;
-        margin-top: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+        gap: var(--space-2);
+        margin: var(--space-3) 0;
+      }
+      .treasury-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+        min-width: 0;
+        padding: var(--space-3);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-surface-raised);
+      }
+      .treasury-form .member-button {
+        min-height: 2.75rem;
+        margin-top: auto;
       }
       .treasury-form-title {
-        flex: 1 1 100%;
         margin: 0;
         font-size: 1rem;
       }
+      .treasury-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 0;
+        font-size: 0.9rem;
+      }
       .treasury-entry {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.35rem var(--space-2);
+      }
+      .treasury-entry-head {
         display: flex;
         flex-wrap: wrap;
-        align-items: center;
-        gap: 0.5rem 0.75rem;
+        align-items: baseline;
+        gap: 0 0.5rem;
+        min-width: 0;
       }
-      .treasury-entry .member-amount {
-        margin-left: auto;
+      .treasury-entry-amount {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        text-align: right;
+      }
+      .treasury-entry > vereint-status-badge,
+      .treasury-entry > .treasury-pick {
+        grid-column: 1 / -1;
+        justify-self: start;
+      }
+      .treasury-pick {
+        min-height: 2.25rem;
+        padding: 0.35rem 0.85rem;
+        font-size: 0.9rem;
       }
       .treasury-entry-note {
-        flex: 1 1 100%;
+        grid-column: 1 / -1;
       }
       .treasury-entry-chosen {
         outline: 2px solid var(--color-brand);
         outline-offset: -2px;
       }
       .member-amount-negative {
-        color: var(--color-danger, #b91c1c);
+        color: var(--color-danger);
       }
-      .board-row {
-        display: flex;
-        flex-wrap: wrap;
+      .treasury-event {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
         align-items: center;
-        gap: 0.75rem;
-        justify-content: space-between;
+        gap: 0.5rem var(--space-2);
+      }
+      .treasury-event .member-button {
+        min-height: 2.5rem;
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+      }
+      .treasury-summary {
+        margin: var(--space-3) 0 0;
+        border-radius: var(--radius-lg);
       }
       .treasury-stats {
         display: grid;
@@ -495,23 +534,25 @@ interface MemberLedger {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         margin: 0 0 var(--space-2);
       }
+      /* Handy: Gesamtguthaben oben über die volle Breite, darunter zwei Kacheln. */
+      @media (max-width: 36rem) {
+        .treasury-stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .treasury-stats > :first-child {
+          grid-column: 1 / -1;
+        }
+        .treasury-event {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+        .treasury-event .member-list-title {
+          grid-column: 1 / -1;
+        }
+        .treasury-event vereint-status-badge {
+          justify-self: start;
+        }
+      }
 
-      .member-button-secondary {
-        background: transparent;
-        color: var(--color-text);
-        border: 1px solid var(--color-border, #cbd5e1);
-      }
-      .member-button-secondary:hover:not(:disabled) {
-        background: var(--color-brand-soft, transparent);
-      }
-      .manage-action-error {
-        color: #b91c1c;
-        font-weight: 600;
-      }
-      .manage-action-info {
-        color: #15803d;
-        font-weight: 600;
-      }
     `,
   ],
 })
