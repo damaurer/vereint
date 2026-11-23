@@ -12,6 +12,7 @@ import { ThemeService, type ThemePreference } from '../shell/theme.service';
 import { PwaSettingsComponent } from '../pwa/pwa-settings.component';
 import { I18nService, TranslatePipe } from '../i18n';
 import { StatisticsSettingsComponent } from '../statistics/statistics-settings.component';
+import { AccountDeletionComponent } from './account-deletion.component';
 
 /**
  * Persönliches Profil eines Mitglieds (TICKET-024, Redesign TICKET-033).
@@ -31,6 +32,7 @@ import { StatisticsSettingsComponent } from '../statistics/statistics-settings.c
     TranslatePipe,
     PwaSettingsComponent,
     StatisticsSettingsComponent,
+    AccountDeletionComponent,
   ],
   templateUrl: './profile.component.html',
   styles: [

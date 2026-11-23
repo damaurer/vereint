@@ -939,6 +939,14 @@ class LedgerService(
         )
     }
 
+    /** Währung und Guthaben einer Person im aktuellen Stammtisch, ohne Rechteprüfung (für die Kontolöschung). */
+    @Transactional(readOnly = true)
+    fun creditBalanceOf(memberId: UUID): Pair<String, BigDecimal> {
+        val entries = ledgerEntryRepository.findByMemberIdOrderByCreatedAtAsc(memberId)
+        val balance = entries.sumOf { balanceDelta(it) }.setScale(2)
+        return (entries.firstOrNull()?.currency ?: DEFAULT_CURRENCY) to balance
+    }
+
     private fun computeBalance(member: UserEntity, entries: List<LedgerEntryEntity>): MemberBalanceDto {
         val topupTotal = entries.filter { it.entryType == LedgerEntryType.topup }.sumOf { it.amount }
         val payoutTotal = entries.filter { it.entryType == LedgerEntryType.payout }.sumOf { it.amount }

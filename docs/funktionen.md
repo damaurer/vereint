@@ -298,9 +298,34 @@ Thekenterminals.
   oder ältere Konten, neue AGB-Fassung), zeigt die App nach dem Login zuerst
   die Seite „Bitte stimme den AGB zu“; bis dahin sind nur Abmelden, Impressum
   und AGB erreichbar.
+- Das eigene Konto löscht man selbst unter *Profil → Konto löschen* (siehe
+  [Konto löschen](#konto-löschen)); AGB § 10 Abs. 3 nennt das.
 - Die Betreiberangaben sind noch Platzhalter; solange zeigen beide Seiten den
   Hinweis „Entwurf“. Datenschutzerklärung und Auftragsverarbeitung fehlen noch.
 - Details: [docs/domains/rechtliches.md](domains/rechtliches.md)
+
+## Konto löschen
+
+- Unter *Profil → Konto löschen* löscht jede Person ihr Konto selbst (#152),
+  wie es Google Play und der App Store verlangen.
+- Vorher zeigt die App: in welchen Gruppen die Mitgliedschaft endet, welche
+  Gruppen archiviert werden (keine weiteren aktiven Mitglieder), wo noch
+  Guthaben offen ist und ob das Login gleich mitgelöscht wird. Bestätigt wird
+  durch Eintippen von *LÖSCHEN*.
+- Wer in einer Gruppe mit weiteren Mitgliedern als Letzte Mitglieder oder
+  Rollen verwaltet, muss das erst übergeben; bis dahin lehnt Vereint ab.
+- Gelöscht werden in allen Gruppen: eigene Chat- und Direktnachrichten mit
+  Fotos und Videos, Direktchats (für beide Seiten), eigene Moments mit ihren
+  Chats, Antworten und Medien, Reaktionen, Freundschaften, Mitteilungen,
+  Push-Abos, Statistikeinträge, Zusagen zu künftigen Events und Serien,
+  Profilbild, Rollen und Rechte sowie das Login in Keycloak.
+- Erhalten bleiben Buchungen, Runden, Events, Thekensitzungen und das
+  Audit-Protokoll. Sie zeigen den Platzhalter *Gelöschtes Konto* ohne E-Mail;
+  das Kassenbuch der Gruppe bleibt so vollständig. Jede Gruppe mit Spuren des
+  Kontos bekommt einen Audit-Eintrag `ACCOUNT_DELETED`.
+- Ein gelöschtes Konto bleibt gesperrt und lässt sich nicht wieder aufnehmen.
+  In Backups stehen die Daten bis zu deren Ablauf.
+- Details: [docs/domains/auth-and-user-management.md](domains/auth-and-user-management.md#konto-löschen)
 
 ## Verwaltung
 

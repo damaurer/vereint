@@ -50,7 +50,7 @@ Weitere Möglichkeiten auf dieser Seite:
 
 Nach der Anmeldung landest du auf der Startseite. Bist du in mehreren Gruppen, wählst du vorher eine aus (siehe [Gruppe wählen und wechseln](#gruppe-wählen-und-wechseln)).
 
-**Neue Fassung der AGB**: Hast du der aktuellen Fassung der AGB noch nicht zugestimmt (etwa weil dein Konto vom Admin angelegt wurde oder die AGB geändert wurden), zeigt Vereint nach der Anmeldung zuerst die Seite **Bitte stimme den AGB zu**. Dort liest du mit **AGB lesen** den vollen Text und tippst **Zustimmen**; danach geht es weiter wie gewohnt. Bis dahin sind nur Abmelden, Impressum und AGB erreichbar. Mit **Nicht zustimmen und abmelden** meldest du dich ab; dein Konto löscht der Betreiber auf Wunsch, die Adresse steht auf der Seite.
+**Neue Fassung der AGB**: Hast du der aktuellen Fassung der AGB noch nicht zugestimmt (etwa weil dein Konto vom Admin angelegt wurde oder die AGB geändert wurden), zeigt Vereint nach der Anmeldung zuerst die Seite **Bitte stimme den AGB zu**. Dort liest du mit **AGB lesen** den vollen Text und tippst **Zustimmen**; danach geht es weiter wie gewohnt. Bis dahin sind nur Abmelden, Impressum und AGB erreichbar. Mit **Nicht zustimmen und abmelden** meldest du dich ab; löschen kannst du dein Konto danach selbst unter **Profil → Konto löschen** oder per E-Mail an den Betreiber, die Adresse steht auf der Seite.
 
 Unter der Anmeldung steht außerdem „Noch keine Gruppe? **Eigene Gruppe eröffnen**“ (siehe [Eine eigene Gruppe eröffnen](#eine-eigene-gruppe-eröffnen)). Ganz unten führen **Impressum** und **AGB** zu den Rechtstexten.
 
@@ -134,6 +134,7 @@ Unter **Mehr → Profil** siehst du deine Kontodaten und deine Rollen.
 - **Darstellung**: **System** folgt der Einstellung deines Geräts, **Hell** und **Dunkel** legen das Aussehen fest.
 - **Sprache**: **Deutsch** oder **English**. Die Wahl gilt sofort für die ganze App und auch für die Anmeldeseite. Hast du nichts gewählt, nimmt Vereint die Sprache deines Browsers.
 - **Sicherheit**: **Zwei-Faktor-Anmeldung einrichten** öffnet die Kontoverwaltung. Dort hinterlegst du eine Authenticator-App (z. B. Google Authenticator); danach fragt die Anmeldung nach Passwort und einem 6-stelligen Code. Das ist freiwillig, für Vorstand und Administration aber empfohlen.
+- **Konto löschen**: Ganz unten im Profil. Vereint zeigt vorher, in welchen Gruppen deine Mitgliedschaft endet, ob du noch Guthaben hast und ob eine Gruppe archiviert wird, weil sonst niemand mehr drin ist. Bist du in einer Gruppe die letzte Person mit Verwaltungsrechten, gib diese Rechte erst an ein anderes Mitglied weiter. Zum Bestätigen tippst du **LÖSCHEN** ein. Gelöscht werden deine Nachrichten mit Fotos und Videos, Direktchats, Moments, Freundschaften, Mitteilungen, Statistikdaten und dein Login. Buchungen und das Protokoll der Gruppe bleiben für die Kasse erhalten und zeigen nur noch „Gelöschtes Konto“. Das Löschen lässt sich nicht rückgängig machen.
 
 <br clear="right">
 

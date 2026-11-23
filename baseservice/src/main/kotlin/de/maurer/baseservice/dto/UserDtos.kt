@@ -128,3 +128,42 @@ data class TermsStatusDto(
 data class AcceptTermsRequest(
     val acceptTerms: Boolean? = null
 )
+
+/** Eine Gruppe in der Vorschau der Kontolöschung. */
+data class AccountDeletionGroupDto(
+    val id: String,
+    val name: String
+)
+
+/** Guthaben ungleich null in einer Gruppe; es verfällt mit dem Konto nicht, bleibt aber nur in der Kasse sichtbar. */
+data class AccountDeletionBalanceDto(
+    val groupId: String,
+    val groupName: String,
+    val currency: String,
+    val creditBalance: java.math.BigDecimal
+)
+
+/** Was eine Kontolöschung bewirken würde (`GET /api/v1/users/me/deletion`). */
+data class AccountDeletionPreviewDto(
+    /** Gruppen, in denen man als Letzte verwaltet und nicht allein ist: Löschen ist erst nach Übergabe möglich. */
+    val blockingGroups: List<AccountDeletionGroupDto>,
+    /** Gruppen, in denen man das einzige aktive Mitglied ist: sie werden archiviert. */
+    val archivedGroups: List<AccountDeletionGroupDto>,
+    /** Gruppen, deren Mitgliedschaft endet. */
+    val leftGroups: List<AccountDeletionGroupDto>,
+    val balances: List<AccountDeletionBalanceDto>,
+    /** Ob auch das Login in Keycloak gelöscht wird. */
+    val loginDeletion: Boolean,
+    /** Ob die Person Anwendungs-Admin ist (Keycloak-Rolle `admin`); die Rechte entfallen mit dem Login. */
+    val platformAdmin: Boolean
+)
+
+data class DeleteAccountRequest(
+    /** Muss `true` sein; die Oberfläche fragt vorher deutlich nach. */
+    val confirm: Boolean? = null
+)
+
+data class AccountDeletedDto(
+    /** `false`, wenn das Login in Keycloak nicht gelöscht werden konnte und von Hand entfernt werden muss. */
+    val loginDeleted: Boolean
+)

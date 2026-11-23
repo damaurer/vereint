@@ -69,5 +69,5 @@ Betreibers:
 - Platzhalter füllen (siehe oben) und die Texte prüfen lassen.
 - Datenschutzerklärung (die AGB verweisen darauf) und Vertrag zur
   Auftragsverarbeitung mit den Gruppen (AGB § 10 Abs. 4).
-- Löschen von Konto oder Gruppe auf Anfrage geht heute von Hand (AGB § 10
-  Abs. 3).
+- Das Konto löscht jede Person selbst unter *Profil → Konto löschen* (#152).
+  Gruppen löscht der Betreiber weiter auf Anfrage von Hand (AGB § 10 Abs. 3).

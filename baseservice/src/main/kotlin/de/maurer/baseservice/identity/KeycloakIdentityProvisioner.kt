@@ -151,4 +151,7 @@ class DisabledIdentityProvisioner : IdentityProvisioner {
         throw RegistrationUnavailableException(Msg("error.memberInvite.registrationDisabled"))
 
     override fun deleteAccount(subject: String) = Unit
+
+    override val canDeleteAccounts: Boolean
+        get() = false
 }

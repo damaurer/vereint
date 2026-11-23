@@ -2,6 +2,7 @@ package de.maurer.baseservice.controller
 
 import de.maurer.baseservice.dto.*
 import de.maurer.baseservice.security.AuthContext
+import de.maurer.baseservice.service.AccountDeletionService
 import de.maurer.baseservice.service.TermsService
 import de.maurer.baseservice.service.UserService
 import de.maurer.baseservice.support.Identifiers
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*
 class UserController(
     private val userService: UserService,
     private val termsService: TermsService,
+    private val accountDeletionService: AccountDeletionService,
     private val authContext: AuthContext
 ) {
 
@@ -54,6 +56,22 @@ class UserController(
     @Operation(summary = "Der gültigen AGB-Fassung zustimmen", description = "Speichert Fassung und Zeitpunkt der Zustimmung am eigenen Konto")
     fun acceptMyTerms(@RequestBody request: AcceptTermsRequest): ResponseEntity<TermsStatusDto> =
         ResponseEntity.ok(termsService.accept(authContext.getRequiredPrincipal(), request))
+
+    @GetMapping("/me/deletion")
+    @Operation(
+        summary = "Vorschau der Kontolöschung",
+        description = "Gruppen, die enden, archiviert werden oder das Löschen blockieren, sowie offenes Guthaben"
+    )
+    fun previewMyDeletion(): ResponseEntity<AccountDeletionPreviewDto> =
+        ResponseEntity.ok(accountDeletionService.preview(authContext.getRequiredPrincipal()))
+
+    @PostMapping("/me/deletion")
+    @Operation(
+        summary = "Eigenes Konto löschen",
+        description = "Löscht persönliche Daten in allen Gruppen und das Login in Keycloak; Buchungen bleiben als „Gelöschtes Konto“"
+    )
+    fun deleteMyAccount(@RequestBody request: DeleteAccountRequest): ResponseEntity<AccountDeletedDto> =
+        ResponseEntity.ok(accountDeletionService.delete(request, authContext.getRequiredPrincipal()))
 
     @GetMapping
     @Operation(

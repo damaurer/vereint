@@ -30,4 +30,12 @@ interface IdentityProvisioner {
 
     /** Entfernt ein gerade angelegtes Konto wieder (Kompensation bei Fehlern). */
     fun deleteAccount(subject: String)
+
+    /**
+     * Ob Login-Konten über die Admin-API gelöscht werden können. Ohne
+     * Konfiguration (`vereint.registration.*`) bleibt das Login bei einer
+     * Kontolöschung in Keycloak bestehen und muss dort entfernt werden.
+     */
+    val canDeleteAccounts: Boolean
+        get() = true
 }

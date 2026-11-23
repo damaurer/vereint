@@ -47,5 +47,6 @@
     <include file="db/changelog/changes/028-chat-receipts-and-outbox.xml"/>
     <include file="db/changelog/changes/029-chat-media.xml"/>
     <include file="db/changelog/changes/030-event-series.xml"/>
+    <include file="db/changelog/changes/031-account-deletion.xml"/>
 
 </databaseChangeLog>
