@@ -26,6 +26,7 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltu
 | einen Hinweis oben im Gruppenchat anheften | **Kommunikation** → Infotafel → **Anpinnen** |
 | ein Thekenterminal ohne PIN entsperren | **Vorstand** → **Kiosk-Geräte** → **Entsperren** |
 | festlegen, welche Moments und Reaktionen es gibt | **Vorstand** → **Moments** |
+| gemeldete Nachrichten oder Moments prüfen | **Vorstand** → **Meldungen** |
 
 ## Vorstandsübersicht
 
@@ -272,6 +273,17 @@ Ein Thekenterminal im Kiosk-Modus lässt sich am Gerät nur mit seiner PIN verla
 2. Beim richtigen Gerät **Entsperren** tippen.
 
 Das Gerät verlässt den Kiosk-Modus innerhalb weniger Sekunden. Start, Fernentsperrung und PIN-Sperren stehen in **Letzte Aktionen**.
+
+## Meldungen
+
+Mitglieder können Chatnachrichten, Moments und Antworten auf Moments melden. Die Meldungen landen unter **Vorstand** → **Meldungen**; die Kachel zeigt die Zahl offener Meldungen. Sehen und bearbeiten darf sie, wer Chats moderiert oder Mitglieder verwaltet (`chat.moderate` oder `members.manage`, also Vorstand und Admin).
+
+Jede Meldung zeigt, was gemeldet wurde, den Grund, die Notiz, wer gemeldet hat und von wem der Inhalt stammt, dazu einen Auszug des Textes.
+
+- **Inhalt entfernen** löscht die Nachricht, die Antwort oder den ganzen Moment mit Fotos und Videos endgültig.
+- **Ohne Folgen schließen** lässt den Inhalt stehen.
+
+Beides steht danach in **Letzte Aktionen**. Mit **Erledigte Meldungen zeigen** siehst du auch, was schon bearbeitet wurde.
 
 ## Statistik der Gruppe
 

@@ -34,6 +34,7 @@ import de.maurer.baseservice.repository.EventRepository
 import de.maurer.baseservice.repository.MomentSessionRepository
 import de.maurer.baseservice.security.UserPrincipal
 import de.maurer.baseservice.tenancy.TenantContext
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -73,7 +74,8 @@ class ConversationService(
     private val typingSignals: TypingSignals,
     private val mediaAttachments: ChatMediaAttachments,
     private val momentSessionRepository: MomentSessionRepository,
-    private val momentAccessPolicy: MomentAccessPolicy
+    private val momentAccessPolicy: MomentAccessPolicy,
+    private val blockService: BlockService
 ) {
 
     fun listConversations(principal: UserPrincipal): List<ConversationSummaryDto> {
@@ -108,7 +110,10 @@ class ConversationService(
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireReadable(conversationId, caller, principal)
         chatReceipts.delivered(conversation, caller)
+        // Nachrichten blockierter Personen bleiben ausgeblendet (#153).
+        val hidden = blockService.hiddenFor(caller.id)
         val messages = chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(conversation.id)
+            .filter { it.sender?.id == null || it.sender?.id !in hidden }
         val receipts = chatReceipts.receiptsFor(conversation, messages, caller, chatNotifier.audienceOf(conversation))
         return withReactions(messages, caller).map { dto ->
             receipts[UUID.fromString(dto.id)]?.let { dto.copy(receipt = it) } ?: dto
@@ -276,6 +281,8 @@ class ConversationService(
         val member = conversationMemberRepository.findByConversationIdAndUserId(conversation.id, caller.id).orElse(null)
         // Wer einen Chat noch nie geöffnet hat, zählt erst ab seinem Beitritt bzw. ab Anlage des Chats.
         val since = member?.lastReadAt ?: member?.joinedAt ?: conversation.createdAt
+        val hidden = blockService.hiddenFor(caller.id)
+        if (hidden.isNotEmpty()) return chatMessageRepository.countUnreadExcluding(conversation.id, caller.id, since, hidden)
         return chatMessageRepository.countUnread(conversation.id, caller.id, since)
     }
 
@@ -291,7 +298,12 @@ class ConversationService(
         } else {
             null
         }
-        val last = chatMessageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conversation.id).orElse(null)
+        val hidden = blockService.hiddenFor(caller.id)
+        val last = if (hidden.isEmpty()) {
+            chatMessageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conversation.id).orElse(null)
+        } else {
+            chatMessageRepository.findLatestVisible(conversation.id, hidden, PageRequest.of(0, 1)).firstOrNull()
+        }
         val event = conversation.event
         val canWrite = event == null ||
             (event.status != EventStatus.cancelled && event.status != EventStatus.archived)

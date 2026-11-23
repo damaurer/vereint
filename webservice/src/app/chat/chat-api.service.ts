@@ -6,8 +6,10 @@ import type {
   ChatMessageDto,
   ConversationSummary,
   ConversationType,
+  CreateReportPayload,
   FriendContact,
   MemberProfile,
+  ReportCreated,
 } from '../api/api.types';
 
 /** Header, mit dem ein Gruppen- oder Event-Chat der Liste seine Gruppe nennt (siehe BFF). */
@@ -113,6 +115,24 @@ export class ChatApiService {
     return this.api.post<ChatMessageDto>(
       `${this.path(conversationId, type)}/messages/${encodeURIComponent(messageId)}/reactions`,
       { emoji },
+      this.headers(type, group),
+    );
+  }
+
+  /**
+   * Meldet eine Nachricht (#153): Gruppen- und Event-Chats gehen an die
+   * Verwaltung der Gruppe, Direktnachrichten an die Anwendungs-Administration.
+   */
+  reportMessage(
+    conversationId: string,
+    messageId: string,
+    payload: CreateReportPayload,
+    type?: ConversationType,
+    group?: string | null,
+  ): Observable<ReportCreated> {
+    return this.api.post<ReportCreated>(
+      `${this.path(conversationId, type)}/messages/${encodeURIComponent(messageId)}/report`,
+      payload,
       this.headers(type, group),
     );
   }

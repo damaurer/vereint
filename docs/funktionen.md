@@ -95,6 +95,24 @@ Thekenterminals.
 - Nachrichten und Mitteilungen werden verschlüsselt gespeichert (siehe
   [Sicherheit und Verschlüsselung](betrieb/sicherheit-und-schluessel.md)).
 
+## Melden und Blockieren
+
+- Fremde Chatnachrichten, Direktnachrichten, Moments und Antworten auf Moments
+  lassen sich melden (Grund und freiwillige Notiz). Im Chat über die
+  Reaktions-Auswahl einer Nachricht (**Melden oder blockieren**), bei Moments
+  über **Melden**.
+- Meldungen zu Inhalten einer Gruppe gehen an ihre Verwaltung
+  (`chat.moderate` oder `members.manage`) unter **Vorstand → Meldungen**
+  (`/meldungen`, mit Zahl offener Meldungen). Meldungen zu Direktnachrichten
+  gehen an die Plattform-Administration (`/plattform/meldungen`). Bearbeiten:
+  Inhalt entfernen oder ohne Folgen schließen; beides steht im Audit-Log.
+- Blockieren gilt über alle Gruppen: Nachrichten, Moments und Antworten der
+  Person sind ausgeblendet, Push von ihr kommt nicht mehr, Direktnachrichten
+  und Freundschaftsanfragen sind in beide Richtungen gesperrt, eine
+  Freundschaft endet. Die Person erfährt es nicht. Aufheben im Profil unter
+  **Blockierte Personen**.
+- Fachliche Details: [docs/domains/melden-und-blockieren.md](domains/melden-und-blockieren.md)
+
 ## Kalender und Freunde
 
 - Persönlicher Kalender (*Mehr → Kalender*): vergangene und kommende Events

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+    <property name="text.type" value="TEXT" dbms="postgresql"/>
+    <property name="text.type" value="VARCHAR(65535)" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 360. Blockieren (#153): persönlich und gruppenübergreifend wie
+         `friendships`, deshalb ohne stammtisch_id und ohne Row Level Security.
+         Der Fachservice gibt Zeilen nur an die blockierende Person heraus. -->
+    <changeSet id="360-create-user-blocks" author="claude">
+        <createTable tableName="user_blocks">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="blocker_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_user_blocks_blocker" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="blocked_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_user_blocks_blocked" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addUniqueConstraint tableName="user_blocks" columnNames="blocker_id, blocked_id"
+                             constraintName="uk_user_blocks_pair"/>
+        <createIndex tableName="user_blocks" indexName="idx_user_blocks_blocked">
+            <column name="blocked_id"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="user_blocks"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 361. Meldungen zu Inhalten einer Gruppe (Chatnachricht, Moment,
+         Moment-Antwort): gehören der Gruppe, sichtbar für Personen mit
+         chat.moderate oder members.manage dieser Gruppe. -->
+    <changeSet id="361-create-content-reports" author="claude">
+        <createTable tableName="content_reports">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="stammtisch_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_content_reports_stammtisch" references="stammtische(id)"/>
+            </column>
+            <column name="reporter_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_content_reports_reporter" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="target_type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_id" type="${uuid.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_user_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_content_reports_target_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="reason" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Freitext und Auszug des gemeldeten Inhalts, mit DATA_ENCRYPTION_KEY verschlüsselt. -->
+            <column name="note" type="${text.type}"/>
+            <column name="excerpt" type="${text.type}"/>
+            <column name="status" type="VARCHAR(16)" defaultValue="open">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resolution" type="VARCHAR(32)"/>
+            <column name="resolved_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_content_reports_resolved_by" references="users(id)"/>
+            </column>
+            <column name="resolved_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="content_reports" indexName="idx_content_reports_stammtisch_status">
+            <column name="stammtisch_id"/>
+            <column name="status"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="content_reports"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 362. Meldungen zu Direktnachrichten: gehören keiner Gruppe und gehen an
+         die Anwendungs-Administration (Keycloak-Rolle admin). -->
+    <changeSet id="362-create-direct-reports" author="claude">
+        <createTable tableName="direct_reports">
+            <column name="id" type="${uuid.type}">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="reporter_id" type="${uuid.type}">
+                <constraints nullable="false" foreignKeyName="fk_direct_reports_reporter" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="target_type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_id" type="${uuid.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_user_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_direct_reports_target_user" references="users(id)" deleteCascade="true"/>
+            </column>
+            <column name="reason" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Freitext und Auszug des gemeldeten Inhalts, mit DATA_ENCRYPTION_KEY verschlüsselt. -->
+            <column name="note" type="${text.type}"/>
+            <column name="excerpt" type="${text.type}"/>
+            <column name="status" type="VARCHAR(16)" defaultValue="open">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resolution" type="VARCHAR(32)"/>
+            <column name="resolved_by" type="${uuid.type}">
+                <constraints foreignKeyName="fk_direct_reports_resolved_by" references="users(id)"/>
+            </column>
+            <column name="resolved_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="direct_reports" indexName="idx_direct_reports_status">
+            <column name="status"/>
+        </createIndex>
+        <rollback>
+            <dropTable tableName="direct_reports"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 363. Row Level Security für content_reports wie in Changeset 165. -->
+    <changeSet id="363-content-reports-row-level-security" author="claude" dbms="postgresql">
+        <sql splitStatements="false">
+            ALTER TABLE content_reports ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE content_reports FORCE ROW LEVEL SECURITY;
+            CREATE POLICY stammtisch_isolation ON content_reports
+                USING (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid)
+                WITH CHECK (current_setting('vereint.rls_bypass', true) = 'on'
+                       OR stammtisch_id = nullif(current_setting('vereint.stammtisch_id', true), '')::uuid);
+        </sql>
+        <rollback>
+            <sql>DROP POLICY IF EXISTS stammtisch_isolation ON content_reports; ALTER TABLE content_reports NO FORCE ROW LEVEL SECURITY; ALTER TABLE content_reports DISABLE ROW LEVEL SECURITY</sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

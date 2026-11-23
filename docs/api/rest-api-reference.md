@@ -246,6 +246,24 @@ Gruppenübergreifend und ohne gewählte Gruppe, siehe [Kalender, Freunde und Dir
 | `POST` | `/api/v1/friends/requests` | Freundschaftsanfrage senden (`FriendRequestRequest`) | gemeinsame Gruppe |
 | `POST` | `/api/v1/friends/requests/{userId}/accept` | Anfrage annehmen | Angefragte Person |
 | `DELETE` | `/api/v1/friends/{userId}` | Anfrage ablehnen oder zurückziehen, Freundschaft beenden | Beteiligte |
+### 7b. Melden und Blockieren (`ModerationController`)
+Siehe [Melden und Blockieren](../domains/melden-und-blockieren.md). `/api/v1/blocks` läuft ohne gewählte Gruppe.
+
+| Methode | Pfad | Beschreibung | Berechtigung |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/blocks` | Eigene blockierte Personen (`BlockedUserDto`) | Angemeldet |
+| `PUT` | `/api/v1/blocks/{userId}` | Person blockieren; beendet eine Freundschaft | Person bekannt (gemeinsame Gruppe, Freundschaft oder Direktchat) |
+| `DELETE` | `/api/v1/blocks/{userId}` | Blockierung aufheben | Angemeldet |
+| `POST` | `/api/v1/conversations/{conversationId}/messages/{messageId}/report` | Chatnachricht melden (`CreateReportRequest`) | Chat lesbar, fremde Nachricht |
+| `POST` | `/api/v1/moments/{momentId}/report` | Moment melden | Moment sichtbar, fremder Moment |
+| `POST` | `/api/v1/moments/{momentId}/responses/{responseId}/report` | Antwort auf einen Moment melden | Moment sichtbar, fremde Antwort |
+| `POST` | `/api/v1/direct-conversations/{conversationId}/messages/{messageId}/report` | Direktnachricht melden | Teilnehmende, fremde Nachricht |
+| `GET` | `/api/v1/reports?all=` | Meldungen der Gruppe (`ReportDto`), mit `all=true` auch erledigte | `chat.moderate` oder `members.manage` |
+| `GET` | `/api/v1/reports/open-count` | Zahl offener Meldungen (`{ open }`, sonst 0) | Angemeldet |
+| `POST` | `/api/v1/reports/{reportId}/resolve` | Erledigen (`ResolveReportRequest`: `removed` oder `dismissed`) | `chat.moderate` oder `members.manage` |
+| `GET` | `/api/v1/platform/reports?all=` | Meldungen zu Direktnachrichten | Plattform-Admin |
+| `POST` | `/api/v1/platform/reports/{reportId}/resolve` | Meldung zu einer Direktnachricht erledigen | Plattform-Admin |
+
 ### 8. Bilder, Statistik & Audit-Logs (`ImageController`, `StatisticsController`, `AuditLogController`)
 | Methode | Pfad | Beschreibung | Berechtigung |
 | :--- | :--- | :--- | :--- |

@@ -471,6 +471,37 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
         @Param("after") after: Instant
     ): Long
 
+    /** Wie [countUnread], ohne Nachrichten blockierter Personen (#153). */
+    @Query(
+        """
+        select count(m) from ChatMessageEntity m left join m.sender s
+        where m.conversation.id = :conversationId
+          and m.createdAt > :after
+          and (s is null or (s.id <> :userId and s.id not in :hidden))
+        """
+    )
+    fun countUnreadExcluding(
+        @Param("conversationId") conversationId: UUID,
+        @Param("userId") userId: UUID,
+        @Param("after") after: Instant,
+        @Param("hidden") hidden: Collection<UUID>
+    ): Long
+
+    /** Neueste Nachrichten ohne die blockierter Personen (#153); mit `PageRequest.of(0, 1)` die letzte. */
+    @Query(
+        """
+        select m from ChatMessageEntity m left join m.sender s
+        where m.conversation.id = :conversationId
+          and (s is null or s.id not in :hidden)
+        order by m.createdAt desc
+        """
+    )
+    fun findLatestVisible(
+        @Param("conversationId") conversationId: UUID,
+        @Param("hidden") hidden: Collection<UUID>,
+        pageable: Pageable
+    ): List<ChatMessageEntity>
+
     /** Zeitpunkt der neuesten Nachricht anderer (Mitglieder oder Gäste) nach `after`; `null`, wenn keine. */
     @Query(
         """
@@ -642,6 +673,7 @@ interface MomentReactionRepository : JpaRepository<MomentReactionEntity, UUID> {
 @Repository
 interface MomentMediaRepository : JpaRepository<MomentMediaEntity, UUID> {
     fun findByResponseIdIn(responseIds: Collection<UUID>): List<MomentMediaEntity>
+    fun findByMomentId(momentId: UUID): List<MomentMediaEntity>
     fun countByMomentIdAndOwnerId(momentId: UUID, ownerId: UUID): Long
     fun findByResponseIsNullAndCreatedAtBefore(cutoff: Instant): List<MomentMediaEntity>
     fun countByCreatedAtGreaterThanEqual(from: Instant): Long
@@ -881,4 +913,51 @@ interface StatisticRecordRepository : JpaRepository<StatisticRecordEntity, UUID>
     @Modifying
     @Query("delete from StatisticRecordEntity r where r.stammtischId = :stammtischId")
     fun deleteAllOfStammtisch(@Param("stammtischId") stammtischId: UUID): Int
+}
+
+/** Blockierungen (#153), persönlich und gruppenübergreifend. */
+@Repository
+interface UserBlockRepository : JpaRepository<UserBlockEntity, UUID> {
+    @Query("select b from UserBlockEntity b join fetch b.blocked where b.blocker.id = :blockerId order by b.createdAt desc")
+    fun findByBlockerId(@Param("blockerId") blockerId: UUID): List<UserBlockEntity>
+
+    fun findByBlockerIdAndBlockedId(blockerId: UUID, blockedId: UUID): Optional<UserBlockEntity>
+
+    @Query("select b.blocked.id from UserBlockEntity b where b.blocker.id = :userId")
+    fun findBlockedIds(@Param("userId") userId: UUID): List<UUID>
+
+    @Query("select b.blocker.id from UserBlockEntity b where b.blocked.id = :userId")
+    fun findBlockerIds(@Param("userId") userId: UUID): List<UUID>
+
+    @Query(
+        """
+        select count(b) > 0 from UserBlockEntity b
+        where (b.blocker.id = :a and b.blocked.id = :b) or (b.blocker.id = :b and b.blocked.id = :a)
+        """
+    )
+    fun existsEitherWay(@Param("a") a: UUID, @Param("b") b: UUID): Boolean
+}
+
+/** Meldungen zu Inhalten der aktuellen Gruppe. */
+@Repository
+interface ContentReportRepository : JpaRepository<ContentReportEntity, UUID> {
+    fun findByStatusOrderByCreatedAtDesc(status: ReportStatus): List<ContentReportEntity>
+    fun findAllByOrderByCreatedAtDesc(): List<ContentReportEntity>
+    fun existsByReporterIdAndTargetTypeAndTargetIdAndStatus(
+        reporterId: UUID,
+        targetType: ReportTargetType,
+        targetId: UUID,
+        status: ReportStatus
+    ): Boolean
+    fun findByTargetTypeAndTargetIdAndStatus(targetType: ReportTargetType, targetId: UUID, status: ReportStatus): List<ContentReportEntity>
+    fun countByStatus(status: ReportStatus): Long
+}
+
+/** Meldungen zu Direktnachrichten; nur für die Anwendungs-Administration. */
+@Repository
+interface DirectReportRepository : JpaRepository<DirectReportEntity, UUID> {
+    fun findByStatusOrderByCreatedAtDesc(status: ReportStatus): List<DirectReportEntity>
+    fun findAllByOrderByCreatedAtDesc(): List<DirectReportEntity>
+    fun existsByReporterIdAndTargetIdAndStatus(reporterId: UUID, targetId: UUID, status: ReportStatus): Boolean
+    fun findByTargetIdAndStatus(targetId: UUID, status: ReportStatus): List<DirectReportEntity>
 }

@@ -22,6 +22,8 @@ import { AccountDeletionComponent } from './account-deletion.component';
  * von Anzeigename und E-Mail. Rollen, Status und Berechtigungen sind reine
  * Anzeige; ihre Vergabe erfolgt ausschließlich administrativ im Fachservice.
  */
+import { BlockedUsersComponent } from '../moderation/blocked-users.component';
+
 @Component({
   selector: 'app-member-profile',
   imports: [
@@ -32,6 +34,7 @@ import { AccountDeletionComponent } from './account-deletion.component';
     TranslatePipe,
     PwaSettingsComponent,
     StatisticsSettingsComponent,
+    BlockedUsersComponent,
     AccountDeletionComponent,
   ],
   templateUrl: './profile.component.html',

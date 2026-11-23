@@ -44,7 +44,8 @@ class MomentService(
     private val auditService: AuditService,
     private val momentConfigService: MomentConfigService,
     private val momentMediaRepository: MomentMediaRepository,
-    private val statisticsRecorder: StatisticsRecorder
+    private val statisticsRecorder: StatisticsRecorder,
+    private val blockService: BlockService
 ) {
 
     /**
@@ -104,9 +105,11 @@ class MomentService(
         )
 
         // Benachrichtigung & Web-Push an alle, die den Moment sehen dürfen
+        // Wer die startende Person blockiert hat, bekommt keine Mitteilung (#153).
+        val blockers = blockService.blockersOf(caller.id)
         val recipients = audience(saved)
             .distinctBy { it.id }
-            .filter { it.id != caller.id }
+            .filter { it.id != caller.id && it.id !in blockers }
 
         if (recipients.isNotEmpty()) {
             val notifTitle = "Neuer Moment: ${saved.title}"
@@ -248,7 +251,7 @@ class MomentService(
         } else {
             momentSessionRepository.findByActiveTrueOrderByCreatedAtDesc()
         }
-        val canView = policy.viewFilter(caller, principal)
+        val canView = viewFilter(caller, principal)
         val labels = momentConfigService.labels()
         val now = Instant.now()
         val activeDtos = mutableListOf<MomentSessionDto>()
@@ -277,7 +280,10 @@ class MomentService(
             completeMomentInternal(session)
         }
 
+        // Antworten blockierter Personen bleiben ausgeblendet (#153).
+        val hidden = blockService.hiddenFor(access.caller.id)
         val responses = momentResponseRepository.findByMomentIdOrderByCreatedAtAsc(session.id)
+            .filter { it.user?.id !in hidden }
         val labels = momentConfigService.labels()
         val mediaByResponse = if (responses.isEmpty()) {
             emptyMap()
@@ -348,7 +354,7 @@ class MomentService(
         }
 
         // Nur abgeschlossene Momente gehören in die Historie; laufende zeigt die Seite separat.
-        val canView = policy.viewFilter(caller, principal)
+        val canView = viewFilter(caller, principal)
         val labels = momentConfigService.labels()
         return sessions.filter { !it.active && canView(it) }.map { toSummaryDto(it, labels) }
     }
@@ -375,7 +381,7 @@ class MomentService(
         }
         sessions.filter { it.active && it.expiresAt.isBefore(now) }.forEach { completeMomentInternal(it) }
 
-        val canView = policy.viewFilter(caller, principal)
+        val canView = viewFilter(caller, principal)
         val visible = sessions.filter(canView).take(MAX_WORLD_MAP_MOMENTS)
         if (visible.isEmpty()) return emptyList()
 
@@ -412,6 +418,13 @@ class MomentService(
                 completedAt = if (session.active) null else session.completedAt ?: session.expiresAt
             )
         }
+    }
+
+    /** Sichtbarkeit nach [MomentAccessPolicy], ohne Moments blockierter Personen (#153). */
+    private fun viewFilter(caller: UserEntity, principal: UserPrincipal): (MomentSessionEntity) -> Boolean {
+        val allowed = policy.viewFilter(caller, principal)
+        val hidden = blockService.hiddenFor(caller.id)
+        return { session -> allowed(session) && session.creator?.id !in hidden }
     }
 
     private fun completeMomentInternal(session: MomentSessionEntity): MomentSummaryDto {

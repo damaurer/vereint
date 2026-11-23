@@ -67,6 +67,7 @@ docs/
 │   ├── tablet-strichliste-recorder.md    # Kiosk-Strichliste, 1-Tap-Buchung & Abendabrechnung
 │   ├── chat-and-push-notifications.md    # Gruppenchat, Direktnachrichten & VAPID Web Push
 │   ├── kalender-freunde-direktnachrichten.md # Persönlicher Kalender, Freunde & DMs über alle Gruppen
+│   ├── melden-und-blockieren.md        # Inhalte melden, Personen blockieren, Meldungen bearbeiten
 │   └── statistics-and-analytics.md       # Gruppenstatistik und Audit-Protokoll
 │
 ├── frontend/                             # Client-Architektur & UI-Bibliothek

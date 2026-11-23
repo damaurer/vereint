@@ -612,6 +612,14 @@
     "roundGive": {
       "title": "Runde ausgeben",
       "description": "Eine Runde oder den ganzen Abend mit dem eigenen Guthaben ausgeben."
+    },
+    "reports": {
+      "title": "Meldungen",
+      "description": "Gemeldete Inhalte der Gruppe bearbeiten."
+    },
+    "platformReports": {
+      "title": "Meldungen zu Direktnachrichten",
+      "description": "Gemeldete Direktnachrichten bearbeiten."
     }
   },
   "chat": {
@@ -704,7 +712,7 @@
       "sendFailed": "Nachricht konnte nicht gesendet werden. Bitte erneut versuchen.",
       "attachUnavailable": "Anhänge sind derzeit nicht verfügbar.",
       "readOnly": "In diesem Chat kannst du nicht mehr schreiben.",
-      "readOnlyDirect": "Ihr seid weder befreundet noch in einer gemeinsamen Gruppe. Der Verlauf bleibt lesbar, neue Nachrichten gehen nicht.",
+      "readOnlyDirect": "Neue Nachrichten an diese Person sind nicht möglich, zum Beispiel weil ihr weder befreundet seid noch eine Gruppe teilt. Der Verlauf bleibt lesbar.",
       "attachMedia": "Foto oder Video anhängen",
       "removeMedia": "Anhang entfernen",
       "uploading": "Wird hochgeladen… {percent} %",
@@ -2682,5 +2690,78 @@
       "flags": "Flaggen",
       "component": "Bausteine"
     }
+  },
+  "moderation": {
+    "action": {
+      "report": "Melden",
+      "reportOrBlock": "Melden oder blockieren"
+    },
+    "reason": {
+      "spam": "Spam oder Werbung",
+      "harassment": "Belästigung oder Beleidigung",
+      "inappropriate": "Unangemessener Inhalt",
+      "other": "Etwas anderes"
+    },
+    "target": {
+      "chat_message": "Chatnachricht",
+      "moment": "Moment",
+      "moment_response": "Antwort auf einen Moment",
+      "direct_message": "Direktnachricht"
+    },
+    "dialog": {
+      "title": "Melden oder blockieren",
+      "about": "Es geht um einen Inhalt von {name}.",
+      "reason": "Warum meldest du das?",
+      "note": "Notiz (optional)",
+      "alsoBlock": "{name} zusätzlich blockieren",
+      "person": "die Person",
+      "blockHint": "Blockierte Personen siehst du nicht mehr in Chats und Moments, und ihr könnt euch keine Direktnachrichten schreiben. Die Person erfährt davon nichts. Aufheben kannst du das im Profil.",
+      "toGroup": "Die Meldung geht an die Verwaltung der Gruppe. Dein Name ist für sie sichtbar.",
+      "toPlatform": "Die Meldung geht an die Administration der Anwendung. Dein Name ist für sie sichtbar.",
+      "onlyBlock": "Nur blockieren",
+      "send": "Melden",
+      "sending": "Wird gesendet …"
+    },
+    "notice": {
+      "reported": "Danke, die Meldung ist eingegangen.",
+      "blocked": "{name} ist blockiert.",
+      "reportedAndBlocked": "Danke, die Meldung ist eingegangen und {name} ist blockiert."
+    },
+    "blocked": {
+      "title": "Blockierte Personen",
+      "hint": "Von diesen Personen siehst du keine Nachrichten, Moments und Antworten mehr. Direktnachrichten sind in beide Richtungen gesperrt.",
+      "empty": "Du hast niemanden blockiert.",
+      "since": "seit {date}",
+      "unblock": "Aufheben"
+    },
+    "reports": {
+      "back": "Zurück",
+      "eyebrow": "Moderation",
+      "title": {
+        "group": "Meldungen der Gruppe",
+        "platform": "Meldungen zu Direktnachrichten"
+      },
+      "intro": {
+        "group": "Gemeldete Chatnachrichten, Moments und Antworten aus dieser Gruppe. Entferne den Inhalt oder schließe die Meldung ohne Folgen.",
+        "platform": "Gemeldete Direktnachrichten aus allen Gruppen. Entferne die Nachricht oder schließe die Meldung ohne Folgen."
+      },
+      "showResolved": "Erledigte Meldungen zeigen",
+      "empty": "Keine Meldungen.",
+      "byline": "Gemeldet von {reporter}, Inhalt von {author}",
+      "unknown": "unbekannt",
+      "contentGone": "Der Inhalt ist nicht mehr vorhanden.",
+      "note": "Notiz: {note}",
+      "dismiss": "Ohne Folgen schließen",
+      "remove": "Inhalt entfernen",
+      "resolved": {
+        "removed": "Inhalt entfernt von {name} am {date}",
+        "dismissed": "Ohne Folgen geschlossen von {name} am {date}"
+      }
+    },
+    "board": {
+      "title": "Meldungen",
+      "desc": "Gemeldete Inhalte prüfen und entfernen"
+    },
+    "platformLink": "Meldungen zu Direktnachrichten bearbeiten"
   }
 }

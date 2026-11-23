@@ -100,7 +100,8 @@ class ChatServiceTest {
             momentSessionRepository,
             MomentAccessPolicy(eventParticipantRepository, StammtischTestSupport.access(userRoleRepository)),
             mock(de.maurer.baseservice.service.StatisticsRecorder::class.java),
-            mock(de.maurer.baseservice.service.ChatNotifier::class.java)
+            mock(de.maurer.baseservice.service.ChatNotifier::class.java),
+            mock(de.maurer.baseservice.service.BlockService::class.java)
         )
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: ownerId)).thenReturn(emptyList())
         `when`(conversationMemberRepository.countByConversationId(any(UUID::class.java) ?: conversationId)).thenReturn(0L)

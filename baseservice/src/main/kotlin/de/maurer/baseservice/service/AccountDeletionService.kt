@@ -214,6 +214,7 @@ class AccountDeletionService(
 
         // Persönliches.
         update("delete from friendships where requester_id = :u or addressee_id = :u", p)
+        update("delete from user_blocks where blocker_id = :u or blocked_id = :u", p)
         update("delete from notifications where user_id = :u", p)
         update("delete from push_subscriptions where user_id = :u", p)
         update("delete from statistic_records where actor_user_id = :u", p)
