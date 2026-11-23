@@ -4,6 +4,9 @@ import de.maurer.baseservice.domain.StammtischMemberEntity
 import de.maurer.baseservice.domain.UserEntity
 import de.maurer.baseservice.domain.UserRoleEntity
 import de.maurer.baseservice.domain.UserRoleId
+import de.maurer.baseservice.error.ErrorCode
+import de.maurer.baseservice.error.InvalidRequestException
+import de.maurer.baseservice.error.Msg
 import de.maurer.baseservice.repository.StammtischMemberRepository
 import de.maurer.baseservice.repository.StammtischRoleRepository
 import de.maurer.baseservice.repository.UserRoleRepository
@@ -34,6 +37,9 @@ class MembershipService(
      */
     fun addMember(user: UserEntity, roles: Set<String> = setOf(UserRole.MEMBER)): Boolean {
         TenantContext.requireStammtischId()
+        if (user.deleted) {
+            throw InvalidRequestException(Msg("error.account.deleted"), ErrorCode.INVALID_REQUEST)
+        }
         val existing = memberRepository.findByUserId(user.id).orElse(null)
         val wasActive = existing?.active == true
         val member = existing ?: StammtischMemberEntity(user = user)

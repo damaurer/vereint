@@ -223,6 +223,9 @@ class UserService(
         requireMembersManage(principal, callerUser)
 
         val user = members.requireKnownUser(id)
+        if (user.deleted) {
+            throw InvalidRequestException(Msg("error.account.deleted"), ErrorCode.INVALID_REQUEST)
+        }
         val member = memberRepository.findByUserId(user.id).orElseThrow {
             ResourceNotFoundException(Msg("error.user.notFound", id), ErrorCode.NOT_FOUND)
         }

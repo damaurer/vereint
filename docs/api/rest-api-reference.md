@@ -34,6 +34,8 @@ Die Spalte „Berechtigung“ nennt die Permission, die der Fachservice in der g
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/users/me` | Eigenes Profil (`UserProfileDto`) | Angemeldet |
 | `PUT` | `/api/v1/users/me` | Eigenes Profil ändern (`UpdateProfileRequest`) | Angemeldet |
+| `GET` | `/api/v1/users/me/deletion` | Vorschau der Kontolöschung (`AccountDeletionPreviewDto`) | Angemeldet |
+| `POST` | `/api/v1/users/me/deletion` | Eigenes Konto löschen (`{"confirm": true}`, Antwort `AccountDeletedDto`; `409 account_deletion_blocked`, solange man irgendwo letzte Verwaltung ist) | Angemeldet |
 | `GET` | `/api/v1/users` | Mitgliederliste mit Paging (`page`, `size`, `sort`) und Filtern `role`, `disabled`, `search` | `members.read` |
 | `GET` | `/api/v1/users/directory` | Aktive Mitglieder für Auswahllisten | Mitglied |
 | `GET` | `/api/v1/users/{id}` | Profil eines Mitglieds | eigenes Profil oder `members.manage` |

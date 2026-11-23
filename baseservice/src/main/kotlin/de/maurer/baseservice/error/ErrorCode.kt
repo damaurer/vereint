@@ -39,6 +39,7 @@ object ErrorCode {
     const val STAMMTISCH_REQUIRED = "stammtisch_required"
     const val STAMMTISCH_ACCESS_DENIED = "stammtisch_access_denied"
     const val LAST_ROLE_MANAGER_PROTECTED = "last_role_manager_protected"
+    const val ACCOUNT_DELETION_BLOCKED = "account_deletion_blocked"
     const val STAMMTISCH_LIMIT = "stammtisch_limit"
     const val INTERNAL_ERROR = "internal_error"
 }

@@ -1325,3 +1325,35 @@ export interface ContentReport {
   createdAt: string;
   contentAvailable: boolean;
 }
+
+/** Eine Gruppe in der Vorschau der Kontolöschung. */
+export interface AccountDeletionGroup {
+  id: string;
+  name: string;
+}
+
+/** Offenes Guthaben in einer Gruppe. */
+export interface AccountDeletionBalance {
+  groupId: string;
+  groupName: string;
+  currency: string;
+  creditBalance: string;
+}
+
+/** `GET /api/v1/users/me/deletion`: was eine Kontolöschung bewirken würde. */
+export interface AccountDeletionPreview {
+  /** Gruppen, in denen man als Letzte verwaltet: Löschen erst nach Übergabe. */
+  blockingGroups: AccountDeletionGroup[];
+  /** Gruppen ohne weitere Mitglieder: werden archiviert. */
+  archivedGroups: AccountDeletionGroup[];
+  leftGroups: AccountDeletionGroup[];
+  balances: AccountDeletionBalance[];
+  /** Ob das Login gleich mit gelöscht wird. */
+  loginDeletion: boolean;
+  platformAdmin: boolean;
+}
+
+/** `POST /api/v1/users/me/deletion`. */
+export interface AccountDeleted {
+  loginDeleted: boolean;
+}

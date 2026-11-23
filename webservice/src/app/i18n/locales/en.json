@@ -234,7 +234,25 @@
       "hint": "Protect your account with an authenticator app (e.g. Google Authenticator). Login then asks for your password and a 6-digit code. Optional, but recommended for board members and admins.",
       "setupTwoFactor": "Set up two-factor sign-in"
     },
-    "since": "since {date}"
+    "since": "since {date}",
+    "deletion": {
+      "title": "Delete account",
+      "hint": "Deletes your account in all groups for good. This cannot be undone.",
+      "open": "Delete account …",
+      "dialogTitle": "Delete your account for good?",
+      "removed": "Deleted: your chat and direct messages with photos and videos, your direct chats, Moments and replies, reactions, friendships, notifications, statistics, answers to upcoming events, your profile picture and your login.",
+      "kept": "Kept: bookings, rounds and entries in the groups' audit log. Instead of your name they only show “Deleted account”.",
+      "blocked": "You are the last person managing these groups: {groups}. Hand over management to another member first, then you can delete your account.",
+      "archived": "These groups have no other members and will be archived: {groups}.",
+      "left": "Your membership ends in: {groups}.",
+      "balance": "You still have a balance of {amount} in {group}. Settle it with the treasurer first; afterwards you can no longer see it.",
+      "platformAdmin": "You are an application admin. These rights end with your login.",
+      "loginManual": "Your login cannot be deleted automatically here. The operators remove it by hand.",
+      "confirmLabel": "Type {word} to confirm",
+      "confirmWord": "DELETE",
+      "confirm": "Delete account for good",
+      "deleting": "Deleting …"
+    }
   },
   "notifications": {
     "eyebrow": "Messages",

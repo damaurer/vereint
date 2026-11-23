@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClient } from '../api/api-client.service';
 import type {
+  AccountDeleted,
+  AccountDeletionPreview,
   RecurrencePayload,
   RecurrencePreview,
   ChatMessageDto,
@@ -54,6 +56,16 @@ export class MemberApiService {
   /** Aktualisiert Anzeigename und/oder E-Mail (`PUT /api/v1/users/me`). */
   updateProfile(payload: UpdateProfilePayload): Observable<MemberProfile> {
     return this.api.put<MemberProfile>('/users/me', payload);
+  }
+
+  /** Vorschau der Kontolöschung (`GET /api/v1/users/me/deletion`). */
+  previewAccountDeletion(): Observable<AccountDeletionPreview> {
+    return this.api.get<AccountDeletionPreview>('/users/me/deletion');
+  }
+
+  /** Löscht das eigene Konto endgültig (`POST /api/v1/users/me/deletion`). */
+  deleteAccount(): Observable<AccountDeleted> {
+    return this.api.post<AccountDeleted>('/users/me/deletion', { confirm: true });
   }
 
   /** Für das Mitglied sichtbare Events (`GET /api/v1/events`). */
