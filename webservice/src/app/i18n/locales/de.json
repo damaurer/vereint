@@ -228,7 +228,25 @@
       "hint": "Schütze dein Konto zusätzlich mit einer Authenticator-App (z. B. Google Authenticator). Danach fragt der Login nach Passwort und einem 6-stelligen Code. Freiwillig, aber empfohlen für Vorstand und Admin.",
       "setupTwoFactor": "Zwei-Faktor-Anmeldung einrichten"
     },
-    "since": "seit {date}"
+    "since": "seit {date}",
+    "deletion": {
+      "title": "Konto löschen",
+      "hint": "Löscht dein Konto in allen Gruppen endgültig. Das lässt sich nicht rückgängig machen.",
+      "open": "Konto löschen …",
+      "dialogTitle": "Konto endgültig löschen?",
+      "removed": "Gelöscht werden: deine Chat- und Direktnachrichten mit Fotos und Videos, deine Direktchats, Moments und Antworten, Reaktionen, Freundschaften, Mitteilungen, Statistikdaten, Zusagen zu künftigen Events, dein Profilbild und dein Login.",
+      "kept": "Bleiben erhalten: Buchungen, Runden und Einträge im Protokoll der Gruppen. Sie zeigen statt deines Namens nur noch „Gelöschtes Konto“.",
+      "blocked": "Du bist in diesen Gruppen die letzte Person mit Verwaltungsrechten: {groups}. Gib die Verwaltung erst an ein anderes Mitglied weiter, dann kannst du dein Konto löschen.",
+      "archived": "Diese Gruppen haben außer dir keine Mitglieder und werden archiviert: {groups}.",
+      "left": "Deine Mitgliedschaft endet in: {groups}.",
+      "balance": "In {group} hast du noch ein Guthaben von {amount}. Kläre es vorher mit der Kasse, danach siehst du es nicht mehr.",
+      "platformAdmin": "Du bist Anwendungs-Admin. Diese Rechte entfallen mit deinem Login.",
+      "loginManual": "Dein Login kann hier nicht automatisch gelöscht werden. Die Betreiber entfernen es von Hand.",
+      "confirmLabel": "Tippe {word} ein, um zu bestätigen",
+      "confirmWord": "LÖSCHEN",
+      "confirm": "Konto endgültig löschen",
+      "deleting": "Wird gelöscht …"
+    }
   },
   "notifications": {
     "eyebrow": "Mitteilungen",

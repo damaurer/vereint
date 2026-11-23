@@ -40,6 +40,14 @@ class UserEntity(
     @Column(name = "statistics_enabled", nullable = false)
     var statisticsEnabled: Boolean = true,
 
+    /**
+     * Zeitpunkt der Selbstlöschung (#152). Gelöschte Konten bleiben als
+     * Platzhalter „Gelöschtes Konto“ stehen, damit Buchungen und Verläufe der
+     * Gruppen gültig bleiben; sie sind dauerhaft gesperrt.
+     */
+    @Column(name = "deleted_at")
+    var deletedAt: Instant? = null,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),
@@ -51,7 +59,10 @@ class UserEntity(
     @Version
     @Column(name = "version", nullable = false)
     var version: Long = 0
-)
+) {
+    val deleted: Boolean
+        get() = deletedAt != null
+}
 
 @Embeddable
 data class UserRoleId(

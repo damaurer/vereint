@@ -60,6 +60,11 @@ ihren Realmrollen der Gruppe „Meine Gruppe“ bei.
 - Wer eine Gruppe eröffnet, wird ihr Admin.
 - Die letzte Person, die Mitglieder **und** Rollen verwalten darf, kann diese
   Rechte nicht verlieren und die Gruppe nicht verlassen.
+- Ihr **Konto löschen** kann jede Person nur selbst, ohne besonderes Recht.
+  Wer als Letzte eine Gruppe mit weiteren Mitgliedern verwaltet, muss die
+  Verwaltung vorher übergeben; ist niemand sonst in der Gruppe, wird sie
+  archiviert. Administration und Plattform-Admin können fremde Konten nicht
+  löschen, nur Mitgliedschaften beenden.
 - Mitglieder können ihr eigenes Guthaben nicht aufladen und sehen diese Option
   auch nicht.
 - Der Vorstand darf IDs sehen, arbeitet in Formularen aber mit Namen.

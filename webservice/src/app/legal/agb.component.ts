@@ -276,8 +276,9 @@ import { LEGAL_BACKUP_RETENTION_DAYS, LEGAL_OPERATOR, TERMS_DATE_LABEL } from '.
         und Videos sind nicht enthalten. Wir empfehlen, die Daten regelmäßig zu exportieren.
       </p>
       <p>
-        (3) Nutzer können jederzeit verlangen, dass wir ihr Konto löschen, Kunden auch die Löschung
-        ihrer Gruppe; dazu genügt eine E-Mail an {{ operator.email }}. Nach dem Ende eines Vertrags
+        (3) Nutzer können ihr Konto jederzeit selbst im Profil unter „Konto löschen“ löschen oder
+        verlangen, dass wir es löschen; Kunden können auch die Löschung ihrer Gruppe verlangen. Dazu
+        genügt eine E-Mail an {{ operator.email }}. Nach dem Ende eines Vertrags
         löschen wir die Daten innerhalb von 30 Tagen, soweit uns keine gesetzliche Pflicht zur
         Aufbewahrung trifft. Aus den Sicherungen verschwinden die Daten mit deren Ablauf nach
         höchstens {{ backupDays }} weiteren Tagen. Vor dem Löschen einer Gruppe weisen wir auf den

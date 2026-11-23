@@ -180,6 +180,7 @@ class StammtischContextFilter(
             "/api/v1/auth",
             "/api/v1/users/me",
             "/api/v1/users/me/terms",
+            "/api/v1/users/me/deletion",
             // Eigene und übergreifende Statistik lesen je Gruppe selbst (wie der Kalender).
             "/api/v1/statistics/me",
             "/api/v1/statistics/events",
