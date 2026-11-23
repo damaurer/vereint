@@ -27,7 +27,7 @@ const pages: Record<Exclude<Role, 'member2'>, string[]> = {
     '/statistik/gruppe/events',
     '/statistik/funktionen',
   ],
-  board: ['/dashboard', '/statistik/uebersicht', '/statistik/gruppe/events', '/board', '/board/treasury', '/board/communications', '/board/moments', '/catalog', '/sublists'],
+  board: ['/dashboard', '/statistik/uebersicht', '/statistik/gruppe/events', '/board', '/board/treasury', '/board/communications', '/board/moments', '/meldungen', '/catalog', '/sublists'],
   admin: ['/dashboard', '/admin', '/tablet'],
   terminal: ['/tablet'],
 };

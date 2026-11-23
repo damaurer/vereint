@@ -154,6 +154,15 @@ Danach öffnet sich der Chat und du schreibst los. **Andere Art wählen** führt
 
 **Direktnachrichten** sind Gespräche zu zweit, die nur ihr beide seht. Sie gelten über alle Gruppen: Mit jeder Person gibt es genau ein Gespräch, egal in welcher Gruppe du gerade bist. Seid ihr weder befreundet noch in einer gemeinsamen Gruppe, bleibt das Gespräch lesbar, neue Nachrichten gehen aber nicht mehr.
 
+### Melden oder blockieren
+
+Stört dich eine Nachricht, tippe bei ihr auf **+** (Reaktion) und dann auf **Melden oder blockieren**. Bei Moments steht **Melden** am Moment und an jeder Antwort.
+
+- **Melden**: Wähle einen Grund und schreib bei Bedarf eine Notiz dazu. Meldungen aus Gruppen- und Event-Chats und zu Moments gehen an den Vorstand bzw. die Verwaltung der Gruppe, Meldungen zu Direktnachrichten an die Betreiber von Vereint. Sie sehen deinen Namen und entscheiden, ob der Inhalt entfernt wird.
+- **Blockieren** (zusätzlich per Haken oder mit **Nur blockieren**): Du siehst von der Person keine Nachrichten, Moments und Antworten mehr, in keiner Gruppe. Ihr könnt euch keine Direktnachrichten mehr schreiben und keine Freundschaft anfragen; eine bestehende Freundschaft endet. Die Person bekommt keine Mitteilung darüber.
+
+Unter **Profil** → **Blockierte Personen** siehst du, wen du blockiert hast, und hebst es mit **Aufheben** wieder auf.
+
 <br clear="right">
 
 ## Kalender

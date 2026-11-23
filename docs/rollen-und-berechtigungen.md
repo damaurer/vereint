@@ -35,19 +35,21 @@ Adminbereich. Rechte für die Verwaltung:
 | :--- | :--- |
 | `members.read` | Mitgliederliste und Rollen sehen |
 | `members.invite` | Einladungslinks erstellen |
-| `members.manage` | Mitglieder deaktivieren, Vorstandsamt setzen |
+| `members.manage` | Mitglieder deaktivieren, Vorstandsamt setzen, Meldungen der Gruppe bearbeiten |
 | `roles.manage` | Rollen anlegen, ändern, zuweisen |
 | `stammtisch.manage` | Gruppe umbenennen, Bild, Daten exportieren, Statistik der Gruppe ein- und ausschalten und ihre Statistikdaten löschen |
 | `moments.manage` | Moment-Typen und Reaktionen verwalten |
 | `kiosk.manage` | Kiosk-Geräte entsperren |
 | `notifications.broadcast` | Rundschreiben senden |
-| `chat.moderate` | Chatnachrichten anderer entfernen |
+| `chat.moderate` | Chatnachrichten anderer entfernen, Meldungen der Gruppe bearbeiten (`/meldungen`) |
 | `audit.read.all` | Audit-Log aller Mitglieder |
 
 ## Plattform-Admin
 
 Die Keycloak-Realmrolle `admin` macht eine Person zum **Plattform-Admin** des
-Vereint-Teams: Gruppen anlegen, umbenennen und archivieren (`/plattform`). Alle anderen Realmrollen (`board`, `member` …) haben
+Vereint-Teams: Gruppen anlegen, umbenennen und archivieren (`/plattform`) und
+Meldungen zu Direktnachrichten bearbeiten (`/plattform/meldungen`), weil
+Direktnachrichten zu keiner Gruppe gehören. Alle anderen Realmrollen (`board`, `member` …) haben
 in Produktion keine Wirkung; Rollen kommen nur aus der gewählten Gruppe. Nur in
 der lokalen Entwicklung und in den E2E-Tests treten Konten ohne Gruppe mit
 ihren Realmrollen der Gruppe „Meine Gruppe“ bei.
@@ -63,6 +65,10 @@ ihren Realmrollen der Gruppe „Meine Gruppe“ bei.
 - Mitglieder können ihr eigenes Guthaben nicht aufladen und sehen diese Option
   auch nicht.
 - Der Vorstand darf IDs sehen, arbeitet in Formularen aber mit Namen.
+- Melden und Blockieren darf jede angemeldete Person, aber nur fremde Inhalte,
+  die sie selbst sehen darf, und nur Personen, die sie kennt (gemeinsame
+  Gruppe, Freundschaft oder Direktchat). Siehe
+  [Melden und Blockieren](domains/melden-und-blockieren.md).
 - Statistik: Alle Mitglieder sehen die Gruppen-, Event- und
   Funktions-Statistik ihrer Gruppe mit Namen. Den Umsatz sehen nur Rollen mit
   `ledger.read` (Vorstand, Kasse, Admin). Die eigene und die übergreifende

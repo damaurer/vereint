@@ -21,6 +21,8 @@ import { StatisticsSettingsComponent } from '../statistics/statistics-settings.c
  * von Anzeigename und E-Mail. Rollen, Status und Berechtigungen sind reine
  * Anzeige; ihre Vergabe erfolgt ausschließlich administrativ im Fachservice.
  */
+import { BlockedUsersComponent } from '../moderation/blocked-users.component';
+
 @Component({
   selector: 'app-member-profile',
   imports: [
@@ -31,6 +33,7 @@ import { StatisticsSettingsComponent } from '../statistics/statistics-settings.c
     TranslatePipe,
     PwaSettingsComponent,
     StatisticsSettingsComponent,
+    BlockedUsersComponent,
   ],
   templateUrl: './profile.component.html',
   styles: [

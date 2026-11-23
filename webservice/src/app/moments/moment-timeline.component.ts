@@ -43,6 +43,11 @@ import { TranslatePipe } from '../i18n';
                     </span>
                   }
                   <time class="timeline-time">{{ formatTime(response.createdAt) }}</time>
+                  @if (myId() && response.userId !== myId()) {
+                    <button type="button" class="timeline-report" (click)="report.emit(response)">
+                      {{ 'moderation.action.report' | t }}
+                    </button>
+                  }
                 </div>
 
                 @if (response.statusText) {
@@ -107,6 +112,17 @@ import { TranslatePipe } from '../i18n';
   `,
   styles: [
     `
+      .timeline-report {
+        border: 0;
+        background: none;
+        color: var(--color-text-muted);
+        font: inherit;
+        font-size: 0.8rem;
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 0;
+        margin-left: auto;
+      }
       .moment-timeline {
         display: flex;
         flex-direction: column;
@@ -287,6 +303,9 @@ export class MomentTimelineComponent {
   readonly responses = input<MomentResponseDto[]>([]);
   /** Ein Bild/Video soll entfernt werden (Eigentümer, Event-Owner, Vorstand/Admin). */
   readonly removeMedia = output<MomentMediaDto>();
+  /** Eigene Benutzer-ID; fremde Antworten bekommen „Melden“ (#153). */
+  readonly myId = input<string | null>(null);
+  readonly report = output<MomentResponseDto>();
 
   /** Sortiert Statusbeiträge chronologisch (neueste oben). */
   protected sortedResponses(): MomentResponseDto[] {

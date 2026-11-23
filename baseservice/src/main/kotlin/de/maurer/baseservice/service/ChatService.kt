@@ -64,7 +64,8 @@ class ChatService(
     private val momentSessionRepository: MomentSessionRepository,
     private val momentAccessPolicy: MomentAccessPolicy,
     private val statisticsRecorder: StatisticsRecorder,
-    private val chatNotifier: ChatNotifier
+    private val chatNotifier: ChatNotifier,
+    private val blockService: BlockService
 ) {
 
     // --- Mitglieder (authentifiziert per JWT) ---
@@ -84,7 +85,7 @@ class ChatService(
         requireMemberAccess(caller, principal, event)
         val conversation = requireEventConversation(event)
         ensureMember(conversation, caller)
-        return messagesOf(conversation)
+        return messagesOf(conversation, blockService.hiddenFor(caller.id))
     }
 
     fun sendMessage(eventId: UUID, request: SendMessageRequest, principal: UserPrincipal): ChatMessageDto {
@@ -170,7 +171,7 @@ class ChatService(
         val conversation = requireActiveConversation(conversationId)
         requireConversationAccess(conversation, caller, principal)
         ensureMember(conversation, caller)
-        return messagesOf(conversation)
+        return messagesOf(conversation, blockService.hiddenFor(caller.id))
     }
 
     /**
@@ -369,8 +370,10 @@ class ChatService(
         }
     }
 
-    private fun messagesOf(conversation: ConversationEntity): List<ChatMessageDto> =
+    /** Nachrichten ohne die von Personen, die der Lesende blockiert hat (#153). */
+    private fun messagesOf(conversation: ConversationEntity, hidden: Set<UUID> = emptySet()): List<ChatMessageDto> =
         chatMessageRepository.findByConversationIdOrderByCreatedAtAsc(conversation.id)
+            .filter { it.sender?.id == null || it.sender?.id !in hidden }
             .map { toMessageDto(it) }
 
     internal fun requireMessageText(value: String?): String {

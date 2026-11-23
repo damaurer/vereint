@@ -24,6 +24,11 @@ import { MomentStartDialogComponent } from './moment-start-dialog.component';
 import { MomentTimelineComponent } from './moment-timeline.component';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
+import { firstValueFrom } from 'rxjs';
+import { describeApiError } from '../api/api-client.service';
+import { ChatApiService } from '../chat/chat-api.service';
+import { ModerationApiService } from '../moderation/moderation-api.service';
+import { ReportDialogComponent, type ReportDialogResult } from '../moderation/report-dialog.component';
 import { translate } from '../i18n/i18n.service';
 
 /**
@@ -33,6 +38,14 @@ import { translate } from '../i18n/i18n.service';
  * `/events/:eventId/moments` zeigt die Seite nur die Moments dieses Events.
  * Das Thema wählt das Mitglied aus den Themen, die der Vorstand pflegt.
  */
+/** Was im Melden-Dialog gemeldet wird: ein Moment oder eine Antwort darauf. */
+interface MomentReportTarget {
+  momentId: string;
+  responseId?: string;
+  personId: string;
+  personName: string;
+}
+
 @Component({
   selector: 'app-moments',
   imports: [
@@ -45,6 +58,7 @@ import { translate } from '../i18n/i18n.service';
     MomentStartDialogComponent,
     MomentRespondDialogComponent,
     TranslatePipe,
+    ReportDialogComponent,
   ],
   template: `
     <main class="page-shell">
@@ -216,6 +230,16 @@ import { translate } from '../i18n/i18n.service';
                     >
                       {{ 'moments.session.complete' | t }}
                     </button>
+
+                    @if (myId() && session.creatorId !== myId()) {
+                      <button
+                        type="button"
+                        class="member-button member-button-ghost btn-sm"
+                        (click)="openReport({ momentId: session.id, personId: session.creatorId, personName: session.creatorName })"
+                      >
+                        {{ 'moderation.action.report' | t }}
+                      </button>
+                    }
                   </div>
                 </article>
               }
@@ -291,6 +315,8 @@ import { translate } from '../i18n/i18n.service';
               @if (activeTab() === 'timeline') {
                 <app-moment-timeline
                   [responses]="detail.responses"
+                  [myId]="myId()"
+                  (report)="openReport({ momentId: detail.session.id, responseId: $event.id, personId: $event.userId, personName: $event.userName })"
                   (removeMedia)="removeMedia(detail.session.id, $event)"
                 />
               } @else {
@@ -364,10 +390,27 @@ import { translate } from '../i18n/i18n.service';
         (closed)="closeRespondModal()"
         (submitted)="onResponseSubmitted($event)"
       />
+
+      <app-report-dialog
+        [open]="!!reportTarget()"
+        [personName]="reportTarget()?.personName ?? null"
+        [busy]="reportBusy()"
+        [error]="reportError()"
+        (closed)="closeReport()"
+        (submitted)="submitReport($event)"
+      />
+      @if (reportNotice()) {
+        <p class="moments-report-notice" role="status">{{ reportNotice() }}</p>
+      }
     </main>
   `,
   styles: [
     `
+      .moments-report-notice {
+        margin: var(--space-3) 0 0;
+        font-size: 0.9rem;
+        color: var(--color-text-muted);
+      }
       .moments-card {
         display: flex;
         flex-direction: column;
@@ -777,6 +820,14 @@ export class MomentsComponent implements OnInit, OnDestroy {
   protected readonly config = signal<MomentConfigDto | null>(null);
   /** Vorstand/Admin sehen den Link zur Verwaltung der Themen und Reaktionen. */
   protected readonly canManage = signal(false);
+  private readonly chatApi = inject(ChatApiService);
+  private readonly moderation = inject(ModerationApiService);
+  /** Eigene Benutzer-ID: eigene Moments und Antworten lassen sich nicht melden. */
+  protected readonly myId = signal<string | null>(null);
+  protected readonly reportTarget = signal<MomentReportTarget | null>(null);
+  protected readonly reportBusy = signal(false);
+  protected readonly reportError = signal<string | null>(null);
+  protected readonly reportNotice = signal<string | null>(null);
 
   protected readonly activeTypes = computed<MomentTypeDto[]>(
     () => this.config()?.types.filter((type) => type.active) ?? [],
@@ -844,6 +895,7 @@ export class MomentsComponent implements OnInit, OnDestroy {
     this.api.getMomentConfig().subscribe({
       next: (config) => this.config.set(config),
     });
+    this.chatApi.me().subscribe({ next: (me) => this.myId.set(me.id), error: () => undefined });
     void this.auth.getSession().then((session) => {
       const roles = session?.roles ?? [];
       this.canManage.set(roles.includes('board') || roles.includes('admin'));
@@ -1003,6 +1055,51 @@ export class MomentsComponent implements OnInit, OnDestroy {
   }
 
   /** Entfernt ein Bild/Video aus einem Beitrag (nach Rückfrage). */
+  protected openReport(target: MomentReportTarget): void {
+    this.reportError.set(null);
+    this.reportTarget.set(target);
+  }
+
+  protected closeReport(): void {
+    if (!this.reportBusy()) this.reportTarget.set(null);
+  }
+
+  /** Meldet Moment oder Antwort (#153) und blockiert auf Wunsch die Person. */
+  protected async submitReport(result: ReportDialogResult): Promise<void> {
+    const target = this.reportTarget();
+    if (!target || this.reportBusy()) return;
+    this.reportBusy.set(true);
+    this.reportError.set(null);
+    try {
+      if (result.report) {
+        await firstValueFrom(
+          target.responseId
+            ? this.moderation.reportMomentResponse(target.momentId, target.responseId, result.report)
+            : this.moderation.reportMoment(target.momentId, result.report),
+        );
+      }
+      if (result.block) {
+        await firstValueFrom(this.moderation.block(target.personId));
+      }
+      this.reportBusy.set(false);
+      this.reportTarget.set(null);
+      this.reportNotice.set(
+        translate(
+          result.report && result.block
+            ? 'moderation.notice.reportedAndBlocked'
+            : result.report
+              ? 'moderation.notice.reported'
+              : 'moderation.notice.blocked',
+          { name: target.personName },
+        ),
+      );
+      if (result.block) this.loadMoments();
+    } catch (error: unknown) {
+      this.reportBusy.set(false);
+      this.reportError.set(describeApiError(error));
+    }
+  }
+
   protected removeMedia(sessionId: string, media: MomentMediaDto): void {
     if (!isPlatformBrowser(this.platformId)) return;
     if (!window.confirm(translate('moments.media.removeConfirm'))) return;

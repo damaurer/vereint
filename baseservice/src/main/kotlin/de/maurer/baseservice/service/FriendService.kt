@@ -44,7 +44,8 @@ class FriendService(
     private val userRepository: UserRepository,
     private val userService: UserService,
     private val sharedGroups: SharedGroups,
-    private val pushDispatcher: PushDispatcher
+    private val pushDispatcher: PushDispatcher,
+    private val blockService: BlockService
 ) {
 
     @Transactional(readOnly = true)
@@ -90,7 +91,13 @@ class FriendService(
             .mapNotNull { it.other(caller.id) }
             .filter { it.id !in sharedIds && !it.disabled }
             .map { other -> toContact(other, STATUS_FRIEND, friendships[other.id]?.acceptedAt, null) }
-        return (fromGroups + friendsOnly).sortedByName()
+        // Blockierte Personen erscheinen nicht; wer mich blockiert hat, ist nicht anschreibbar (#153).
+        val hidden = blockService.hiddenFor(caller.id)
+        val blockers = blockService.blockersOf(caller.id)
+        return (fromGroups + friendsOnly)
+            .filter { UUID.fromString(it.userId) !in hidden }
+            .map { if (UUID.fromString(it.userId) in blockers) it.copy(canMessage = false) else it }
+            .sortedByName()
     }
 
     /** Schickt eine Anfrage; liegt schon eine Anfrage der anderen Person vor, gilt sie als angenommen. */
@@ -100,6 +107,8 @@ class FriendService(
         if (targetId == caller.id) {
             throw InvalidRequestException(Msg("error.friend.self"), ErrorCode.INVALID_REQUEST)
         }
+        // Blockiert (in eine der beiden Richtungen): wie ein unbekanntes Konto (#153).
+        if (blockService.blockedEitherWay(caller.id, targetId)) throw notFound(targetId)
         val groups = sharedGroups.between(caller.id, targetId)
         val existing = friendshipRepository.findByPairKey(pairKey(caller.id, targetId)).orElse(null)
         // Ohne gemeinsame Gruppe und ohne bestehende Beziehung bleibt das Konto unsichtbar.

@@ -40,7 +40,8 @@ class ChatNotifier(
     private val conversationMemberRepository: ConversationMemberRepository,
     private val liveUpdateHub: LiveUpdateHub,
     private val pushDispatcher: PushDispatcher,
-    private val stammtischRepository: StammtischRepository
+    private val stammtischRepository: StammtischRepository,
+    private val blockService: BlockService
 ) {
 
     /** Neue Nachricht: Live-Signal an alle Leser (auch die eigenen anderen Geräte), Push an alle anderen. */
@@ -49,7 +50,9 @@ class ChatNotifier(
         val audience = audienceOf(conversation)
         publish(conversation, audience)
         if (conversation.type == ConversationService.TYPE_CLUB || conversation.type == ConversationService.TYPE_EVENT) {
-            val recipients = audience - setOfNotNull(message.sender?.id)
+            // Wer die schreibende Person blockiert hat, bekommt keinen Push (#153).
+            val blockers = message.sender?.id?.let { blockService.blockersOf(it) }.orEmpty()
+            val recipients = audience - setOfNotNull(message.sender?.id) - blockers
             val senderName = message.sender?.displayName ?: message.guest?.displayName ?: ChatService.UNKNOWN_SENDER_NAME
             val link = "/chat?id=${conversation.id}"
             pushDispatcher.dispatch(

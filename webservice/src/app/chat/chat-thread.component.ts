@@ -17,7 +17,7 @@ import {
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import type { Subscription } from 'rxjs';
+import { firstValueFrom, type Subscription } from 'rxjs';
 import type { ChatMedia, ChatMessageDto, ConversationSummary, MessageReceipt } from '../api/api.types';
 import { describeApiError } from '../api/api-client.service';
 import { formatDateTime, formatDayTime, formatShortDateTime, formatTime } from '../member/member-format';
@@ -36,6 +36,8 @@ import { CHAT_MEDIA_ACCEPT, CHAT_MEDIA_LIMITS, ChatMediaUploader } from './chat-
 import { EmojiPickerComponent } from '../ui/emoji-picker.component';
 import { I18nService } from '../i18n/i18n.service';
 import { MediaPrepareError, type PreparedMedia } from '../moments/moment-media';
+import { ModerationApiService } from '../moderation/moderation-api.service';
+import { ReportDialogComponent, type ReportDialogResult } from '../moderation/report-dialog.component';
 
 /** Ein Anhang im Composer: lokal vorbereitet, wird sofort hochgeladen. */
 interface DraftMedia {
@@ -91,6 +93,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
     TranslatePipe,
     ChatMediaGridComponent,
     EmojiPickerComponent,
+    ReportDialogComponent,
   ],
   template: `
     <div class="chat-thread" [class.is-embedded]="embedded" [class.is-fill]="fill">
@@ -250,6 +253,11 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                     >
                       …
                     </button>
+                    @if (canReport(message)) {
+                      <button type="button" class="chat-picker-report" (click)="openReport(message)">
+                        {{ 'moderation.action.reportOrBlock' | t }}
+                      </button>
+                    }
                   </div>
                   @if (fullPicker()) {
                     <vereint-emoji-picker class="chat-emoji-popup" (pick)="toggleReaction(message, $event)" />
@@ -302,6 +310,19 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
       @if (actionError()) {
         <p class="manage-action-error" role="alert">{{ actionError() }}</p>
       }
+      @if (actionNotice()) {
+        <p class="chat-action-notice" role="status">{{ actionNotice() }}</p>
+      }
+
+      <app-report-dialog
+        [open]="!!reportTarget()"
+        [personName]="reportTarget()?.senderName ?? null"
+        [handledBy]="conversation.type === 'direct' ? 'platform' : 'group'"
+        [busy]="reportBusy()"
+        [error]="reportError()"
+        (closed)="closeReport()"
+        (submitted)="submitReport($event)"
+      />
 
       @if (conversation.canWrite) {
         @if (composerPicker()) {
@@ -598,6 +619,21 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
       .chat-picker-emoji {
         font-size: 1.1rem;
       }
+      .chat-picker-report {
+        border: 0;
+        background: none;
+        color: var(--color-text-muted);
+        font: inherit;
+        font-size: 0.85rem;
+        text-decoration: underline;
+        cursor: pointer;
+        padding: 0 var(--space-1);
+      }
+      .chat-action-notice {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+      }
       .chat-composer {
         display: flex;
         align-items: center;
@@ -781,6 +817,12 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   protected readonly reacting = signal(false);
   protected readonly actionError = signal<string | null>(null);
   protected readonly pickerFor = signal<string | null>(null);
+  private readonly moderation = inject(ModerationApiService);
+  /** Nachricht, die gerade gemeldet oder deren Absender blockiert wird (#153). */
+  protected readonly reportTarget = signal<ChatMessageDto | null>(null);
+  protected readonly reportBusy = signal(false);
+  protected readonly reportError = signal<string | null>(null);
+  protected readonly actionNotice = signal<string | null>(null);
 
   /** Id der offenen Konversation als Signal, für die wartenden Nachrichten. */
   private readonly conversationId = signal<string | null>(null);
@@ -1092,6 +1134,64 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
       delivered: receipt.delivered,
       total: receipt.recipients,
     });
+  }
+
+  /** Fremde Nachrichten von Personen lassen sich melden (nicht System- oder Gastnachrichten). */
+  protected canReport(message: ChatMessageDto): boolean {
+    return message.senderType === 'member' && !!message.senderId && !this.isOwn(message);
+  }
+
+  protected openReport(message: ChatMessageDto): void {
+    this.pickerFor.set(null);
+    this.fullPicker.set(false);
+    this.reportError.set(null);
+    this.reportTarget.set(message);
+  }
+
+  protected closeReport(): void {
+    if (this.reportBusy()) return;
+    this.reportTarget.set(null);
+  }
+
+  /** Schickt Meldung und/oder Blockierung ab; blendet Blockierte sofort aus. */
+  protected async submitReport(result: ReportDialogResult): Promise<void> {
+    const message = this.reportTarget();
+    if (!message || this.reportBusy()) return;
+    this.reportBusy.set(true);
+    this.reportError.set(null);
+    try {
+      if (result.report) {
+        await firstValueFrom(
+          this.api.reportMessage(
+            this.conversation.id,
+            message.id,
+            result.report,
+            this.conversation.type,
+            this.conversation.stammtischId,
+          ),
+        );
+      }
+      if (result.block && message.senderId) {
+        await firstValueFrom(this.moderation.block(message.senderId));
+        const blocked = message.senderId;
+        this.messages.update((list) => (list ?? []).filter((entry) => entry.senderId !== blocked));
+      }
+      this.reportBusy.set(false);
+      this.reportTarget.set(null);
+      this.actionNotice.set(
+        translate(
+          result.report && result.block
+            ? 'moderation.notice.reportedAndBlocked'
+            : result.report
+              ? 'moderation.notice.reported'
+              : 'moderation.notice.blocked',
+          { name: message.senderName },
+        ),
+      );
+    } catch (error: unknown) {
+      this.reportBusy.set(false);
+      this.reportError.set(describeApiError(error));
+    }
   }
 
   protected togglePicker(messageId: string): void {

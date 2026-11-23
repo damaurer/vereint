@@ -25,6 +25,7 @@ import { StammtischApiService, apiErrorText, type PlatformStammtischDto } from '
         <span class="eyebrow">{{ 'stammtisch.platform.eyebrow' | t }}</span>
         <h1 id="platform-title">{{ 'stammtisch.platform.title' | t }}</h1>
         <p>{{ 'stammtisch.platform.intro' | t }}</p>
+        <p><a routerLink="/plattform/meldungen">{{ 'moderation.platformLink' | t }}</a></p>
 
         <h2 class="member-subtitle">{{ 'stammtisch.platform.createTitle' | t }}</h2>
         <form class="st-form" (ngSubmit)="create()">

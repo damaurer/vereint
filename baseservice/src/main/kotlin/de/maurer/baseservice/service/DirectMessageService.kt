@@ -59,6 +59,7 @@ class DirectMessageService(
     private val userRepository: UserRepository,
     private val userService: UserService,
     private val friendService: FriendService,
+    private val blockService: BlockService,
     private val sharedGroups: SharedGroups,
     private val pushDispatcher: PushDispatcher,
     private val liveUpdateHub: LiveUpdateHub,
@@ -70,11 +71,14 @@ class DirectMessageService(
     fun list(principal: UserPrincipal): List<ConversationSummaryDto> {
         val caller = userService.getOrCreateUser(principal)
         val reachable = reachableIds(caller)
+        val hidden = blockService.hiddenFor(caller.id)
         return participantRepository.findByUserId(caller.id)
             .mapNotNull { participant ->
                 // Die Liste zeigt die neueste Nachricht: damit ist das Gespräch zugestellt.
                 participant.conversation?.also { chatReceipts.deliveredDirect(it, caller, participant) }
             }
+            // Gespräche mit blockierten Personen verschwinden aus der Liste (#153).
+            .filter { partnerOf(it, caller)?.id !in hidden }
             .map { toSummary(it, caller, reachable) }
             .sortedByDescending { it.lastMessage?.createdAt ?: Instant.EPOCH }
     }
@@ -88,12 +92,15 @@ class DirectMessageService(
      * Summe ungelesener Direktnachrichten über alle eigenen Gespräche. Der Zähler
      * steht in der App: was er zählt, ist damit zugestellt.
      */
-    fun unreadTotal(caller: UserEntity): Long =
-        participantRepository.findByUserId(caller.id).sumOf { participant ->
+    fun unreadTotal(caller: UserEntity): Long {
+        val hidden = blockService.hiddenFor(caller.id)
+        return participantRepository.findByUserId(caller.id).sumOf { participant ->
             val conversation = participant.conversation ?: return@sumOf 0L
+            if (hidden.isNotEmpty() && partnerOf(conversation, caller)?.id in hidden) return@sumOf 0L
             chatReceipts.deliveredDirect(conversation, caller, participant)
             unreadFor(conversation, participant, caller)
         }
+    }
 
     fun start(userIdValue: String?, principal: UserPrincipal): ConversationSummaryDto {
         val caller = userService.getOrCreateUser(principal)
@@ -250,9 +257,10 @@ class DirectMessageService(
 
     // --- Interne Helfer ---
 
-    /** Freunde oder Personen mit gemeinsamer Gruppe. */
+    /** Freunde oder Personen mit gemeinsamer Gruppe, sofern niemand die andere Person blockiert hat. */
     private fun canMessage(callerId: UUID, otherId: UUID): Boolean =
-        friendService.areFriends(callerId, otherId) || sharedGroups.between(callerId, otherId).isNotEmpty()
+        !blockService.blockedEitherWay(callerId, otherId) &&
+            (friendService.areFriends(callerId, otherId) || sharedGroups.between(callerId, otherId).isNotEmpty())
 
     /** Alle Personen, denen [caller] gerade schreiben darf (für `canWrite` in Listen). */
     private fun reachableIds(caller: UserEntity): Set<UUID> =

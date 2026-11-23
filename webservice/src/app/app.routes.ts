@@ -80,6 +80,18 @@ export const routes: Routes = [
     loadComponent: () => import('./stammtisch/platform.component').then((m) => m.PlatformComponent),
   },
   {
+    // Meldungen zu Direktnachrichten (#153), nur Anwendungs-Administration.
+    path: 'plattform/meldungen',
+    canActivate: [kioskGuard, platformGuard],
+    data: {
+      scope: 'platform',
+      title: 'routes.platformReports.title',
+      description: 'routes.platformReports.description',
+      access: 'routes.access.platform',
+    },
+    loadComponent: () => import('./moderation/reports.component').then((m) => m.ReportsComponent),
+  },
+  {
     // Rechtstexte: ohne Anmeldung und auch im Kiosk-Modus erreichbar.
     path: 'impressum',
     data: { title: 'routes.imprint.title', description: 'routes.imprint.description', access: 'routes.access.public' },
@@ -301,6 +313,20 @@ export const routes: Routes = [
     },
     loadComponent: () =>
       import('./board/moment-config.component').then((m) => m.MomentConfigComponent),
+  },
+  {
+    // Meldungen der Gruppe (#153): wer Chats moderiert oder Mitglieder verwaltet.
+    path: 'meldungen',
+    canActivate: [authGuard, permissionGuard],
+    data: {
+      back: '/board',
+      scope: 'group',
+      title: 'routes.reports.title',
+      description: 'routes.reports.description',
+      access: 'routes.access.protected',
+      permissions: ['chat.moderate', 'members.manage'],
+    },
+    loadComponent: () => import('./moderation/reports.component').then((m) => m.ReportsComponent),
   },
   {
     path: 'admin',

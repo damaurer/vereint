@@ -112,3 +112,5 @@ Vereint verschickt keine E-Mails, deshalb gibt es keinen Link zum Zurücksetzen.
 ## Plattform-Administration
 
 Die Seite **Plattform** (`/plattform`) ist nur für das Vereint-Team, das die Installation betreibt. Dort werden alle Gruppen angelegt, umbenannt und archiviert. Als Admin einer Gruppe brauchst du sie nicht.
+
+Gemeldete Direktnachrichten gehören zu keiner Gruppe. Sie landen deshalb unter **Plattform** → **Meldungen zu Direktnachrichten bearbeiten** (`/plattform/meldungen`) und werden dort wie im [Leitfaden Vorstand](03-vorstand.md#meldungen) entfernt oder ohne Folgen geschlossen.

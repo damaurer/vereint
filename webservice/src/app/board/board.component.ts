@@ -11,6 +11,7 @@ import { BoardApiService } from './board-api.service';
 import type { AuditLogEntry, EventSummary } from '../api/api.types';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
+import { ModerationApiService } from '../moderation/moderation-api.service';
 
 interface BoardView {
   events: EventSummary[];
@@ -56,6 +57,16 @@ interface BoardView {
             <vereint-icon class="board-panel-icon" name="moments" />
             <span class="board-panel-title">{{ 'board.overview.momentConfigTitle' | t }}</span>
             <span class="board-panel-desc">{{ 'board.overview.momentConfigDesc' | t }}</span>
+          </a>
+          <a class="board-panel" routerLink="/meldungen">
+            <vereint-icon class="board-panel-icon" name="megaphone" />
+            <span class="board-panel-title">
+              {{ 'moderation.board.title' | t }}
+              @if (openReports() > 0) {
+                <span class="board-panel-count">{{ openReports() }}</span>
+              }
+            </span>
+            <span class="board-panel-desc">{{ 'moderation.board.desc' | t }}</span>
           </a>
           <button type="button" class="board-panel" (click)="inviteOpen.set(true)">
             <vereint-icon class="board-panel-icon" name="users" />
@@ -187,6 +198,17 @@ interface BoardView {
         font-weight: 700;
         color: var(--color-text);
       }
+      .board-panel-count {
+        display: inline-block;
+        min-width: 1.4rem;
+        margin-left: var(--space-1);
+        padding: 0 0.4rem;
+        border-radius: 999px;
+        background: var(--color-danger);
+        color: #fff;
+        font-size: 0.8rem;
+        text-align: center;
+      }
       .board-panel-desc {
         font-size: 0.85rem;
         color: var(--color-text-muted);
@@ -231,6 +253,9 @@ export class BoardComponent implements OnInit, OnDestroy {
   protected readonly load = new AsyncState<BoardView>();
   protected readonly inviteOpen = signal(false);
   protected readonly kioskDevicesOpen = signal(false);
+  private readonly moderation = inject(ModerationApiService);
+  /** Offene Meldungen der Gruppe (#153), als Zahl am Panel „Meldungen“. */
+  protected readonly openReports = signal(0);
   protected readonly eventStatusLabel = eventStatusLabel;
   protected readonly formatDateTime = formatDateTime;
   protected readonly formatShortDate = formatShortDate;
@@ -241,6 +266,10 @@ export class BoardComponent implements OnInit, OnDestroy {
   /** Ordnet den Eventstatus einer Badge-Farbe der geteilten Primitive zu. */
   ngOnInit(): void {
     this.reload();
+    this.moderation.openReportCount().subscribe({
+      next: (count) => this.openReports.set(count.open),
+      error: () => this.openReports.set(0),
+    });
   }
 
   ngOnDestroy(): void {

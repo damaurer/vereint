@@ -600,6 +600,14 @@
     "roundGive": {
       "title": "Buy a round",
       "description": "Buy a round or the whole evening from your own balance."
+    },
+    "reports": {
+      "title": "Reports",
+      "description": "Handle reported content of the group."
+    },
+    "platformReports": {
+      "title": "Direct message reports",
+      "description": "Handle reported direct messages."
     }
   },
   "chat": {
@@ -698,7 +706,7 @@
       "sendFailed": "Message could not be sent. Please try again.",
       "attachUnavailable": "Attachments are currently unavailable.",
       "readOnly": "You can no longer write in this chat.",
-      "readOnlyDirect": "You are neither friends nor share a group. The history stays readable, but you cannot send new messages.",
+      "readOnlyDirect": "You cannot send new messages to this person, for example because you are neither friends nor share a group. The history stays readable.",
       "attachMedia": "Attach photo or video",
       "removeMedia": "Remove attachment",
       "uploading": "Uploading… {percent} %",
@@ -2697,5 +2705,78 @@
       "flags": "Flags",
       "component": "Components"
     }
+  },
+  "moderation": {
+    "action": {
+      "report": "Report",
+      "reportOrBlock": "Report or block"
+    },
+    "reason": {
+      "spam": "Spam or advertising",
+      "harassment": "Harassment or insults",
+      "inappropriate": "Inappropriate content",
+      "other": "Something else"
+    },
+    "target": {
+      "chat_message": "Chat message",
+      "moment": "Moment",
+      "moment_response": "Reply to a Moment",
+      "direct_message": "Direct message"
+    },
+    "dialog": {
+      "title": "Report or block",
+      "about": "This is about content from {name}.",
+      "reason": "Why are you reporting this?",
+      "note": "Note (optional)",
+      "alsoBlock": "Also block {name}",
+      "person": "this person",
+      "blockHint": "You will no longer see blocked people in chats and Moments, and neither of you can send direct messages to the other. They are not told. You can undo this in your profile.",
+      "toGroup": "The report goes to the group's managers. They can see your name.",
+      "toPlatform": "The report goes to the application administrators. They can see your name.",
+      "onlyBlock": "Only block",
+      "send": "Report",
+      "sending": "Sending …"
+    },
+    "notice": {
+      "reported": "Thanks, the report was received.",
+      "blocked": "{name} is blocked.",
+      "reportedAndBlocked": "Thanks, the report was received and {name} is blocked."
+    },
+    "blocked": {
+      "title": "Blocked people",
+      "hint": "You no longer see messages, Moments and replies from these people. Direct messages are blocked both ways.",
+      "empty": "You haven't blocked anyone.",
+      "since": "since {date}",
+      "unblock": "Unblock"
+    },
+    "reports": {
+      "back": "Back",
+      "eyebrow": "Moderation",
+      "title": {
+        "group": "Group reports",
+        "platform": "Direct message reports"
+      },
+      "intro": {
+        "group": "Reported chat messages, Moments and replies from this group. Remove the content or close the report without action.",
+        "platform": "Reported direct messages from all groups. Remove the message or close the report without action."
+      },
+      "showResolved": "Show resolved reports",
+      "empty": "No reports.",
+      "byline": "Reported by {reporter}, content by {author}",
+      "unknown": "unknown",
+      "contentGone": "The content no longer exists.",
+      "note": "Note: {note}",
+      "dismiss": "Close without action",
+      "remove": "Remove content",
+      "resolved": {
+        "removed": "Content removed by {name} on {date}",
+        "dismissed": "Closed without action by {name} on {date}"
+      }
+    },
+    "board": {
+      "title": "Reports",
+      "desc": "Review and remove reported content"
+    },
+    "platformLink": "Handle direct message reports"
   }
 }

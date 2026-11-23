@@ -1285,3 +1285,43 @@ export interface StatisticsSettings {
 export interface StatisticsDeleted {
   deleted: number;
 }
+
+/** Gründe für eine Meldung (#153). */
+export type ReportReason = 'spam' | 'harassment' | 'inappropriate' | 'other';
+
+export interface CreateReportPayload {
+  reason: ReportReason;
+  note?: string;
+}
+
+export interface ReportCreated {
+  id: string;
+  /** `group`: Verwaltung der Gruppe; `platform`: Anwendungs-Administration. */
+  handledBy: 'group' | 'platform';
+}
+
+export interface BlockedUser {
+  userId: string;
+  displayName: string;
+  since: string;
+}
+
+/** Meldung in der Liste der Verwaltung. */
+export interface ContentReport {
+  id: string;
+  targetType: 'chat_message' | 'moment' | 'moment_response' | 'direct_message';
+  targetId: string;
+  contextId: string | null;
+  targetUserId: string | null;
+  targetUserName: string | null;
+  reporterName: string;
+  reason: ReportReason;
+  note: string | null;
+  excerpt: string | null;
+  status: 'open' | 'resolved';
+  resolution: 'removed' | 'dismissed' | null;
+  resolvedByName: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  contentAvailable: boolean;
+}
