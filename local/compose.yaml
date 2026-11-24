@@ -53,7 +53,7 @@ services:
 
   postgres:
     <<: *defaults
-    image: postgres:18.6-alpine
+    image: postgres:18.7-alpine
     # Der Entrypoint uebergibt das Datenverzeichnis an den Benutzer postgres
     # und wechselt dann zu ihm; dafuer braucht er genau diese Rechte.
     cap_add:
