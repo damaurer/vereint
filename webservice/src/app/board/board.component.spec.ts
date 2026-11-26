@@ -76,6 +76,20 @@ describe('BoardComponent', () => {
     expect(html(fixture)).toContain('Rollen geändert');
   });
 
+  it('shows a series only once with a recurring icon', async () => {
+    api.listEvents.mockReturnValue(
+      of([
+        { ...events[0], id: 's-1', title: 'Stammtisch', status: 'published', startsAt: '2099-07-01T18:00:00Z', seriesId: 's' },
+        { ...events[0], id: 's-2', title: 'Stammtisch', status: 'published', startsAt: '2099-07-08T18:00:00Z', seriesId: 's' },
+      ]),
+    );
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('a.board-row-action')).map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['/events/s-1/manage']);
+    expect(root.querySelector('[data-testid="board-series"]')).not.toBeNull();
+  });
+
   it('shows names instead of raw IDs in recent actions', async () => {
     const fixture = await create();
     expect(html(fixture)).toContain('Betrifft Erika Muster');

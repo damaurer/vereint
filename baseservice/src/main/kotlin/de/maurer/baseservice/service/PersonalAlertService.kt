@@ -55,7 +55,8 @@ class PersonalAlertService(
     private val chatMessageRepository: ChatMessageRepository,
     private val eventRepository: EventRepository,
     private val eventParticipantRepository: EventParticipantRepository,
-    private val chatReceipts: ChatReceipts
+    private val chatReceipts: ChatReceipts,
+    private val seriesChats: SeriesChats
 ) {
 
     fun alerts(principal: UserPrincipal, now: Instant = Instant.now()): List<NotificationDto> {
@@ -162,9 +163,11 @@ class PersonalAlertService(
             .distinctBy { it.id }
             .filter { it.status != EventStatus.archived && it.status != EventStatus.draft }
             .mapNotNull { event ->
-                conversationRepository.findByDirectKey(ChatService.eventConversationKey(event.id)).orElse(null)
+                conversationRepository.findByDirectKey(seriesChats.keyFor(event)).orElse(null)
                     ?.let { it to event.title }
             }
+            // Termine einer Serie teilen sich einen Chat.
+            .distinctBy { it.first.id }
         return listOfNotNull(club?.let { it to null }) + events
     }
 
@@ -174,7 +177,7 @@ class PersonalAlertService(
         chatTitle: String,
         stammtischId: String
     ): NotificationDto? {
-        val latest = chatMessageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conversation.id).orElse(null)
+        val latest = chatMessageRepository.findFirstByConversationIdAndKindIsNullOrderByCreatedAtDesc(conversation.id).orElse(null)
             ?: return null
         if (latest.sender?.id == caller.id) return null
         val member = conversationMemberRepository.findByConversationIdAndUserId(conversation.id, caller.id).orElse(null)

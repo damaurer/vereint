@@ -36,7 +36,7 @@ Deine Vorstandsbereiche findest du am Handy unter **Mehr**, Abschnitt **Verwaltu
 
 - Die Kacheln oben führen zu **Kasse & Finanzen**, **Kommunikation**, **Moments** (Typen und Reaktionen), **Mitglied einladen** und **Kiosk-Geräte**.
 - Die Kennzahlen zeigen, wie viele Events du siehst und wie viele Aktionen zuletzt protokolliert wurden.
-- Unter **Gastgeber · Events** stehen alle Events mit Datum, Status und **Verwalten**.
+- Unter **Gastgeber · Events** stehen alle Events mit Datum, Status und **Verwalten**. Von einer Serie steht dort nur der aktuelle Termin, mit Wiederholungssymbol; die übrigen Termine öffnest du über die Eventseite oder den Kalender.
 - **Letzte Aktionen** ist das Protokoll: wer wann was gebucht, geändert oder versendet hat, mit den Namen der beteiligten Mitglieder, Events und Artikel.
 
 <br clear="right">

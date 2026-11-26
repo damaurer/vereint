@@ -35,6 +35,7 @@ describe('ChatThreadComponent', () => {
     typing: ReturnType<typeof vi.fn>;
     mediaUrl: ReturnType<typeof vi.fn>;
     mediaUpload: ReturnType<typeof vi.fn>;
+    messageInfo: ReturnType<typeof vi.fn>;
   };
   let uploader: { prepare: ReturnType<typeof vi.fn>; upload: ReturnType<typeof vi.fn> };
   let store: { count: ReturnType<typeof signal<number>>; refresh: ReturnType<typeof vi.fn> };
@@ -96,6 +97,16 @@ describe('ChatThreadComponent', () => {
         type !== 'direct' && group ? `${media.url}?chatGroup=${group}` : media.url,
       ),
       mediaUpload: vi.fn((id: string) => ({ path: `/conversations/${id}/media`, headers: {} })),
+      messageInfo: vi.fn((_c: string, messageId: string) =>
+        of({
+          messageId,
+          recipients: [
+            { userId: 'u-1', displayName: 'Carla', status: 'read' },
+            { userId: 'u-2', displayName: 'Ben', status: 'delivered' },
+            { userId: 'u-3', displayName: 'Dora', status: 'sent' },
+          ],
+        }),
+      ),
     };
     uploader = {
       prepare: vi.fn(async (file: File) => ({
@@ -124,6 +135,53 @@ describe('ChatThreadComponent', () => {
     expect(own.length).toBe(1);
     expect(own[0].textContent).toContain('Ich!');
     expect(own[0].textContent).toContain('Du');
+  });
+
+  it('shows answers as green and red notes and under later messages', async () => {
+    api.messages.mockReturnValue(
+      of([
+        chatMessage({ id: 'n-1', message: '', kind: 'rsvp_accepted' }),
+        chatMessage({ id: 'n-2', senderId: 'u-me', senderName: 'Ich Selbst', message: '', kind: 'rsvp_declined', rsvpEventStartsAt: '2026-12-02T18:30:00Z' }),
+        chatMessage({ id: 'm-5', message: 'Ich bringe Kuchen', senderRsvp: 'accepted' }),
+        chatMessage({ id: 'm-6', senderId: 'u-me', senderName: 'Ich Selbst', message: 'Leider nicht', senderRsvp: 'declined' }),
+        chatMessage({ id: 'm-7', message: 'Ohne Antwort' }),
+      ]),
+    );
+    const fixture = await create(summary({ id: 'c-event', type: 'event', title: 'Stammtisch' }));
+    const el = root(fixture);
+    const notes = Array.from(el.querySelectorAll<HTMLElement>('[data-testid="chat-rsvp-note"]'));
+    expect(notes.map((n) => n.dataset['kind'])).toEqual(['rsvp_accepted', 'rsvp_declined']);
+    expect(notes[0].textContent).toContain('Anna Beispiel hat zugesagt');
+    expect(notes[1].textContent).toContain('Du hast für');
+    expect(notes[1].textContent).toContain('abgesagt');
+    expect(el.querySelectorAll('.chat-message').length).toBe(3);
+    const badges = Array.from(el.querySelectorAll<HTMLElement>('[data-testid="chat-rsvp-badge"]'));
+    expect(badges.map((b) => [b.dataset['rsvp'], b.textContent?.trim()])).toEqual([
+      ['accepted', 'Zugesagt'],
+      ['declined', 'Abgesagt'],
+    ]);
+  });
+
+  it('selects an own message by tapping it and shows read, delivered and not yet delivered per person', async () => {
+    const fixture = await create();
+    const el = root(fixture);
+    const own = el.querySelector<HTMLElement>('.chat-message.is-own .chat-bubble')!;
+    const other = el.querySelector<HTMLElement>('.chat-message:not(.is-own) .chat-bubble')!;
+    other.click();
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="chat-info-open"]')).toBeNull();
+    own.click();
+    fixture.detectChanges();
+    expect(own.classList).toContain('is-selected');
+    (el.querySelector('[data-testid="chat-info-open"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(api.messageInfo).toHaveBeenCalledWith('c-club', 'm-2', 'club', undefined);
+    const groups = Array.from(document.querySelectorAll<HTMLElement>('.chat-info-group'));
+    expect(groups.map((g) => g.dataset['status'])).toEqual(['read', 'delivered', 'sent']);
+    expect(groups[0].textContent).toContain('Gelesen');
+    expect(groups[0].textContent).toContain('Carla');
+    expect(groups[1].textContent).toContain('Ben');
+    expect(groups[2].textContent).toContain('Noch nicht zugestellt');
   });
 
   it('marks the conversation read when opened and refreshes the chat badge', async () => {

@@ -23,6 +23,14 @@ class ConversationEntity(
     @JoinColumn(name = "event_id")
     var event: EventEntity? = null,
 
+    /**
+     * Serie, deren Termine sich diesen Event-Chat teilen (erste Serie vor
+     * jeder Teilung); [event] ist dann leer.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "series_id")
+    var series: EventSeriesEntity? = null,
+
     @Column(name = "title", length = 255)
     var title: String? = null,
 
@@ -121,6 +129,15 @@ class ChatMessageEntity(
     /** Id, die die App vergeben hat; verhindert Doppelte beim erneuten Senden. */
     @Column(name = "client_id", length = 64, updatable = false)
     var clientId: String? = null,
+
+    /** Hinweiszeile statt Nachricht: `rsvp_accepted` oder `rsvp_declined`; `null` = normale Nachricht. */
+    @Column(name = "kind", length = 32, updatable = false)
+    var kind: String? = null,
+
+    /** Termin, auf den sich eine Zu- oder Absage bezieht. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rsvp_event_id")
+    var rsvpEvent: EventEntity? = null,
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

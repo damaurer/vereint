@@ -9,6 +9,7 @@ import type {
   CreateReportPayload,
   FriendContact,
   MemberProfile,
+  MessageInfo,
   ReportCreated,
 } from '../api/api.types';
 
@@ -115,6 +116,14 @@ export class ChatApiService {
     return this.api.post<ChatMessageDto>(
       `${this.path(conversationId, type)}/messages/${encodeURIComponent(messageId)}/reactions`,
       { emoji },
+      this.headers(type, group),
+    );
+  }
+
+  /** Nachrichten-Info einer eigenen Nachricht: Stand je Person im Chat. */
+  messageInfo(conversationId: string, messageId: string, type?: ConversationType, group?: string | null): Observable<MessageInfo> {
+    return this.api.get<MessageInfo>(
+      `${this.path(conversationId, type)}/messages/${encodeURIComponent(messageId)}/info`,
       this.headers(type, group),
     );
   }

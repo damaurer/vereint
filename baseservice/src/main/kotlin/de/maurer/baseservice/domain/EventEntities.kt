@@ -276,6 +276,13 @@ class EventSeriesEntity(
     @Column(name = "invite_all_members", nullable = false)
     var inviteAllMembers: Boolean = false,
 
+    /**
+     * Erste Serie, aus der diese durch Teilen entstand; ihr Chat gilt weiter.
+     * `null` = diese Serie ist selbst der Anfang.
+     */
+    @Column(name = "chat_root_id")
+    var chatRootId: UUID? = null,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),

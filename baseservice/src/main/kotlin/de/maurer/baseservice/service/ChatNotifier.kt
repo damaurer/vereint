@@ -25,7 +25,8 @@ import java.util.UUID
  *
  * Wer ein Signal bekommt, folgt den Leserechten:
  * - Gruppenchat: alle aktiven Mitglieder der Gruppe
- * - Event-Chat: Owner und Eingeladene, deren Einladung schon verschickt ist
+ * - Event-Chat: Owner und Eingeladene, deren Einladung schon verschickt ist;
+ *   beim Chat einer Serie die aller Termine
  * - Moment-Chat: wer den Chat schon geöffnet hat (Mitglied der Konversation);
  *   dafür gibt es keinen Push, weil diese Chats nach 24 Stunden enden
  *
@@ -41,7 +42,8 @@ class ChatNotifier(
     private val liveUpdateHub: LiveUpdateHub,
     private val pushDispatcher: PushDispatcher,
     private val stammtischRepository: StammtischRepository,
-    private val blockService: BlockService
+    private val blockService: BlockService,
+    private val seriesChats: SeriesChats
 ) {
 
     /** Neue Nachricht: Live-Signal an alle Leser (auch die eigenen anderen Geräte), Push an alle anderen. */
@@ -73,7 +75,7 @@ class ChatNotifier(
 
     /** Name des Chats wie in den persönlichen Mitteilungen: Event-Titel oder Name der Gruppe. */
     private fun chatTitle(conversation: ConversationEntity): String =
-        conversation.event?.title
+        seriesChats.eventOf(conversation)?.title
             ?: TenantContext.stammtischId()?.let { stammtischRepository.findById(it).orElse(null)?.name }
             ?: "Vereint"
 
@@ -99,7 +101,10 @@ class ChatNotifier(
         ConversationService.TYPE_CLUB -> members.activeUsers().map { it.id }.toSet()
         ConversationService.TYPE_EVENT -> {
             val event = conversation.event
-            if (event == null) {
+            val series = conversation.series
+            if (series != null) {
+                seriesChats.audience(series.id)
+            } else if (event == null) {
                 emptySet()
             } else {
                 val invited = eventParticipantRepository.findByEventId(event.id)

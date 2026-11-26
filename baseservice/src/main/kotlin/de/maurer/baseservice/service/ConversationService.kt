@@ -75,7 +75,9 @@ class ConversationService(
     private val mediaAttachments: ChatMediaAttachments,
     private val momentSessionRepository: MomentSessionRepository,
     private val momentAccessPolicy: MomentAccessPolicy,
-    private val blockService: BlockService
+    private val blockService: BlockService,
+    private val chatRsvpNotes: ChatRsvpNotes,
+    private val userRepository: de.maurer.baseservice.repository.UserRepository
 ) {
 
     fun listConversations(principal: UserPrincipal): List<ConversationSummaryDto> {
@@ -133,7 +135,7 @@ class ConversationService(
                 return ownMessageDto(existing, conversation, caller)
             }
         }
-        conversation.event?.let { chatService.requireEventOpenForChat(it) }
+        chatService.requireConversationOpen(conversation)
         val mediaIds = mediaAttachments.parseIds(request.mediaIds)
         val text = request.message?.trim().orEmpty()
         // Ohne Foto oder Video braucht die Nachricht Text.
@@ -148,10 +150,31 @@ class ConversationService(
             )
         )
         val media = mediaAttachments.attachGroup(mediaIds, conversation.id, caller.id, saved.id)
-        chatService.recordMessage(saved, caller, conversation.event, media)
+        chatService.recordMessage(saved, caller, chatService.eventOf(conversation), media)
         // Eigene Nachrichten gelten als gelesen.
         membership(conversation, caller).lastReadAt = saved.createdAt
         return ownMessageDto(saved, conversation, caller)
+    }
+
+    /**
+     * Nachrichten-Info: Stand einer eigenen Nachricht bei jeder Person im Chat
+     * (gelesen, zugestellt, noch nicht zugestellt). Nur die Absenderin darf sie sehen.
+     */
+    @Transactional(readOnly = true)
+    fun messageInfo(conversationId: UUID, messageId: UUID, principal: UserPrincipal): de.maurer.baseservice.dto.MessageInfoDto {
+        val caller = userService.getOrCreateUser(principal)
+        val conversation = requireReadable(conversationId, caller, principal)
+        val message = chatMessageRepository.findById(messageId)
+            .filter { it.conversation?.id == conversation.id && it.kind == null }
+            .orElseThrow { ResourceNotFoundException(Msg("error.chat.messageNotFound", messageId), ErrorCode.NOT_FOUND) }
+        if (message.sender?.id != caller.id) {
+            throw AccessDeniedException(Msg("error.chat.infoOwnOnly"), ErrorCode.ACCESS_DENIED)
+        }
+        val audience = userRepository.findAllById(chatNotifier.audienceOf(conversation))
+        return de.maurer.baseservice.dto.MessageInfoDto(
+            messageId = message.id.toString(),
+            recipients = chatReceipts.infoFor(conversation, message, audience)
+        )
     }
 
     fun markRead(conversationId: UUID, principal: UserPrincipal): ConversationSummaryDto {
@@ -173,7 +196,7 @@ class ConversationService(
     fun typing(conversationId: UUID, principal: UserPrincipal) {
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireReadable(conversationId, caller, principal)
-        conversation.event?.let { chatService.requireEventOpenForChat(it) }
+        chatService.requireConversationOpen(conversation)
         typingSignals.typing(
             userId = caller.id,
             name = caller.displayName,
@@ -208,7 +231,7 @@ class ConversationService(
                     StatisticFeature.CHAT_REACTION,
                     kind = StatisticKind.RESPONSE,
                     actor = caller,
-                    event = conversation.event,
+                    event = chatService.eventOf(conversation),
                     variant = conversation.type,
                     respondsTo = message.id,
                     sourceId = reaction.id
@@ -255,6 +278,8 @@ class ConversationService(
             .distinctBy { it.id }
             .filter { it.status != EventStatus.archived && it.status != EventStatus.draft }
             .map { chatService.requireEventConversation(it) }
+            // Termine einer Serie teilen sich einen Chat.
+            .distinctBy { it.id }
     }
 
     /**
@@ -304,9 +329,8 @@ class ConversationService(
         } else {
             chatMessageRepository.findLatestVisible(conversation.id, hidden, PageRequest.of(0, 1)).firstOrNull()
         }
-        val event = conversation.event
-        val canWrite = event == null ||
-            (event.status != EventStatus.cancelled && event.status != EventStatus.archived)
+        val event = chatService.eventOf(conversation)
+        val canWrite = chatService.isOpen(conversation)
         val pinnedText = conversation.pinnedText
         return ConversationSummaryDto(
             id = conversation.id.toString(),
@@ -324,7 +348,8 @@ class ConversationService(
                     senderName = it.sender?.displayName ?: it.guest?.displayName ?: ChatService.UNKNOWN_SENDER_NAME,
                     message = it.message,
                     createdAt = it.createdAt,
-                    mediaKind = ChatMediaAttachments.previewKind(mediaAttachments.groupMedia(listOf(it.id))[it.id])
+                    mediaKind = ChatMediaAttachments.previewKind(mediaAttachments.groupMedia(listOf(it.id))[it.id]),
+                    kind = it.kind
                 )
             },
             unreadCount = unreadFor(conversation, caller),
@@ -346,6 +371,8 @@ class ConversationService(
         val byMessage = chatReactionRepository.findByMessageIdIn(messages.map { it.id })
             .groupBy { it.message?.id }
         val media = mediaAttachments.groupMedia(messages.map { it.id })
+        val conversation = messages.first().conversation
+        val answers = conversation?.let { chatRsvpNotes.badges(it, messages) }.orEmpty()
         return messages.map { message ->
             val reactions = byMessage[message.id].orEmpty()
                 .groupBy { it.emoji }
@@ -356,7 +383,8 @@ class ConversationService(
             chatService.toMessageDto(message).copy(
                 reactions = reactions,
                 clientId = message.clientId.takeIf { message.sender?.id == caller.id },
-                media = media[message.id].orEmpty()
+                media = media[message.id].orEmpty(),
+                senderRsvp = answers[message.id]
             )
         }
     }
@@ -367,7 +395,8 @@ class ConversationService(
         return chatService.toMessageDto(message).copy(
             clientId = message.clientId,
             receipt = receipt,
-            media = mediaAttachments.groupMedia(listOf(message.id))[message.id].orEmpty()
+            media = mediaAttachments.groupMedia(listOf(message.id))[message.id].orEmpty(),
+            senderRsvp = chatRsvpNotes.badges(conversation, listOf(message))[message.id]
         )
     }
 

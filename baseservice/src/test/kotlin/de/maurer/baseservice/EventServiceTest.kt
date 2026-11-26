@@ -73,7 +73,8 @@ class EventServiceTest {
             StammtischTestSupport.access(userRoleRepository),
             userService,
             eventInvitationService,
-            mock(de.maurer.baseservice.service.StatisticsRecorder::class.java)
+            mock(de.maurer.baseservice.service.StatisticsRecorder::class.java),
+            mock(de.maurer.baseservice.service.ChatRsvpNotes::class.java)
         )
         `when`(eventParticipantRepository.countByEventId(any(UUID::class.java) ?: eventId)).thenReturn(0L)
         `when`(userRoleRepository.findByIdUserId(any(UUID::class.java) ?: ownerId)).thenReturn(emptyList())

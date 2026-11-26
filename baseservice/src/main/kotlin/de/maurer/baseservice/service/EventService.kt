@@ -41,7 +41,8 @@ class EventService(
     private val access: StammtischAccess,
     private val userService: UserService,
     private val eventInvitationService: EventInvitationService,
-    private val statisticsRecorder: StatisticsRecorder
+    private val statisticsRecorder: StatisticsRecorder,
+    private val chatRsvpNotes: ChatRsvpNotes
 ) {
 
     fun createEvent(request: CreateEventRequest, principal: UserPrincipal): EventDto {
@@ -107,9 +108,12 @@ class EventService(
         val status = RsvpStatus.fromValue(request.status)
             ?.takeIf { it != RsvpStatus.invited }
             ?: throw InvalidRequestException(Msg("validation.rsvp.allowed"), ErrorCode.INVALID_REQUEST)
+        val previous = participant.rsvp
         participant.rsvp = status
         participant.rsvpAt = Instant.now()
         eventParticipantRepository.save(participant)
+        // Zu- und Absagen stehen im Event-Chat.
+        chatRsvpNotes.rsvpChanged(event, caller, previous, status)
         statisticsRecorder.record(
             StatisticFeature.RSVP,
             kind = StatisticKind.RESPONSE,

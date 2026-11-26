@@ -875,7 +875,29 @@ export interface ChatMessageDto {
   receipt?: MessageReceipt | null;
   /** Fotos und Videos der Nachricht. */
   media?: ChatMedia[];
+  /** Hinweiszeile statt Nachricht: Zu- oder Absage. */
+  kind?: ChatNoteKind | null;
+  /** Bei Zu-/Absagen im Chat einer Serie: Beginn des Termins. */
+  rsvpEventStartsAt?: string | null;
+  /** Antwort der Absenderin auf den Termin, für den sie schrieb (bis er vorbei ist). */
+  senderRsvp?: 'accepted' | 'declined' | null;
 }
+
+/** Nachrichten-Info: Stand einer eigenen Nachricht je Person. */
+export interface MessageInfo {
+  messageId: string;
+  recipients: MessageInfoRecipient[];
+}
+
+/** `read` = gelesen, `delivered` = zugestellt, `sent` = noch nicht zugestellt. */
+export interface MessageInfoRecipient {
+  userId: string;
+  displayName: string;
+  status: 'read' | 'delivered' | 'sent';
+}
+
+/** Zu- oder Absage als Hinweiszeile im Event-Chat. */
+export type ChatNoteKind = 'rsvp_accepted' | 'rsvp_declined';
 
 /** Foto oder Video einer Chatnachricht; `url` ist der berechtigungsgeprüfte Abruf. */
 export interface ChatMedia {
@@ -920,6 +942,7 @@ export interface ConversationSummary {
     createdAt: string;
     /** Foto/Video in der Nachricht (Vorschau „📷 Foto“). */
     mediaKind?: 'image' | 'video' | null;
+    kind?: ChatNoteKind | null;
   } | null;
   unreadCount: number;
   pinned: PinnedNote | null;

@@ -65,6 +65,12 @@ Auf der **Startseite** steht außerdem immer dein nächster Termin.
 
 <br clear="right">
 
+<img src="bilder/m-event-chat-zusagen.png" alt="Zu- und Absagen im Event-Chat" width="300" align="right">
+
+Sagt jemand zu oder ab, erscheint im Chat eine Zeile in der Mitte: **grün** „Anna hat zugesagt“, **rot** „Anna hat abgesagt“, bei Serien mit dem Abend. Unter den Nachrichten einer Person steht klein **Zugesagt** bzw. **Abgesagt**, so wie die Haken. Das gilt jeweils für den Abend, um den es beim Schreiben ging, und verschwindet, wenn er vorbei ist. Bei „Vielleicht“ oder ohne Antwort steht dort nichts.
+
+<br clear="right">
+
 ## Selbst ein Event anlegen
 
 <img src="bilder/m-event-neu.png" alt="Event anlegen" width="300" align="right">
@@ -101,13 +107,13 @@ Der Stammtisch ist jeden Dienstag, der Wirt öffnet jeden letzten Samstag im Mon
 6. **Termine auslassen** für Feiertage oder den Urlaub des Wirts, **Zusätzliche Termine** für Sondertermine.
 7. **Einladung verschicken**: wie viele Tage vor jedem Termin die Eingeladenen ihre Einladung bekommen (Standard 7 Tage).
 
-Unten zeigt die Vorschau die Regel in Worten und die nächsten Termine. Jeder Termin ist danach ein eigenes Event mit eigener Zu- und Absage, eigenem Chat, eigener Erinnerung und eigener Statistik. Alle beginnen zur gleichen Uhrzeit, auch nach der Zeitumstellung.
+Unten zeigt die Vorschau die Regel in Worten und die nächsten Termine. Jeder Termin ist danach ein eigenes Event mit eigener Zu- und Absage, eigener Erinnerung und eigener Statistik. Den **Event-Chat** teilen sich alle Termine der Serie: Es gibt nur einen Chat, in dem alle Eingeladenen über alle Abende schreiben, und er steht auch nur einmal in der Chatliste. Alle beginnen zur gleichen Uhrzeit, auch nach der Zeitumstellung.
 
 <br clear="right">
 
 <img src="bilder/m-events-serie.png" alt="Eventliste mit Serien" width="300" align="right">
 
-In der Eventliste steht von jeder Serie nur der nächste Termin, darunter **Weitere Termine** zum direkten Öffnen. Die Eventseite zeigt den Rhythmus (etwa „Wöchentlich am Dienstag“) und die nächsten Termine der Serie. Im Kalender trägt jeder Termin ein Wiederholungssymbol.
+In der Eventliste steht jede Serie nur einmal, mit dem Hinweis **Wiederkehrend**: unter **Kommend** der Termin, der gerade läuft oder als Nächstes ansteht, unter **Vergangen** der zuletzt vergangene. Die Eventseite zeigt den Rhythmus (etwa „Wöchentlich am Dienstag“) und die nächsten Termine der Serie zum direkten Öffnen. Im Kalender steht jeder Termin einzeln, mit einem Wiederholungssymbol.
 
 <br clear="right">
 
@@ -131,13 +137,20 @@ Unter **Chat** (untere Leiste) stehen alle deine Chats in einer Liste, so wie be
 Tippe auf einen Chat, um ihn zu öffnen. Am Handy füllt er den ganzen Bildschirm, der Pfeil oben links führt zurück zur Liste. Am Rechner und Tablet stehen Liste und Chat nebeneinander. Oben im Gruppenchat kann der Vorstand eine **Infotafel** anheften, etwa einen wichtigen Termin.
 
 - Unten Nachricht eintippen und senden. Neue Nachrichten und Reaktionen der anderen erscheinen sofort, ohne Neuladen.
-- Haken neben deinen Nachrichten: **✓** gesendet, **✓✓** bei allen angekommen, **✓✓ blau** von allen gelesen. Im Gruppen- und Event-Chat zeigt ein Antippen bzw. Darüberfahren, bei wie vielen die Nachricht schon angekommen ist und wie viele sie gelesen haben.
+- Haken neben deinen Nachrichten: **✓** gesendet, **✓✓** bei allen angekommen, **✓✓ blau** von allen gelesen. Im Gruppen- und Event-Chat zeigt ein Antippen bzw. Darüberfahren der Haken, bei wie vielen die Nachricht schon angekommen ist und wie viele sie gelesen haben.
+- **Nachrichten-Info** (Bild unten): Tippe eine deiner Nachrichten an (am Rechner auch Rechtsklick), sie wird markiert. Unter ihr erscheint neben den Reaktionen **Info**. Dort siehst du für jede Person, ob sie die Nachricht **gelesen** hat, ob sie **zugestellt** ist oder **noch nicht zugestellt**.
 - Tippt gerade jemand, steht über dem Eingabefeld zum Beispiel „Anna schreibt…“.
 - Ohne Netz kannst du trotzdem schreiben: Die Nachricht steht mit einer **Uhr** da und geht von allein hinaus, sobald du wieder Netz hast, auch wenn du die App zwischendurch schließt. Klappt es nicht (zum Beispiel weil das Event abgesagt wurde), steht **Nicht gesendet** darunter, mit **Erneut senden** und **Verwerfen**. Beim Abmelden werden ungesendete Nachrichten gelöscht.
 - Mit eingeschaltetem Push bekommst du neue Nachrichten aus allen deinen Chats aufs Handy, mit Name und Text. Je Chat gibt es eine Benachrichtigung, die neueste ersetzt die vorige. Ein Tipp darauf öffnet den Chat.
 - **Fotos und Videos**: Die **Büroklammer** links neben dem Eingabefeld öffnet Kamera bzw. Galerie. Bis zu **4** Fotos oder Videos je Nachricht; Videos bis **60 Sekunden** und **100 MB** (MP4 oder MOV), Fotos werden vor dem Hochladen verkleinert. Die Anhänge laden sofort hoch und stehen mit Fortschrittsbalken über dem Eingabefeld; das **✕** nimmt einen wieder heraus. Text dazu ist freiwillig. Fotos öffnen sich mit einem Tipp in voller Größe, Videos spielen direkt im Chat. Sie sind verschlüsselt gespeichert und nur für alle im Chat sichtbar.
 - **Emojis**: Das **😊** rechts neben dem Eingabefeld öffnet die Auswahl mit **allen** Emojis, nach Gruppen sortiert, mit **Zuletzt verwendet** und Suche (englische Namen, z. B. „beer“).
 - Mit **+** unter einer Nachricht reagierst du mit einem Emoji. Die fünf häufigsten stehen gleich da, **…** öffnet die volle Auswahl.
+
+<br clear="right">
+
+<img src="bilder/m-nachrichten-info.png" alt="Nachrichten-Info" width="300" align="right">
+
+Die **Nachrichten-Info** listet zuerst, wer gelesen hat, dann, bei wem die Nachricht zugestellt ist, und zuletzt, bei wem sie noch nicht angekommen ist. Uhrzeiten stehen dort nicht, weil Vereint den Lesestand je Chat speichert und nicht je Nachricht. Die Info gibt es in Gruppen-, Event- und Moment-Chats; in Direktnachrichten zeigen die Haken schon alles.
 
 <br clear="right">
 

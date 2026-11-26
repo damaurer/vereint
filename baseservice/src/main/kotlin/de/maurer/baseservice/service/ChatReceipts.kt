@@ -7,6 +7,7 @@ import de.maurer.baseservice.domain.DirectConversationEntity
 import de.maurer.baseservice.domain.DirectMessageEntity
 import de.maurer.baseservice.domain.DirectParticipantEntity
 import de.maurer.baseservice.domain.UserEntity
+import de.maurer.baseservice.dto.MessageInfoRecipientDto
 import de.maurer.baseservice.dto.MessageReceiptDto
 import de.maurer.baseservice.live.LiveEvent
 import de.maurer.baseservice.live.LiveUpdateHub
@@ -90,6 +91,34 @@ class ChatReceipts(
         return own.associate { message ->
             message.id to receipt(message.createdAt, recipients.map { states[it] ?: (null to null) })
         }
+    }
+
+    /**
+     * Stand von [message] bei jeder Person aus [audience] außer der Absenderin,
+     * gelesen zuerst, dann zugestellt, dann noch nicht zugestellt, je nach Name.
+     */
+    fun infoFor(
+        conversation: ConversationEntity,
+        message: ChatMessageEntity,
+        audience: Collection<UserEntity>
+    ): List<MessageInfoRecipientDto> {
+        val states = conversationMemberRepository.findByConversationId(conversation.id)
+            .mapNotNull { member -> member.user?.id?.let { it to (member.lastDeliveredAt to member.lastReadAt) } }
+            .toMap()
+        val order = listOf(MessageReceiptDto.READ, MessageReceiptDto.DELIVERED, MessageReceiptDto.SENT)
+        return audience
+            .filter { it.id != message.sender?.id }
+            .map { user ->
+                val (deliveredAt, readAt) = states[user.id] ?: (null to null)
+                val reached = reachedAt(deliveredAt, readAt)
+                val status = when {
+                    readAt != null && !readAt.isBefore(message.createdAt) -> MessageReceiptDto.READ
+                    reached != null && !reached.isBefore(message.createdAt) -> MessageReceiptDto.DELIVERED
+                    else -> MessageReceiptDto.SENT
+                }
+                MessageInfoRecipientDto(userId = user.id.toString(), displayName = user.displayName, status = status)
+            }
+            .sortedWith(compareBy<MessageInfoRecipientDto> { order.indexOf(it.status) }.thenBy { it.displayName.lowercase() })
     }
 
     // --- Direktnachrichten ---

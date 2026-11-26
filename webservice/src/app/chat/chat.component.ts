@@ -570,6 +570,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   protected previewOf(row: ConversationSummary): string {
     const last = row.lastMessage;
     if (!last) return '';
+    if (last.kind) {
+      return translate(last.kind === 'rsvp_accepted' ? 'chat.rsvp.previewAccepted' : 'chat.rsvp.previewDeclined', { name: last.senderName });
+    }
     // Nur Foto/Video ohne Text: „📷 Foto“ bzw. „🎥 Video“ wie bei bekannten Messengern.
     const text = last.message || (last.mediaKind ? translate(last.mediaKind === 'video' ? 'chat.list.video' : 'chat.list.photo') : '');
     if (row.type === 'direct') return text;

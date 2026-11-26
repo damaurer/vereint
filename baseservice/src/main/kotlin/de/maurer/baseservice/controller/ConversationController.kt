@@ -71,6 +71,11 @@ class ConversationController(
     fun messages(@PathVariable conversationId: String): ResponseEntity<List<ChatMessageDto>> =
         ResponseEntity.ok(conversationService.listMessages(conversationId(conversationId), authContext.getRequiredPrincipal()))
 
+    @GetMapping("/{conversationId}/messages/{messageId}/info")
+    @Operation(summary = "Nachrichten-Info", description = "Stand einer eigenen Nachricht je Person: gelesen, zugestellt, noch nicht zugestellt")
+    fun info(@PathVariable conversationId: String, @PathVariable messageId: String): ResponseEntity<de.maurer.baseservice.dto.MessageInfoDto> =
+        ResponseEntity.ok(conversationService.messageInfo(conversationId(conversationId), messageId(messageId), authContext.getRequiredPrincipal()))
+
     @PostMapping("/{conversationId}/messages")
     @Operation(summary = "Nachricht senden", description = "Sendet eine Nachricht in eine Konversation")
     fun send(

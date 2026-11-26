@@ -225,6 +225,7 @@ Alle Events der Gruppe, zu denen du eingeladen bist oder die du selbst angelegt 
 - Jede Karte zeigt Titel, Status, Datum, Uhrzeit und Ort:
   - **Aktiv**: Der Abend läuft, die Theke ist offen. Hast du zugesagt, steht „Du bist dabei“.
   - **Offen**: Du hast noch nicht geantwortet. **Zusagen** und **Absagen** stehen direkt in der Karte.
+- Wiederkehrende Events stehen nur einmal da, mit dem Hinweis **Wiederkehrend**: unter **Kommend** der laufende oder nächste Termin, unter **Vergangen** der zuletzt vergangene. Alle Termine stehen im [Kalender](#kalender).
 - Ein Tipp auf die Karte öffnet das [Event](#event).
 
 <br clear="right">
@@ -268,7 +269,7 @@ Danach verwaltest du das Event unter [Event verwalten](#event-verwalten).
 
 <img src="screens/event-chat.png" alt="Event-Chat" width="300" align="right">
 
-Der Chat aller Eingeladenen eines Events, etwa für Fahrgemeinschaften oder Absprachen.
+Der Chat aller Eingeladenen eines Events, etwa für Fahrgemeinschaften oder Absprachen. Bei wiederkehrenden Events teilen sich alle Termine diesen einen Chat.
 
 - Kopfzeile mit dem Eventnamen.
 - Läuft gerade ein Moment, steht oben ein Hinweis („Moment läuft: …“) mit **Ansehen**.

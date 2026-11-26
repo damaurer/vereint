@@ -64,7 +64,7 @@ class ChatMediaService(
         val ownerId = tx.execute {
             val caller = userService.getOrCreateUser(principal)
             val conversation = chatService.requireReadableConversation(conversationId, caller, principal)
-            conversation.event?.let { chatService.requireEventOpenForChat(it) }
+            chatService.requireConversationOpen(conversation)
             requirePendingBelowLimit(chatMediaRepository.countByConversationIdAndOwnerIdAndMessageIdIsNull(conversationId, caller.id))
             caller.id
         }!!

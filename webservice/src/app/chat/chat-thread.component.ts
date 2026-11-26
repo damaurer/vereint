@@ -18,15 +18,15 @@ import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom, type Subscription } from 'rxjs';
-import type { ChatMedia, ChatMessageDto, ConversationSummary, MessageReceipt } from '../api/api.types';
+import type { ChatMedia, ChatMessageDto, ConversationSummary, MessageInfo, MessageInfoRecipient, MessageReceipt } from '../api/api.types';
 import { describeApiError } from '../api/api-client.service';
 import { formatDateTime, formatDayTime, formatShortDateTime, formatTime } from '../member/member-format';
-import { AvatarBadgeComponent, InfoPanelComponent } from '../ui';
+import { AvatarBadgeComponent, InfoPanelComponent, ModalComponent } from '../ui';
 import { IconComponent } from '../ui/icon.component';
 import type { IconName } from '../ui/icons';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
-import { translate } from '../i18n/i18n.service';
+import { activeLocale, translate } from '../i18n/i18n.service';
 import { ChatApiService } from './chat-api.service';
 import { ChatUnreadStore } from './chat-unread.store';
 import { LiveUpdatesService } from '../live/live-updates.service';
@@ -94,6 +94,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
     ChatMediaGridComponent,
     EmojiPickerComponent,
     ReportDialogComponent,
+    ModalComponent,
   ],
   template: `
     <div class="chat-thread" [class.is-embedded]="embedded" [class.is-fill]="fill">
@@ -165,12 +166,26 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
             @if (dayBreak(i); as day) {
               <p class="chat-day"><span>{{ day }}</span></p>
             }
+            @if (message.kind) {
+              <p class="chat-rsvp-note" [attr.data-kind]="message.kind" data-testid="chat-rsvp-note">
+                <span>
+                  <vereint-icon [name]="message.kind === 'rsvp_accepted' ? 'check' : 'close'" />
+                  {{ noteText(message) }}
+                  <time [attr.datetime]="message.createdAt">{{ formatTime(message.createdAt) }}</time>
+                </span>
+              </p>
+            } @else {
             <article class="chat-message" [class.is-own]="isOwn(message)" [class.is-direct]="conversation.type === 'direct'">
               @if (!isOwn(message) && conversation.type !== 'direct') {
                 <vereint-avatar-badge class="chat-message-avatar" [name]="message.senderName" />
               }
               <div class="chat-message-body">
-                <div class="chat-bubble">
+                <div
+                  class="chat-bubble"
+                  [class.is-selected]="pickerFor() === message.id"
+                  (click)="selectMessage(message, $event)"
+                  (contextmenu)="selectMessage(message, $event)"
+                >
                   <span class="chat-message-head">
                     <span class="chat-message-author">{{
                       isOwn(message) ? ('chat.you' | t) : message.senderName
@@ -206,6 +221,12 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                     }
                   </span>
                 </div>
+                @if (message.senderRsvp; as rsvp) {
+                  <span class="chat-rsvp-badge" [attr.data-rsvp]="rsvp" data-testid="chat-rsvp-badge">
+                    <vereint-icon [name]="rsvp === 'accepted' ? 'check' : 'close'" />
+                    {{ (rsvp === 'accepted' ? 'chat.rsvp.badgeAccepted' : 'chat.rsvp.badgeDeclined') | t }}
+                  </span>
+                }
                 <div class="chat-reactions">
                   @for (reaction of message.reactions ?? []; track reaction.emoji) {
                     <button
@@ -253,6 +274,11 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                     >
                       …
                     </button>
+                    @if (canShowInfo(message)) {
+                      <button type="button" class="chat-picker-info" data-testid="chat-info-open" (click)="openInfo(message)">
+                        <vereint-icon name="info" /> {{ 'chat.info.open' | t }}
+                      </button>
+                    }
                     @if (canReport(message)) {
                       <button type="button" class="chat-picker-report" (click)="openReport(message)">
                         {{ 'moderation.action.reportOrBlock' | t }}
@@ -265,6 +291,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                 }
               </div>
             </article>
+            }
           }
           @for (entry of pending(); track entry.clientId) {
             <article class="chat-message is-own is-pending" [class.is-failed]="entry.state === 'failed'">
@@ -313,6 +340,46 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
       @if (actionNotice()) {
         <p class="chat-action-notice" role="status">{{ actionNotice() }}</p>
       }
+
+      <vereint-modal [open]="!!infoTarget()" [title]="'chat.info.title' | t" (closed)="closeInfo()">
+        @if (infoTarget(); as target) {
+          <div class="chat-info" data-testid="chat-info">
+            <p class="chat-info-quote">
+              @if (target.message) {
+                {{ target.message }}
+              } @else {
+                {{ 'chat.list.photo' | t }}
+              }
+              <time [attr.datetime]="target.createdAt">{{ formatDateTime(target.createdAt) }}</time>
+            </p>
+            @if (infoError(); as error) {
+              <p class="manage-action-error" role="alert">{{ error }}</p>
+            } @else if (info(); as data) {
+              @for (group of infoGroups(data); track group.status) {
+                <section class="chat-info-group" [attr.data-status]="group.status">
+                  <h3>
+                    <vereint-icon [name]="group.status === 'sent' ? 'check' : 'checkDouble'" />
+                    {{ 'chat.info.' + group.status | t }} · {{ group.people.length }}
+                  </h3>
+                  <ul>
+                    @for (person of group.people; track person.userId) {
+                      <li>
+                        <vereint-avatar-badge [name]="person.displayName" />
+                        <span>{{ person.displayName }}</span>
+                      </li>
+                    }
+                  </ul>
+                </section>
+              } @empty {
+                <p class="member-muted">{{ 'chat.info.nobody' | t }}</p>
+              }
+              <p class="chat-info-hint">{{ 'chat.info.hint' | t }}</p>
+            } @else {
+              <p class="member-muted">{{ 'common.loading' | t }}</p>
+            }
+          </div>
+        }
+      </vereint-modal>
 
       <app-report-dialog
         [open]="!!reportTarget()"
@@ -495,6 +562,54 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         font-weight: 600;
         box-shadow: 0 1px 1px rgba(15, 23, 42, 0.08);
       }
+      /* Zu- und Absagen: Hinweiszeile in der Mitte, grün bzw. rot. */
+      .chat-rsvp-note {
+        display: flex;
+        justify-content: center;
+        margin: 0.35rem 0;
+      }
+      .chat-rsvp-note > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        max-width: 90%;
+        padding: 0.3rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-align: center;
+      }
+      .chat-rsvp-note[data-kind='rsvp_accepted'] > span {
+        background-color: color-mix(in srgb, var(--color-success) 16%, var(--color-surface));
+        color: var(--color-success);
+      }
+      .chat-rsvp-note[data-kind='rsvp_declined'] > span {
+        background-color: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface));
+        color: var(--color-danger);
+      }
+      .chat-rsvp-note time {
+        font-weight: 400;
+        opacity: 0.7;
+      }
+      /* Antwort unter einer Nachricht, wie die Haken klein und dezent. */
+      .chat-rsvp-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        margin-top: 0.15rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        line-height: 1;
+      }
+      .chat-message.is-own .chat-rsvp-badge {
+        align-self: flex-end;
+      }
+      .chat-rsvp-badge[data-rsvp='accepted'] {
+        color: var(--color-success);
+      }
+      .chat-rsvp-badge[data-rsvp='declined'] {
+        color: var(--color-danger);
+      }
       .chat-message {
         display: flex;
         gap: 0.4rem;
@@ -618,6 +733,68 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
       }
       .chat-picker-emoji {
         font-size: 1.1rem;
+      }
+      .chat-bubble.is-selected {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 1px;
+      }
+      .chat-picker-info {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        border: 0;
+        background: none;
+        color: var(--color-primary);
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0 var(--space-1);
+      }
+      .chat-info {
+        display: grid;
+        gap: var(--space-2);
+      }
+      .chat-info-quote {
+        display: grid;
+        gap: 0.25rem;
+        margin: 0;
+        padding: 0.6rem 0.8rem;
+        border-radius: var(--radius-sm);
+        background-color: var(--color-surface-muted);
+        white-space: pre-line;
+      }
+      .chat-info-quote time {
+        color: var(--color-text-muted);
+        font-size: 0.75rem;
+      }
+      .chat-info-group h3 {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin: 0 0 0.35rem;
+        font-size: 0.9rem;
+        color: var(--color-text-muted);
+      }
+      .chat-info-group[data-status='read'] h3 {
+        color: var(--color-info, #2f8fdc);
+      }
+      .chat-info-group ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.4rem;
+      }
+      .chat-info-group li {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+      .chat-info-hint {
+        margin: 0;
+        color: var(--color-text-muted);
+        font-size: 0.8rem;
       }
       .chat-picker-report {
         border: 0;
@@ -820,6 +997,10 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   private readonly moderation = inject(ModerationApiService);
   /** Nachricht, die gerade gemeldet oder deren Absender blockiert wird (#153). */
   protected readonly reportTarget = signal<ChatMessageDto | null>(null);
+  /** Eigene Nachricht, deren Info gerade offen ist. */
+  protected readonly infoTarget = signal<ChatMessageDto | null>(null);
+  protected readonly info = signal<MessageInfo | null>(null);
+  protected readonly infoError = signal<string | null>(null);
   protected readonly reportBusy = signal(false);
   protected readonly reportError = signal<string | null>(null);
   protected readonly actionNotice = signal<string | null>(null);
@@ -1125,6 +1306,20 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /** Zugänglicher Text zu den Haken einer eigenen Nachricht. */
+  /** „Anna hat zugesagt“ bzw. „Du hast abgesagt“, bei Serien mit Termin. */
+  protected noteText(message: ChatMessageDto): string {
+    const accepted = message.kind === 'rsvp_accepted';
+    const own = this.isOwn(message);
+    const key = `chat.rsvp.${own ? 'own' : 'other'}${accepted ? 'Accepted' : 'Declined'}${message.rsvpEventStartsAt ? 'For' : ''}`;
+    return translate(key, {
+      name: message.senderName,
+      // „Sa, 28. Nov“: kurz, damit die Zeile meist einzeilig bleibt.
+      date: message.rsvpEventStartsAt
+        ? new Intl.DateTimeFormat(activeLocale(), { weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(message.rsvpEventStartsAt))
+        : '',
+    });
+  }
+
   protected receiptLabel(receipt: MessageReceipt): string {
     const group = this.conversation.type !== 'direct' && receipt.recipients > 1;
     if (!group) return translate(`chat.receipt.${receipt.status}`);
@@ -1139,6 +1334,43 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   /** Fremde Nachrichten von Personen lassen sich melden (nicht System- oder Gastnachrichten). */
   protected canReport(message: ChatMessageDto): boolean {
     return message.senderType === 'member' && !!message.senderId && !this.isOwn(message);
+  }
+
+  /** Nachrichten-Info (wie bei bekannten Messengern) nur für eigene Nachrichten in Gruppen-, Event- und Moment-Chats. */
+  protected canShowInfo(message: ChatMessageDto): boolean {
+    return this.isOwn(message) && !message.kind && this.conversation.type !== 'direct';
+  }
+
+  /** Antippen bzw. lange Drücken einer Nachricht wählt sie aus: Reaktionen, Info, Melden. */
+  protected selectMessage(message: ChatMessageDto, event: Event): void {
+    const target = event.target as HTMLElement | null;
+    // Links, Videos und Bilder in der Blase behalten ihre eigene Bedienung.
+    if (target?.closest('a, button, video, img, app-chat-media-grid')) return;
+    if (event.type === 'contextmenu') event.preventDefault();
+    this.togglePicker(message.id);
+  }
+
+  protected openInfo(message: ChatMessageDto): void {
+    this.pickerFor.set(null);
+    this.fullPicker.set(false);
+    this.info.set(null);
+    this.infoError.set(null);
+    this.infoTarget.set(message);
+    this.api.messageInfo(this.conversation.id, message.id, this.conversation.type, this.conversation.stammtischId).subscribe({
+      next: (info) => this.info.set(info),
+      error: (error: unknown) => this.infoError.set(describeApiError(error)),
+    });
+  }
+
+  protected closeInfo(): void {
+    this.infoTarget.set(null);
+  }
+
+  /** Gelesen, zugestellt, noch nicht zugestellt; leere Gruppen fallen weg. */
+  protected infoGroups(info: MessageInfo): { status: MessageInfoRecipient['status']; people: MessageInfoRecipient[] }[] {
+    return (['read', 'delivered', 'sent'] as const)
+      .map((status) => ({ status, people: info.recipients.filter((person) => person.status === status) }))
+      .filter((group) => group.people.length > 0);
   }
 
   protected openReport(message: ChatMessageDto): void {

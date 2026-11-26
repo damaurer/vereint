@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 380. Zu- und Absagen im Event-Chat: Hinweiszeilen sind Nachrichten mit
+         kind (rsvp_accepted, rsvp_declined; NULL = normale Nachricht) und dem
+         Termin, auf den sich die Antwort bezieht. -->
+    <changeSet id="380-chat-rsvp-notes" author="claude">
+        <addColumn tableName="chat_messages">
+            <column name="kind" type="VARCHAR(32)"/>
+            <column name="rsvp_event_id" type="${uuid.type}"/>
+        </addColumn>
+        <addForeignKeyConstraint baseTableName="chat_messages" baseColumnNames="rsvp_event_id"
+                                 constraintName="fk_chat_messages_rsvp_event"
+                                 referencedTableName="events" referencedColumnNames="id"
+                                 onDelete="SET NULL"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="chat_messages" constraintName="fk_chat_messages_rsvp_event"/>
+            <dropColumn tableName="chat_messages" columnName="rsvp_event_id"/>
+            <dropColumn tableName="chat_messages" columnName="kind"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

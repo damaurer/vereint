@@ -75,7 +75,16 @@ data class ChatMessageDto(
     /** Haken; nur bei eigenen Nachrichten. */
     val receipt: MessageReceiptDto? = null,
     /** Fotos und Videos der Nachricht (nur über den Content-Endpunkt abrufbar). */
-    val media: List<ChatMediaDto> = emptyList()
+    val media: List<ChatMediaDto> = emptyList(),
+    /** Hinweiszeile statt Nachricht: `rsvp_accepted` oder `rsvp_declined`. */
+    val kind: String? = null,
+    /** Bei Zu-/Absagen im Chat einer Serie: Beginn des Termins. */
+    val rsvpEventStartsAt: Instant? = null,
+    /**
+     * Antwort der Absenderin (`accepted`/`declined`) auf den Termin, für den die
+     * Nachricht geschrieben wurde; nur solange der Termin nicht vorbei ist.
+     */
+    val senderRsvp: String? = null
 )
 
 /**
@@ -115,6 +124,23 @@ data class MessageReceiptDto(
     }
 }
 
+/**
+ * Nachrichten-Info wie bei bekannten Messengern: Stand der eigenen Nachricht
+ * bei jeder Person, die den Chat lesen darf. `status` ist `read` (gelesen),
+ * `delivered` (zugestellt, noch nicht gelesen) oder `sent` (noch nicht
+ * zugestellt). Zeitpunkte gibt es nicht je Nachricht, nur je Chat.
+ */
+data class MessageInfoDto(
+    val messageId: String,
+    val recipients: List<MessageInfoRecipientDto>
+)
+
+data class MessageInfoRecipientDto(
+    val userId: String,
+    val displayName: String,
+    val status: String
+)
+
 /** Zusammengefasste Reaktionen auf eine Nachricht. */
 data class ChatReactionDto(
     val emoji: String,
@@ -128,7 +154,9 @@ data class ChatMessagePreviewDto(
     val message: String,
     val createdAt: Instant,
     /** `image` oder `video`, wenn die Nachricht Fotos/Videos enthält. */
-    val mediaKind: String? = null
+    val mediaKind: String? = null,
+    /** Zu-/Absage-Hinweis statt Nachricht (`rsvp_accepted`/`rsvp_declined`). */
+    val kind: String? = null
 )
 
 /**
