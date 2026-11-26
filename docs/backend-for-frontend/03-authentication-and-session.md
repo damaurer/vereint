@@ -126,6 +126,42 @@ bleiben die Namen ohne Präfix (`vereint_session`, `__oidc_state`,
 
 ---
 
+## ⏳ Sitzungsdauer: 30 Tage ohne Nutzung
+
+Angemeldet bleibt, wer Vereint mindestens einmal in 30 Tagen nutzt. Erst nach
+30 Tagen ohne Nutzung (oder spätestens 365 Tage nach dem Login) ist eine neue
+Anmeldung nötig. Abmelden beendet die Session sofort.
+
+| Ebene | Wert | Wirkung |
+| :--- | :--- | :--- |
+| BFF `SESSION_DURATION_DAYS` | `30` | `expiresAt` der Session und `Max-Age` des Cookies. Bei jedem Token-Refresh neu berechnet: `min(jetzt + 30 Tage, Login + 365 Tage)` (`sessionExpiresAt`). |
+| BFF `SESSION_MAX_LIFESPAN_DAYS` | `365` | Obergrenze ab `createdAt`, auch bei täglicher Nutzung. |
+| Keycloak `ssoSessionIdleTimeout` (+ `…RememberMe`) | `2592000` s (30 Tage) | Gültigkeit des Refresh-Tokens ohne Nutzung. Jede Erneuerung setzt sie zurück. |
+| Keycloak `ssoSessionMaxLifespan` (+ `…RememberMe`) | `31536000` s (365 Tage) | Absolutes Ende der Keycloak-Session. |
+| Keycloak `clientSessionIdleTimeout` / `clientSessionMaxLifespan` | `0` | Erben die SSO-Werte. |
+| Keycloak `rememberMe` | `false` | Kein Häkchen „Angemeldet bleiben“ auf der Anmeldeseite: Das App-Cookie ist immer dauerhaft, das Häkchen hätte nur Keycloaks eigenes Cookie betroffen. |
+| Keycloak `accessTokenLifespan` | `300` s | Unverändert kurz; der BFF erneuert es bei Nutzung im Hintergrund. |
+
+Weil das Access-Token nur fünf Minuten gilt, erneuert der BFF es bei jeder
+Nutzung nach spätestens fünf Minuten. Dabei schreibt er das Cookie mit neuem
+`Max-Age` und schiebt das Ende um 30 Tage nach hinten. Ohne Nutzung läuft das
+Cookie im Browser und das Refresh-Token in Keycloak nach 30 Tagen ab. Liegen
+BFF- und Keycloak-Werte auseinander, gilt der kürzere: Ist Keycloak kürzer
+eingestellt, scheitert der Refresh und die Person wird früher abgemeldet.
+
+Sicherheit: Tokens liegen weiter nur verschlüsselt im `HttpOnly`-,
+`Secure`-, `SameSite=Lax`-Cookie (`__Host-` unter HTTPS); Refresh-Tokens werden
+bei jeder Erneuerung rotiert (`revokeRefreshToken`, `refreshTokenMaxReuse` 0).
+Wer Rollen verliert oder in Keycloak deaktiviert wird, verliert den Zugang
+spätestens beim nächsten Refresh nach fünf Minuten. Sitzungen einer Person
+beendet die Keycloak-Verwaltung unter *Users → Sessions* sofort.
+
+Kiosk-Geräte (`/tablet`) nutzen dieselbe Session. Ein Thekengerät, das
+mindestens einmal im Monat läuft, bleibt angemeldet; nach 365 Tagen meldet es
+sich einmal neu an.
+
+---
+
 ## ⚡ Token-Refresh & Nebenläufigkeitssperre
 
 Der Access-Token-Ablauf wird bei jeder Anfrage in `attachIdentity` / `verifyRequestSession` geprüft.
@@ -147,6 +183,7 @@ graph TD
 
 - **Karenzzeit (`REFRESH_GRACE_MS`)**: `30.000 ms` (30 Sekunden). Läuft das Access-Token innerhalb der nächsten 30 Sekunden ab, wird es vorzeitig erneuert.
 - **Serialisierung via `inFlightRefreshes`**: Parallele Anfragen derselben Session teilen sich denselben Refresh-Vorgang über eine `Map<string, Promise<SessionData>>`. Dadurch werden Race Conditions und abgewiesene Refresh-Token-Rotationen in Keycloak zuverlässig verhindert.
+- **Puffer für das gerade rotierte Token (`RECENT_REFRESH_TTL_MS`, 60 s)**: Anfragen, die der Browser noch mit dem alten Cookie losgeschickt hat (zweiter Tab, abgebrochene Antwort), bekommen 60 Sekunden lang die bereits erneuerte Session statt eines zweiten Refreshs, den Keycloak ablehnen würde. Schlüssel ist `sessionId` plus SHA-256 des alten Refresh-Tokens; Abmelden leert den Puffer der Session sofort.
 
 ---
 

@@ -13,7 +13,14 @@ export interface ServerEnvironment {
   readonly port: number;
   readonly production: boolean;
   readonly sessionCookieName: string;
+  /**
+   * Leerlaufzeit der Session: Wer die App so lange nicht nutzt, meldet sich neu
+   * an. Jede Token-Erneuerung (spätestens alle fünf Minuten Nutzung) schiebt
+   * das Ende wieder um diese Dauer nach hinten.
+   */
   readonly sessionDurationMs: number;
+  /** Absolute Höchstdauer einer Session ab dem Login, unabhängig von Nutzung. */
+  readonly sessionMaxLifespanMs: number;
   readonly sessionCookieSecure: boolean;
   /**
    * Cookies tragen das Präfix `__Host-` (nur mit `Secure`, `Path=/`, ohne
@@ -50,11 +57,17 @@ interface NodeProcess {
   loadEnvFile?: (path?: string) => void;
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /**
- * Express-Session-TTL. Muss identisch zu `ssoSessionMaxLifespan` im
- * Keycloak-Realm (86400 s) bleiben, siehe `docs/backend-for-frontend/01-overview-and-setup.md`.
+ * Leerlaufzeit der Session (30 Tage, gleitend). Muss zu `ssoSessionIdleTimeout`
+ * im Keycloak-Realm (2592000 s) passen, sonst läuft das Refresh-Token vorher ab,
+ * siehe `docs/backend-for-frontend/03-authentication-and-session.md`.
  */
-const DEFAULT_SESSION_DURATION_MINUTES = 24 * 60;
+const DEFAULT_SESSION_DURATION_MINUTES = 30 * 24 * 60;
+
+/** Höchstdauer der Session (365 Tage), passend zu `ssoSessionMaxLifespan` (31536000 s). */
+const DEFAULT_SESSION_MAX_LIFESPAN_DAYS = 365;
 
 /** Mindestlänge des Session-Secrets in Byte (AES-256 über HKDF). */
 export const MINIMUM_SESSION_SECRET_BYTES = 32;
@@ -95,11 +108,16 @@ export function resolveServerEnvironment(env: Record<string, string | undefined>
     const minutes = readNumber(env['SESSION_DURATION_MINUTES'], DEFAULT_SESSION_DURATION_MINUTES);
     sessionDurationMs = minutes * 60 * 1000;
   } else if (env['SESSION_DURATION_DAYS']) {
-    const durationDays = readNumber(env['SESSION_DURATION_DAYS'], 1);
-    sessionDurationMs = durationDays * 24 * 60 * 60 * 1000;
+    const durationDays = readNumber(env['SESSION_DURATION_DAYS'], DEFAULT_SESSION_DURATION_MINUTES / (24 * 60));
+    sessionDurationMs = durationDays * DAY_MS;
   } else {
     sessionDurationMs = DEFAULT_SESSION_DURATION_MINUTES * 60 * 1000;
   }
+  // Die Höchstdauer ist nie kürzer als die Leerlaufzeit.
+  const sessionMaxLifespanMs = Math.max(
+    readNumber(env['SESSION_MAX_LIFESPAN_DAYS'], DEFAULT_SESSION_MAX_LIFESPAN_DAYS) * DAY_MS,
+    sessionDurationMs,
+  );
 
   const sessionCookieSecure = readBoolean(env['SESSION_COOKIE_SECURE'], production);
   const publicBaseUrl = env['PUBLIC_BASE_URL'] || 'http://localhost:8080';
@@ -111,6 +129,7 @@ export function resolveServerEnvironment(env: Record<string, string | undefined>
     production,
     sessionCookieName: env['SESSION_COOKIE_NAME'] || 'vereint_session',
     sessionDurationMs,
+    sessionMaxLifespanMs,
     sessionCookieSecure,
     hostPrefixedCookies: sessionCookieSecure && publicBaseUrl.startsWith('https://'),
     sessionSecretCurrent: readSecret(env['SESSION_SECRET_CURRENT'] ?? env['SESSION_SECRET']),

@@ -62,6 +62,14 @@ Ein komplettes, lauffähiges Beispiel aller Dienste ist
 | `SESSION_SECRET`, optional `SESSION_SECRET_PREVIOUS`, `SESSION_COOKIE_SECURE=true` | Sitzungs-Cookie |
 | `APP_STAGE` | `prod` (Standard) oder `qs`: QS zeigt als installierte App eigenes Icon und den Namen „Vereint QS“. Im `:qs`-Image schon gesetzt |
 
+Angemeldet bleibt man 30 Tage ohne Nutzung (gleitend, höchstens 365 Tage ab
+Login). Ändern lässt sich das mit `SESSION_DURATION_DAYS` und
+`SESSION_MAX_LIFESPAN_DAYS`; die Keycloak-Werte `ssoSessionIdleTimeout` und
+`ssoSessionMaxLifespan` müssen dazu passen. Keycloak importiert den Realm nur
+beim ersten Start: In einem bestehenden Realm die Werte unter *Realm settings →
+Sessions* von Hand setzen, siehe
+[Sitzungsdauer](../backend-for-frontend/03-authentication-and-session.md#-sitzungsdauer-30-tage-ohne-nutzung).
+
 Alle Secrets mindestens 32 Zeichen, zum Beispiel `openssl rand -hex 32`;
 `DATA_ENCRYPTION_KEY` mit `openssl rand -base64 32`. Weitere Variablen:
 [baseservice](../baseservice/01-overview-and-setup.md),

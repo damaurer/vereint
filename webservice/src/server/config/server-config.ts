@@ -1,6 +1,7 @@
 import { serverEnvironment } from './environment';
 
 export const sessionDurationMs = serverEnvironment.sessionDurationMs;
+export const sessionMaxLifespanMs = serverEnvironment.sessionMaxLifespanMs;
 export const publicPaths = new Set([
   '/auth/error',
   '/auth/logged-out',

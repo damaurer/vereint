@@ -106,14 +106,14 @@ export function readLegacySessionCookie(req: Request): string | undefined {
   return readChunkedCookie(req, serverEnvironment.sessionCookieName);
 }
 
-function sessionChunkFlags(name: string, value: string, persistent: boolean): string {
+function sessionChunkFlags(name: string, value: string, maxAgeSeconds: number | undefined): string {
   return [
     `${name}=${encodeURIComponent(value)}`,
     'Path=/',
     'HttpOnly',
     'SameSite=Lax',
     ...(serverEnvironment.sessionCookieSecure ? ['Secure'] : []),
-    ...(persistent ? [`Max-Age=${Math.floor(sessionDurationMs / 1000)}`] : []),
+    ...(maxAgeSeconds !== undefined ? [`Max-Age=${maxAgeSeconds}`] : []),
   ].join('; ');
 }
 
@@ -127,14 +127,22 @@ function splitSessionValue(value: string): string[] {
 }
 
 /**
- * `persistent=false` erzeugt reine Browsersitzungs-Cookies ohne Max-Age. Große
- * Werte werden auf mehrere Teil-Cookies verteilt; überzählige Teil-Cookies einer
- * früheren, größeren Session werden zusätzlich gelöscht.
+ * `persistent=false` erzeugt reine Browsersitzungs-Cookies ohne Max-Age.
+ * `maxAgeSeconds` ist die Restlaufzeit der Session (Standard: volle
+ * Leerlaufzeit). Große Werte werden auf mehrere Teil-Cookies verteilt;
+ * überzählige Teil-Cookies einer früheren, größeren Session werden zusätzlich
+ * gelöscht.
  */
-export function setSessionCookie(res: Response, value: string, persistent = true): void {
+export function setSessionCookie(
+  res: Response,
+  value: string,
+  persistent = true,
+  maxAgeSeconds = Math.floor(sessionDurationMs / 1000),
+): void {
+  const maxAge = persistent ? Math.max(0, Math.floor(maxAgeSeconds)) : undefined;
   const chunks = splitSessionValue(value);
   chunks.forEach((chunk, index) => {
-    appendCookie(res, sessionChunkFlags(sessionChunkName(index), chunk, persistent));
+    appendCookie(res, sessionChunkFlags(sessionChunkName(index), chunk, maxAge));
   });
 
   for (let index = chunks.length; index < MAX_SESSION_COOKIE_CHUNKS; index++) {

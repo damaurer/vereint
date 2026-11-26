@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } from 'node:crypto';
 import type { Request, Response } from 'express';
 import { serverEnvironment } from '../config/environment';
-import { sessionDurationMs } from '../config/server-config';
+import { sessionDurationMs, sessionMaxLifespanMs } from '../config/server-config';
 import type { KeycloakTokenResponse, RequestIdentity, SessionData } from './auth.types';
 import {
   MAX_SESSION_COOKIE_CHUNKS,
@@ -54,6 +54,57 @@ export const REFRESH_GRACE_MS = 30_000;
 
 /** Laufende Refresh-Vorgänge je `sessionId`, damit die Rotation nicht kollidiert. */
 const inFlightRefreshes = new Map<string, Promise<SessionData | undefined>>();
+
+/**
+ * Wie lange ein gerade rotiertes Refresh-Token noch zur bereits erneuerten
+ * Session führt. Anfragen, die der Browser vor dem Eintreffen des neuen Cookies
+ * losgeschickt hat (parallele Tabs, abgebrochene Antworten), tragen noch das
+ * alte Token. Keycloak lehnt dessen zweite Einlösung ab (`refreshTokenMaxReuse`
+ * 0); ohne diesen Puffer wäre die Person dann abgemeldet.
+ */
+export const RECENT_REFRESH_TTL_MS = 60_000;
+const MAX_RECENT_REFRESHES = 10_000;
+const recentRefreshes = new Map<string, { session: SessionData; until: number }>();
+
+function recentRefreshKey(session: SessionData): string | undefined {
+  const refreshToken = session.tokens.refreshToken;
+  if (!refreshToken) return undefined;
+  const digest = createHash('sha256').update(refreshToken, 'utf8').digest('base64url');
+  return `${session.sessionId}:${digest}`;
+}
+
+function pruneRecentRefreshes(now: number): void {
+  for (const [key, entry] of recentRefreshes) {
+    if (entry.until <= now) recentRefreshes.delete(key);
+  }
+  // Harte Obergrenze gegen Speicherwachstum: älteste Einträge zuerst.
+  while (recentRefreshes.size >= MAX_RECENT_REFRESHES) {
+    const oldest = recentRefreshes.keys().next().value;
+    if (oldest === undefined) break;
+    recentRefreshes.delete(oldest);
+  }
+}
+
+/** Nach dem Abmelden führt auch ein altes Cookie nicht mehr zur erneuerten Session. */
+function forgetRecentRefreshes(sessionId: string): void {
+  const prefix = `${sessionId}:`;
+  for (const key of recentRefreshes.keys()) {
+    if (key.startsWith(prefix)) recentRefreshes.delete(key);
+  }
+}
+
+/** Nur für Tests: leert den Puffer rotierter Refresh-Tokens. */
+export function resetRecentRefreshesForTests(): void {
+  recentRefreshes.clear();
+}
+
+/**
+ * Ende der Session: gleitend `sessionDurationMs` ab jetzt, höchstens
+ * `sessionMaxLifespanMs` ab dem Login.
+ */
+export function sessionExpiresAt(createdAt: number, now: number): number {
+  return Math.min(now + sessionDurationMs, createdAt + sessionMaxLifespanMs);
+}
 
 function configuredSecrets(): { current: string; previous?: string | null } {
   return {
@@ -187,7 +238,7 @@ export function assertSessionCookieWithinLimit(encryptedValue: string, correlati
 function writeSessionCookie(res: Response, session: SessionData, persistent: boolean, correlationId?: string): void {
   const encrypted = encryptSessionData(session);
   assertSessionCookieWithinLimit(encrypted, correlationId);
-  setSessionCookie(res, encrypted, persistent);
+  setSessionCookie(res, encrypted, persistent, (session.expiresAt - Date.now()) / 1000);
 }
 
 export interface CreateSessionOptions {
@@ -213,17 +264,15 @@ export async function createSessionFromTokens(
   const { identity } = await extractIdentityFromVerifiedTokens(tokens, { nonce: resolved.nonce });
   const now = Date.now();
 
-  const sessionTtlMs = rememberMe
-    ? sessionDurationMs
-    : tokens.expires_in
-      ? tokens.expires_in * 1000
-      : 3600 * 1000;
+  const expiresAt = rememberMe
+    ? sessionExpiresAt(now, now)
+    : now + (tokens.expires_in ? tokens.expires_in * 1000 : 3600 * 1000);
 
   const session: SessionData = {
     sessionId: randomBytes(16).toString('hex'),
     uid: identity.uid,
     createdAt: now,
-    expiresAt: now + sessionTtlMs,
+    expiresAt,
     accessTokenExpiresAt: tokens.expires_in ? now + tokens.expires_in * 1000 : undefined,
     tokens: {
       accessToken: tokens.access_token,
@@ -257,6 +306,8 @@ async function performRefresh(session: SessionData, correlationId: string): Prom
 
     return {
       ...session,
+      // Nutzung verlängert die Session (gleitende Leerlaufzeit).
+      expiresAt: sessionExpiresAt(session.createdAt, now),
       accessTokenExpiresAt: refreshed.expires_in ? now + refreshed.expires_in * 1000 : undefined,
       tokens: {
         accessToken: refreshed.access_token,
@@ -287,12 +338,26 @@ async function performRefresh(session: SessionData, correlationId: string): Prom
  * mehrfach einlösen und die Session durch die Rotation invalidieren.
  */
 async function refreshSessionSerialized(session: SessionData, correlationId: string): Promise<SessionData | undefined> {
+  const now = Date.now();
+  const key = recentRefreshKey(session);
+  const recent = key ? recentRefreshes.get(key) : undefined;
+  if (recent && recent.until > now) return recent.session;
+
   const pending = inFlightRefreshes.get(session.sessionId);
   if (pending) return pending;
 
-  const task = performRefresh(session, correlationId).finally(() => {
-    inFlightRefreshes.delete(session.sessionId);
-  });
+  const task = performRefresh(session, correlationId)
+    .then((refreshed) => {
+      if (refreshed && key) {
+        const completedAt = Date.now();
+        pruneRecentRefreshes(completedAt);
+        recentRefreshes.set(key, { session: refreshed, until: completedAt + RECENT_REFRESH_TTL_MS });
+      }
+      return refreshed;
+    })
+    .finally(() => {
+      inFlightRefreshes.delete(session.sessionId);
+    });
 
   inFlightRefreshes.set(session.sessionId, task);
   return task;
@@ -355,6 +420,7 @@ export async function destroySession(req: Request, res: Response): Promise<boole
 
   if (cookie) {
     const session = decryptSessionData(cookie);
+    if (session) forgetRecentRefreshes(session.sessionId);
     if (session?.tokens.refreshToken) {
       backchannelLogout = await logoutFromKeycloak(session.tokens.refreshToken, correlationId);
     }
