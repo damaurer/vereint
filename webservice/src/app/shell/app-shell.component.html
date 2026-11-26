@@ -259,3 +259,10 @@
     </vereint-bottom-sheet>
   </div>
 }
+
+<!-- Erlaubnisse und Installation einmal pro Gerät anbieten; lädt erst bei Bedarf. -->
+@defer (when startSetup()) {
+  @if (startSetup() && !kiosk() && !isGuest()) {
+    <vereint-start-setup-dialog (closed)="startSetup.set(false)" />
+  }
+}

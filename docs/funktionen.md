@@ -39,6 +39,14 @@ Thekenterminals.
   Rechner eine Seitenleiste mit allen Bereichen.
 - Hell, Dunkel oder Systemeinstellung im Profil; Sprache Deutsch oder Englisch.
 - Freiwillige Zwei-Faktor-Anmeldung mit einer Authenticator-App, im Profil unter *Sicherheit*.
+- Startdialog *Vereint einrichten* beim ersten Öffnen nach der Anmeldung, einmal
+  pro Gerät (nicht im Kiosk-Modus): erklärt, dass Vereint auf den
+  Home-Bildschirm gehört (nur dort Push auf iPhone/iPad), bietet *Installieren*
+  bzw. die iPhone-Anleitung an und holt per Knopf die Erlaubnis für
+  Mitteilungen, Kamera (Strichcode scannen) und Standort (Moments). Was dort
+  nicht erlaubt wird, fragt Vereint beim Start nie wieder; der Browser fragt
+  erst, wenn die Funktion benutzt wird. Läuft Vereint schon installiert und ist
+  alles entschieden, erscheint der Dialog nicht.
 
 ## Events und Zusagen
 
