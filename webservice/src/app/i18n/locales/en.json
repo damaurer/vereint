@@ -1957,7 +1957,6 @@
       "badge": "Series",
       "series": "Recurring",
       "nextDates": "Next dates of the series",
-      "moreDates": "More dates:",
       "detached": "This date was changed individually.",
       "scope": {
         "title": "Change recurring event",

@@ -107,7 +107,7 @@ Unten zeigt die Vorschau die Regel in Worten und die nächsten Termine. Jeder Te
 
 <img src="bilder/m-events-serie.png" alt="Eventliste mit Serien" width="300" align="right">
 
-In der Eventliste steht von jeder Serie nur der nächste Termin, darunter **Weitere Termine** zum direkten Öffnen. Die Eventseite zeigt den Rhythmus (etwa „Wöchentlich am Dienstag“) und die nächsten Termine der Serie. Im Kalender trägt jeder Termin ein Wiederholungssymbol.
+In der Eventliste steht jede Serie nur einmal, mit dem Hinweis **Wiederkehrend**: unter **Kommend** der Termin, der gerade läuft oder als Nächstes ansteht, unter **Vergangen** der zuletzt vergangene. Die Eventseite zeigt den Rhythmus (etwa „Wöchentlich am Dienstag“) und die nächsten Termine der Serie zum direkten Öffnen. Im Kalender steht jeder Termin einzeln, mit einem Wiederholungssymbol.
 
 <br clear="right">
 

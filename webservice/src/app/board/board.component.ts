@@ -12,6 +12,7 @@ import type { AuditLogEntry, EventSummary } from '../api/api.types';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
 import { ModerationApiService } from '../moderation/moderation-api.service';
+import { collapseSeries } from '../events/series-list';
 
 interface BoardView {
   events: EventSummary[];
@@ -108,7 +109,12 @@ interface BoardView {
               @for (event of view.events; track event.id) {
                 <li class="member-list-item board-row">
                   <span class="board-row-text">
-                    <span class="member-list-title">{{ event.title }}</span>
+                    <span class="member-list-title">
+                      @if (event.seriesId) {
+                        <vereint-icon name="repeat" [label]="'events.recurrence.series' | t" data-testid="board-series" />
+                      }
+                      {{ event.title }}
+                    </span>
                     <span class="member-list-meta">
                       {{ formatShortDate(event.startsAt) }} · {{ eventStatusLabel(event.status) }}
                     </span>
@@ -280,7 +286,8 @@ export class BoardComponent implements OnInit, OnDestroy {
     // Die Audit-Antwort ist paginiert; für die Übersicht werden die Zeilen abgebildet.
     this.load.run(
       forkJoin({
-        events: this.api.listEvents(),
+        // Von einer Serie steht nur der aktuelle Termin in der Übersicht.
+        events: this.api.listEvents().pipe(map((events) => collapseSeries(events))),
         audit: this.api.listAuditLogs().pipe(map((page) => page.content)),
       }),
     );

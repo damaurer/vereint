@@ -67,6 +67,7 @@ Statusänderungen und Stammdatenaktualisierungen laufen über `PUT /api/v1/event
 - `EventSeriesService.reconcile` legt Termine der nächsten 365 Tage an (höchstens 26 kommende), passt nicht einzeln geänderte kommende Termine an die Vorlage an und entfernt wegfallende: löschen, wenn unberührt, sonst absagen (Antwort, Chatnachricht, Buchung, Runde, Moment oder Gast vorhanden). Vergangene und laufende Termine bleiben unangetastet. Ein Job (`vereint.events.series-check-interval`, Standard `PT6H`) legt nach.
 - `PUT /events/{id}` mit `scope` `this` (Standard, löst den Termin von der Serie), `following` (teilt die Serie am Termin; mit `status=cancelled` endet sie dort) oder `all` (alle kommenden Termine); `recurrence` nur mit `following`/`all`. Bei einem einzelnen Event macht `following` + `recurrence` eine Serie daraus.
 - `POST /events/recurrence-preview` rechnet die nächsten Termine vor, `POST /events/{id}/series/copy-menu` übernimmt Getränke und Speisen in die folgenden Termine, `POST /events/{id}/invitations` mit `scope=following` lädt zu allen folgenden ein.
+- Die Eventliste (`/events`) und die Vorstandsübersicht fassen Termine einer Serie im Frontend zusammen (`webservice/src/app/events/series-list.ts`): je Reiter nur der aktuellste Termin (laufend, sonst nächster kommender, sonst zuletzt vergangener) mit Hinweis „Wiederkehrend“. `GET /events` liefert weiterhin jeden Termin; der Kalender zeigt alle.
 
 ## ⚙️ Technische Sicht (Architecture & Implementation)
 

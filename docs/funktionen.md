@@ -61,6 +61,12 @@ Thekenterminals.
   die Zeitumstellung). Angelegt werden die Termine der nächsten 12 Monate,
   höchstens 26 kommende je Serie; ein Hintergrundjob legt alle 6 Stunden nach.
   Die Einladung geht je Termin N Tage vorher hinaus (Standard 7).
+- In der Eventliste steht jede Serie nur einmal, mit dem Hinweis
+  **Wiederkehrend**: unter **Kommend** der laufende oder nächste Termin, unter
+  **Vergangen** der zuletzt vergangene. Die Vorstandsübersicht
+  (**Gastgeber · Events**) zeigt ebenfalls nur den aktuellen Termin je Serie,
+  mit Wiederholungssymbol. Der Kalender zeigt weiterhin jeden Termin, die
+  Eventseite die nächsten Termine der Serie.
 - Ändern wie im Kalender: **nur dieser Termin**, **dieser und alle folgenden**
   (die Serie wird geteilt) oder **alle kommenden Termine**. Vergangene und
   einzeln geänderte Termine bleiben unverändert. Fällt ein Termin durch eine

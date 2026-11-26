@@ -91,6 +91,32 @@ describe('EventsComponent', () => {
     expect(html(fixture)).not.toContain('Wanderung');
   });
 
+  it('lists only the current date of a series with a recurring marker', async () => {
+    api.listEvents.mockReturnValue(
+      of([
+        { ...events[0], id: 's-2', title: 'Stammtisch', status: 'published', startsAt: '2099-07-08T18:00:00Z', seriesId: 's' },
+        { ...events[0], id: 's-1', title: 'Stammtisch', status: 'published', startsAt: '2099-07-01T18:00:00Z', seriesId: 's' },
+        { ...events[0], id: 's-0', title: 'Stammtisch', status: 'completed', startsAt: '2020-06-24T18:00:00Z', seriesId: 's' },
+        { ...events[0], id: 's-00', title: 'Stammtisch', status: 'completed', startsAt: '2020-06-17T18:00:00Z', seriesId: 's' },
+        { ...events[0], id: 'e-2', title: 'Wanderung', status: 'published', seriesId: null },
+      ]),
+    );
+    const fixture = await create();
+    const root = fixture.nativeElement as HTMLElement;
+    const links = () =>
+      Array.from(root.querySelectorAll<HTMLAnchorElement>('.events-cover')).map((a) => a.getAttribute('href'));
+    expect(links()).toEqual(['/events/s-1', '/events/e-2']);
+    expect(root.querySelectorAll('[data-testid="events-series"]').length).toBe(1);
+    expect(root.querySelector('[data-testid="events-series"]')?.textContent).toContain('Wiederkehrend');
+    expect(html(fixture)).toContain('Kommend · 2');
+
+    Array.from(root.querySelectorAll<HTMLButtonElement>('.events-tab'))
+      .find((tab) => tab.textContent?.includes('Vergangen'))!
+      .click();
+    fixture.detectChanges();
+    expect(links()).toEqual(['/events/s-0']);
+  });
+
   it('shows no answer buttons for events without invitation', async () => {
     api.listEvents.mockReturnValue(of([{ ...events[0], myRsvp: null }]));
     const fixture = await create();

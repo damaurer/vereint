@@ -8,7 +8,8 @@ import type { EventStatus, EventSummary } from '../api/api.types';
 import { EventCardComponent, IconComponent, type StatusTone } from '../ui';
 import { StateComponent } from '../ui/state.component';
 import { TranslatePipe } from '../i18n';
-import { activeLocale, translate } from '../i18n/i18n.service';
+import { translate } from '../i18n/i18n.service';
+import { collapseSeries, isEventPast } from '../events/series-list';
 
 /**
  * Eventübersicht eines Mitglieds (TICKET-024, Redesign TICKET-034).
@@ -17,7 +18,8 @@ import { activeLocale, translate } from '../i18n/i18n.service';
  * bzw. Vorstand/Admin); die Sichtbarkeit entscheidet der Fachservice. Die
  * Darstellung nutzt die geteilte `EventCard` aus TICKET-032. Eingeladene
  * antworten direkt in der Liste (`PUT /events/{id}/rsvp`); jedes Mitglied kann
- * über „Event anlegen“ ein eigenes Event erstellen.
+ * über „Event anlegen“ ein eigenes Event erstellen. Wiederkehrende Events
+ * stehen je Serie nur einmal in der Liste, mit dem Hinweis „Wiederkehrend“.
  */
 @Component({
   selector: 'app-member-events',
@@ -59,13 +61,13 @@ import { activeLocale, translate } from '../i18n/i18n.service';
           } @else {
             <div class="events-tabs" role="group" [attr.aria-label]="'member.events.rangeGroup' | t">
               <button type="button" class="events-tab" [attr.aria-pressed]="range() === 'upcoming'" (click)="range.set('upcoming')">
-                {{ 'member.events.upcoming' | t }} · {{ upcomingEntries(events).length }}
+                {{ 'member.events.upcoming' | t }} · {{ upcoming(events).length }}
               </button>
               <button type="button" class="events-tab" [attr.aria-pressed]="range() === 'past'" (click)="range.set('past')">
                 {{ 'member.events.past' | t }}
               </button>
             </div>
-            @if (entries(events); as list) {
+            @if (visible(events); as list) {
               @if (list.length === 0) {
                 <vereint-state
                   kind="empty"
@@ -74,8 +76,7 @@ import { activeLocale, translate } from '../i18n/i18n.service';
                 />
               }
               <ul class="events-list">
-                @for (entry of list; track entry.event.id) {
-                  @let event = entry.event;
+                @for (event of list; track event.id) {
                   <li>
                     <vereint-event-card
                       [title]="event.title"
@@ -85,6 +86,11 @@ import { activeLocale, translate } from '../i18n/i18n.service';
                       [icons]="false"
                     >
                       <a class="events-cover" [routerLink]="['/events', event.id]" [attr.aria-label]="event.title"></a>
+                      @if (event.seriesId) {
+                        <p class="events-series" data-testid="events-series">
+                          <vereint-icon name="repeat" /> {{ 'events.recurrence.series' | t }}
+                        </p>
+                      }
                       @if (event.myRsvp && canAnswer(event)) {
                         <div class="events-rsvp" role="group" [attr.aria-label]="'member.events.rsvpGroup' | t: { title: event.title }">
                           @if (event.myRsvp === 'accepted') {
@@ -119,15 +125,6 @@ import { activeLocale, translate } from '../i18n/i18n.service';
                         </div>
                       }
                     </vereint-event-card>
-                    @if (entry.more.length) {
-                      <div class="events-series" data-testid="events-series-more">
-                        <vereint-icon name="repeat" />
-                        <span>{{ 'events.recurrence.moreDates' | t }}</span>
-                        @for (next of entry.more; track next.id) {
-                          <a class="events-series-date" [routerLink]="['/events', next.id]">{{ shortWhen(next) }}</a>
-                        }
-                      </div>
-                    }
                   </li>
                 }
               </ul>
@@ -140,21 +137,13 @@ import { activeLocale, translate } from '../i18n/i18n.service';
   styles: [
     `
       .events-series {
-        display: flex;
-        flex-wrap: wrap;
+        display: inline-flex;
         align-items: center;
-        gap: 0.35rem 0.5rem;
-        margin: 0.4rem 0 0 0.25rem;
+        gap: 0.35rem;
+        margin: 0.35rem 0 0;
         color: var(--color-text-muted);
         font-size: 0.85rem;
-      }
-      .events-series-date {
-        padding: 0.2rem 0.6rem;
-        border-radius: 999px;
-        background-color: var(--color-surface-muted);
-        color: var(--color-text);
         font-weight: 600;
-        text-decoration: none;
       }
       .events-tabs {
         display: grid;
@@ -282,61 +271,28 @@ export class EventsComponent implements OnInit, OnDestroy {
   /** Reiter „Kommend“ bzw. „Vergangen“. */
   protected readonly range = signal<'upcoming' | 'past'>('upcoming');
 
-  /** Laufende und noch nicht beendete Events, das nächste zuerst. */
+  /**
+   * Laufende und noch nicht beendete Events, das nächste zuerst. Von einer
+   * Serie steht nur der aktuelle Termin (laufend oder als nächstes) in der
+   * Liste; alle Termine zeigt der Kalender.
+   */
   protected upcoming(events: EventSummary[], now: Date = new Date()): EventSummary[] {
-    return events
-      .filter((event) => !this.isPast(event, now))
+    const list = events
+      .filter((event) => !isEventPast(event, now))
       .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
+    return collapseSeries(list, now);
   }
 
   /**
-   * Kommende Events, je Serie nur der nächste Termin; die folgenden Termine
-   * der Serie (höchstens drei) stehen als Kurzlinks darunter.
+   * Events des gewählten Reiters; vergangene mit dem jüngsten zuerst und von
+   * einer Serie nur der zuletzt vergangene Termin.
    */
-  protected upcomingEntries(events: EventSummary[], now: Date = new Date()): { event: EventSummary; more: EventSummary[] }[] {
-    const entries: { event: EventSummary; more: EventSummary[] }[] = [];
-    const bySeries = new Map<string, { event: EventSummary; more: EventSummary[] }>();
-    for (const event of this.upcoming(events, now)) {
-      const entry = event.seriesId ? bySeries.get(event.seriesId) : undefined;
-      if (entry) {
-        if (entry.more.length < 3) entry.more.push(event);
-        continue;
-      }
-      const created = { event, more: [] as EventSummary[] };
-      entries.push(created);
-      if (event.seriesId) bySeries.set(event.seriesId, created);
-    }
-    return entries;
-  }
-
-  /** Einträge des gewählten Reiters. */
-  protected entries(events: EventSummary[], now: Date = new Date()): { event: EventSummary; more: EventSummary[] }[] {
-    if (this.range() === 'upcoming') return this.upcomingEntries(events, now);
-    return this.visible(events, now).map((event) => ({ event, more: [] }));
-  }
-
-  /** „Di, 2. Dez“ für die Kurzlinks weiterer Termine. */
-  protected shortWhen(event: EventSummary): string {
-    return new Intl.DateTimeFormat(activeLocale(), { weekday: 'short', day: 'numeric', month: 'short' }).format(
-      new Date(event.startsAt),
-    );
-  }
-
-  /** Events des gewählten Reiters; vergangene mit dem jüngsten zuerst. */
   protected visible(events: EventSummary[], now: Date = new Date()): EventSummary[] {
     if (this.range() === 'upcoming') return this.upcoming(events, now);
-    return events
-      .filter((event) => this.isPast(event, now))
+    const list = events
+      .filter((event) => isEventPast(event, now))
       .sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt));
-  }
-
-  /** Vorbei ist ein Event, das abgeschlossen ist oder dessen Ende bzw. Beginn zurückliegt. */
-  private isPast(event: EventSummary, now: Date): boolean {
-    if (event.status === 'active') return false;
-    if (event.status === 'completed' || event.status === 'archived') return true;
-    // Ohne Ende gilt ein Event bis sechs Stunden nach Beginn als kommend.
-    const end = event.endsAt ? Date.parse(event.endsAt) : Date.parse(event.startsAt) + 6 * 3600_000;
-    return Number.isFinite(end) && end < now.getTime();
+    return collapseSeries(list, now);
   }
 
   /** Zeile unter dem Titel: „Fr, 17. Okt · 18:30 · Vereinsheim“. */

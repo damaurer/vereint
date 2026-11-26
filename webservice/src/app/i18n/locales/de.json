@@ -1924,7 +1924,6 @@
       "badge": "Serie",
       "series": "Wiederkehrend",
       "nextDates": "Nächste Termine der Serie",
-      "moreDates": "Weitere Termine:",
       "detached": "Dieser Termin wurde einzeln geändert.",
       "scope": {
         "title": "Wiederkehrendes Event ändern",
