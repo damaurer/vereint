@@ -26,6 +26,8 @@ Am **Handy** hat jede Seite drei feste Teile:
 
 Am **Rechner** ersetzt eine **Seitenleiste** links die untere Leiste. Sie gliedert alle Bereiche in **Gruppe**, **Mein Konto**, **Theke** und **Verwaltung**; ungelesene Mitteilungen und Chats tragen rote Zahlen. Das **Thekenterminal** läuft quer auf dem Tablet und hat einen eigenen Aufbau (siehe [Thekenterminal](#thekenterminal)).
 
+Beim ersten Öffnen nach der Anmeldung zeigt jedes Gerät einmal den Dialog **Vereint einrichten** mit dem Hinweis zum Home-Bildschirm und je einem Knopf **Erlauben** für Mitteilungen, Kamera und Standort (siehe [Erste Schritte](01-erste-schritte.md#vereint-einrichten-beim-ersten-öffnen)).
+
 Was jemand sieht, hängt von den Rollen in der offenen Gruppe ab. Bereiche ohne Berechtigung erscheinen nicht. Ruft jemand eine solche Seite trotzdem auf, erscheint [Kein Zugriff](#kein-zugriff-und-nicht-gefunden).
 
 ---

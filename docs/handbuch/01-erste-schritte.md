@@ -138,6 +138,16 @@ Unter **Mehr → Profil** siehst du deine Kontodaten und deine Rollen.
 
 <br clear="right">
 
+## Vereint einrichten (beim ersten Öffnen)
+
+Öffnest du Vereint nach der Anmeldung zum ersten Mal auf einem Gerät, erscheint **Vereint einrichten**:
+
+- **Auf den Home-Bildschirm legen**: Vereint gehört auf den Home-Bildschirm. Nur dort startet es wie eine App und kann zuverlässig Mitteilungen schicken; auf iPhone und iPad gibt es Mitteilungen nur so. Je nach Gerät steht dort ein Knopf **Installieren** oder eine kurze Anleitung (siehe unten).
+- **Mitteilungen**, **Kamera** (Strichcode beim Buchen scannen) und **Standort** (nur wenn du bei einem Moment deinen Ort teilst): Tippe bei allem, was du nutzen möchtest, auf **Erlauben** und bestätige die Frage deines Handys.
+- **Später** bzw. **Fertig** schließt den Dialog.
+
+Was du hier nicht erlaubst, fragt Vereint beim Start nicht noch einmal. Erst wenn du die Funktion benutzt, zum Beispiel den Scanner öffnest, fragt dein Handy erneut. Mitteilungen schaltest du jederzeit im Profil ein. Auf dem iPhone erscheint der Dialog nach der Installation noch einmal in der App, weil Mitteilungen erst dort gehen. Im Kiosk-Modus des Thekenterminals erscheint er nie.
+
 ## Vereint als App auf dem Handy
 
 <img src="bilder/profil-geraet.png" alt="App installieren und Mitteilungen im Profil" width="300" align="right">

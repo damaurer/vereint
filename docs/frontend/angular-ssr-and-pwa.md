@@ -67,3 +67,10 @@ Die Progressive Web App (`pwa/`, Service Worker `public/vereint-sw.js`, Regeln g
 - Manifest mit Icons (inkl. maskable), Shortcuts (Events, Chat, Guthaben, Mitteilungen) und `start_url` `/dashboard`.
 - QS-Variante: Mit `APP_STAGE=qs` liefert der BFF unter denselben Adressen `public/qs/manifest.webmanifest` („Vereint QS“) und die orangen QS-Icons aus (`stage-assets.middleware.ts`). Favicon, Apple Touch Icon und das Icon der Push-Mitteilungen wechseln dadurch mit.
 - `InstallPromptService` fängt `beforeinstallprompt` ab; das Profil zeigt dann „Installieren“. Auf iOS erscheint die Anleitung „Teilen → Zum Home-Bildschirm“.
+
+### 4. Startdialog „Vereint einrichten“
+- `StartSetupDialogComponent` (`pwa/start-setup-dialog.component.ts`) lädt die App-Shell per `@defer`, sobald eine Session da ist, kein Kiosk-Modus läuft und `localStorage['vereint.startSetup']` fehlt (`pwa/start-setup.ts`).
+- Zeigt den Home-Bildschirm-Hinweis (nur wenn nicht standalone) mit Installieren-Knopf bzw. iOS-Anleitung und je eine Zeile für Push, Kamera und Standort. Die Browserabfrage startet erst auf Knopfdruck (Browser verlangen eine Nutzeraktion): Push über `PushNotificationsService.enable()`, Kamera über ein kurzes `getUserMedia` (Spuren werden sofort gestoppt), Standort über ein einmaliges `getCurrentPosition` (Wert wird verworfen). Der Stand kommt aus der Permissions-API; Geräte ohne Kamera bzw. Geolocation bekommen keine Zeile.
+- Schließen (X, Hintergrund, „Später“/„Fertig“) setzt den Merker; abgelehnte oder übersprungene Erlaubnisse werden beim Start nie wieder abgefragt, sondern erst von der jeweiligen Funktion (Scan, Moment mit Standort, Push-Schalter). Gibt es nichts zu fragen, setzt der Dialog den Merker unsichtbar.
+- Auf iPhone/iPad hat die installierte App einen eigenen Speicher; dort erscheint der Dialog deshalb nach der Installation noch einmal, damit Push erlaubt werden kann.
+- E2E: `e2e/support/fixtures.ts` setzt den Merker per `addInitScript`; `as(role, { startSetup: true })` lässt den Dialog zu (Test in `e2e/tests/mobile.spec.ts`).

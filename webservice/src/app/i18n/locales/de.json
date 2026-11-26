@@ -2328,6 +2328,38 @@
         "disabled": "Mitteilungen sind auf diesem Gerät aus.",
         "disableFailed": "Mitteilungen konnten nicht deaktiviert werden. Bitte später erneut versuchen."
       }
+    },
+    "setup": {
+      "title": "Vereint einrichten",
+      "intro": "Damit Vereint auf diesem Gerät richtig funktioniert, braucht die App ein paar Erlaubnisse. Du entscheidest selbst, was du erlaubst.",
+      "home": {
+        "title": "Auf den Home-Bildschirm legen",
+        "why": "Vereint ist eine App für den Home-Bildschirm. Nur dort startet sie wie eine App ohne Browserleiste und kann dir zuverlässig Mitteilungen schicken. Auf iPhone und iPad gibt es Mitteilungen nur so.",
+        "ios1": "In Safari unten auf „Teilen“ tippen (Quadrat mit Pfeil).",
+        "ios2": "„Zum Home-Bildschirm“ wählen und „Hinzufügen“ tippen.",
+        "ios3": "Vereint ab jetzt über das neue Symbol öffnen."
+      },
+      "push": {
+        "title": "Mitteilungen",
+        "why": "Für neue Chat-Nachrichten, Einladungen und Moments, auch bei geschlossener App.",
+        "needsInstall": "Auf iPhone und iPad erst möglich, wenn Vereint auf dem Home-Bildschirm liegt."
+      },
+      "camera": {
+        "title": "Kamera",
+        "why": "Zum Scannen von Strichcodes, wenn du ein Getränk buchst."
+      },
+      "location": {
+        "title": "Standort",
+        "why": "Nur wenn du bei einem Moment deinen Ort teilen möchtest, etwa für die Weltkarte."
+      },
+      "allow": "Erlauben",
+      "busy": "Einen Moment …",
+      "granted": "Erlaubt",
+      "denied": "Im Browser abgelehnt",
+      "later": "Nach der Installation",
+      "note": "Was du jetzt nicht erlaubst, fragt Vereint beim Start nicht noch einmal. Erst wenn du die Funktion benutzt, fragt der Browser erneut. Ändern kannst du alles später im Profil oder in den Einstellungen des Browsers.",
+      "skip": "Später",
+      "done": "Fertig"
     }
   },
   "scan": {

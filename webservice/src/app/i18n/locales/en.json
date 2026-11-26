@@ -2361,6 +2361,38 @@
         "disabled": "Notifications are off for this device.",
         "disableFailed": "Notifications could not be turned off. Please try again later."
       }
+    },
+    "setup": {
+      "title": "Set up Vereint",
+      "intro": "For Vereint to work properly on this device, the app needs a few permissions. You decide what to allow.",
+      "home": {
+        "title": "Add to your home screen",
+        "why": "Vereint is meant to live on your home screen. Only there does it start like an app without the browser bar and reliably send you notifications. On iPhone and iPad, notifications only work this way.",
+        "ios1": "In Safari, tap “Share” at the bottom (square with an arrow).",
+        "ios2": "Choose “Add to Home Screen” and tap “Add”.",
+        "ios3": "From now on, open Vereint from the new icon."
+      },
+      "push": {
+        "title": "Notifications",
+        "why": "For new chat messages, invitations and Moments, even when the app is closed.",
+        "needsInstall": "On iPhone and iPad only possible once Vereint is on your home screen."
+      },
+      "camera": {
+        "title": "Camera",
+        "why": "To scan barcodes when you book a drink."
+      },
+      "location": {
+        "title": "Location",
+        "why": "Only when you want to share your location with a Moment, for example for the world map."
+      },
+      "allow": "Allow",
+      "busy": "One moment …",
+      "granted": "Allowed",
+      "denied": "Blocked in the browser",
+      "later": "After installing",
+      "note": "Whatever you don't allow now, Vereint won't ask again at startup. The browser only asks again when you use that feature. You can change everything later in your profile or in the browser settings.",
+      "skip": "Later",
+      "done": "Done"
     }
   },
   "scan": {

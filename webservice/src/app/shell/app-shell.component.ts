@@ -38,6 +38,8 @@ import { BreakpointService } from './breakpoint.service';
 import { BottomSheetComponent } from '../ui/bottom-sheet.component';
 import { IconComponent } from '../ui/icon.component';
 import { KioskModeService } from '../kiosk/kiosk-mode.service';
+import { StartSetupDialogComponent } from '../pwa/start-setup-dialog.component';
+import { startSetupDone } from '../pwa/start-setup';
 import { GroupAvatarComponent } from '../stammtisch/group-avatar.component';
 import { buildNavSections, buildPrimaryNav, NavItem, NavSection, PRIMARY_NAV } from './nav-model';
 
@@ -107,6 +109,7 @@ function backOf(root: ActivatedRouteSnapshot): string {
     BottomSheetComponent,
     GroupAvatarComponent,
     LegalLinksComponent,
+    StartSetupDialogComponent,
     TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -283,6 +286,9 @@ export class AppShellComponent implements OnInit, OnDestroy {
   });
 
   readonly moreOpen = signal(false);
+
+  /** Startdialog „Vereint einrichten“ (einmal pro Gerät, nie im Kiosk-Modus). */
+  readonly startSetup = signal(false);
   readonly profileOpen = signal(false);
 
   constructor(
@@ -321,6 +327,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
         this.refreshChatUnread();
         // Sofortige Aktualisierung von Chats und Mitteilungen (nicht am Thekentablet).
         if (session && !this.kiosk()) live.start();
+        if (session && !this.kiosk() && !startSetupDone()) this.startSetup.set(true);
         // Offline geschriebene Chat-Nachrichten senden, egal auf welcher Seite die App startet.
         if (session && !this.kiosk()) void this.injector.get(ChatOutboxService).start();
       });
