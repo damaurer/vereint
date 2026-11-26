@@ -165,6 +165,15 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
             @if (dayBreak(i); as day) {
               <p class="chat-day"><span>{{ day }}</span></p>
             }
+            @if (message.kind) {
+              <p class="chat-rsvp-note" [attr.data-kind]="message.kind" data-testid="chat-rsvp-note">
+                <span>
+                  <vereint-icon [name]="message.kind === 'rsvp_accepted' ? 'check' : 'close'" />
+                  {{ noteText(message) }}
+                  <time [attr.datetime]="message.createdAt">{{ formatTime(message.createdAt) }}</time>
+                </span>
+              </p>
+            } @else {
             <article class="chat-message" [class.is-own]="isOwn(message)" [class.is-direct]="conversation.type === 'direct'">
               @if (!isOwn(message) && conversation.type !== 'direct') {
                 <vereint-avatar-badge class="chat-message-avatar" [name]="message.senderName" />
@@ -206,6 +215,12 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                     }
                   </span>
                 </div>
+                @if (message.senderRsvp; as rsvp) {
+                  <span class="chat-rsvp-badge" [attr.data-rsvp]="rsvp" data-testid="chat-rsvp-badge">
+                    <vereint-icon [name]="rsvp === 'accepted' ? 'check' : 'close'" />
+                    {{ (rsvp === 'accepted' ? 'chat.rsvp.badgeAccepted' : 'chat.rsvp.badgeDeclined') | t }}
+                  </span>
+                }
                 <div class="chat-reactions">
                   @for (reaction of message.reactions ?? []; track reaction.emoji) {
                     <button
@@ -265,6 +280,7 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
                 }
               </div>
             </article>
+            }
           }
           @for (entry of pending(); track entry.clientId) {
             <article class="chat-message is-own is-pending" [class.is-failed]="entry.state === 'failed'">
@@ -494,6 +510,54 @@ export const QUICK_REACTIONS = [DRINK_EMOJI, '👍', '❤️', '😂', '🎉'] a
         font-size: 0.75rem;
         font-weight: 600;
         box-shadow: 0 1px 1px rgba(15, 23, 42, 0.08);
+      }
+      /* Zu- und Absagen: Hinweiszeile in der Mitte, grün bzw. rot. */
+      .chat-rsvp-note {
+        display: flex;
+        justify-content: center;
+        margin: 0.35rem 0;
+      }
+      .chat-rsvp-note > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        max-width: 90%;
+        padding: 0.3rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-align: center;
+      }
+      .chat-rsvp-note[data-kind='rsvp_accepted'] > span {
+        background-color: color-mix(in srgb, var(--color-success) 16%, var(--color-surface));
+        color: var(--color-success);
+      }
+      .chat-rsvp-note[data-kind='rsvp_declined'] > span {
+        background-color: color-mix(in srgb, var(--color-danger) 14%, var(--color-surface));
+        color: var(--color-danger);
+      }
+      .chat-rsvp-note time {
+        font-weight: 400;
+        opacity: 0.7;
+      }
+      /* Antwort unter einer Nachricht, wie die Haken klein und dezent. */
+      .chat-rsvp-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        margin-top: 0.15rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        line-height: 1;
+      }
+      .chat-message.is-own .chat-rsvp-badge {
+        align-self: flex-end;
+      }
+      .chat-rsvp-badge[data-rsvp='accepted'] {
+        color: var(--color-success);
+      }
+      .chat-rsvp-badge[data-rsvp='declined'] {
+        color: var(--color-danger);
       }
       .chat-message {
         display: flex;
@@ -1125,6 +1189,17 @@ export class ChatThreadComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /** Zugänglicher Text zu den Haken einer eigenen Nachricht. */
+  /** „Anna hat zugesagt“ bzw. „Du hast abgesagt“, bei Serien mit Termin. */
+  protected noteText(message: ChatMessageDto): string {
+    const accepted = message.kind === 'rsvp_accepted';
+    const own = this.isOwn(message);
+    const key = `chat.rsvp.${own ? 'own' : 'other'}${accepted ? 'Accepted' : 'Declined'}${message.rsvpEventStartsAt ? 'For' : ''}`;
+    return translate(key, {
+      name: message.senderName,
+      date: message.rsvpEventStartsAt ? formatShortDateTime(message.rsvpEventStartsAt) : '',
+    });
+  }
+
   protected receiptLabel(receipt: MessageReceipt): string {
     const group = this.conversation.type !== 'direct' && receipt.recipients > 1;
     if (!group) return translate(`chat.receipt.${receipt.status}`);

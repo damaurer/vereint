@@ -75,7 +75,8 @@ class ConversationService(
     private val mediaAttachments: ChatMediaAttachments,
     private val momentSessionRepository: MomentSessionRepository,
     private val momentAccessPolicy: MomentAccessPolicy,
-    private val blockService: BlockService
+    private val blockService: BlockService,
+    private val chatRsvpNotes: ChatRsvpNotes
 ) {
 
     fun listConversations(principal: UserPrincipal): List<ConversationSummaryDto> {
@@ -325,7 +326,8 @@ class ConversationService(
                     senderName = it.sender?.displayName ?: it.guest?.displayName ?: ChatService.UNKNOWN_SENDER_NAME,
                     message = it.message,
                     createdAt = it.createdAt,
-                    mediaKind = ChatMediaAttachments.previewKind(mediaAttachments.groupMedia(listOf(it.id))[it.id])
+                    mediaKind = ChatMediaAttachments.previewKind(mediaAttachments.groupMedia(listOf(it.id))[it.id]),
+                    kind = it.kind
                 )
             },
             unreadCount = unreadFor(conversation, caller),
@@ -347,6 +349,8 @@ class ConversationService(
         val byMessage = chatReactionRepository.findByMessageIdIn(messages.map { it.id })
             .groupBy { it.message?.id }
         val media = mediaAttachments.groupMedia(messages.map { it.id })
+        val conversation = messages.first().conversation
+        val answers = conversation?.let { chatRsvpNotes.badges(it, messages) }.orEmpty()
         return messages.map { message ->
             val reactions = byMessage[message.id].orEmpty()
                 .groupBy { it.emoji }
@@ -357,7 +361,8 @@ class ConversationService(
             chatService.toMessageDto(message).copy(
                 reactions = reactions,
                 clientId = message.clientId.takeIf { message.sender?.id == caller.id },
-                media = media[message.id].orEmpty()
+                media = media[message.id].orEmpty(),
+                senderRsvp = answers[message.id]
             )
         }
     }
@@ -368,7 +373,8 @@ class ConversationService(
         return chatService.toMessageDto(message).copy(
             clientId = message.clientId,
             receipt = receipt,
-            media = mediaAttachments.groupMedia(listOf(message.id))[message.id].orEmpty()
+            media = mediaAttachments.groupMedia(listOf(message.id))[message.id].orEmpty(),
+            senderRsvp = chatRsvpNotes.badges(conversation, listOf(message))[message.id]
         )
     }
 

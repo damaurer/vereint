@@ -174,6 +174,42 @@ class EventSeriesIntegrationTest @Autowired constructor(
     }
 
     @Test
+    fun `answers show up in the chat as notes and under later messages`() {
+        val (anna, annaUser) = person("Anna")
+        val (ben, benUser) = person("Ben")
+        val start = nextWeekday(DayOfWeek.MONDAY)
+        val first = create(start, RecurrenceRequest(frequency = "WEEKLY", count = 3), listOf(annaUser, benUser))
+        val events = occurrences(first.series!!.id)
+        val chatId = UUID.fromString(chatService.getConversation(events[0].id, anna).id)
+
+        chatService.sendMessage(events[0].id, de.maurer.baseservice.dto.SendMessageRequest(message = "Noch offen"), ben)
+        Thread.sleep(5)
+        eventService.respond(events[0].id, RsvpRequest(status = "accepted"), anna)
+        eventService.respond(events[0].id, RsvpRequest(status = "accepted"), anna)
+        chatService.sendMessage(events[0].id, de.maurer.baseservice.dto.SendMessageRequest(message = "Ich bringe Kuchen"), anna)
+
+        val messages = conversationService.listMessages(chatId, ben)
+        val notes = messages.filter { it.kind != null }
+        assertEquals(listOf("rsvp_accepted"), notes.map { it.kind }, "gleiche Antwort zweimal: ein Hinweis")
+        assertEquals(events[0].startsAt, notes.single().rsvpEventStartsAt, "bei Serien mit Termin")
+        assertEquals("accepted", messages.single { it.message == "Ich bringe Kuchen" }.senderRsvp)
+        assertNull(messages.single { it.message == "Noch offen" }.senderRsvp, "ohne Zu- oder Absage keine Anzeige")
+        // Hinweise zählen nicht als ungelesen.
+        assertEquals(1, conversationService.listConversations(ben).single { it.id == chatId.toString() }.unreadCount)
+
+        eventService.respond(events[0].id, RsvpRequest(status = "declined"), anna)
+        val after = conversationService.listMessages(chatId, ben)
+        assertEquals(listOf("rsvp_accepted", "rsvp_declined"), after.mapNotNull { it.kind })
+        assertEquals("declined", after.single { it.message == "Ich bringe Kuchen" }.senderRsvp, "zeigt die aktuelle Antwort")
+
+        // Vielleicht: kein Hinweis, die Anzeige verschwindet.
+        eventService.respond(events[0].id, RsvpRequest(status = "maybe"), anna)
+        val maybe = conversationService.listMessages(chatId, ben)
+        assertEquals(2, maybe.count { it.kind != null })
+        assertNull(maybe.single { it.message == "Ich bringe Kuchen" }.senderRsvp)
+    }
+
+    @Test
     fun `rule change deletes untouched dates and cancels answered ones`() {
         val (annaP, anna) = person("Anna")
         val start = nextWeekday(DayOfWeek.MONDAY)

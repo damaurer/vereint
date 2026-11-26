@@ -126,6 +126,31 @@ describe('ChatThreadComponent', () => {
     expect(own[0].textContent).toContain('Du');
   });
 
+  it('shows answers as green and red notes and under later messages', async () => {
+    api.messages.mockReturnValue(
+      of([
+        chatMessage({ id: 'n-1', message: '', kind: 'rsvp_accepted' }),
+        chatMessage({ id: 'n-2', senderId: 'u-me', senderName: 'Ich Selbst', message: '', kind: 'rsvp_declined', rsvpEventStartsAt: '2026-12-02T18:30:00Z' }),
+        chatMessage({ id: 'm-5', message: 'Ich bringe Kuchen', senderRsvp: 'accepted' }),
+        chatMessage({ id: 'm-6', senderId: 'u-me', senderName: 'Ich Selbst', message: 'Leider nicht', senderRsvp: 'declined' }),
+        chatMessage({ id: 'm-7', message: 'Ohne Antwort' }),
+      ]),
+    );
+    const fixture = await create(summary({ id: 'c-event', type: 'event', title: 'Stammtisch' }));
+    const el = root(fixture);
+    const notes = Array.from(el.querySelectorAll<HTMLElement>('[data-testid="chat-rsvp-note"]'));
+    expect(notes.map((n) => n.dataset['kind'])).toEqual(['rsvp_accepted', 'rsvp_declined']);
+    expect(notes[0].textContent).toContain('Anna Beispiel hat zugesagt');
+    expect(notes[1].textContent).toContain('Du hast für');
+    expect(notes[1].textContent).toContain('abgesagt');
+    expect(el.querySelectorAll('.chat-message').length).toBe(3);
+    const badges = Array.from(el.querySelectorAll<HTMLElement>('[data-testid="chat-rsvp-badge"]'));
+    expect(badges.map((b) => [b.dataset['rsvp'], b.textContent?.trim()])).toEqual([
+      ['accepted', 'Zugesagt'],
+      ['declined', 'Abgesagt'],
+    ]);
+  });
+
   it('marks the conversation read when opened and refreshes the chat badge', async () => {
     const fixture = await create();
     expect(api.markRead).toHaveBeenCalledWith('c-club', 'club', undefined);

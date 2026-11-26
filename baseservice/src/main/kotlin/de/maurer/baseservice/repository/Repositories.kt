@@ -474,11 +474,14 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
         """
         select c.type, c.id, s.id, s.displayName from ChatMessageEntity m
         join m.conversation c left join m.sender s
-        where m.createdAt >= :from
+        where m.createdAt >= :from and m.kind is null
         """
     )
     fun findStatisticsRowsSince(@Param("from") from: Instant): List<Array<Any?>>
     fun findFirstByConversationIdOrderByCreatedAtDesc(conversationId: UUID): Optional<ChatMessageEntity>
+
+    /** Neueste echte Nachricht ohne Zu-/Absage-Hinweise (persönliche Mitteilungen). */
+    fun findFirstByConversationIdAndKindIsNullOrderByCreatedAtDesc(conversationId: UUID): Optional<ChatMessageEntity>
 
     /** Ungelesene Nachrichten anderer (Mitglieder oder Gäste) seit `after`. */
     @Query(
@@ -486,6 +489,7 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
         select count(m) from ChatMessageEntity m left join m.sender s
         where m.conversation.id = :conversationId
           and m.createdAt > :after
+          and m.kind is null
           and (s is null or s.id <> :userId)
         """
     )
@@ -501,6 +505,7 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
         select count(m) from ChatMessageEntity m left join m.sender s
         where m.conversation.id = :conversationId
           and m.createdAt > :after
+          and m.kind is null
           and (s is null or (s.id <> :userId and s.id not in :hidden))
         """
     )

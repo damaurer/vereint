@@ -758,6 +758,20 @@
       "photos": "{count} photos",
       "open": "Open photo in full size",
       "pendingCount": "{count} attachments"
+    },
+    "rsvp": {
+      "otherAccepted": "{name} is coming",
+      "otherDeclined": "{name} can't make it",
+      "ownAccepted": "You're coming",
+      "ownDeclined": "You can't make it",
+      "otherAcceptedFor": "{name} is coming on {date}",
+      "otherDeclinedFor": "{name} can't make it on {date}",
+      "ownAcceptedFor": "You're coming on {date}",
+      "ownDeclinedFor": "You can't make it on {date}",
+      "badgeAccepted": "Coming",
+      "badgeDeclined": "Not coming",
+      "previewAccepted": "{name} is coming",
+      "previewDeclined": "{name} can't make it"
     }
   },
   "calendar": {

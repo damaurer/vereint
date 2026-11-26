@@ -746,6 +746,20 @@
       "photos": "{count} Fotos",
       "open": "Foto in voller Größe öffnen",
       "pendingCount": "{count} Anhänge"
+    },
+    "rsvp": {
+      "otherAccepted": "{name} hat zugesagt",
+      "otherDeclined": "{name} hat abgesagt",
+      "ownAccepted": "Du hast zugesagt",
+      "ownDeclined": "Du hast abgesagt",
+      "otherAcceptedFor": "{name} hat für {date} zugesagt",
+      "otherDeclinedFor": "{name} hat für {date} abgesagt",
+      "ownAcceptedFor": "Du hast für {date} zugesagt",
+      "ownDeclinedFor": "Du hast für {date} abgesagt",
+      "badgeAccepted": "Zugesagt",
+      "badgeDeclined": "Abgesagt",
+      "previewAccepted": "{name} hat zugesagt",
+      "previewDeclined": "{name} hat abgesagt"
     }
   },
   "calendar": {

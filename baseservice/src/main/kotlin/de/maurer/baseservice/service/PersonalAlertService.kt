@@ -177,7 +177,7 @@ class PersonalAlertService(
         chatTitle: String,
         stammtischId: String
     ): NotificationDto? {
-        val latest = chatMessageRepository.findFirstByConversationIdOrderByCreatedAtDesc(conversation.id).orElse(null)
+        val latest = chatMessageRepository.findFirstByConversationIdAndKindIsNullOrderByCreatedAtDesc(conversation.id).orElse(null)
             ?: return null
         if (latest.sender?.id == caller.id) return null
         val member = conversationMemberRepository.findByConversationIdAndUserId(conversation.id, caller.id).orElse(null)

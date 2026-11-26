@@ -130,6 +130,15 @@ class ChatMessageEntity(
     @Column(name = "client_id", length = 64, updatable = false)
     var clientId: String? = null,
 
+    /** Hinweiszeile statt Nachricht: `rsvp_accepted` oder `rsvp_declined`; `null` = normale Nachricht. */
+    @Column(name = "kind", length = 32, updatable = false)
+    var kind: String? = null,
+
+    /** Termin, auf den sich eine Zu- oder Absage bezieht. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rsvp_event_id")
+    var rsvpEvent: EventEntity? = null,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now()

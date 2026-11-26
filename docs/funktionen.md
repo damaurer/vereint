@@ -98,6 +98,7 @@ Thekenterminals.
 - „… schreibt…“ über dem Eingabefeld, solange jemand im offenen Chat tippt (Gruppen-, Event-Chat und Direktnachrichten).
 - Offline schreiben: Ohne Netz wartet eine Nachricht mit Uhr-Symbol auf dem Gerät und geht automatisch hinaus, sobald das Netz zurück ist, auch nach einem Neuladen der App. Doppelt kommt sie dabei nie an. Lehnt der Server sie ab (z. B. Event abgesagt), lässt sie sich erneut senden oder verwerfen. Beim Abmelden wird die Warteschlange geleert.
 - Der Event-Chat auf der Eventseite ist derselbe Verlauf wie unter *Chat*, mit Reaktionen, Haken und Tipp-Anzeige.
+- Zu- und Absagen stehen im Event-Chat als Hinweiszeile, grün für „hat zugesagt“, rot für „hat abgesagt“ (bei Serien mit dem Termin). Sie lösen keinen Push aus und zählen nicht als ungelesen. Unter jeder Nachricht steht klein wie die Haken, ob die Person für den Termin, für den sie schrieb, zu- oder abgesagt hat (bei Serien der damals nächste Termin). Die Anzeige zeigt die aktuelle Antwort, fehlt ohne Zu- oder Absage (auch bei „Vielleicht“) und verschwindet, sobald der Termin vorbei ist.
 - Web-Push für neue Nachrichten im Gruppenchat und in Event-Chats (Absender und Text, je Chat eine Benachrichtigung). Pushes aus anderen Gruppen zeigen ihren Inhalt, und ein Tipp darauf wechselt in die Gruppe.
 - Direktnachrichten sind gruppenübergreifend: ein Gespräch je Person, schreiben
   darf man Freunden und Personen aus den eigenen Gruppen.

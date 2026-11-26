@@ -448,7 +448,9 @@ class ChatService(
             senderName = senderName,
             message = message.message,
             imageUrl = message.imageUrl,
-            createdAt = message.createdAt
+            createdAt = message.createdAt,
+            kind = message.kind,
+            rsvpEventStartsAt = message.rsvpEvent?.takeIf { it.series != null }?.startsAt
         )
     }
 

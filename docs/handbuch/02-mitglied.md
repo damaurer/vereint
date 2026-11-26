@@ -63,6 +63,8 @@ Auf der **Startseite** steht außerdem immer dein nächster Termin.
 
 **Event-Chat**: Alle Eingeladenen eines Events können hier miteinander schreiben, zum Beispiel für Fahrgemeinschaften. Nachricht unten eintippen und senden. Es ist derselbe Chat wie unter **Chat** in der Liste der Event-Chats, mit Reaktionen, Haken und „schreibt…“ (siehe [Chat](#chat)).
 
+Sagt jemand zu oder ab, erscheint im Chat eine Zeile in der Mitte: **grün** „Anna hat zugesagt“, **rot** „Anna hat abgesagt“, bei Serien mit dem Abend. Unter den Nachrichten einer Person steht klein **Zugesagt** bzw. **Abgesagt**, so wie die Haken. Das gilt jeweils für den Abend, um den es beim Schreiben ging, und verschwindet, wenn er vorbei ist. Bei „Vielleicht“ oder ohne Antwort steht dort nichts.
+
 <br clear="right">
 
 ## Selbst ein Event anlegen
