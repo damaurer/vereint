@@ -114,6 +114,10 @@ interface EventRepository : JpaRepository<EventEntity, UUID> {
 
     /** Termine einer Serie, nach ursprünglichem Tag sortiert. */
     fun findBySeriesIdOrderBySeriesDateAsc(seriesId: UUID): List<EventEntity>
+
+    /** Alle Termine einer Serie samt ihrer abgeteilten Serien (gemeinsamer Chat). */
+    @Query("select e from EventEntity e join e.series s where s.id = :rootId or s.chatRootId = :rootId")
+    fun findByChatRoot(@Param("rootId") rootId: UUID): List<EventEntity>
 }
 
 @Repository
@@ -129,6 +133,10 @@ interface EventParticipantRepository : JpaRepository<EventParticipantEntity, UUI
     fun findByEventId(eventId: UUID): List<EventParticipantEntity>
     fun findByUserId(userId: UUID): List<EventParticipantEntity>
     fun findByEventIdAndUserId(eventId: UUID, userId: UUID): Optional<EventParticipantEntity>
+
+    /** Einladungen zu allen Terminen einer Serie samt ihrer abgeteilten Serien. */
+    @Query("select p from EventParticipantEntity p join p.event e join e.series s where s.id = :rootId or s.chatRootId = :rootId")
+    fun findByChatRoot(@Param("rootId") rootId: UUID): List<EventParticipantEntity>
     fun countByEventId(eventId: UUID): Long
 
     /** Zeilen: eventId, Zahl der Eingeladenen ohne Antwort, die ihre Statistik nicht ausgeschaltet haben. */
@@ -371,6 +379,22 @@ interface ConversationRepository : JpaRepository<ConversationEntity, UUID> {
         @Param("stammtischId") stammtischId: UUID,
         @Param("type") type: String,
         @Param("title") title: String,
+        @Param("key") key: String
+    ): Int
+
+    /** Wie [insertKeyedIfAbsent], für den einen Chat aller Termine einer Serie. */
+    @Modifying
+    @Query(
+        value = "INSERT INTO conversations (id, stammtisch_id, type, series_id, title, direct_key, created_at, version) " +
+            "VALUES (:id, :stammtischId, :type, :seriesId, :title, :key, CURRENT_TIMESTAMP, 0) ON CONFLICT DO NOTHING",
+        nativeQuery = true
+    )
+    fun insertSeriesIfAbsent(
+        @Param("id") id: UUID,
+        @Param("stammtischId") stammtischId: UUID,
+        @Param("type") type: String,
+        @Param("seriesId") seriesId: UUID,
+        @Param("title") title: String?,
         @Param("key") key: String
     ): Int
 

@@ -101,7 +101,7 @@ Der Stammtisch ist jeden Dienstag, der Wirt öffnet jeden letzten Samstag im Mon
 6. **Termine auslassen** für Feiertage oder den Urlaub des Wirts, **Zusätzliche Termine** für Sondertermine.
 7. **Einladung verschicken**: wie viele Tage vor jedem Termin die Eingeladenen ihre Einladung bekommen (Standard 7 Tage).
 
-Unten zeigt die Vorschau die Regel in Worten und die nächsten Termine. Jeder Termin ist danach ein eigenes Event mit eigener Zu- und Absage, eigenem Chat, eigener Erinnerung und eigener Statistik. Alle beginnen zur gleichen Uhrzeit, auch nach der Zeitumstellung.
+Unten zeigt die Vorschau die Regel in Worten und die nächsten Termine. Jeder Termin ist danach ein eigenes Event mit eigener Zu- und Absage, eigener Erinnerung und eigener Statistik. Den **Event-Chat** teilen sich alle Termine der Serie: Es gibt nur einen Chat, in dem alle Eingeladenen über alle Abende schreiben, und er steht auch nur einmal in der Chatliste. Alle beginnen zur gleichen Uhrzeit, auch nach der Zeitumstellung.
 
 <br clear="right">
 

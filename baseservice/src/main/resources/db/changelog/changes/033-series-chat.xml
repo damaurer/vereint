@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <property name="uuid.type" value="UUID" dbms="postgresql"/>
+    <property name="uuid.type" value="UUID" dbms="h2"/>
+
+    <preConditions>
+        <or>
+            <dbms type="postgresql"/>
+            <dbms type="h2"/>
+        </or>
+    </preConditions>
+
+    <!-- 370. Ein Chat je Serie: Alle Termine einer Serie teilen sich einen
+         Event-Chat. conversations.series_id zeigt auf die Serie, mit der der Chat
+         begann (event_id bleibt dann leer). Wird eine Serie geteilt („dieser und
+         alle folgenden“), merkt sich die neue Serie in chat_root_id die erste
+         Serie und führt deren Chat weiter. -->
+    <changeSet id="370-series-chat-columns" author="claude">
+        <addColumn tableName="event_series">
+            <column name="chat_root_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_event_series_chat_root" references="event_series(id)"/>
+            </column>
+        </addColumn>
+        <addColumn tableName="conversations">
+            <column name="series_id" type="${uuid.type}">
+                <constraints foreignKeyName="fk_conversations_series" references="event_series(id)"/>
+            </column>
+        </addColumn>
+        <createIndex tableName="event_series" indexName="idx_event_series_chat_root">
+            <column name="chat_root_id"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="event_series" indexName="idx_event_series_chat_root"/>
+            <dropColumn tableName="conversations" columnName="series_id"/>
+            <dropColumn tableName="event_series" columnName="chat_root_id"/>
+        </rollback>
+    </changeSet>
+
+    <!-- 371. Bestehende Chats einzelner Termine einer Serie zusammenführen: Der
+         älteste Chat wird der Serienchat, Nachrichten, Fotos/Videos und
+         Mitglieder der übrigen ziehen dorthin um, die übrigen Chats entfallen.
+         Mitglieder, die es im Serienchat schon gibt, behalten den neueren
+         Lesestand. -->
+    <changeSet id="371-merge-series-chats" author="claude" dbms="postgresql">
+        <sql splitStatements="false">
+            SELECT set_config('vereint.rls_bypass', 'on', true);
+
+            CREATE TEMP TABLE series_chat_merge ON COMMIT DROP AS
+            SELECT c.id AS conversation_id,
+                   e.series_id,
+                   FIRST_VALUE(c.id) OVER (PARTITION BY e.series_id ORDER BY c.created_at, c.id) AS target_id
+            FROM conversations c JOIN events e ON e.id = c.event_id
+            WHERE c.type = 'event' AND e.series_id IS NOT NULL;
+
+            UPDATE chat_messages m SET conversation_id = s.target_id
+            FROM series_chat_merge s
+            WHERE m.conversation_id = s.conversation_id AND s.conversation_id &lt;&gt; s.target_id;
+
+            UPDATE chat_media m SET conversation_id = s.target_id
+            FROM series_chat_merge s
+            WHERE m.conversation_id = s.conversation_id AND s.conversation_id &lt;&gt; s.target_id;
+
+            UPDATE conversation_members t SET
+                last_read_at = GREATEST(t.last_read_at, o.last_read_at),
+                last_delivered_at = GREATEST(t.last_delivered_at, o.last_delivered_at)
+            FROM conversation_members o JOIN series_chat_merge s ON s.conversation_id = o.conversation_id
+            WHERE s.conversation_id &lt;&gt; s.target_id AND t.conversation_id = s.target_id
+              AND o.user_id IS NOT NULL AND t.user_id = o.user_id;
+
+            DELETE FROM conversation_members o USING series_chat_merge s
+            WHERE o.conversation_id = s.conversation_id AND s.conversation_id &lt;&gt; s.target_id
+              AND EXISTS (
+                  SELECT 1 FROM conversation_members t
+                  WHERE t.conversation_id = s.target_id
+                    AND ((o.user_id IS NOT NULL AND t.user_id = o.user_id)
+                         OR (o.guest_id IS NOT NULL AND t.guest_id = o.guest_id)));
+
+            -- Dieselbe Person kann in mehreren Termin-Chats stehen: nur eine Zeile umziehen.
+            DELETE FROM conversation_members o USING series_chat_merge s
+            WHERE o.conversation_id = s.conversation_id AND s.conversation_id &lt;&gt; s.target_id
+              AND EXISTS (
+                  SELECT 1 FROM conversation_members d JOIN series_chat_merge ds ON ds.conversation_id = d.conversation_id
+                  WHERE ds.target_id = s.target_id AND ds.conversation_id &lt;&gt; ds.target_id
+                    AND d.id &lt; o.id
+                    AND ((o.user_id IS NOT NULL AND d.user_id = o.user_id)
+                         OR (o.guest_id IS NOT NULL AND d.guest_id = o.guest_id)));
+
+            UPDATE conversation_members o SET conversation_id = s.target_id
+            FROM series_chat_merge s
+            WHERE o.conversation_id = s.conversation_id AND s.conversation_id &lt;&gt; s.target_id;
+
+            DELETE FROM conversations c USING series_chat_merge s
+            WHERE c.id = s.conversation_id AND s.conversation_id &lt;&gt; s.target_id;
+
+            UPDATE conversations c SET
+                series_id = s.series_id,
+                event_id = NULL,
+                direct_key = 'series:' || s.series_id,
+                title = es.title
+            FROM series_chat_merge s JOIN event_series es ON es.id = s.series_id
+            WHERE c.id = s.target_id AND s.conversation_id = s.target_id;
+        </sql>
+        <rollback/>
+    </changeSet>
+</databaseChangeLog>

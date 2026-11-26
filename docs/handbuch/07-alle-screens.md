@@ -269,7 +269,7 @@ Danach verwaltest du das Event unter [Event verwalten](#event-verwalten).
 
 <img src="screens/event-chat.png" alt="Event-Chat" width="300" align="right">
 
-Der Chat aller Eingeladenen eines Events, etwa für Fahrgemeinschaften oder Absprachen.
+Der Chat aller Eingeladenen eines Events, etwa für Fahrgemeinschaften oder Absprachen. Bei wiederkehrenden Events teilen sich alle Termine diesen einen Chat.
 
 - Kopfzeile mit dem Eventnamen.
 - Läuft gerade ein Moment, steht oben ein Hinweis („Moment läuft: …“) mit **Ansehen**.

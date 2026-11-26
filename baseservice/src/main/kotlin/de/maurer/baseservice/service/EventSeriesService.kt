@@ -410,7 +410,9 @@ class EventSeriesService(
             inviteLeadDays = series.inviteLeadDays,
             reminderHoursBefore = series.reminderHoursBefore,
             statisticsEnabled = series.statisticsEnabled,
-            inviteAllMembers = series.inviteAllMembers
+            inviteAllMembers = series.inviteAllMembers,
+            // Beide Teile teilen sich weiter einen Chat.
+            chatRootId = series.chatRootId ?: series.id
         )
         EventSeriesSupport.store(
             next,

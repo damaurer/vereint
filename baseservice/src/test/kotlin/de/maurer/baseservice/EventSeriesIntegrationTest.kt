@@ -42,7 +42,9 @@ class EventSeriesIntegrationTest @Autowired constructor(
     private val userService: UserService,
     private val membershipService: MembershipService,
     private val eventRepository: EventRepository,
-    private val eventParticipantRepository: EventParticipantRepository
+    private val eventParticipantRepository: EventParticipantRepository,
+    private val chatService: de.maurer.baseservice.service.ChatService,
+    private val conversationService: de.maurer.baseservice.service.ConversationService
 ) {
     private val zone = ZoneId.of("Europe/Berlin")
 
@@ -140,6 +142,35 @@ class EventSeriesIntegrationTest @Autowired constructor(
         assertEquals(3, tail.size, "COUNT läuft in der neuen Serie mit dem Rest weiter")
         assertTrue(tail.all { it.startsAt.atZone(zone).toLocalTime() == LocalTime.of(18, 0) })
         assertTrue(occurrences(seriesId).all { it.startsAt.atZone(zone).toLocalTime() != LocalTime.of(18, 0) })
+    }
+
+    @Test
+    fun `all dates of a series share one chat, also after a split`() {
+        val (anna, annaUser) = person("Anna")
+        val (_, _) = person("Ben")
+        val start = nextWeekday(DayOfWeek.WEDNESDAY)
+        val first = create(start, RecurrenceRequest(frequency = "WEEKLY", count = 5), listOf(annaUser))
+        val events = occurrences(first.series!!.id)
+
+        val chat = chatService.getConversation(events[0].id, anna)
+        assertEquals(chat.id, chatService.getConversation(events[3].id, anna).id, "ein Chat für alle Termine")
+        chatService.sendMessage(events[0].id, de.maurer.baseservice.dto.SendMessageRequest(message = "Wer kommt?"), anna)
+        assertEquals(listOf("Wer kommt?"), chatService.listMessages(events[2].id, anna).map { it.message })
+
+        val eventChats = conversationService.listConversations(anna).filter { it.type == "event" && it.id == chat.id }
+        assertEquals(1, eventChats.size, "die Chatliste zeigt die Serie einmal")
+        assertEquals(events[0].id.toString(), eventChats.single().eventId, "verlinkt den nächsten Termin")
+
+        // Dieser und folgende teilt die Serie; der Chat bleibt derselbe.
+        val split = eventSeriesService.update(events[2].id, UpdateEventRequest(title = "Stammtisch spät", scope = "following"), board)
+        assertNotEquals(first.series!!.id, split.series!!.id)
+        assertEquals(chat.id, chatService.getConversation(events[4].id, anna).id)
+        assertEquals(1, chatService.listMessages(events[4].id, anna).size)
+
+        // Ein Termin abgesagt: der Chat der Serie bleibt offen.
+        eventService.updateEvent(events[0].id, UpdateEventRequest(status = "cancelled"), board)
+        chatService.sendMessage(events[1].id, de.maurer.baseservice.dto.SendMessageRequest(message = "Dann nächste Woche"), anna)
+        assertEquals(2, conversationService.listMessages(UUID.fromString(chat.id), anna).size)
     }
 
     @Test

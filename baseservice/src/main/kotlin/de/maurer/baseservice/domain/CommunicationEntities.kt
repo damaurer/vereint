@@ -23,6 +23,14 @@ class ConversationEntity(
     @JoinColumn(name = "event_id")
     var event: EventEntity? = null,
 
+    /**
+     * Serie, deren Termine sich diesen Event-Chat teilen (erste Serie vor
+     * jeder Teilung); [event] ist dann leer.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "series_id")
+    var series: EventSeriesEntity? = null,
+
     @Column(name = "title", length = 255)
     var title: String? = null,
 

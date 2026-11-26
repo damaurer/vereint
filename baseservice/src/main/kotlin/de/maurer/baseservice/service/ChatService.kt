@@ -65,7 +65,8 @@ class ChatService(
     private val momentAccessPolicy: MomentAccessPolicy,
     private val statisticsRecorder: StatisticsRecorder,
     private val chatNotifier: ChatNotifier,
-    private val blockService: BlockService
+    private val blockService: BlockService,
+    private val seriesChats: SeriesChats
 ) {
 
     // --- Mitglieder (authentifiziert per JWT) ---
@@ -92,8 +93,10 @@ class ChatService(
         val caller = userService.getOrCreateUser(principal)
         val event = requireEvent(eventId)
         requireMemberAccess(caller, principal, event)
-        requireEventOpenForChat(event)
+        // Einzelne Events: abgesagt heißt geschlossen; der Chat einer Serie bleibt offen, solange ein Termin offen ist.
+        if (event.series == null) requireEventOpenForChat(event)
         val conversation = requireEventConversation(event)
+        requireConversationOpen(conversation)
         ensureMember(conversation, caller)
 
         val message = ChatMessageEntity(
@@ -115,14 +118,18 @@ class ChatService(
         val event = guest.event ?: throw ResourceNotFoundException(Msg("error.event.notFound", eventId), ErrorCode.NOT_FOUND)
         val conversation = requireEventConversation(event)
         ensureGuestMember(conversation, guest)
-        return messagesOf(conversation)
+        // Im Chat einer Serie sehen Gäste nur, was seit ihrer Einladung geschrieben wurde.
+        val messages = messagesOf(conversation)
+        return if (conversation.series == null) messages else messages.filter { !it.createdAt.isBefore(guest.createdAt) }
     }
 
     fun sendGuestMessage(eventId: UUID, guestToken: String?, request: SendMessageRequest): ChatMessageDto {
         val guest = resolveActiveGuest(eventId, guestToken)
         val event = guest.event ?: throw ResourceNotFoundException(Msg("error.event.notFound", eventId), ErrorCode.NOT_FOUND)
-        requireEventOpenForChat(event)
+        // Einzelne Events: abgesagt heißt geschlossen; der Chat einer Serie bleibt offen, solange ein Termin offen ist.
+        if (event.series == null) requireEventOpenForChat(event)
         val conversation = requireEventConversation(event)
+        requireConversationOpen(conversation)
         ensureGuestMember(conversation, guest)
 
         val message = ChatMessageEntity(
@@ -185,7 +192,7 @@ class ChatService(
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireActiveConversation(conversationId)
         val event = requireConversationAccess(conversation, caller, principal)
-        event?.let { requireEventOpenForChat(it) }
+        requireConversationOpen(conversation)
         ensureMember(conversation, caller)
 
         val message = ChatMessageEntity(
@@ -237,6 +244,14 @@ class ChatService(
             }
             return session.event
         }
+        val series = conversation.series
+        if (series != null) {
+            // Chat aller Termine einer Serie: Zugriff über irgendeinen Termin.
+            if (!isBoardOrAdmin(caller, principal) && !seriesChats.canAccess(caller, series.id)) {
+                throw AccessDeniedException(Msg("error.chat.accessDenied"), ErrorCode.ACCESS_DENIED)
+            }
+            return seriesChats.current(series.id)
+        }
         val event = conversation.event ?: throw ResourceNotFoundException(Msg("error.chat.eventNotFound"), ErrorCode.NOT_FOUND)
         requireMemberAccess(caller, principal, event)
         return event
@@ -283,13 +298,33 @@ class ChatService(
 
     /**
      * Liefert die Event-Konversation oder legt sie beim ersten Zugriff an. Je
-     * Event existiert genau eine Konversation vom Typ `event`.
+     * Event existiert genau eine Konversation vom Typ `event`; alle Termine
+     * einer Serie teilen sich eine ([SeriesChats]).
      */
     internal fun requireEventConversation(event: EventEntity): ConversationEntity {
-        val key = eventConversationKey(event.id)
+        val key = seriesChats.keyFor(event)
         conversationRepository.findByDirectKey(key).getOrNull()?.let { return it }
-        conversationRepository.insertEventIfAbsent(UUID.randomUUID(), TenantContext.requireStammtischId(), CONVERSATION_TYPE_EVENT, event.id, event.title, key)
+        val stammtischId = TenantContext.requireStammtischId()
+        val series = event.series
+        if (series != null) {
+            conversationRepository.insertSeriesIfAbsent(UUID.randomUUID(), stammtischId, CONVERSATION_TYPE_EVENT, seriesChats.rootOf(series), series.title, key)
+        } else {
+            conversationRepository.insertEventIfAbsent(UUID.randomUUID(), stammtischId, CONVERSATION_TYPE_EVENT, event.id, event.title, key)
+        }
         return conversationRepository.findByDirectKey(key).orElseThrow()
+    }
+
+    /** Event, für das ein Chat steht (bei Serien der aktuelle Termin). */
+    fun eventOf(conversation: ConversationEntity): EventEntity? = seriesChats.eventOf(conversation)
+
+    /** Ob der Chat neue Nachrichten annimmt (siehe [SeriesChats.isOpen]). */
+    fun isOpen(conversation: ConversationEntity): Boolean = seriesChats.isOpen(conversation)
+
+    /** Wie [requireEventOpenForChat], für Event-, Serien- und Moment-Chats. */
+    internal fun requireConversationOpen(conversation: ConversationEntity) {
+        if (!seriesChats.isOpen(conversation)) {
+            throw EventNotActiveException(Msg("error.chat.eventClosed"), ErrorCode.EVENT_NOT_ACTIVE)
+        }
     }
 
     /** Mitglieder erreichen den Chat als Owner, Teilnehmer oder Vorstand/Administration. */
@@ -393,7 +428,7 @@ class ChatService(
         ConversationDto(
             id = conversation.id.toString(),
             type = conversation.type,
-            eventId = conversation.event?.id?.toString(),
+            eventId = eventOf(conversation)?.id?.toString(),
             title = conversation.title,
             memberCount = conversationMemberRepository.countByConversationId(conversation.id).toInt(),
             expiresAt = conversation.expiresAt

@@ -146,6 +146,7 @@ class StammtischExportService(
                         "type" to conversation.type,
                         "title" to conversation.title,
                         "eventId" to conversation.event?.id,
+                        "seriesId" to conversation.series?.id,
                         "messages" to messagesByConversation[conversation.id].orEmpty().sortedBy { it.createdAt }.map {
                             mapOf(
                                 "senderId" to it.sender?.id,

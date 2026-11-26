@@ -8,7 +8,7 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
 
 ### 1. Gruppenchat & Konversationsarten
 - **Gruppenchat**: Zentraler Raum für alle Mitglieder der Gruppe (im Code `club`). Wer `chat.moderate` oder `event.manage` hat, setzt dort eine **Infotafel** (angeheftete Notiz).
-- **Event-Chats**: Jedes Event hat einen eigenen Chat für Veranstalter, Eingeladene und autorisierte Gäste. Mit `chat.moderate` oder `event.manage` lassen sich alle Event-Chats öffnen. Beendete oder abgesagte Events nehmen keine neuen Nachrichten an.
+- **Event-Chats**: Jedes Event hat einen eigenen Chat für Veranstalter, Eingeladene und autorisierte Gäste. Alle Termine einer Serie teilen sich einen Chat (`conversations.series_id`, Schlüssel `series:{id}`; über geteilte Serien hinweg via `event_series.chat_root_id`, siehe `SeriesChats`). Ihn lesen Veranstalter und Eingeladene aller Termine; Gäste eines Termins sehen nur Nachrichten ab ihrer Einladung. Er nimmt Nachrichten an, solange ein Termin nicht abgesagt oder archiviert ist; Statistik, Titel und `eventId` beziehen sich auf den aktuellen Termin (laufend, sonst nächster, sonst zuletzt vergangener). Mit `chat.moderate` oder `event.manage` lassen sich alle Event-Chats öffnen. Beendete oder abgesagte Events nehmen keine neuen Nachrichten an.
 - **Direktnachrichten**: 1:1-Gespräche, gruppenübergreifend: genau ein Gespräch je Personenpaar, schreiben darf man Freunden und Personen aus den eigenen Gruppen (`/direktnachrichten`). Details in [Kalender, Freunde und Direktnachrichten](kalender-freunde-direktnachrichten.md).
 - **Gast-Chat**: Gäste mit gültigem Einladungstoken lesen und schreiben im Chat ihres Events, ohne Benutzerkonto.
 - **Reaktionen**: Emoji-Reaktionen auf einzelne Nachrichten.
@@ -22,7 +22,7 @@ Das Kommunikationsmodul in **Vereint** ermöglicht den Austausch zwischen Mitgli
 ### 2. Mitteilungen & Push-Benachrichtigungen
 - **Mitteilungen** entstehen bei Event-Einladungen, Erinnerungen und Absagen, neuen Moments, Runden („Thomas gibt eine Runde aus“, Typ `round`, an die Eingeladenen) sowie Nachrichten des Vorstands. Sie gehören zur Gruppe, in der sie entstehen.
 - **Web Push**: Browserbasierte Benachrichtigungen (auch bei geschlossener App) für diese Mitteilungen, für neue Nachrichten im Gruppenchat und in Event-Chats sowie für Direktnachrichten und Freundschaftsanfragen (siehe [Kalender, Freunde und Direktnachrichten](kalender-freunde-direktnachrichten.md#push-benachrichtigungen)).
-  - Chat-Pushes gehen an alle, die den Chat lesen dürfen, außer an die Absenderin: im Gruppenchat an alle aktiven Mitglieder, im Event-Chat an Veranstalter und Eingeladene, deren Einladung schon verschickt ist. Moment-Chats (24 Stunden) lösen keinen Push aus.
+  - Chat-Pushes gehen an alle, die den Chat lesen dürfen, außer an die Absenderin: im Gruppenchat an alle aktiven Mitglieder, im Event-Chat an Veranstalter und Eingeladene, deren Einladung schon verschickt ist (beim Chat einer Serie die aller Termine). Moment-Chats (24 Stunden) lösen keinen Push aus.
   - Die Benachrichtigung zeigt „Name in Chat“ und den Text. Je Chat gibt es eine Benachrichtigung; eine neue Nachricht ersetzt die vorige.
   - Pushes zeigen Inhalte aus **allen** eigenen Gruppen richtig an, nicht nur aus der gerade gewählten. Ein Tipp darauf wechselt zuerst in die Gruppe des Eintrags und öffnet dann Chat, Event oder Mitteilungen.
   - Bei Event-Einladungen bietet die Benachrichtigung „Zusagen“ und „Absagen“ an.

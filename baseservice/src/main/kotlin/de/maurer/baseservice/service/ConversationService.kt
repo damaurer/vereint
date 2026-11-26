@@ -133,7 +133,7 @@ class ConversationService(
                 return ownMessageDto(existing, conversation, caller)
             }
         }
-        conversation.event?.let { chatService.requireEventOpenForChat(it) }
+        chatService.requireConversationOpen(conversation)
         val mediaIds = mediaAttachments.parseIds(request.mediaIds)
         val text = request.message?.trim().orEmpty()
         // Ohne Foto oder Video braucht die Nachricht Text.
@@ -148,7 +148,7 @@ class ConversationService(
             )
         )
         val media = mediaAttachments.attachGroup(mediaIds, conversation.id, caller.id, saved.id)
-        chatService.recordMessage(saved, caller, conversation.event, media)
+        chatService.recordMessage(saved, caller, chatService.eventOf(conversation), media)
         // Eigene Nachrichten gelten als gelesen.
         membership(conversation, caller).lastReadAt = saved.createdAt
         return ownMessageDto(saved, conversation, caller)
@@ -173,7 +173,7 @@ class ConversationService(
     fun typing(conversationId: UUID, principal: UserPrincipal) {
         val caller = userService.getOrCreateUser(principal)
         val conversation = requireReadable(conversationId, caller, principal)
-        conversation.event?.let { chatService.requireEventOpenForChat(it) }
+        chatService.requireConversationOpen(conversation)
         typingSignals.typing(
             userId = caller.id,
             name = caller.displayName,
@@ -208,7 +208,7 @@ class ConversationService(
                     StatisticFeature.CHAT_REACTION,
                     kind = StatisticKind.RESPONSE,
                     actor = caller,
-                    event = conversation.event,
+                    event = chatService.eventOf(conversation),
                     variant = conversation.type,
                     respondsTo = message.id,
                     sourceId = reaction.id
@@ -255,6 +255,8 @@ class ConversationService(
             .distinctBy { it.id }
             .filter { it.status != EventStatus.archived && it.status != EventStatus.draft }
             .map { chatService.requireEventConversation(it) }
+            // Termine einer Serie teilen sich einen Chat.
+            .distinctBy { it.id }
     }
 
     /**
@@ -304,9 +306,8 @@ class ConversationService(
         } else {
             chatMessageRepository.findLatestVisible(conversation.id, hidden, PageRequest.of(0, 1)).firstOrNull()
         }
-        val event = conversation.event
-        val canWrite = event == null ||
-            (event.status != EventStatus.cancelled && event.status != EventStatus.archived)
+        val event = chatService.eventOf(conversation)
+        val canWrite = chatService.isOpen(conversation)
         val pinnedText = conversation.pinnedText
         return ConversationSummaryDto(
             id = conversation.id.toString(),
