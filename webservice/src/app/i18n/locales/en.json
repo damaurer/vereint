@@ -772,6 +772,15 @@
       "badgeDeclined": "Not coming",
       "previewAccepted": "{name} is coming",
       "previewDeclined": "{name} can't make it"
+    },
+    "info": {
+      "open": "Info",
+      "title": "Message info",
+      "read": "Read",
+      "delivered": "Delivered",
+      "sent": "Not delivered yet",
+      "nobody": "Nobody else is in this chat.",
+      "hint": "Delivered means the message reached a device. Read means the chat was open there."
     }
   },
   "calendar": {

@@ -76,7 +76,8 @@ class ConversationService(
     private val momentSessionRepository: MomentSessionRepository,
     private val momentAccessPolicy: MomentAccessPolicy,
     private val blockService: BlockService,
-    private val chatRsvpNotes: ChatRsvpNotes
+    private val chatRsvpNotes: ChatRsvpNotes,
+    private val userRepository: de.maurer.baseservice.repository.UserRepository
 ) {
 
     fun listConversations(principal: UserPrincipal): List<ConversationSummaryDto> {
@@ -153,6 +154,27 @@ class ConversationService(
         // Eigene Nachrichten gelten als gelesen.
         membership(conversation, caller).lastReadAt = saved.createdAt
         return ownMessageDto(saved, conversation, caller)
+    }
+
+    /**
+     * Nachrichten-Info: Stand einer eigenen Nachricht bei jeder Person im Chat
+     * (gelesen, zugestellt, noch nicht zugestellt). Nur die Absenderin darf sie sehen.
+     */
+    @Transactional(readOnly = true)
+    fun messageInfo(conversationId: UUID, messageId: UUID, principal: UserPrincipal): de.maurer.baseservice.dto.MessageInfoDto {
+        val caller = userService.getOrCreateUser(principal)
+        val conversation = requireReadable(conversationId, caller, principal)
+        val message = chatMessageRepository.findById(messageId)
+            .filter { it.conversation?.id == conversation.id && it.kind == null }
+            .orElseThrow { ResourceNotFoundException(Msg("error.chat.messageNotFound", messageId), ErrorCode.NOT_FOUND) }
+        if (message.sender?.id != caller.id) {
+            throw AccessDeniedException(Msg("error.chat.infoOwnOnly"), ErrorCode.ACCESS_DENIED)
+        }
+        val audience = userRepository.findAllById(chatNotifier.audienceOf(conversation))
+        return de.maurer.baseservice.dto.MessageInfoDto(
+            messageId = message.id.toString(),
+            recipients = chatReceipts.infoFor(conversation, message, audience)
+        )
     }
 
     fun markRead(conversationId: UUID, principal: UserPrincipal): ConversationSummaryDto {

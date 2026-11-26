@@ -124,6 +124,23 @@ data class MessageReceiptDto(
     }
 }
 
+/**
+ * Nachrichten-Info wie bei bekannten Messengern: Stand der eigenen Nachricht
+ * bei jeder Person, die den Chat lesen darf. `status` ist `read` (gelesen),
+ * `delivered` (zugestellt, noch nicht gelesen) oder `sent` (noch nicht
+ * zugestellt). Zeitpunkte gibt es nicht je Nachricht, nur je Chat.
+ */
+data class MessageInfoDto(
+    val messageId: String,
+    val recipients: List<MessageInfoRecipientDto>
+)
+
+data class MessageInfoRecipientDto(
+    val userId: String,
+    val displayName: String,
+    val status: String
+)
+
 /** Zusammengefasste Reaktionen auf eine Nachricht. */
 data class ChatReactionDto(
     val emoji: String,

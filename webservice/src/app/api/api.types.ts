@@ -883,6 +883,19 @@ export interface ChatMessageDto {
   senderRsvp?: 'accepted' | 'declined' | null;
 }
 
+/** Nachrichten-Info: Stand einer eigenen Nachricht je Person. */
+export interface MessageInfo {
+  messageId: string;
+  recipients: MessageInfoRecipient[];
+}
+
+/** `read` = gelesen, `delivered` = zugestellt, `sent` = noch nicht zugestellt. */
+export interface MessageInfoRecipient {
+  userId: string;
+  displayName: string;
+  status: 'read' | 'delivered' | 'sent';
+}
+
 /** Zu- oder Absage als Hinweiszeile im Event-Chat. */
 export type ChatNoteKind = 'rsvp_accepted' | 'rsvp_declined';
 

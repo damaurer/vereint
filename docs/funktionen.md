@@ -95,6 +95,7 @@ Thekenterminals.
 - Zähler für ungelesene Nachrichten am Chat-Eintrag, über alle eigenen Chats.
 - Live: Neue Nachrichten, Reaktionen und Mitteilungen erscheinen sofort, ohne Neuladen; Zähler gleichen sich über alle eigenen Geräte ab.
 - Haken wie bei bekannten Messengern an eigenen Nachrichten: einer = gesendet, zwei = zugestellt (auf einem Gerät angekommen), zwei farbige = gelesen. In Gruppen- und Event-Chats wechseln die Haken erst, wenn alle Empfänger so weit sind; ein Antippen bzw. Darüberfahren zeigt „Zugestellt an 3 von 5, gelesen von 2“.
+- Nachrichten-Info wie bei bekannten Messengern: Eine eigene Nachricht im Gruppen-, Event- oder Moment-Chat antippen (am Rechner auch Rechtsklick) und **Info** wählen. Die Info zeigt je Person, ob die Nachricht **gelesen**, **zugestellt** oder **noch nicht zugestellt** ist (ohne Uhrzeit, weil der Stand je Chat und nicht je Nachricht gespeichert wird). Nur die Absenderin sieht sie.
 - „… schreibt…“ über dem Eingabefeld, solange jemand im offenen Chat tippt (Gruppen-, Event-Chat und Direktnachrichten).
 - Offline schreiben: Ohne Netz wartet eine Nachricht mit Uhr-Symbol auf dem Gerät und geht automatisch hinaus, sobald das Netz zurück ist, auch nach einem Neuladen der App. Doppelt kommt sie dabei nie an. Lehnt der Server sie ab (z. B. Event abgesagt), lässt sie sich erneut senden oder verwerfen. Beim Abmelden wird die Warteschlange geleert.
 - Der Event-Chat auf der Eventseite ist derselbe Verlauf wie unter *Chat*, mit Reaktionen, Haken und Tipp-Anzeige.

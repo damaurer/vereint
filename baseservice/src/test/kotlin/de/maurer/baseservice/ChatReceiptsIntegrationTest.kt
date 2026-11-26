@@ -119,6 +119,32 @@ class ChatReceiptsIntegrationTest @Autowired constructor(
     }
 
     @Test
+    fun `message info lists read, delivered and not yet delivered per person, only for the sender`() {
+        val alice = inB(person("Alice"))
+        val bob = inB(person("Bob"))
+        val carol = inB(person("Carol"))
+        val club = UUID.fromString(asB { conversationService.clubSummary(alice) }.id)
+        val sent = asB { conversationService.sendMessage(club, SendMessageRequest(message = "Wer kommt?"), alice) }
+        val messageId = UUID.fromString(sent.id)
+
+        asB { conversationService.listConversations(bob) }
+        asB { conversationService.markRead(club, carol) }
+
+        val info = asB { conversationService.messageInfo(club, messageId, alice) }
+        val byName = info.recipients.associate { it.displayName to it.status }
+        assertEquals(MessageReceiptDto.READ, byName["Carol"])
+        assertEquals(MessageReceiptDto.DELIVERED, byName["Bob"])
+        assertTrue("Alice" !in byName, "die Absenderin steht nicht in der Liste")
+        assertEquals(MessageReceiptDto.READ, info.recipients.first().status, "gelesen zuerst")
+        // Noch nicht zugestellt: wer den Chat nie geladen hat (etwa die Gruppenadmin).
+        assertTrue(info.recipients.any { it.status == MessageReceiptDto.SENT })
+
+        assertThrows<de.maurer.baseservice.error.AccessDeniedException> {
+            asB { conversationService.messageInfo(club, messageId, bob) }
+        }
+    }
+
+    @Test
     fun `group chats count delivered and read per recipient and keep the unread counter`() {
         val alice = inB(person("Alice"))
         val bob = inB(person("Bob"))

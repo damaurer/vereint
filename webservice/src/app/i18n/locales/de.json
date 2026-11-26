@@ -760,6 +760,15 @@
       "badgeDeclined": "Abgesagt",
       "previewAccepted": "{name} hat zugesagt",
       "previewDeclined": "{name} hat abgesagt"
+    },
+    "info": {
+      "open": "Info",
+      "title": "Nachrichten-Info",
+      "read": "Gelesen",
+      "delivered": "Zugestellt",
+      "sent": "Noch nicht zugestellt",
+      "nobody": "Außer dir ist niemand in diesem Chat.",
+      "hint": "Zugestellt heißt: Die Nachricht ist auf einem Gerät angekommen. Gelesen heißt: Der Chat war dort offen."
     }
   },
   "calendar": {
