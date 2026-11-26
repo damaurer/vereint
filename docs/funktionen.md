@@ -38,6 +38,9 @@ Thekenterminals.
   *Mehr*, am Tablet dieselben Einträge in einer schmalen Leiste links, am
   Rechner eine Seitenleiste mit allen Bereichen.
 - Hell, Dunkel oder Systemeinstellung im Profil; Sprache Deutsch oder Englisch.
+- Angemeldet bleiben: Wer Vereint mindestens einmal in 30 Tagen öffnet, bleibt
+  angemeldet (spätestens nach einem Jahr ist ein neuer Login nötig). Abmelden
+  im Profil beendet die Sitzung sofort.
 - Freiwillige Zwei-Faktor-Anmeldung mit einer Authenticator-App, im Profil unter *Sicherheit*.
 - Startdialog *Vereint einrichten* beim ersten Öffnen nach der Anmeldung, einmal
   pro Gerät (nicht im Kiosk-Modus): erklärt, dass Vereint auf den

@@ -91,15 +91,26 @@ describe('resolveServerEnvironment', () => {
     ).toBe(false);
   });
 
-  it('defaults the session TTL to 24 hours, matching the Keycloak SSO lifespan', () => {
+  it('defaults the session to 30 days idle and 365 days max, matching the Keycloak SSO session', () => {
     const env = resolveServerEnvironment({ ...completeEnv, PORT: 'not-a-port' });
 
     expect(env.port).toBe(4300);
     expect(env.sessionCookieName).toBe('vereint_session');
-    expect(env.sessionDurationMs).toBe(24 * 60 * 60 * 1000);
+    expect(env.sessionDurationMs).toBe(30 * 24 * 60 * 60 * 1000);
+    expect(env.sessionMaxLifespanMs).toBe(365 * 24 * 60 * 60 * 1000);
     expect(env.keycloakRealm).toBe('vereint');
     expect(env.keycloakClientId).toBe('vereint-web');
     expect(env.keycloakIssuerUri).toBe('http://localhost:8082/realms/vereint');
+  });
+
+  it('reads the session max lifespan and never lets it undercut the idle time', () => {
+    expect(
+      resolveServerEnvironment({ ...completeEnv, SESSION_MAX_LIFESPAN_DAYS: '90' }).sessionMaxLifespanMs,
+    ).toBe(90 * 24 * 60 * 60 * 1000);
+    expect(
+      resolveServerEnvironment({ ...completeEnv, SESSION_DURATION_DAYS: '30', SESSION_MAX_LIFESPAN_DAYS: '7' })
+        .sessionMaxLifespanMs,
+    ).toBe(30 * 24 * 60 * 60 * 1000);
   });
 
   it('never falls back to a default client or session secret', () => {

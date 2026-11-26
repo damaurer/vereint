@@ -42,7 +42,7 @@ Die erste Seite für alle mit Konto.
 
 - **Sprache** oben: **Deutsch** oder **English**, gilt sofort für die Anmeldeseite.
 - **Benutzername oder E-Mail** und **Passwort**. **Zeigen** blendet das Passwort im Klartext ein, um Tippfehler zu finden.
-- **Angemeldet bleiben**: Das Gerät merkt sich die Anmeldung. Nur auf dem eigenen Gerät anhaken.
+- Ein Häkchen „Angemeldet bleiben“ gibt es nicht: Vereint hält dich angemeldet, solange du die App mindestens einmal in 30 Tagen nutzt. Auf einem fremden Gerät meldest du dich danach mit **Abmelden** ab.
 - **Anmelden** führt zur Startseite, bei mehreren Gruppen vorher zu [Gruppe wählen](#gruppe-wählen).
 - **Noch keine Gruppe?** erklärt die zwei Wege hinein: per Einladungslink oder mit **Eigene Gruppe eröffnen**.
 - Unten: **Impressum** und **AGB**.

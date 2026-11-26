@@ -100,7 +100,7 @@ Vereint ist kostenlos. Es gibt keine Tarife und keine Grenzen für Mitglieder, S
 ## Thekentablet einrichten
 
 1. Ein eigenes Konto für die Theke anlegen, z. B. „Theke Vereinsheim“: per Einladungslink registrieren und danach unter **Bearbeiten** die Rolle **Thekenterminal** (`tabletRecorder`) geben.
-2. Am Tablet mit diesem Konto anmelden und **Angemeldet bleiben** anhaken.
+2. Am Tablet mit diesem Konto anmelden. Das Tablet bleibt angemeldet, solange es mindestens einmal in 30 Tagen läuft.
 3. **Thekenterminal** öffnen (unter **Verwaltung**) und **Kiosk-Modus starten**, damit das Tablet auf der Strichliste bleibt. Der Rest steht im [Leitfaden Thekenterminal](05-thekenterminal.md).
 
 Ein eigenes Thekenkonto ist besser als ein persönliches: So erscheint auf dem Tablet kein privates Guthaben, und im Protokoll ist klar, welche Striche vom Tablet kamen.

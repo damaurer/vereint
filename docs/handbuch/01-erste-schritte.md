@@ -44,7 +44,7 @@ Du bist sofort Mitglied und landest auf der Startseite der neuen Gruppe. Dein Ko
 
 Weitere Möglichkeiten auf dieser Seite:
 
-- **Angemeldet bleiben**: Du musst dich auf diesem Gerät nicht jedes Mal neu anmelden. Nur auf deinem eigenen Gerät anhaken.
+- Ein Häkchen „Angemeldet bleiben“ brauchst du nicht: Vereint hält dich auf jedem Gerät angemeldet, solange du die App mindestens einmal in 30 Tagen öffnest.
 - Einen Link „Passwort vergessen?“ gibt es nicht, weil Vereint keine E-Mails verschickt. Hast du dein Passwort vergessen, melde dich beim Admin deiner Gruppe. Ein neues, vorläufiges Passwort setzt, wer Zugang zur Keycloak-Verwaltung hat (meist der Betreiber von Vereint); du änderst es beim nächsten Anmelden.
 - Oben kannst du die Sprache der Anmeldeseite wählen.
 
@@ -83,7 +83,7 @@ Die **Glocke** oben rechts führt zu deinen Mitteilungen. Die rote Zahl zeigt, w
 
 Auf Unterseiten wie „Event verwalten“ oder „Kasse & Finanzen“ führt der **Pfeil** oben links zurück.
 
-Ganz unten im Mehr-Menü meldest du dich mit **Abmelden** ab. Darunter stehen **Impressum** und **AGB**.
+Vereint hält dich angemeldet, solange du die App mindestens einmal in 30 Tagen öffnest; spätestens nach einem Jahr fragt die Anmeldung einmal neu. Ganz unten im Mehr-Menü meldest du dich mit **Abmelden** ab, auf einem fremden Gerät immer. Darunter stehen **Impressum** und **AGB**.
 
 Das Mehr-Menü schließt du, indem du es mit dem Finger nach unten wischst, daneben tippst oder einen Eintrag wählst. Fenster wie „Mitglied einladen“ füllen am Handy den ganzen Bildschirm; oben rechts schließt sie das **×**.
 

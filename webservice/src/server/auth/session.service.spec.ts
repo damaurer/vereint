@@ -5,11 +5,14 @@ import type { SessionData } from './auth.types';
 import {
   MAX_SESSION_COOKIE_BYTES,
   REFRESH_GRACE_MS,
+  RECENT_REFRESH_TTL_MS,
   createSessionFromTokens,
   decryptSessionData,
   destroySession,
   encryptSessionData,
   estimateSessionCookieBytes,
+  resetRecentRefreshesForTests,
+  sessionExpiresAt,
   sessionKeyVersion,
   verifyRequestSession,
 } from './session.service';
@@ -86,6 +89,7 @@ describe('session.service', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     installTestSecrets();
+    resetRecentRefreshesForTests();
   });
 
   afterEach(() => {
@@ -435,6 +439,135 @@ describe('session.service', () => {
 
       expect(await verifyRequestSession(req)).toBeUndefined();
       expect(globalThis.fetch).not.toHaveBeenCalled();
+    });
+
+    describe('sliding idle timeout (30 days)', () => {
+      const DAY = 24 * 60 * 60 * 1000;
+
+      function maxAgeOf(res: Response): number | undefined {
+        const setCookie = res.getHeader('set-cookie');
+        const cookies = Array.isArray(setCookie) ? setCookie : setCookie ? [String(setCookie)] : [];
+        const first = cookies.find((cookie) => /^vereint_session=/.test(cookie) && !cookie.includes('Max-Age=0'));
+        const match = first?.match(/Max-Age=(\d+)/);
+        return match ? Number(match[1]) : undefined;
+      }
+
+      async function mockRefresh(refreshToken: string): Promise<void> {
+        const refreshedTokens = await signTokenPair({ subject: sampleSession.uid });
+        globalThis.fetch = vi.fn().mockImplementation(
+          async () =>
+            new Response(JSON.stringify({ ...refreshedTokens, refresh_token: refreshToken }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            }),
+        );
+      }
+
+      it('computes the end as 30 days from now, capped at 365 days after login', () => {
+        const now = Date.now();
+        expect(sessionExpiresAt(now, now)).toBe(now + 30 * DAY);
+        expect(sessionExpiresAt(now - 350 * DAY, now)).toBe(now + 15 * DAY);
+      });
+
+      it('starts a new login with 30 days and a matching cookie Max-Age', async () => {
+        const tokens = await signTokenPair({ subject: sampleSession.uid });
+        const res = createMockResponse();
+        const before = Date.now();
+
+        const session = await createSessionFromTokens(tokens, res, { rememberMe: true });
+
+        expect(session.expiresAt).toBeGreaterThanOrEqual(before + 30 * DAY);
+        expect(session.expiresAt).toBeLessThanOrEqual(Date.now() + 30 * DAY);
+        expect(maxAgeOf(res)).toBeGreaterThan(30 * 24 * 60 * 60 - 5);
+      });
+
+      it('extends a session that is used again after 29 days', async () => {
+        const now = Date.now();
+        const oldSession: SessionData = {
+          ...sampleSession,
+          sessionId: 'sess_sliding',
+          createdAt: now - 29 * DAY,
+          expiresAt: now + 1 * DAY,
+          accessTokenExpiresAt: now - 29 * DAY + 300_000,
+        };
+        await mockRefresh('rotated_sliding');
+
+        const res = createMockResponse();
+        const req = cookieRequest(encryptSessionData(oldSession));
+        expect(await verifyRequestSession(req, res)).toBeDefined();
+
+        expect(req.sessionData!.expiresAt).toBeGreaterThan(now + 29 * DAY);
+        expect(maxAgeOf(res)).toBeGreaterThan(29 * 24 * 60 * 60);
+      });
+
+      it('ends the session at the latest 365 days after login', async () => {
+        const now = Date.now();
+        const oldSession: SessionData = {
+          ...sampleSession,
+          sessionId: 'sess_max',
+          createdAt: now - 364 * DAY,
+          expiresAt: now + 10 * DAY,
+          accessTokenExpiresAt: now - 1000,
+        };
+        await mockRefresh('rotated_max');
+
+        const res = createMockResponse();
+        const req = cookieRequest(encryptSessionData(oldSession));
+        expect(await verifyRequestSession(req, res)).toBeDefined();
+
+        expect(req.sessionData!.expiresAt).toBeLessThanOrEqual(now - 364 * DAY + 365 * DAY);
+        expect(maxAgeOf(res)).toBeLessThanOrEqual(24 * 60 * 60);
+      });
+
+      it('lets a request with the just-rotated cookie keep the session instead of logging out', async () => {
+        const stale: SessionData = {
+          ...sampleSession,
+          sessionId: 'sess_stale_cookie',
+          accessTokenExpiresAt: Date.now() - 1000,
+        };
+        await mockRefresh('rotated_after_first');
+        const encrypted = encryptSessionData(stale);
+
+        const first = createMockRequest(`vereint_session=${encodeURIComponent(encrypted)}`);
+        expect(await verifyRequestSession(first, createMockResponse())).toBeDefined();
+
+        // Keycloak würde das alte Refresh-Token jetzt ablehnen.
+        globalThis.fetch = vi.fn().mockResolvedValue(new Response('{"error":"invalid_grant"}', { status: 400 }));
+        const second = cookieRequest(encrypted);
+        const res = createMockResponse();
+        expect(await verifyRequestSession(second, res)).toBeDefined();
+        expect(second.sessionData?.tokens.refreshToken).toBe('rotated_after_first');
+        expect(globalThis.fetch).not.toHaveBeenCalled();
+        expect(sessionHeaderFromResponse(res)).not.toBe('');
+      });
+
+      it('forgets the rotated cookie after the grace window and after logout', async () => {
+        const stale: SessionData = {
+          ...sampleSession,
+          sessionId: 'sess_grace_end',
+          accessTokenExpiresAt: Date.now() - 1000,
+        };
+        await mockRefresh('rotated_grace');
+        const encrypted = encryptSessionData(stale);
+        expect(await verifyRequestSession(cookieRequest(encrypted), createMockResponse())).toBeDefined();
+
+        const realNow = Date.now();
+        vi.spyOn(Date, 'now').mockReturnValue(realNow + RECENT_REFRESH_TTL_MS + 1);
+        vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        globalThis.fetch = vi.fn().mockResolvedValue(new Response('{"error":"invalid_grant"}', { status: 400 }));
+        expect(await verifyRequestSession(cookieRequest(encrypted), createMockResponse())).toBeUndefined();
+        vi.mocked(Date.now).mockRestore();
+
+        // Abmelden löscht den Puffer sofort.
+        await mockRefresh('rotated_before_logout');
+        const other: SessionData = { ...stale, sessionId: 'sess_logout_grace' };
+        const otherEncrypted = encryptSessionData(other);
+        expect(await verifyRequestSession(cookieRequest(otherEncrypted), createMockResponse())).toBeDefined();
+        globalThis.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+        await destroySession(cookieRequest(otherEncrypted), createMockResponse());
+        globalThis.fetch = vi.fn().mockResolvedValue(new Response('{"error":"invalid_grant"}', { status: 400 }));
+        expect(await verifyRequestSession(cookieRequest(otherEncrypted), createMockResponse())).toBeUndefined();
+      });
     });
   });
 

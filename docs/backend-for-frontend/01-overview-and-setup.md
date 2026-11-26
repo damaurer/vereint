@@ -171,8 +171,9 @@ In Produktions- oder Container-Umgebungen (Docker/Kubernetes) werden Umgebungsva
 | `SESSION_SECRET` / `SESSION_SECRET_CURRENT` | *(kein Default)* | **Ja** | Hauptgeheimnis zur AES-256-GCM-Verschlüsselung der Session. **Mindestens 32 Byte**. |
 | `SESSION_SECRET_PREVIOUS` | `null` | Nein | Vorheriges Secret für unterbrechungsfreie Schlüsselrotation. Mindestens 32 Byte, darf nicht identisch mit dem aktuellen Secret sein. |
 | `SESSION_COOKIE_NAME` | `vereint_session` | Nein | Basisname des HttpOnly-Session-Cookies. Unter HTTPS mit `SESSION_COOKIE_SECURE=true` stellt der BFF `__Host-` voran. |
-| `SESSION_DURATION_MINUTES` | `1440` (24h) | Nein | Session-Lebensdauer in Minuten (muss mit Keycloak `ssoSessionMaxLifespan` übereinstimmen). |
-| `SESSION_DURATION_DAYS` | `1` | Nein | Alternative Angabe der Session-Lebensdauer in Tagen. |
+| `SESSION_DURATION_DAYS` | `30` | Nein | Leerlaufzeit der Session in Tagen, gleitend: Jede Nutzung schiebt das Ende wieder um diese Dauer nach hinten. Muss zu Keycloak `ssoSessionIdleTimeout` passen ([Sitzungsdauer](03-authentication-and-session.md#-sitzungsdauer-30-tage-ohne-nutzung)). |
+| `SESSION_DURATION_MINUTES` | *(leer)* | Nein | Dieselbe Leerlaufzeit in Minuten; hat Vorrang vor `SESSION_DURATION_DAYS`. |
+| `SESSION_MAX_LIFESPAN_DAYS` | `365` | Nein | Absolute Höchstdauer einer Session ab dem Login, auch bei täglicher Nutzung. Nie kürzer als die Leerlaufzeit. Muss zu Keycloak `ssoSessionMaxLifespan` passen. |
 | `SESSION_COOKIE_SECURE` | In Prod: `true`, sonst `false` | Nein | Erzwingt das `Secure`-Attribut am Cookie. In Produktion **Pflicht**. Zusammen mit einer `PUBLIC_BASE_URL` mit `https://` heißen alle Cookies `__Host-…` ([Cookie-Namen](03-authentication-and-session.md#cookie-namen-mit-__host-)). |
 | `APP_STAGE` | `prod` | Nein | `qs` liefert Manifest („Vereint QS“) und Icons mit QS-Kennung aus `public/qs/` aus, damit die installierte QS-App von der Produktiv-App unterscheidbar ist. Das `:qs`-Image setzt den Wert bereits. |
 | `NG_ALLOWED_HOSTS` | *(leer)* | Nein | Zusätzliche Hosts (kommagetrennt), für die Angular SSR rendern darf; Host aus `PUBLIC_BASE_URL` ist immer erlaubt. |

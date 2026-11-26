@@ -35,7 +35,9 @@ describe('Keycloak Realm Configuration', () => {
   it('has valid realm name and base settings', () => {
     expect(realmConfig.realm).toBe('vereint');
     expect(realmConfig.enabled).toBe(true);
-    expect(realmConfig.rememberMe).toBe(true);
+    // Vereint hält jede Anmeldung 30 Tage ohne Nutzung; ein Häkchen
+    // „Angemeldet bleiben“ würde etwas anderes versprechen.
+    expect(realmConfig.rememberMe).toBe(false);
     // Ohne Mailversand bleibt "Passwort vergessen" in Produktion aus (#27).
     expect(realmConfig.resetPasswordAllowed).toBe(false);
   });
@@ -53,10 +55,15 @@ describe('Keycloak Realm Configuration', () => {
     }
   });
 
-  it('keeps the SSO lifespan aligned with the Express session TTL of 24 hours', () => {
+  it('keeps the SSO session aligned with the BFF session: 30 days idle, 365 days max', () => {
     for (const config of [realmConfig, devRealmConfig]) {
-      expect(config.ssoSessionMaxLifespan).toBe(86400);
-      expect(config.ssoSessionMaxLifespanRememberMe).toBe(86400);
+      expect(config.ssoSessionIdleTimeout).toBe(30 * 24 * 60 * 60);
+      expect(config.ssoSessionIdleTimeoutRememberMe).toBe(30 * 24 * 60 * 60);
+      expect(config.ssoSessionMaxLifespan).toBe(365 * 24 * 60 * 60);
+      expect(config.ssoSessionMaxLifespanRememberMe).toBe(365 * 24 * 60 * 60);
+      // Client-Sessions erben die Realm-Werte (0 = wie SSO-Session).
+      expect(config.clientSessionIdleTimeout).toBe(0);
+      expect(config.clientSessionMaxLifespan).toBe(0);
       expect(config.accessTokenLifespan).toBe(300);
     }
   });
